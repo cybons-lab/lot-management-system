@@ -36,8 +36,8 @@ import type {
 
 // v2.0 LotCreate スキーマに合わせたZodスキーマ
 const lotCreateSchema = z.object({
-  product_code: z.string().min(1, "製品は必須です"),
-  supplier_code: z.string().min(1, "仕入先は必須です"),
+  product_code: z.string().min(1, "製品は必須です").optional(), // ⬅️ .optional() を追加
+  supplier_code: z.string().min(1, "仕入先は必須です").optional(), // ⬅️ .optional() を追加
   lot_number: z.string().min(1, "ロット番号は必須です"),
   receipt_date: z.string().min(1, "入荷日は必須です"),
   expiry_date: z.string().optional().nullable(),
@@ -47,12 +47,12 @@ type LotCreateFormInput = z.infer<typeof lotCreateSchema>;
 
 // フォームのデフォルト値
 const defaultValues: LotCreateFormInput = {
-  product_code: "",
-  supplier_code: "",
+  product_code: undefined, // ⬅️ 修正
+  supplier_code: undefined, // ⬅️ 修正
   lot_number: "",
-  receipt_date: formatISO(new Date(), { representation: "date" }), // 今日の日付
+  receipt_date: formatISO(new Date(), { representation: "date" }),
   expiry_date: "",
-  warehouse_code: "",
+  warehouse_code: undefined, // ⬅️ 修正
 };
 
 export default function InventoryPage() {
@@ -194,7 +194,7 @@ export default function InventoryPage() {
                     render={({ field }) => (
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value ?? ""}
+                        value={field.value}
                         disabled={isLoadingProducts}>
                         <SelectTrigger id="product_code">
                           <SelectValue placeholder="製品を選択..." />
@@ -228,7 +228,7 @@ export default function InventoryPage() {
                     render={({ field }) => (
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value ?? ""}
+                        value={field.value}
                         disabled={isLoadingSuppliers}>
                         <SelectTrigger id="supplier_code">
                           <SelectValue placeholder="仕入先を選択..." />
@@ -298,14 +298,13 @@ export default function InventoryPage() {
                     render={({ field }) => (
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value ?? ""}
+                        value={field.value}
                         disabled={isLoadingWarehouses}>
                         <SelectTrigger id="warehouse_code">
                           <SelectValue placeholder="倉庫を選択..." />
                         </SelectTrigger>
                         <SelectContent>
-                          {/* (ここは value="" が「指定なし」なのでOK) */}
-                          <SelectItem value="">（指定なし）</SelectItem>
+                          {/* ⬆️ value="" の SelectItem を削除しました */}
                           {warehouses.map((w) => (
                             <SelectItem
                               key={w.warehouse_code}

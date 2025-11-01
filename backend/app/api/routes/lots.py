@@ -76,18 +76,37 @@ def list_lots(
     # 現在在庫と製品名を付与
     result = []
     for lot in lots:
-        lot_dict = LotResponse.model_validate(lot).model_dump()
+        # 1. まずLotの基本的な属性を辞書にコピー
+        lot_dict = {
+            "id": lot.id,
+            "supplier_code": lot.supplier_code,
+            "product_code": lot.product_code,
+            "lot_number": lot.lot_number,
+            "receipt_date": lot.receipt_date,
+            "mfg_date": lot.mfg_date,
+            "expiry_date": lot.expiry_date,
+            "warehouse_code": lot.warehouse_code,
+            "kanban_class": lot.kanban_class,
+            "sales_unit": lot.sales_unit,
+            "inventory_unit": lot.inventory_unit,
+            "received_by": lot.received_by,
+            "source_doc": lot.source_doc,
+            "qc_certificate_status": lot.qc_certificate_status,
+            "qc_certificate_file": lot.qc_certificate_file,
+            "created_at": lot.created_at,
+            "updated_at": lot.updated_at,
+        }
 
-        # 製品名を付与
+        # 2. リレーション先の正しい値を手動で設定
         if lot.product:
             lot_dict["product_name"] = lot.product.product_name
 
-        # 在庫を付与
         if lot.current_stock:
             lot_dict["current_stock"] = lot.current_stock.current_quantity
         else:
             lot_dict["current_stock"] = 0.0
 
+        # 3. 最後に完成した辞書をLotResponseで検証
         result.append(LotResponse(**lot_dict))
 
     return result
