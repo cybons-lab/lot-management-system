@@ -53,4 +53,30 @@ export interface DashboardStatsResponse {
   unallocated_orders: number;
 }
 
-// (古いv1.0のShipment型は、v2.0では未実装のため一旦削除)
+// v2.0 API (backend/app/schemas/sales.py)
+export interface OrderResponse {
+  id: number;
+  order_no: string;
+  customer_code: string;
+  order_date?: string; // YYYY-MM-DD
+  status: string;
+  sap_order_id?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface OrderLineResponse {
+  id: number;
+  order_id: number;
+  line_no: number;
+  product_code: string;
+  quantity: number;
+  unit?: string;
+  due_date?: string; // YYYY-MM-DD
+  created_at: string;
+  allocated_qty?: number; // 引当済数量 (GET /orders/{id} で付与)
+}
+
+export interface OrderWithLinesResponse extends OrderResponse {
+  lines: OrderLineResponse[];
+}

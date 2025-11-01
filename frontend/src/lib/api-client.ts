@@ -5,6 +5,8 @@ import type {
   Supplier,
   Warehouse,
   DashboardStatsResponse,
+  OrderResponse, // 追記
+  OrderWithLinesResponse, // 追記
 } from "@/types";
 
 const API_BASE_URL = "http://localhost:8000/api";
@@ -46,6 +48,17 @@ export const api = {
 
   // updateLot, deleteLot は一旦省略 (v2.0スキーマに合わせる必要あり)
 
+  // --- Order endpoints (ここから追記) ---
+  async getOrders(): Promise<OrderResponse[]> {
+    const response = await fetch(`${API_BASE_URL}/orders`);
+    return handleResponse<OrderResponse[]>(response);
+  },
+
+  async getOrderDetails(orderId: number): Promise<OrderWithLinesResponse> {
+    const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+    return handleResponse<OrderWithLinesResponse>(response);
+  },
+
   // --- Master endpoints (v2.0) ---
   async getProducts(): Promise<Product[]> {
     const response = await fetch(`${API_BASE_URL}/masters/products`);
@@ -66,7 +79,6 @@ export const api = {
 
   // --- Admin endpoints ---
   async getStats(): Promise<DashboardStatsResponse> {
-    // <-- 2. この関数を丸ごと追記
     const response = await fetch(`${API_BASE_URL}/admin/stats`);
     return handleResponse<DashboardStatsResponse>(response);
   },

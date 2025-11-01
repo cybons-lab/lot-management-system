@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DashboardStats } from "@/components/DashboardStats"; // 1. DashboardStats をインポート
 import InventoryPage from "@/pages/InventoryPage";
 import AdminPage from "@/pages/AdminPage";
+import OrderPage from "@/pages/OrderPage";
 
 function App() {
   return (
@@ -24,7 +25,8 @@ function App() {
           <Tabs defaultValue="inventory" className="space-y-4">
             <TabsList>
               <TabsTrigger value="inventory">在庫管理</TabsTrigger>
-              <TabsTrigger value="shipping">出荷管理</TabsTrigger>
+              {/* 2. 「shipping」を「order」に変更 */}
+              <TabsTrigger value="order">受注管理</TabsTrigger>
               <TabsTrigger value="alerts">アラート</TabsTrigger>
               <TabsTrigger value="admin" className="text-destructive">
                 管理
@@ -35,13 +37,8 @@ function App() {
               <InventoryPage />
             </TabsContent>
 
-            <TabsContent value="shipping" className="space-y-4">
-              <div className="rounded-lg border bg-card p-6">
-                <h3 className="text-lg font-medium">出荷管理</h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  出荷管理機能は開発中です
-                </p>
-              </div>
+            <TabsContent value="order" className="space-y-4">
+              <OrderPage />
             </TabsContent>
 
             <TabsContent value="alerts" className="space-y-4">
