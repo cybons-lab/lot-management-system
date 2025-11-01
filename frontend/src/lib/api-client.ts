@@ -4,6 +4,7 @@ import type {
   Product,
   Supplier,
   Warehouse,
+  DashboardStatsResponse,
 } from "@/types";
 
 const API_BASE_URL = "http://localhost:8000/api";
@@ -64,6 +65,12 @@ export const api = {
   // (古いShipmentエンドポイントは削除)
 
   // --- Admin endpoints ---
+  async getStats(): Promise<DashboardStatsResponse> {
+    // <-- 2. この関数を丸ごと追記
+    const response = await fetch(`${API_BASE_URL}/admin/stats`);
+    return handleResponse<DashboardStatsResponse>(response);
+  },
+
   async resetDatabase(): Promise<{
     success: boolean;
     message: string;

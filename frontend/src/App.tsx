@@ -1,8 +1,9 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/query-client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DashboardStats } from "@/components/DashboardStats"; // 1. DashboardStats をインポート
 import InventoryPage from "@/pages/InventoryPage";
-import AdminPage from "@/pages/AdminPage"; // 1. AdminPageをインポート
+import AdminPage from "@/pages/AdminPage";
 
 function App() {
   return (
@@ -15,12 +16,16 @@ function App() {
         </header>
 
         <main className="container mx-auto px-4 py-8">
+          {/* 2. DashboardStats をここに追加 */}
+          <div className="mb-8">
+            <DashboardStats />
+          </div>
+
           <Tabs defaultValue="inventory" className="space-y-4">
             <TabsList>
               <TabsTrigger value="inventory">在庫管理</TabsTrigger>
               <TabsTrigger value="shipping">出荷管理</TabsTrigger>
               <TabsTrigger value="alerts">アラート</TabsTrigger>
-              {/* 2. 管理タブのトリガーを追加 */}
               <TabsTrigger value="admin" className="text-destructive">
                 管理
               </TabsTrigger>

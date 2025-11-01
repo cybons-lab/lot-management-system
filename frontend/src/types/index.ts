@@ -46,4 +46,11 @@ export interface Warehouse {
   is_active: number;
 }
 
+// v2.0 API (backend/app/schemas/admin.py)
+export interface DashboardStatsResponse {
+  total_stock: number;
+  total_orders: number;
+  unallocated_orders: number;
+}
+
 // (古いv1.0のShipment型は、v2.0では未実装のため一旦削除)
