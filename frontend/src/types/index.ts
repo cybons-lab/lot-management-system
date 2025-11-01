@@ -1,48 +1,44 @@
 export interface Lot {
   id: number
-  name: string
+  lot_id: string
+  product_name: string
   quantity: number
-  status: LotStatus
-  description?: string
-  created_at: string
-  updated_at: string
+  received_date: string
+  expiry_date?: string
+  status: 'active' | 'shipped' | 'expired'
+  location?: string
+  supplier?: string
+  notes?: string
 }
 
-export type LotStatus = "pending" | "in_progress" | "completed" | "cancelled"
-
-export interface LotCreate {
-  name: string
+export interface CreateLotInput {
+  lot_id: string
+  product_name: string
   quantity: number
-  status?: LotStatus
-  description?: string
+  received_date: string
+  expiry_date?: string
+  location?: string
+  supplier?: string
+  notes?: string
 }
 
-export interface LotUpdate {
-  name?: string
-  quantity?: number
-  status?: LotStatus
-  description?: string
+export interface UpdateLotInput extends Partial<CreateLotInput> {
+  status?: 'active' | 'shipped' | 'expired'
 }
 
-export interface Shipping {
+export interface Shipment {
   id: number
   lot_id: number
-  destination: string
-  shipping_date: string
-  quantity: number
-  status: ShippingStatus
-  tracking_number?: string
+  quantity_shipped: number
+  shipped_date: string
+  destination?: string
+  notes?: string
 }
 
-export type ShippingStatus = "preparing" | "in_transit" | "delivered"
-
-export interface Alert {
-  id: number
-  type: AlertType
+export interface CreateShipmentInput {
   lot_id: number
-  message: string
-  created_at: string
-  acknowledged: boolean
+  quantity_shipped: number
+  shipped_date: string
+  destination?: string
+  notes?: string
 }
-
-export type AlertType = "expired" | "expiring_soon" | "low_stock"
