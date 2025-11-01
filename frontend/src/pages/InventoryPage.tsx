@@ -1,72 +1,162 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query"; // useMutation, useQueryClient は一旦削除
-import { format, parseISO } from "date-fns"; // parseISO を追加
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, parseISO, formatISO } from "date-fns";
 import { Plus, Search } from "lucide-react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
 import { api } from "@/lib/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-// import { Label } from '@/components/ui/label' // フォームを使わないので一旦削除
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  // DialogFooter, // フォームを使わないので一旦削除
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { LotResponse } from "@/types"; // Lot, CreateLotInput -> LotResponse
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"; // 5.1で追加
+import type {
+  LotResponse,
+  LotCreate,
+  Product,
+  Supplier,
+  Warehouse,
+} from "@/types";
+
+// v2.0 LotCreate スキーマに合わせたZodスキーマ
+const lotCreateSchema = z.object({
+  product_code: z.string().min(1, "製品は必須です"),
+  supplier_code: z.string().min(1, "仕入先は必須です"),
+  lot_number: z.string().min(1, "ロット番号は必須です"),
+  receipt_date: z.string().min(1, "入荷日は必須です"),
+  expiry_date: z.string().optional().nullable(),
+  warehouse_code: z.string().optional().nullable(),
+});
+type LotCreateFormInput = z.infer<typeof lotCreateSchema>;
+
+// フォームのデフォルト値
+const defaultValues: LotCreateFormInput = {
+  product_code: "",
+  supplier_code: "",
+  lot_number: "",
+  receipt_date: formatISO(new Date(), { representation: "date" }), // 今日の日付
+  expiry_date: "",
+  warehouse_code: "",
+};
 
 export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  // const queryClient = useQueryClient() // 登録機能を使わないので一旦削除
+  const queryClient = useQueryClient();
 
-  // Fetch lots (v2.0)
-  const { data: lots = [], isLoading } = useQuery({
+  // React Hook Form の初期化
+  const {
+    control,
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm<LotCreateFormInput>({
+    resolver: zodResolver(lotCreateSchema),
+    defaultValues,
+  });
+
+  // --- データフェッチ ---
+
+  // 在庫一覧
+  const { data: lots = [], isLoading: isLoadingLots } = useQuery({
     queryKey: ["lots"],
     queryFn: api.getLots,
   });
 
-  // Create lot mutation (v1.0) - 一旦コメントアウト
-  /*
+  // 製品マスタ
+  const { data: products = [], isLoading: isLoadingProducts } = useQuery({
+    queryKey: ["products"],
+    queryFn: api.getProducts,
+  });
+
+  // 仕入先マスタ
+  const { data: suppliers = [], isLoading: isLoadingSuppliers } = useQuery({
+    queryKey: ["suppliers"],
+    queryFn: api.getSuppliers,
+  });
+
+  // 倉庫マスタ
+  const { data: warehouses = [], isLoading: isLoadingWarehouses } = useQuery({
+    queryKey: ["warehouses"],
+    queryFn: api.getWarehouses,
+  });
+
+  // --- ミューテーション ---
+
+  // ロット作成 (v2.0)
   const createLotMutation = useMutation({
-    mutationFn: api.createLot,
+    mutationFn: (data: LotCreate) => api.createLot(data), // v2.0のapi.createLot
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lots'] })
-      setIsAddDialogOpen(false)
+      queryClient.invalidateQueries({ queryKey: ["lots"] });
+      setIsAddDialogOpen(false);
+      reset(defaultValues);
     },
-  })
-  */
+    onError: (error) => {
+      // TODO: エラーをトースト表示
+      console.error(error);
+      alert(`登録失敗: ${error.message}`);
+    },
+  });
+
+  // --- イベントハンドラ ---
+
+  // フォーム送信
+  const onSubmit = (data: LotCreateFormInput) => {
+    const input: LotCreate = {
+      ...data,
+      // オプショナルなフィールドを undefined に変換
+      expiry_date: data.expiry_date || undefined,
+      warehouse_code: data.warehouse_code || undefined,
+    };
+    createLotMutation.mutate(input);
+  };
+
+  // ダイアログ開閉
+  const onOpenChange = (open: boolean) => {
+    setIsAddDialogOpen(open);
+    if (!open) {
+      reset(defaultValues); // 閉じたらフォームリセット
+    }
+  };
+
+  // --- フィルタリングと表示ロジック ---
 
   // Filter lots (v2.0)
   const filteredLots = lots.filter(
     (lot) =>
-      lot.lot_number.toLowerCase().includes(searchQuery.toLowerCase()) || // lot_id -> lot_number
-      (lot.product_name && // product_name
+      lot.lot_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (lot.product_name &&
         lot.product_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      lot.product_code.toLowerCase().includes(searchQuery.toLowerCase()) // product_code
+      lot.product_code.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handle form submission (v1.0) - 一旦コメントアウト
-  /*
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    // ... (v1.0 logic) ...
-    // createLotMutation.mutate(input)
-  }
-  */
-
-  // Get status badge color (v1.0) - v2.0では期限で色分け
+  // Get status badge color (v2.0)
   const getExpiryStatusColor = (expiryDate: string | undefined | null) => {
     if (!expiryDate) return "bg-gray-100 text-gray-800";
     const daysLeft =
       (parseISO(expiryDate).getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24);
 
-    if (daysLeft <= 0) return "bg-red-100 text-red-800"; // 期限切れ
-    if (daysLeft <= 30) return "bg-yellow-100 text-yellow-800"; // 30日以内
-    return "bg-green-100 text-green-800"; // 正常
+    if (daysLeft <= 0) return "bg-red-100 text-red-800";
+    if (daysLeft <= 30) return "bg-yellow-100 text-yellow-800";
+    return "bg-green-100 text-green-800";
   };
 
   return (
@@ -79,7 +169,7 @@ export default function InventoryPage() {
           </p>
         </div>
 
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <Dialog open={isAddDialogOpen} onOpenChange={onOpenChange}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -87,19 +177,159 @@ export default function InventoryPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
-            {/* <form onSubmit={handleSubmit}> */}
-            <DialogHeader>
-              <DialogTitle>新規ロット登録</DialogTitle>
-              <DialogDescription>
-                （この機能はv2.0 APIに合わせて現在改修中です）
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <p className="text-sm text-muted-foreground">
-                次のステップで、製品・仕入先・倉庫を選択するドロップダウンを実装します。
-              </p>
-            </div>
-            {/* </form> */}
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <DialogHeader>
+                <DialogTitle>新規ロット登録</DialogTitle>
+                <DialogDescription>
+                  新しいロット情報を入力してください
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid gap-4 py-4">
+                {/* 製品 (Select) */}
+                <div className="grid gap-2">
+                  <Label htmlFor="product_code">製品 *</Label>
+                  <Controller
+                    name="product_code"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={isLoadingProducts}>
+                        <SelectTrigger id="product_code">
+                          <SelectValue placeholder="製品を選択..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {products.map((p) => (
+                            <SelectItem
+                              key={p.product_code}
+                              value={p.product_code}>
+                              {p.product_code} - {p.product_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.product_code && (
+                    <p className="text-sm text-destructive">
+                      {errors.product_code.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* 仕入先 (Select) */}
+                <div className="grid gap-2">
+                  <Label htmlFor="supplier_code">仕入先 *</Label>
+                  <Controller
+                    name="supplier_code"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={isLoadingSuppliers}>
+                        <SelectTrigger id="supplier_code">
+                          <SelectValue placeholder="仕入先を選択..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {suppliers.map((s) => (
+                            <SelectItem
+                              key={s.supplier_code}
+                              value={s.supplier_code}>
+                              {s.supplier_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.supplier_code && (
+                    <p className="text-sm text-destructive">
+                      {errors.supplier_code.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* ロット番号 (Input) */}
+                <div className="grid gap-2">
+                  <Label htmlFor="lot_number">ロット番号 *</Label>
+                  <Input id="lot_number" {...register("lot_number")} />
+                  {errors.lot_number && (
+                    <p className="text-sm text-destructive">
+                      {errors.lot_number.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* 入荷日 (Input type="date") */}
+                <div className="grid gap-2">
+                  <Label htmlFor="receipt_date">入荷日 *</Label>
+                  <Input
+                    id="receipt_date"
+                    type="date"
+                    {...register("receipt_date")}
+                  />
+                  {errors.receipt_date && (
+                    <p className="text-sm text-destructive">
+                      {errors.receipt_date.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* 有効期限 (Input type="date") */}
+                <div className="grid gap-2">
+                  <Label htmlFor="expiry_date">有効期限</Label>
+                  <Input
+                    id="expiry_date"
+                    type="date"
+                    {...register("expiry_date")}
+                  />
+                </div>
+
+                {/* 倉庫 (Select) */}
+                <div className="grid gap-2">
+                  <Label htmlFor="warehouse_code">倉庫</Label>
+                  <Controller
+                    name="warehouse_code"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? ""}
+                        disabled={isLoadingWarehouses}>
+                        <SelectTrigger id="warehouse_code">
+                          <SelectValue placeholder="倉庫を選択..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">（指定なし）</SelectItem>
+                          {warehouses.map((w) => (
+                            <SelectItem
+                              key={w.warehouse_code}
+                              value={w.warehouse_code}>
+                              {w.warehouse_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}>
+                  キャンセル
+                </Button>
+                <Button type="submit" disabled={createLotMutation.isPending}>
+                  {createLotMutation.isPending ? "登録中..." : "登録"}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -109,7 +339,7 @@ export default function InventoryPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="ロット番号、製品名、製品コードで検索..." // 検索対象を明記
+            placeholder="ロット番号、製品名、製品コードで検索..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8"
@@ -122,6 +352,7 @@ export default function InventoryPage() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
+              {/* (テーブルヘッダは変更なし) */}
               <tr className="border-b bg-muted/50">
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   ロット番号
@@ -147,7 +378,7 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
+              {isLoadingLots ? ( // isLoading -> isLoadingLots
                 <tr>
                   <td colSpan={7} className="h-24 text-center">
                     読み込み中...
@@ -160,6 +391,7 @@ export default function InventoryPage() {
                   </td>
                 </tr>
               ) : (
+                // (テーブルボディのmapロジックはステップ4で完了しているので変更なし)
                 filteredLots.map((lot) => (
                   <tr key={lot.id} className="border-b">
                     <td className="p-4 align-middle font-medium">
@@ -176,7 +408,6 @@ export default function InventoryPage() {
                       {lot.current_stock}
                     </td>
                     <td className="p-4 align-middle">
-                      {/* date-fns v4 は parseISO を使います */}
                       {format(parseISO(lot.receipt_date), "yyyy/MM/dd")}
                     </td>
                     <td className="p-4 align-middle">
