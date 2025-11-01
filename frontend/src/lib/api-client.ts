@@ -1,24 +1,21 @@
 import type {
-  Lot,
-  CreateLotInput,
-  UpdateLotInput,
-  Shipment,
-  CreateShipmentInput,
+  LotResponse, // Lot -> LotResponse
+  LotCreate, // CreateLotInput -> LotCreate
+  Product,
+  Supplier,
+  Warehouse,
 } from "@/types";
 
 const API_BASE_URL = "http://localhost:8000/api";
 
-// レスポンス処理の型を汎用的にします
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response
       .json()
       .catch(() => ({ detail: "Unknown error" }));
-    // v2.0のResponseBase形式に対応
-    const message = error.detail || error.message || "API request failed";
+    const message = error.detail || error.message || "API request failed"; // v2.0のエラー形式に対応
     throw new Error(message);
   }
-  // 204 No Content (DELETEなど) の場合は、nullを返す
   if (response.status === 204) {
     return null as T;
   }
@@ -26,64 +23,52 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 export const api = {
-  // Lot endpoints (v1.0のまま - いずれv2.0用に修正が必要)
-  async getLots(): Promise<Lot[]> {
-    const response = await fetch(`${API_BASE_URL}/lots`);
-    return handleResponse<Lot[]>(response);
+  // --- Lot endpoints (v2.0) ---
+  async getLots(): Promise<LotResponse[]> {
+    const response = await fetch(`${API_BASE_URL}/lots?with_stock=true`); // ?with_stock=true をデフォルトに
+    return handleResponse<LotResponse[]>(response);
   },
 
-  async getLot(id: number): Promise<Lot> {
+  async getLot(id: number): Promise<LotResponse> {
     const response = await fetch(`${API_BASE_URL}/lots/${id}`);
-    return handleResponse<Lot>(response);
+    return handleResponse<LotResponse>(response);
   },
 
-  async createLot(data: CreateLotInput): Promise<Lot> {
+  async createLot(data: LotCreate): Promise<LotResponse> {
     const response = await fetch(`${API_BASE_URL}/lots`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
-    return handleResponse<Lot>(response);
+    return handleResponse<LotResponse>(response);
   },
 
-  async updateLot(id: number, data: UpdateLotInput): Promise<Lot> {
-    const response = await fetch(`${API_BASE_URL}/lots/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    return handleResponse<Lot>(response);
+  // updateLot, deleteLot は一旦省略 (v2.0スキーマに合わせる必要あり)
+
+  // --- Master endpoints (v2.0) ---
+  async getProducts(): Promise<Product[]> {
+    const response = await fetch(`${API_BASE_URL}/masters/products`);
+    return handleResponse<Product[]>(response);
   },
 
-  async deleteLot(id: number): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/lots/${id}`, {
-      method: "DELETE",
-    });
-    await handleResponse<null>(response);
+  async getSuppliers(): Promise<Supplier[]> {
+    const response = await fetch(`${API_BASE_URL}/masters/suppliers`);
+    return handleResponse<Supplier[]>(response);
   },
 
-  // Shipment endpoints (v1.0のまま)
-  async getShipments(): Promise<Shipment[]> {
-    const response = await fetch(`${API_BASE_URL}/shipments`);
-    return handleResponse<Shipment[]>(response);
+  async getWarehouses(): Promise<Warehouse[]> {
+    const response = await fetch(`${API_BASE_URL}/masters/warehouses`);
+    return handleResponse<Warehouse[]>(response);
   },
 
-  async createShipment(data: CreateShipmentInput): Promise<Shipment> {
-    const response = await fetch(`${API_BASE_URL}/shipments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    return handleResponse<Shipment>(response);
-  },
+  // (古いShipmentエンドポイントは削除)
 
-  // --- v2.0 Admin endpoints (ここから追加) ---
+  // --- Admin endpoints ---
   async resetDatabase(): Promise<{
     success: boolean;
     message: string;
     data: any;
   }> {
-    // エンドポイントを修正 (reset-db -> reset-database)
     const response = await fetch(`${API_BASE_URL}/admin/reset-database`, {
       method: "POST",
     });

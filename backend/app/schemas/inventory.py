@@ -3,9 +3,9 @@
 在庫関連のPydanticスキーマ
 """
 
-from pydantic import Field
-from typing import Optional
 from datetime import date, datetime
+from typing import Optional
+
 from .base import BaseSchema, TimestampMixin
 
 
@@ -42,6 +42,7 @@ class LotUpdate(BaseSchema):
 class LotResponse(LotBase, TimestampMixin):
     id: int
     current_stock: Optional[float] = None  # 現在在庫数量
+    product_name: Optional[str] = None  # <-- この行を追加
 
 
 # --- StockMovement ---
@@ -110,6 +111,7 @@ class ReceiptLineResponse(ReceiptLineBase):
 # --- Receipt (Header + Lines) ---
 class ReceiptCreateRequest(BaseSchema):
     """入荷伝票作成リクエスト(ヘッダー+明細)"""
+
     receipt_no: str
     supplier_code: str
     warehouse_code: str
@@ -121,6 +123,7 @@ class ReceiptCreateRequest(BaseSchema):
 
 class ReceiptResponse(ReceiptHeaderResponse):
     """入荷伝票レスポンス"""
+
     lines: list[ReceiptLineResponse] = []
 
 

@@ -1,34 +1,35 @@
-import { useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { format } from 'date-fns'
-import { Plus, Search } from 'lucide-react'
-import { api } from '@/lib/api-client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query"; // useMutation, useQueryClient は一旦削除
+import { format, parseISO } from "date-fns"; // parseISO を追加
+import { Plus, Search } from "lucide-react";
+import { api } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+// import { Label } from '@/components/ui/label' // フォームを使わないので一旦削除
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+  // DialogFooter, // フォームを使わないので一旦削除
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import type { Lot, CreateLotInput } from '@/types'
+} from "@/components/ui/dialog";
+import type { LotResponse } from "@/types"; // Lot, CreateLotInput -> LotResponse
 
 export default function InventoryPage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const queryClient = useQueryClient()
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  // const queryClient = useQueryClient() // 登録機能を使わないので一旦削除
 
-  // Fetch lots
+  // Fetch lots (v2.0)
   const { data: lots = [], isLoading } = useQuery({
-    queryKey: ['lots'],
+    queryKey: ["lots"],
     queryFn: api.getLots,
-  })
+  });
 
-  // Create lot mutation
+  // Create lot mutation (v1.0) - 一旦コメントアウト
+  /*
   const createLotMutation = useMutation({
     mutationFn: api.createLot,
     onSuccess: () => {
@@ -36,47 +37,37 @@ export default function InventoryPage() {
       setIsAddDialogOpen(false)
     },
   })
+  */
 
-  // Filter lots based on search query
+  // Filter lots (v2.0)
   const filteredLots = lots.filter(
     (lot) =>
-      lot.lot_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lot.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lot.status.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+      lot.lot_number.toLowerCase().includes(searchQuery.toLowerCase()) || // lot_id -> lot_number
+      (lot.product_name && // product_name
+        lot.product_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      lot.product_code.toLowerCase().includes(searchQuery.toLowerCase()) // product_code
+  );
 
-  // Handle form submission
+  // Handle form submission (v1.0) - 一旦コメントアウト
+  /*
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const formData = new FormData(e.currentTarget)
-    
-    const input: CreateLotInput = {
-      lot_id: formData.get('lot_id') as string,
-      product_name: formData.get('product_name') as string,
-      quantity: parseInt(formData.get('quantity') as string),
-      received_date: formData.get('received_date') as string,
-      expiry_date: formData.get('expiry_date') as string || undefined,
-      location: formData.get('location') as string || undefined,
-      supplier: formData.get('supplier') as string || undefined,
-      notes: formData.get('notes') as string || undefined,
-    }
-
-    createLotMutation.mutate(input)
+    // ... (v1.0 logic) ...
+    // createLotMutation.mutate(input)
   }
+  */
 
-  // Get status badge color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800'
-      case 'shipped':
-        return 'bg-blue-100 text-blue-800'
-      case 'expired':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
+  // Get status badge color (v1.0) - v2.0では期限で色分け
+  const getExpiryStatusColor = (expiryDate: string | undefined | null) => {
+    if (!expiryDate) return "bg-gray-100 text-gray-800";
+    const daysLeft =
+      (parseISO(expiryDate).getTime() - new Date().getTime()) /
+      (1000 * 60 * 60 * 24);
+
+    if (daysLeft <= 0) return "bg-red-100 text-red-800"; // 期限切れ
+    if (daysLeft <= 30) return "bg-yellow-100 text-yellow-800"; // 30日以内
+    return "bg-green-100 text-green-800"; // 正常
+  };
 
   return (
     <div className="space-y-6">
@@ -84,10 +75,10 @@ export default function InventoryPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight">在庫一覧</h2>
           <p className="text-muted-foreground">
-            ロット情報を管理します
+            現在庫のあるロット情報をFEFO（有効期限順）で表示します
           </p>
         </div>
-        
+
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -96,71 +87,19 @@ export default function InventoryPage() {
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[500px]">
-            <form onSubmit={handleSubmit}>
-              <DialogHeader>
-                <DialogTitle>新規ロット登録</DialogTitle>
-                <DialogDescription>
-                  新しいロット情報を入力してください
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="lot_id">ロットID *</Label>
-                  <Input id="lot_id" name="lot_id" required />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="product_name">製品名 *</Label>
-                  <Input id="product_name" name="product_name" required />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="quantity">数量 *</Label>
-                  <Input
-                    id="quantity"
-                    name="quantity"
-                    type="number"
-                    min="1"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="received_date">入荷日 *</Label>
-                  <Input
-                    id="received_date"
-                    name="received_date"
-                    type="date"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="expiry_date">有効期限</Label>
-                  <Input id="expiry_date" name="expiry_date" type="date" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="location">保管場所</Label>
-                  <Input id="location" name="location" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="supplier">仕入先</Label>
-                  <Input id="supplier" name="supplier" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="notes">備考</Label>
-                  <Input id="notes" name="notes" />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAddDialogOpen(false)}
-                >
-                  キャンセル
-                </Button>
-                <Button type="submit" disabled={createLotMutation.isPending}>
-                  {createLotMutation.isPending ? '登録中...' : '登録'}
-                </Button>
-              </DialogFooter>
-            </form>
+            {/* <form onSubmit={handleSubmit}> */}
+            <DialogHeader>
+              <DialogTitle>新規ロット登録</DialogTitle>
+              <DialogDescription>
+                （この機能はv2.0 APIに合わせて現在改修中です）
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                次のステップで、製品・仕入先・倉庫を選択するドロップダウンを実装します。
+              </p>
+            </div>
+            {/* </form> */}
           </DialogContent>
         </Dialog>
       </div>
@@ -170,7 +109,7 @@ export default function InventoryPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="ロットID、製品名、ステータスで検索..."
+            placeholder="ロット番号、製品名、製品コードで検索..." // 検索対象を明記
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-8"
@@ -178,20 +117,20 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table (v2.0) */}
       <div className="rounded-md border">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  ロットID
+                  ロット番号
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   製品名
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  数量
+                  現在在庫
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   入荷日
@@ -200,10 +139,10 @@ export default function InventoryPage() {
                   有効期限
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  ステータス
+                  倉庫
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  保管場所
+                  仕入先
                 </th>
               </tr>
             </thead>
@@ -224,33 +163,39 @@ export default function InventoryPage() {
                 filteredLots.map((lot) => (
                   <tr key={lot.id} className="border-b">
                     <td className="p-4 align-middle font-medium">
-                      {lot.lot_id}
-                    </td>
-                    <td className="p-4 align-middle">{lot.product_name}</td>
-                    <td className="p-4 align-middle">{lot.quantity}</td>
-                    <td className="p-4 align-middle">
-                      {format(new Date(lot.received_date), 'yyyy/MM/dd')}
+                      {lot.lot_number}
                     </td>
                     <td className="p-4 align-middle">
-                      {lot.expiry_date
-                        ? format(new Date(lot.expiry_date), 'yyyy/MM/dd')
-                        : '-'}
+                      {lot.product_name || (
+                        <span className="text-muted-foreground italic">
+                          {lot.product_code}
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4 align-middle font-semibold">
+                      {lot.current_stock}
                     </td>
                     <td className="p-4 align-middle">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusColor(
-                          lot.status
-                        )}`}
-                      >
-                        {lot.status === 'active'
-                          ? '在庫中'
-                          : lot.status === 'shipped'
-                          ? '出荷済み'
-                          : '期限切れ'}
-                      </span>
+                      {/* date-fns v4 は parseISO を使います */}
+                      {format(parseISO(lot.receipt_date), "yyyy/MM/dd")}
                     </td>
                     <td className="p-4 align-middle">
-                      {lot.location || '-'}
+                      {lot.expiry_date ? (
+                        <span
+                          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getExpiryStatusColor(
+                            lot.expiry_date
+                          )}`}>
+                          {format(parseISO(lot.expiry_date), "yyyy/MM/dd")}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </td>
+                    <td className="p-4 align-middle">
+                      {lot.warehouse_code || "-"}
+                    </td>
+                    <td className="p-4 align-middle">
+                      {lot.supplier_code || "-"}
                     </td>
                   </tr>
                 ))
@@ -260,5 +205,5 @@ export default function InventoryPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
