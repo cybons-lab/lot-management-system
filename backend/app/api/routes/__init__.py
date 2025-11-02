@@ -5,7 +5,7 @@ API Routes Package
 """
 
 from .admin import router as admin_router
-from .forecasts import router as forecast_router
+from .forecast import router as forecast_router  # 🔽 [追加]
 from .integration import router as integration_router
 from .lots import router as lots_router
 from .masters import router as masters_router
@@ -19,5 +19,5 @@ __all__ = [
     "orders_router",
     "integration_router",
     "admin_router",
-    "forecast_router",
+    "forecast_router",  # 🔽 [追加]
 ]

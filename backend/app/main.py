@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
     admin_router,
-    forecast_router,
+    forecast_router,  # 🔽 [追加]
     integration_router,
     lots_router,
     masters_router,
@@ -64,7 +64,7 @@ app.include_router(receipts_router, prefix=settings.API_PREFIX)
 app.include_router(orders_router, prefix=settings.API_PREFIX)
 app.include_router(integration_router, prefix=settings.API_PREFIX)
 app.include_router(admin_router, prefix=settings.API_PREFIX)
-app.include_router(forecast_router, prefix=settings.API_PREFIX)
+app.include_router(forecast_router, prefix=settings.API_PREFIX)  # 🔽 [追加]
 
 
 # ルートエンドポイント

@@ -1,85 +1,155 @@
+# backend/app/schemas/forecast.py
+"""
+フォーキャスト関連のPydanticスキーマ
+"""
+
 from datetime import date, datetime
-from typing import Literal, Optional
+from typing import Optional, List, Literal
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
-
-Granularity = Literal["daily", "dekad", "monthly"]
+from .base import BaseSchema, TimestampMixin
 
 
-class ForecastBase(BaseModel):
+# --- Forecast Basic ---
+class ForecastBase(BaseSchema):
+    """フォーキャスト基本スキーマ"""
+    
+    forecast_id: str  # UUID等の一意識別子
     product_id: str
     client_id: str
     supplier_id: str
-
-    granularity: Granularity
+    granularity: Literal["daily", "dekad", "monthly"]
+    qty_forecast: int
+    version_no: int = 1
+    source_system: str = "external"
+    is_active: bool = True
+    
+    # 粒度別の期間フィールド（排他的）
     date_day: Optional[date] = None
-    date_dekad_start: Optional[date] = None  # 1/11/21 のみ許可
+    date_dekad_start: Optional[date] = None
     year_month: Optional[str] = None  # 'YYYY-MM'
 
-    qty_forecast: int
 
+class ForecastCreate(BaseSchema):
+    """フォーキャスト作成リクエスト"""
+    
+    forecast_id: str
+    product_id: str
+    client_id: str
+    supplier_id: str
+    granularity: Literal["daily", "dekad", "monthly"]
+    qty_forecast: int
     version_no: int = 1
     version_issued_at: datetime
     source_system: str = "external"
     is_active: bool = True
-
-    # --- 単独フィールドの簡易チェック ---
-
-    @field_validator("year_month")
-    @classmethod
-    def validate_year_month(cls, v: Optional[str]) -> Optional[str]:
-        if v is None:
-            return v
-        if len(v) != 7 or v[4] != "-":
-            raise ValueError("year_month must be 'YYYY-MM'")
-        # 追加で 01-12 の範囲を軽くチェックしてもOK
-        mm = v[5:7]
-        if mm < "01" or mm > "12":
-            raise ValueError("year_month month part must be 01-12")
-        return v
-
-    @field_validator("date_dekad_start")
-    @classmethod
-    def validate_dekad_start(cls, v: Optional[date]) -> Optional[date]:
-        if v is None:
-            return v
-        if v.day not in (1, 11, 21):
-            raise ValueError("dekad start must be 1, 11 or 21")
-        return v
-
-    # --- 相互排他チェック（Pydantic v2 は model_validator で） ---
-
-    @model_validator(mode="after")
-    def validate_period_key_exclusivity(self):
-        g = self.granularity
-        dd = self.date_day
-        dk = self.date_dekad_start
-        ym = self.year_month
-
-        if g == "daily":
-            if not dd or dk or ym:
-                raise ValueError(
-                    "daily requires ONLY date_day (date_dekad_start/year_month must be null)"
-                )
-        elif g == "dekad":
-            if not dk or dd or ym:
-                raise ValueError(
-                    "dekad requires ONLY date_dekad_start (date_day/year_month must be null)"
-                )
-        elif g == "monthly":
-            if not ym or dd or dk:
-                raise ValueError(
-                    "monthly requires ONLY year_month (date_day/date_dekad_start must be null)"
-                )
-        return self
+    
+    # 粒度別の期間フィールド
+    date_day: Optional[date] = None
+    date_dekad_start: Optional[date] = None
+    year_month: Optional[str] = None
 
 
-class ForecastCreate(ForecastBase):
-    # 入力スキーマ。特に追加なし
-    pass
+class ForecastUpdate(BaseSchema):
+    """フォーキャスト更新リクエスト"""
+    
+    qty_forecast: Optional[int] = None
+    is_active: Optional[bool] = None
 
 
-class ForecastRead(ForecastBase):
-    # 出力スキーマ（ORM → Schema 変換を許可）
-    forecast_id: str
-    model_config = ConfigDict(from_attributes=True)
+class ForecastResponse(ForecastBase, TimestampMixin):
+    """フォーキャストレスポンス"""
+    
+    id: int
+    version_issued_at: datetime
+
+
+# --- Bulk Import ---
+class ForecastBulkImportRequest(BaseSchema):
+    """一括インポートリクエスト"""
+    
+    version_no: int
+    version_issued_at: datetime
+    source_system: str = "external"
+    deactivate_old_version: bool = True  # 旧バージョンを自動的に非アクティブ化
+    forecasts: List[ForecastCreate]
+
+
+class ForecastBulkImportResponse(BaseSchema):
+    """一括インポートレスポンス"""
+    
+    success: bool
+    message: str
+    version_no: int
+    imported_count: int
+    skipped_count: int
+    error_count: int
+    error_details: Optional[str] = None
+
+
+# --- Matching ---
+class ForecastMatchRequest(BaseSchema):
+    """マッチングリクエスト"""
+    
+    order_id: Optional[int] = None  # 特定受注のみ
+    order_ids: Optional[List[int]] = None  # 複数受注
+    date_from: Optional[date] = None  # 期間指定
+    date_to: Optional[date] = None
+    force_rematch: bool = False  # 既にマッチ済みでも再マッチング
+
+
+class ForecastMatchResult(BaseSchema):
+    """個別マッチング結果"""
+    
+    order_line_id: int
+    order_no: str
+    line_no: int
+    product_code: str
+    matched: bool
+    forecast_id: Optional[int] = None
+    forecast_granularity: Optional[str] = None
+    forecast_match_status: Optional[str] = None
+    forecast_qty: Optional[float] = None
+
+
+class ForecastMatchResponse(BaseSchema):
+    """マッチングレスポンス"""
+    
+    success: bool
+    message: str
+    total_lines: int
+    matched_lines: int
+    unmatched_lines: int
+    results: List[ForecastMatchResult] = []
+
+
+# --- Version Management ---
+class ForecastVersionInfo(BaseSchema):
+    """バージョン情報"""
+    
+    version_no: int
+    version_issued_at: datetime
+    is_active: bool
+    forecast_count: int
+    source_system: str
+
+
+class ForecastVersionListResponse(BaseSchema):
+    """バージョン一覧レスポンス"""
+    
+    versions: List[ForecastVersionInfo]
+
+
+class ForecastActivateRequest(BaseSchema):
+    """バージョンアクティブ化リクエスト"""
+    
+    version_no: int
+    deactivate_others: bool = True  # 他のバージョンを非アクティブ化
+
+
+class ForecastActivateResponse(BaseSchema):
+    """バージョンアクティブ化レスポンス"""
+    
+    success: bool
+    message: str
+    activated_version: int
+    deactivated_versions: List[int] = []
