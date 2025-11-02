@@ -76,6 +76,79 @@ def list_orders(
     return orders
 
 
+# ===================================================================
+# 🔽 [修正] /orders-with-allocations (静的パス) を
+# 　 /{order_id} (動的パス) より「前」に定義する
+# ===================================================================
+@router.get("/orders-with-allocations", response_model=OrdersWithAllocResponse)
+def get_orders_with_allocations(db: Session = Depends(get_db)):
+    """
+    倉庫配分情報を含む受注明細一覧を取得
+    """
+    query = (
+        db.query(OrderLine)
+        .options(
+            # 倉庫配分 (LEFT JOIN)
+            selectinload(OrderLine.warehouse_allocations).joinedload(
+                OrderLineWarehouseAllocation.warehouse
+            ),
+            # 受注ヘッダ (INNER JOIN - 必須)
+            joinedload(OrderLine.order),
+            # 🔽 [修正] 'outerjoin=True' ではなく 'innerjoin=False' が正しい構文
+            # 製品マスタ (LEFT JOIN)
+            joinedload(OrderLine.product, innerjoin=False),
+            # フォーキャスト (LEFT JOIN)
+            joinedload(OrderLine.forecast, innerjoin=False),
+        )
+        .order_by(OrderLine.id)
+    )
+
+    lines: List[OrderLine] = query.all()
+
+    items: List[OrderLineOut] = []
+    for line in lines:
+        allocs: List[WarehouseAllocOut] = []
+
+        if line.warehouse_allocations:
+            for a in line.warehouse_allocations:
+                if a.warehouse:
+                    allocs.append(
+                        WarehouseAllocOut(
+                            warehouse_code=a.warehouse.warehouse_code,
+                            quantity=a.quantity,
+                        )
+                    )
+
+        # 🔽 line.product や line.order が None の可能性も考慮 (innerjoin=False のため)
+        product_name = (
+            line.product.product_name if line.product else "(製品マスタ未登録)"
+        )
+        customer_code = line.order.customer_code if line.order else "(受注ヘッダなし)"
+
+        supplier_code = line.forecast.supplier_id if line.forecast else ""
+        if line.forecast:
+            supplier_code = line.forecast.supplier_id
+
+        items.append(
+            OrderLineOut(
+                id=line.id,
+                product_code=line.product_code,
+                product_name=product_name,
+                customer_code=customer_code,
+                supplier_code=supplier_code,
+                quantity=line.quantity,
+                unit=line.unit or "EA",
+                warehouse_allocations=allocs,
+                related_lots=[],
+            )
+        )
+
+    return OrdersWithAllocResponse(items=items)
+
+
+# ===================================================================
+# 🔽 [修正] /{order_id} (動的パス) は静的パスの「後」に定義する
+# ===================================================================
 @router.get("/{order_id}", response_model=OrderWithLinesResponse)
 def get_order(order_id: int, db: Session = Depends(get_db)):
     """受注詳細取得(明細含む)"""
@@ -317,72 +390,8 @@ def cancel_allocation(allocation_id: int, db: Session = Depends(get_db)):
     return None
 
 
-# 🔽 [修正] 倉庫配分(Warehouse Allocation) 関連 🔽
-
-
-@router.get("/orders-with-allocations", response_model=OrdersWithAllocResponse)
-def get_orders_with_allocations(db: Session = Depends(get_db)):
-    """
-    倉庫配分情報を含む受注明細一覧を取得
-    """
-    query = (
-        db.query(OrderLine)
-        .options(
-            # 倉庫配分 (LEFT JOIN)
-            selectinload(OrderLine.warehouse_allocations).joinedload(
-                OrderLineWarehouseAllocation.warehouse
-            ),
-            # 受注ヘッダ (INNER JOIN - 必須)
-            joinedload(OrderLine.order),
-            # 製品マスタ (LEFT JOIN - 必須ではないが、あったほうが良い)
-            joinedload(OrderLine.product, outerjoin=True),  # ⬅️ [修正]
-            # フォーキャスト (LEFT JOIN - 必須ではない)
-            joinedload(OrderLine.forecast, outerjoin=True),  # ⬅️ [修正]
-        )
-        .order_by(OrderLine.id)
-    )
-
-    lines: List[OrderLine] = query.all()
-
-    items: List[OrderLineOut] = []
-    for line in lines:
-        allocs: List[WarehouseAllocOut] = []
-
-        if line.warehouse_allocations:
-            for a in line.warehouse_allocations:
-                if a.warehouse:
-                    allocs.append(
-                        WarehouseAllocOut(
-                            warehouse_code=a.warehouse.warehouse_code,
-                            quantity=a.quantity,
-                        )
-                    )
-
-        # 🔽 [修正] line.product や line.order が None の可能性も考慮 (outerjoinのため)
-        product_name = (
-            line.product.product_name if line.product else "(製品マスタ未登録)"
-        )
-        customer_code = line.order.customer_code if line.order else "(受注ヘッダなし)"
-
-        supplier_code = None
-        if line.forecast:
-            supplier_code = line.forecast.supplier_id
-
-        items.append(
-            OrderLineOut(
-                id=line.id,
-                product_code=line.product_code,
-                product_name=product_name,
-                customer_code=customer_code,
-                supplier_code=supplier_code,
-                quantity=line.quantity,
-                unit=line.unit or "EA",
-                warehouse_allocations=allocs,
-                related_lots=[],
-            )
-        )
-
-    return OrdersWithAllocResponse(items=items)
+# 🔽 倉庫配分(Warehouse Allocation) 関連 🔽
+# (get_orders_with_allocations は上記で移動済み)
 
 
 @router.post("/{order_line_id}/warehouse-allocations", response_model=ResponseBase)

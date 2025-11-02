@@ -184,7 +184,7 @@ class OrderLineOut(BaseSchema):
     product_code: str
     product_name: str
     customer_code: str
-    supplier_code: str
+    supplier_code: Optional[str] = None
     quantity: float
     unit: str
     warehouse_allocations: list[WarehouseAllocOut] = []
