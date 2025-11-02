@@ -4,7 +4,7 @@ import type {
   LotCreate,
   Product,
   Supplier,
-  OldWarehouse, // 既存の /masters/warehouses 用
+  OldWarehouse,
   DashboardStats,
   OrderResponse,
   OrderWithLinesResponse,
@@ -47,7 +47,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
 }
 
 /**
- * 汎用API呼び出し (GET, POST)
+ * 汎用API呼び出し
  */
 async function fetchApi<T>(
   endpoint: string,
@@ -67,6 +67,55 @@ async function fetchApi<T>(
   return handleResponse<T>(response);
 }
 
+// ===== ロット引当関連の型定義 =====
+export interface LotCandidate {
+  lot_id: number;
+  lot_code: string;
+  available_qty: number;
+  unit: string;
+  warehouse_code: string;
+  expiry_date?: string;
+  mfg_date?: string;
+}
+
+export interface AllocatedLot {
+  allocation_id: number;
+  lot_id: number;
+  lot_code: string;
+  allocated_qty: number;
+  warehouse_code: string;
+  expiry_date?: string;
+}
+
+export interface LotAllocationRequest {
+  allocations: Array<{
+    lot_id: number;
+    qty: number;
+  }>;
+}
+
+export interface LotAllocationResponse {
+  success: boolean;
+  message: string;
+  applied: Array<{
+    lot_id: number;
+    qty: number;
+    allocation_id: number;
+  }>;
+  order_line: any;
+}
+
+export interface AllocationCancelRequest {
+  allocation_id?: number;
+  all?: boolean;
+}
+
+export interface AllocationCancelResponse {
+  success: boolean;
+  message: string;
+  order_line: any;
+}
+
 /**
  * APIクライアント
  */
@@ -75,8 +124,6 @@ export const api = {
   getLots: () =>
     fetchApi<LotResponse[]>("/lots", {
       method: "GET",
-      // 🔽 クエリパラメータはURLに含める (v2.0では ?with_stock=true がデフォルト)
-      // fetchApi("/lots?with_stock=true", { method: "GET" })
     }),
   getLot: (id: number) =>
     fetchApi<LotResponse>(`/lots/${id}`, { method: "GET" }),
@@ -175,6 +222,58 @@ export const api = {
     );
   },
 
+  // ===== ロット引当関連のエンドポイント =====
+
+  /**
+   * 受注明細のステータスを更新
+   * ※ サーバ側は `status` フィールドを期待
+   */
+  updateOrderLineStatus: (orderLineId: number, newStatus: string) =>
+    fetchApi<{
+      success: boolean;
+      message: string;
+      order_line_id: number;
+      new_status: string;
+    }>(`/orders/${orderLineId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: newStatus }),
+    }),
+
+  /**
+   * 受注明細に対する引当候補ロットを取得
+   */
+  getCandidateLots: (orderLineId: number) =>
+    fetchApi<{ items: LotCandidate[] }>(
+      `/orders/${orderLineId}/candidate-lots`,
+      {
+        method: "GET",
+      }
+    ),
+
+  /**
+   * ロット引当を実行
+   */
+  createLotAllocations: (orderLineId: number, request: LotAllocationRequest) =>
+    fetchApi<LotAllocationResponse>(`/orders/${orderLineId}/allocations`, {
+      method: "POST",
+      body: JSON.stringify(request),
+    }),
+
+  /**
+   * ロット引当を取消
+   */
+  cancelLotAllocations: (
+    orderLineId: number,
+    request: AllocationCancelRequest
+  ) =>
+    fetchApi<AllocationCancelResponse>(
+      `/orders/${orderLineId}/allocations/cancel`,
+      {
+        method: "POST",
+        body: JSON.stringify(request),
+      }
+    ),
+
   // --- CSV Export Helper ---
   exportToCSV(data: any[], filename: string): void {
     if (!data || data.length === 0) {
@@ -184,23 +283,25 @@ export const api = {
     const headers = Object.keys(data[0]);
     const csvContent = [
       headers.join(","),
-      ...data.map((row) =>
-        headers
-          .map((header) => {
-            const value = row[header];
-            if (value === null || value === undefined) return "";
-            const stringValue = String(value);
-            if (
-              stringValue.includes(",") ||
-              stringValue.includes("\n") ||
-              stringValue.includes('"')
-            ) {
-              return `"${stringValue.replace(/"/g, '""')}"`;
-            }
-            return stringValue;
-          })
-          .join(",")
-      ),
+      data
+        .map((row) =>
+          headers
+            .map((header) => {
+              const value = row[header];
+              if (value === null || value === undefined) return "";
+              const stringValue = String(value);
+              if (
+                stringValue.includes(",") ||
+                stringValue.includes("\n") ||
+                stringValue.includes('"')
+              ) {
+                return `"${stringValue.replace(/"/g, '""')}"`;
+              }
+              return stringValue;
+            })
+            .join(",")
+        )
+        .join("\n"),
     ].join("\n");
 
     const blob = new Blob([`\uFEFF${csvContent}`], {

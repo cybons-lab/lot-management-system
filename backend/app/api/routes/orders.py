@@ -7,7 +7,8 @@ from datetime import date
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import delete, select
+from pydantic import BaseModel
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.api.deps import get_db
@@ -50,6 +51,13 @@ except ImportError:
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 
+# ===== リクエストスキーマ =====
+class StatusUpdateRequest(BaseModel):
+    """ステータス更新用のリクエストボディ"""
+
+    status: str
+
+
 @router.get("", response_model=List[OrderResponse])
 def list_orders(
     skip: int = 0,
@@ -82,23 +90,17 @@ def list_orders(
 # ===================================================================
 @router.get("/orders-with-allocations", response_model=OrdersWithAllocResponse)
 def get_orders_with_allocations(db: Session = Depends(get_db)):
-    """
-    倉庫配分情報を含む受注明細一覧を取得
-    """
+    """倉庫配分情報 + 既引当ロット情報を含む受注明細一覧を取得"""
     query = (
         db.query(OrderLine)
         .options(
-            # 倉庫配分 (LEFT JOIN)
             selectinload(OrderLine.warehouse_allocations).joinedload(
                 OrderLineWarehouseAllocation.warehouse
             ),
-            # 受注ヘッダ (INNER JOIN - 必須)
             joinedload(OrderLine.order),
-            # 🔽 [修正] 'outerjoin=True' ではなく 'innerjoin=False' が正しい構文
-            # 製品マスタ (LEFT JOIN)
             joinedload(OrderLine.product, innerjoin=False),
-            # フォーキャスト (LEFT JOIN)
             joinedload(OrderLine.forecast, innerjoin=False),
+            selectinload(OrderLine.allocations).joinedload(Allocation.lot),  # ← 追加
         )
         .order_by(OrderLine.id)
     )
@@ -107,8 +109,8 @@ def get_orders_with_allocations(db: Session = Depends(get_db)):
 
     items: List[OrderLineOut] = []
     for line in lines:
+        # 倉庫配分情報
         allocs: List[WarehouseAllocOut] = []
-
         if line.warehouse_allocations:
             for a in line.warehouse_allocations:
                 if a.warehouse:
@@ -119,15 +121,29 @@ def get_orders_with_allocations(db: Session = Depends(get_db)):
                         )
                     )
 
-        # 🔽 line.product や line.order が None の可能性も考慮 (innerjoin=False のため)
         product_name = (
             line.product.product_name if line.product else "(製品マスタ未登録)"
         )
         customer_code = line.order.customer_code if line.order else "(受注ヘッダなし)"
-
         supplier_code = line.forecast.supplier_id if line.forecast else ""
-        if line.forecast:
-            supplier_code = line.forecast.supplier_id
+
+        # ← 既引当ロット情報を追加
+        allocated_lots = []
+        if line.allocations:
+            for alloc in line.allocations:
+                if alloc.lot:
+                    allocated_lots.append(
+                        {
+                            "allocation_id": alloc.id,
+                            "lot_id": alloc.lot.id,
+                            "lot_code": f"{alloc.lot.supplier_code}-{alloc.lot.product_code}-{alloc.lot.lot_number}",
+                            "allocated_qty": alloc.allocated_qty,
+                            "warehouse_code": alloc.lot.warehouse_code or "N/A",
+                            "expiry_date": alloc.lot.expiry_date.isoformat()
+                            if alloc.lot.expiry_date
+                            else None,
+                        }
+                    )
 
         items.append(
             OrderLineOut(
@@ -140,6 +156,7 @@ def get_orders_with_allocations(db: Session = Depends(get_db)):
                 unit=line.unit or "EA",
                 warehouse_allocations=allocs,
                 related_lots=[],
+                allocated_lots=allocated_lots,  # ← 追加
             )
         )
 
@@ -443,3 +460,290 @@ def save_warehouse_allocations(
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"保存に失敗しました: {str(e)}")
+
+
+# ===== ロット候補取得 =====
+@router.get("/{order_line_id}/candidate-lots")
+def get_candidate_lots_for_allocation(
+    order_line_id: int, db: Session = Depends(get_db)
+):
+    """受注明細に対する引当候補ロットを取得"""
+    order_line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
+    if not order_line:
+        raise HTTPException(status_code=404, detail="受注明細が見つかりません")
+
+    # 同じproduct_codeで在庫のあるロットを取得
+    query = (
+        db.query(Lot)
+        .join(LotCurrentStock, Lot.id == LotCurrentStock.lot_id)
+        .filter(
+            and_(
+                Lot.product_code == order_line.product_code,
+                LotCurrentStock.current_quantity > 0,
+            )
+        )
+        .order_by(Lot.expiry_date.asc().nullslast())
+    )
+
+    lots = query.all()
+
+    result = []
+    for lot in lots:
+        current_stock = (
+            db.query(LotCurrentStock).filter(LotCurrentStock.lot_id == lot.id).first()
+        )
+
+        result.append(
+            {
+                "lot_id": lot.id,
+                "lot_code": f"{lot.supplier_code}-{lot.product_code}-{lot.lot_number}",
+                "available_qty": current_stock.current_quantity
+                if current_stock
+                else 0.0,
+                "unit": lot.inventory_unit or order_line.unit or "EA",
+                "warehouse_code": lot.warehouse_code or "N/A",
+                "expiry_date": lot.expiry_date.isoformat() if lot.expiry_date else None,
+                "mfg_date": lot.mfg_date.isoformat() if lot.mfg_date else None,
+            }
+        )
+
+    return {"items": result}
+
+
+# ===== ロット引当実行 =====
+@router.post("/{order_line_id}/allocations")
+def create_lot_allocations(
+    order_line_id: int, request: dict, db: Session = Depends(get_db)
+):
+    """ロット引当を実行（複数ロット対応）"""
+    order_line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
+    if not order_line:
+        raise HTTPException(status_code=404, detail="受注明細が見つかりません")
+
+    allocations_data = request.get("allocations", [])
+    if not allocations_data:
+        raise HTTPException(
+            status_code=422, detail="VALIDATION_ERROR: allocations が空です"
+        )
+
+    applied = []
+
+    try:
+        for alloc in allocations_data:
+            lot_id = alloc.get("lot_id")
+            qty = alloc.get("qty")
+
+            if not lot_id or not qty or qty <= 0:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"VALIDATION_ERROR: 無効な引当データ {alloc}",
+                )
+
+            lot = db.query(Lot).filter(Lot.id == lot_id).first()
+            if not lot:
+                raise HTTPException(
+                    status_code=404, detail=f"ロットID {lot_id} が見つかりません"
+                )
+
+            # 単位チェック
+            lot_unit = lot.inventory_unit or "EA"
+            order_unit = order_line.unit or "EA"
+            if lot_unit != order_unit:
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"VALIDATION_ERROR: 単位不一致 (ロット: {lot_unit}, 受注: {order_unit})",
+                )
+
+            # 在庫チェック
+            current_stock = (
+                db.query(LotCurrentStock)
+                .filter(LotCurrentStock.lot_id == lot_id)
+                .first()
+            )
+
+            if not current_stock or current_stock.current_quantity < qty:
+                avail = current_stock.current_quantity if current_stock else 0.0
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"ALLOCATION_CONFLICT: 在庫不足 (利用可能: {avail}, 要求: {qty})",
+                )
+
+            # 引当レコード作成
+            allocation = Allocation(
+                order_line_id=order_line_id, lot_id=lot_id, allocated_qty=qty
+            )
+            db.add(allocation)
+            db.flush()
+
+            # 在庫変動記録
+            movement = StockMovement(
+                lot_id=lot_id,
+                movement_type="allocate",
+                quantity=-qty,
+                related_id=f"allocation_{allocation.id}",
+            )
+            db.add(movement)
+
+            # 現在在庫更新
+            current_stock.current_quantity -= qty
+
+            applied.append(
+                {"lot_id": lot_id, "qty": qty, "allocation_id": allocation.id}
+            )
+
+        db.commit()
+        db.refresh(order_line)
+
+        return {
+            "success": True,
+            "message": "引当が完了しました",
+            "applied": applied,
+            "order_line": {
+                "id": order_line.id,
+                "product_code": order_line.product_code,
+                "quantity": order_line.quantity,
+                "unit": order_line.unit,
+            },
+        }
+
+    except Exception:
+        db.rollback()
+        raise
+
+
+# ===== 引当取消 =====
+@router.post("/{order_line_id}/allocations/cancel")
+def cancel_lot_allocations(
+    order_line_id: int, request: dict, db: Session = Depends(get_db)
+):
+    """ロット引当を取消"""
+    order_line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
+    if not order_line:
+        raise HTTPException(status_code=404, detail="受注明細が見つかりません")
+
+    allocation_id = request.get("allocation_id")
+    cancel_all = request.get("all", False)
+
+    try:
+        if cancel_all:
+            allocations = (
+                db.query(Allocation)
+                .filter(Allocation.order_line_id == order_line_id)
+                .all()
+            )
+        elif allocation_id:
+            allocation = (
+                db.query(Allocation).filter(Allocation.id == allocation_id).first()
+            )
+            if not allocation:
+                raise HTTPException(
+                    status_code=404, detail="引当レコードが見つかりません"
+                )
+            allocations = [allocation]
+        else:
+            raise HTTPException(
+                status_code=422,
+                detail="VALIDATION_ERROR: allocation_id または all を指定してください",
+            )
+
+        for alloc in allocations:
+            # 在庫変動記録（戻し）
+            movement = StockMovement(
+                lot_id=alloc.lot_id,
+                movement_type="allocate_cancel",
+                quantity=alloc.allocated_qty,
+                related_id=f"cancel_allocation_{alloc.id}",
+            )
+            db.add(movement)
+
+            # 現在在庫更新
+            current_stock = (
+                db.query(LotCurrentStock)
+                .filter(LotCurrentStock.lot_id == alloc.lot_id)
+                .first()
+            )
+            if current_stock:
+                current_stock.current_quantity += alloc.allocated_qty
+
+            db.delete(alloc)
+
+        db.commit()
+        db.refresh(order_line)
+
+        return {
+            "success": True,
+            "message": f"{len(allocations)}件の引当を取消しました",
+            "order_line": {
+                "id": order_line.id,
+                "product_code": order_line.product_code,
+                "quantity": order_line.quantity,
+                "unit": order_line.unit,
+            },
+        }
+
+    except Exception:
+        db.rollback()
+        raise
+
+
+@router.patch("/{order_line_id}/status")
+def update_order_line_status(
+    order_line_id: int, request: StatusUpdateRequest, db: Session = Depends(get_db)
+):
+    """
+    受注明細のステータスを更新
+
+    - 引当完了時に "allocated" に変更
+    - 出荷時に "shipped" に変更
+    """
+    new_status = request.status
+
+    # 受注明細を取得
+    stmt = select(OrderLine).where(OrderLine.id == order_line_id)
+    order_line = db.execute(stmt).scalar_one_or_none()
+
+    if not order_line:
+        raise HTTPException(
+            status_code=404, detail=f"OrderLine {order_line_id} not found"
+        )
+
+    # ステータスの検証
+    valid_statuses = [
+        "open",
+        "allocated",
+        "partially_allocated",
+        "shipped",
+        "completed",
+    ]
+    if new_status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}",
+        )
+
+    # "allocated" に変更する場合、引当数量をチェック
+    if new_status == "allocated":
+        # 引当済み数量を計算
+        stmt_alloc = select(func.sum(Allocation.allocated_qty)).where(
+            Allocation.order_line_id == order_line_id
+        )
+        total_allocated = db.execute(stmt_alloc).scalar() or 0.0
+
+        # 必要数量と比較
+        if total_allocated < order_line.quantity:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot set status to 'allocated': allocated quantity ({total_allocated}) is less than required quantity ({order_line.quantity})",
+            )
+
+    # ステータスを更新
+    order_line.status = new_status
+    db.commit()
+    db.refresh(order_line)
+
+    return {
+        "success": True,
+        "message": f"Order line status updated to '{new_status}'",
+        "order_line_id": order_line_id,
+        "new_status": new_status,
+    }

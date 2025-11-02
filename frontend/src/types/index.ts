@@ -84,7 +84,7 @@ export interface OrderLineResponse {
   forecast_granularity?: string | null;
   forecast_match_status?: string | null;
   forecast_qty?: number | null;
-  forecast_version_no?: number | null; // v2.0では int
+  forecast_version_no?: number | null;
 }
 
 export interface OrderWithLinesResponse extends OrderResponse {
@@ -113,10 +113,6 @@ export interface ResetResponse {
   data?: any;
 }
 
-// ---
-// ここから今回の機能追加分
-// ---
-
 // --- 倉庫配分 (Warehouse Allocation) ---
 
 // 1. 新しい倉庫マスタ (warehouse.id が主キーのもの)
@@ -124,6 +120,7 @@ export interface Warehouse {
   warehouse_code: string;
   warehouse_name: string;
 }
+
 export interface WarehouseListResponse {
   items: Warehouse[];
 }
@@ -144,8 +141,18 @@ export interface OrderLineWithAlloc {
   quantity: number;
   unit: string;
   warehouse_allocations: WarehouseAlloc[];
-  related_lots: any[]; // TODO: ロット引当実装時に定義
+  related_lots: LotCandidate[];
+  allocated_lots: AllocatedLot[];
+
+  // 追加フィールド（モック用）
+  status?: string;
+  order_date?: string;
+  due_date?: string;
+  order_no?: string;
+  forecast_matched?: boolean;
+  forecast_qty?: number;
 }
+
 export interface OrdersWithAllocResponse {
   items: OrderLineWithAlloc[];
 }
@@ -154,9 +161,44 @@ export interface OrdersWithAllocResponse {
 export interface SaveAllocationsRequest {
   allocations: WarehouseAlloc[];
 }
+
 export interface SaveAllocationsResponse {
   success: boolean;
   message: string;
+}
+
+// ===== ロット引当関連の型定義 =====
+
+// 引当候補ロット情報
+export interface LotCandidate {
+  lot_id: number;
+  lot_code: string;
+  available_qty: number;
+  unit: string;
+  warehouse_code: string;
+  expiry_date?: string;
+  mfg_date?: string;
+}
+
+// 既引当ロット情報
+export interface AllocatedLot {
+  allocation_id: number;
+  lot_id: number;
+  lot_code: string;
+  allocated_qty: number;
+  warehouse_code: string;
+  expiry_date?: string;
+}
+
+// UI用ロット選択状態
+export interface LotSelection {
+  lot_id: number;
+  lot_code: string;
+  available_qty: number;
+  requested_qty: number;
+  unit: string;
+  warehouse_code: string;
+  expiry_date?: string;
 }
 
 // --- Forecast一覧 (Forecast List) ---
@@ -179,9 +221,11 @@ export interface ForecastItemOut {
   unit?: string;
   version_history?: any[];
 }
+
 export interface ForecastListResponse {
   items: ForecastItemOut[];
 }
+
 export interface ForecastListParams {
   product_code?: string;
   supplier_code?: string;
@@ -195,10 +239,11 @@ export interface ForecastBulkItem {
   date_day?: string;
   date_dekad_start?: string;
   year_month?: string;
-  forecast_qty: number; // v2.0では int
-  version_no: number; // v2.0では int
+  forecast_qty: number;
+  version_no: number;
   version_issued_at: string; // ISO 8601 string
 }
+
 export interface ForecastBulkRequest {
   version_no: number;
   version_issued_at: string; // ISO 8601 string

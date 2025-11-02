@@ -27,7 +27,7 @@ function AppTabs() {
               <TabsTrigger value="dashboard">ダッシュボード</TabsTrigger>
               <TabsTrigger value="inventory">在庫管理</TabsTrigger>
               <TabsTrigger value="orders">受注管理</TabsTrigger>
-              <TabsTrigger value="orders-card">受注管理（カード）</TabsTrigger>
+              <TabsTrigger value="orders-card">ロット引当処理</TabsTrigger>
               <TabsTrigger value="forecast-list">Forecast一覧</TabsTrigger>
 
               <TabsTrigger value="forecast">Forecast</TabsTrigger>

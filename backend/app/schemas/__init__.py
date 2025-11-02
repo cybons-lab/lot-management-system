@@ -97,10 +97,15 @@ from .masters import (
 from .orders import (
     # Allocation
     AllocationBase,
+    AllocationCancelRequest,
+    AllocationCancelResponse,
     AllocationCreate,
     AllocationResponse,
     DragAssignRequest,
     DragAssignResponse,
+    LotAllocationRequest,
+    LotAllocationResponse,
+    LotCandidateOut,
     # Order
     OrderBase,
     OrderCreate,
@@ -237,4 +242,9 @@ __all__ = [
     "OrderLineOut",
     "OrdersWithAllocResponse",
     "SaveAllocationsRequest",
+    "LotCandidateOut",
+    "LotAllocationRequest",
+    "LotAllocationResponse",
+    "AllocationCancelRequest",
+    "AllocationCancelResponse",
 ]

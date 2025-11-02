@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import Field
 
@@ -187,8 +187,9 @@ class OrderLineOut(BaseSchema):
     supplier_code: Optional[str] = None
     quantity: float
     unit: str
-    warehouse_allocations: list[WarehouseAllocOut] = []
-    related_lots: list[dict] = []  # 仕様未定なら空配列で
+    warehouse_allocations: list["WarehouseAllocOut"] = []
+    related_lots: list[LotCandidateOut] = []  # ← 型を明示
+    allocated_lots: list[dict] = []  # ← 既引当ロット
 
 
 class OrdersWithAllocResponse(BaseSchema):
@@ -197,3 +198,47 @@ class OrdersWithAllocResponse(BaseSchema):
 
 class SaveAllocationsRequest(BaseSchema):
     allocations: list[WarehouseAllocIn]
+
+
+class LotCandidateOut(BaseSchema):
+    """引当候補ロット情報"""
+
+    lot_id: int
+    lot_code: str
+    available_qty: float
+    unit: str
+    warehouse_code: str
+    expiry_date: Optional[str] = None
+    mfg_date: Optional[str] = None
+
+
+class LotAllocationRequest(BaseSchema):
+    """ロット引当リクエスト"""
+
+    allocations: List[dict] = Field(
+        ..., description="[{'lot_id': int, 'qty': float}, ...]"
+    )
+
+
+class LotAllocationResponse(BaseSchema):
+    """ロット引当レスポンス"""
+
+    success: bool
+    message: str = ""
+    applied: List[dict] = Field(default_factory=list)
+    order_line: Optional[dict] = None
+
+
+class AllocationCancelRequest(BaseSchema):
+    """引当取消リクエスト"""
+
+    allocation_id: Optional[int] = None
+    all: bool = False
+
+
+class AllocationCancelResponse(BaseSchema):
+    """引当取消レスポンス"""
+
+    success: bool
+    message: str = ""
+    order_line: Optional[dict] = None
