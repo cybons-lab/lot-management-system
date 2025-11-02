@@ -3,11 +3,12 @@ from pathlib import Path
 
 import requests
 
-BASE_URL = "http://localhost:8000/api"
-
-# backend/ の1階層上を起点に data/ を探す
-BASE_DIR = Path(__file__).resolve().parents[1]
+# -------------------------------------------------------
+# パス設定（スクリプト自身を基準に絶対パスで解決）
+# -------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parents[1]  # backend/
 DATA_DIR = BASE_DIR / "data"
+BASE_URL = "http://localhost:8000/api"
 
 
 # -------------------------------------------------------
@@ -28,7 +29,7 @@ def print_error(msg: str):
 
 
 def load_json(name: str) -> dict:
-    """data/ 配下の JSON ファイルを読み込む"""
+    """data/配下のJSONファイルを絶対パスで読み込む"""
     path = DATA_DIR / name
     if not path.exists():
         print_error(f"ファイルが見つかりません: {path}")

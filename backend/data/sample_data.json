@@ -159,6 +159,31 @@
       "receipt_date": "2025-10-28",
       "expiry_date": "2026-04-28",
       "warehouse_code": "WH001"
+    },
+
+    {
+      "supplier_code": "SUP002",
+      "product_code": "PRD-101",
+      "lot_number": "COMMON-PRD-101",
+      "receipt_date": "2025-10-29",
+      "expiry_date": null,
+      "warehouse_code": "WH001"
+    },
+    {
+      "supplier_code": "SUP002",
+      "product_code": "PRD-102",
+      "lot_number": "COMMON-PRD-102",
+      "receipt_date": "2025-10-29",
+      "expiry_date": null,
+      "warehouse_code": "WH001"
+    },
+    {
+      "supplier_code": "SUP002",
+      "product_code": "PRD-201",
+      "lot_number": "COMMON-PRD-201",
+      "receipt_date": "2025-10-29",
+      "expiry_date": null,
+      "warehouse_code": "WH001"
     }
   ],
   "receipts": [
