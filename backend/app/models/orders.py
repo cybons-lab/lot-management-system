@@ -16,6 +16,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    String,
     Text,
     UniqueConstraint,
     func,
@@ -43,6 +44,9 @@ class Order(AuditMixin, Base):
     sap_status = Column(Text)
     sap_sent_at = Column(DateTime)
     sap_error_msg = Column(Text)
+    customer_order_no = Column(Text)
+    customer_order_no_last6 = Column(String(6))
+    delivery_mode = Column(Text)
 
     # リレーション
     customer = relationship("Customer", back_populates="orders")
@@ -66,6 +70,7 @@ class OrderLine(AuditMixin, Base):
     quantity = Column(Float, nullable=False)
     unit = Column(Text)
     due_date = Column(Date)
+    next_div = Column(Text)
 
     # フォーキャスト連携メタデータ
     forecast_id = Column(Integer, ForeignKey("forecasts.id"), nullable=True)
@@ -184,3 +189,24 @@ class PurchaseRequest(AuditMixin, Base):
 
     # リレーション
     supplier = relationship("Supplier", back_populates="purchase_requests")
+
+
+class NextDivMap(AuditMixin, Base):
+    """次区マッピング（得意先・納入先・製品ごとの次区設定）。"""
+
+    __tablename__ = "next_div_map"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    customer_code = Column(Text, nullable=False)
+    ship_to_code = Column(Text, nullable=False)
+    product_code = Column(Text, nullable=False)
+    next_div = Column(Text, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "customer_code",
+            "ship_to_code",
+            "product_code",
+            name="uq_next_div_map_customer_ship_to_product",
+        ),
+    )

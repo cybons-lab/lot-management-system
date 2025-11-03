@@ -35,13 +35,11 @@ from .orders import (
     Order,
     OrderLine,
     OrderLineWarehouseAllocation,  # orders.pyから直接インポート
+    NextDivMap,
     PurchaseRequest,
     Shipping,
 )
-from .logs import (
-    OcrSubmission,
-    SapSyncLog,
-)
+from .logs import InboundSubmission, OcrSubmission, SapSyncLog
 from .forecast import (
     Forecast,
 )
@@ -71,7 +69,9 @@ __all__ = [
     "Allocation",
     "Shipping",
     "PurchaseRequest",
+    "NextDivMap",
     # Logs
+    "InboundSubmission",
     "OcrSubmission",
     "SapSyncLog",
     # Forecast

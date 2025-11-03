@@ -7,6 +7,7 @@
 from enum import Enum as PyEnum
 
 from sqlalchemy import (
+    Boolean,
     Column,
     Date,
     DateTime,
@@ -63,6 +64,10 @@ class Lot(AuditMixin, Base):
     source_doc = Column(Text, nullable=True)
     qc_certificate_status = Column(Text, nullable=True)
     qc_certificate_file = Column(Text, nullable=True)
+    is_locked = Column(Boolean, nullable=False, default=False)
+    lock_reason = Column(Text, nullable=True)
+    inspection_date = Column(Date, nullable=True)
+    inspection_result = Column(Text, nullable=True)
 
     __table_args__ = (
         UniqueConstraint(

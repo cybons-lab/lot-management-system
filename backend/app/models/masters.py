@@ -9,6 +9,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -91,9 +92,10 @@ class Product(AuditMixin, Base):
     product_name = Column(Text, nullable=False)
     customer_part_no = Column(Text)
     maker_part_no = Column(Text)
+    packaging_qty = Column(Numeric(10, 2), nullable=False, default=1)  # 包装数量
+    packaging_unit = Column(String(20), nullable=False, default="EA")  # 包装単位
     internal_unit = Column(Text, nullable=False, default="EA")  # 内部管理単位
     base_unit = Column(String(10), nullable=False, default="EA")  # 基準単位
-    packaging = Column(Text)
     assemble_div = Column(Text)
     next_div = Column(Text)
     shelf_life_days = Column(Integer)
