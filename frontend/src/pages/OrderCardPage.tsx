@@ -5,8 +5,13 @@ import OrderFilters from "@/features/orders/components/OrderFilters";
 import OrderLineCard from "@/features/orders/components/OrderLineCard";
 import { useOrdersWithAllocations } from "@/features/orders/hooks/useOrders";
 import type { OrdersListParams } from "@/types";
+import { isValidDate } from "@/lib/utils/date";
 
-const DEFAULT_PARAMS: OrdersListParams = { skip: 0, limit: 50 };
+const DEFAULT_PARAMS: OrdersListParams = {
+  skip: 0,
+  limit: 50,
+  due_filter: "all",
+};
 const norm = (s?: string) => (s ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
 export default function OrderCardPage() {
@@ -30,11 +35,19 @@ export default function OrderCardPage() {
   const lines = React.useMemo(() => {
     const wantCustomer = norm(params.customer_code);
     const wantStatus = norm(params.status);
+    const wantDue = params.due_filter ?? "all";
     return allLines.filter((ln) => {
       const okC =
         !wantCustomer || norm(ln.customer_code).includes(wantCustomer);
       const okS = !wantStatus || norm(ln.status) === wantStatus;
-      return okC && okS;
+      // 納期候補: due_date（正式）→ ship_date（誤用/流用）→ planned_ship_date（逆算予定）
+      const dueSource =
+        ln?.due_date ?? ln?.ship_date ?? ln?.planned_ship_date ?? null;
+      const hasDue = isValidDate(dueSource);
+
+      const okDue =
+        wantDue === "all" ? true : wantDue === "has_due" ? hasDue : !hasDue;
+      return okC && okS && okDue;
     });
   }, [allLines, params]);
 
@@ -55,6 +68,9 @@ export default function OrderCardPage() {
           （顧客コードはハイフン等を無視して検索されます）。
         </div>
       )}
+      <div className="flex items-center justify-end text-xs text-muted-foreground">
+        {lines.length} / {allLines.length} 件
+      </div>
       <div className="grid gap-3">
         {lines.map((ln) => (
           <OrderLineCard

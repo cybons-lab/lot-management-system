@@ -100,6 +100,7 @@ export interface OrdersListParams {
   customer_code?: string;
   date_from?: string;
   date_to?: string;
+  due_filter?: DueFilter; // 納期フィルタ: 既定 'all'
 }
 
 // --- 管理 (Admin) ---
@@ -301,3 +302,4 @@ export interface WarehouseAlloc {
 export interface SaveAllocationsRequest {
   allocations: WarehouseAlloc[];
 }
+export type DueFilter = "all" | "has_due" | "no_due";
