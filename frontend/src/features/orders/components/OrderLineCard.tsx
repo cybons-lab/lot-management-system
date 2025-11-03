@@ -84,28 +84,30 @@ export default function OrderLineCard({
       {/* ヘッダー */}
       <div
         className={`flex items-center justify-between border-b p-4 ${status.color} bg-opacity-10`}>
-        <div className="flex items-center gap-3">
-          <StatusIcon
-            className={`h-5 w-5 ${status.color.replace("bg-", "text-")}`}
-          />
-          <span className="font-semibold">{status.label}</span>
-          {canRematch && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="ml-2"
-              onClick={onRematch}>
-              <RefreshCcw className="mr-1 h-3 w-3" />
-              ロット再マッチ
-            </Button>
-          )}
+        <div className="min-w-0">
+          <div className="flex items-center gap-3">
+            <span className="text-base font-semibold truncate">
+              {line?.product_name ?? ""}{" "}
+              <span className="text-muted-foreground">
+                ({line?.product_code})
+              </span>
+            </span>
+          </div>
         </div>
-        <div className="text-sm text-muted-foreground flex items-center gap-2">
-          <Calendar className="h-4 w-4" />
-          受注日:
-          <span className="font-medium text-foreground">
-            {formatYmd(line?.order_date ?? order?.order_date)}
-          </span>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-1 text-sm">
+            <StatusIcon
+              className={`h-4 w-4 ${status.color.replace("bg-", "text-")}`}
+            />
+            <span className="font-medium">{status.label}</span>
+          </div>
+          <div className="text-sm text-muted-foreground flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            受注日:{" "}
+            <span className="font-medium text-foreground">
+              {formatYmd(line?.order_date ?? order?.order_date)}
+            </span>
+          </div>
         </div>
       </div>
 
