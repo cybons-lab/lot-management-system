@@ -44,6 +44,7 @@ from app.schemas.orders import (
     SaveAllocationsRequest,
     WarehouseAllocOut,
 )
+from app.services.quantity import QuantityConversionError, to_internal_qty
 
 # フォーキャストマッチング機能（オプション）
 try:
@@ -199,6 +200,11 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
     """
     受注登録
     """
+    if order.customer_order_no and len(order.customer_order_no) < 6:
+        raise HTTPException(
+            status_code=400, detail="customer_order_noは6桁以上で入力してください"
+        )
+
     existing = db.query(Order).filter(Order.order_no == order.order_no).first()
     if existing:
         raise HTTPException(status_code=400, detail="受注番号が既に存在します")
@@ -209,7 +215,11 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
     if not customer:
         raise HTTPException(status_code=404, detail="得意先が見つかりません")
 
-    db_order = Order(**order.model_dump(exclude={"lines"}))
+    order_payload = order.model_dump(exclude={"lines"})
+    if order.customer_order_no:
+        order_payload["customer_order_no_last6"] = order.customer_order_no[-6:]
+
+    db_order = Order(**order_payload)
     db.add(db_order)
     db.flush()
 
@@ -217,7 +227,34 @@ def create_order(order: OrderCreate, db: Session = Depends(get_db)):
 
     if hasattr(order, "lines") and order.lines:
         for line_data in order.lines:
-            db_line = OrderLine(order_id=db_order.id, **line_data.model_dump())
+            product = (
+                db.query(Product)
+                .filter(Product.product_code == line_data.product_code)
+                .first()
+            )
+            if not product:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"製品コードが見つかりません: {line_data.product_code}",
+                )
+
+            try:
+                internal_qty = to_internal_qty(
+                    product=product,
+                    qty_external=line_data.quantity,
+                    external_unit=line_data.external_unit,
+                )
+            except QuantityConversionError as exc:  # pragma: no cover - 入力不備
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+            db_line = OrderLine(
+                order_id=db_order.id,
+                line_no=line_data.line_no,
+                product_code=line_data.product_code,
+                quantity=float(internal_qty),
+                unit=product.internal_unit,
+                due_date=line_data.due_date,
+            )
             db.add(db_line)
             db.flush()
 

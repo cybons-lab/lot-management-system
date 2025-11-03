@@ -3,7 +3,10 @@
 マスタ関連のPydanticスキーマ
 """
 
+from decimal import Decimal
 from typing import Optional
+
+from pydantic import Field
 
 from .base import BaseSchema
 
@@ -76,7 +79,9 @@ class ProductBase(BaseSchema):
     product_name: str
     customer_part_no: Optional[str] = None
     maker_part_no: Optional[str] = None
-    internal_unit: str = "EA"
+    packaging_qty: Decimal = Field(..., gt=Decimal("0"))
+    packaging_unit: str = Field(..., min_length=1)
+    internal_unit: str = Field(..., min_length=1)
     base_unit: str = "EA"
     packaging: Optional[str] = None
     assemble_div: Optional[str] = None
@@ -93,6 +98,8 @@ class ProductUpdate(BaseSchema):
     product_name: Optional[str] = None
     customer_part_no: Optional[str] = None
     maker_part_no: Optional[str] = None
+    packaging_qty: Optional[Decimal] = Field(default=None, gt=Decimal("0"))
+    packaging_unit: Optional[str] = None
     internal_unit: Optional[str] = None
     base_unit: Optional[str] = None
     packaging: Optional[str] = None

@@ -20,6 +20,7 @@ from app.schemas import (
     SapRegisterResponse,
     SapSyncLogResponse,
 )
+from app.services.quantity import QuantityConversionError, to_internal_qty
 
 # フォーキャストマッチング機能（オプション）
 try:
@@ -111,12 +112,25 @@ def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_
                     )
                     continue
 
+                try:
+                    internal_qty = to_internal_qty(
+                        product=product,
+                        qty_external=line.quantity,
+                        external_unit=line.external_unit,
+                    )
+                except QuantityConversionError as exc:
+                    failed_records += 1
+                    error_details.append(
+                        f"受注 {record.order_no} 明細 {line.line_no}: {exc}"
+                    )
+                    continue
+
                 db_line = OrderLine(
                     order_id=db_order.id,
                     line_no=line.line_no,
                     product_code=line.product_code,
-                    quantity=line.quantity,
-                    unit=line.unit,
+                    quantity=float(internal_qty),
+                    unit=product.internal_unit,
                     due_date=line.due_date,
                 )
                 db.add(db_line)

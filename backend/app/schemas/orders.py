@@ -19,6 +19,7 @@ class OrderBase(BaseSchema):
     customer_code: str
     order_date: Optional[date] = None
     status: str = "open"
+    customer_order_no: Optional[str] = None
 
 
 class OrderUpdate(BaseSchema):
@@ -46,7 +47,7 @@ class OrderLineBase(BaseSchema):
 
 
 class OrderLineCreate(OrderLineBase):
-    pass
+    external_unit: str = Field(..., min_length=1)
 
 
 class OrderCreate(OrderBase):

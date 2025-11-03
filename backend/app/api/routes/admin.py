@@ -49,6 +49,7 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
         ).scalar()
         or 0.0
     )
+    # LotCurrentStock.current_quantity は内部単位数量を保持する
 
     total_orders = db.query(func.count(Order.id)).scalar() or 0
 
