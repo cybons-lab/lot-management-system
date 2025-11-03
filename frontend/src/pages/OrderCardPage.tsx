@@ -56,25 +56,22 @@ export default function OrderCardPage() {
   }, [allLines, params]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mx-auto px-3 max-w-4xl xl:max-w-5xl 2xl:max-w-6xl">
       <OrderFilters
         value={params}
         onChange={setParams}
         onSearch={handleSearch}
         onReset={handleReset}
       />
-
       {isLoading && (
         <div className="p-3 text-sm text-gray-500">読み込み中…</div>
       )}
-
       {!isLoading && lines.length === 0 && (
         <div className="p-3 text-sm text-amber-600 border rounded">
           該当する受注明細がありません。フィルタを見直してください
           （顧客コードはハイフン等を無視して検索されます）。
         </div>
       )}
-
       <div className="grid gap-3">
         {lines.map((ln) => (
           <OrderLineCard
@@ -93,7 +90,6 @@ export default function OrderCardPage() {
           />
         ))}
       </div>
-
       <LotAllocationPanel
         open={activeLineId != null}
         onClose={() => setActiveLineId(null)}
