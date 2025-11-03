@@ -85,6 +85,8 @@ export interface OrderLineResponse {
   forecast_match_status?: string | null;
   forecast_qty?: number | null;
   forecast_version_no?: number | null;
+  qty?: number;
+  status?: string;
 }
 
 export interface OrderWithLinesResponse extends OrderResponse {
@@ -178,6 +180,7 @@ export interface LotCandidate {
   warehouse_code: string;
   expiry_date?: string;
   mfg_date?: string;
+  stock_qty: number;
 }
 
 // 既引当ロット情報
@@ -268,4 +271,33 @@ export interface ForecastBulkResponse {
 // --- 再マッチング (Re-match) ---
 export interface ReMatchResponse extends OrderWithLinesResponse {
   // OrderWithLinesResponse と同じ
+}
+// --- Allocation: 引当リクエスト/レスポンス ---
+export interface LotAllocationRequest {
+  items: { lot_id: number; qty: number }[];
+}
+export interface LotAllocationResponse {
+  success: boolean;
+  message?: string;
+  allocated?: { lot_id: number; qty: number }[];
+}
+
+// --- Allocation: 取消リクエスト/レスポンス（必要最小限） ---
+export interface AllocationCancelRequest {
+  all?: boolean;
+  items?: { allocation_id?: number; lot_id?: number }[];
+}
+export interface AllocationCancelResponse {
+  success: boolean;
+  message?: string;
+}
+
+// --- 倉庫配分 ---
+export interface WarehouseAlloc {
+  warehouse_id: number;
+  lot_id: number;
+  qty: number;
+}
+export interface SaveAllocationsRequest {
+  allocations: WarehouseAlloc[];
 }
