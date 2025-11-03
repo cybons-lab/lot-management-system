@@ -16,7 +16,8 @@ import { useAllocationActions } from "@/features/orders/hooks/useAllocationActio
 type Props = {
   order?: any;
   line: any;
-  onOpenAllocation: () => void;
+  /** 旧モーダル用。互換のため残すが未使用 */
+  onOpenAllocation?: () => void;
   onRematch?: () => void;
 };
 
@@ -164,7 +165,10 @@ export default function OrderLineCard({
             <div className="border-t pt-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">出荷倉庫</span>
-                <Button variant="outline" size="sm" onClick={onOpenAllocation}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}>
                   <Edit className="mr-2 h-3 w-3" />
                   編集
                 </Button>

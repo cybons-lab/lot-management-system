@@ -61,9 +61,6 @@ export default function OrderCardPage() {
             key={ln.id}
             // このAPIは「行」しか返さないため order は省略
             line={ln}
-            onOpenAllocation={() => {
-              /* no-op：カード内インライン編集に移行 */
-            }}
           />
         ))}
       </div>
