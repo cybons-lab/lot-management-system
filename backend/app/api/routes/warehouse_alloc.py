@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 
 # 既存の models.masters.Warehouse とは異なる、新しいモデルをインポート
-from app.models.warehouse import Warehouse
+from app.models import Warehouse
 from app.schemas.warehouses import WarehouseListResponse, WarehouseOut
 
 router = APIRouter(prefix="/warehouse-alloc", tags=["Warehouse Alloc"])

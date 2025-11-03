@@ -19,11 +19,12 @@ from app.models import (
     LotCurrentStock,
     Order,
     OrderLine,
+    OrderLineWarehouseAllocation,
     Product,
     StockMovement,
     StockMovementReason,
+    Warehouse,
 )
-from app.models.warehouse import OrderLineWarehouseAllocation, Warehouse
 from app.schemas import (
     DragAssignRequest,
     DragAssignResponse,
@@ -516,7 +517,9 @@ def get_candidate_lots_for_allocation(
         raise HTTPException(status_code=404, detail="受注明細が見つかりません")
 
     requested_product_code = (product_code or "").strip()
-    order_line_product_code = order_line.product_code.strip() if order_line.product_code else ""
+    order_line_product_code = (
+        order_line.product_code.strip() if order_line.product_code else ""
+    )
 
     if (
         requested_product_code
@@ -570,7 +573,9 @@ def get_candidate_lots_for_allocation(
     conversion_map: dict[str, float] = {}
     for conv in product.conversions:
         if conv.source_unit and conv.source_value and conv.internal_unit_value:
-            conversion_map[conv.source_unit] = conv.internal_unit_value / conv.source_value
+            conversion_map[conv.source_unit] = (
+                conv.internal_unit_value / conv.source_value
+            )
 
     stocked_lots: list[Lot] = (
         db.query(Lot)

@@ -1,7 +1,7 @@
-# backend/app/models/sales.py
+# backend/app/models/orders.py
 """
-販売関連のモデル定義
-受注、受注明細、引当、出荷
+販売関連のモデル定義（修正版）
+受注、受注明細、引当、出荷、倉庫配分
 """
 
 from sqlalchemy import (
@@ -16,10 +16,9 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.orm import Mapped, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import AuditMixin, Base
-from .warehouse import OrderLineWarehouseAllocation
 
 
 class Order(AuditMixin, Base):
@@ -60,45 +59,57 @@ class OrderLine(AuditMixin, Base):
     unit = Column(Text)
     due_date = Column(Date)
 
-    # --- 🔽 [変更] フォーキャスト連携メタデータを追加 🔽 ---
+    # フォーキャスト連携メタデータ
     forecast_id = Column(Integer, ForeignKey("forecasts.id"), nullable=True)
-    forecast_granularity = Column(Text, nullable=True)  # 'daily', 'dekad', 'monthly'
-    forecast_match_status = Column(
-        Text, nullable=True
-    )  # 'EXACT', 'PERIOD', 'DIFF', 'NONE'
-    forecast_qty = Column(Float, nullable=True)  # 月次マッチの場合は NULL にする
-    forecast_version_no = Column(Integer, nullable=True)
+    forecast_matched_at = Column(DateTime, nullable=True)
+    forecast_version = Column(Integer, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint("order_id", "line_no", name="uq_order_line"),
+    )
 
     # リレーション
     order = relationship("Order", back_populates="lines")
     product = relationship("Product", back_populates="order_lines")
-
-    # 🔽 [修正] これは「ロット引当」用
     allocations = relationship(
         "Allocation", back_populates="order_line", cascade="all, delete-orphan"
     )
-
-    shippings = relationship("Shipping", back_populates="order_line")
-    purchase_requests = relationship("PurchaseRequest", back_populates="src_order_line")
-
-    # --- 🔽 [変更] Forecast へのリレーションを追加 🔽 ---
-    forecast = relationship("Forecast")
-
-    # 🔽 [修正] 89行目をこちらに修正
-    # 名前を "warehouse_allocations" に変更
-    # "backref" を "back_populates" に変更
-    warehouse_allocations: Mapped[list[OrderLineWarehouseAllocation]] = relationship(
+    forecast = relationship("Forecast", back_populates="order_lines")
+    warehouse_allocations = relationship(
         "OrderLineWarehouseAllocation",
         back_populates="order_line",
         cascade="all, delete-orphan",
-        lazy="selectin",
     )
 
-    __table_args__ = (UniqueConstraint("order_id", "line_no", name="uq_order_line"),)
+
+class OrderLineWarehouseAllocation(AuditMixin, Base):
+    """
+    受注明細の倉庫配分
+    各受注明細に対してどの倉庫からいくつ出荷するかを管理
+    """
+
+    __tablename__ = "order_line_warehouse_allocation"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    order_line_id: Mapped[int] = mapped_column(
+        ForeignKey("order_lines.id"), nullable=False
+    )
+    warehouse_id: Mapped[int] = mapped_column(
+        ForeignKey("warehouse.id"), nullable=False
+    )
+    quantity: Mapped[float] = mapped_column(Float, nullable=False)
+
+    # リレーション
+    order_line: Mapped["OrderLine"] = relationship(
+        "OrderLine", back_populates="warehouse_allocations"
+    )
+    warehouse: Mapped["Warehouse"] = relationship(
+        "Warehouse", back_populates="warehouse_allocations"
+    )
 
 
 class Allocation(AuditMixin, Base):
-    """引当(受注明細とロットの紐付け)"""
+    """ロット引当"""
 
     __tablename__ = "allocations"
 
@@ -106,33 +117,32 @@ class Allocation(AuditMixin, Base):
     order_line_id = Column(
         Integer, ForeignKey("order_lines.id", ondelete="CASCADE"), nullable=False
     )
-    lot_id = Column(Integer, ForeignKey("lots.id", ondelete="CASCADE"), nullable=False)
+    lot_id = Column(Integer, ForeignKey("lots.id"), nullable=False)
     allocated_qty = Column(Float, nullable=False)
-    allocated_at = Column(DateTime, default=func.now())
-
-    # リレーション
-    order_line = relationship("OrderLine", back_populates="allocations")
-    lot = relationship("Lot", back_populates="allocations")
+    allocation_date = Column(DateTime, server_default=func.now())
+    status = Column(Text, default="active")  # active, shipped, cancelled
 
     __table_args__ = (
         Index("ix_alloc_ol", "order_line_id"),
         Index("ix_alloc_lot", "lot_id"),
     )
 
+    # リレーション
+    order_line = relationship("OrderLine", back_populates="allocations")
+    lot = relationship("Lot", back_populates="allocations")
+
 
 class Shipping(AuditMixin, Base):
-    """出荷記録"""
+    """出荷"""
 
     __tablename__ = "shipping"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     lot_id = Column(Integer, ForeignKey("lots.id"), nullable=False)
     order_line_id = Column(Integer, ForeignKey("order_lines.id"))
-    shipped_quantity = Column(Float, nullable=False)
-    shipping_date = Column(Date, nullable=False)
-    destination_code = Column(Text)
-    destination_name = Column(Text)
-    destination_address = Column(Text)
+    shipped_qty = Column(Float, nullable=False)
+    shipped_date = Column(Date, default=func.current_date())
+    shipping_address = Column(Text)
     contact_person = Column(Text)
     contact_phone = Column(Text)
     delivery_time_slot = Column(Text)
@@ -141,13 +151,9 @@ class Shipping(AuditMixin, Base):
     carrier_service = Column(Text)
     notes = Column(Text)
 
-    # リレーション
-    lot = relationship("Lot", back_populates="shippings")
-    order_line = relationship("OrderLine", back_populates="shippings")
-
 
 class PurchaseRequest(AuditMixin, Base):
-    """仮発注(在庫不足時)"""
+    """仮発注（在庫不足時）"""
 
     __tablename__ = "purchase_requests"
 
@@ -156,16 +162,13 @@ class PurchaseRequest(AuditMixin, Base):
     supplier_code = Column(Text, ForeignKey("suppliers.supplier_code"), nullable=False)
     requested_qty = Column(Float, nullable=False)
     unit = Column(Text)
-    reason_code = Column(Text, nullable=False)  # shortage, expired, etc.
+    reason_code = Column(Text, nullable=False)  # stock_out, forecast_shortage, etc.
     src_order_line_id = Column(Integer, ForeignKey("order_lines.id"))
-    requested_date = Column(Date, default=func.current_date())
+    requested_date = Column(Date, server_default=func.current_date())
     desired_receipt_date = Column(Date)
-    status = Column(
-        Text, default="draft"
-    )  # draft, submitted, ordered, received, cancelled
+    status = Column(Text, default="draft")  # draft, submitted, approved, ordered
     sap_po_id = Column(Text)
     notes = Column(Text)
 
     # リレーション
     supplier = relationship("Supplier", back_populates="purchase_requests")
-    src_order_line = relationship("OrderLine", back_populates="purchase_requests")

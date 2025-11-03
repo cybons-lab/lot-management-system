@@ -1,7 +1,6 @@
-# backend/app/api/routes/admin.py
+# backend/app/api/routes/admin.py（修正部分）
 """
-管理機能のAPIエンドポイント
-ヘルスチェック、データベースリセット等
+管理機能のAPIエンドポイント - サンプルデータ投入修正版
 """
 
 import logging
@@ -26,46 +25,23 @@ from app.models import (
     ReceiptLine,
     StockMovement,
     StockMovementReason,
+    Warehouse,  # 🔽 統合された新Warehouse
 )
-
-# 🔽 [追加] 新しい Warehouse モデルもインポート
 from app.schemas import (
     DashboardStatsResponse,
     FullSampleDataRequest,
     ResponseBase,
 )
-from app.schemas.integration import OcrOrderRecord
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 logger = logging.getLogger(__name__)
 
 
-@router.get("/health")
-def health_check(db: Session = Depends(get_db)):
-    """
-    ヘルスチェック
-    """
-    try:
-        # DB接続確認
-        db.execute(text("SELECT 1"))
-        db_status = "healthy"
-    except Exception:
-        db_status = "unhealthy"
-
-    return {
-        "status": "healthy",
-        "environment": settings.ENVIRONMENT,
-        "app_name": settings.APP_NAME,
-        "app_version": settings.APP_VERSION,
-        "database": db_status,
-    }
-
-
 @router.post("/reset-database", response_model=ResponseBase)
 def reset_database(db: Session = Depends(get_db)):
     """
-    データベースリセット
-    (開発環境のみ)
+    データベースリセット（開発環境のみ）
+    新スキーマに対応したマスタデータを投入
     """
     if settings.ENVIRONMENT == "production":
         raise HTTPException(
@@ -76,38 +52,53 @@ def reset_database(db: Session = Depends(get_db)):
         drop_db()
         init_db()
 
-        # AdminPage.tsx の load_full_sample_data がマスタも投入するが、
-        # ここでも最低限のマスタを投入しておく（init-sample-dataの簡易版）
+        # 🔽 [修正] 新warehouseテーブルへのマスタ投入
+        # ORM経由で投入することで、AuditMixinの自動設定が有効になる
+        
+        # 1. 倉庫マスタ
+        warehouses = [
+            Warehouse(
+                warehouse_code="WH001",
+                warehouse_name="第一倉庫",
+                is_active=1,
+            ),
+            Warehouse(
+                warehouse_code="WH002",
+                warehouse_name="第二倉庫",
+                is_active=1,
+            ),
+            Warehouse(
+                warehouse_code="WH003",
+                warehouse_name="第三倉庫（予備）",
+                is_active=1,
+            ),
+        ]
+        db.add_all(warehouses)
 
-        # 🔽 [修正] 既存のマスタデータ
-        sample_masters_old = """
-        INSERT OR IGNORE INTO warehouses (warehouse_code, warehouse_name, is_active) VALUES
-        ('WH001', '第一倉庫', 1), ('WH002', '第二倉庫', 1);
+        # 2. 仕入先マスタ
+        sample_suppliers = """
         INSERT OR IGNORE INTO suppliers (supplier_code, supplier_name) VALUES
-        ('SUP001', 'サプライヤーA'), ('SUP002', 'サプライヤーB');
-        INSERT OR IGNORE INTO customers (customer_code, customer_name) VALUES
-        ('CUS001', '得意先A'), ('CUS002', '得意先B');
+        ('SUP001', 'サプライヤーA'),
+        ('SUP002', 'サプライヤーB'),
+        ('SUP003', 'サプライヤーC');
         """
-        for statement in sample_masters_old.split(";"):
-            if statement.strip():
-                db.execute(text(statement))
+        db.execute(text(sample_suppliers))
 
-        # 🔽 [ここから追加]
-        # 新しい 'warehouse' テーブル (IDが主キー) にもデータを投入
-        sample_masters_new = """
-        INSERT OR IGNORE INTO warehouse (warehouse_code, warehouse_name) VALUES
-        ('WH001', '第一倉庫 (新)'), 
-        ('WH002', '第二倉庫 (新)'),
-        ('WH003', '予備倉庫 (新)');
+        # 3. 得意先マスタ
+        sample_customers = """
+        INSERT OR IGNORE INTO customers (customer_code, customer_name) VALUES
+        ('CUS001', '得意先A'),
+        ('CUS002', '得意先B'),
+        ('CUS003', '得意先C');
         """
-        for statement in sample_masters_new.split(";"):
-            if statement.strip():
-                db.execute(text(statement))
-        # 🔼 [追加ここまで]
+        db.execute(text(sample_customers))
 
         db.commit()
 
-        return ResponseBase(success=True, message="データベースをリセットしました")
+        return ResponseBase(
+            success=True,
+            message="データベースをリセットしました（新スキーマ対応）",
+        )
 
     except Exception as e:
         db.rollback()
@@ -116,82 +107,20 @@ def reset_database(db: Session = Depends(get_db)):
         )
 
 
-@router.get("/stats", response_model=DashboardStatsResponse)
-def get_dashboard_stats(db: Session = Depends(get_db)):
-    """
-    ダッシュボード用の統計情報を取得
-    """
-    try:
-        # 1. 総在庫数 (LotCurrentStock の合計)
-        total_stock_result = db.query(
-            func.sum(LotCurrentStock.current_quantity)
-        ).scalar()
-
-        # 2. 総受注数 (Order の総数)
-        total_orders = db.query(Order).count()
-
-        # 3. 未引当受注数 (Order の 'open' ステータス)
-        unallocated_orders = db.query(Order).filter(Order.status == "open").count()
-
-        return DashboardStatsResponse(
-            total_stock=total_stock_result or 0.0,
-            total_orders=total_orders or 0,
-            unallocated_orders=unallocated_orders or 0,
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500, detail=f"統計情報の取得中にエラーが発生しました: {str(e)}"
-        )
-
-
 @router.post("/load-full-sample-data", response_model=ResponseBase)
 def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get_db)):
     """
-    一括サンプルデータ投入
-
-    マスタ -> ロット -> 入荷 -> 受注 の順でデータを投入する
-    本番環境では無効化されます
+    一括サンプルデータ投入（新スキーマ対応版）
+    
+    処理順序:
+    1. 製品マスタ
+    2. ロット登録
+    3. 入荷伝票作成（在庫変動も自動）
+    4. 受注登録
     """
     if settings.ENVIRONMENT == "production":
         raise HTTPException(
             status_code=403, detail="本番環境ではサンプルデータの投入はできません"
-        )
-
-    # 既存のマスタデータを投入 (SETUP_GUIDE.md にあるもの)
-    try:
-        # 🔽 [修正] 既存のマスタデータ
-        sample_masters_old = """
-        INSERT OR IGNORE INTO warehouses (warehouse_code, warehouse_name, is_active) VALUES
-        ('WH001', '第一倉庫', 1), ('WH002', '第二倉庫', 1);
-        INSERT OR IGNORE INTO suppliers (supplier_code, supplier_name) VALUES
-        ('SUP001', 'サプライヤーA'), ('SUP002', 'サプライヤーB');
-        INSERT OR IGNORE INTO customers (customer_code, customer_name) VALUES
-        ('CUS001', '得意先A'), ('CUS002', '得意先B');
-        """
-        for statement in sample_masters_old.split(";"):
-            if statement.strip():
-                db.execute(text(statement))
-
-        # 🔽 [ここから追加]
-        # 新しい 'warehouse' テーブル (IDが主キー) にもデータを投入
-        sample_masters_new = """
-        INSERT OR IGNORE INTO warehouse (warehouse_code, warehouse_name) VALUES
-        ('WH001', '第一倉庫 (新)'), 
-        ('WH002', '第二倉庫 (新)'),
-        ('WH003', '予備倉庫 (新)');
-        """
-        for statement in sample_masters_new.split(";"):
-            if statement.strip():
-                db.execute(text(statement))
-        # 🔼 [追加ここまで]
-
-        db.commit()
-
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(
-            status_code=500,
-            detail=f"サンプルマスタ投入中にエラー: {e}\n{traceback.format_exc()}",
         )
 
     counts = {
@@ -203,230 +132,201 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
 
     validation_warnings: list[str] = []
 
-    def _parse_iso_date(value, context: str, field: str) -> Optional[date]:
-        """入力値をdateに変換し、失敗した場合は警告を記録する"""
-
-        if value is None:
-            validation_warnings.append(f"[{context}] {field} が未設定です")
-            return None
-
-        if isinstance(value, date):
-            return value
-
-        if isinstance(value, str):
-            raw = value.strip()
-            if not raw or raw in {"-", "--"}:
-                validation_warnings.append(
-                    f"[{context}] {field} が欠落しています (値: '{value}')"
-                )
-                return None
-            try:
-                return date.fromisoformat(raw)
-            except ValueError:
-                validation_warnings.append(
-                    f"[{context}] {field} が日付形式 (YYYY-MM-DD) ではありません: '{value}'"
-                )
-                return None
-
-        validation_warnings.append(
-            f"[{context}] {field} を日付に変換できませんでした (値種別: {type(value).__name__})"
-        )
-        return None
-
-    parsed_orders: list[tuple[OcrOrderRecord, date, list[dict]]] = []
-    if data.orders:
-        for o_idx, o_data in enumerate(data.orders):
-            context = f"order[{o_idx}] {o_data.order_no}" if o_data.order_no else f"order[{o_idx}]"
-
-            if not o_data.order_no:
-                validation_warnings.append(f"[{context}] order_no は必須です")
-            if not o_data.customer_code:
-                validation_warnings.append(f"[{context}] customer_code は必須です")
-
-            order_date_obj = _parse_iso_date(o_data.order_date, context, "order_date")
-            if order_date_obj is None:
-                order_date_obj = date.today()
-                validation_warnings.append(
-                    f"[{context}] order_date を {order_date_obj.isoformat()} で補完しました"
-                )
-
-            parsed_lines: list[dict] = []
-            for line_idx, line in enumerate(o_data.lines or []):
-                line_ctx = f"{context} line[{line_idx}]"
-
-                if not getattr(line, "product_code", None):
-                    validation_warnings.append(
-                        f"[{line_ctx}] product_code は必須です"
-                    )
-
-                quantity = getattr(line, "quantity", None)
-                if quantity is None or quantity <= 0:
-                    validation_warnings.append(
-                        f"[{line_ctx}] quantity が未設定または0以下です (値: {quantity})"
-                    )
-
-                unit = getattr(line, "unit", None)
-                if not unit:
-                    unit = "EA"
-                    validation_warnings.append(
-                        f"[{line_ctx}] unit が未設定のため 'EA' を補完しました"
-                    )
-
-                due_date_obj = _parse_iso_date(line.due_date, line_ctx, "due_date")
-                if due_date_obj is None:
-                    due_date_obj = order_date_obj
-                    validation_warnings.append(
-                        f"[{line_ctx}] due_date を {due_date_obj.isoformat()} で補完しました"
-                    )
-
-                line_data = line.model_dump()
-                line_data["due_date"] = due_date_obj
-                line_data["unit"] = unit
-                parsed_lines.append(line_data)
-
-            if not parsed_lines:
-                validation_warnings.append(f"[{context}] 有効な明細行がありません")
-            else:
-                parsed_orders.append((o_data, order_date_obj, parsed_lines))
-
     try:
-        # 1. 製品 (Products)
+        # ==== 1. 製品マスタ ====
         if data.products:
-            for p_data in data.products:
-                existing = (
-                    db.query(Product)
-                    .filter_by(product_code=p_data.product_code)
-                    .first()
+            for p in data.products:
+                existing_product = db.query(Product).filter_by(
+                    product_code=p.product_code
+                ).first()
+                if existing_product:
+                    continue
+
+                db_product = Product(
+                    product_code=p.product_code,
+                    product_name=p.product_name,
+                    internal_unit=p.internal_unit or "EA",
+                    base_unit=getattr(p, "base_unit", "EA") or "EA",
+                    requires_lot_number=p.requires_lot_number,
                 )
-                if not existing:
-                    db_product = Product(**p_data.model_dump())
-                    db.add(db_product)
-                    counts["products"] += 1
+                db.add(db_product)
+                counts["products"] += 1
+
             db.commit()
 
-        # 2. ロット (Lots) - この時点では在庫0
-        # (Pydanticスキーマが 'date' 型なので自動変換される)
+        # ==== 2. ロット登録 ====
         if data.lots:
-            for l_data in data.lots:
-                existing_lot = (
-                    db.query(Lot)
-                    .filter_by(
-                        supplier_code=l_data.supplier_code,
-                        product_code=l_data.product_code,
-                        lot_number=l_data.lot_number,
+            for lot_data in data.lots:
+                # warehouse_codeからwarehouse_idを取得
+                warehouse = db.query(Warehouse).filter_by(
+                    warehouse_code=lot_data.warehouse_code
+                ).first()
+
+                if not warehouse:
+                    validation_warnings.append(
+                        f"倉庫コード '{lot_data.warehouse_code}' が見つかりません"
                     )
-                    .first()
-                )
+                    continue
+
+                existing_lot = db.query(Lot).filter_by(
+                    supplier_code=lot_data.supplier_code,
+                    product_code=lot_data.product_code,
+                    lot_number=lot_data.lot_number,
+                ).first()
+
                 if existing_lot:
                     continue
 
-                lot_payload = l_data.model_dump()
-                lot_payload.setdefault("warehouse_id", lot_payload.get("warehouse_code"))
-                db_lot = Lot(**lot_payload)
+                # 日付変換
+                receipt_date_obj = _parse_iso_date(
+                    lot_data.receipt_date, f"lot {lot_data.lot_number}", "receipt_date"
+                )
+                expiry_date_obj = _parse_iso_date(
+                    lot_data.expiry_date, f"lot {lot_data.lot_number}", "expiry_date"
+                ) if hasattr(lot_data, "expiry_date") else None
+
+                db_lot = Lot(
+                    supplier_code=lot_data.supplier_code,
+                    product_code=lot_data.product_code,
+                    lot_number=lot_data.lot_number,
+                    receipt_date=receipt_date_obj or date.today(),
+                    expiry_date=expiry_date_obj,
+                    warehouse_id=warehouse.id,  # 🔽 修正: IDを使用
+                    lot_unit=getattr(lot_data, "lot_unit", "EA"),
+                )
                 db.add(db_lot)
                 db.flush()
 
-                current_stock = LotCurrentStock(lot_id=db_lot.id, current_quantity=0.0)
-                db.add(current_stock)
+                # 現在在庫の初期化
+                db_current_stock = LotCurrentStock(
+                    lot_id=db_lot.id,
+                    current_quantity=0.0,
+                )
+                db.add(db_current_stock)
+
                 counts["lots"] += 1
+
             db.commit()
 
-        # 3. 入荷 (Receipts) - 在庫を増やす
-        # (Pydanticスキーマが 'date' 型なので自動変換される)
+        # ==== 3. 入荷伝票 ====
         if data.receipts:
-            for r_data in data.receipts:
-                existing_receipt = (
-                    db.query(ReceiptHeader)
-                    .filter_by(receipt_no=r_data.receipt_no)
-                    .first()
-                )
+            for receipt_data in data.receipts:
+                # warehouse_codeからwarehouse_idを取得
+                warehouse = db.query(Warehouse).filter_by(
+                    warehouse_code=receipt_data.warehouse_code
+                ).first()
+
+                if not warehouse:
+                    validation_warnings.append(
+                        f"入荷伝票 {receipt_data.receipt_no}: 倉庫コード '{receipt_data.warehouse_code}' が見つかりません"
+                    )
+                    continue
+
+                existing_receipt = db.query(ReceiptHeader).filter_by(
+                    receipt_no=receipt_data.receipt_no
+                ).first()
+
                 if existing_receipt:
                     continue
 
-                db_header = ReceiptHeader(
-                    receipt_no=r_data.receipt_no,
-                    supplier_code=r_data.supplier_code,
-                    warehouse_code=r_data.warehouse_code,
-                    receipt_date=r_data.receipt_date,  # Pydanticが 'date' に変換済み
-                    created_by="system",
+                receipt_date_obj = _parse_iso_date(
+                    receipt_data.receipt_date,
+                    f"receipt {receipt_data.receipt_no}",
+                    "receipt_date",
                 )
-                db.add(db_header)
+
+                db_receipt = ReceiptHeader(
+                    receipt_no=receipt_data.receipt_no,
+                    supplier_code=receipt_data.supplier_code,
+                    warehouse_id=warehouse.id,  # 🔽 修正: IDを使用
+                    receipt_date=receipt_date_obj or date.today(),
+                    notes=getattr(receipt_data, "notes", None),
+                )
+                db.add(db_receipt)
                 db.flush()
 
-                for line in r_data.lines:
+                # 明細行
+                for line_data in receipt_data.lines:
                     db_line = ReceiptLine(
-                        header_id=db_header.id,
-                        line_no=line.line_no,
-                        product_code=line.product_code,
-                        lot_id=line.lot_id,
-                        quantity=line.quantity,
-                        unit=line.unit,
+                        header_id=db_receipt.id,
+                        line_no=line_data.line_no,
+                        product_code=line_data.product_code,
+                        lot_id=line_data.lot_id,
+                        quantity=line_data.quantity,
+                        unit=line_data.unit,
                     )
                     db.add(db_line)
 
-                    lot = db.query(Lot).filter(Lot.id == line.lot_id).first()
-                    movement = StockMovement(
-                        product_id=line.product_code,
-                        warehouse_id=(
-                            lot.warehouse_id if lot else r_data.warehouse_code
-                        ),
-                        lot_id=line.lot_id,
-                        quantity_delta=line.quantity,
-                        reason=StockMovementReason.RECEIPT,
-                        source_table="receipt_lines",
-                        source_id=db_line.id,
-                        batch_id=f"receipt_{db_header.id}",
-                        created_by=db_header.created_by or "system",
+                    # 在庫変動記録
+                    db_movement = StockMovement(
+                        lot_id=line_data.lot_id,
+                        warehouse_id=warehouse.id,  # 🔽 修正: IDを使用
+                        movement_type=StockMovementReason.RECEIPT,
+                        quantity=line_data.quantity,
+                        related_id=receipt_data.receipt_no,
                     )
-                    db.add(movement)
+                    db.add(db_movement)
 
-                    stock = (
-                        db.query(LotCurrentStock).filter_by(lot_id=line.lot_id).first()
-                    )
-                    if stock:
-                        stock.current_quantity += line.quantity
-                    else:
-                        stock = LotCurrentStock(
-                            lot_id=line.lot_id, current_quantity=line.quantity
-                        )
-                        db.add(stock)
+                    # 現在在庫更新
+                    current_stock = db.query(LotCurrentStock).filter_by(
+                        lot_id=line_data.lot_id
+                    ).first()
+                    if current_stock:
+                        current_stock.current_quantity += line_data.quantity
 
                 counts["receipts"] += 1
+
             db.commit()
 
-        # 4. 受注 (Orders) - OCR取込のロジックを簡易的に再現
-        if parsed_orders:
-            for o_data, order_date_obj, parsed_lines in parsed_orders:
-                existing_order = (
-                    db.query(Order).filter_by(order_no=o_data.order_no).first()
-                )
+        # ==== 4. 受注登録 ====
+        if data.orders:
+            for order_data in data.orders:
+                existing_order = db.query(Order).filter_by(
+                    order_no=order_data.order_no
+                ).first()
+
                 if existing_order:
                     continue
 
+                order_date_obj = _parse_iso_date(
+                    order_data.order_date, f"order {order_data.order_no}", "order_date"
+                ) if hasattr(order_data, "order_date") else date.today()
+
                 db_order = Order(
-                    order_no=o_data.order_no,
-                    customer_code=o_data.customer_code,
+                    order_no=order_data.order_no,
+                    customer_code=order_data.customer_code,
                     order_date=order_date_obj,
                     status="open",
                 )
-
                 db.add(db_order)
                 db.flush()
 
-                for line_data in parsed_lines:
-                    db_line = OrderLine(order_id=db_order.id, **line_data)
+                for line_data in order_data.lines:
+                    due_date_obj = _parse_iso_date(
+                        line_data.due_date,
+                        f"order {order_data.order_no} line {line_data.line_no}",
+                        "due_date",
+                    ) if hasattr(line_data, "due_date") else None
+
+                    db_line = OrderLine(
+                        order_id=db_order.id,
+                        line_no=line_data.line_no,
+                        product_code=line_data.product_code,
+                        quantity=line_data.quantity,
+                        unit=line_data.unit,
+                        due_date=due_date_obj,
+                    )
                     db.add(db_line)
 
                 counts["orders"] += 1
-            db.commit()
 
-        if validation_warnings:
-            for msg in validation_warnings:
-                logger.warning("[sample-data] %s", msg)
+            db.commit()
 
         response_payload = {"counts": counts}
         if validation_warnings:
             response_payload["warnings"] = validation_warnings
+            for msg in validation_warnings:
+                logger.warning("[sample-data] %s", msg)
 
         return ResponseBase(
             success=True,
@@ -436,8 +336,35 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
 
     except Exception as e:
         db.rollback()
-        # 開発中は詳細なエラーを返す
         raise HTTPException(
             status_code=500,
             detail=f"サンプルデータ投入中にエラーが発生しました: {e}\n{traceback.format_exc()}",
         )
+
+
+def _parse_iso_date(value, context: str, field: str) -> Optional[date]:
+    """
+    入力値をdateに変換し、失敗した場合は警告を記録する
+    """
+    if value is None:
+        return None
+
+    if isinstance(value, date):
+        return value
+
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw or raw in {"-", "--"}:
+            return None
+        try:
+            return date.fromisoformat(raw)
+        except ValueError:
+            logger.warning(
+                f"[{context}] {field} が日付形式 (YYYY-MM-DD) ではありません: '{value}'"
+            )
+            return None
+
+    logger.warning(
+        f"[{context}] {field} を日付に変換できませんでした (値種別: {type(value).__name__})"
+    )
+    return None

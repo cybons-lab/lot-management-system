@@ -1,12 +1,14 @@
 # backend/app/models/masters.py
-"""マスタテーブルのモデル定義."""
+"""
+マスタテーブルのモデル定義（統合版）
+倉庫、仕入先、得意先、製品
+"""
 
 from sqlalchemy import (
     Column,
     Float,
     ForeignKey,
     Integer,
-    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -17,24 +19,39 @@ from .base_model import AuditMixin, Base
 
 
 class Warehouse(AuditMixin, Base):
-    """倉庫マスタ"""
+    """
+    倉庫マスタ（統合版）
+    - IDを主キーとする新スキーマに統一
+    - warehouse_codeはユニーク制約
+    """
 
-    __tablename__ = "warehouses"
+    __tablename__ = "warehouse"
 
-    warehouse_code = Column(Text, primary_key=True)
-    warehouse_name = Column(Text, nullable=False)
-    address = Column(Text)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    warehouse_code = Column(String(32), unique=True, nullable=False, index=True)
+    warehouse_name = Column(String(128), nullable=False)
+    address = Column(Text, nullable=True)
     is_active = Column(Integer, default=1)
 
     # リレーション
-    # 🔽 [修正] 参照先をフルパスで明記
     lots = relationship(
-        "app.models.inventory.Lot",
+        "Lot",
         back_populates="warehouse",
-        foreign_keys="app.models.inventory.Lot.warehouse_id",
+        foreign_keys="Lot.warehouse_id",
     )
     stock_movements = relationship(
-        "app.models.inventory.StockMovement", back_populates="warehouse"
+        "StockMovement",
+        back_populates="warehouse",
+    )
+    receipt_headers = relationship(
+        "ReceiptHeader",
+        back_populates="warehouse",
+    )
+    # OrderLineWarehouseAllocationはorders.pyで定義されている
+    warehouse_allocations = relationship(
+        "OrderLineWarehouseAllocation",
+        back_populates="warehouse",
+        cascade="all, delete-orphan",
     )
 
 
@@ -48,8 +65,7 @@ class Supplier(AuditMixin, Base):
     address = Column(Text)
 
     # リレーション
-    # 🔽 [修正] 参照先をフルパスで明記
-    lots = relationship("app.models.inventory.Lot", back_populates="supplier")
+    lots = relationship("Lot", back_populates="supplier")
     purchase_requests = relationship("PurchaseRequest", back_populates="supplier")
 
 
@@ -76,7 +92,7 @@ class Product(AuditMixin, Base):
     customer_part_no = Column(Text)
     maker_part_no = Column(Text)
     internal_unit = Column(Text, nullable=False, default="EA")  # 内部管理単位
-    base_unit = Column(String(10), nullable=False, default="EA")
+    base_unit = Column(String(10), nullable=False, default="EA")  # 基準単位
     packaging = Column(Text)
     assemble_div = Column(Text)
     next_div = Column(Text)
@@ -84,8 +100,7 @@ class Product(AuditMixin, Base):
     requires_lot_number = Column(Integer, default=1)
 
     # リレーション
-    # 🔽 [修正] 参照先をフルパスで明記
-    lots = relationship("app.models.inventory.Lot", back_populates="product")
+    lots = relationship("Lot", back_populates="product")
     conversions = relationship(
         "ProductUomConversion", back_populates="product", cascade="all, delete-orphan"
     )
@@ -93,13 +108,7 @@ class Product(AuditMixin, Base):
         "UnitConversion", back_populates="product", cascade="all, delete-orphan"
     )
     order_lines = relationship("OrderLine", back_populates="product")
-    # 🔽 [修正] 参照先をフルパスで明記
-    receipt_lines = relationship(
-        "app.models.inventory.ReceiptLine", back_populates="product"
-    )
-    stock_movements = relationship(
-        "app.models.inventory.StockMovement", back_populates="product"
-    )
+    forecasts = relationship("Forecast", back_populates="product")
 
 
 class ProductUomConversion(AuditMixin, Base):
@@ -109,31 +118,35 @@ class ProductUomConversion(AuditMixin, Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     product_code = Column(Text, ForeignKey("products.product_code"), nullable=False)
-    source_unit = Column(Text, nullable=False)  # 変換元単位 (例: "CASE")
-    source_value = Column(Float, nullable=False, default=1.0)  # 変換元の値 (例: 1)
-    internal_unit_value = Column(Float, nullable=False)  # 内部単位での値 (例: 10 EA)
-
-    # リレーション
-    product = relationship("Product", back_populates="conversions")
+    source_unit = Column(Text, nullable=False)
+    source_value = Column(Float, nullable=False, default=1.0)
+    internal_unit_value = Column(Float, nullable=False)
 
     __table_args__ = (
         UniqueConstraint("product_code", "source_unit", name="uq_product_unit"),
     )
 
+    # リレーション
+    product = relationship("Product", back_populates="conversions")
+
 
 class UnitConversion(AuditMixin, Base):
-    """製品単位換算マスタ(新仕様)."""
+    """
+    単位換算マスタ（新規追加）
+    製品ごとの単位換算係数を管理
+    """
 
     __tablename__ = "unit_conversions"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    product_id = Column(Text, ForeignKey("products.product_code"), nullable=False)
+    product_code = Column(Text, ForeignKey("products.product_code"), nullable=False)
     from_unit = Column(String(10), nullable=False)
     to_unit = Column(String(10), nullable=False)
-    factor = Column(Numeric(10, 4), nullable=False)
-
-    product = relationship("Product", back_populates="unit_conversions")
+    factor = Column(Float, nullable=False)  # from_unit * factor = to_unit
 
     __table_args__ = (
-        UniqueConstraint("product_id", "from_unit", "to_unit", name="uq_product_units"),
+        UniqueConstraint("product_code", "from_unit", "to_unit", name="uq_unit_conv"),
     )
+
+    # リレーション
+    product = relationship("Product", back_populates="unit_conversions")
