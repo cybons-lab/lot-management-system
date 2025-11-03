@@ -25,7 +25,7 @@ export interface FullSampleDataRequest {
   products?: Array<{
     product_code: string;
     product_name: string;
-    requires_lot_number: number;
+    requires_lot_number: boolean;
   }>;
   lots?: Array<{
     supplier_code: string;
@@ -43,7 +43,8 @@ export interface FullSampleDataRequest {
     lines: Array<{
       line_no: number;
       product_code: string;
-      lot_id: number;
+      lot_id?: number;
+      lot_number?: string;
       quantity: number;
       unit: string;
     }>;

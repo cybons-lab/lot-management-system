@@ -6,6 +6,8 @@
 from datetime import date, datetime
 from typing import Optional
 
+from pydantic import model_validator
+
 from .base import BaseSchema, TimestampMixin
 
 
@@ -101,10 +103,19 @@ class ReceiptHeaderResponse(ReceiptHeaderBase):
 class ReceiptLineBase(BaseSchema):
     line_no: int
     product_code: str
-    lot_id: int
+    lot_id: Optional[int] = None
+    lot_number: Optional[str] = None
     quantity: float
     unit: Optional[str] = None
     notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _validate_lot_identifier(cls, data):
+        lot_id = getattr(data, "lot_id", None)
+        lot_number = getattr(data, "lot_number", None)
+        if lot_id is None and not lot_number:
+            raise ValueError("lot_id または lot_number のいずれかを指定してください")
+        return data
 
 
 class ReceiptLineCreate(ReceiptLineBase):

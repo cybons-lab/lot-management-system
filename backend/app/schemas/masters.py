@@ -82,7 +82,7 @@ class ProductBase(BaseSchema):
     assemble_div: Optional[str] = None
     next_div: Optional[str] = None
     shelf_life_days: Optional[int] = None
-    requires_lot_number: int = 1
+    requires_lot_number: bool = True
 
 
 class ProductCreate(ProductBase):
@@ -99,7 +99,7 @@ class ProductUpdate(BaseSchema):
     assemble_div: Optional[str] = None
     next_div: Optional[str] = None
     shelf_life_days: Optional[int] = None
-    requires_lot_number: Optional[int] = None
+    requires_lot_number: Optional[bool] = None
 
 
 class ProductResponse(ProductBase):
