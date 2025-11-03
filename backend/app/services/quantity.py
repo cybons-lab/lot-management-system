@@ -63,6 +63,8 @@ def to_internal_qty(product: "Product", qty_external: NumberLike, external_unit:
         raise QuantityConversionError("包装数量は正の値である必要があります")
 
     external_qty = _to_decimal(qty_external)
+    if external_qty < 0:
+        raise QuantityConversionError("数量は0以上である必要があります")
     internal_qty = external_qty / packaging_qty
 
     rounding_rule = ROUNDING_RULES.get(external_unit_value) or ROUNDING_RULES.get(

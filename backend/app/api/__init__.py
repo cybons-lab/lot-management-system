@@ -5,7 +5,9 @@ APIルーティングの集約
 """
 
 from .routes import (
+    admin_presets_router,
     admin_router,
+    allocations_router,
     forecast_router,
     integration_router,
     lots_router,
@@ -22,6 +24,8 @@ __all__ = [
     "orders_router",
     "integration_router",
     "admin_router",
+    "admin_presets_router",
+    "allocations_router",
     "forecast_router",
     "warehouse_alloc_router",  # ⬅️ [修正] __all__ にも追加
 ]

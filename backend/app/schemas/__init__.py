@@ -5,6 +5,8 @@ Pydantic スキーマの集約
 """
 
 from .admin import (
+    AdminPresetListResponse,
+    AdminPresetLoadResponse,
     DashboardStatsResponse,
     FullSampleDataRequest,
 )
@@ -83,6 +85,8 @@ from .masters import (
     ProductUomConversionResponse,
     ProductUomConversionUpdate,
     ProductUpdate,
+    MasterBulkLoadRequest,
+    MasterBulkLoadResponse,
     # Supplier
     SupplierBase,
     SupplierCreate,
@@ -101,6 +105,11 @@ from .orders import (
     AllocationCancelResponse,
     AllocationCreate,
     AllocationResponse,
+    FefoCommitResponse,
+    FefoLineAllocation,
+    FefoLotAllocation,
+    FefoPreviewRequest,
+    FefoPreviewResponse,
     DragAssignRequest,
     DragAssignResponse,
     LotAllocationRequest,
@@ -165,6 +174,8 @@ __all__ = [
     "ProductUomConversionCreate",
     "ProductUomConversionUpdate",
     "ProductUomConversionResponse",
+    "MasterBulkLoadRequest",
+    "MasterBulkLoadResponse",
     # Inventory
     "LotBase",
     "LotCreate",
@@ -198,6 +209,11 @@ __all__ = [
     "AllocationBase",
     "AllocationCreate",
     "AllocationResponse",
+    "FefoLotAllocation",
+    "FefoLineAllocation",
+    "FefoPreviewRequest",
+    "FefoPreviewResponse",
+    "FefoCommitResponse",
     "DragAssignRequest",
     "DragAssignResponse",
     "ShippingBase",
@@ -220,6 +236,8 @@ __all__ = [
     # Admin
     "FullSampleDataRequest",
     "DashboardStatsResponse",
+    "AdminPresetListResponse",
+    "AdminPresetLoadResponse",
     # 🔽 [修正] Forecastスキーマ
     "ForecastBase",
     "ForecastCreate",

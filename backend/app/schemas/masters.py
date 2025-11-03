@@ -132,3 +132,19 @@ class ProductUomConversionUpdate(BaseSchema):
 
 class ProductUomConversionResponse(ProductUomConversionBase):
     id: int
+
+
+class MasterBulkLoadRequest(BaseSchema):
+    """Bulk load payload for master data."""
+
+    warehouses: list[WarehouseCreate] = Field(default_factory=list)
+    suppliers: list[SupplierCreate] = Field(default_factory=list)
+    customers: list[CustomerCreate] = Field(default_factory=list)
+    products: list[ProductCreate] = Field(default_factory=list)
+
+
+class MasterBulkLoadResponse(BaseSchema):
+    """Bulk load result summary."""
+
+    created: dict[str, list[str]] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
