@@ -10,7 +10,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.models import Forecast, Order, OrderLine, Product
+from app.models import Customer, Forecast, Order, OrderLine, Product
 from app.schemas.forecast import (
     ForecastActivateRequest,
     ForecastActivateResponse,
@@ -107,8 +107,10 @@ def list_forecasts(
     limit: int = 100,
     product_id: Optional[str] = None,
     client_id: Optional[str] = None,
+    product_code: Optional[str] = None,
+    client_code: Optional[str] = None,
     granularity: Optional[str] = None,
-    is_active: Optional[bool] = True,
+    is_active: Optional[bool] = None,
     version_no: Optional[int] = None,
     db: Session = Depends(get_db),
 ):
@@ -116,9 +118,32 @@ def list_forecasts(
     フォーキャスト一覧取得 (生データ)
     """
     query = db.query(Forecast)
-    if product_id:
+    if product_code:
+        normalized_code = product_code.strip()
+        product_codes = {normalized_code}
+        product = (
+            db.query(Product)
+            .filter(Product.product_code == normalized_code)
+            .first()
+        )
+        if product:
+            product_codes.add(product.product_code)
+        query = query.filter(Forecast.product_id.in_(product_codes))
+    elif product_id:
         query = query.filter(Forecast.product_id == product_id)
-    if client_id:
+
+    if client_code:
+        normalized_client = client_code.strip()
+        client_codes = {normalized_client}
+        customer = (
+            db.query(Customer)
+            .filter(Customer.customer_code == normalized_client)
+            .first()
+        )
+        if customer:
+            client_codes.add(customer.customer_code)
+        query = query.filter(Forecast.client_id.in_(client_codes))
+    elif client_id:
         query = query.filter(Forecast.client_id == client_id)
     if granularity:
         query = query.filter(Forecast.granularity == granularity)

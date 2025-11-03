@@ -56,21 +56,34 @@ export interface WarehouseAlloc {
 export interface LotCandidate {
   lot_id: number;
   lot_code: string;
-  lot_number: string;
+  lot_number?: string;
   product_code: string;
-  product_name?: string;
-  stock_qty: number;
-  warehouse_code?: string;
+  warehouse_code: string;
+  available_qty: number;
+  base_unit: string;
+  lot_unit_qty?: number | null;
+  lot_unit?: string | null;
+  conversion_factor?: number | null;
   expiry_date?: string | null;
-  receipt_date?: string;
-  unit?: string;
+  mfg_date?: string | null;
+}
+
+export interface AllocationWarning {
+  code: string;
+  message: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface LotCandidateResponse {
+  items: LotCandidate[];
+  warnings: AllocationWarning[];
 }
 
 /**
  * ロット引当リクエスト
  */
 export interface LotAllocationRequest {
-  items: {
+  allocations: {
     lot_id: number;
     qty: number;
   }[];

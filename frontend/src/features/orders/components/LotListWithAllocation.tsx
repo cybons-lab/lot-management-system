@@ -12,8 +12,6 @@ type Props = {
   onAllocate: (lotId: number, qty: number) => void;
   /** 引当取消 */
   onCancelAllocation: (allocationId: number) => void;
-  /** 選択中の倉庫 */
-  selectedWarehouse: string;
   /** 単位 */
   unit: string;
   /** ローディング中 */
@@ -25,7 +23,6 @@ export default function LotListWithAllocation({
   allocatedLots,
   onAllocate,
   onCancelAllocation,
-  selectedWarehouse,
   unit,
   isLoading,
 }: Props) {
@@ -59,11 +56,6 @@ export default function LotListWithAllocation({
     <div className="rounded-lg border">
       <div className="p-3 border-b bg-gray-50">
         <div className="text-sm font-medium">ロット候補</div>
-        {!selectedWarehouse && (
-          <div className="text-xs text-amber-600 mt-1">
-            ⚠️ 倉庫を選択してください
-          </div>
-        )}
       </div>
 
       <div className="divide-y">
@@ -82,6 +74,9 @@ export default function LotListWithAllocation({
                 {/* 左側: ロット情報 */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
+                      {lot.warehouse_code || "—"}
+                    </span>
                     {isAllocated && (
                       <Check className="h-4 w-4 text-green-600 shrink-0" />
                     )}
@@ -89,12 +84,18 @@ export default function LotListWithAllocation({
                       {lot.lot_code}
                     </div>
                   </div>
-                  
-                  <div className="text-xs text-gray-500 mt-1 space-y-0.5">
-                    <div>在庫: {lot.stock_qty} {unit}</div>
-                    {lot.warehouse_code && (
-                      <div>倉庫: {lot.warehouse_code}</div>
-                    )}
+
+                  <div className="text-xs text-gray-500 mt-2 space-y-0.5">
+                    <div>
+                      在庫: {lot.available_qty.toLocaleString()} {lot.base_unit}
+                      {typeof lot.lot_unit_qty === "number" &&
+                        lot.lot_unit &&
+                        lot.lot_unit !== lot.base_unit && (
+                        <span className="text-gray-400">
+                          {` (${lot.lot_unit_qty} ${lot.lot_unit})`}
+                        </span>
+                      )}
+                    </div>
                     {lot.expiry_date && (
                       <div>期限: {lot.expiry_date}</div>
                     )}
@@ -103,6 +104,9 @@ export default function LotListWithAllocation({
                   {/* 引当済みの場合 */}
                   {isAllocated && allocation && (
                     <div className="mt-2 flex items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                        {allocation.warehouse_code || lot.warehouse_code || "—"}
+                      </span>
                       <span className="text-xs font-medium text-green-700">
                         引当済: {allocation.allocated_qty} {unit}
                       </span>
@@ -124,7 +128,7 @@ export default function LotListWithAllocation({
                     <input
                       type="number"
                       min={0}
-                      max={lot.stock_qty}
+                      max={lot.available_qty}
                       value={inputQty}
                       onChange={(e) =>
                         setAllocQty((prev) => ({
@@ -133,11 +137,11 @@ export default function LotListWithAllocation({
                         }))
                       }
                       placeholder="数量"
-                      className="w-20 border rounded px-2 py-1 text-sm"
+                      className="w-24 border rounded px-2 py-1 text-sm"
                     />
                     <button
                       className="px-3 py-1 rounded bg-sky-600 text-white text-sm hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={!selectedWarehouse || inputQty <= 0}
+                      disabled={inputQty <= 0}
                       onClick={() => {
                         onAllocate(lot.lot_id, inputQty);
                         setAllocQty((prev) => ({ ...prev, [lot.lot_id]: 0 }));

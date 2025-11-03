@@ -5,7 +5,6 @@ import { RefreshCcw, Check } from "lucide-react";
 
 import OrderLineHeader from "@/features/orders/components/OrderLineHeader";
 import AllocationProgress from "@/features/orders/components/AllocationProgress";
-import WarehouseSelector from "@/features/orders/components/WarehouseSelector";
 import LotListWithAllocation from "@/features/orders/components/LotListWithAllocation";
 import ForecastSection from "@/features/orders/components/ForecastSection";
 import InfoRow from "@/components/common/InfoRow";
@@ -23,13 +22,11 @@ type Props = {
 export default function OrderLineCard({ order, line, onRematch }: Props) {
   const c = useOrderLineComputed(line, order);
   
-  // ★ 選択された倉庫（受注に指定された倉庫から選択）
-  const [selectedWarehouse, setSelectedWarehouse] = React.useState<string>("");
-  
   // ★ 品番を渡してフィルタリング
   const { candidatesQ, createAlloc, cancelAlloc } = useAllocationActions(
     c.ids.lineId,
-    c.productCode
+    c.productCode,
+    c.customerCode
   );
 
   const canRematch = !!onRematch && !!c.ids.orderId;
@@ -48,13 +45,8 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
       showToast({ title: "引当数量を入力してください", variant: "destructive" });
       return;
     }
-    if (!selectedWarehouse) {
-      showToast({ title: "倉庫を選択してください", variant: "destructive" });
-      return;
-    }
-    
     createAlloc.mutate(
-      { items: [{ lot_id: lotId, qty, warehouse_code: selectedWarehouse }] },
+      { allocations: [{ lot_id: lotId, qty }] },
       {
         onSuccess: () => showToast({ title: "引当完了" }),
         onError: () => showToast({ title: "引当失敗", variant: "destructive" }),
@@ -79,7 +71,7 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
         productName={c.productName}
         productCode={c.productCode}
         status={c.status}
-        orderDate={c.orderDate}
+        orderDate={formatYmd(c.orderDate) || undefined}
       />
 
       <div className="p-6">
@@ -105,12 +97,21 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
             </div>
 
             {/* ★ ロット一覧（常時表示） */}
+            {candidatesQ.data?.warnings?.length ? (
+              <div className="rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800 space-y-1">
+                {candidatesQ.data.warnings.map((warning) => (
+                  <div key={`${warning.code}-${warning.message}`}>
+                    <span className="font-semibold">{warning.code}:</span> {warning.message}
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
             <LotListWithAllocation
               candidates={candidatesQ.data?.items ?? []}
               allocatedLots={line?.allocated_lots ?? []}
               onAllocate={handleAllocate}
               onCancelAllocation={handleCancelAllocation}
-              selectedWarehouse={selectedWarehouse}
               unit={c.unit}
               isLoading={candidatesQ.isLoading}
             />
@@ -129,6 +130,7 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
             />
             <InfoRow label="数量" value={`${c.totalQty} ${c.unit}`} />
             <InfoRow label="得意先" value={c.customerCode ?? ""} />
+            <InfoRow label="受注日" value={formatYmd(c.orderDate) || "—"} />
             <InfoRow label="納期" value={formatYmd(c.dueDate) || "—"} />
             <InfoRow
               label="出荷日(予定)"
@@ -137,25 +139,22 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
 
             {/* ★ 配送リードタイム */}
             {c.shippingLeadTime && (
-              <InfoRow
-                label="配送リードタイム"
-                value={c.shippingLeadTime}
-                highlight={c.shippingLeadTime.includes("遅延")}
-              />
-            )}
-
-            {/* ★ 倉庫選択（受注指定の倉庫から選択） */}
-            <WarehouseSelector
-              warehouses={c.warehouses.length > 0 ? c.warehouses : ["WH-01", "WH-02"]} // 仮
-              selectedWarehouse={selectedWarehouse}
-              onSelectWarehouse={setSelectedWarehouse}
+            <InfoRow
+              label="配送リードタイム"
+              value={c.shippingLeadTime}
+              highlight={c.shippingLeadTime.includes("遅延")}
             />
+          )}
           </div>
         </div>
 
         {/* ★ フォーキャスト（全幅表示） */}
         <div className="mt-6">
-          <ForecastSection productCode={c.productCode} fullWidth />
+          <ForecastSection
+            productCode={c.productCode}
+            customerCode={c.customerCode}
+            fullWidth
+          />
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as ordersApi from "@/features/orders/api";
 import type {
   LotCandidate,
+  LotCandidateResponse,
   LotAllocationRequest,
   LotAllocationResponse,
   SaveAllocationsResponse,
@@ -21,21 +22,24 @@ const keyCandidates = (orderLineId: number) =>
  */
 export function useCandidateLots(
   orderLineId: number | undefined,
-  productCode?: string
+  productCode?: string,
+  customerCode?: string
 ) {
-  return useQuery<{ items: LotCandidate[] }>({
+  return useQuery<LotCandidateResponse>({
     queryKey: orderLineId
-      ? [...keyCandidates(orderLineId), productCode]
+      ? [...keyCandidates(orderLineId), productCode, customerCode]
       : ["orders", "line", "candidates", "disabled"],
-    queryFn: () => ordersApi.getCandidateLots(orderLineId as number),
+    queryFn: () =>
+      ordersApi.getCandidateLots(orderLineId as number, {
+        product_code: productCode,
+        customer_code: customerCode,
+      }),
     enabled: !!orderLineId,
     select: (data) => {
-      // 品番が指定されている場合は一致するロットのみを返す
       if (!productCode) return data;
       return {
-        items: data.items.filter(
-          (lot) => lot.product_code === productCode
-        ),
+        ...data,
+        items: data.items.filter((lot) => lot.product_code === productCode),
       };
     },
   });
@@ -62,18 +66,34 @@ export function useCreateAllocations(
       // 楽観的更新: 候補ロットの在庫を即座に減算
       qc.setQueriesData(
         { queryKey: keyCandidates(orderLineId) },
-        (old: any) => {
+        (old: LotCandidateResponse | undefined) => {
           if (!old?.items) return old;
           return {
             ...old,
-            items: old.items.map((lot: LotCandidate) => {
-              const allocItem = newAlloc.items.find(
+            items: old.items.map((lot) => {
+              const allocItem = newAlloc.allocations.find(
                 (item) => item.lot_id === lot.lot_id
               );
               if (!allocItem) return lot;
+              const nextAvailable = Math.max(
+                0,
+                lot.available_qty - allocItem.qty
+              );
+              const factor = lot.conversion_factor && lot.conversion_factor > 0
+                ? lot.conversion_factor
+                : 1;
+              const nextLotUnitQty =
+                typeof lot.lot_unit_qty === "number"
+                  ? Math.max(
+                      0,
+                      lot.lot_unit_qty - allocItem.qty / factor
+                    )
+                  : lot.lot_unit_qty;
+
               return {
                 ...lot,
-                stock_qty: lot.stock_qty - allocItem.qty,
+                available_qty: nextAvailable,
+                lot_unit_qty: nextLotUnitQty,
               };
             }),
           };

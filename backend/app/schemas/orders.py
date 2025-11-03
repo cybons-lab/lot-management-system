@@ -200,16 +200,36 @@ class SaveAllocationsRequest(BaseSchema):
     allocations: list[WarehouseAllocIn]
 
 
+class AllocationWarning(BaseSchema):
+    """ロット候補取得時の警告情報"""
+
+    code: str
+    message: str
+    meta: Optional[dict] = None
+
+
 class LotCandidateOut(BaseSchema):
     """引当候補ロット情報"""
 
     lot_id: int
     lot_code: str
-    available_qty: float
-    unit: str
+    lot_number: Optional[str] = None
+    product_code: str
     warehouse_code: str
+    available_qty: float
+    base_unit: str
+    lot_unit_qty: Optional[float] = None
+    lot_unit: Optional[str] = None
+    conversion_factor: Optional[float] = None
     expiry_date: Optional[str] = None
     mfg_date: Optional[str] = None
+
+
+class LotCandidateListResponse(BaseSchema):
+    """ロット候補レスポンス"""
+
+    items: List[LotCandidateOut] = Field(default_factory=list)
+    warnings: List[AllocationWarning] = Field(default_factory=list)
 
 
 class LotAllocationRequest(BaseSchema):

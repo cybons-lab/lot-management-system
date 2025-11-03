@@ -19,6 +19,7 @@ from app.models import (
     LotCurrentStock,
     Order,
     OrderLine,
+    Product,
     StockMovement,
 )
 from app.models.warehouse import OrderLineWarehouseAllocation, Warehouse
@@ -33,6 +34,9 @@ from app.schemas import (
 )
 from app.schemas.base import ResponseBase
 from app.schemas.orders import (
+    AllocationWarning,
+    LotCandidateListResponse,
+    LotCandidateOut,
     OrderLineOut,
     OrdersWithAllocResponse,
     SaveAllocationsRequest,
@@ -463,51 +467,177 @@ def save_warehouse_allocations(
 
 
 # ===== ロット候補取得 =====
-@router.get("/{order_line_id}/candidate-lots")
+@router.get(
+    "/{order_line_id}/candidate-lots",
+    response_model=LotCandidateListResponse,
+)
 def get_candidate_lots_for_allocation(
-    order_line_id: int, db: Session = Depends(get_db)
+    order_line_id: int,
+    product_code: Optional[str] = None,
+    customer_code: Optional[str] = None,
+    db: Session = Depends(get_db),
 ):
     """受注明細に対する引当候補ロットを取得"""
-    order_line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
+
+    warnings: list[AllocationWarning] = []
+
+    order_line = (
+        db.query(OrderLine)
+        .options(joinedload(OrderLine.order), joinedload(OrderLine.product))
+        .filter(OrderLine.id == order_line_id)
+        .first()
+    )
     if not order_line:
         raise HTTPException(status_code=404, detail="受注明細が見つかりません")
 
-    # 同じproduct_codeで在庫のあるロットを取得
-    query = (
+    requested_product_code = (product_code or "").strip()
+    order_line_product_code = order_line.product_code.strip() if order_line.product_code else ""
+
+    if (
+        requested_product_code
+        and order_line_product_code
+        and requested_product_code != order_line_product_code
+    ):
+        warnings.append(
+            AllocationWarning(
+                code="OCR_MISMATCH",
+                message="受注明細の品番と照合結果の品番が一致しません",
+                meta={
+                    "order_line_product_code": order_line_product_code,
+                    "requested_product_code": requested_product_code,
+                },
+            )
+        )
+
+    target_product_code = requested_product_code or order_line_product_code
+    if not target_product_code:
+        warnings.append(
+            AllocationWarning(
+                code="OCR_MISMATCH",
+                message="品番を特定できませんでした",
+            )
+        )
+        return LotCandidateListResponse(warnings=warnings)
+
+    product = (
+        db.query(Product)
+        .options(selectinload(Product.conversions))
+        .filter(Product.product_code == target_product_code)
+        .first()
+    )
+
+    if not product:
+        warnings.append(
+            AllocationWarning(
+                code="OCR_MISMATCH",
+                message=f"品番 {target_product_code} は製品マスタに存在しません",
+                meta={"product_code": target_product_code},
+            )
+        )
+        return LotCandidateListResponse(warnings=warnings)
+
+    base_unit = product.internal_unit or order_line.unit or "EA"
+
+    normalized_customer_code = (customer_code or "").strip()
+    if not normalized_customer_code and order_line.order:
+        normalized_customer_code = order_line.order.customer_code or ""
+
+    conversion_map: dict[str, float] = {}
+    for conv in product.conversions:
+        if conv.source_unit and conv.source_value and conv.internal_unit_value:
+            conversion_map[conv.source_unit] = conv.internal_unit_value / conv.source_value
+
+    stocked_lots: list[Lot] = (
         db.query(Lot)
+        .options(joinedload(Lot.current_stock))
         .join(LotCurrentStock, Lot.id == LotCurrentStock.lot_id)
         .filter(
             and_(
-                Lot.product_code == order_line.product_code,
+                Lot.product_code == target_product_code,
                 LotCurrentStock.current_quantity > 0,
             )
         )
         .order_by(Lot.expiry_date.asc().nullslast())
+        .all()
     )
 
-    lots = query.all()
+    total_lot_count = (
+        db.query(func.count())
+        .select_from(Lot)
+        .filter(Lot.product_code == target_product_code)
+        .scalar()
+        or 0
+    )
 
-    result = []
-    for lot in lots:
-        current_stock = (
-            db.query(LotCurrentStock).filter(LotCurrentStock.lot_id == lot.id).first()
+    items: list[LotCandidateOut] = []
+    unit_conversion_missing = False
+
+    for lot in stocked_lots:
+        current_stock = lot.current_stock.current_quantity if lot.current_stock else 0.0
+        lot_unit = lot.inventory_unit or base_unit
+
+        conversion_factor: Optional[float] = 1.0
+        lot_unit_qty = current_stock
+        available_qty = current_stock
+
+        if lot_unit and lot_unit != base_unit:
+            conversion_factor = conversion_map.get(lot_unit)
+            if conversion_factor:
+                available_qty = lot_unit_qty * conversion_factor
+            else:
+                unit_conversion_missing = True
+                continue
+
+        items.append(
+            LotCandidateOut(
+                lot_id=lot.id,
+                lot_code=f"{lot.supplier_code}-{lot.product_code}-{lot.lot_number}",
+                lot_number=lot.lot_number,
+                product_code=lot.product_code,
+                warehouse_code=lot.warehouse_code or "",
+                available_qty=available_qty,
+                base_unit=base_unit,
+                lot_unit_qty=lot_unit_qty if lot_unit else None,
+                lot_unit=lot_unit,
+                conversion_factor=conversion_factor,
+                expiry_date=lot.expiry_date.isoformat() if lot.expiry_date else None,
+                mfg_date=lot.mfg_date.isoformat() if lot.mfg_date else None,
+            )
         )
 
-        result.append(
-            {
-                "lot_id": lot.id,
-                "lot_code": f"{lot.supplier_code}-{lot.product_code}-{lot.lot_number}",
-                "available_qty": current_stock.current_quantity
-                if current_stock
-                else 0.0,
-                "unit": lot.inventory_unit or order_line.unit or "EA",
-                "warehouse_code": lot.warehouse_code or "N/A",
-                "expiry_date": lot.expiry_date.isoformat() if lot.expiry_date else None,
-                "mfg_date": lot.mfg_date.isoformat() if lot.mfg_date else None,
-            }
+    if total_lot_count == 0:
+        warnings.append(
+            AllocationWarning(
+                code="NO_INBOUND_YET",
+                message=f"品番 {target_product_code} はまだ入荷登録がありません",
+                meta={
+                    "product_code": target_product_code,
+                    "customer_code": normalized_customer_code or None,
+                },
+            )
+        )
+    elif not items:
+        warnings.append(
+            AllocationWarning(
+                code="OUT_OF_STOCK",
+                message=f"品番 {target_product_code} のロットは登録されていますが利用可能在庫がありません",
+                meta={
+                    "product_code": target_product_code,
+                    "customer_code": normalized_customer_code or None,
+                },
+            )
         )
 
-    return {"items": result}
+    if unit_conversion_missing:
+        warnings.append(
+            AllocationWarning(
+                code="UNIT_CONVERSION_MISSING",
+                message="単位換算が未登録のロットがあるため候補から除外しました",
+                meta={"product_code": target_product_code},
+            )
+        )
+
+    return LotCandidateListResponse(items=items, warnings=warnings)
 
 
 # ===== ロット引当実行 =====

@@ -6,6 +6,7 @@ import type {
   ForecastBulkRequest,
   ForecastBulkResponse,
 } from "@/types";
+import type { ForecastResponse } from "@/types/forecast";
 
 export const getForecastList = (params: ForecastListParams) => {
   const searchParams = new URLSearchParams();
@@ -26,3 +27,16 @@ export const bulkImportForecast = (data: ForecastBulkRequest) =>
     method: "POST",
     body: JSON.stringify(data),
   });
+
+export const getForecastByCodes = (
+  productCode: string,
+  clientCode: string
+) => {
+  const searchParams = new URLSearchParams();
+  searchParams.append("product_code", productCode);
+  searchParams.append("client_code", clientCode);
+  return fetchApi<ForecastResponse[]>(
+    `/forecast?${searchParams.toString()}`,
+    { method: "GET" }
+  );
+};

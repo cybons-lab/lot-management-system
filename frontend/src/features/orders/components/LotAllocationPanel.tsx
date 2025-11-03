@@ -159,13 +159,22 @@ export default function LotAllocationPanel(props: Props) {
                   <tr key={c.lot_id} className="border-t">
                     <td className="py-1">{c.lot_id}</td>
                     <td className="py-1">{c.lot_code}</td>
-                    <td className="py-1">{c.stock_qty}</td>
+                    <td className="py-1">
+                      {c.available_qty} {c.base_unit}
+                      {typeof c.lot_unit_qty === "number" &&
+                        c.lot_unit &&
+                        c.lot_unit !== c.base_unit && (
+                        <span className="text-gray-400">
+                          {` (${c.lot_unit_qty} ${c.lot_unit})`}
+                        </span>
+                      )}
+                    </td>
                     <td className="py-1">
                       <input
                         className="border rounded px-2 py-0.5 w-24"
                         type="number"
                         min={0}
-                        max={c.stock_qty}
+                        max={c.available_qty}
                         value={Number(selected[c.lot_id] ?? 0)}
                         onChange={(e) =>
                           setSelected((prev) => ({

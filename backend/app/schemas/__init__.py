@@ -105,7 +105,9 @@ from .orders import (
     DragAssignResponse,
     LotAllocationRequest,
     LotAllocationResponse,
+    LotCandidateListResponse,
     LotCandidateOut,
+    AllocationWarning,
     # Order
     OrderBase,
     OrderCreate,
@@ -242,6 +244,8 @@ __all__ = [
     "OrderLineOut",
     "OrdersWithAllocResponse",
     "SaveAllocationsRequest",
+    "AllocationWarning",
+    "LotCandidateListResponse",
     "LotCandidateOut",
     "LotAllocationRequest",
     "LotAllocationResponse",

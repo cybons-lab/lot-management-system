@@ -4,8 +4,10 @@
 ヘルスチェック、データベースリセット等
 """
 
+import logging
 import traceback
 from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, text
@@ -31,8 +33,10 @@ from app.schemas import (
     FullSampleDataRequest,
     ResponseBase,
 )
+from app.schemas.integration import OcrOrderRecord
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("/health")
@@ -196,6 +200,94 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
         "orders": 0,
     }
 
+    validation_warnings: list[str] = []
+
+    def _parse_iso_date(value, context: str, field: str) -> Optional[date]:
+        """入力値をdateに変換し、失敗した場合は警告を記録する"""
+
+        if value is None:
+            validation_warnings.append(f"[{context}] {field} が未設定です")
+            return None
+
+        if isinstance(value, date):
+            return value
+
+        if isinstance(value, str):
+            raw = value.strip()
+            if not raw or raw in {"-", "--"}:
+                validation_warnings.append(
+                    f"[{context}] {field} が欠落しています (値: '{value}')"
+                )
+                return None
+            try:
+                return date.fromisoformat(raw)
+            except ValueError:
+                validation_warnings.append(
+                    f"[{context}] {field} が日付形式 (YYYY-MM-DD) ではありません: '{value}'"
+                )
+                return None
+
+        validation_warnings.append(
+            f"[{context}] {field} を日付に変換できませんでした (値種別: {type(value).__name__})"
+        )
+        return None
+
+    parsed_orders: list[tuple[OcrOrderRecord, date, list[dict]]] = []
+    if data.orders:
+        for o_idx, o_data in enumerate(data.orders):
+            context = f"order[{o_idx}] {o_data.order_no}" if o_data.order_no else f"order[{o_idx}]"
+
+            if not o_data.order_no:
+                validation_warnings.append(f"[{context}] order_no は必須です")
+            if not o_data.customer_code:
+                validation_warnings.append(f"[{context}] customer_code は必須です")
+
+            order_date_obj = _parse_iso_date(o_data.order_date, context, "order_date")
+            if order_date_obj is None:
+                order_date_obj = date.today()
+                validation_warnings.append(
+                    f"[{context}] order_date を {order_date_obj.isoformat()} で補完しました"
+                )
+
+            parsed_lines: list[dict] = []
+            for line_idx, line in enumerate(o_data.lines or []):
+                line_ctx = f"{context} line[{line_idx}]"
+
+                if not getattr(line, "product_code", None):
+                    validation_warnings.append(
+                        f"[{line_ctx}] product_code は必須です"
+                    )
+
+                quantity = getattr(line, "quantity", None)
+                if quantity is None or quantity <= 0:
+                    validation_warnings.append(
+                        f"[{line_ctx}] quantity が未設定または0以下です (値: {quantity})"
+                    )
+
+                unit = getattr(line, "unit", None)
+                if not unit:
+                    unit = "EA"
+                    validation_warnings.append(
+                        f"[{line_ctx}] unit が未設定のため 'EA' を補完しました"
+                    )
+
+                due_date_obj = _parse_iso_date(line.due_date, line_ctx, "due_date")
+                if due_date_obj is None:
+                    due_date_obj = order_date_obj
+                    validation_warnings.append(
+                        f"[{line_ctx}] due_date を {due_date_obj.isoformat()} で補完しました"
+                    )
+
+                line_data = line.model_dump()
+                line_data["due_date"] = due_date_obj
+                line_data["unit"] = unit
+                parsed_lines.append(line_data)
+
+            if not parsed_lines:
+                validation_warnings.append(f"[{context}] 有効な明細行がありません")
+            else:
+                parsed_orders.append((o_data, order_date_obj, parsed_lines))
+
     try:
         # 1. 製品 (Products)
         if data.products:
@@ -291,59 +383,43 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
             db.commit()
 
         # 4. 受注 (Orders) - OCR取込のロジックを簡易的に再現
-        if data.orders:
-            for o_data in data.orders:
+        if parsed_orders:
+            for o_data, order_date_obj, parsed_lines in parsed_orders:
                 existing_order = (
                     db.query(Order).filter_by(order_no=o_data.order_no).first()
                 )
                 if existing_order:
                     continue
 
-                # --- 🔽 2. ここを修正 🔽 ---
-                # 'YYYY-MM-DD' の文字列を Python の date オブジェクトに変換
-                order_date_obj = None
-                if o_data.order_date:
-                    try:
-                        # Pydanticスキーマ(OcrOrderRecord)では 'str' なので変換
-                        order_date_obj = date.fromisoformat(o_data.order_date)
-                    except (ValueError, TypeError):
-                        pass  # 不正な形式の場合は None のまま
-
                 db_order = Order(
                     order_no=o_data.order_no,
                     customer_code=o_data.customer_code,
-                    order_date=order_date_obj,  # 修正: 文字列ではなく date オブジェクトを渡す
+                    order_date=order_date_obj,
                     status="open",
                 )
-                # --- 🔼 修正完了 🔼 ---
 
                 db.add(db_order)
                 db.flush()
 
-                for line in o_data.lines:
-                    # --- 🔽 3. (念のため) OrderLine の due_date も変換 🔽 ---
-                    due_date_obj = None
-                    if line.due_date:
-                        try:
-                            # Pydantic(OrderLineCreate)が自動変換するはずだが、念のため
-                            if isinstance(line.due_date, str):
-                                due_date_obj = date.fromisoformat(line.due_date)
-                            else:
-                                due_date_obj = line.due_date  # 既にdateオブジェクト
-                        except (ValueError, TypeError):
-                            pass
-
-                    line_data = line.model_dump()
-                    line_data["due_date"] = due_date_obj  # date オブジェクトで上書き
-
+                for line_data in parsed_lines:
                     db_line = OrderLine(order_id=db_order.id, **line_data)
-                    # --- 🔼 修正完了 🔼 ---
                     db.add(db_line)
+
                 counts["orders"] += 1
             db.commit()
 
+        if validation_warnings:
+            for msg in validation_warnings:
+                logger.warning("[sample-data] %s", msg)
+
+        response_payload = {"counts": counts}
+        if validation_warnings:
+            response_payload["warnings"] = validation_warnings
+
         return ResponseBase(
-            success=True, message="サンプルデータを正常に投入しました", data=counts
+            success=True,
+            message="サンプルデータを正常に投入しました",
+            data=response_payload,
         )
 
     except Exception as e:

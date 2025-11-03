@@ -7,7 +7,7 @@ import type {
   ReMatchResponse,
   OrdersWithAllocResponse,
   WarehouseListResponse,
-  LotCandidate,
+  LotCandidateResponse,
   LotAllocationRequest,
   LotAllocationResponse,
   SaveAllocationsRequest,
@@ -48,10 +48,26 @@ export const getWarehouseAllocList = () =>
     method: "GET",
   });
 
-export const getCandidateLots = (orderLineId: number) =>
-  fetchApi<{ items: LotCandidate[] }>(`/orders/${orderLineId}/candidate-lots`, {
-    method: "GET",
-  });
+export const getCandidateLots = (
+  orderLineId: number,
+  params?: { product_code?: string; customer_code?: string }
+) => {
+  const searchParams = new URLSearchParams();
+  if (params?.product_code)
+    searchParams.append("product_code", params.product_code);
+  if (params?.customer_code)
+    searchParams.append("customer_code", params.customer_code);
+
+  const queryString = searchParams.toString();
+  return fetchApi<LotCandidateResponse>(
+    `/orders/${orderLineId}/candidate-lots${
+      queryString ? "?" + queryString : ""
+    }`,
+    {
+      method: "GET",
+    }
+  );
+};
 
 export const createLotAllocations = (
   orderLineId: number,
