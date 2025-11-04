@@ -1,0 +1,22 @@
+{
+  "warehouses": [
+    {"warehouse_code": "PRST-WH1", "warehouse_name": "プリセット倉庫1", "is_active": 1}
+  ],
+  "suppliers": [
+    {"supplier_code": "PRST-SUP1", "supplier_name": "プリセット仕入先"}
+  ],
+  "customers": [
+    {"customer_code": "PRST-CUS1", "customer_name": "プリセット得意先"}
+  ],
+  "products": [
+    {
+      "product_code": "PRST-PROD1",
+      "product_name": "プリセット製品",
+      "packaging_qty": 1,
+      "packaging_unit": "EA",
+      "internal_unit": "EA",
+      "base_unit": "EA",
+      "requires_lot_number": true
+    }
+  ]
+}

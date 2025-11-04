@@ -6,6 +6,8 @@
 from datetime import date, datetime
 from typing import Optional
 
+from pydantic import model_validator
+
 from .base import BaseSchema, TimestampMixin
 
 
@@ -18,6 +20,8 @@ class LotBase(BaseSchema):
     mfg_date: Optional[date] = None
     expiry_date: Optional[date] = None
     warehouse_code: Optional[str] = None
+    warehouse_id: Optional[str] = None
+    lot_unit: Optional[str] = None
     kanban_class: Optional[str] = None
     sales_unit: Optional[str] = None
     inventory_unit: Optional[str] = None
@@ -35,6 +39,8 @@ class LotUpdate(BaseSchema):
     mfg_date: Optional[date] = None
     expiry_date: Optional[date] = None
     warehouse_code: Optional[str] = None
+    warehouse_id: Optional[str] = None
+    lot_unit: Optional[str] = None
     qc_certificate_status: Optional[str] = None
     qc_certificate_file: Optional[str] = None
 
@@ -47,17 +53,22 @@ class LotResponse(LotBase, TimestampMixin):
 
 # --- StockMovement ---
 class StockMovementBase(BaseSchema):
-    lot_id: int
-    movement_type: str  # receipt, allocate, ship, adjust, transfer_in, transfer_out
-    quantity: float
-    related_id: Optional[str] = None
+    product_id: str
+    warehouse_id: str
+    lot_id: Optional[int] = None
+    quantity_delta: float
+    reason: str
+    source_table: Optional[str] = None
+    source_id: Optional[int] = None
+    batch_id: Optional[str] = None
+    created_by: str = "system"
 
 
 class StockMovementCreate(StockMovementBase):
     pass
 
 
-class StockMovementResponse(StockMovementBase):
+class StockMovementResponse(StockMovementBase, TimestampMixin):
     id: int
     occurred_at: datetime
 
@@ -92,10 +103,19 @@ class ReceiptHeaderResponse(ReceiptHeaderBase):
 class ReceiptLineBase(BaseSchema):
     line_no: int
     product_code: str
-    lot_id: int
+    lot_id: Optional[int] = None
+    lot_number: Optional[str] = None
     quantity: float
     unit: Optional[str] = None
     notes: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _validate_lot_identifier(cls, data):
+        lot_id = getattr(data, "lot_id", None)
+        lot_number = getattr(data, "lot_number", None)
+        if lot_id is None and not lot_number:
+            raise ValueError("lot_id または lot_number のいずれかを指定してください")
+        return data
 
 
 class ReceiptLineCreate(ReceiptLineBase):

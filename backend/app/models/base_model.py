@@ -4,7 +4,7 @@ SQLAlchemy Base Model
 共通のベースクラスと外部キー制約の設定
 """
 
-from sqlalchemy import event
+from sqlalchemy import Column, DateTime, Integer, String, event, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.engine import Engine
 
@@ -18,3 +18,16 @@ def set_sqlite_pragma(dbapi_conn, connection_record):
 
 # 全てのモデルの基底クラス
 Base = declarative_base()
+
+
+class AuditMixin:
+    """共通の監査カラムを提供するミックスイン"""
+
+    created_at = Column(DateTime, nullable=False, server_default=func.now())
+    updated_at = Column(
+        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
+    )
+    created_by = Column(String(50), nullable=True)
+    updated_by = Column(String(50), nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
+    revision = Column(Integer, nullable=False, server_default="1", default=1)

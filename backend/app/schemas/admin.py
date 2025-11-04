@@ -8,7 +8,7 @@ from pydantic import BaseModel
 
 from .integration import OcrOrderRecord
 from .inventory import LotCreate, ReceiptCreateRequest
-from .masters import ProductCreate
+from .masters import MasterBulkLoadResponse, ProductCreate
 
 
 class FullSampleDataRequest(BaseModel):
@@ -32,3 +32,16 @@ class DashboardStatsResponse(BaseModel):
     total_stock: float
     total_orders: int
     unallocated_orders: int
+
+
+class AdminPresetListResponse(BaseModel):
+    """プリセット名の一覧レスポンス。"""
+
+    presets: List[str]
+
+
+class AdminPresetLoadResponse(BaseModel):
+    """プリセット投入結果。"""
+
+    preset: str
+    result: MasterBulkLoadResponse

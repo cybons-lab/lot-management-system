@@ -3,7 +3,10 @@
 マスタ関連のPydanticスキーマ
 """
 
+from decimal import Decimal
 from typing import Optional
+
+from pydantic import Field
 
 from .base import BaseSchema
 
@@ -76,12 +79,15 @@ class ProductBase(BaseSchema):
     product_name: str
     customer_part_no: Optional[str] = None
     maker_part_no: Optional[str] = None
-    internal_unit: str = "EA"
+    packaging_qty: Decimal = Field(..., gt=Decimal("0"))
+    packaging_unit: str = Field(..., min_length=1)
+    internal_unit: str = Field(..., min_length=1)
+    base_unit: str = "EA"
     packaging: Optional[str] = None
     assemble_div: Optional[str] = None
     next_div: Optional[str] = None
     shelf_life_days: Optional[int] = None
-    requires_lot_number: int = 1
+    requires_lot_number: bool = True
 
 
 class ProductCreate(ProductBase):
@@ -92,12 +98,15 @@ class ProductUpdate(BaseSchema):
     product_name: Optional[str] = None
     customer_part_no: Optional[str] = None
     maker_part_no: Optional[str] = None
+    packaging_qty: Optional[Decimal] = Field(default=None, gt=Decimal("0"))
+    packaging_unit: Optional[str] = None
     internal_unit: Optional[str] = None
+    base_unit: Optional[str] = None
     packaging: Optional[str] = None
     assemble_div: Optional[str] = None
     next_div: Optional[str] = None
     shelf_life_days: Optional[int] = None
-    requires_lot_number: Optional[int] = None
+    requires_lot_number: Optional[bool] = None
 
 
 class ProductResponse(ProductBase):
@@ -123,3 +132,19 @@ class ProductUomConversionUpdate(BaseSchema):
 
 class ProductUomConversionResponse(ProductUomConversionBase):
     id: int
+
+
+class MasterBulkLoadRequest(BaseSchema):
+    """Bulk load payload for master data."""
+
+    warehouses: list[WarehouseCreate] = Field(default_factory=list)
+    suppliers: list[SupplierCreate] = Field(default_factory=list)
+    customers: list[CustomerCreate] = Field(default_factory=list)
+    products: list[ProductCreate] = Field(default_factory=list)
+
+
+class MasterBulkLoadResponse(BaseSchema):
+    """Bulk load result summary."""
+
+    created: dict[str, list[str]] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)

@@ -12,3 +12,5 @@ dist/
 .npm
 *.log
 .DS_Store
+
+lint_logs/

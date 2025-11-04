@@ -11,8 +11,15 @@ Models Package
 
 # 1. 共通のBaseをインポートする
 from .base_model import Base
-from .forecast import (
-    Forecast,
+
+# 2. 各ドメインのモデルをすべてインポートする
+from .masters import (
+    Customer,
+    Product,
+    ProductUomConversion,
+    Supplier,
+    UnitConversion,
+    Warehouse,  # 統合された新Warehouse
 )
 from .inventory import (
     ExpiryRule,
@@ -21,26 +28,20 @@ from .inventory import (
     ReceiptHeader,
     ReceiptLine,
     StockMovement,
-)
-from .logs import (
-    OcrSubmission,
-    SapSyncLog,
-)
-
-# 2. 各ドメインのモデルをすべてインポートする
-from .masters import (
-    Customer,
-    Product,
-    ProductUomConversion,
-    Supplier,
-    Warehouse,
+    StockMovementReason,
 )
 from .orders import (
     Allocation,
     Order,
     OrderLine,
+    OrderLineWarehouseAllocation,  # orders.pyから直接インポート
+    NextDivMap,
     PurchaseRequest,
     Shipping,
+)
+from .logs import InboundSubmission, OcrSubmission, SapSyncLog
+from .forecast import (
+    Forecast,
 )
 
 # 3. 外部に公開するモデルを明示
@@ -52,20 +53,25 @@ __all__ = [
     "Customer",
     "Product",
     "ProductUomConversion",
+    "UnitConversion",
     # Inventory
     "Lot",
     "StockMovement",
+    "StockMovementReason",
     "LotCurrentStock",
     "ReceiptHeader",
     "ReceiptLine",
     "ExpiryRule",
-    # Sales
+    # Sales/Orders
     "Order",
     "OrderLine",
+    "OrderLineWarehouseAllocation",
     "Allocation",
     "Shipping",
     "PurchaseRequest",
+    "NextDivMap",
     # Logs
+    "InboundSubmission",
     "OcrSubmission",
     "SapSyncLog",
     # Forecast

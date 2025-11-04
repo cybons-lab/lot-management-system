@@ -21,7 +21,7 @@ def _year_month_str(d: date) -> str:
 def pick_forecast(
     db: Session,
     product_id: str,
-    client_id: str,
+    customer_id: str,
     supplier_id: str,
     order_date: date,
 ) -> Tuple[Optional[Forecast], Optional[str]]:
@@ -30,7 +30,7 @@ def pick_forecast(
         select(Forecast)
         .where(
             Forecast.product_id == product_id,
-            Forecast.client_id == client_id,
+            Forecast.customer_id == customer_id,
             Forecast.supplier_id == supplier_id,
             Forecast.granularity == "daily",
             Forecast.date_day == order_date,
@@ -49,7 +49,7 @@ def pick_forecast(
         select(Forecast)
         .where(
             Forecast.product_id == product_id,
-            Forecast.client_id == client_id,
+            Forecast.customer_id == customer_id,
             Forecast.supplier_id == supplier_id,
             Forecast.granularity == "dekad",
             Forecast.date_dekad_start == dk_start,
@@ -68,7 +68,7 @@ def pick_forecast(
         select(Forecast)
         .where(
             Forecast.product_id == product_id,
-            Forecast.client_id == client_id,
+            Forecast.customer_id == customer_id,
             Forecast.supplier_id == supplier_id,
             Forecast.granularity == "monthly",
             Forecast.year_month == ym,

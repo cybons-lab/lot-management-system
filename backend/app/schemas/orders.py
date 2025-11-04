@@ -19,6 +19,7 @@ class OrderBase(BaseSchema):
     customer_code: str
     order_date: Optional[date] = None
     status: str = "open"
+    customer_order_no: Optional[str] = None
 
 
 class OrderUpdate(BaseSchema):
@@ -46,7 +47,7 @@ class OrderLineBase(BaseSchema):
 
 
 class OrderLineCreate(OrderLineBase):
-    pass
+    external_unit: str = Field(..., min_length=1)
 
 
 class OrderCreate(OrderBase):
@@ -88,6 +89,40 @@ class AllocationCreate(AllocationBase):
 class AllocationResponse(AllocationBase):
     id: int
     allocated_at: datetime
+
+
+class FefoLotAllocation(BaseSchema):
+    lot_id: int
+    lot_number: str
+    allocate_qty: float
+    expiry_date: Optional[date] = None
+    receipt_date: Optional[date] = None
+
+
+class FefoLineAllocation(BaseSchema):
+    order_line_id: int
+    product_code: str
+    required_qty: float
+    already_allocated_qty: float
+    allocations: list[FefoLotAllocation] = Field(default_factory=list)
+    next_div: Optional[str] = None
+    warnings: list[str] = Field(default_factory=list)
+
+
+class FefoPreviewRequest(BaseSchema):
+    order_id: int
+
+
+class FefoPreviewResponse(BaseSchema):
+    order_id: int
+    lines: list[FefoLineAllocation] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class FefoCommitResponse(BaseSchema):
+    order_id: int
+    created_allocation_ids: list[int] = Field(default_factory=list)
+    preview: FefoPreviewResponse
 
 
 class DragAssignRequest(BaseSchema):

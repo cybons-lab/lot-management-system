@@ -1,22 +1,23 @@
 # backend/app/models/logs.py
 """
 連携・ログ関連のモデル定義
-OCR取込ログ、SAP連携ログ
+入庫取込ログ（汎用化）、SAP連携ログ
 """
 
-from sqlalchemy import Column, Integer, Text, ForeignKey, DateTime, func
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import relationship
-from .base_model import Base
+from .base_model import AuditMixin, Base
 
 
-class OcrSubmission(Base):
-    """OCR取込ログ"""
-    __tablename__ = "ocr_submissions"
-    
+class InboundSubmission(AuditMixin, Base):
+    """受入取込ログ（OCR等の汎用チャネル）。"""
+
+    __tablename__ = "inbound_submissions"
+
     id = Column(Integer, primary_key=True, autoincrement=True)
     submission_id = Column(Text, unique=True)
     source_file = Column(Text)
-    source = Column(Text)  # PAD, API, etc.
+    source = Column(String(20), nullable=False, default="ocr")  # ocr, edi, api, etc.
     operator = Column(Text)
     schema_version = Column(Text)
     target_type = Column(Text, default='order')  # order, receipt, etc.
@@ -27,10 +28,9 @@ class OcrSubmission(Base):
     failed_records = Column(Integer)
     skipped_records = Column(Integer)
     error_details = Column(Text)
-    created_at = Column(DateTime, default=func.now())
 
 
-class SapSyncLog(Base):
+class SapSyncLog(AuditMixin, Base):
     """SAP連携ログ"""
     __tablename__ = "sap_sync_logs"
     
@@ -43,3 +43,7 @@ class SapSyncLog(Base):
     
     # リレーション
     order = relationship("Order", back_populates="sap_sync_logs")
+
+
+# 後方互換用エイリアス（フェーズ2での削除を想定）
+OcrSubmission = InboundSubmission

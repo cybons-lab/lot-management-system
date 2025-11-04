@@ -15,7 +15,7 @@ class ForecastBase(BaseSchema):
 
     forecast_id: str  # UUID等の一意識別子
     product_id: str
-    client_id: str
+    customer_id: str
     supplier_id: str
     granularity: Literal["daily", "dekad", "monthly"]
     qty_forecast: int
@@ -34,7 +34,7 @@ class ForecastCreate(BaseSchema):
 
     forecast_id: str
     product_id: str
-    client_id: str
+    customer_id: str
     supplier_id: str
     granularity: Literal["daily", "dekad", "monthly"]
     qty_forecast: int
@@ -166,7 +166,7 @@ class ForecastItemOut(BaseSchema):
     id: int
     product_code: str
     product_name: str
-    client_code: str
+    customer_code: str
     supplier_code: str
     granularity: str
     version_no: int
@@ -180,7 +180,7 @@ class ForecastItemOut(BaseSchema):
     dekad_summary: Optional[Dict[str, float]] = None
 
     # フロントのモックデータに合わせたダミーフィールド (スキーマのみ)
-    client_name: Optional[str] = "得意先A (ダミー)"
+    customer_name: Optional[str] = "得意先A (ダミー)"
     supplier_name: Optional[str] = "サプライヤーB (ダミー)"
     unit: str = "EA"
     version_history: List[dict] = []

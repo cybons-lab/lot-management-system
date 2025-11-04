@@ -24,7 +24,7 @@ class ForecastMatcher:
         self,
         order_line: OrderLine,
         product_code: str,
-        client_code: str,
+        customer_code: str,
         order_date: date,
     ) -> Optional[dict]:
         """
@@ -33,7 +33,7 @@ class ForecastMatcher:
         Args:
             order_line: 受注明細オブジェクト
             product_code: 製品コード
-            client_code: 得意先コード
+            customer_code: 得意先コード
             order_date: 受注日
 
         Returns:
@@ -48,7 +48,7 @@ class ForecastMatcher:
         """
         # 1. 日次マッチング (EXACT)
         daily_forecast = self._find_daily_forecast(
-            product_code, client_code, order_date
+            product_code, customer_code, order_date
         )
         if daily_forecast:
             return {
@@ -61,7 +61,7 @@ class ForecastMatcher:
 
         # 2. 旬次マッチング (PERIOD)
         dekad_forecast = self._find_dekad_forecast(
-            product_code, client_code, order_date
+            product_code, customer_code, order_date
         )
         if dekad_forecast:
             return {
@@ -74,7 +74,7 @@ class ForecastMatcher:
 
         # 3. 月次マッチング (PERIOD)
         monthly_forecast = self._find_monthly_forecast(
-            product_code, client_code, order_date
+            product_code, customer_code, order_date
         )
         if monthly_forecast:
             year_month = order_date.strftime("%Y-%m")
@@ -90,14 +90,14 @@ class ForecastMatcher:
         return None
 
     def _find_daily_forecast(
-        self, product_code: str, client_code: str, target_date: date
+        self, product_code: str, customer_code: str, target_date: date
     ) -> Optional[Forecast]:
         """日次フォーキャストを検索"""
         return (
             self.db.query(Forecast)
             .filter(
                 Forecast.product_id == product_code,
-                Forecast.client_id == client_code,
+                Forecast.customer_id == customer_code,
                 Forecast.granularity == "daily",
                 Forecast.date_day == target_date,
                 Forecast.is_active == True,
@@ -107,7 +107,7 @@ class ForecastMatcher:
         )
 
     def _find_dekad_forecast(
-        self, product_code: str, client_code: str, target_date: date
+        self, product_code: str, customer_code: str, target_date: date
     ) -> Optional[Forecast]:
         """旬次フォーキャストを検索 (1日～10日、11日～20日、21日～月末)"""
         day = target_date.day
@@ -122,7 +122,7 @@ class ForecastMatcher:
             self.db.query(Forecast)
             .filter(
                 Forecast.product_id == product_code,
-                Forecast.client_id == client_code,
+                Forecast.customer_id == customer_code,
                 Forecast.granularity == "dekad",
                 Forecast.date_dekad_start == dekad_start,
                 Forecast.is_active == True,
@@ -132,7 +132,7 @@ class ForecastMatcher:
         )
 
     def _find_monthly_forecast(
-        self, product_code: str, client_code: str, target_date: date
+        self, product_code: str, customer_code: str, target_date: date
     ) -> Optional[Forecast]:
         """月次フォーキャストを検索"""
         year_month = target_date.strftime("%Y-%m")
@@ -141,7 +141,7 @@ class ForecastMatcher:
             self.db.query(Forecast)
             .filter(
                 Forecast.product_id == product_code,
-                Forecast.client_id == client_code,
+                Forecast.customer_id == customer_code,
                 Forecast.granularity == "monthly",
                 Forecast.year_month == year_month,
                 Forecast.is_active == True,
@@ -154,7 +154,7 @@ class ForecastMatcher:
         self,
         order_line: OrderLine,
         product_code: str,
-        client_code: str,
+        customer_code: str,
         order_date: date,
     ) -> bool:
         """
@@ -163,14 +163,14 @@ class ForecastMatcher:
         Args:
             order_line: 受注明細オブジェクト
             product_code: 製品コード
-            client_code: 得意先コード
+            customer_code: 得意先コード
             order_date: 受注日
 
         Returns:
             マッチングが成功したかどうか
         """
         match_result = self.match_order_line(
-            order_line, product_code, client_code, order_date
+            order_line, product_code, customer_code, order_date
         )
 
         if match_result:

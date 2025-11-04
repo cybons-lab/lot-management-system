@@ -77,7 +77,7 @@ def list_forecast_summary(
             id=forecast.id,
             product_code=forecast.product_id,
             product_name=product_name or " (製品マスタ未登録)",
-            client_code=forecast.client_id,
+            customer_code=forecast.customer_id,
             supplier_code=forecast.supplier_id,
             granularity=forecast.granularity,
             version_no=str(forecast.version_no),
@@ -90,7 +90,7 @@ def list_forecast_summary(
             if forecast.granularity == "monthly"
             else None,
             dekad_summary=dekad_summary,
-            client_name=f"{forecast.client_id} (ダミー)",
+            customer_name=f"{forecast.customer_id} (ダミー)",
             supplier_name=f"{forecast.supplier_id} (ダミー)",
             unit="EA",
             version_history=version_history,
@@ -106,9 +106,9 @@ def list_forecasts(
     skip: int = 0,
     limit: int = 100,
     product_id: Optional[str] = None,
-    client_id: Optional[str] = None,
+    customer_id: Optional[str] = None,
     product_code: Optional[str] = None,
-    client_code: Optional[str] = None,
+    customer_code: Optional[str] = None,
     granularity: Optional[str] = None,
     is_active: Optional[bool] = None,
     version_no: Optional[int] = None,
@@ -132,19 +132,19 @@ def list_forecasts(
     elif product_id:
         query = query.filter(Forecast.product_id == product_id)
 
-    if client_code:
-        normalized_client = client_code.strip()
-        client_codes = {normalized_client}
+    if customer_code:
+        normalized_customer = customer_code.strip()
+        customer_codes = {normalized_customer}
         customer = (
             db.query(Customer)
-            .filter(Customer.customer_code == normalized_client)
+            .filter(Customer.customer_code == normalized_customer)
             .first()
         )
         if customer:
-            client_codes.add(customer.customer_code)
-        query = query.filter(Forecast.client_id.in_(client_codes))
-    elif client_id:
-        query = query.filter(Forecast.client_id == client_id)
+            customer_codes.add(customer.customer_code)
+        query = query.filter(Forecast.customer_id.in_(customer_codes))
+    elif customer_id:
+        query = query.filter(Forecast.customer_id == customer_id)
     if granularity:
         query = query.filter(Forecast.granularity == granularity)
     if is_active is not None:
@@ -417,7 +417,7 @@ def match_forecasts(request: ForecastMatchRequest, db: Session = Depends(get_db)
         success = matcher.apply_forecast_to_order_line(
             order_line=line,
             product_code=line.product_code,
-            client_code=order.customer_code,
+            customer_code=order.customer_code,
             order_date=order.order_date,
         )
 

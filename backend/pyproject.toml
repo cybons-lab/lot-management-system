@@ -1,0 +1,16 @@
+[tool.ruff]
+# Python 3.12 を前提
+target-version = "py312"
+line-length = 100
+# 代表的なチェックセット: E/F(PEP8/未使用), I(Import順), B(bugbear)
+select = ["E", "F", "I", "B"]
+# 行長は Black に合わせる。長すぎる行の警告は Ruff 側で無視
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+combine-as-imports = true
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
