@@ -1,4 +1,5 @@
 """FEFO allocation service (excluding locked lots)."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -55,13 +56,22 @@ class AllocationCommitError(RuntimeError):
     """Raised when FEFO allocation cannot be committed."""
 
 
+# ============================
+# Exceptions
+# ============================
+
+
+class AllocationNotFoundError(Exception):
+    """Raised when the specified allocation is not found in DB."""
+
+    pass
+
+
 def _load_order(db: Session, order_id: int) -> Order:
     order = (
         db.query(Order)
         .options(
-            joinedload(Order.lines)
-            .joinedload(OrderLine.allocations)
-            .joinedload(Allocation.lot)
+            joinedload(Order.lines).joinedload(OrderLine.allocations).joinedload(Allocation.lot)
         )
         .filter(Order.id == order_id)
         .first()
@@ -172,9 +182,7 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
                 break
 
         if remaining > 0:
-            message = (
-                f"在庫不足: 製品 {line.product_code} に対して {remaining:.2f} 足りません"
-            )
+            message = f"在庫不足: 製品 {line.product_code} に対して {remaining:.2f} 足りません"
             line_plan.warnings.append(message)
             warnings.append(message)
 
@@ -200,9 +208,7 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
                 .first()
             )
             if not line:
-                raise AllocationCommitError(
-                    f"OrderLine {line_plan.order_line_id} not found"
-                )
+                raise AllocationCommitError(f"OrderLine {line_plan.order_line_id} not found")
 
             if line_plan.next_div and not line.next_div:
                 line.next_div = line_plan.next_div
@@ -210,13 +216,9 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
             for alloc_plan in line_plan.allocations:
                 lot = db.query(Lot).filter(Lot.id == alloc_plan.lot_id).first()
                 if not lot:
-                    raise AllocationCommitError(
-                        f"Lot {alloc_plan.lot_id} not found"
-                    )
+                    raise AllocationCommitError(f"Lot {alloc_plan.lot_id} not found")
                 if lot.is_locked:
-                    raise AllocationCommitError(
-                        f"Lot {alloc_plan.lot_id} is locked"
-                    )
+                    raise AllocationCommitError(f"Lot {alloc_plan.lot_id} is locked")
 
                 current_stock = (
                     db.query(LotCurrentStock)
@@ -278,3 +280,18 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
         raise
 
     return FefoCommitResult(preview=preview, created_allocations=created)
+
+
+def cancel_allocation(db: Session, allocation_id: int) -> None:
+    """Cancel an allocation and restore stock quantity."""
+    allocation = db.query(Allocation).filter(Allocation.id == allocation_id).first()
+    if not allocation:
+        raise AllocationNotFoundError(f"Allocation {allocation_id} not found")
+
+    # 在庫を元に戻す
+    stock = db.query(LotCurrentStock).filter(LotCurrentStock.lot_id == allocation.lot_id).first()
+    if stock:
+        stock.current_quantity += allocation.allocated_qty
+
+    db.delete(allocation)
+    db.commit()

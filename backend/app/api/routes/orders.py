@@ -176,7 +176,7 @@ def get_order(order_id: int, db: Session = Depends(get_db)):
     """受注詳細取得(明細含む)"""
     order = (
         db.query(Order)
-        .options(selectinload(Order.lines).selectinload(OrderLine.lot_allocations))
+        .options(selectinload(Order.lines).selectinload(OrderLine.allocations))
         .filter(Order.id == order_id)
         .first()
     )
@@ -187,7 +187,7 @@ def get_order(order_id: int, db: Session = Depends(get_db)):
     # 明細に引当済数量を付与
     response = OrderWithLinesResponse.model_validate(order)
     for i, line in enumerate(order.lines):
-        allocated_qty = sum(alloc.allocated_qty for alloc in line.lot_allocations)
+        allocated_qty = sum(alloc.allocated_qty for alloc in line.allocations)
         response.lines[i].allocated_qty = allocated_qty
 
     return response
@@ -291,7 +291,7 @@ def rematch_order_forecast(order_id: int, db: Session = Depends(get_db)):
 
     order = (
         db.query(Order)
-        .options(selectinload(Order.lines).selectinload(OrderLine.lot_allocations))
+        .options(selectinload(Order.lines).selectinload(OrderLine.allocations))
         .filter(Order.id == order_id)
         .first()
     )
@@ -325,7 +325,7 @@ def rematch_order_forecast(order_id: int, db: Session = Depends(get_db)):
 
     response = OrderWithLinesResponse.model_validate(order)
     for i, line in enumerate(order.lines):
-        allocated_qty = sum(alloc.allocated_qty for alloc in line.lot_allocations)
+        allocated_qty = sum(alloc.allocated_qty for alloc in line.allocations)
         response.lines[i].allocated_qty = allocated_qty
 
     return response
