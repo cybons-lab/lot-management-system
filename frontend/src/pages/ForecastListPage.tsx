@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ForecastFileUploadCard } from "@/features/forecast/components/ForecastFileUploadCard";
 import { getForecastList } from "@/features/forecast/api";
 import { api } from "@/services/api";
 import type { ForecastResponse } from "@/types/forecast";
@@ -94,6 +95,10 @@ export default function ForecastListPage() {
         <p className="text-muted-foreground">
           製品×得意先ごとの需要予測を日・旬・月の粒度で確認できます
         </p>
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <ForecastFileUploadCard />
       </div>
 
       <div className="rounded-lg border bg-card p-4">

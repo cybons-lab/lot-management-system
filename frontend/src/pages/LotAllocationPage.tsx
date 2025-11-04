@@ -6,30 +6,27 @@
  * 構成:
  * - 左ペイン: 受注一覧（優先度バー、KPIバッジ付き）
  * - 中央ペイン: 選択した受注の明細一覧
- * - 右ペイン: LotAllocationPanel（既存の分割引当コンポーネント）
+ * - 右ペイン: 候補ロット一覧と倉庫別配分入力
  */
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import LotAllocationPanel from "@/features/orders/components/LotAllocationPanel";
+import { formatCodeAndName } from "@/lib/utils";
 import {
   getOrders,
   getOrder,
-  getCandidateLots,
-  createLotAllocations,
-  cancelLotAllocations,
-  saveWarehouseAllocations,
 } from "@/features/orders/api";
 import type {
   OrderLine,
-  LotCandidate,
-  WarehouseAlloc,
-  LotAllocationRequest,
-  AllocationCancelRequest,
 } from "@/types/orders";
+import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
+import {
+  createAllocations,
+  type CreateAllocationPayload,
+} from "@/features/allocations/api";
 
 // ===== 型定義 =====
 interface Order {
@@ -217,61 +214,94 @@ export default function LotAllocationPage() {
   const selectedLine = orderDetailQuery.data?.lines?.find((line) => line.id === selectedLineId);
 
   // ロット候補を取得
-  const lotCandidatesQuery = useQuery({
-    queryKey: ["lot-candidates", selectedLineId, selectedLine?.product_code],
-    queryFn: () =>
-      getCandidateLots(selectedLineId!, {
-        product_code: selectedLine?.product_code,
-      }),
-    enabled: !!selectedLineId && !!selectedLine?.product_code,
-  });
+  const lotsQuery = useLotsQuery(selectedLine?.product_code);
+  const candidateLots: CandidateLot[] = lotsQuery.data ?? [];
 
-  // 引当実行
-  const allocateMutation = useMutation({
-    mutationFn: ({
-      orderLineId,
-      request,
-    }: {
-      orderLineId: number;
-      request: LotAllocationRequest;
-    }) => createLotAllocations(orderLineId, request),
+  // 倉庫別配分入力の状態
+  const [warehouseAllocations, setWarehouseAllocations] = useState<Record<string, number>>({});
+
+  type WarehouseSummary = {
+    key: string;
+    warehouseId?: number;
+    warehouseCode?: string | null;
+    warehouseName?: string | null;
+    totalStock: number;
+  };
+
+  const warehouseSummaries: WarehouseSummary[] = useMemo(() => {
+    const map = new Map<string, WarehouseSummary>();
+    candidateLots.forEach((lot) => {
+      const key = String(lot.warehouse_id ?? lot.warehouse_code ?? lot.id);
+      const existing = map.get(key) ?? {
+        key,
+        warehouseId: lot.warehouse_id ?? undefined,
+        warehouseCode: lot.warehouse_code ?? null,
+        warehouseName: lot.warehouse_name ?? null,
+        totalStock: 0,
+      };
+
+      existing.totalStock += lot.current_stock?.current_quantity ?? 0;
+      map.set(key, existing);
+    });
+
+    return Array.from(map.values());
+  }, [candidateLots]);
+
+  useEffect(() => {
+    if (warehouseSummaries.length === 0) {
+      setWarehouseAllocations({});
+      return;
+    }
+
+    setWarehouseAllocations((prev) => {
+      const next: Record<string, number> = {};
+      warehouseSummaries.forEach((warehouse) => {
+        next[warehouse.key] = prev[warehouse.key] ?? 0;
+      });
+      return next;
+    });
+  }, [warehouseSummaries]);
+
+  const allocationList = useMemo(() => {
+    return warehouseSummaries
+      .map((warehouse) => ({
+        warehouse_id: warehouse.warehouseId ?? null,
+        warehouse_code: warehouse.warehouseCode ?? null,
+        quantity: Number(warehouseAllocations[warehouse.key] ?? 0),
+      }))
+      .filter((item) => item.quantity > 0);
+  }, [warehouseSummaries, warehouseAllocations]);
+
+  const allocationTotalAll = useMemo(() => {
+    return warehouseSummaries.reduce(
+      (sum, warehouse) => sum + Number(warehouseAllocations[warehouse.key] ?? 0),
+      0
+    );
+  }, [warehouseSummaries, warehouseAllocations]);
+
+  const createAllocationMutation = useMutation({
+    mutationFn: (payload: CreateAllocationPayload) => createAllocations(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
       queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["lot-candidates"] });
+      console.log("引当データを保存しました");
     },
   });
 
-  // 引当取消
-  const cancelMutation = useMutation({
-    mutationFn: ({
-      orderLineId,
-      request,
-    }: {
-      orderLineId: number;
-      request: AllocationCancelRequest;
-    }) => cancelLotAllocations(orderLineId, request),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["lot-candidates"] });
-    },
-  });
+  const handleSaveAllocations = () => {
+    if (!selectedLineId || !selectedLine?.product_code) return;
+    if (allocationList.length === 0) return;
 
-  // 倉庫配分保存
-  const saveAllocMutation = useMutation({
-    mutationFn: ({
-      orderLineId,
-      allocations,
-    }: {
-      orderLineId: number;
-      allocations: WarehouseAlloc[];
-    }) => saveWarehouseAllocations(orderLineId, allocations),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["order-detail", selectedOrderId] });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-    },
-  });
+    const payload: CreateAllocationPayload = {
+      order_line_id: selectedLineId,
+      product_code: selectedLine.product_code,
+      allocations: allocationList,
+    };
+
+    createAllocationMutation.mutate(payload);
+  };
+
+  const canSave = allocationList.length > 0 && !createAllocationMutation.isPending;
 
   // 受注カードデータを作成
   const orderCards = useMemo(() => {
@@ -308,36 +338,6 @@ export default function LotAllocationPage() {
 
   const handleSelectLine = (lineId: number) => {
     setSearchParams({ selected: String(selectedOrderId), line: String(lineId) });
-  };
-
-  const handleAllocate = (payload: { items: { lot_id: number; qty: number }[] }) => {
-    if (!selectedLineId) return;
-
-    const request: LotAllocationRequest = {
-      allocations: payload.items.map((item) => ({
-        lot_id: item.lot_id,
-        qty: item.qty,
-      })),
-    };
-
-    allocateMutation.mutate({ orderLineId: selectedLineId, request });
-  };
-
-  const handleCancelAllocations = (payload: any) => {
-    if (!selectedLineId) return;
-
-    const request: AllocationCancelRequest = {
-      order_line_id: selectedLineId,
-      allocation_ids: payload.allocation_ids,
-    };
-
-    cancelMutation.mutate({ orderLineId: selectedLineId, request });
-  };
-
-  const handleSaveWarehouseAllocations = (allocations: WarehouseAlloc[]) => {
-    if (!selectedLineId) return;
-
-    saveAllocMutation.mutate({ orderLineId: selectedLineId, allocations });
   };
 
   return (
@@ -437,26 +437,154 @@ export default function LotAllocationPage() {
         )}
       </div>
 
-      {/* 右ペイン: LotAllocationPanel */}
+      {/* 右ペイン: 候補ロット & 倉庫別配分 */}
       <div className="w-96 border-l bg-white overflow-y-auto">
         {selectedLineId && selectedLine ? (
-          <div className="p-4">
-            <LotAllocationPanel
-              mode="inline"
-              orderLineId={selectedLineId}
-              candidates={(lotCandidatesQuery.data?.items || []) as LotCandidate[]}
-              onAllocate={handleAllocate}
-              onCancelAllocations={handleCancelAllocations}
-              onSaveWarehouseAllocations={handleSaveWarehouseAllocations}
-              maxQty={selectedLine.quantity}
-              onToast={(message) => {
-                // Toast通知（実装は省略）
-                console.log(message.title);
-              }}
-            />
+          <div className="p-4 space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold">候補ロット</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                製品コード: {selectedLine.product_code}
+              </p>
+            </div>
+
+            <div className="rounded-lg border p-3">
+              {lotsQuery.isLoading ? (
+                <div className="py-6 text-center text-sm text-gray-500">
+                  候補ロットを読み込み中...
+                </div>
+              ) : lotsQuery.isError ? (
+                <div className="py-6 text-center text-sm text-red-600">
+                  候補ロットの取得に失敗しました
+                </div>
+              ) : candidateLots.length === 0 ? (
+                <div className="py-6 text-center text-sm text-gray-500">
+                  候補ロットがありません
+                </div>
+              ) : (
+                <div className="max-h-56 overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="text-left text-gray-500">
+                        <th className="py-1 pr-2">ロット番号</th>
+                        <th className="py-1 pr-2">倉庫</th>
+                        <th className="py-1 pr-2 text-right">在庫数</th>
+                        <th className="py-1 pr-2 text-right">賞味期限</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {candidateLots.map((lot) => (
+                        <tr key={lot.id} className="border-t">
+                          <td className="py-1 pr-2">
+                            {lot.lot_number && lot.lot_number.trim() !== ""
+                              ? lot.lot_number
+                              : `#${lot.id}`}
+                          </td>
+                          <td className="py-1 pr-2">
+                            {formatCodeAndName(
+                              lot.warehouse_code ?? "",
+                              lot.warehouse_name ?? undefined
+                            ) || "—"}
+                          </td>
+                          <td className="py-1 pr-2 text-right">
+                            {(lot.current_stock?.current_quantity ?? 0).toLocaleString()}
+                          </td>
+                          <td className="py-1 pr-2 text-right">
+                            {lot.expiry_date
+                              ? format(new Date(lot.expiry_date), "yyyy/MM/dd", { locale: ja })
+                              : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-lg border p-3 space-y-4">
+              <div>
+                <h4 className="text-sm font-medium">倉庫別配分</h4>
+                <p className="mt-1 text-xs text-gray-500">
+                  倉庫ごとの在庫に対して配分数量を入力してください。
+                </p>
+              </div>
+
+              {warehouseSummaries.length === 0 ? (
+                <div className="py-6 text-center text-sm text-gray-500">
+                  倉庫情報がありません
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {warehouseSummaries.map((warehouse) => {
+                    const currentValue = Number(warehouseAllocations[warehouse.key] ?? 0);
+                    const maxQty = Math.max(0, Math.floor(warehouse.totalStock));
+                    const warehouseLabel =
+                      formatCodeAndName(
+                        warehouse.warehouseCode ?? "",
+                        warehouse.warehouseName ?? undefined
+                      ) || "倉庫";
+
+                    return (
+                      <div key={warehouse.key} className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium">{warehouseLabel}</span>
+                          <span className="text-xs text-gray-500">
+                            在庫: {maxQty.toLocaleString()}
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={maxQty}
+                          value={currentValue}
+                          onChange={(e) => {
+                            const next = Math.min(maxQty, Math.max(0, Number(e.target.value)));
+                            setWarehouseAllocations((prev) => ({
+                              ...prev,
+                              [warehouse.key]: next,
+                            }));
+                          }}
+                          className="w-full"
+                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            min={0}
+                            max={maxQty}
+                            value={currentValue}
+                            onChange={(e) => {
+                              const next = Math.min(maxQty, Math.max(0, Number(e.target.value)));
+                              setWarehouseAllocations((prev) => ({
+                                ...prev,
+                                [warehouse.key]: next,
+                              }));
+                            }}
+                            className="w-24 rounded border px-2 py-1 text-sm"
+                          />
+                          <span className="text-xs text-gray-500">/ {maxQty.toLocaleString()}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="text-xs text-gray-600">
+                配分合計: <span className="font-semibold">{allocationTotalAll.toLocaleString()}</span>
+              </div>
+
+              <button
+                className="w-full rounded bg-black py-2 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                onClick={handleSaveAllocations}
+                disabled={!canSave}
+              >
+                保存
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-500 p-8 text-center">
+          <div className="flex h-full items-center justify-center p-8 text-center text-gray-500">
             中央ペインから明細を選択してください
           </div>
         )}
@@ -479,6 +607,16 @@ interface OrderCardProps {
 function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
   const priorityColor = getPriorityColor(order.priority);
   const badgeColor = getBadgeColor(order.priority);
+  const primaryLine = order.lines?.[0];
+  const deliveryDestination = order.ship_to ?? "";
+  const quantityText =
+    primaryLine?.quantity != null
+      ? `${primaryLine.quantity.toLocaleString()}${primaryLine.unit ? ` ${primaryLine.unit}` : ""}`
+      : "―";
+  const dueDateSource = primaryLine?.due_date ?? order.due_date ?? null;
+  const dueDateText = dueDateSource
+    ? format(new Date(dueDateSource), "MM/dd", { locale: ja })
+    : "―";
 
   return (
     <div
@@ -535,13 +673,11 @@ function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
             )}
           </div>
 
-          {/* 3行目: 納期/倉庫 */}
-          <div className="text-xs text-gray-500">
-            {order.due_date && (
-              <span>納期: {format(new Date(order.due_date), "MM/dd", { locale: ja })}</span>
-            )}
-            {order.due_date && order.ship_to && <span className="mx-1">|</span>}
-            {order.ship_to && <span>倉庫: {order.ship_to}</span>}
+          {/* 3行目: 納品先/個数/納期 */}
+          <div className="mt-2 space-y-1 text-xs text-gray-600">
+            <div>納品先: {deliveryDestination || "―"}</div>
+            <div>個数: {quantityText}</div>
+            <div>納期: {dueDateText}</div>
           </div>
         </div>
       </div>
