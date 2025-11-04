@@ -1,0 +1,114 @@
+diff --git forkSrcPrefix/backend/app/main.py forkDstPrefix/backend/app/main.py
+index cb3c0ffcd6e9ba002bc1bed3f8651958a7b495ab..ad51694e44231198002b2f57ec60a13fcbd5a55b 100644
+--- forkSrcPrefix/backend/app/main.py
++++ forkDstPrefix/backend/app/main.py
+@@ -40,7 +40,10 @@ async def lifespan(app: FastAPI):
+ 
+ 
+ app = FastAPI(
+-    title=settings.APP_NAME,
++    title="Lot Management API",
++    openapi_url="/api/openapi.json",  # ← ここを明示
++    docs_url="/api/docs",  # ← Swagger UI のパス
++    redoc_url="/api/redoc",  # ← ReDoc のパス
+     version=settings.APP_VERSION,
+     description="材料ロット管理システム - バックエンドAPI",
+     lifespan=lifespan,
+diff --git forkSrcPrefix/backend/README.md forkDstPrefix/backend/README.md
+index adc6f2445762f608fac22ff4b065ff2558b0c2c9..00386adbce2c1ca3aedac6736f29278dceedfad9 100644
+--- forkSrcPrefix/backend/README.md
++++ forkDstPrefix/backend/README.md
+@@ -251,36 +251,76 @@ MIT License
+ 
+ ---
+ 
+-## アーキテクチャ概要
++## アーキテクチャ概要（再掲・確定）
+ 
+-本バックエンドは、**3層構造（API層 / Service層 / Model層）**で責務分離されています。  
+-API（FastAPIルーター）はI/O整形と例外ハンドリング、ServiceはユースケースとTx境界管理、ModelはSQLAlchemy ORMを担います。
++本バックエンドは **API層 / Service層 / Model層** の3層で責務分離しています。  
++API（Fast APIルーター）は入出力整形と例外ハンドリング、Serviceはユースケース（Tx境界、在庫整合性、FEFO制御など）、
++ModelはSQL Alchemy ORMとスキーマ定義を担当します。
+ 
+ ```
+ API Layer (FastAPI Routers)
+-     ↓
++↓
+ Service Layer (Business Logic)
+-     ↓
++↓
+ Model Layer (SQLAlchemy ORM)
+ ```
+-
++- 主要エンドポイント（抜粋・確定）
++  - ロット: `GET /api/lots`, `POST /api/lots`, `POST /api/lots/movements`
++  - 受注: `GET /api/orders`, `GET /api/orders/{order_id}`, `POST /api/orders/allocations/drag-assign`
++  - 連携: `POST /api/integration/ai-ocr/submit`, `POST /api/integration/sap/register`, `GET /api/integration/sap/logs`
++  - 管理: `GET /api/admin/health`, `POST /api/admin/reset-database`, `POST /api/admin/init-sample-data`
++  - APIドキュメント: `http://localhost:8000/api/docs`, `http://localhost:8000/api/redoc`
++    （OpenAPI: `GET /api/openapi.json`）
++> ルーターのprefix/tagsは統一済み。既存のAPI仕様は変更していません。
++
++## テスト状況（確定）
++- ✅ `pytest`: **25件 PASS**（回帰完了）
++- 今後の改善候補:
++  - SQLAlchemy 2.0 記法の徹底（`declarative_base` → `sqlalchemy.orm.declarative_base` など）
++  - Pydantic v2の`Config`記法の整理
++  - fixtureの`rollback`順序の見直し（警告のみ）
++  
++  
+ ## 依存関係マップ（Mermaid）
+ 
+ 下記は主要ルーターとサービス・モデルの依存関係を示す概要図です。  
+ 完全版は [`docs/architecture/api_service_model.mmd`](docs/architecture/api_service_model.mmd) を参照してください。
+ 
+ ```mermaid
+-graph TD
+-    A3[allocations.py] --> S2[AllocationService]
+-    S2 --> M2[Allocation]
+-    S2 --> M3[Lot]
+-    S2 --> M4[LotCurrentStock]
+-    S2 --> M6[OrderLine]
+-
+-    A8[orders_refactored.py] --> S6[OrderService]
+-    S6 --> M5[Order]
+-    S6 --> M6[OrderLine]
+-    S6 --> M9[Product]
++%% api_service_model.mmd
++
++flowchart TD
++    %% API Routers
++    AR[api/routes/orders.py] --> OS[services/order_service.py]
++    AA[api/routes/allocations.py] --> AS[services/allocation_service.py]
++    AL[api/routes/lots.py] --> LS[services/lot_service.py]
++    AI[api/routes/integration.py] --> IS[services/integration_service.py]
++    AD[api/routes/admin.py] --> DS[services/admin_service.py]
++
++    %% Services -> Models
++    OS --> OM[models/orders.py: Order, OrderLine]
++    OS --> PM[models/masters.py: Product]
++    OS --> LM[models/inventory.py: Lot, LotCurrentStock]
++
++    AS --> AM[models/allocations.py: Allocation]
++    AS --> LM
++    AS --> OM
++
++    LS --> LM
++    LS --> SM[models/inventory.py: StockMovement]
++
++    IS --> LG[models/logs.py: OcrSubmission, SapSyncLog]
++    DS --> -- Utility/Setup --> MM[models/masters.py: Warehouse, Supplier, Customer]
++
++    %% FEFO / Tx / Constraints（注釈）
++    classDef note fill:#f6f6f6,stroke:#bbb,color:#333
++    N1[[FEFO: Lot.expiry_date ASC NULLS LAST]]:::note
++    N2[[Tx境界: Service層でcommit/rollback管理]]:::note
++    N3[[数量整合: StockMovementとLotCurrentStockの一貫性]]:::note
++
++    AS --- N1
++    AS --- N2
++    LS --- N3
+ ```
+ 
+ > ルーターの統一（prefix/tags整備）、ordersの一本化、allocationsのURL整合修正は、**既存API仕様を変更せず**に実施しています。

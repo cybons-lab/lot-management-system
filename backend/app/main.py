@@ -40,7 +40,10 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title=settings.APP_NAME,
+    title="Lot Management API",
+    openapi_url="/api/openapi.json",  # ← ここを明示
+    docs_url="/api/docs",  # ← Swagger UI のパス
+    redoc_url="/api/redoc",  # ← ReDoc のパス
     version=settings.APP_VERSION,
     description="材料ロット管理システム - バックエンドAPI",
     lifespan=lifespan,
