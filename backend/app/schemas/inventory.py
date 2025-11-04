@@ -20,7 +20,7 @@ class LotBase(BaseSchema):
     mfg_date: Optional[date] = None
     expiry_date: Optional[date] = None
     warehouse_code: Optional[str] = None
-    warehouse_id: Optional[int] = None  # ✅ str → int に修正
+    warehouse_id: Optional[int] = None
     lot_unit: Optional[str] = None
     kanban_class: Optional[str] = None
     sales_unit: Optional[str] = None
@@ -39,7 +39,7 @@ class LotUpdate(BaseSchema):
     mfg_date: Optional[date] = None
     expiry_date: Optional[date] = None
     warehouse_code: Optional[str] = None
-    warehouse_id: Optional[int] = None  # ✅ str → int に修正
+    warehouse_id: Optional[int] = None
     lot_unit: Optional[str] = None
     qc_certificate_status: Optional[str] = None
     qc_certificate_file: Optional[str] = None
@@ -47,7 +47,7 @@ class LotUpdate(BaseSchema):
 
 class LotResponse(LotBase, TimestampMixin):
     id: int
-    current_stock: Optional[float] = None  # 現在在庫数量
+    current_stock: Optional[float] = None
     product_name: Optional[str] = None
 
 
@@ -127,11 +127,12 @@ class ReceiptLineResponse(ReceiptLineBase):
     receipt_id: int
 
 
-class ReceiptCreateRequest(BaseSchema):
-    """入荷伝票作成リクエスト"""
-
-    header: ReceiptHeaderCreate
+# ===== ✅ ここを修正 =====
+class ReceiptCreateRequest(ReceiptHeaderBase):
+    """入荷伝票作成リクエスト(ヘッダー+明細)"""
+    
     lines: list[ReceiptLineCreate]
+# ========================
 
 
 class ReceiptResponse(BaseSchema):
