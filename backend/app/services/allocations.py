@@ -283,15 +283,22 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
 
 
 def cancel_allocation(db: Session, allocation_id: int) -> None:
-    """Cancel an allocation and restore stock quantity."""
+    """Cancel an allocation (soft) and restore stock quantity."""
     allocation = db.query(Allocation).filter(Allocation.id == allocation_id).first()
     if not allocation:
         raise AllocationNotFoundError(f"Allocation {allocation_id} not found")
 
+    # すでにキャンセル済なら何もしない（冪等）
+    if allocation.status == "cancelled":
+        return
+
     # 在庫を元に戻す
     stock = db.query(LotCurrentStock).filter(LotCurrentStock.lot_id == allocation.lot_id).first()
     if stock:
-        stock.current_quantity += allocation.allocated_qty
+        stock.current_quantity = float(stock.current_quantity or 0.0) + float(
+            allocation.allocated_qty or 0.0
+        )
 
-    db.delete(allocation)
+    # 行は削除せず、状態のみを更新（テストがこれを期待）
+    allocation.status = "cancelled"
     db.commit()

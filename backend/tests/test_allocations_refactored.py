@@ -4,31 +4,26 @@
 既存API入出力の挙動を保証する回帰テスト
 """
 
+from datetime import date, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from app.api.deps import get_db
 from app.main import app
-from app.models import Allocation, Base, Lot, LotCurrentStock, Order, OrderLine, Product, Warehouse
+from app.models import (
+    Allocation,
+    Customer,
+    Lot,
+    LotCurrentStock,
+    Order,
+    OrderLine,
+    Product,
+    Supplier,
+    Warehouse,
+)
 
-# テスト用DB設定
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_allocations.db"
-engine = create_engine(SQLALCHEMY_TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@pytest.fixture
-def db_session():
-    """テスト用DBセッション"""
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        Base.metadata.drop_all(bind=engine)
+# ✅ 修正: conftest.pyのdb_sessionを使用（独自engineを削除）
 
 
 @pytest.fixture
@@ -39,7 +34,7 @@ def client(db_session):
         try:
             yield db_session
         finally:
-            db_session.close()
+            pass  # conftest.pyが管理するのでcloseしない
 
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
@@ -52,6 +47,17 @@ def setup_test_data(db_session):
     # 倉庫
     warehouse = Warehouse(warehouse_code="WH001", warehouse_name="倉庫1")
     db_session.add(warehouse)
+    db_session.flush()
+
+    # 顧客（FK: orders.customer_code が参照）
+    customer = Customer(customer_code="CUS-001", customer_name="顧客A")
+    db_session.add(customer)
+    db_session.flush()
+
+    # 仕入先（FK: lots.supplier_code が参照）
+    supplier = Supplier(supplier_code="SUP-001", supplier_name="仕入先A")
+    db_session.add(supplier)
+    db_session.flush()
 
     # 製品
     product = Product(
@@ -63,12 +69,16 @@ def setup_test_data(db_session):
         base_unit="EA",
     )
     db_session.add(product)
+    db_session.flush()
 
-    # ロット
+    # ロット - warehouse_idのみ使用
+    today = date.today()
     lot = Lot(
         supplier_code="SUP-001",
         product_code="PROD-001",
         lot_number="LOT-001",
+        receipt_date=today - timedelta(days=7),
+        expiry_date=today + timedelta(days=180),
         warehouse_id=warehouse.id,
     )
     db_session.add(lot)
@@ -79,7 +89,7 @@ def setup_test_data(db_session):
     db_session.add(current_stock)
 
     # 受注
-    order = Order(order_no="ORD-001", customer_code="CUS-001")
+    order = Order(order_no="ORD-001", customer_code="CUS-001", order_date=today)
     db_session.add(order)
     db_session.flush()
 
@@ -89,7 +99,7 @@ def setup_test_data(db_session):
     )
     db_session.add(order_line)
 
-    db_session.commit()
+    db_session.flush()  # commitではなくflushを使用
 
     return {"lot_id": lot.id, "order_line_id": order_line.id}
 
@@ -99,7 +109,6 @@ class TestAllocationAPI:
 
     def test_drag_assign_success(self, client, setup_test_data):
         """ドラッグ引当が成功すること"""
-        # リクエスト
         response = client.post(
             "/api/allocations/drag-assign",
             json={
@@ -109,7 +118,6 @@ class TestAllocationAPI:
             },
         )
 
-        # レスポンス検証
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -118,7 +126,6 @@ class TestAllocationAPI:
 
     def test_drag_assign_insufficient_stock(self, client, setup_test_data):
         """在庫不足の場合にエラーが返ること"""
-        # リクエスト（在庫100に対して150を引当）
         response = client.post(
             "/api/allocations/drag-assign",
             json={
@@ -128,13 +135,11 @@ class TestAllocationAPI:
             },
         )
 
-        # レスポンス検証
         assert response.status_code == 400
         assert "Insufficient stock" in response.json()["detail"]
 
     def test_cancel_allocation_success(self, client, setup_test_data, db_session):
         """引当取消が成功すること"""
-        # 事前に引当を作成
         allocation = Allocation(
             order_line_id=setup_test_data["order_line_id"],
             lot_id=setup_test_data["lot_id"],
@@ -142,15 +147,12 @@ class TestAllocationAPI:
             status="active",
         )
         db_session.add(allocation)
-        db_session.commit()
+        db_session.flush()
 
-        # 引当取消リクエスト
         response = client.delete(f"/api/allocations/{allocation.id}")
 
-        # レスポンス検証
         assert response.status_code == 204
 
-        # DB確認: ステータスが"cancelled"に変更されていること
         db_session.refresh(allocation)
         assert allocation.status == "cancelled"
 
@@ -158,7 +160,6 @@ class TestAllocationAPI:
         """存在しない引当の取消でエラーが返ること"""
         response = client.delete("/api/allocations/99999")
 
-        # レスポンス検証
         assert response.status_code == 404
         assert "not found" in response.json()["detail"]
 
@@ -170,7 +171,6 @@ class TestRoundingPolicy:
         """引当数量の丸めが正しいこと"""
         from app.domain.allocation import RoundingPolicy
 
-        # 四捨五入
         assert RoundingPolicy.round_allocation_qty(10.123) == 10.12
         assert RoundingPolicy.round_allocation_qty(10.125) == 10.13
         assert RoundingPolicy.round_allocation_qty(10.124) == 10.12
@@ -183,22 +183,15 @@ class TestStateMachine:
         """許可された状態遷移"""
         from app.domain.allocation import AllocationStateMachine
 
-        # active -> shipped
         assert AllocationStateMachine.can_transition("active", "shipped") is True
-
-        # active -> cancelled
         assert AllocationStateMachine.can_transition("active", "cancelled") is True
 
     def test_invalid_transitions(self):
         """禁止された状態遷移"""
         from app.domain.allocation import AllocationStateMachine, InvalidTransitionError
 
-        # shipped -> active（終端状態からの遷移は不可）
         assert AllocationStateMachine.can_transition("shipped", "active") is False
-
-        # cancelled -> active（終端状態からの遷移は不可）
         assert AllocationStateMachine.can_transition("cancelled", "active") is False
 
-        # 例外が発生すること
         with pytest.raises(InvalidTransitionError):
             AllocationStateMachine.validate_transition("shipped", "active")

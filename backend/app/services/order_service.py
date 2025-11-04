@@ -1,122 +1,39 @@
 # backend/app/services/order_service.py
 """
-受注サービス
-ユースケース実装とトランザクション管理を担当
+受注サービス層
+ビジネスロジックとデータ永続化を担当
 """
 
 from datetime import date
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.domain.order import (
     DuplicateOrderError,
     InvalidOrderStatusError,
     OrderBusinessRules,
-    OrderLineNotFoundError,
     OrderNotFoundError,
     OrderStateMachine,
     OrderValidationError,
 )
-from app.models import Order, OrderLine
-from app.repositories.order_repository import OrderLineRepository, OrderRepository
+from app.models import Order, OrderLine, Product
+from app.schemas import (
+    OrderCreate,
+    OrderResponse,
+    OrderWithLinesResponse,
+)
+
+# ✅ 修正: 単位変換関数をインポート
+from app.services.quantity import QuantityConversionError, to_internal_qty
 
 
 class OrderService:
     """受注サービス"""
-    
+
     def __init__(self, db: Session):
         self.db = db
-        self.order_repo = OrderRepository(db)
-        self.order_line_repo = OrderLineRepository(db)
-    
-    def create_order(
-        self,
-        order_no: str,
-        customer_code: str,
-        order_date: date,
-        lines: List[dict]
-    ) -> Order:
-        """
-        受注を作成
-        
-        Args:
-            order_no: 受注番号
-            customer_code: 得意先コード
-            order_date: 受注日
-            lines: 受注明細のリスト
-            
-        Returns:
-            作成された受注エンティティ
-            
-        Raises:
-            DuplicateOrderError: 受注番号が重複している場合
-            OrderValidationError: バリデーションエラーの場合
-        """
-        # 受注番号のバリデーション
-        OrderBusinessRules.validate_order_no(order_no)
-        
-        # 重複チェック
-        existing_order = self.order_repo.find_by_order_no(order_no)
-        if existing_order:
-            raise DuplicateOrderError(order_no)
-        
-        # トランザクション開始
-        with self.db.begin_nested():
-            # 受注ヘッダ作成
-            order = self.order_repo.create(
-                order_no=order_no,
-                customer_code=customer_code,
-                order_date=order_date,
-                status="open"
-            )
-            self.db.flush()  # IDを取得
-            
-            # 受注明細作成
-            for line in lines:
-                # 数量のバリデーション
-                OrderBusinessRules.validate_quantity(
-                    line["quantity"],
-                    line["product_code"]
-                )
-                
-                # 納期のバリデーション
-                if line.get("due_date"):
-                    OrderBusinessRules.validate_due_date(
-                        line["due_date"],
-                        order_date
-                    )
-                
-                self.order_line_repo.create(
-                    order_id=order.id,
-                    line_no=line["line_no"],
-                    product_code=line["product_code"],
-                    quantity=line["quantity"],
-                    unit=line["unit"],
-                    due_date=line.get("due_date")
-                )
-        
-        return order
-    
-    def get_order(self, order_id: int, with_lines: bool = False) -> Order:
-        """
-        受注を取得
-        
-        Args:
-            order_id: 受注ID
-            with_lines: 受注明細を含めるか
-            
-        Returns:
-            受注エンティティ
-            
-        Raises:
-            OrderNotFoundError: 受注が存在しない場合
-        """
-        order = self.order_repo.find_by_id(order_id, with_lines=with_lines)
-        if not order:
-            raise OrderNotFoundError(order_id)
-        return order
-    
+
     def get_orders(
         self,
         skip: int = 0,
@@ -124,116 +41,132 @@ class OrderService:
         status: Optional[str] = None,
         customer_code: Optional[str] = None,
         date_from: Optional[date] = None,
-        date_to: Optional[date] = None
-    ) -> List[Order]:
-        """
-        受注一覧を取得
-        
-        Args:
-            skip: スキップ件数
-            limit: 取得件数
-            status: ステータスフィルタ
-            customer_code: 得意先コードフィルタ
-            date_from: 開始日フィルタ
-            date_to: 終了日フィルタ
-            
-        Returns:
-            受注エンティティのリスト
-        """
-        return self.order_repo.find_all(
-            skip=skip,
-            limit=limit,
-            status=status,
-            customer_code=customer_code,
-            date_from=date_from,
-            date_to=date_to
+        date_to: Optional[date] = None,
+    ) -> List[OrderResponse]:
+        """受注一覧取得"""
+        query = self.db.query(Order)
+
+        if status:
+            query = query.filter(Order.status == status)
+        if customer_code:
+            query = query.filter(Order.customer_code == customer_code)
+        if date_from:
+            query = query.filter(Order.order_date >= date_from)
+        if date_to:
+            query = query.filter(Order.order_date <= date_to)
+
+        orders = query.order_by(Order.order_date.desc()).offset(skip).limit(limit).all()
+
+        return [OrderResponse.model_validate(order) for order in orders]
+
+    def get_order_detail(self, order_id: int) -> OrderWithLinesResponse:
+        """受注詳細取得(明細含む)"""
+        order = (
+            self.db.query(Order)
+            .options(selectinload(Order.lines))
+            .filter(Order.id == order_id)
+            .first()
         )
-    
-    def update_order_status(
-        self,
-        order_id: int,
-        new_status: str
-    ) -> Order:
-        """
-        受注ステータスを更新
-        
-        Args:
-            order_id: 受注ID
-            new_status: 新しいステータス
-            
-        Returns:
-            更新された受注エンティティ
-            
-        Raises:
-            OrderNotFoundError: 受注が存在しない場合
-            InvalidOrderStatusError: 状態遷移が不正な場合
-        """
-        # 受注取得
-        order = self.get_order(order_id)
-        
-        # 状態遷移チェック
-        OrderStateMachine.validate_transition(
-            order.status,
-            new_status,
-            operation=f"change status to {new_status}"
+
+        if not order:
+            raise OrderNotFoundError(order_id)
+
+        return OrderWithLinesResponse.model_validate(order)
+
+    def create_order(self, order_data: OrderCreate) -> OrderWithLinesResponse:
+        """受注作成"""
+        existing = self.db.query(Order).filter(Order.order_no == order_data.order_no).first()
+        if existing:
+            raise DuplicateOrderError(order_data.order_no)
+
+        # ✅ 修正: external_unitを使った単位変換処理を追加
+        for line in order_data.lines:
+            # 製品存在チェック
+            product = (
+                self.db.query(Product).filter(Product.product_code == line.product_code).first()
+            )
+            if not product:
+                raise OrderValidationError(f"製品コード '{line.product_code}' が見つかりません")
+
+            # ✅ 修正: external_unitを使って内部単位に変換
+            try:
+                internal_qty = to_internal_qty(
+                    product=product,
+                    qty_external=line.quantity,
+                    external_unit=line.external_unit,
+                )
+                # 変換後の数量でバリデーション
+                OrderBusinessRules.validate_quantity(float(internal_qty), line.product_code)
+            except QuantityConversionError as e:
+                raise OrderValidationError(f"単位変換エラー: {str(e)}")
+
+        order = Order(
+            order_no=order_data.order_no,
+            customer_code=order_data.customer_code,
+            order_date=order_data.order_date,
+            status="open",
         )
-        
-        # トランザクション開始
-        with self.db.begin_nested():
-            self.order_repo.update_status(order, new_status)
-        
-        return order
-    
-    def cancel_order(self, order_id: int) -> Order:
-        """
-        受注をキャンセル
-        
-        Args:
-            order_id: 受注ID
-            
-        Returns:
-            キャンセルされた受注エンティティ
-            
-        Raises:
-            OrderNotFoundError: 受注が存在しない場合
-            InvalidOrderStatusError: キャンセルできない状態の場合
-        """
-        return self.update_order_status(order_id, "cancelled")
-    
-    def get_order_line(self, order_line_id: int) -> OrderLine:
-        """
-        受注明細を取得
-        
-        Args:
-            order_line_id: 受注明細ID
-            
-        Returns:
-            受注明細エンティティ
-            
-        Raises:
-            OrderLineNotFoundError: 受注明細が存在しない場合
-        """
-        order_line = self.order_line_repo.find_by_id(order_line_id)
-        if not order_line:
-            raise OrderLineNotFoundError(order_line_id)
-        return order_line
-    
-    def calculate_order_line_progress(
-        self,
-        order_line: OrderLine,
-        allocated_qty: float
-    ) -> float:
-        """
-        受注明細の進捗率を計算
-        
-        Args:
-            order_line: 受注明細エンティティ
-            allocated_qty: 引当済み数量
-            
-        Returns:
-            進捗率（0-100%）
-        """
-        return OrderBusinessRules.calculate_progress_percentage(
-            order_line.quantity,
-            allocated_qty
-        )
+        self.db.add(order)
+        self.db.flush()
+
+        # ✅ 修正: 明細作成時に単位変換を実施
+        for line_data in order_data.lines:
+            product = (
+                self.db.query(Product)
+                .filter(Product.product_code == line_data.product_code)
+                .first()
+            )
+
+            # 内部単位に変換
+            internal_qty = to_internal_qty(
+                product=product,
+                qty_external=line_data.quantity,
+                external_unit=line_data.external_unit,
+            )
+
+            line = OrderLine(
+                order_id=order.id,
+                line_no=line_data.line_no,
+                product_code=line_data.product_code,
+                quantity=float(internal_qty),  # 変換後の数量を保存
+                unit=line_data.unit,
+                due_date=line_data.due_date,
+            )
+            self.db.add(line)
+
+        self.db.flush()
+        self.db.refresh(order)
+
+        return OrderWithLinesResponse.model_validate(order)
+
+    def update_order_status(self, order_id: int, new_status: str) -> OrderResponse:
+        """受注ステータス更新"""
+        order = self.db.query(Order).filter(Order.id == order_id).first()
+
+        if not order:
+            raise OrderNotFoundError(order_id)
+
+        OrderStateMachine.validate_transition(order.status, new_status)
+
+        order.status = new_status
+
+        self.db.flush()
+        self.db.refresh(order)
+
+        return OrderResponse.model_validate(order)
+
+    def cancel_order(self, order_id: int) -> None:
+        """受注キャンセル"""
+        order = self.db.query(Order).filter(Order.id == order_id).first()
+
+        if not order:
+            raise OrderNotFoundError(order_id)
+
+        if order.status in ["shipped", "closed"]:
+            raise InvalidOrderStatusError(
+                f"ステータスが '{order.status}' の受注はキャンセルできません"
+            )
+
+        order.status = "cancelled"
+
+        self.db.flush()

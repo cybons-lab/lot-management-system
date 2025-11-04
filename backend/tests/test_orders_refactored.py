@@ -7,30 +7,12 @@
 import pytest
 from datetime import date
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from app.main import app
-from app.models import Base, Order, OrderLine, Customer, Product
+from app.models import Order, OrderLine, Customer, Product
 from app.api.deps import get_db
 
-
-# テスト用DB設定
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_orders.db"
-engine = create_engine(SQLALCHEMY_TEST_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-@pytest.fixture
-def db_session():
-    """テスト用DBセッション"""
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        Base.metadata.drop_all(bind=engine)
+# ✅ 修正: conftest.pyのdb_sessionを使用（独自engineを削除）
 
 
 @pytest.fixture
@@ -40,7 +22,7 @@ def client(db_session):
         try:
             yield db_session
         finally:
-            db_session.close()
+            pass  # conftest.pyが管理するのでcloseしない
     
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
@@ -50,11 +32,9 @@ def client(db_session):
 @pytest.fixture
 def setup_test_data(db_session):
     """テストデータをセットアップ"""
-    # 得意先
     customer = Customer(customer_code="CUS-001", customer_name="得意先A")
     db_session.add(customer)
     
-    # 製品
     product = Product(
         product_code="PROD-001",
         product_name="製品A",
@@ -65,7 +45,7 @@ def setup_test_data(db_session):
     )
     db_session.add(product)
     
-    db_session.commit()
+    db_session.flush()  # commitではなくflushを使用
     
     return {
         "customer_code": "CUS-001",
@@ -90,13 +70,13 @@ class TestOrderAPI:
                         "product_code": setup_test_data["product_code"],
                         "quantity": 100.0,
                         "unit": "EA",
+                        "external_unit": "EA",
                         "due_date": "2024-11-15"
                     }
                 ]
             }
         )
         
-        # レスポンス検証
         assert response.status_code == 201
         data = response.json()
         assert data["order_no"] == "ORD-001"
@@ -104,7 +84,6 @@ class TestOrderAPI:
     
     def test_create_order_duplicate(self, client, setup_test_data, db_session):
         """重複受注番号でエラーが返ること"""
-        # 事前に受注を作成
         order = Order(
             order_no="ORD-001",
             customer_code=setup_test_data["customer_code"],
@@ -112,9 +91,8 @@ class TestOrderAPI:
             status="open"
         )
         db_session.add(order)
-        db_session.commit()
+        db_session.flush()
         
-        # 重複した受注番号で作成
         response = client.post(
             "/api/orders",
             json={
@@ -125,13 +103,11 @@ class TestOrderAPI:
             }
         )
         
-        # レスポンス検証
         assert response.status_code == 409
         assert "already exists" in response.json()["detail"]
     
     def test_get_order_success(self, client, setup_test_data, db_session):
         """受注詳細取得が成功すること"""
-        # 事前に受注を作成
         order = Order(
             order_no="ORD-001",
             customer_code=setup_test_data["customer_code"],
@@ -149,12 +125,10 @@ class TestOrderAPI:
             unit="EA"
         )
         db_session.add(order_line)
-        db_session.commit()
+        db_session.flush()
         
-        # 受注詳細取得
         response = client.get(f"/api/orders/{order.id}")
         
-        # レスポンス検証
         assert response.status_code == 200
         data = response.json()
         assert data["order_no"] == "ORD-001"
@@ -162,7 +136,6 @@ class TestOrderAPI:
     
     def test_update_order_status_success(self, client, setup_test_data, db_session):
         """受注ステータス更新が成功すること"""
-        # 事前に受注を作成
         order = Order(
             order_no="ORD-001",
             customer_code=setup_test_data["customer_code"],
@@ -170,22 +143,19 @@ class TestOrderAPI:
             status="open"
         )
         db_session.add(order)
-        db_session.commit()
+        db_session.flush()
         
-        # ステータス更新
         response = client.patch(
             f"/api/orders/{order.id}/status",
             json={"status": "allocated"}
         )
         
-        # レスポンス検証
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "allocated"
     
     def test_cancel_order_success(self, client, setup_test_data, db_session):
         """受注キャンセルが成功すること"""
-        # 事前に受注を作成
         order = Order(
             order_no="ORD-001",
             customer_code=setup_test_data["customer_code"],
@@ -193,17 +163,19 @@ class TestOrderAPI:
             status="open"
         )
         db_session.add(order)
-        db_session.commit()
+        db_session.flush()
         
-        # キャンセル
-        response = client.delete(f"/api/orders/{order.id}/cancel")
+        order_id = order.id
         
-        # レスポンス検証
+        response = client.delete(f"/api/orders/{order_id}/cancel")
+        
         assert response.status_code == 204
         
-        # DB確認: ステータスが"cancelled"に変更されていること
-        db_session.refresh(order)
-        assert order.status == "cancelled"
+        # DB確認: 新しいクエリでステータスを確認
+        db_session.expire_all()
+        updated_order = db_session.query(Order).filter(Order.id == order_id).first()
+        assert updated_order is not None
+        assert updated_order.status == "cancelled"
 
 
 class TestOrderStateMachine:
@@ -213,23 +185,16 @@ class TestOrderStateMachine:
         """許可された状態遷移"""
         from app.domain.order import OrderStateMachine
         
-        # open -> allocated
         assert OrderStateMachine.can_transition("open", "allocated") is True
-        
-        # allocated -> shipped
         assert OrderStateMachine.can_transition("allocated", "shipped") is True
-        
-        # shipped -> closed
         assert OrderStateMachine.can_transition("shipped", "closed") is True
     
     def test_invalid_transitions(self):
         """禁止された状態遷移"""
         from app.domain.order import OrderStateMachine, InvalidOrderStatusError
         
-        # closed -> open（終端状態からの遷移は不可）
         assert OrderStateMachine.can_transition("closed", "open") is False
         
-        # 例外が発生すること
         with pytest.raises(InvalidOrderStatusError):
             OrderStateMachine.validate_transition("closed", "open")
 
@@ -241,10 +206,8 @@ class TestOrderBusinessRules:
         """数量バリデーション"""
         from app.domain.order import OrderBusinessRules, OrderValidationError
         
-        # 正常ケース
         OrderBusinessRules.validate_quantity(100.0, "PROD-001")
         
-        # エラーケース（0以下）
         with pytest.raises(OrderValidationError):
             OrderBusinessRules.validate_quantity(0.0, "PROD-001")
         
@@ -255,11 +218,6 @@ class TestOrderBusinessRules:
         """進捗率計算"""
         from app.domain.order import OrderBusinessRules
         
-        # 50%
         assert OrderBusinessRules.calculate_progress_percentage(100.0, 50.0) == 50.0
-        
-        # 100%
         assert OrderBusinessRules.calculate_progress_percentage(100.0, 100.0) == 100.0
-        
-        # 0%
         assert OrderBusinessRules.calculate_progress_percentage(100.0, 0.0) == 0.0

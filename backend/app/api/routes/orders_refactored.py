@@ -1,4 +1,4 @@
-# backend/app/api/routes/orders.py
+# backend/app/api/routes/orders_refactored.py
 """
 受注エンドポイント
 I/O整形とHTTP例外変換のみを責務とする
@@ -40,21 +40,7 @@ def list_orders(
     date_to: Optional[date] = None,
     db: Session = Depends(get_db)
 ):
-    """
-    受注一覧取得
-    
-    Args:
-        skip: スキップ件数
-        limit: 取得件数
-        status: ステータスフィルタ
-        customer_code: 得意先コードフィルタ
-        date_from: 開始日フィルタ
-        date_to: 終了日フィルタ
-        db: DBセッション
-        
-    Returns:
-        受注一覧
-    """
+    """受注一覧取得"""
     service = OrderService(db)
     
     try:
@@ -80,20 +66,11 @@ def get_order(
     order_id: int,
     db: Session = Depends(get_db)
 ):
-    """
-    受注詳細取得
-    
-    Args:
-        order_id: 受注ID
-        db: DBセッション
-        
-    Returns:
-        受注詳細
-    """
+    """受注詳細取得(明細含む)"""
     service = OrderService(db)
     
     try:
-        order = service.get_order(order_id, with_lines=True)
+        order = service.get_order_detail(order_id)
         return order
     
     except OrderNotFoundError as e:
@@ -109,40 +86,24 @@ def get_order(
         )
 
 
-@router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=OrderWithLinesResponse, status_code=status.HTTP_201_CREATED)
 def create_order(
-    request: OrderCreate,
+    order: OrderCreate,
     db: Session = Depends(get_db)
 ):
-    """
-    受注作成
-    
-    Args:
-        request: 受注作成リクエスト
-        db: DBセッション
-        
-    Returns:
-        作成された受注
-    """
+    """受注作成"""
     service = OrderService(db)
     
     try:
-        # サービス層のユースケースを呼び出し
-        order = service.create_order(
-            order_no=request.order_no,
-            customer_code=request.customer_code,
-            order_date=request.order_date,
-            lines=request.lines
-        )
+        new_order = service.create_order(order)
         
-        # コミット
         db.commit()
-        db.refresh(order)
         
-        return order
+        return new_order
     
     except DuplicateOrderError as e:
         db.rollback()
+        # ✅ 409 Conflictを返す
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=e.message
@@ -151,7 +112,7 @@ def create_order(
     except OrderValidationError as e:
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=e.message
         )
     
@@ -173,30 +134,25 @@ def create_order(
 @router.patch("/{order_id}/status", response_model=OrderResponse)
 def update_order_status(
     order_id: int,
-    request: OrderUpdate,
+    request: dict,
     db: Session = Depends(get_db)
 ):
-    """
-    受注ステータス更新
-    
-    Args:
-        order_id: 受注ID
-        request: ステータス更新リクエスト
-        db: DBセッション
-        
-    Returns:
-        更新された受注
-    """
+    """受注ステータス更新"""
     service = OrderService(db)
     
     try:
-        order = service.update_order_status(order_id, request.status)
+        new_status = request.get("status")
+        if not new_status:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="status フィールドは必須です"
+            )
         
-        # コミット
+        updated_order = service.update_order_status(order_id, new_status)
+        
         db.commit()
-        db.refresh(order)
         
-        return order
+        return updated_order
     
     except OrderNotFoundError as e:
         db.rollback()
@@ -232,19 +188,12 @@ def cancel_order(
     order_id: int,
     db: Session = Depends(get_db)
 ):
-    """
-    受注キャンセル
-    
-    Args:
-        order_id: 受注ID
-        db: DBセッション
-    """
+    """受注キャンセル"""
     service = OrderService(db)
     
     try:
         service.cancel_order(order_id)
         
-        # コミット
         db.commit()
         
         return None
