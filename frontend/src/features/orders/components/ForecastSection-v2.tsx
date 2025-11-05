@@ -7,24 +7,20 @@ type Props = {
   fullWidth?: boolean;
 };
 
-export default function ForecastSection({ productCode, fullWidth = false }: Props) {
+export function ForecastSection({ productCode, fullWidth = false }: Props) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   if (!productCode) return null;
 
   return (
-    <div
-      className={`border rounded-lg ${
-        fullWidth ? "w-full" : ""
-      }`}>
+    <div className={`border rounded-lg ${fullWidth ? "w-full" : ""}`}>
       <button
         className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
-        onClick={() => setIsOpen(!isOpen)}>
+        onClick={() => setIsOpen(!isOpen)}
+      >
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">フォーキャスト</span>
-          <span className="text-xs text-gray-500">
-            ({productCode} の需要予測)
-          </span>
+          <span className="text-xs text-gray-500">({productCode} の需要予測)</span>
         </div>
         <span className="text-gray-400">{isOpen ? "▼" : "▶"}</span>
       </button>
@@ -57,12 +53,9 @@ export default function ForecastSection({ productCode, fullWidth = false }: Prop
           <div className="flex gap-2">
             <a
               href={`/forecast?product=${encodeURIComponent(productCode)}`}
-              className="px-4 py-2 rounded bg-sky-600 text-white text-sm hover:bg-sky-700 inline-flex items-center gap-2">
-              <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24">
+              className="px-4 py-2 rounded bg-sky-600 text-white text-sm hover:bg-sky-700 inline-flex items-center gap-2"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -72,10 +65,11 @@ export default function ForecastSection({ productCode, fullWidth = false }: Prop
               </svg>
               詳細フォーキャストを見る
             </a>
-            
+
             <a
               href={`/forecast`}
-              className="px-4 py-2 rounded border text-sm hover:bg-gray-100 inline-flex items-center gap-2">
+              className="px-4 py-2 rounded border text-sm hover:bg-gray-100 inline-flex items-center gap-2"
+            >
               フォーキャスト一覧
             </a>
           </div>

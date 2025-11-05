@@ -7,16 +7,11 @@ type Props = {
   highlight?: boolean;
 };
 
-export default function InfoRow({ label, value, highlight }: Props) {
+export function InfoRow({ label, value, highlight }: Props) {
   return (
     <div className="flex justify-between items-center text-sm">
       <span className="text-gray-600">{label}:</span>
-      <span
-        className={
-          highlight
-            ? "font-semibold text-sky-700"
-            : "font-medium text-gray-900"
-        }>
+      <span className={highlight ? "font-semibold text-sky-700" : "font-medium text-gray-900"}>
         {value}
       </span>
     </div>

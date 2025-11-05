@@ -15,12 +15,7 @@ const statusColors: Record<string, string> = {
   shipped: "bg-blue-100 text-blue-700",
 };
 
-export default function OrderLineHeader({
-  productName,
-  productCode,
-  status,
-  orderDate,
-}: Props) {
+export function OrderLineHeader({ productName, productCode, status, orderDate }: Props) {
   return (
     <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-sky-50 to-white">
       <h2 className="text-lg font-semibold text-gray-900">
@@ -31,15 +26,12 @@ export default function OrderLineHeader({
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
               statusColors[status] ?? statusColors.open
-            }`}>
+            }`}
+          >
             {status}
           </span>
         )}
-        {orderDate && (
-          <span className="text-sm text-gray-600">
-            受注日: {orderDate}
-          </span>
-        )}
+        {orderDate && <span className="text-sm text-gray-600">受注日: {orderDate}</span>}
       </div>
     </div>
   );

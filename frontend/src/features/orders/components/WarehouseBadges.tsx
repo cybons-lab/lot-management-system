@@ -5,13 +5,9 @@ type Props = {
   warehouses: string[];
 };
 
-export default function WarehouseBadges({ warehouses }: Props) {
+export function WarehouseBadges({ warehouses }: Props) {
   if (warehouses.length === 0) {
-    return (
-      <div className="text-sm text-gray-500">
-        倉庫: 未配分
-      </div>
-    );
+    return <div className="text-sm text-gray-500">倉庫: 未配分</div>;
   }
 
   return (
@@ -19,9 +15,7 @@ export default function WarehouseBadges({ warehouses }: Props) {
       <div className="text-sm font-medium text-gray-600">出荷倉庫:</div>
       <div className="flex flex-wrap gap-1">
         {warehouses.map((wh) => (
-          <span
-            key={wh}
-            className="px-2 py-1 rounded bg-sky-100 text-sky-700 text-xs font-medium">
+          <span key={wh} className="px-2 py-1 rounded bg-sky-100 text-sky-700 text-xs font-medium">
             {wh}
           </span>
         ))}

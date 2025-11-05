@@ -11,11 +11,7 @@ type Props = {
   fullWidth?: boolean;
 };
 
-export default function ForecastSection({
-  productCode,
-  customerCode,
-  fullWidth = false,
-}: Props) {
+export function ForecastSection({ productCode, customerCode, fullWidth = false }: Props) {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const forecastQ = useQuery<ForecastResponse[]>({
@@ -43,12 +39,11 @@ export default function ForecastSection({
   };
 
   return (
-    <div
-      className={`border rounded-lg ${fullWidth ? "w-full" : ""}`}
-    >
+    <div className={`border rounded-lg ${fullWidth ? "w-full" : ""}`}>
       <button
         className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
-        onClick={() => setIsOpen((prev) => !prev)}>
+        onClick={() => setIsOpen((prev) => !prev)}
+      >
         <div className="flex flex-col">
           <span className="text-sm font-medium">フォーキャスト</span>
           <span className="text-xs text-gray-500">
@@ -69,16 +64,9 @@ export default function ForecastSection({
               </div>
               <div className="grid gap-3 md:grid-cols-3 sm:grid-cols-2 text-xs">
                 {forecasts.slice(0, 3).map((f) => (
-                  <div
-                    key={f.id}
-                    className="rounded border bg-white p-3 shadow-sm"
-                  >
-                    <div className="text-[11px] uppercase text-gray-400">
-                      {f.granularity}
-                    </div>
-                    <div className="text-sm font-semibold text-gray-800">
-                      {renderPeriod(f)}
-                    </div>
+                  <div key={f.id} className="rounded border bg-white p-3 shadow-sm">
+                    <div className="text-[11px] uppercase text-gray-400">{f.granularity}</div>
+                    <div className="text-sm font-semibold text-gray-800">{renderPeriod(f)}</div>
                     <div className="mt-1 text-xs text-gray-500">
                       予測数量: {f.qty_forecast.toLocaleString()} EA
                     </div>

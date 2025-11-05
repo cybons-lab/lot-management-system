@@ -20,23 +20,20 @@ type Props = {
   onRematch?: () => void;
 };
 
-export default function OrderLineCard({ order, line, onRematch }: Props) {
+export function OrderLineCard({ order, line, onRematch }: Props) {
   const c = useOrderLineComputed(line, order);
-  
+
   // ★ 品番を渡してフィルタリング
   const { candidatesQ, createAlloc, cancelAlloc } = useAllocationActions(
     c.ids.lineId,
     c.productCode,
-    c.customerCode
+    c.customerCode,
   );
 
   const canRematch = !!onRematch && !!c.ids.orderId;
 
   // トースト表示
-  const showToast = (message: {
-    title: string;
-    variant?: "default" | "destructive";
-  }) => {
+  const showToast = (message: { title: string; variant?: "default" | "destructive" }) => {
     console.log("Toast:", message);
   };
 
@@ -51,7 +48,7 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
       {
         onSuccess: () => showToast({ title: "引当完了" }),
         onError: () => showToast({ title: "引当失敗", variant: "destructive" }),
-      }
+      },
     );
   };
 
@@ -62,7 +59,7 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
       {
         onSuccess: () => showToast({ title: "引当取消完了" }),
         onError: () => showToast({ title: "引当取消失敗", variant: "destructive" }),
-      }
+      },
     );
   };
 
@@ -130,10 +127,7 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
               highlight
             />
             <InfoRow label="数量" value={`${c.totalQty} ${c.unit}`} />
-            <InfoRow
-              label="得意先"
-              value={formatCodeAndName(c.customerCode, c.customerName)}
-            />
+            <InfoRow label="得意先" value={formatCodeAndName(c.customerCode, c.customerName)} />
             <InfoRow label="受注日" value={formatYmd(c.orderDate) || "—"} />
             <InfoRow label="納期" value={formatYmd(c.dueDate) || "—"} />
             <InfoRow
@@ -143,22 +137,18 @@ export default function OrderLineCard({ order, line, onRematch }: Props) {
 
             {/* ★ 配送リードタイム */}
             {c.shippingLeadTime && (
-            <InfoRow
-              label="配送リードタイム"
-              value={c.shippingLeadTime}
-              highlight={c.shippingLeadTime.includes("遅延")}
-            />
-          )}
+              <InfoRow
+                label="配送リードタイム"
+                value={c.shippingLeadTime}
+                highlight={c.shippingLeadTime.includes("遅延")}
+              />
+            )}
           </div>
         </div>
 
         {/* ★ フォーキャスト（全幅表示） */}
         <div className="mt-6">
-          <ForecastSection
-            productCode={c.productCode}
-            customerCode={c.customerCode}
-            fullWidth
-          />
+          <ForecastSection productCode={c.productCode} customerCode={c.customerCode} fullWidth />
         </div>
       </div>
     </div>

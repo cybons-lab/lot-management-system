@@ -8,23 +8,23 @@ type Props = {
   onReMatch?: () => void;
 };
 
-export default function OrderCard({ order, onSelectLine, onReMatch }: Props) {
+export function OrderCard({ order, onSelectLine, onReMatch }: Props) {
   return (
     <div className="rounded-2xl border p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-lg font-semibold">
-            受注番号: {order.order_no ?? order.id}
-          </div>
+          <div className="text-lg font-semibold">受注番号: {order.order_no ?? order.id}</div>
           <div className="text-sm text-gray-500">
-            顧客: {formatCodeAndName(order.customer_code, (order as { customer_name?: string | null }).customer_name)} / 作成日:{" "}
-            {order.created_at?.slice(0, 10) ?? "-"}
+            顧客:{" "}
+            {formatCodeAndName(
+              order.customer_code,
+              (order as { customer_name?: string | null }).customer_name,
+            )}{" "}
+            / 作成日: {order.created_at?.slice(0, 10) ?? "-"}
           </div>
         </div>
         {onReMatch && (
-          <button
-            className="px-3 py-1 rounded bg-gray-800 text-white"
-            onClick={onReMatch}>
+          <button className="px-3 py-1 rounded bg-gray-800 text-white" onClick={onReMatch}>
             ロット再マッチ
           </button>
         )}
@@ -52,7 +52,8 @@ export default function OrderCard({ order, onSelectLine, onReMatch }: Props) {
                   {onSelectLine && (
                     <button
                       className="px-2 py-0.5 rounded border"
-                      onClick={() => onSelectLine(ln.id)}>
+                      onClick={() => onSelectLine(ln.id)}
+                    >
                       候補ロット
                     </button>
                   )}

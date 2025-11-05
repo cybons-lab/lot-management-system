@@ -19,7 +19,7 @@ type Props = {
   isLoading?: boolean;
 };
 
-export default function LotListWithAllocation({
+export function LotListWithAllocation({
   candidates,
   allocatedLots,
   onAllocate,
@@ -46,9 +46,7 @@ export default function LotListWithAllocation({
   if (candidates.length === 0) {
     return (
       <div className="rounded-lg border p-4">
-        <div className="text-sm text-gray-500">
-          引当可能なロットがありません
-        </div>
+        <div className="text-sm text-gray-500">引当可能なロットがありません</div>
       </div>
     );
   }
@@ -68,9 +66,8 @@ export default function LotListWithAllocation({
           return (
             <div
               key={lot.lot_id}
-              className={`p-3 ${
-                isAllocated ? "bg-green-50" : "hover:bg-gray-50"
-              }`}>
+              className={`p-3 ${isAllocated ? "bg-green-50" : "hover:bg-gray-50"}`}
+            >
               <div className="flex items-start justify-between gap-3">
                 {/* 左側: ロット情報 */}
                 <div className="flex-1 min-w-0">
@@ -78,12 +75,8 @@ export default function LotListWithAllocation({
                     <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
                       {formatCodeAndName(lot.warehouse_code || "", lot.warehouse_name)}
                     </span>
-                    {isAllocated && (
-                      <Check className="h-4 w-4 text-green-600 shrink-0" />
-                    )}
-                    <div className="font-mono text-sm font-medium truncate">
-                      {lot.lot_code}
-                    </div>
+                    {isAllocated && <Check className="h-4 w-4 text-green-600 shrink-0" />}
+                    <div className="font-mono text-sm font-medium truncate">{lot.lot_code}</div>
                   </div>
 
                   <div className="text-xs text-gray-500 mt-2 space-y-0.5">
@@ -92,14 +85,12 @@ export default function LotListWithAllocation({
                       {typeof lot.lot_unit_qty === "number" &&
                         lot.lot_unit &&
                         lot.lot_unit !== lot.base_unit && (
-                        <span className="text-gray-400">
-                          {` (${lot.lot_unit_qty} ${lot.lot_unit})`}
-                        </span>
-                      )}
+                          <span className="text-gray-400">
+                            {` (${lot.lot_unit_qty} ${lot.lot_unit})`}
+                          </span>
+                        )}
                     </div>
-                    {lot.expiry_date && (
-                      <div>期限: {lot.expiry_date}</div>
-                    )}
+                    {lot.expiry_date && <div>期限: {lot.expiry_date}</div>}
                   </div>
 
                   {/* 引当済みの場合 */}
@@ -108,7 +99,7 @@ export default function LotListWithAllocation({
                       <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                         {formatCodeAndName(
                           allocation.warehouse_code ?? lot.warehouse_code ?? "",
-                          allocation.warehouse_name
+                          allocation.warehouse_name,
                         ) || "—"}
                       </span>
                       <span className="text-xs font-medium text-green-700">
@@ -116,9 +107,8 @@ export default function LotListWithAllocation({
                       </span>
                       <button
                         className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
-                        onClick={() =>
-                          onCancelAllocation(allocation.allocation_id)
-                        }>
+                        onClick={() => onCancelAllocation(allocation.allocation_id)}
+                      >
                         <X className="h-3 w-3" />
                         取消
                       </button>
@@ -149,7 +139,8 @@ export default function LotListWithAllocation({
                       onClick={() => {
                         onAllocate(lot.lot_id, inputQty);
                         setAllocQty((prev) => ({ ...prev, [lot.lot_id]: 0 }));
-                      }}>
+                      }}
+                    >
                       引当
                     </button>
                   </div>

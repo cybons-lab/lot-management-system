@@ -39,7 +39,7 @@ type Props = {
  */
 const validateWarehouseAllocations = (
   allocs: WarehouseAlloc[],
-  maxQty?: number
+  maxQty?: number,
 ): { valid: boolean; message: string } => {
   const total = allocs.reduce((sum, a) => sum + Number(a.quantity ?? 0), 0);
 
@@ -57,7 +57,7 @@ const validateWarehouseAllocations = (
   return { valid: true, message: "" };
 };
 
-export default function LotAllocationPanel(props: Props) {
+export function LotAllocationPanel(props: Props) {
   const {
     mode = "modal",
     open = true,
@@ -78,17 +78,15 @@ export default function LotAllocationPanel(props: Props) {
 
   const totalSelected = React.useMemo(
     () => Object.values(selected).reduce((sum, value) => sum + Number(value || 0), 0),
-    [selected]
+    [selected],
   );
   const requiredQty = typeof maxQty === "number" ? maxQty : 0;
   const progressPct =
     requiredQty > 0
       ? Math.min(100, Math.max(0, Math.round((totalSelected / requiredQty) * 100)))
       : 0;
-  const remainingQty =
-    requiredQty > 0 ? Math.max(0, requiredQty - totalSelected) : undefined;
-  const isOverAllocated =
-    typeof maxQty === "number" && totalSelected > (maxQty ?? 0);
+  const remainingQty = requiredQty > 0 ? Math.max(0, requiredQty - totalSelected) : undefined;
+  const isOverAllocated = typeof maxQty === "number" && totalSelected > (maxQty ?? 0);
 
   React.useEffect(() => {
     setSelected({});
@@ -100,10 +98,7 @@ export default function LotAllocationPanel(props: Props) {
 
   // 引当実行のハンドラ
   const handleAllocate = () => {
-    const sum = Object.values(selected).reduce(
-      (s, q) => s + Number(q || 0),
-      0
-    );
+    const sum = Object.values(selected).reduce((s, q) => s + Number(q || 0), 0);
     if (sum <= 0) {
       const msg = "引当数が0です";
       setValidationError(msg);
@@ -122,7 +117,7 @@ export default function LotAllocationPanel(props: Props) {
         lot_id: Number(lot_id),
         qty: Number(qty),
       }));
-    
+
     setValidationError("");
     onAllocate({ items });
     onToast?.({ title: "引当を実行しました" });
@@ -131,7 +126,7 @@ export default function LotAllocationPanel(props: Props) {
   // 倉庫配分保存のハンドラ
   const handleSaveWarehouseAlloc = () => {
     const validation = validateWarehouseAllocations(wareAlloc, maxQty);
-    
+
     if (!validation.valid) {
       setValidationError(validation.message);
       onToast?.({ title: validation.message, variant: "destructive" });
@@ -152,7 +147,8 @@ export default function LotAllocationPanel(props: Props) {
         {mode === "modal" && (
           <button
             className="px-3 py-1 rounded border hover:bg-gray-100"
-            onClick={() => onClose && onClose()}>
+            onClick={() => onClose && onClose()}
+          >
             閉じる
           </button>
         )}
@@ -195,10 +191,10 @@ export default function LotAllocationPanel(props: Props) {
                       {typeof c.lot_unit_qty === "number" &&
                         c.lot_unit &&
                         c.lot_unit !== c.base_unit && (
-                        <span className="text-gray-400">
-                          {` (${c.lot_unit_qty} ${c.lot_unit})`}
-                        </span>
-                      )}
+                          <span className="text-gray-400">
+                            {` (${c.lot_unit_qty} ${c.lot_unit})`}
+                          </span>
+                        )}
                     </td>
                     <td className="py-1">
                       <input
@@ -233,14 +229,11 @@ export default function LotAllocationPanel(props: Props) {
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>進捗</span>
                   <span>
-                    {progressPct}%
-                    {typeof remainingQty === "number" && ` (残り ${remainingQty})`}
+                    {progressPct}%{typeof remainingQty === "number" && ` (残り ${remainingQty})`}
                   </span>
                 </div>
                 {isOverAllocated && (
-                  <div className="text-xs text-red-600">
-                    引当合計が要求数量を超えています。
-                  </div>
+                  <div className="text-xs text-red-600">引当合計が要求数量を超えています。</div>
                 )}
               </div>
             )}
@@ -259,7 +252,8 @@ export default function LotAllocationPanel(props: Props) {
                 onClick={() => {
                   onCancelAllocations({ order_line_id: orderLineId });
                   onToast?.({ title: "引当を取消しました" });
-                }}>
+                }}
+              >
                 引当を取消
               </button>
             </div>
@@ -272,9 +266,7 @@ export default function LotAllocationPanel(props: Props) {
         <div className="text-sm font-medium mb-2">
           倉庫別配分
           {typeof maxQty === "number" && (
-            <span className="ml-2 text-xs text-gray-500">
-              (最大: {maxQty})
-            </span>
+            <span className="ml-2 text-xs text-gray-500">(最大: {maxQty})</span>
           )}
         </div>
         <div className="flex items-center gap-2 mb-3">
@@ -292,13 +284,15 @@ export default function LotAllocationPanel(props: Props) {
                   quantity: 0,
                 } as WarehouseAlloc,
               ])
-            }>
+            }
+          >
             + 行追加
           </button>
 
           <button
             className="px-3 py-1 rounded bg-black text-white hover:bg-gray-800"
-            onClick={handleSaveWarehouseAlloc}>
+            onClick={handleSaveWarehouseAlloc}
+          >
             保存
           </button>
         </div>
@@ -325,9 +319,7 @@ export default function LotAllocationPanel(props: Props) {
                 onChange={(e) => {
                   const v = Number(e.target.value);
                   setWareAlloc((arr) =>
-                    arr.map((x, i) =>
-                      i === idx ? { ...x, warehouse_id: v } : x
-                    )
+                    arr.map((x, i) => (i === idx ? { ...x, warehouse_id: v } : x)),
                   );
                 }}
               />
@@ -347,8 +339,8 @@ export default function LotAllocationPanel(props: Props) {
                             warehouse_code: codePart ?? "",
                             warehouse_name: namePart ?? x.warehouse_name,
                           }
-                        : x
-                    )
+                        : x,
+                    ),
                   );
                 }}
               />
@@ -361,17 +353,14 @@ export default function LotAllocationPanel(props: Props) {
                 onChange={(e) => {
                   const v = Number(e.target.value);
                   setWareAlloc((arr) =>
-                    arr.map((x, i) =>
-                      i === idx ? { ...x, quantity: v, qty: v } : x
-                    )
+                    arr.map((x, i) => (i === idx ? { ...x, quantity: v, qty: v } : x)),
                   );
                 }}
               />
               <button
                 className="px-2 py-0.5 rounded border hover:bg-gray-100"
-                onClick={() =>
-                  setWareAlloc((arr) => arr.filter((_, i) => i !== idx))
-                }>
+                onClick={() => setWareAlloc((arr) => arr.filter((_, i) => i !== idx))}
+              >
                 削除
               </button>
             </div>

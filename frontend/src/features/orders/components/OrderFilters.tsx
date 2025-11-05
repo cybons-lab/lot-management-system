@@ -9,12 +9,7 @@ type Props = {
   onReset: () => void;
 };
 
-export default function OrderFilters({
-  value,
-  onChange,
-  onSearch,
-  onReset,
-}: Props) {
+export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
   return (
     <div className="rounded-lg border bg-white p-4 space-y-3">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -26,9 +21,7 @@ export default function OrderFilters({
             className="w-full border rounded px-3 py-1.5 text-sm"
             placeholder="部分一致で検索"
             value={value.customer_code ?? ""}
-            onChange={(e) =>
-              onChange({ ...value, customer_code: e.target.value })
-            }
+            onChange={(e) => onChange({ ...value, customer_code: e.target.value })}
           />
         </div>
 
@@ -38,7 +31,8 @@ export default function OrderFilters({
           <select
             className="w-full border rounded px-3 py-1.5 text-sm"
             value={value.status ?? ""}
-            onChange={(e) => onChange({ ...value, status: e.target.value })}>
+            onChange={(e) => onChange({ ...value, status: e.target.value })}
+          >
             <option value="">すべて</option>
             <option value="open">open</option>
             <option value="partial">partial</option>
@@ -58,7 +52,8 @@ export default function OrderFilters({
                 ...value,
                 due_filter: e.target.value as "all" | "has_due" | "no_due",
               })
-            }>
+            }
+          >
             <option value="all">すべて</option>
             <option value="has_due">納期あり</option>
             <option value="no_due">納期なし</option>
@@ -70,12 +65,9 @@ export default function OrderFilters({
       <div className="flex gap-2">
         <button
           className="px-4 py-1.5 rounded border hover:bg-gray-100 text-sm flex items-center gap-2"
-          onClick={onSearch}>
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24">
+          onClick={onSearch}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -86,9 +78,7 @@ export default function OrderFilters({
           再取得
         </button>
 
-        <button
-          className="px-4 py-1.5 rounded border hover:bg-gray-100 text-sm"
-          onClick={onReset}>
+        <button className="px-4 py-1.5 rounded border hover:bg-gray-100 text-sm" onClick={onReset}>
           リセット
         </button>
       </div>

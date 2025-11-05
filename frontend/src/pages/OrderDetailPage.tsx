@@ -1,22 +1,26 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
-import { api } from '@/lib/api-client';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, RefreshCw, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { format } from 'date-fns';
-import { useToast } from '@/hooks/use-toast';
-import { formatCodeAndName } from '@/lib/utils';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
+import { api } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, RefreshCw, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { formatCodeAndName } from "@/lib/utils";
 
-export default function OrderDetailPage() {
+export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isRematching, setIsRematching] = useState(false);
 
-  const { data: order, isLoading, error } = useQuery({
-    queryKey: ['order', orderId],
+  const {
+    data: order,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["order", orderId],
     queryFn: () => api.getOrder(Number(orderId)),
     enabled: !!orderId,
   });
@@ -28,16 +32,16 @@ export default function OrderDetailPage() {
     },
     onSuccess: () => {
       toast({
-        title: '再マッチング完了',
-        description: 'Forecastとの再マッチングが完了しました',
+        title: "再マッチング完了",
+        description: "Forecastとの再マッチングが完了しました",
       });
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+      queryClient.invalidateQueries({ queryKey: ["order", orderId] });
     },
     onError: (error: any) => {
       toast({
-        title: '再マッチング失敗',
-        description: error.message || '再マッチング処理に失敗しました',
-        variant: 'destructive',
+        title: "再マッチング失敗",
+        description: error.message || "再マッチング処理に失敗しました",
+        variant: "destructive",
       });
     },
     onSettled: () => {
@@ -52,7 +56,7 @@ export default function OrderDetailPage() {
   if (error || !order) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" onClick={() => navigate('/orders')}>
+        <Button variant="ghost" onClick={() => navigate("/orders")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           一覧に戻る
         </Button>
@@ -68,7 +72,7 @@ export default function OrderDetailPage() {
       {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" onClick={() => navigate('/orders')}>
+          <Button variant="ghost" onClick={() => navigate("/orders")}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             一覧に戻る
           </Button>
@@ -77,11 +81,8 @@ export default function OrderDetailPage() {
             <p className="text-muted-foreground">{order.order_no}</p>
           </div>
         </div>
-        <Button
-          onClick={() => rematchMutation.mutate()}
-          disabled={isRematching}
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${isRematching ? 'animate-spin' : ''}`} />
+        <Button onClick={() => rematchMutation.mutate()} disabled={isRematching}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${isRematching ? "animate-spin" : ""}`} />
           再マッチング
         </Button>
       </div>
@@ -93,21 +94,21 @@ export default function OrderDetailPage() {
           <InfoItem label="受注番号" value={order.order_no} />
           <InfoItem
             label="得意先"
-            value={formatCodeAndName(order.customer_code, (order as { customer_name?: string | null }).customer_name)}
+            value={formatCodeAndName(
+              order.customer_code,
+              (order as { customer_name?: string | null }).customer_name,
+            )}
           />
           <InfoItem
             label="受注日"
-            value={order.order_date ? format(new Date(order.order_date), 'yyyy-MM-dd') : '-'}
+            value={order.order_date ? format(new Date(order.order_date), "yyyy-MM-dd") : "-"}
           />
           <InfoItem
             label="納期"
-            value={order.due_date ? format(new Date(order.due_date), 'yyyy-MM-dd') : '-'}
+            value={order.due_date ? format(new Date(order.due_date), "yyyy-MM-dd") : "-"}
           />
-          <InfoItem
-            label="ステータス"
-            value={<StatusBadge status={order.status} />}
-          />
-          <InfoItem label="備考" value={order.remarks || '-'} />
+          <InfoItem label="ステータス" value={<StatusBadge status={order.status} />} />
+          <InfoItem label="備考" value={order.remarks || "-"} />
         </div>
       </div>
 
@@ -139,14 +140,14 @@ export default function OrderDetailPage() {
                   <td className="p-3 text-right text-sm">{line.quantity.toLocaleString()}</td>
                   <td className="p-3 text-sm">{line.unit}</td>
                   <td className="p-3 text-sm">
-                    {line.due_date ? format(new Date(line.due_date), 'yyyy-MM-dd') : '-'}
+                    {line.due_date ? format(new Date(line.due_date), "yyyy-MM-dd") : "-"}
                   </td>
                   <td className="p-3 text-right text-sm">{line.allocated_qty.toLocaleString()}</td>
                   <td className="p-3">
                     <ForecastMatchBadge status={line.forecast_match_status} />
                   </td>
                   <td className="p-3 text-right text-sm">
-                    {line.forecast_qty !== null ? line.forecast_qty.toLocaleString() : '-'}
+                    {line.forecast_qty !== null ? line.forecast_qty.toLocaleString() : "-"}
                   </td>
                   <td className="p-3 text-sm">
                     {line.forecast_version_no ? (
@@ -154,7 +155,7 @@ export default function OrderDetailPage() {
                         {line.forecast_version_no}
                       </span>
                     ) : (
-                      '-'
+                      "-"
                     )}
                   </td>
                 </tr>
@@ -178,16 +179,18 @@ function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
 
 function StatusBadge({ status }: { status: string }) {
   const variants: Record<string, { label: string; class: string }> = {
-    open: { label: '未処理', class: 'bg-yellow-100 text-yellow-800' },
-    allocated: { label: '引当済', class: 'bg-blue-100 text-blue-800' },
-    shipped: { label: '出荷済', class: 'bg-green-100 text-green-800' },
-    completed: { label: '完了', class: 'bg-gray-100 text-gray-800' },
+    open: { label: "未処理", class: "bg-yellow-100 text-yellow-800" },
+    allocated: { label: "引当済", class: "bg-blue-100 text-blue-800" },
+    shipped: { label: "出荷済", class: "bg-green-100 text-green-800" },
+    completed: { label: "完了", class: "bg-gray-100 text-gray-800" },
   };
 
-  const variant = variants[status] || { label: status, class: 'bg-gray-100 text-gray-800' };
+  const variant = variants[status] || { label: status, class: "bg-gray-100 text-gray-800" };
 
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${variant.class}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${variant.class}`}
+    >
       {variant.label}
     </span>
   );
@@ -204,16 +207,18 @@ function ForecastMatchBadge({ status }: { status: string | null }) {
   }
 
   const variants: Record<string, { icon: React.ElementType; class: string }> = {
-    matched: { icon: CheckCircle, class: 'bg-green-100 text-green-800' },
-    partial: { icon: AlertCircle, class: 'bg-yellow-100 text-yellow-800' },
-    unmatched: { icon: XCircle, class: 'bg-red-100 text-red-800' },
+    matched: { icon: CheckCircle, class: "bg-green-100 text-green-800" },
+    partial: { icon: AlertCircle, class: "bg-yellow-100 text-yellow-800" },
+    unmatched: { icon: XCircle, class: "bg-red-100 text-red-800" },
   };
 
   const variant = variants[status] || variants.unmatched;
   const Icon = variant.icon;
 
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${variant.class}`}>
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${variant.class}`}
+    >
       <Icon className="h-3 w-3" />
       {status}
     </span>

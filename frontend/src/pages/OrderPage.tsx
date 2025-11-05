@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge"; // Badgeコンポーネントも必要になります
 import { formatCodeAndName } from "@/lib/utils";
 
-export default function OrderPage() {
+export function OrderPage() {
   const {
     data: orders = [],
     isLoading,
@@ -24,7 +24,7 @@ export default function OrderPage() {
   });
 
   const getStatusVariant = (
-    status: string
+    status: string,
   ): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case "open":
@@ -69,9 +69,7 @@ export default function OrderPage() {
               </TableRow>
             ) : isError ? (
               <TableRow>
-                <TableCell
-                  colSpan={6}
-                  className="h-24 text-center text-destructive">
+                <TableCell colSpan={6} className="h-24 text-center text-destructive">
                   データの読み込みに失敗しました。
                 </TableCell>
               </TableRow>
@@ -84,21 +82,15 @@ export default function OrderPage() {
             ) : (
               orders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">
-                    {order.order_no}
-                  </TableCell>
+                  <TableCell className="font-medium">{order.order_no}</TableCell>
                   <TableCell>
                     {formatCodeAndName(order.customer_code, order.customer_name)}
                   </TableCell>
                   <TableCell>
-                    {order.order_date
-                      ? format(parseISO(order.order_date), "yyyy/MM/dd")
-                      : "-"}
+                    {order.order_date ? format(parseISO(order.order_date), "yyyy/MM/dd") : "-"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={getStatusVariant(order.status)}>
-                      {order.status}
-                    </Badge>
+                    <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                   </TableCell>
                   <TableCell>{order.sap_order_id || "-"}</TableCell>
                   <TableCell>

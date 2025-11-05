@@ -1,82 +1,223 @@
 /**
- * フォームダイアログコンポーネント
+ * FormDialog.tsx
+ * 
+ * モーダルフォームコンポーネント
+ * - ダイアログベースのフォーム
+ * - 送信・キャンセルボタン
+ * - ローディング状態
  */
 
-import React from 'react';
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
-interface FormDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+// ============================================
+// 型定義
+// ============================================
+
+export interface FormDialogProps {
+  /** ダイアログのタイトル */
   title: string;
+  /** ダイアログの説明 */
+  description?: string;
+  /** ダイアログの開閉状態 */
+  open: boolean;
+  /** ダイアログを閉じる関数 */
+  onClose: () => void;
+  /** フォームの送信処理 */
+  onSubmit: () => void | Promise<void>;
+  /** フォームの内容 */
   children: React.ReactNode;
-  footer?: React.ReactNode;
+  /** 送信ボタンのラベル */
+  submitLabel?: string;
+  /** キャンセルボタンのラベル */
+  cancelLabel?: string;
+  /** ローディング状態 */
+  isLoading?: boolean;
+  /** 送信ボタンの無効化 */
+  submitDisabled?: boolean;
+  /** ダイアログのサイズ */
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const sizeStyles = {
-  sm: 'max-w-md',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
-  xl: 'max-w-4xl',
-};
+// ============================================
+// メインコンポーネント
+// ============================================
 
 export function FormDialog({
-  isOpen,
-  onClose,
   title,
+  description,
+  open,
+  onClose,
+  onSubmit,
   children,
-  footer,
+  submitLabel = '保存',
+  cancelLabel = 'キャンセル',
+  isLoading = false,
+  submitDisabled = false,
   size = 'md',
 }: FormDialogProps) {
-  if (!isOpen) return null;
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (isSubmitting || submitDisabled) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (isSubmitting) return;
+    onClose();
+  };
+
+  // サイズに応じたクラス
+  const sizeClasses = {
+    sm: 'max-w-md',
+    md: 'max-w-lg',
+    lg: 'max-w-2xl',
+    xl: 'max-w-4xl',
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50"
-        onClick={onClose}
-      />
-      
-      {/* Dialog */}
-      <div className={`relative z-10 w-full ${sizeStyles[size]} mx-4`}>
-        <div className="rounded-lg bg-white shadow-xl">
-          {/* Header */}
-          <div className="flex items-center justify-between border-b px-6 py-4">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+    <Dialog open={open} onOpenChange={(open) => !open && handleCancel()}>
+      <DialogContent className={sizeClasses[size]}>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            {description && <DialogDescription>{description}</DialogDescription>}
+          </DialogHeader>
+
+          <div className="py-4">{children}</div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
             >
-              <svg
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-          
-          {/* Content */}
-          <div className="max-h-[70vh] overflow-y-auto px-6 py-4">
-            {children}
-          </div>
-          
-          {/* Footer */}
-          {footer && (
-            <div className="flex justify-end space-x-2 border-t px-6 py-4">
-              {footer}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+              {cancelLabel}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || submitDisabled || isLoading}
+            >
+              {(isSubmitting || isLoading) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              {submitLabel}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ============================================
+// 確認ダイアログ
+// ============================================
+
+export interface ConfirmDialogProps {
+  /** ダイアログのタイトル */
+  title: string;
+  /** ダイアログの説明 */
+  description: string;
+  /** ダイアログの開閉状態 */
+  open: boolean;
+  /** ダイアログを閉じる関数 */
+  onClose: () => void;
+  /** 確認時の処理 */
+  onConfirm: () => void | Promise<void>;
+  /** 確認ボタンのラベル */
+  confirmLabel?: string;
+  /** キャンセルボタンのラベル */
+  cancelLabel?: string;
+  /** 確認ボタンのバリアント */
+  confirmVariant?: 'default' | 'destructive';
+  /** ローディング状態 */
+  isLoading?: boolean;
+}
+
+/**
+ * 確認ダイアログ
+ * (削除確認など、簡単な確認用)
+ */
+export function ConfirmDialog({
+  title,
+  description,
+  open,
+  onClose,
+  onConfirm,
+  confirmLabel = '確認',
+  cancelLabel = 'キャンセル',
+  confirmVariant = 'default',
+  isLoading = false,
+}: ConfirmDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleConfirm = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await onConfirm();
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (isSubmitting) return;
+    onClose();
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(open) => !open && handleCancel()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isSubmitting}
+          >
+            {cancelLabel}
+          </Button>
+          <Button
+            type="button"
+            variant={confirmVariant}
+            onClick={handleConfirm}
+            disabled={isSubmitting || isLoading}
+          >
+            {(isSubmitting || isLoading) && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

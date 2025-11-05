@@ -1,14 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
 
-export default function AdminPage() {
+export function AdminPage() {
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-destructive">管理機能</h2>
-        <p className="text-muted-foreground">
-          システム管理と危険な操作を実行できます
-        </p>
+        <p className="text-muted-foreground">システム管理と危険な操作を実行できます</p>
       </div>
 
       <div className="rounded-lg border border-destructive bg-destructive/10 p-6">

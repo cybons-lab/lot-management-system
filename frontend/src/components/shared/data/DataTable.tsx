@@ -1,296 +1,291 @@
 /**
- * 汎用データテーブルコンポーネント
+ * DataTable.tsx
  * 
- * ソート、ページネーション、選択機能を持つテーブル
+ * 汎用データテーブルコンポーネント
+ * - カラム定義ベースの表示
+ * - ソート機能
+ * - 行選択機能
+ * - アクションボタン
+ * - レスポンシブ対応
  */
 
-import React from 'react';
-import type { SortState } from '@/hooks/ui/useTable';
+import { useMemo } from 'react';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
-/**
- * カラム定義
- */
-export interface Column<T> {
-  /** カラムID (ソート用) */
+// ============================================
+// 型定義
+// ============================================
+
+export interface Column<T = any> {
+  /** カラムID */
   id: string;
   /** カラムヘッダー表示名 */
   header: string;
-  /** セル値を取得・表示する関数 */
-  cell: (row: T) => React.ReactNode;
-  /** ソート可能か */
+  /** セルの値を取得する関数 */
+  accessor?: (row: T) => any;
+  /** セルのレンダリング関数(カスタム表示) */
+  cell?: (row: T) => React.ReactNode;
+  /** ソート可能かどうか */
   sortable?: boolean;
-  /** カラム幅 */
+  /** カラム幅(CSS) */
   width?: string;
-  /** テキスト揃え */
+  /** テキスト配置 */
   align?: 'left' | 'center' | 'right';
-}
-
-interface DataTableProps<T> {
-  /** 表示するデータ */
-  data: T[];
-  /** カラム定義 */
-  columns: Column<T>[];
-  /** 行のキー取得関数 */
-  getRowKey: (row: T) => string | number;
-  /** ソート状態 */
-  sort?: SortState;
-  /** ソート変更ハンドラー */
-  onSort?: (columnId: string) => void;
-  /** 行クリックハンドラー */
-  onRowClick?: (row: T) => void;
-  /** 選択された行 */
-  selectedRows?: Set<string | number>;
-  /** ローディング状態 */
-  isLoading?: boolean;
-  /** エラー状態 */
-  error?: Error | null;
-  /** 空状態メッセージ */
-  emptyMessage?: string;
-  /** 追加のクラス名 */
+  /** カラムのクラス名 */
   className?: string;
 }
 
-/**
- * 汎用データテーブルコンポーネント
- * 
- * @example
- * ```tsx
- * const columns: Column<Lot>[] = [
- *   {
- *     id: 'lot_no',
- *     header: 'ロット番号',
- *     cell: (lot) => lot.lot_no,
- *     sortable: true,
- *   },
- *   {
- *     id: 'product_name',
- *     header: '製品名',
- *     cell: (lot) => lot.product_name,
- *   },
- * ];
- * 
- * <DataTable
- *   data={lots}
- *   columns={columns}
- *   getRowKey={(lot) => lot.id}
- *   sort={sort}
- *   onSort={handleSort}
- * />
- * ```
- */
-export function DataTable<T>({
+export interface SortConfig {
+  column: string;
+  direction: 'asc' | 'desc';
+}
+
+export interface DataTableProps<T = any> {
+  /** 表示データ */
+  data: T[];
+  /** カラム定義 */
+  columns: Column<T>[];
+  /** ソート設定 */
+  sort?: SortConfig;
+  /** ソート変更時のコールバック */
+  onSortChange?: (sort: SortConfig) => void;
+  /** 行選択を有効化 */
+  selectable?: boolean;
+  /** 選択された行のID配列 */
+  selectedIds?: (string | number)[];
+  /** 行選択変更時のコールバック */
+  onSelectionChange?: (ids: (string | number)[]) => void;
+  /** 行のID取得関数 */
+  getRowId?: (row: T) => string | number;
+  /** 行クリック時のコールバック */
+  onRowClick?: (row: T) => void;
+  /** 行のアクションボタン */
+  rowActions?: (row: T) => React.ReactNode;
+  /** 空データ時のメッセージ */
+  emptyMessage?: string;
+  /** ローディング状態 */
+  isLoading?: boolean;
+  /** テーブルのクラス名 */
+  className?: string;
+}
+
+// ============================================
+// メインコンポーネント
+// ============================================
+
+export function DataTable<T = any>({
   data,
   columns,
-  getRowKey,
   sort,
-  onSort,
+  onSortChange,
+  selectable = false,
+  selectedIds = [],
+  onSelectionChange,
+  getRowId = (row: any) => row.id,
   onRowClick,
-  selectedRows,
-  isLoading,
-  error,
+  rowActions,
   emptyMessage = 'データがありません',
-  className = '',
+  isLoading = false,
+  className,
 }: DataTableProps<T>) {
-  // ローディング状態
+  // 全選択の状態
+  const allSelected = useMemo(() => {
+    if (data.length === 0) return false;
+    return data.every((row) => selectedIds.includes(getRowId(row)));
+  }, [data, selectedIds, getRowId]);
+
+  const someSelected = useMemo(() => {
+    if (data.length === 0) return false;
+    return selectedIds.length > 0 && !allSelected;
+  }, [data.length, selectedIds.length, allSelected]);
+
+  // 全選択/全解除
+  const handleSelectAll = () => {
+    if (!onSelectionChange) return;
+
+    if (allSelected) {
+      onSelectionChange([]);
+    } else {
+      onSelectionChange(data.map(getRowId));
+    }
+  };
+
+  // 行選択
+  const handleSelectRow = (rowId: string | number) => {
+    if (!onSelectionChange) return;
+
+    if (selectedIds.includes(rowId)) {
+      onSelectionChange(selectedIds.filter((id) => id !== rowId));
+    } else {
+      onSelectionChange([...selectedIds, rowId]);
+    }
+  };
+
+  // ソート処理
+  const handleSort = (columnId: string) => {
+    if (!onSortChange) return;
+
+    const newDirection =
+      sort?.column === columnId && sort.direction === 'asc' ? 'desc' : 'asc';
+
+    onSortChange({
+      column: columnId,
+      direction: newDirection,
+    });
+  };
+
+  // ソートアイコン
+  const SortIcon = ({ columnId }: { columnId: string }) => {
+    if (!sort || sort.column !== columnId) {
+      return <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />;
+    }
+
+    return sort.direction === 'asc' ? (
+      <ArrowUp className="ml-1 h-4 w-4" />
+    ) : (
+      <ArrowDown className="ml-1 h-4 w-4" />
+    );
+  };
+
+  // ローディング表示
   if (isLoading) {
     return (
-      <div className="rounded-lg border">
-        <div className="p-8 text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent" />
-          <p className="mt-2 text-sm text-gray-600">読み込み中...</p>
+      <div className="flex items-center justify-center py-12">
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+          <p className="text-sm text-gray-500">読み込み中...</p>
         </div>
       </div>
     );
   }
-  
-  // エラー状態
-  if (error) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-8">
-        <p className="text-center text-sm text-red-600">
-          エラーが発生しました: {error.message}
-        </p>
-      </div>
-    );
-  }
-  
-  // 空状態
+
+  // 空データ表示
   if (data.length === 0) {
     return (
-      <div className="rounded-lg border">
-        <div className="p-8 text-center">
-          <p className="text-sm text-gray-600">{emptyMessage}</p>
-        </div>
+      <div className="flex items-center justify-center py-12">
+        <p className="text-sm text-gray-500">{emptyMessage}</p>
       </div>
     );
   }
-  
+
   return (
-    <div className={`overflow-x-auto rounded-lg border ${className}`}>
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className={cn('relative overflow-x-auto', className)}>
+      <table className="w-full border-collapse">
+        <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
+            {/* 選択チェックボックス列 */}
+            {selectable && (
+              <th className="w-12 px-4 py-3">
+                <Checkbox
+                  checked={allSelected}
+                  indeterminate={someSelected}
+                  onCheckedChange={handleSelectAll}
+                  aria-label="すべて選択"
+                />
+              </th>
+            )}
+
+            {/* カラムヘッダー */}
             {columns.map((column) => (
               <th
                 key={column.id}
-                scope="col"
-                className={`px-6 py-3 text-xs font-medium uppercase tracking-wider text-gray-500 ${
-                  column.align === 'center' ? 'text-center' : 
-                  column.align === 'right' ? 'text-right' : 
-                  'text-left'
-                } ${column.sortable && onSort ? 'cursor-pointer select-none hover:bg-gray-100' : ''}`}
+                className={cn(
+                  'px-4 py-3 text-sm font-medium text-gray-700',
+                  column.align === 'center' && 'text-center',
+                  column.align === 'right' && 'text-right',
+                  column.className
+                )}
                 style={{ width: column.width }}
-                onClick={() => column.sortable && onSort?.(column.id)}
               >
-                <div className="flex items-center justify-between">
-                  <span>{column.header}</span>
-                  
-                  {column.sortable && onSort && (
-                    <span className="ml-2">
-                      {sort?.column === column.id ? (
-                        sort.direction === 'asc' ? '↑' : 
-                        sort.direction === 'desc' ? '↓' : 
-                        '⇅'
-                      ) : (
-                        '⇅'
-                      )}
-                    </span>
-                  )}
-                </div>
+                {column.sortable && onSortChange ? (
+                  <button
+                    onClick={() => handleSort(column.id)}
+                    className="inline-flex items-center hover:text-gray-900 transition-colors"
+                  >
+                    {column.header}
+                    <SortIcon columnId={column.id} />
+                  </button>
+                ) : (
+                  column.header
+                )}
               </th>
             ))}
+
+            {/* アクション列 */}
+            {rowActions && (
+              <th className="px-4 py-3 text-sm font-medium text-gray-700 w-24 text-right">
+                アクション
+              </th>
+            )}
           </tr>
         </thead>
-        
-        <tbody className="divide-y divide-gray-200 bg-white">
+
+        <tbody className="divide-y divide-gray-200">
           {data.map((row) => {
-            const rowKey = getRowKey(row);
-            const isSelected = selectedRows?.has(rowKey);
-            
+            const rowId = getRowId(row);
+            const isSelected = selectedIds.includes(rowId);
+
             return (
               <tr
-                key={rowKey}
-                className={`
-                  ${onRowClick ? 'cursor-pointer hover:bg-gray-50' : ''}
-                  ${isSelected ? 'bg-blue-50' : ''}
-                `}
+                key={String(rowId)}
+                className={cn(
+                  'transition-colors',
+                  onRowClick && 'cursor-pointer hover:bg-gray-50',
+                  isSelected && 'bg-blue-50'
+                )}
                 onClick={() => onRowClick?.(row)}
               >
-                {columns.map((column) => (
+                {/* 選択チェックボックス */}
+                {selectable && (
                   <td
-                    key={column.id}
-                    className={`whitespace-nowrap px-6 py-4 text-sm ${
-                      column.align === 'center' ? 'text-center' : 
-                      column.align === 'right' ? 'text-right' : 
-                      'text-left'
-                    }`}
+                    className="px-4 py-3"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    {column.cell(row)}
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => handleSelectRow(rowId)}
+                      aria-label="行を選択"
+                    />
                   </td>
-                ))}
+                )}
+
+                {/* データセル */}
+                {columns.map((column) => {
+                  const value = column.accessor ? column.accessor(row) : null;
+                  const cellContent = column.cell ? column.cell(row) : value;
+
+                  return (
+                    <td
+                      key={column.id}
+                      className={cn(
+                        'px-4 py-3 text-sm text-gray-900',
+                        column.align === 'center' && 'text-center',
+                        column.align === 'right' && 'text-right',
+                        column.className
+                      )}
+                    >
+                      {cellContent}
+                    </td>
+                  );
+                })}
+
+                {/* アクションボタン */}
+                {rowActions && (
+                  <td
+                    className="px-4 py-3 text-sm text-right"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {rowActions(row)}
+                  </td>
+                )}
               </tr>
             );
           })}
         </tbody>
       </table>
-    </div>
-  );
-}
-
-/**
- * テーブルのページネーションコンポーネント
- */
-interface TablePaginationProps {
-  /** 現在のページ */
-  page: number;
-  /** ページサイズ */
-  pageSize: number;
-  /** 総アイテム数 */
-  totalItems: number;
-  /** 総ページ数 */
-  totalPages: number;
-  /** ページ変更ハンドラー */
-  onPageChange: (page: number) => void;
-  /** ページサイズ変更ハンドラー */
-  onPageSizeChange?: (pageSize: number) => void;
-  /** ページサイズの選択肢 */
-  pageSizeOptions?: number[];
-}
-
-export function TablePagination({
-  page,
-  pageSize,
-  totalItems,
-  totalPages,
-  onPageChange,
-  onPageSizeChange,
-  pageSizeOptions = [10, 25, 50, 100],
-}: TablePaginationProps) {
-  const startItem = (page - 1) * pageSize + 1;
-  const endItem = Math.min(page * pageSize, totalItems);
-  
-  return (
-    <div className="flex items-center justify-between border-t bg-white px-4 py-3">
-      <div className="flex items-center space-x-2">
-        {onPageSizeChange && (
-          <>
-            <span className="text-sm text-gray-700">表示件数:</span>
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="rounded-md border border-gray-300 py-1 pl-2 pr-8 text-sm focus:border-blue-500 focus:outline-none"
-            >
-              {pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}件
-                </option>
-              ))}
-            </select>
-          </>
-        )}
-        
-        <span className="text-sm text-gray-700">
-          {totalItems}件中 {startItem}～{endItem}件を表示
-        </span>
-      </div>
-      
-      <div className="flex items-center space-x-2">
-        <button
-          onClick={() => onPageChange(1)}
-          disabled={page === 1}
-          className="rounded-md px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          最初
-        </button>
-        
-        <button
-          onClick={() => onPageChange(page - 1)}
-          disabled={page === 1}
-          className="rounded-md px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          前へ
-        </button>
-        
-        <span className="text-sm text-gray-700">
-          {page} / {totalPages}
-        </span>
-        
-        <button
-          onClick={() => onPageChange(page + 1)}
-          disabled={page === totalPages}
-          className="rounded-md px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          次へ
-        </button>
-        
-        <button
-          onClick={() => onPageChange(totalPages)}
-          disabled={page === totalPages}
-          className="rounded-md px-3 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          最後
-        </button>
-      </div>
     </div>
   );
 }

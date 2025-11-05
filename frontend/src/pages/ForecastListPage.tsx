@@ -33,7 +33,7 @@ interface ForecastGroup {
 
 // ===== メインコンポーネント =====
 
-export default function ForecastListPage() {
+export function ForecastListPage() {
   const [filters, setFilters] = useState({
     product_code: "",
     customer_code: "",
@@ -56,7 +56,7 @@ export default function ForecastListPage() {
 
     forecastsQuery.data.forEach((fc) => {
       const key = `${fc.product_code}__${fc.customer_code}`;
-      
+
       if (!map.has(key)) {
         map.set(key, {
           productCode: fc.product_code,
@@ -84,8 +84,7 @@ export default function ForecastListPage() {
       result = result.filter((group) => {
         const name = group.productName?.toLowerCase() ?? "";
         return (
-          group.productCode.toLowerCase().includes(productKeyword) ||
-          name.includes(productKeyword)
+          group.productCode.toLowerCase().includes(productKeyword) || name.includes(productKeyword)
         );
       });
     }
@@ -126,9 +125,7 @@ export default function ForecastListPage() {
               placeholder="製品コードまたは商品名で絞り込み"
               className="w-full px-3 py-2 text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              例: "PRD-001" または "製品A" など
-            </p>
+            <p className="text-xs text-gray-500 mt-1">例: "PRD-001" または "製品A" など</p>
           </div>
           <div>
             <Label className="text-sm font-medium mb-2 block">顧客コード / 得意先名</Label>
@@ -139,9 +136,7 @@ export default function ForecastListPage() {
               placeholder="顧客コードまたは得意先名で絞り込み"
               className="w-full px-3 py-2 text-sm"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              例: "CUS-001" または "得意先A" など
-            </p>
+            <p className="text-xs text-gray-500 mt-1">例: "CUS-001" または "得意先A" など</p>
           </div>
         </div>
       </div>
@@ -178,7 +173,8 @@ export default function ForecastListPage() {
 // ===== サブコンポーネント =====
 
 function ForecastGroupCard({ group }: { group: ForecastGroup }) {
-  const { productCode, productName, customerCode, customerName, unit, daily, dekad, monthly } = group;
+  const { productCode, productName, customerCode, customerName, unit, daily, dekad, monthly } =
+    group;
 
   const [dekadState, setDekadState] = useState({
     value: dekad ? String(dekad.version_no ?? "") : "",
@@ -288,7 +284,9 @@ function ForecastGroupCard({ group }: { group: ForecastGroup }) {
                   <input
                     type="checkbox"
                     checked={monthlyState.isActive}
-                    onChange={(e) => setMonthlyState({ ...monthlyState, isActive: e.target.checked })}
+                    onChange={(e) =>
+                      setMonthlyState({ ...monthlyState, isActive: e.target.checked })
+                    }
                   />
                   有効
                 </label>

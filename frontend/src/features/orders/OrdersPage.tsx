@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useOrders, useDragAssign } from "@/hooks/useOrders";
 
-export default function OrdersPage() {
+export function OrdersPage() {
   const [filters] = useState<Record<string, unknown>>({});
   const { data: orders, isLoading } = useOrders(filters);
   const dragAssign = useDragAssign();

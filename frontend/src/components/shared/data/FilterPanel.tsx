@@ -1,65 +1,175 @@
 /**
+ * FilterPanel.tsx
+ * 
  * フィルターパネルコンポーネント
+ * - 複数フィルター項目の表示
+ * - 開閉機能
+ * - リセット機能
  */
 
-import React from 'react';
+import { useState } from 'react';
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-interface FilterPanelProps {
+// ============================================
+// 型定義
+// ============================================
+
+export interface FilterPanelProps {
+  /** フィルターのタイトル */
   title?: string;
+  /** 子要素(フィルター項目) */
   children: React.ReactNode;
+  /** 初期開閉状態 */
+  defaultOpen?: boolean;
+  /** リセットボタンのコールバック */
   onReset?: () => void;
-  activeCount?: number;
+  /** 開閉可能かどうか */
+  collapsible?: boolean;
+  /** クラス名 */
   className?: string;
 }
+
+// ============================================
+// メインコンポーネント
+// ============================================
 
 export function FilterPanel({
   title = 'フィルター',
   children,
+  defaultOpen = true,
   onReset,
-  activeCount = 0,
-  className = '',
+  collapsible = true,
+  className,
 }: FilterPanelProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
-    <div className={`rounded-lg border bg-white p-4 ${className}`}>
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
-          {activeCount > 0 && (
-            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-              {activeCount}
-            </span>
+    <div
+      className={cn(
+        'border border-gray-200 rounded-lg bg-white shadow-sm',
+        className
+      )}
+    >
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <div className="flex items-center gap-2">
+          {collapsible && (
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+              aria-label={isOpen ? 'フィルターを閉じる' : 'フィルターを開く'}
+            >
+              {isOpen ? (
+                <ChevronUp className="h-5 w-5" />
+              ) : (
+                <ChevronDown className="h-5 w-5" />
+              )}
+            </button>
           )}
+          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
         </div>
-        
-        {onReset && activeCount > 0 && (
-          <button
+
+        {onReset && (
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onReset}
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="h-8 text-xs"
           >
-            クリア
-          </button>
+            <X className="h-4 w-4 mr-1" />
+            リセット
+          </Button>
         )}
       </div>
-      
-      <div className="space-y-3">
-        {children}
-      </div>
+
+      {/* フィルター項目 */}
+      {(!collapsible || isOpen) && (
+        <div className="p-4 space-y-4">{children}</div>
+      )}
     </div>
   );
 }
 
-interface FilterFieldProps {
-  label: string;
+// ============================================
+// コンパクト版フィルターパネル
+// ============================================
+
+export interface CompactFilterPanelProps {
+  /** 子要素(フィルター項目) */
   children: React.ReactNode;
+  /** リセットボタンのコールバック */
+  onReset?: () => void;
+  /** クラス名 */
+  className?: string;
 }
 
-export function FilterField({ label, children }: FilterFieldProps) {
+/**
+ * コンパクト版フィルターパネル
+ * (タイトルなし、開閉なし)
+ */
+export function CompactFilterPanel({
+  children,
+  onReset,
+  className,
+}: CompactFilterPanelProps) {
   return (
-    <div>
-      <label className="mb-1 block text-xs font-medium text-gray-700">
-        {label}
-      </label>
+    <div className={cn('space-y-4', className)}>
+      {onReset && (
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onReset}
+            className="h-8 text-xs"
+          >
+            <X className="h-4 w-4 mr-1" />
+            リセット
+          </Button>
+        </div>
+      )}
       {children}
+    </div>
+  );
+}
+
+// ============================================
+// インラインフィルターパネル
+// ============================================
+
+export interface InlineFilterPanelProps {
+  /** 子要素(フィルター項目) */
+  children: React.ReactNode;
+  /** リセットボタンのコールバック */
+  onReset?: () => void;
+  /** クラス名 */
+  className?: string;
+}
+
+/**
+ * インラインフィルターパネル
+ * (横並びレイアウト用)
+ */
+export function InlineFilterPanel({
+  children,
+  onReset,
+  className,
+}: InlineFilterPanelProps) {
+  return (
+    <div className={cn('flex items-end gap-4 flex-wrap', className)}>
+      {children}
+      {onReset && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onReset}
+          className="h-10"
+        >
+          <X className="h-4 w-4 mr-1" />
+          リセット
+        </Button>
+      )}
     </div>
   );
 }

@@ -1,13 +1,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Pages
-import DashboardPage from "@/pages/DashboardPage";
-import InventoryPage from "@/pages/InventoryPage";
-import OrdersListPage from "@/pages/OrdersListPage";
-import ForecastImportPage from "@/pages/ForecastImportPage";
-import AdminPage from "@/pages/AdminPage";
-import ForecastListPage from "@/pages/ForecastListPage";
-import LotAllocationPage from "@/pages/LotAllocationPage";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { InventoryPage } from "@/pages/InventoryPage";
+import { OrdersListPage } from "@/pages/OrdersListPage";
+import { ForecastImportPage } from "@/pages/ForecastImportPage";
+import { AdminPage } from "@/pages/AdminPage";
+import { ForecastListPage } from "@/pages/ForecastListPage";
+import { LotAllocationPage } from "@/pages/LotAllocationPage";
 
 function AppTabs() {
   return (
