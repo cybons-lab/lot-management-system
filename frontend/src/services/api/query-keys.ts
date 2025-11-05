@@ -5,6 +5,21 @@
 
 import type { LotSearchParams, OrderSearchParams } from '@/utils/validators';
 
+const createMasterKeyFactory = <T extends string>(entity: T) => {
+  const base = ['masters', entity] as const;
+  const lists = () => [...base, 'list'] as const;
+  const details = () => [...base, 'detail'] as const;
+
+  return {
+    all: base,
+    lists,
+    list: (params?: Record<string, unknown>) =>
+      params ? ([...lists(), params] as const) : lists(),
+    details,
+    detail: (code: string) => [...details(), code] as const,
+  } as const;
+};
+
 /**
  * ロット関連のクエリキー
  */
@@ -39,35 +54,26 @@ export const orderKeys = {
  * マスタ関連のクエリキー
  */
 export const masterKeys = {
-  products: {
-    all: ['products'] as const,
-    lists: () => [...masterKeys.products.all, 'list'] as const,
-    list: (params?: Record<string, unknown>) => [...masterKeys.products.lists(), params] as const,
-    details: () => [...masterKeys.products.all, 'detail'] as const,
-    detail: (code: string) => [...masterKeys.products.details(), code] as const,
+  products: createMasterKeyFactory('products'),
+  suppliers: createMasterKeyFactory('suppliers'),
+  warehouses: createMasterKeyFactory('warehouses'),
+  customers: createMasterKeyFactory('customers'),
+} as const;
+
+export const QUERY_KEYS = {
+  lots: lotKeys,
+  orders: orderKeys,
+  masters: {
+    products: () => masterKeys.products.list(),
+    product: (code: string) => masterKeys.products.detail(code),
+    customers: () => masterKeys.customers.list(),
+    customer: (code: string) => masterKeys.customers.detail(code),
+    warehouses: () => masterKeys.warehouses.list(),
+    warehouse: (code: string) => masterKeys.warehouses.detail(code),
+    suppliers: () => masterKeys.suppliers.list(),
+    supplier: (code: string) => masterKeys.suppliers.detail(code),
   },
-  suppliers: {
-    all: ['suppliers'] as const,
-    lists: () => [...masterKeys.suppliers.all, 'list'] as const,
-    list: (params?: Record<string, unknown>) => [...masterKeys.suppliers.lists(), params] as const,
-    details: () => [...masterKeys.suppliers.all, 'detail'] as const,
-    detail: (code: string) => [...masterKeys.suppliers.details(), code] as const,
-  },
-  warehouses: {
-    all: ['warehouses'] as const,
-    lists: () => [...masterKeys.warehouses.all, 'list'] as const,
-    list: (params?: Record<string, unknown>) => [...masterKeys.warehouses.lists(), params] as const,
-    details: () => [...masterKeys.warehouses.all, 'detail'] as const,
-    detail: (code: string) => [...masterKeys.warehouses.details(), code] as const,
-  },
-  customers: {
-    all: ['customers'] as const,
-    lists: () => [...masterKeys.customers.all, 'list'] as const,
-    list: (params?: Record<string, unknown>) => [...masterKeys.customers.lists(), params] as const,
-    details: () => [...masterKeys.customers.all, 'detail'] as const,
-    detail: (code: string) => [...masterKeys.customers.details(), code] as const,
-  },
-};
+} as const;
 
 /**
  * 全てのクエリキーをインバリデートするための配列
