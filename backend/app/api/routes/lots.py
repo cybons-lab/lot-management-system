@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import and_
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_db
@@ -160,7 +161,16 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
             detail=f"仕入先コード '{lot.supplier_code}' が見つかりません",
         )
 
-    if lot.warehouse_code:
+    warehouse_id: Optional[int] = None
+    if lot.warehouse_id is not None:
+        warehouse = db.query(Warehouse).filter(Warehouse.id == lot.warehouse_id).first()
+        if not warehouse:
+            raise HTTPException(
+                status_code=404,
+                detail=f"倉庫ID '{lot.warehouse_id}' が見つかりません",
+            )
+        warehouse_id = warehouse.id
+    elif lot.warehouse_code:
         warehouse = (
             db.query(Warehouse).filter(Warehouse.warehouse_code == lot.warehouse_code).first()
         )
@@ -169,24 +179,42 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
                 status_code=404,
                 detail=f"倉庫コード '{lot.warehouse_code}' が見つかりません",
             )
+        warehouse_id = warehouse.id
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="倉庫コードまたは倉庫IDを指定してください",
+        )
 
     # ロット作成
     lot_payload = lot.model_dump()
-    lot_payload.setdefault("warehouse_id", lot_payload.get("warehouse_code"))
-    db_lot = Lot(**lot_payload)
-    db.add(db_lot)
-    db.flush()
+    lot_payload["warehouse_id"] = warehouse_id
+    lot_payload.pop("warehouse_code", None)
 
-    # 現在在庫初期化
-    current_stock = LotCurrentStock(lot_id=db_lot.id, current_quantity=0.0)
-    db.add(current_stock)
+    try:
+        db_lot = Lot(**lot_payload)
+        db.add(db_lot)
+        db.flush()
 
-    db.commit()
+        # 現在在庫初期化
+        current_stock = LotCurrentStock(lot_id=db_lot.id, current_quantity=0.0)
+        db.add(current_stock)
+
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="DBエラーが発生しました") from exc
+
     db.refresh(db_lot)
 
     # レスポンス
     response = LotResponse.model_validate(db_lot)
     response.current_stock = 0.0
+    if db_lot.warehouse:
+        response.warehouse_code = db_lot.warehouse.warehouse_code
     return response
 
 
@@ -213,18 +241,54 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="ロットが見つかりません")
 
     updates = lot.model_dump(exclude_unset=True)
-    if "warehouse_code" in updates and "warehouse_id" not in updates:
-        updates["warehouse_id"] = updates["warehouse_code"]
+
+    warehouse_id: Optional[int] = None
+    if "warehouse_id" in updates:
+        warehouse = db.query(Warehouse).filter(Warehouse.id == updates["warehouse_id"]).first()
+        if not warehouse:
+            raise HTTPException(
+                status_code=404,
+                detail=f"倉庫ID '{updates['warehouse_id']}' が見つかりません",
+            )
+        warehouse_id = warehouse.id
+    elif "warehouse_code" in updates:
+        warehouse = (
+            db.query(Warehouse)
+            .filter(Warehouse.warehouse_code == updates["warehouse_code"])
+            .first()
+        )
+        if not warehouse:
+            raise HTTPException(
+                status_code=404,
+                detail=f"倉庫コード '{updates['warehouse_code']}' が見つかりません",
+            )
+        warehouse_id = warehouse.id
+
+    updates.pop("warehouse_code", None)
+    if warehouse_id is not None:
+        updates["warehouse_id"] = warehouse_id
+
     for key, value in updates.items():
         setattr(db_lot, key, value)
 
     db_lot.updated_at = datetime.now()
-    db.commit()
+
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="DBエラーが発生しました") from exc
+
     db.refresh(db_lot)
 
     response = LotResponse.model_validate(db_lot)
     if db_lot.current_stock:
         response.current_stock = db_lot.current_stock.current_quantity
+    if db_lot.warehouse:
+        response.warehouse_code = db_lot.warehouse.warehouse_code
     return response
 
 
