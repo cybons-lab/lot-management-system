@@ -4,7 +4,10 @@
 ロット、在庫変動、現在在庫、入荷、有効期限ルール
 """
 
+from __future__ import annotations
+
 from enum import Enum as PyEnum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -12,7 +15,6 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
-    Enum,
     Float,
     ForeignKey,
     Index,
@@ -22,9 +24,13 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 from .base_model import AuditMixin, Base
+
+# 型チェック時のみインポート（循環インポート回避）
+if TYPE_CHECKING:
+    from .masters import Warehouse
 
 
 class StockMovementReason(PyEnum):
@@ -54,16 +60,11 @@ class Lot(AuditMixin, Base):
     mfg_date = Column(Date, nullable=True)
     expiry_date = Column(Date, nullable=True)
 
-    # 🔽 DB実態に合わせて BigInteger & FK 先を複数形へ
+    # 🔧 修正: BigInteger & FK先を warehouses.id へ
     warehouse_id = Column(
-        BigInteger, ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True
+        BigInteger, ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True, index=True
     )
-    __table_args__ = (
-        UniqueConstraint(
-            "supplier_code", "product_code", "lot_number", name="uq_lot_supplier_product_no"
-        ),
-        Index("ix_lots_warehouse_id", "warehouse_id"),
-    )
+
     lot_unit = Column(String(10), nullable=True)  # ロット単位（例: CAN, KG）
     kanban_class = Column(Text, nullable=True)
     sales_unit = Column(Text, nullable=True)
@@ -90,11 +91,14 @@ class Lot(AuditMixin, Base):
     supplier = relationship("Supplier", back_populates="lots")
     product = relationship("Product", back_populates="lots")
     # FKカラムを明示しておくと安全
-    warehouse = relationship("Warehouse", back_populates="lots", foreign_keys="Lot.warehouse_id")
-    stock_movements = relationship(
+    warehouse: Mapped["Warehouse"] = relationship(
+        "Warehouse", back_populates="lots", foreign_keys=[warehouse_id]
+    )
+    stock_movements: Mapped[list["StockMovement"]] = relationship(
         "StockMovement", back_populates="lot", cascade="all, delete-orphan"
     )
-    current_stock = relationship(
+    # 1対1（uselist=False）の場合は Optional が自然
+    current_stock: Mapped["LotCurrentStock | None"] = relationship(
         "LotCurrentStock",
         back_populates="lot",
         uselist=False,
@@ -113,19 +117,26 @@ class StockMovement(AuditMixin, Base):
     __tablename__ = "stock_movements"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    lot_id = Column(Integer, ForeignKey("lots.id"), nullable=False)
-    warehouse_id = Column(Integer, ForeignKey("warehouse.id"), nullable=False)
-    movement_type = Column(Enum(StockMovementReason), nullable=False)  # receipt, shipment, etc.
-    quantity = Column(Float, nullable=False)  # 正: 入庫, 負: 出庫
-    related_id = Column(Text, nullable=True)  # 関連伝票番号
-    notes = Column(Text, nullable=True)
-    movement_date = Column(DateTime, nullable=False, server_default=func.now())
+    lot_id = Column(Integer, ForeignKey("lots.id"), nullable=False, index=True)
+
+    # 🔧 修正: BigInteger & FK先を warehouses.id へ、index 追加
+    warehouse_id = Column(BigInteger, ForeignKey("warehouses.id"), nullable=False, index=True)
+
+    product_id = Column(Text, nullable=False)
+    reason = Column(Text, nullable=False)
+    quantity_delta = Column(Float, nullable=False)
+    source_table = Column(String(50), nullable=True)
+    source_id = Column(Integer, nullable=True)
+    batch_id = Column(String(100), nullable=True)
+    occurred_at = Column(DateTime, nullable=True)
 
     __table_args__ = (Index("ix_stock_movements_lot", "lot_id"),)
 
     # リレーション
     lot = relationship("Lot", back_populates="stock_movements")
-    warehouse = relationship("Warehouse", back_populates="stock_movements")
+    warehouse: Mapped["Warehouse"] = relationship(
+        "Warehouse", back_populates="stock_movements", foreign_keys=[warehouse_id]
+    )
 
 
 class LotCurrentStock(AuditMixin, Base):
@@ -141,7 +152,7 @@ class LotCurrentStock(AuditMixin, Base):
     last_updated = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
     # リレーション
-    lot = relationship("Lot", back_populates="current_stock")
+    lot: Mapped["Lot"] = relationship("Lot", back_populates="current_stock")
 
 
 class ReceiptHeader(AuditMixin, Base):
@@ -153,15 +164,17 @@ class ReceiptHeader(AuditMixin, Base):
     receipt_no = Column(Text, unique=True)
     supplier_code = Column(Text, ForeignKey("suppliers.supplier_code"), nullable=False)
 
-    # 🔽 修正: warehouse_idを使用
-    warehouse_id = Column(Integer, ForeignKey("warehouse.id"), nullable=False)
+    # 🔧 修正: BigInteger & FK先を warehouses.id へ、index 追加
+    warehouse_id = Column(BigInteger, ForeignKey("warehouses.id"), nullable=False, index=True)
 
     receipt_date = Column(Date, nullable=False)
     created_by = Column(Text)
     notes = Column(Text)
 
     # リレーション
-    warehouse = relationship("Warehouse", back_populates="receipt_headers")
+    warehouse: Mapped["Warehouse"] = relationship(
+        "Warehouse", back_populates="receipt_headers", foreign_keys=[warehouse_id]
+    )
     lines = relationship("ReceiptLine", back_populates="header", cascade="all, delete-orphan")
 
 
@@ -184,8 +197,8 @@ class ReceiptLine(AuditMixin, Base):
     __table_args__ = (UniqueConstraint("header_id", "line_no", name="uq_receipt_line"),)
 
     # リレーション
-    header = relationship("ReceiptHeader", back_populates="lines")
-    lot = relationship("Lot", back_populates="receipt_lines")
+    header: Mapped["ReceiptHeader"] = relationship("ReceiptHeader", back_populates="lines")
+    lot: Mapped["Lot"] = relationship("Lot", back_populates="receipt_lines")
 
 
 class ExpiryRule(AuditMixin, Base):
