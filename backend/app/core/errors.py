@@ -143,7 +143,7 @@ async def validation_exception_handler(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=_problem_json(
             title="Validation Error",
-            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="リクエストの検証に失敗しました",
             instance=str(request.url.path),
             errors=errors,
@@ -176,7 +176,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=_problem_json(
             title="Internal Server Error",
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="サーバー内部でエラーが発生しました",
             instance=str(request.url.path),
         ),

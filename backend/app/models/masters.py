@@ -4,6 +4,10 @@
 倉庫、仕入先、得意先、製品
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from sqlalchemy import (
     BigInteger,
     Boolean,
@@ -28,9 +32,9 @@ class Warehouse(AuditMixin, Base):
     - warehouse_codeはユニーク制約
     """
 
-    __tablename__ = "warehouse"
+    __tablename__ = "warehouses"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     warehouse_code = Column(String(32), unique=True, nullable=False, index=True)
     warehouse_name = Column(String(128), nullable=False)
     address = Column(Text, nullable=True)
@@ -55,6 +59,12 @@ class Warehouse(AuditMixin, Base):
         back_populates="warehouse",
         foreign_keys="Lot.warehouse_id",
     )
+
+
+# 型チェッカ専用の前方参照（実行時には評価されない）
+if TYPE_CHECKING:
+    from .inventory import Lot
+    from .orders import OrderLineWarehouseAllocation
 
 
 class Supplier(AuditMixin, Base):
