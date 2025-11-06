@@ -8,7 +8,7 @@ import sqlite3
 
 from sqlalchemy import Column, DateTime, Integer, String, event, func
 from sqlalchemy.engine import Engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 
 
 # SQLiteで外部キー制約を有効化
