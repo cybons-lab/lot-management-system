@@ -1,0 +1,3 @@
+supplier_code,product_code,lot_number,receipt_date,warehouse_code,lot_unit
+SUP-001,PROD-001,LOT-001,2025-10-30,WH-A,EA
+SUP-002,PROD-002,LOT-002,2025-10-31,WH-B,EA
