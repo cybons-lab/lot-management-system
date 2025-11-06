@@ -11,7 +11,16 @@ export default defineConfig({
     },
   },
   server: {
+    host: true,
     port: 5173,
+    strictPort: true,
+    hmr: {
+      host: "localhost", // ホスト側からHMRする
+      port: 5173,
+    },
+    watch: {
+      usePolling: true, // Docker環境でのファイル監視安定化
+    },
     proxy: {
       "/api": {
         target: "http://lot-backend:8000",
