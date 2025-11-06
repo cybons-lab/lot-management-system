@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 # ドメイン例外 → HTTPステータスコードのマッピング
 DOMAIN_EXCEPTION_MAP: Dict[Type[DomainError], int] = {
+    DomainError: status.HTTP_400_BAD_REQUEST,  # ← 既定
     OrderNotFoundError: status.HTTP_404_NOT_FOUND,
     ProductNotFoundError: status.HTTP_404_NOT_FOUND,
     DuplicateOrderError: status.HTTP_409_CONFLICT,
@@ -37,16 +38,10 @@ DOMAIN_EXCEPTION_MAP: Dict[Type[DomainError], int] = {
 }
 
 
-def _problem_json(
-    title: str,
-    status_code: int,
-    detail: str,
-    instance: str,
-    **kwargs
-) -> dict:
+def _problem_json(title: str, status_code: int, detail: str, instance: str, **kwargs) -> dict:
     """
     Problem+JSON形式のレスポンスを生成
-    
+
     RFC 7807: https://tools.ietf.org/html/rfc7807
     """
     problem = {
@@ -63,11 +58,11 @@ def _problem_json(
 async def domain_exception_handler(request: Request, exc: DomainError) -> JSONResponse:
     """
     ドメイン例外をHTTPレスポンスに変換
-    
+
     Args:
         request: FastAPIリクエスト
         exc: 発生した例外
-        
+
     Returns:
         JSONResponse（Problem+JSON形式）
     """
@@ -99,7 +94,7 @@ async def domain_exception_handler(request: Request, exc: DomainError) -> JSONRe
         status_code=status_code,
         content=_problem_json(
             title=type(exc).__name__,
-            status=status_code,
+            status_code=status_code,
             detail=detail,
             instance=str(request.url.path),
         ),
@@ -109,11 +104,11 @@ async def domain_exception_handler(request: Request, exc: DomainError) -> JSONRe
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     """
     HTTPExceptionをProblem+JSON形式に変換
-    
+
     Args:
         request: FastAPIリクエスト
         exc: HTTPException
-        
+
     Returns:
         JSONResponse（Problem+JSON形式）
     """
@@ -121,7 +116,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
         status_code=exc.status_code,
         content=_problem_json(
             title="HTTP Error",
-            status=exc.status_code,
+            status_code=exc.status_code,
             detail=exc.detail,
             instance=str(request.url.path),
         ),
@@ -129,19 +124,21 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
     )
 
 
-async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+) -> JSONResponse:
     """
     バリデーションエラーをProblem+JSON形式に変換
-    
+
     Args:
         request: FastAPIリクエスト
         exc: RequestValidationError
-        
+
     Returns:
         JSONResponse（Problem+JSON形式）
     """
     errors = exc.errors()
-    
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=_problem_json(
@@ -157,11 +154,11 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
     予期しない例外をProblem+JSON形式に変換
-    
+
     Args:
         request: FastAPIリクエスト
         exc: Exception
-        
+
     Returns:
         JSONResponse（Problem+JSON形式）
     """
@@ -172,9 +169,9 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
             "exception_message": str(exc),
             "path": request.url.path,
             "traceback": traceback.format_exc(),
-        }
+        },
     )
-    
+
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content=_problem_json(
