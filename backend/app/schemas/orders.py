@@ -1,12 +1,12 @@
 # backend/app/schemas/orders.py
-"""
-受注関連のPydanticスキーマ（OrderStatusUpdate追加版）
-"""
+"""受注関連のPydanticスキーマ（拡張版）"""
 
-from datetime import date
-from typing import List, Optional
+from __future__ import annotations
 
-from pydantic import BaseModel, Field, constr
+from datetime import date, datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import Field, constr
 
 from .base import BaseSchema, TimestampMixin
 
@@ -17,6 +17,13 @@ class OrderBase(BaseSchema):
     customer_code: str
     order_date: date
     status: str = "open"
+    customer_order_no: Optional[str] = None
+    customer_order_no_last6: Optional[str] = None
+    delivery_mode: Optional[str] = None
+    sap_order_id: Optional[str] = None
+    sap_status: Optional[str] = None
+    sap_sent_at: Optional[datetime] = None
+    sap_error_msg: Optional[str] = None
 
 
 class OrderCreate(OrderBase):
@@ -25,6 +32,9 @@ class OrderCreate(OrderBase):
 
 class OrderUpdate(BaseSchema):
     status: Optional[str] = None
+    customer_order_no: Optional[str] = None
+    delivery_mode: Optional[str] = None
+    sap_status: Optional[str] = None
 
 
 class OrderStatusUpdate(BaseSchema):
@@ -56,6 +66,8 @@ class OrderLineBase(BaseSchema):
     quantity: float
     unit: str
     due_date: Optional[date] = None
+    next_div: Optional[str] = None
+    destination_id: Optional[int] = None
 
 
 class OrderLineCreate(OrderLineBase):
@@ -65,16 +77,68 @@ class OrderLineCreate(OrderLineBase):
 class OrderLineResponse(OrderLineBase, TimestampMixin):
     id: int
     order_id: int
+    allocated_qty: Optional[float] = None
+
+
+class WarehouseAllocOut(BaseSchema):
+    warehouse_code: str
+    quantity: float
+
+
+class WarehouseAllocIn(BaseSchema):
+    warehouse_code: str
+    quantity: float
 
 
 class OrderLineOut(BaseSchema):
     id: int
-    line_no: int
+    line_no: Optional[int] = None
     product_code: str
     product_name: str
+    customer_code: Optional[str] = None
+    supplier_code: Optional[str] = None
     quantity: float
     unit: str
     due_date: Optional[date] = None
+    warehouse_allocations: List[WarehouseAllocOut] = Field(default_factory=list)
+    related_lots: List[Dict[str, Any]] = Field(default_factory=list)
+    allocated_lots: List[Dict[str, Any]] = Field(default_factory=list)
+    allocated_qty: Optional[float] = None
+    next_div: Optional[str] = None
+
+
+class AllocationWarning(BaseSchema):
+    code: str
+    message: str
+    meta: Optional[Dict[str, Any]] = None
+
+
+class LotCandidateOut(BaseSchema):
+    lot_id: int
+    lot_code: str
+    lot_number: str
+    product_code: str
+    warehouse_code: Optional[str] = None
+    available_qty: float
+    base_unit: str
+    lot_unit_qty: Optional[float] = None
+    lot_unit: Optional[str] = None
+    conversion_factor: Optional[float] = None
+    expiry_date: Optional[str] = None
+    mfg_date: Optional[str] = None
+
+
+class LotCandidateListResponse(BaseSchema):
+    items: List[LotCandidateOut] = Field(default_factory=list)
+    warnings: List[AllocationWarning] = Field(default_factory=list)
+
+
+class SaveAllocationsRequest(BaseSchema):
+    allocations: List[WarehouseAllocIn] = Field(default_factory=list)
+
+
+class OrdersWithAllocResponse(BaseSchema):
+    items: List[OrderLineOut] = Field(default_factory=list)
 
 
 # Pydantic v2のforward reference解決

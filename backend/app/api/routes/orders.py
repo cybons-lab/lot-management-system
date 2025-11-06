@@ -27,21 +27,19 @@ from app.models import (
     Warehouse,
 )
 from app.schemas import (
+    AllocationWarning,
     DragAssignRequest,
     DragAssignResponse,
+    LotCandidateListResponse,
+    LotCandidateOut,
     OrderCreate,
+    OrderLineOut,
     OrderLineResponse,
     OrderResponse,
     OrderUpdate,
     OrderWithLinesResponse,
-)
-from app.schemas.base import ResponseBase
-from app.schemas.orders import (
-    AllocationWarning,
-    LotCandidateListResponse,
-    LotCandidateOut,
-    OrderLineOut,
     OrdersWithAllocResponse,
+    ResponseBase,
     SaveAllocationsRequest,
     WarehouseAllocOut,
 )
