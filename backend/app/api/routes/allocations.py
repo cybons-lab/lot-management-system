@@ -8,13 +8,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.models import Allocation, Lot, LotCurrentStock, OrderLine
 from app.schemas import (
+    DragAssignRequest,
     FefoCommitResponse,
     FefoLineAllocation,
     FefoLotAllocation,
     FefoPreviewRequest,
     FefoPreviewResponse,
 )
-from app.schemas.orders import DragAssignRequest
 
 # ←ここまでは既存の import 群
 # ↓ここを修正版に置き換えてください
