@@ -16,6 +16,7 @@ from app.domain.order import (
     OrderNotFoundError,
     OrderStateMachine,
     OrderValidationError,
+    ProductNotFoundError,
 )
 from app.models import Order, OrderLine, Product
 from app.schemas import (
@@ -24,14 +25,6 @@ from app.schemas import (
     OrderWithLinesResponse,
 )
 from app.services.quantity import QuantityConversionError, to_internal_qty
-
-
-class ProductNotFoundError(Exception):
-    """製品が見つからない場合の例外"""
-    def __init__(self, product_code: str):
-        self.product_code = product_code
-        self.message = f"製品コード '{product_code}' が見つかりません"
-        super().__init__(self.message)
 
 
 class OrderService:
@@ -165,11 +158,14 @@ class OrderService:
                 raise ProductNotFoundError(line_data.product_code)
 
             # 内部単位に変換
-            internal_qty = to_internal_qty(
-                product=product,
-                qty_external=line_data.quantity,
-                external_unit=line_data.external_unit,
-            )
+            try:
+                internal_qty = to_internal_qty(
+                    product=product,
+                    qty_external=line_data.quantity,
+                    external_unit=line_data.external_unit,
+                )
+            except QuantityConversionError as exc:
+                raise OrderValidationError(str(exc)) from exc
 
             # 【修正#4】内部単位整合: 内部単位を保存
             # Note: OrderLine.unitには内部単位（product.internal_unit）を保存

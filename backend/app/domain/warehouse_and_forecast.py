@@ -4,16 +4,19 @@ Warehouse Domain Layer
 倉庫配分ロジック、倉庫間移動ルール
 """
 
-from typing import List, Dict
+from typing import Dict, List, Optional
 from dataclasses import dataclass
 
+from app.domain.errors import DomainError
 
-class WarehouseDomainError(Exception):
+
+class WarehouseDomainError(DomainError):
     """倉庫ドメイン層の基底例外"""
-    def __init__(self, message: str, code: str = "WAREHOUSE_ERROR"):
-        self.message = message
-        self.code = code
-        super().__init__(self.message)
+
+    default_code = "WAREHOUSE_ERROR"
+
+    def __init__(self, message: str, code: str | None = None):
+        super().__init__(message, code=code or self.default_code)
 
 
 class WarehouseNotFoundError(WarehouseDomainError):
@@ -99,16 +102,15 @@ Forecast Domain Layer
 """
 
 from datetime import date
-from typing import Optional
-from dataclasses import dataclass
 
 
-class ForecastDomainError(Exception):
+class ForecastDomainError(DomainError):
     """フォーキャストドメイン層の基底例外"""
-    def __init__(self, message: str, code: str = "FORECAST_ERROR"):
-        self.message = message
-        self.code = code
-        super().__init__(self.message)
+
+    default_code = "FORECAST_ERROR"
+
+    def __init__(self, message: str, code: str | None = None):
+        super().__init__(message, code=code or self.default_code)
 
 
 class ForecastNotFoundError(ForecastDomainError):

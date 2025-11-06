@@ -11,6 +11,7 @@ from .exceptions import (
     OrderLineNotFoundError,
     OrderNotFoundError,
     OrderValidationError,
+    ProductNotFoundError,
 )
 from .state_machine import OrderStateMachine, OrderStatus
 
@@ -22,6 +23,7 @@ __all__ = [
     "InvalidOrderStatusError",
     "DuplicateOrderError",
     "OrderValidationError",
+    "ProductNotFoundError",
     # State Machine
     "OrderStateMachine",
     "OrderStatus",

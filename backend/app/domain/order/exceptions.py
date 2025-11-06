@@ -1,14 +1,16 @@
 # backend/app/domain/order/exceptions.py
-"""
-受注ドメインの例外定義
-"""
+"""受注ドメインの例外定義."""
 
-class OrderDomainError(Exception):
-    """受注ドメイン層の基底例外"""
-    def __init__(self, message: str, code: str = "ORDER_ERROR"):
-        self.message = message
-        self.code = code
-        super().__init__(self.message)
+from app.domain.errors import DomainError
+
+
+class OrderDomainError(DomainError):
+    """受注ドメイン層の基底例外."""
+
+    default_code = "ORDER_ERROR"
+
+    def __init__(self, message: str, code: str | None = None):
+        super().__init__(message, code=code or self.default_code)
 
 
 class OrderNotFoundError(OrderDomainError):
@@ -43,3 +45,11 @@ class OrderValidationError(OrderDomainError):
     """受注バリデーションエラー"""
     def __init__(self, message: str):
         super().__init__(message, code="ORDER_VALIDATION_ERROR")
+
+
+class ProductNotFoundError(OrderDomainError):
+    """製品が存在しない場合のエラー."""
+
+    def __init__(self, product_code: str):
+        message = f"Product not found: {product_code}"
+        super().__init__(message, code="PRODUCT_NOT_FOUND")

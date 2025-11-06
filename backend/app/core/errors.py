@@ -13,20 +13,21 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.domain.errors import DomainError
 from app.domain.order import (
     DuplicateOrderError,
     InvalidOrderStatusError,
     OrderDomainError,
     OrderNotFoundError,
     OrderValidationError,
+    ProductNotFoundError,
 )
-from app.services.order_service import ProductNotFoundError
 
 logger = logging.getLogger(__name__)
 
 
 # ドメイン例外 → HTTPステータスコードのマッピング
-DOMAIN_EXCEPTION_MAP: Dict[Type[Exception], int] = {
+DOMAIN_EXCEPTION_MAP: Dict[Type[DomainError], int] = {
     OrderNotFoundError: status.HTTP_404_NOT_FOUND,
     ProductNotFoundError: status.HTTP_404_NOT_FOUND,
     DuplicateOrderError: status.HTTP_409_CONFLICT,
@@ -59,7 +60,7 @@ def _problem_json(
     return problem
 
 
-async def domain_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+async def domain_exception_handler(request: Request, exc: DomainError) -> JSONResponse:
     """
     ドメイン例外をHTTPレスポンスに変換
     
@@ -71,31 +72,38 @@ async def domain_exception_handler(request: Request, exc: Exception) -> JSONResp
         JSONResponse（Problem+JSON形式）
     """
     # ドメイン例外のマッピングをチェック
-    for exc_type, status_code in DOMAIN_EXCEPTION_MAP.items():
-        if isinstance(exc, exc_type):
-            detail = getattr(exc, "message", str(exc))
-            
-            logger.warning(
-                f"Domain exception: {exc_type.__name__}",
-                extra={
-                    "exception_type": exc_type.__name__,
-                    "detail": detail,
-                    "path": request.url.path,
-                }
-            )
-            
-            return JSONResponse(
-                status_code=status_code,
-                content=_problem_json(
-                    title=exc_type.__name__,
-                    status=status_code,
-                    detail=detail,
-                    instance=str(request.url.path),
-                ),
-            )
-    
-    # マッピングに存在しない例外は上位へ
-    raise exc
+    status_code = DOMAIN_EXCEPTION_MAP.get(type(exc))
+    detail = getattr(exc, "message", str(exc))
+
+    if status_code is None:
+        logger.warning(
+            "Unhandled domain exception type; delegating to generic handler",
+            extra={
+                "exception_type": type(exc).__name__,
+                "detail": detail,
+                "path": request.url.path,
+            },
+        )
+        return await generic_exception_handler(request, exc)
+
+    logger.warning(
+        f"Domain exception: {type(exc).__name__}",
+        extra={
+            "exception_type": type(exc).__name__,
+            "detail": detail,
+            "path": request.url.path,
+        },
+    )
+
+    return JSONResponse(
+        status_code=status_code,
+        content=_problem_json(
+            title=type(exc).__name__,
+            status=status_code,
+            detail=detail,
+            instance=str(request.url.path),
+        ),
+    )
 
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:

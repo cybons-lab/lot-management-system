@@ -27,6 +27,7 @@ from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import setup_json_logging
+from app.domain.errors import DomainError
 
 logger = logging.getLogger(__name__)
 setup_json_logging()
@@ -55,12 +56,11 @@ app = FastAPI(
 )
 
 # 【修正#1】グローバル例外ハンドラの登録（重要: 登録順序に注意）
-# ドメイン例外 → HTTP例外 → バリデーションエラー → 汎用例外の順
-app.add_exception_handler(Exception, errors.domain_exception_handler)
+# HTTP例外 → バリデーションエラー → ドメイン例外 → 汎用例外の順
 app.add_exception_handler(StarletteHTTPException, errors.http_exception_handler)
 app.add_exception_handler(RequestValidationError, errors.validation_exception_handler)
-# generic_exception_handlerは最後のフォールバック
-# （domain_exception_handlerが未対応の例外をraiseし、それをcatchする）
+app.add_exception_handler(DomainError, errors.domain_exception_handler)
+app.add_exception_handler(Exception, errors.generic_exception_handler)
 
 # ミドルウェア登録
 from app.middleware.request_id import RequestIdMiddleware

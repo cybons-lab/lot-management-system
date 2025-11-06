@@ -1,15 +1,7 @@
 # backend/app/domain/allocation/exceptions.py
-"""
-引当ドメインの例外定義
-ビジネスルール違反を表現する例外クラス群
-"""
+"""引当ドメインの例外定義."""
 
-class DomainError(Exception):
-    """ドメイン層の基底例外"""
-    def __init__(self, message: str, code: str = "DOMAIN_ERROR"):
-        self.message = message
-        self.code = code
-        super().__init__(self.message)
+from app.domain.errors import DomainError
 
 
 class ValidationError(DomainError):

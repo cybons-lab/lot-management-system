@@ -8,14 +8,17 @@ from dataclasses import dataclass
 from datetime import date
 from typing import List, Optional
 
+from app.domain.errors import DomainError
+
 
 # ===== 例外定義 =====
-class LotDomainError(Exception):
+class LotDomainError(DomainError):
     """ロットドメイン層の基底例外"""
-    def __init__(self, message: str, code: str = "LOT_ERROR"):
-        self.message = message
-        self.code = code
-        super().__init__(self.message)
+
+    default_code = "LOT_ERROR"
+
+    def __init__(self, message: str, code: str | None = None):
+        super().__init__(message, code=code or self.default_code)
 
 
 class LotNotFoundError(LotDomainError):

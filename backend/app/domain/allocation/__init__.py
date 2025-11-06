@@ -6,7 +6,6 @@ Allocation Domain Layer
 from .exceptions import (
     AlreadyAllocatedError,
     ConflictError,
-    DomainError,
     InsufficientStockError,
     InvalidTransitionError,
     NotFoundError,
@@ -17,7 +16,6 @@ from .state_machine import AllocationStateMachine, AllocationStatus
 
 __all__ = [
     # Exceptions
-    "DomainError",
     "ValidationError",
     "NotFoundError",
     "ConflictError",
