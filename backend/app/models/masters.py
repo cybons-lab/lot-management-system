@@ -5,6 +5,8 @@
 """
 
 from sqlalchemy import (
+    BigInteger,
+    Boolean,
     Column,
     Float,
     ForeignKey,
@@ -14,7 +16,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, synonym
 
 from .base_model import AuditMixin, Base
 
@@ -68,6 +70,25 @@ class Supplier(AuditMixin, Base):
     # リレーション
     lots = relationship("Lot", back_populates="supplier")
     purchase_requests = relationship("PurchaseRequest", back_populates="supplier")
+    products = relationship("Product", back_populates="supplier")
+
+
+class DeliveryPlace(AuditMixin, Base):
+    """納入先マスタ（SAP納入先のローカルコピー）"""
+
+    __tablename__ = "delivery_places"
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    delivery_place_code = Column(String, nullable=False, unique=True, index=True)
+    delivery_place_name = Column(String, nullable=False)
+    address = Column(String, nullable=True)
+    postal_code = Column(String, nullable=True)
+    is_active = Column(Boolean, nullable=False, server_default="true")
+
+    # リレーション
+    products = relationship("Product", back_populates="delivery_place")
+    order_lines = relationship("OrderLine", back_populates="destination")
+    allocations = relationship("Allocation", back_populates="destination")
 
 
 class Customer(AuditMixin, Base):
@@ -91,7 +112,9 @@ class Product(AuditMixin, Base):
     product_code = Column(Text, primary_key=True)
     product_name = Column(Text, nullable=False)
     customer_part_no = Column(Text)
-    maker_part_no = Column(Text)
+    maker_item_code = Column(String, nullable=True)
+    supplier_item_code = Column(String, nullable=True)
+    supplier_code = Column(Text, ForeignKey("suppliers.supplier_code"), nullable=True)
     packaging_qty = Column(Numeric(10, 2), nullable=False, default=1)  # 包装数量
     packaging_unit = Column(String(20), nullable=False, default="EA")  # 包装単位
     internal_unit = Column(Text, nullable=False, default="EA")  # 内部管理単位
@@ -100,6 +123,11 @@ class Product(AuditMixin, Base):
     next_div = Column(Text)
     shelf_life_days = Column(Integer)
     requires_lot_number = Column(Integer, default=1)
+    delivery_place_id = Column(BigInteger, ForeignKey("delivery_places.id"), nullable=True)
+    ji_ku_text = Column(String, nullable=True)
+    kumitsuke_ku_text = Column(String, nullable=True)
+    delivery_place_name = Column(String, nullable=True)
+    shipping_warehouse_name = Column(String, nullable=True)
 
     # リレーション
     lots = relationship("Lot", back_populates="product")
@@ -110,6 +138,17 @@ class Product(AuditMixin, Base):
         "UnitConversion", back_populates="product", cascade="all, delete-orphan"
     )
     order_lines = relationship("OrderLine", back_populates="product")
+    supplier = relationship("Supplier", back_populates="products")
+    delivery_place = relationship("DeliveryPlace", back_populates="products")
+
+    maker_part_no = synonym("maker_item_code")
+
+    __table_args__ = (
+        UniqueConstraint("supplier_code", "maker_item_code", name="uq_products_supplier_maker_item"),
+        UniqueConstraint(
+            "supplier_code", "supplier_item_code", name="uq_products_supplier_supplier_item"
+        ),
+    )
 
 
 class ProductUomConversion(AuditMixin, Base):

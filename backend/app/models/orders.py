@@ -9,6 +9,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
+    BigInteger,
     Column,
     Date,
     DateTime,
@@ -27,7 +28,7 @@ from .base_model import AuditMixin, Base
 
 # 🔧 修正: 型チェック時のみインポート（循環インポートを回避）
 if TYPE_CHECKING:
-    from .masters import Warehouse
+    from .masters import DeliveryPlace, Warehouse
 
 
 class Order(AuditMixin, Base):
@@ -71,6 +72,7 @@ class OrderLine(AuditMixin, Base):
     unit = Column(Text)
     due_date = Column(Date)
     next_div = Column(Text)
+    destination_id = Column(BigInteger, ForeignKey("delivery_places.id"), nullable=True)
 
     # フォーキャスト連携メタデータ
     forecast_id = Column(Integer, ForeignKey("forecasts.id"), nullable=True)
@@ -88,6 +90,7 @@ class OrderLine(AuditMixin, Base):
     # リレーション
     order = relationship("Order", back_populates="lines")
     product = relationship("Product", back_populates="order_lines")
+    destination = relationship("DeliveryPlace", back_populates="order_lines")
     allocations = relationship(
         "Allocation", back_populates="order_line", cascade="all, delete-orphan"
     )
@@ -136,6 +139,7 @@ class Allocation(AuditMixin, Base):
     )
     lot_id = Column(Integer, ForeignKey("lots.id"), nullable=False)
     allocated_qty = Column(Float, nullable=False)
+    destination_id = Column(BigInteger, ForeignKey("delivery_places.id"), nullable=True)
     allocation_date = Column(DateTime, server_default=func.now())
     status = Column(Text, default="active")  # active, shipped, cancelled
 
@@ -147,6 +151,7 @@ class Allocation(AuditMixin, Base):
     # リレーション
     order_line = relationship("OrderLine", back_populates="allocations")
     lot = relationship("Lot", back_populates="allocations")
+    destination = relationship("DeliveryPlace", back_populates="allocations")
 
 
 class Shipping(AuditMixin, Base):

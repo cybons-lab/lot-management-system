@@ -54,7 +54,7 @@ class Lot(AuditMixin, Base):
     expiry_date = Column(Date, nullable=True)
 
     # 🔽 修正: warehouse_idのみ使用（Integer型）
-    warehouse_id = Column(Integer, ForeignKey("warehouse.id"), nullable=False)
+    warehouse_id = Column(Integer, ForeignKey("warehouse.id"), nullable=True)
 
     lot_unit = Column(String(10), nullable=True)  # ロット単位（例: CAN, KG）
     kanban_class = Column(Text, nullable=True)

@@ -44,6 +44,7 @@ class OrderLineBase(BaseSchema):
     quantity: float
     unit: Optional[str] = None
     due_date: Optional[date] = None
+    destination_id: Optional[int] = None
 
 
 class OrderLineCreate(OrderLineBase):
@@ -80,6 +81,7 @@ class AllocationBase(BaseSchema):
     order_line_id: int
     lot_id: int
     allocated_qty: float
+    destination_id: Optional[int] = None
 
 
 class AllocationCreate(AllocationBase):

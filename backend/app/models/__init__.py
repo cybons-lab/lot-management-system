@@ -15,6 +15,7 @@ from .base_model import Base
 # 2. 各ドメインのモデルをすべてインポートする
 from .masters import (
     Customer,
+    DeliveryPlace,
     Product,
     ProductUomConversion,
     Supplier,
@@ -50,6 +51,7 @@ __all__ = [
     # Masters
     "Warehouse",
     "Supplier",
+    "DeliveryPlace",
     "Customer",
     "Product",
     "ProductUomConversion",

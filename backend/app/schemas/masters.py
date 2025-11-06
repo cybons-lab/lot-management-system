@@ -77,8 +77,10 @@ class CustomerResponse(CustomerBase):
 class ProductBase(BaseSchema):
     product_code: str
     product_name: str
+    supplier_code: Optional[str] = None
     customer_part_no: Optional[str] = None
-    maker_part_no: Optional[str] = None
+    maker_item_code: Optional[str] = None
+    supplier_item_code: Optional[str] = None
     packaging_qty: Decimal = Field(..., gt=Decimal("0"))
     packaging_unit: str = Field(..., min_length=1)
     internal_unit: str = Field(..., min_length=1)
@@ -86,8 +88,13 @@ class ProductBase(BaseSchema):
     packaging: Optional[str] = None
     assemble_div: Optional[str] = None
     next_div: Optional[str] = None
+    ji_ku_text: Optional[str] = None
+    kumitsuke_ku_text: Optional[str] = None
     shelf_life_days: Optional[int] = None
     requires_lot_number: bool = True
+    delivery_place_id: Optional[int] = None
+    delivery_place_name: Optional[str] = None
+    shipping_warehouse_name: Optional[str] = None
 
 
 class ProductCreate(ProductBase):
@@ -96,8 +103,10 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseSchema):
     product_name: Optional[str] = None
+    supplier_code: Optional[str] = None
     customer_part_no: Optional[str] = None
-    maker_part_no: Optional[str] = None
+    maker_item_code: Optional[str] = None
+    supplier_item_code: Optional[str] = None
     packaging_qty: Optional[Decimal] = Field(default=None, gt=Decimal("0"))
     packaging_unit: Optional[str] = None
     internal_unit: Optional[str] = None
@@ -105,8 +114,13 @@ class ProductUpdate(BaseSchema):
     packaging: Optional[str] = None
     assemble_div: Optional[str] = None
     next_div: Optional[str] = None
+    ji_ku_text: Optional[str] = None
+    kumitsuke_ku_text: Optional[str] = None
     shelf_life_days: Optional[int] = None
     requires_lot_number: Optional[bool] = None
+    delivery_place_id: Optional[int] = None
+    delivery_place_name: Optional[str] = None
+    shipping_warehouse_name: Optional[str] = None
 
 
 class ProductResponse(ProductBase):
