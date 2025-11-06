@@ -29,6 +29,7 @@ from .base_model import AuditMixin, Base
 
 # 🔧 修正: 型チェック時のみインポート（循環インポートを回避）
 if TYPE_CHECKING:
+    from .inventory import Lot, StockMovement
     from .masters import Warehouse
 
 
@@ -66,45 +67,39 @@ class OrderLine(AuditMixin, Base):
     line_no = Column(Integer, nullable=False)
     product_code = Column(Text, ForeignKey("products.product_code"), nullable=False)
     quantity = Column(Float, nullable=False)
-    unit = Column(Text)
-    due_date = Column(Date)
-    next_div = Column(Text)
-    destination_id = Column(BigInteger, ForeignKey("delivery_places.id"), nullable=True)
-
-    # フォーキャスト連携メタデータ
+    unit = Column(Text, nullable=True)
+    status = Column(Text, default="open")
+    delivery_date = Column(Date, nullable=True)
     forecast_id = Column(Integer, ForeignKey("forecasts.id"), nullable=True)
-    forecast_granularity = Column(Text, nullable=True)
-    forecast_match_status = Column(Text, nullable=True)
-    forecast_qty = Column(Float, nullable=True)
-    forecast_version_no = Column(Integer, nullable=True)
-    forecast_matched_at = Column(DateTime, nullable=True)
-    forecast_version = Column(Integer, nullable=True)
 
-    __table_args__ = (UniqueConstraint("order_id", "line_no", name="uq_order_line"),)
+    __table_args__ = (
+        UniqueConstraint("order_id", "line_no", name="uq_order_line"),
+        Index("ix_order_lines_order_id", "order_id"),
+        Index("ix_order_lines_product_code", "product_code"),
+    )
 
     # リレーション
     order = relationship("Order", back_populates="lines")
     product = relationship("Product", back_populates="order_lines")
-    destination = relationship("DeliveryPlace", back_populates="order_lines")
-    allocations = relationship(
-        "Allocation", back_populates="order_line", cascade="all, delete-orphan"
-    )
-    forecast = relationship("Forecast", back_populates="order_lines")
-    warehouse_allocations: Mapped[list["OrderLineWarehouseAllocation"]] = relationship(
+    allocations = relationship("Allocation", back_populates="order_line", cascade="all, delete-orphan")
+    warehouse_allocations = relationship(
         "OrderLineWarehouseAllocation",
         back_populates="order_line",
         cascade="all, delete-orphan",
     )
+    forecast = relationship("Forecast", back_populates="order_lines")
 
 
 class OrderLineWarehouseAllocation(AuditMixin, Base):
+    """受注明細の倉庫別配分"""
+
     __tablename__ = "order_line_warehouse_allocation"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     order_line_id: Mapped[int] = mapped_column(ForeignKey("order_lines.id"), nullable=False)
     warehouse_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("warehouses.id"),  # ← OK
+        ForeignKey("warehouses.id"),
         nullable=False,
     )
     quantity: Mapped[float] = mapped_column(Float, nullable=False)
@@ -138,41 +133,42 @@ class Allocation(AuditMixin, Base):
     allocated_qty = Column(Float, nullable=False)
     destination_id = Column(BigInteger, ForeignKey("delivery_places.id"), nullable=True)
     allocation_date = Column(DateTime, server_default=func.now())
-    status = Column(Text, default="active")  # active, shipped, cancelled
 
     __table_args__ = (
-        Index("ix_alloc_ol", "order_line_id"),
-        Index("ix_alloc_lot", "lot_id"),
+        Index("ix_allocations_order_line", "order_line_id"),
+        Index("ix_allocations_lot", "lot_id"),
     )
 
     # リレーション
-    order_line = relationship("OrderLine", back_populates="allocations")
-    lot = relationship("Lot", back_populates="allocations")
+    order_line: Mapped["OrderLine"] = relationship("OrderLine", back_populates="allocations")
+    lot: Mapped["Lot"] = relationship("Lot", back_populates="allocations")
     destination = relationship("DeliveryPlace", back_populates="allocations")
 
 
 class Shipping(AuditMixin, Base):
-    """出荷"""
+    """出荷実績"""
 
     __tablename__ = "shipping"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     lot_id = Column(Integer, ForeignKey("lots.id"), nullable=False)
-    order_line_id = Column(Integer, ForeignKey("order_lines.id"))
-    shipped_qty = Column(Float, nullable=False)
-    shipped_date = Column(Date, default=func.current_date())
-    shipping_address = Column(Text)
-    contact_person = Column(Text)
-    contact_phone = Column(Text)
-    delivery_time_slot = Column(Text)
-    tracking_number = Column(Text)
-    carrier = Column(Text)
-    carrier_service = Column(Text)
-    notes = Column(Text)
+    order_line_id = Column(Integer, ForeignKey("order_lines.id"), nullable=True)
+    shipped_quantity = Column(Float, nullable=False)
+    shipping_date = Column(Date, nullable=False)
+    destination_code = Column(Text, nullable=True)
+    destination_name = Column(Text, nullable=True)
+    destination_address = Column(Text, nullable=True)
+    contact_person = Column(Text, nullable=True)
+    contact_phone = Column(Text, nullable=True)
+    delivery_time_slot = Column(Text, nullable=True)
+    tracking_number = Column(Text, nullable=True)
+    carrier = Column(Text, nullable=True)
+    carrier_service = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
 
 
 class PurchaseRequest(AuditMixin, Base):
-    """仮発注（在庫不足時）"""
+    """発注依頼"""
 
     __tablename__ = "purchase_requests"
 
@@ -180,35 +176,20 @@ class PurchaseRequest(AuditMixin, Base):
     product_code = Column(Text, ForeignKey("products.product_code"), nullable=False)
     supplier_code = Column(Text, ForeignKey("suppliers.supplier_code"), nullable=False)
     requested_qty = Column(Float, nullable=False)
-    unit = Column(Text)
-    reason_code = Column(Text, nullable=False)  # stock_out, forecast_shortage, etc.
-    src_order_line_id = Column(Integer, ForeignKey("order_lines.id"))
-    requested_date = Column(Date, server_default=func.current_date())
-    desired_receipt_date = Column(Date)
-    status = Column(Text, default="draft")  # draft, submitted, approved, ordered
-    sap_po_id = Column(Text)
-    notes = Column(Text)
-
-    # リレーション
-    supplier = relationship("Supplier", back_populates="purchase_requests")
+    requested_date = Column(Date, nullable=False)
+    status = Column(Text, default="pending")
 
 
 class NextDivMap(AuditMixin, Base):
-    """次区マッピング（得意先・納入先・製品ごとの次区設定）。"""
+    """次工程区分マッピング"""
 
     __tablename__ = "next_div_map"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    customer_code = Column(Text, nullable=False)
-    ship_to_code = Column(Text, nullable=False)
-    product_code = Column(Text, nullable=False)
-    next_div = Column(Text, nullable=False)
+    from_customer = Column(Text, nullable=False)
+    from_next_div = Column(Text, nullable=False)
+    target_supplier = Column(Text, nullable=False)
 
     __table_args__ = (
-        UniqueConstraint(
-            "customer_code",
-            "ship_to_code",
-            "product_code",
-            name="uq_next_div_map_customer_ship_to_product",
-        ),
+        UniqueConstraint("from_customer", "from_next_div", name="uq_next_div_map"),
     )
