@@ -8,6 +8,7 @@ from .admin import router as admin_router
 from .admin_presets import router as admin_presets_router
 from .allocations import router as allocations_router
 from .forecast import router as forecast_router
+from .health import router as health_router
 from .integration import router as integration_router
 from .lots import router as lots_router
 from .masters import router as masters_router
@@ -26,4 +27,5 @@ __all__ = [
     "allocations_router",
     "forecast_router",
     "warehouse_alloc_router",
+    "health_router",
 ]
