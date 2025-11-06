@@ -8,7 +8,7 @@ import sqlite3
 
 from sqlalchemy import Column, DateTime, Integer, String, event, func
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 
 
 # SQLiteで外部キー制約を有効化
@@ -24,8 +24,10 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor.close()
 
 
-# 全てのモデルの基底クラス
-Base = declarative_base()
+# 全てのモデルの基底クラス（SQLAlchemy 2.0準拠）
+class Base(DeclarativeBase):
+    """全モデルの基底クラス"""
+    pass
 
 
 class AuditMixin:
