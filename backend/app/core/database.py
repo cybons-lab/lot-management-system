@@ -44,8 +44,8 @@ def init_db() -> None:
     """データベースの初期化（全テーブル作成）"""
     import app.models  # noqa
 
-    Base.metadata.create_all(bind=engine)
-    logger.info("✅ データベーステーブルを作成しました")
+    # Base.metadata.create_all(bind=engine)
+    logger.info("ℹ️ Skipped create_all; schema is managed by Alembic.")
 
 
 def drop_db() -> None:

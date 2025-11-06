@@ -6,8 +6,9 @@ import os
 import sys
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 # 'backend' フォルダ (app/ と alembic/ がある場所) へのパスを追加
 # これにより、'app' パッケージをインポートできる
@@ -50,13 +51,29 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Online mode (to apply changes to the DB)"""
-    # alembic.ini の [alembic] セクションから接続情報を取得
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",  # 'sqlalchemy.url' などを読み込む
-        poolclass=pool.NullPool,
-        future=True,
-    )
+
+    # ✅ 環境変数からDATABASE_URLを取得
+    import os
+
+    database_url = os.environ.get("DATABASE_URL")
+
+    if database_url:
+        # 環境変数が設定されている場合はそれを使用
+        from sqlalchemy import create_engine
+
+        connectable = create_engine(
+            database_url,
+            poolclass=pool.NullPool,
+            future=True,
+        )
+    else:
+        # 環境変数がない場合は alembic.ini から読み込む
+        connectable = engine_from_config(
+            config.get_section(config.config_ini_section),
+            prefix="sqlalchemy.",
+            poolclass=pool.NullPool,
+            future=True,
+        )
 
     with connectable.connect() as connection:
         context.configure(
