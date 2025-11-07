@@ -1,16 +1,25 @@
 [tool.ruff]
-# Python 3.12 を前提
+line-length = 100
 target-version = "py312"
-line-length = 100
-# 代表的なチェックセット: E/F(PEP8/未使用), I(Import順), B(bugbear)
-select = ["E", "F", "I", "B"]
-# 行長は Black に合わせる。長すぎる行の警告は Ruff 側で無視
-ignore = ["E501"]
 
-[tool.ruff.lint.isort]
-known-first-party = ["app"]
-combine-as-imports = true
+[tool.ruff.lint]
+select = ["E", "F", "I", "D", "UP", "B"]
+ignore = [
+  "D203","D212",        # スタイル衝突回避（お好みで）
+  "D100","D101","D102","D103",  # ★ docstringが無い系は一旦無視
+]
 
-[tool.black]
-line-length = 100
-target-version = ["py312"]
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]      # テストはD全体を緩める場合
+
+[tool.docformatter]
+recursive = true
+in-place = true
+wrap-summaries = 100
+wrap-descriptions = 100
+pre-summary-newline = true
+make-summary-multi-line = true
+blank = true
