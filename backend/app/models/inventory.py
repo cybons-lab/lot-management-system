@@ -204,27 +204,18 @@ class StockMovement(AuditMixin, Base):
 
 
 class LotCurrentStock(AuditMixin, Base):
-    """
-    ロット別現在在庫
-    
-    各ロットの現在在庫数量を集計保持。
-    在庫変動の都度更新され、引当可能数量を高速に取得可能。
-    
-    Attributes:
-        lot_id: ロットID（主キー、FK）
-        available_quantity: 引当可能数量（物理在庫 - 引当済数量）
-        allocated_quantity: 引当済数量
-        physical_quantity: 物理在庫数量
-        last_movement_id: 最終変動ID（整合性チェック用）
-    """
+    """ロット別現在在庫を保持するモデル。"""
 
     __tablename__ = "lot_current_stock"
 
     lot_id = Column(Integer, ForeignKey("lots.id"), primary_key=True)  # ロットID（主キー）
-    available_quantity = Column(Float, nullable=False, default=0.0)  # 引当可能数量
-    allocated_quantity = Column(Float, nullable=False, default=0.0)  # 引当済数量
-    physical_quantity = Column(Float, nullable=False, default=0.0)  # 物理在庫数量
-    last_movement_id = Column(Integer, nullable=True)  # 最終変動ID
+    current_quantity = Column(Float, nullable=False, default=0.0)
+    last_updated = Column(
+        DateTime,
+        nullable=True,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
 
     # リレーション
     lot: Mapped["Lot"] = relationship(

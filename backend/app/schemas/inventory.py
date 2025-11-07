@@ -47,7 +47,8 @@ class LotUpdate(BaseSchema):
 
 class LotResponse(LotBase, TimestampMixin):
     id: int
-    current_stock: Optional[float] = None
+    current_quantity: float = 0.0
+    last_updated: Optional[datetime] = None
     product_name: Optional[str] = None
 
 
@@ -77,7 +78,7 @@ class StockMovementResponse(StockMovementBase, TimestampMixin):
 class LotCurrentStockResponse(BaseSchema):
     lot_id: int
     current_quantity: float
-    last_updated: datetime
+    last_updated: Optional[datetime] = None
 
 
 # --- ReceiptHeader ---

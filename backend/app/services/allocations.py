@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime
 from typing import Dict, List, Tuple
 
 from sqlalchemy import func, nulls_last
@@ -236,6 +236,7 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
                     )
 
                 current_stock.current_quantity -= alloc_plan.allocate_qty
+                current_stock.last_updated = datetime.utcnow()
 
                 allocation = Allocation(
                     order_line_id=line.id,

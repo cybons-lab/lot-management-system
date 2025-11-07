@@ -14,10 +14,6 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
   const expiryDate = new Date(receiptDate);
   expiryDate.setDate(expiryDate.getDate() + faker.number.int({ min: 30, max: 365 }));
 
-  const stockQuantity = faker.number.int({ min: 0, max: 1000 });
-  const allocatedQuantity = faker.number.int({ min: 0, max: stockQuantity });
-  const availableQuantity = stockQuantity - allocatedQuantity;
-
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
     product_code: `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
@@ -32,9 +28,9 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
       '名古屋倉庫',
       null,
     ]),
-    stock_quantity: stockQuantity,
-    allocated_quantity: allocatedQuantity,
-    available_quantity: availableQuantity,
+    current_quantity: faker.number.int({ min: 0, max: 1000 }),
+    last_updated: faker.date.recent().toISOString(),
+    product_name: faker.commerce.productName(),
     unit: faker.helpers.arrayElement(['EA', 'CASE', 'BOX']),
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
@@ -54,9 +50,7 @@ export function createLots(count: number, overrides?: Partial<LotResponse>): Lot
  */
 export function createLotWithStock(overrides?: Partial<LotResponse>): LotResponse {
   return createLot({
-    stock_quantity: faker.number.int({ min: 100, max: 1000 }),
-    allocated_quantity: 0,
-    available_quantity: faker.number.int({ min: 100, max: 1000 }),
+    current_quantity: faker.number.int({ min: 100, max: 1000 }),
     ...overrides,
   });
 }
@@ -66,9 +60,7 @@ export function createLotWithStock(overrides?: Partial<LotResponse>): LotRespons
  */
 export function createLotWithoutStock(overrides?: Partial<LotResponse>): LotResponse {
   return createLot({
-    stock_quantity: 0,
-    allocated_quantity: 0,
-    available_quantity: 0,
+    current_quantity: 0,
     ...overrides,
   });
 }

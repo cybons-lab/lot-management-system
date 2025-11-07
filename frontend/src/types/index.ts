@@ -16,9 +16,9 @@ export interface LotResponse {
   expiry_date?: string | null;
   warehouse_code?: string | null;
   warehouse_name?: string | null;
-  stock_quantity: number;
-  allocated_quantity: number;
-  available_quantity: number;
+  current_quantity: number;
+  last_updated?: string | null;
+  product_name?: string | null;
   unit?: string;
   created_at: string;
   updated_at: string;

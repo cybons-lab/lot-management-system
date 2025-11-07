@@ -154,5 +154,5 @@ class AllocationRepository:
         current_stock = self.get_lot_current_stock(lot_id)
         if current_stock:
             current_stock.current_quantity += quantity_delta
-            current_stock.last_updated = datetime.now()
+            current_stock.last_updated = datetime.utcnow()
         # NOTE: commitはservice層で行う

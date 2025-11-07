@@ -57,7 +57,7 @@ def list_lots(
         expiry_to: 有効期限終了日
         with_stock: 在庫あり(>0)のみ取得
     """
-    query = db.query(Lot).options(joinedload(Lot.product))
+    query = db.query(Lot).options(joinedload(Lot.product), joinedload(Lot.warehouse))
 
     # フィルタ適用
     if product_code:
@@ -80,45 +80,26 @@ def list_lots(
 
     lots = query.offset(skip).limit(limit).all()
 
-    # 現在在庫と製品名を付与
-    result = []
+    responses: list[LotResponse] = []
     for lot in lots:
-        # 1. まずLotの基本的な属性を辞書にコピー
-        lot_dict = {
-            "id": lot.id,
-            "supplier_code": lot.supplier_code,
-            "product_code": lot.product_code,
-            "lot_number": lot.lot_number,
-            "receipt_date": lot.receipt_date,
-            "mfg_date": lot.mfg_date,
-            "expiry_date": lot.expiry_date,
-            "warehouse_code": lot.warehouse.warehouse_code if lot.warehouse else None,
-            "warehouse_id": lot.warehouse_id,
-            "lot_unit": lot.lot_unit,
-            "kanban_class": lot.kanban_class,
-            "sales_unit": lot.sales_unit,
-            "inventory_unit": lot.inventory_unit,
-            "received_by": lot.received_by,
-            "source_doc": lot.source_doc,
-            "qc_certificate_status": lot.qc_certificate_status,
-            "qc_certificate_file": lot.qc_certificate_file,
-            "created_at": lot.created_at,
-            "updated_at": lot.updated_at,
-        }
+        response = LotResponse.model_validate(lot)
 
-        # 2. リレーション先の正しい値を手動で設定
         if lot.product:
-            lot_dict["product_name"] = lot.product.product_name
+            response.product_name = lot.product.product_name
+
+        if lot.warehouse:
+            response.warehouse_code = lot.warehouse.warehouse_code
 
         if lot.current_stock:
-            lot_dict["current_stock"] = lot.current_stock.current_quantity
+            response.current_quantity = lot.current_stock.current_quantity
+            response.last_updated = lot.current_stock.last_updated
         else:
-            lot_dict["current_stock"] = 0.0
+            response.current_quantity = 0.0
+            response.last_updated = None
 
-        # 3. 最後に完成した辞書をLotResponseで検証
-        result.append(LotResponse(**lot_dict))
+        responses.append(response)
 
-    return result
+    return responses
 
 
 @router.post("", response_model=LotResponse, status_code=201)
@@ -212,7 +193,8 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
 
     # レスポンス
     response = LotResponse.model_validate(db_lot)
-    response.current_stock = 0.0
+    response.current_quantity = 0.0
+    response.last_updated = None
     if db_lot.warehouse:
         response.warehouse_code = db_lot.warehouse.warehouse_code
     return response
@@ -227,9 +209,11 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
 
     response = LotResponse.model_validate(lot)
     if lot.current_stock:
-        response.current_stock = lot.current_stock.current_quantity
+        response.current_quantity = lot.current_stock.current_quantity
+        response.last_updated = lot.current_stock.last_updated
     else:
-        response.current_stock = 0.0
+        response.current_quantity = 0.0
+        response.last_updated = None
     return response
 
 
@@ -286,7 +270,8 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
 
     response = LotResponse.model_validate(db_lot)
     if db_lot.current_stock:
-        response.current_stock = db_lot.current_stock.current_quantity
+        response.current_quantity = db_lot.current_stock.current_quantity
+        response.last_updated = db_lot.current_stock.last_updated
     if db_lot.warehouse:
         response.warehouse_code = db_lot.warehouse.warehouse_code
     return response
@@ -311,7 +296,7 @@ def list_lot_movements(lot_id: int, db: Session = Depends(get_db)):
     movements = (
         db.query(StockMovement)
         .filter(StockMovement.lot_id == lot_id)
-        .order_by(StockMovement.occurred_at.desc())
+        .order_by(StockMovement.movement_date.desc())
         .all()
     )
     return movements

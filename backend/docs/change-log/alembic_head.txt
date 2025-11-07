@@ -1,4 +1,5 @@
-c6d1f3f1e2ab -> 0c1de9b8a6e7 (head), Phase 1 schema updates for packaging, orders, lots, inbound submissions, next_div_map.
+3c7057758764 -> 0acb3d7d0cc5 (head), Unify lot_current_stock to current_quantity/last_updated and drop legacy columns.
+c6d1f3f1e2ab -> 0c1de9b8a6e7, Phase 1 schema updates for packaging, orders, lots, inbound submissions, next_div_map.
 b4dd2e0b31c8 -> c6d1f3f1e2ab, rename client columns to customer in forecasts
 a13c02758a9d -> b4dd2e0b31c8, ensure warehouse master exists
 f6c1d5c07f58 -> a13c02758a9d, create history tables

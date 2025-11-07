@@ -138,4 +138,4 @@ def test_create_stock_movement_updates_current_stock():
     r = client.get(f"/lots/{lot.id}")
     assert r.status_code == 200
     body = r.json()
-    assert body["current_stock"] == 8.0
+    assert body["current_quantity"] == 8.0

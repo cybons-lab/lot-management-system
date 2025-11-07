@@ -32,7 +32,7 @@ export const lotHandlers = [
       filteredLots = filteredLots.filter((lot) => lot.supplier_code === supplierCode);
     }
     if (hasStock === 'true') {
-      filteredLots = filteredLots.filter((lot) => lot.available_quantity > 0);
+      filteredLots = filteredLots.filter((lot) => lot.current_quantity > 0);
     }
 
     return HttpResponse.json(filteredLots);
