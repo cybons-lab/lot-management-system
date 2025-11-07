@@ -10,7 +10,7 @@
 """
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 from .base_model import AuditMixin, Base
 
 
@@ -80,7 +80,7 @@ class SapSyncLog(AuditMixin, Base):
     executed_at = Column(DateTime, default=func.now())  # 実行日時
     
     # リレーション
-    order = relationship(
+    order: Mapped["Order"] = relationship(
         "Order",
         back_populates="sap_sync_logs",
         lazy="noload",  # 受注情報は必要時のみ明示的に取得

@@ -76,18 +76,18 @@ class Order(AuditMixin, Base):
     delivery_mode = Column(Text)  # 納入形態
 
     # リレーション
-    customer = relationship(
+    customer: Mapped["Customer"] = relationship(
         "Customer",
         back_populates="orders",
         lazy="joined",  # 得意先情報は常に一緒に取得（頻繁にアクセス）
     )
-    lines = relationship(
+    lines: Mapped[list["OrderLine"]] = relationship(
         "OrderLine",
         back_populates="order",
         cascade="all, delete-orphan",
         lazy="selectin",  # 明細は常に一緒に取得（N+1回避）
     )
-    sap_sync_logs = relationship(
+    sap_sync_logs: Mapped[list["SapSyncLog"]] = relationship(
         "SapSyncLog",
         back_populates="order",
         lazy="noload",  # SAP連携ログは必要時のみ明示的に取得
@@ -131,29 +131,29 @@ class OrderLine(AuditMixin, Base):
     )
 
     # リレーション
-    order = relationship(
+    order: Mapped["Order"] = relationship(
         "Order",
         back_populates="lines",
         lazy="joined",  # 受注ヘッダ情報は常に一緒に取得
     )
-    product = relationship(
+    product: Mapped["Product"] = relationship(
         "Product",
         back_populates="order_lines",
         lazy="joined",  # 製品情報は常に一緒に取得（頻繁にアクセス）
     )
-    allocations = relationship(
+    allocations: Mapped[list["Allocation"]] = relationship(
         "Allocation",
         back_populates="order_line",
         cascade="all, delete-orphan",
         lazy="selectin",  # 引当情報は常に一緒に取得（N+1回避）
     )
-    warehouse_allocations = relationship(
+    warehouse_allocations: Mapped[list["OrderLineWarehouseAllocation"]] = relationship(
         "OrderLineWarehouseAllocation",
         back_populates="order_line",
         cascade="all, delete-orphan",
         lazy="selectin",  # 倉庫配分は常に一緒に取得（N+1回避）
     )
-    forecast = relationship(
+    forecast: Mapped["Forecast"] = relationship(
         "Forecast",
         back_populates="order_lines",
         lazy="noload",  # フォーキャストは必要時のみ明示的に取得
@@ -247,7 +247,7 @@ class Allocation(AuditMixin, Base):
         back_populates="allocations",
         lazy="joined",  # ロット情報は常に一緒に取得
     )
-    destination = relationship(
+    destination: Mapped["DeliveryPlace"] = relationship(
         "DeliveryPlace",
         back_populates="allocations",
         lazy="noload",  # 納入場所は必要時のみ明示的に取得

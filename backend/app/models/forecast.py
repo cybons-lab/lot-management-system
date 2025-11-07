@@ -19,7 +19,7 @@ from sqlalchemy import (
     Integer,
     String,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, relationship
 
 from .base_model import AuditMixin, Base
 
@@ -75,7 +75,7 @@ class Forecast(AuditMixin, Base):
     is_active = Column(Boolean, nullable=False, default=True)  # 有効フラグ
 
     # リレーション
-    order_lines = relationship(
+    order_lines: Mapped[list["OrderLine"]] = relationship(
         "OrderLine",
         back_populates="forecast",
         lazy="noload",  # 受注明細は必要時のみ明示的に取得

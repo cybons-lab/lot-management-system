@@ -106,17 +106,17 @@ class Supplier(AuditMixin, Base):
     address = Column(Text, nullable=True)  # 住所
 
     # リレーション
-    lots = relationship(
+    lots: Mapped[list["Lot"]] = relationship(
         "Lot",
         back_populates="supplier",
         lazy="noload",  # ロットは必要時のみ明示的に取得
     )
-    products = relationship(
+    products: Mapped[list["Product"]] = relationship(
         "Product",
         back_populates="supplier",
         lazy="selectin",  # 製品情報は常に一緒に取得（N+1回避）
     )
-    expiry_rules = relationship(
+    expiry_rules: Mapped[list["ExpiryRule"]] = relationship(
         "ExpiryRule",
         back_populates="supplier",
         lazy="selectin",  # 有効期限ルールは常に一緒に取得
@@ -142,7 +142,7 @@ class Customer(AuditMixin, Base):
     address = Column(Text, nullable=True)  # 住所
 
     # リレーション
-    orders = relationship(
+    orders: Mapped[list["Order"]] = relationship(
         "Order",
         back_populates="customer",
         lazy="noload",  # 受注は必要時のみ明示的に取得
@@ -172,7 +172,7 @@ class DeliveryPlace(AuditMixin, Base):
     is_active = Column(Integer, nullable=False, default=1)  # 有効フラグ
 
     # リレーション
-    allocations = relationship(
+    allocations: Mapped[list["Allocation"]] = relationship(
         "Allocation",
         back_populates="destination",
         lazy="noload",  # 引当は必要時のみ明示的に取得
@@ -231,27 +231,27 @@ class Product(AuditMixin, Base):
     shipping_warehouse_name = Column(Text, nullable=True)  # 出荷倉庫名称（非正規化）
 
     # リレーション
-    supplier = relationship(
+    supplier: Mapped["Supplier"] = relationship(
         "Supplier",
         back_populates="products",
         lazy="joined",  # 仕入先情報は常に一緒に取得（頻繁にアクセス）
     )
-    lots = relationship(
+    lots: Mapped[list["Lot"]] = relationship(
         "Lot",
         back_populates="product",
         lazy="noload",  # ロットは必要時のみ明示的に取得
     )
-    uom_conversions = relationship(
+    uom_conversions: Mapped[list["ProductUomConversion"]] = relationship(
         "ProductUomConversion",
         back_populates="product",
         lazy="selectin",  # 単位変換情報は常に一緒に取得（N+1回避）
     )
-    expiry_rules = relationship(
+    expiry_rules: Mapped[list["ExpiryRule"]] = relationship(
         "ExpiryRule",
         back_populates="product",
         lazy="selectin",  # 有効期限ルールは常に一緒に取得
     )
-    order_lines = relationship(
+    order_lines: Mapped[list["OrderLine"]] = relationship(
         "OrderLine",
         back_populates="product",
         lazy="noload",  # 受注明細は必要時のみ明示的に取得
@@ -286,7 +286,7 @@ class ProductUomConversion(AuditMixin, Base):
     )
 
     # リレーション
-    product = relationship(
+    product: Mapped["Product"] = relationship(
         "Product",
         back_populates="uom_conversions",
         lazy="joined",  # 製品情報は常に一緒に取得

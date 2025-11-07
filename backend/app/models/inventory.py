@@ -115,12 +115,12 @@ class Lot(AuditMixin, Base):
     )
 
     # リレーション
-    supplier = relationship(
+    supplier: Mapped["Supplier"] = relationship(
         "Supplier",
         back_populates="lots",
         lazy="joined",  # 仕入先情報は常に一緒に取得（頻繁にアクセス）
     )
-    product = relationship(
+    product: Mapped["Product"] = relationship(
         "Product",
         back_populates="lots",
         lazy="joined",  # 製品情報は常に一緒に取得（頻繁にアクセス）
@@ -144,7 +144,7 @@ class Lot(AuditMixin, Base):
         cascade="all, delete-orphan",
         lazy="joined",  # 現在在庫は常に一緒に取得（頻繁にアクセス）
     )
-    allocations = relationship(
+    allocations: Mapped[list["Allocation"]] = relationship(
         "Allocation",
         back_populates="lot",
         lazy="noload",  # 引当は必要時のみ明示的に取得
@@ -190,7 +190,7 @@ class StockMovement(AuditMixin, Base):
     )
 
     # リレーション
-    lot = relationship(
+    lot: Mapped["Lot"] = relationship(
         "Lot",
         back_populates="stock_movements",
         lazy="joined",  # ロット情報は常に一緒に取得
@@ -269,7 +269,7 @@ class ReceiptHeader(AuditMixin, Base):
         foreign_keys=[warehouse_id],
         lazy="joined",  # 倉庫情報は常に一緒に取得
     )
-    lines = relationship(
+    lines: Mapped[list["ReceiptLine"]] = relationship(
         "ReceiptLine",
         back_populates="header",
         cascade="all, delete-orphan",
@@ -311,12 +311,12 @@ class ReceiptLine(AuditMixin, Base):
     )
 
     # リレーション
-    header = relationship(
+    header: Mapped["ReceiptHeader"] = relationship(
         "ReceiptHeader",
         back_populates="lines",
         lazy="joined",  # ヘッダ情報は常に一緒に取得
     )
-    lot = relationship(
+    lot: Mapped["Lot"] = relationship(
         "Lot",
         lazy="joined",  # ロット情報は常に一緒に取得
     )
@@ -349,12 +349,12 @@ class ExpiryRule(AuditMixin, Base):
     )
 
     # リレーション
-    product = relationship(
+    product: Mapped["Product"] = relationship(
         "Product",
         back_populates="expiry_rules",
         lazy="joined",  # 製品情報は常に一緒に取得
     )
-    supplier = relationship(
+    supplier: Mapped["Supplier"] = relationship(
         "Supplier",
         back_populates="expiry_rules",
         lazy="joined",  # 仕入先情報は常に一緒に取得
