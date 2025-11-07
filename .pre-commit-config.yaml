@@ -1,0 +1,14 @@
+# リポジトリ直下の .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.7 # 手元のインストールと合わせてOK（v1.7.5でも可）
+    hooks:
+      - id: docformatter # ← こっち！ (-venv ではない)
+        args: ["-r", "-i", "backend/app"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: ["--fix", "--select=E,F,I,UP,B", "backend/app"]
+      - id: ruff-format
