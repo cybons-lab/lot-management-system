@@ -12,7 +12,7 @@ from .health import router as health_router
 from .integration import router as integration_router
 from .lots import router as lots_router
 from .masters import router as masters_router
-from .orders_refactored import router as orders_router
+from .orders import router as orders_router
 from .receipts import router as receipts_router
 from .warehouse_alloc import router as warehouse_alloc_router
 

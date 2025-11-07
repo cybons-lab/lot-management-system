@@ -6,7 +6,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import Field, constr
+from pydantic import Field, PositiveInt, constr
 
 from .base import BaseSchema, TimestampMixin
 
@@ -139,6 +139,41 @@ class SaveAllocationsRequest(BaseSchema):
 
 class OrdersWithAllocResponse(BaseSchema):
     items: List[OrderLineOut] = Field(default_factory=list)
+
+
+class OrderValidationLotAvailability(BaseSchema):
+    lot_id: int
+    available: int
+
+
+class OrderValidationDetails(BaseSchema):
+    warehouse_code: str
+    per_lot: List[OrderValidationLotAvailability] = Field(default_factory=list)
+    ship_date: Optional[date] = None
+
+
+class OrderValidationErrorData(BaseSchema):
+    product_code: str
+    required: int
+    available: int
+    details: OrderValidationDetails
+
+
+class OrderLineDemandSchema(BaseSchema):
+    product_code: str
+    warehouse_code: str
+    quantity: PositiveInt
+
+
+class OrderValidationRequest(BaseSchema):
+    lines: List[OrderLineDemandSchema]
+    ship_date: Optional[date] = None
+
+
+class OrderValidationResponse(BaseSchema):
+    ok: bool
+    message: str
+    data: Optional[OrderValidationErrorData] = None
 
 
 # Pydantic v2のforward reference解決
