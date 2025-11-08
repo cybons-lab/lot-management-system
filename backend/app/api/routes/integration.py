@@ -11,6 +11,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.api.deps import get_db
 from app.models import Customer, OcrSubmission, Order, OrderLine, Product, SapSyncLog
@@ -236,7 +238,8 @@ def register_to_sap(request: SapRegisterRequest, db: Session = Depends(get_db)):
         if order:
             orders.append(order)
     elif request.target.type == "order_id":
-        order = db.query(Order).filter(Order.id == request.target.value).first()
+        stmt = select(Order).where(Order.id == request.target.value).options(selectinload(Order.order_lines))
+        order = db.execute(stmt).scalar_one_or_none()
         if order:
             orders.append(order)
     else:

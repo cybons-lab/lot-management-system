@@ -41,13 +41,22 @@ def upgrade() -> None:
     )
     op.execute(
         """
+        -- products 由来の product_code は INNER に相当（必須前提）
+        -- supplier_code / warehouse_code は NULL 許容で相関サブクエリにする
         UPDATE lots AS l
-        SET product_code = p.product_code,
-            supplier_code = s.supplier_code,
-            warehouse_code = w.warehouse_code
+        SET
+        product_code   = p.product_code,
+        supplier_code  = (
+            SELECT s.supplier_code
+            FROM suppliers AS s
+            WHERE s.id = l.supplier_id
+        ),
+        warehouse_code = (
+            SELECT w.warehouse_code
+            FROM warehouses AS w
+            WHERE w.id = l.warehouse_id
+        )
         FROM products AS p
-        LEFT JOIN suppliers AS s ON l.supplier_id = s.id
-        LEFT JOIN warehouses AS w ON l.warehouse_id = w.id
         WHERE l.product_id = p.id;
         """
     )
