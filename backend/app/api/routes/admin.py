@@ -22,10 +22,6 @@ from app.models import (
     Order,
     OrderLine,
     Product,
-    ReceiptHeader,
-    ReceiptLine,
-    StockMovement,
-    StockMovementReason,
     Supplier,
     Warehouse,  # 統合された新Warehouse
 )
@@ -135,8 +131,7 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
     処理順序:
     1. 製品マスタ
     2. ロット登録
-    3. 入荷伝票作成（在庫変動も自動）
-    4. 受注登録
+    3. 受注登録
     """
     if settings.ENVIRONMENT == "production":
         raise HTTPException(
@@ -146,7 +141,6 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
     counts = {
         "products": 0,
         "lots": 0,
-        "receipts": 0,
         "orders": 0,
     }
 
@@ -273,137 +267,7 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
 
             db.commit()
 
-        # ==== 3. 入荷伝票 ====
-        if data.receipts:
-            for receipt_data in data.receipts:
-                warehouse = _ensure_warehouse(
-                    db, receipt_data.warehouse_code, warn
-                )
-
-                if not warehouse:
-                    continue
-
-                existing_receipt = (
-                    db.query(ReceiptHeader)
-                    .filter_by(receipt_no=receipt_data.receipt_no)
-                    .first()
-                )
-
-                if existing_receipt:
-                    continue
-
-                receipt_date_obj = _parse_iso_date(
-                    receipt_data.receipt_date,
-                    f"receipt {receipt_data.receipt_no}",
-                    "receipt_date",
-                )
-
-                db_receipt = ReceiptHeader(
-                    receipt_no=receipt_data.receipt_no,
-                    supplier_code=receipt_data.supplier_code,
-                    warehouse_id=warehouse.id,  # IDを使用
-                    receipt_date=receipt_date_obj or date.today(),
-                    notes=getattr(receipt_data, "notes", None),
-                )
-                db.add(db_receipt)
-                db.flush()
-
-                if not receipt_data.lines:
-                    warn(
-                        f"入荷伝票 {receipt_data.receipt_no}: 明細が存在しないためスキップしました"
-                    )
-                    db.delete(db_receipt)
-                    db.flush()
-                    continue
-
-                # 明細行
-                line_created = False
-                for line_data in receipt_data.lines:
-                    if line_data.quantity is None or line_data.quantity <= 0:
-                        warn(
-                            f"入荷伝票 {receipt_data.receipt_no} 明細 {line_data.line_no}: 数量が正の数値ではないためスキップしました"
-                        )
-                        continue
-
-                    lot_id = line_data.lot_id
-                    if lot_id is None:
-                        lot_number = getattr(line_data, "lot_number", None)
-                        if lot_number:
-                            lot_obj = (
-                                db.query(Lot)
-                                .filter_by(
-                                    product_code=line_data.product_code,
-                                    lot_number=lot_number,
-                                )
-                                .first()
-                            )
-                            if lot_obj:
-                                lot_id = lot_obj.id
-                            else:
-                                warn(
-                                    f"入荷伝票 {receipt_data.receipt_no} 明細 {line_data.line_no}: ロット番号 '{lot_number}' が見つからないためスキップしました"
-                                )
-                                continue
-                        else:
-                            warn(
-                                f"入荷伝票 {receipt_data.receipt_no} 明細 {line_data.line_no}: lot_id または lot_number を指定してください"
-                            )
-                            continue
-
-                    product = (
-                        db.query(Product)
-                        .filter_by(product_code=line_data.product_code)
-                        .first()
-                    )
-                    if not product:
-                        warn(
-                            f"入荷伝票 {receipt_data.receipt_no} 明細 {line_data.line_no}: 製品コード '{line_data.product_code}' が存在しないためスキップしました"
-                        )
-                        continue
-
-                    db_line = ReceiptLine(
-                        header_id=db_receipt.id,
-                        line_no=line_data.line_no,
-                        product_code=line_data.product_code,
-                        lot_id=lot_id,
-                        quantity=line_data.quantity,
-                        unit=line_data.unit,
-                    )
-                    db.add(db_line)
-                    line_created = True
-
-                    # 在庫変動記録
-                    db_movement = StockMovement(
-                        lot_id=lot_id,
-                        warehouse_id=warehouse.id,  # IDを使用
-                        movement_type=StockMovementReason.RECEIPT,
-                        quantity=line_data.quantity,
-                        related_id=receipt_data.receipt_no,
-                    )
-                    db.add(db_movement)
-
-                    # 現在在庫更新
-                    current_stock = (
-                        db.query(LotCurrentStock)
-                        .filter_by(lot_id=lot_id)
-                        .first()
-                    )
-                    if current_stock:
-                        current_stock.current_quantity += line_data.quantity
-
-                if not line_created:
-                    warn(
-                        f"入荷伝票 {receipt_data.receipt_no}: 有効な明細が存在しないため登録を取り消しました"
-                    )
-                    db.delete(db_receipt)
-                    db.flush()
-                    continue
-
-                counts["receipts"] += 1
-
-            db.commit()
-
-        # ==== 4. 受注登録 ====
+        # ==== 3. 受注登録 ====
         if data.orders:
             for order_data in data.orders:
                 existing_order = (
@@ -636,12 +500,6 @@ def _collect_supplier_codes(data: FullSampleDataRequest) -> set[str]:
     codes: set[str] = set()
     if data.lots:
         codes.update(lot.supplier_code for lot in data.lots if lot.supplier_code)
-    if data.receipts:
-        codes.update(
-            receipt.supplier_code
-            for receipt in data.receipts
-            if receipt.supplier_code
-        )
     return codes
 
 
@@ -650,12 +508,6 @@ def _collect_warehouse_codes(data: FullSampleDataRequest) -> set[str]:
     if data.lots:
         codes.update(
             lot.warehouse_code for lot in data.lots if getattr(lot, "warehouse_code", None)
-        )
-    if data.receipts:
-        codes.update(
-            receipt.warehouse_code
-            for receipt in data.receipts
-            if getattr(receipt, "warehouse_code", None)
         )
     return codes
 

@@ -6,7 +6,7 @@ from app.api.routes.masters_products import create_product
 from app.api.routes.masters_suppliers import create_supplier
 from app.api.routes.masters_warehouses import create_warehouse
 from app.api.routes.orders import create_order
-from app.models import Lot, LotCurrentStock, NextDivMap, Order, Warehouse
+from app.models import Lot, LotCurrentStock, Order, Warehouse
 from app.schemas import (
     FefoPreviewRequest,
     OrderCreate,
@@ -28,6 +28,7 @@ def test_order_to_fefo_allocation_flow(db_session):
             internal_unit="EA",
             base_unit="EA",
             requires_lot_number=True,
+            next_div="ND-A",
         ),
         db=db_session,
     )
@@ -57,16 +58,6 @@ def test_order_to_fefo_allocation_flow(db_session):
         ),
         db=db_session,
     )
-
-    # Register next division map for product A
-    next_div = NextDivMap(
-        customer_code="CUS-A",
-        ship_to_code="CUS-A",
-        product_code="PROD-A",
-        next_div="ND-A",
-    )
-    db_session.add(next_div)
-    db_session.commit()
 
     order = create_order(
         OrderCreate(
@@ -128,7 +119,7 @@ def test_order_to_fefo_allocation_flow(db_session):
     usable_lot_late = _create_lot("A-2", "PROD-A", 2, 10)
     assert locked_lot != usable_lot_early
 
-    # Product B lots (no next_div map to trigger warning)
+    # Product B lots (no next_div configured to trigger warning)
     lot_b1 = _create_lot("B-1", "PROD-B", 2, 3)
     lot_b2 = _create_lot("B-2", "PROD-B", 5, 8)
 
@@ -173,7 +164,9 @@ def test_order_to_fefo_allocation_flow(db_session):
         db_session.query(Order.status).filter(Order.id == order_id).scalar()
     )
     assert db_status in {"allocated", "part_allocated"}
-    line_next_divs = {line.product_code: line.next_div for line in refreshed_order.lines}
-    assert line_next_divs["PROD-A"] == "ND-A"
-    assert line_next_divs["PROD-B"] is None
+    commit_preview_lines = {
+        line["product_code"]: line["next_div"] for line in commit_data["preview"]["lines"]
+    }
+    assert commit_preview_lines["PROD-A"] == "ND-A"
+    assert commit_preview_lines["PROD-B"] is None
 

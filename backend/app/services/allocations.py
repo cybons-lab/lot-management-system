@@ -13,9 +13,9 @@ from app.models import (
     Allocation,
     Lot,
     LotCurrentStock,
-    NextDivMap,
     Order,
     OrderLine,
+    Product,
 )
 
 
@@ -71,7 +71,10 @@ def _load_order(db: Session, order_id: int) -> Order:
     order = (
         db.query(Order)
         .options(
-            joinedload(Order.lines).joinedload(OrderLine.allocations).joinedload(Allocation.lot)
+            joinedload(Order.lines)
+            .joinedload(OrderLine.allocations)
+            .joinedload(Allocation.lot),
+            joinedload(Order.lines).joinedload(OrderLine.product),
         )
         .filter(Order.id == order_id)
         .first()
@@ -90,21 +93,26 @@ def _existing_allocated_qty(line: OrderLine) -> float:
 
 
 def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> Tuple[str | None, str | None]:
-    ship_to_code = getattr(order, "delivery_mode", None) or order.customer_code
-    mapping = (
-        db.query(NextDivMap)
-        .filter(
-            NextDivMap.customer_code == order.customer_code,
-            NextDivMap.ship_to_code == ship_to_code,
-            NextDivMap.product_code == line.product_code,
-        )
-        .first()
-    )
-    if mapping:
-        return mapping.next_div, None
+    product = getattr(line, "product", None)
+    if product is None and getattr(line, "product_id", None):
+        product = db.query(Product).filter(Product.id == line.product_id).first()
+    if product is None:
+        product_code = getattr(line, "product_code", None)
+        if product_code:
+            product = (
+                db.query(Product)
+                .filter(Product.product_code == product_code)
+                .first()
+            )
+    if product and product.next_div:
+        return product.next_div, None
+
+    product_code = getattr(line, "product_code", None)
+    if not product_code and product:
+        product_code = product.product_code
     warning = (
         "次区が未設定: customer="
-        f"{order.customer_code}, ship_to={ship_to_code}, product={line.product_code}"
+        f"{order.customer_code}, product={product_code or 'unknown'}"
     )
     return None, warning
 
@@ -145,10 +153,28 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
         if remaining <= 0:
             continue
 
+        product_code = getattr(line, "product_code", None)
+        if not product_code and getattr(line, "product", None):
+            product_code = line.product.product_code
+            setattr(line, "product_code", product_code)
+        if not product_code:
+            warning = f"製品コード未設定: order_line={line.id}"
+            warnings.append(warning)
+            preview_lines.append(
+                FefoLinePlan(
+                    order_line_id=line.id,
+                    product_code="",
+                    required_qty=required_qty,
+                    already_allocated_qty=already_allocated,
+                    warnings=[warning],
+                )
+            )
+            continue
+
         next_div_value, next_div_warning = _resolve_next_div(db, order, line)
         line_plan = FefoLinePlan(
             order_line_id=line.id,
-            product_code=line.product_code,
+            product_code=product_code,
             required_qty=required_qty,
             already_allocated_qty=already_allocated,
             next_div=next_div_value,
@@ -157,7 +183,7 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
             line_plan.warnings.append(next_div_warning)
             warnings.append(next_div_warning)
 
-        for lot, current_qty in _lot_candidates(db, line.product_code):
+        for lot, current_qty in _lot_candidates(db, product_code):
             available = available_per_lot.get(lot.id, float(current_qty or 0.0))
             if available <= 0:
                 continue
@@ -182,7 +208,7 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
                 break
 
         if remaining > 0:
-            message = f"在庫不足: 製品 {line.product_code} に対して {remaining:.2f} 足りません"
+            message = f"在庫不足: 製品 {product_code} に対して {remaining:.2f} 足りません"
             line_plan.warnings.append(message)
             warnings.append(message)
 
@@ -210,41 +236,44 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
             if not line:
                 raise AllocationCommitError(f"OrderLine {line_plan.order_line_id} not found")
 
-            if line_plan.next_div and not line.next_div:
-                line.next_div = line_plan.next_div
+            if line_plan.next_div and not getattr(line, "next_div", None):
+                setattr(line, "next_div", line_plan.next_div)
 
             for alloc_plan in line_plan.allocations:
                 lot = db.query(Lot).filter(Lot.id == alloc_plan.lot_id).first()
                 if not lot:
                     raise AllocationCommitError(f"Lot {alloc_plan.lot_id} not found")
                 if lot.is_locked:
-                    raise AllocationCommitError(f"Lot {alloc_plan.lot_id} is locked")
+                    raise AllocationCommitError(
+                        f"Lot {alloc_plan.lot_id} is locked and cannot be allocated"
+                    )
 
                 current_stock = (
                     db.query(LotCurrentStock)
-                    .filter(LotCurrentStock.lot_id == alloc_plan.lot_id)
+                    .filter(LotCurrentStock.lot_id == lot.id)
+                    .with_for_update()
                     .first()
                 )
                 if not current_stock:
                     raise AllocationCommitError(
-                        f"Current stock for lot {alloc_plan.lot_id} not found"
+                        f"Current stock not found for lot {lot.id}"
                     )
 
-                if current_stock.current_quantity < alloc_plan.allocate_qty:
+                available = float(current_stock.current_quantity or 0.0)
+                if available + EPSILON < alloc_plan.allocate_qty:
                     raise AllocationCommitError(
-                        f"Lot {alloc_plan.lot_id} does not have enough stock"
+                        f"Insufficient stock for lot {lot.id}: required {alloc_plan.allocate_qty}, available {available}"
                     )
 
-                current_stock.current_quantity -= alloc_plan.allocate_qty
+                current_stock.current_quantity = available - alloc_plan.allocate_qty
                 current_stock.last_updated = datetime.utcnow()
 
                 allocation = Allocation(
                     order_line_id=line.id,
-                    lot_id=alloc_plan.lot_id,
+                    lot_id=lot.id,
                     allocated_qty=alloc_plan.allocate_qty,
                 )
                 db.add(allocation)
-                db.flush()
                 created.append(allocation)
 
         totals = (
@@ -273,9 +302,6 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
             target_order.status = "part_allocated"
 
         db.commit()
-
-        for alloc in created:
-            db.refresh(alloc)
     except Exception:
         db.rollback()
         raise
@@ -284,22 +310,28 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
 
 
 def cancel_allocation(db: Session, allocation_id: int) -> None:
-    """Cancel an allocation (soft) and restore stock quantity."""
-    allocation = db.query(Allocation).filter(Allocation.id == allocation_id).first()
+    allocation = (
+        db.query(Allocation)
+        .options(joinedload(Allocation.lot), joinedload(Allocation.order_line))
+        .filter(Allocation.id == allocation_id)
+        .first()
+    )
     if not allocation:
         raise AllocationNotFoundError(f"Allocation {allocation_id} not found")
 
-    # すでにキャンセル済なら何もしない（冪等）
-    if allocation.status == "cancelled":
-        return
-
-    # 在庫を元に戻す
-    stock = db.query(LotCurrentStock).filter(LotCurrentStock.lot_id == allocation.lot_id).first()
-    if stock:
-        stock.current_quantity = float(stock.current_quantity or 0.0) + float(
-            allocation.allocated_qty or 0.0
+    lot_stock = (
+        db.query(LotCurrentStock)
+        .filter(LotCurrentStock.lot_id == allocation.lot_id)
+        .with_for_update()
+        .first()
+    )
+    if not lot_stock:
+        raise AllocationCommitError(
+            f"Lot current stock not found for lot {allocation.lot_id}"
         )
 
-    # 行は削除せず、状態のみを更新（テストがこれを期待）
-    allocation.status = "cancelled"
+    lot_stock.current_quantity += allocation.allocated_qty
+    lot_stock.last_updated = datetime.utcnow()
+
+    db.delete(allocation)
     db.commit()

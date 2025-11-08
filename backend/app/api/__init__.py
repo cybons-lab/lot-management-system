@@ -13,15 +13,13 @@ from .routes import (
     lots_router,
     masters_router,
     orders_router,
-    receipts_router,
     warehouse_alloc_router,  # ⬅️ [修正] 不足していたルータを追加
-    orders_validate,  # ⬅️ [修正] orders_validate ルータをインポート
+    orders_validate_router,
 )
 
 __all__ = [
     "masters_router",
     "lots_router",
-    "receipts_router",
     "orders_router",
     "integration_router",
     "admin_router",
@@ -29,5 +27,5 @@ __all__ = [
     "allocations_router",
     "forecast_router",
     "warehouse_alloc_router",  # ⬅️ [修正] __all__ にも追加
-    "orders_validate",  # ⬅️ [修正] __all__ にも追加
+    "orders_validate_router",
 ]
