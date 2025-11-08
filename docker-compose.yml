@@ -1,14 +1,15 @@
+# Docker Compose Spec v2（versionキーは不要）
 services:
   # ========================================
-  # PostgreSQL データベース
+  # PostgreSQL
   # ========================================
   db-postgres:
     image: postgres:15-alpine
     container_name: lot-db-postgres
     environment:
-      POSTGRES_DB: lot_management
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: ${POSTGRES_DB:-lot_management}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=ja_JP.UTF-8"
       TZ: Asia/Tokyo
     volumes:
@@ -16,20 +17,22 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
+      # ← 起動直後の誤検知を避けつつ、127.0.0.1 を明示して安定化
       test:
         [
           "CMD-SHELL",
           "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-lot_management} -h 127.0.0.1 || exit 1",
         ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      interval: 5s
+      timeout: 3s
+      retries: 20
       start_period: 25s
     networks:
       - lot-network
+    restart: unless-stopped
 
   # ========================================
-  # Backend (Python + FastAPI)
+  # Backend (FastAPI)
   # ========================================
   backend:
     build:
@@ -37,23 +40,30 @@ services:
       dockerfile: Dockerfile
     container_name: lot-backend
     environment:
-      - ENVIRONMENT=development
-      - DATABASE_URL=postgresql://admin:dev_password@db-postgres:5432/lot_management
-      - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-    volumes:
-      - ./backend:/app
-      - backend-cache:/app/__pycache__
+      # ← ここは既存指定を引き継ぎつつ、将来切替しやすいよう .env 化
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      POSTGRES_DB: ${POSTGRES_DB:-lot_management}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+      # psycopg2 のままなら postgresql:// でOK（psycopg3 に切替時は postgresql+psycopg:// へ）
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-dev_password}@db-postgres:5432/${POSTGRES_DB:-lot_management}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      TZ: Asia/Tokyo
     ports:
       - "8000:8000"
     depends_on:
       db-postgres:
-        condition: service_healthy
+        condition: service_healthy # ← DB が healthy になるまで待機
+    volumes:
+      - ./backend:/app
+      - backend-cache:/root/.cache/pip
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     networks:
       - lot-network
     restart: unless-stopped
 
   # ========================================
-  # Frontend (React + Vite)
+  # Frontend (Vite)
   # ========================================
   frontend:
     build:
@@ -61,49 +71,43 @@ services:
       dockerfile: Dockerfile
     container_name: lot-frontend
     environment:
-      - VITE_API_URL=http://localhost:8000
-    volumes:
-      - ./frontend:/app
-      - frontend_node_modules:/app/node_modules
-    command: sh -lc "npm ci && npm run dev"
+      # フロントから見えるAPIのエンドポイント
+      VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8000}
+      TZ: Asia/Tokyo
     ports:
       - "5173:5173"
     depends_on:
       - backend
+    volumes:
+      - ./frontend:/usr/src/app
+      - frontend_node_modules:/usr/src/app/node_modules
     networks:
       - lot-network
     restart: unless-stopped
 
   # ========================================
-  # pgAdmin 4 (PostgreSQL GUI)
+  # pgAdmin 4
   # ========================================
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: lot-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
       TZ: Asia/Tokyo
+    ports:
+      - "5050:80"
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-      # （任意）初回の接続先を自動登録したい場合は servers.json をマウント
-      - ./ops/pgadmin/servers.json:/pgadmin4/servers.json:ro
-    ports:
-      - "127.0.0.1:5050:80" # ローカルのみ公開（外部露出を避ける）
     depends_on:
       db-postgres:
-        condition: service_healthy
+        condition: service_started
     networks:
       - lot-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost/misc/ping || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
 
 # ========================================
-# ボリューム（データ永続化）
+# 永続ボリューム
 # ========================================
 volumes:
   postgres-data:
@@ -115,7 +119,7 @@ volumes:
     driver: local
 
 # ========================================
-# ネットワーク（コンテナ間通信）
+# ネットワーク
 # ========================================
 networks:
   lot-network:
