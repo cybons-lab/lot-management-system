@@ -5,7 +5,7 @@
  */
 
 import { http } from "./http";
-import type { components } from "@/types/api.gen";
+import type { components } from "@/types/api";
 
 // ========================================
 // 型定義
