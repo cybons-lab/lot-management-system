@@ -1,34 +1,22 @@
-/**
- * Lots Hooks
- * React Query を使用したロットデータの取得フック
- */
-
+// src/hooks/useLots.ts
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/services/api";
+import { get } from "@/lib/apiClient";
+import type { paths } from "@/types/api";
 
-// ========================================
-// クエリキー定義
-// ========================================
+type LotsList = paths["/api/lots"]["get"]["responses"]["200"]["content"]["application/json"];
+type LotsQuery = paths["/api/lots"]["get"]["parameters"]["query"];
+type LotDetail = paths["/api/lots/{lot_id}"]["get"]["responses"]["200"]["content"]["application/json"];
 
-const lotsKeys = {
-  all: ["lots"] as const,
-  lists: () => [...lotsKeys.all, "list"] as const,
-  list: (filters?: Record<string, unknown>) =>
-    [...lotsKeys.lists(), filters] as const,
-};
-
-// ========================================
-// クエリフック
-// ========================================
-
-/**
- * ロット一覧を取得するフック
- * @param filters フィルタ条件
- */
-export const useLots = (filters?: Record<string, unknown>) => {
+export function useLots(params?: LotsQuery) {
   return useQuery({
-    queryKey: lotsKeys.list(filters),
-    queryFn: () => api.listLots(filters),
-    staleTime: 1000 * 60 * 5, // 5分間キャッシュ
+    queryKey: ["lots", params],
+    queryFn: () => get<LotsList>("/lots", params),
   });
-};
+}
+export function useLot(lotId: number | string) {
+  return useQuery({
+    queryKey: ["lot", lotId],
+    queryFn: () => get<LotDetail>(`/lots/${lotId}`),
+    enabled: !!lotId,
+  });
+}

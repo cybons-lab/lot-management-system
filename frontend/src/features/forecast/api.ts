@@ -5,21 +5,18 @@ import type {
   ForecastListResponse,
   ForecastBulkRequest,
   ForecastBulkResponse,
-} from "@/types";
-import type { ForecastResponse } from "@/types/forecast";
+} from "@/types/legacy";
+import type { ForecastResponse } from "@/types/legacy/forecast";
 
 export const getForecastList = (params: ForecastListParams) => {
   const searchParams = new URLSearchParams();
-  if (params.product_code)
-    searchParams.append("product_code", params.product_code);
-  if (params.supplier_code)
-    searchParams.append("supplier_code", params.supplier_code);
+  if (params.product_code) searchParams.append("product_code", params.product_code);
+  if (params.supplier_code) searchParams.append("supplier_code", params.supplier_code);
 
   const queryString = searchParams.toString();
-  return fetchApi<ForecastListResponse>(
-    `/forecast/list${queryString ? "?" + queryString : ""}`,
-    { method: "GET" }
-  );
+  return fetchApi<ForecastListResponse>(`/forecast/list${queryString ? "?" + queryString : ""}`, {
+    method: "GET",
+  });
 };
 
 export const bulkImportForecast = (data: ForecastBulkRequest) =>
@@ -28,15 +25,9 @@ export const bulkImportForecast = (data: ForecastBulkRequest) =>
     body: JSON.stringify(data),
   });
 
-export const getForecastByCodes = (
-  productCode: string,
-  clientCode: string
-) => {
+export const getForecastByCodes = (productCode: string, clientCode: string) => {
   const searchParams = new URLSearchParams();
   searchParams.append("product_code", productCode);
   searchParams.append("client_code", clientCode);
-  return fetchApi<ForecastResponse[]>(
-    `/forecast?${searchParams.toString()}`,
-    { method: "GET" }
-  );
+  return fetchApi<ForecastResponse[]>(`/forecast?${searchParams.toString()}`, { method: "GET" });
 };

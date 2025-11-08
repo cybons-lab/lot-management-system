@@ -2,7 +2,7 @@
 import React from "react";
 import { Check, X } from "lucide-react";
 import { formatCodeAndName } from "@/lib/utils";
-import type { LotCandidate, AllocatedLot } from "@/types";
+import type { LotCandidate, AllocatedLot } from "@/types/legacy";
 
 type Props = {
   /** 引当候補ロット */

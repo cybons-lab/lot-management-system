@@ -3,11 +3,11 @@
  * ロット関連のAPI通信関数
  */
 
-import { http } from '@/services/http';
-import type { LotResponse } from '@/types';
-import type { LotCreateInput, LotUpdateInput, LotSearchParams } from '@/utils/validators';
+import { http } from "@/services/http";
+import type { LotResponse } from "@/types/legacy";
+import type { LotCreateInput, LotUpdateInput, LotSearchParams } from "@/utils/validators";
 
-const BASE_PATH = '/lots';
+const BASE_PATH = "/lots";
 
 /**
  * ロット一覧を取得
@@ -51,7 +51,9 @@ export async function deleteLot(id: number): Promise<void> {
 /**
  * 在庫のあるロットのみを取得
  */
-export async function listLotsWithStock(params?: Omit<LotSearchParams, 'has_stock'>): Promise<LotResponse[]> {
+export async function listLotsWithStock(
+  params?: Omit<LotSearchParams, "has_stock">,
+): Promise<LotResponse[]> {
   return listLots({ ...params, has_stock: true });
 }
 

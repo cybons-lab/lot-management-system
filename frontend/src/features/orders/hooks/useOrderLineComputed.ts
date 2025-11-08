@@ -2,14 +2,14 @@
 import React from "react";
 import { isValidDate, diffDays } from "@/lib/utils/date";
 import { formatCodeAndName } from "@/lib/utils";
-import type { OrderLine, OrderLineComputed, AllocatedLot } from "@/types";
+import type { OrderLine, OrderLineComputed, AllocatedLot } from "@/types/legacy";
 
 /**
  * 受注明細の計算済み情報を取得
  */
 export function useOrderLineComputed(
   line: any, // 後でOrderLine型に移行
-  order?: any
+  order?: any,
 ): OrderLineComputed {
   return React.useMemo(() => {
     // 基本情報
@@ -26,15 +26,11 @@ export function useOrderLineComputed(
 
     // 引当済み数量
     const allocatedLots: AllocatedLot[] = line?.allocated_lots ?? [];
-    const allocatedTotal = allocatedLots.reduce(
-      (sum, a) => sum + Number(a.allocated_qty ?? 0),
-      0
-    );
+    const allocatedTotal = allocatedLots.reduce((sum, a) => sum + Number(a.allocated_qty ?? 0), 0);
 
     // 残数量と進捗率
     const remainingQty = Math.max(0, totalQty - allocatedTotal);
-    const progressPct =
-      totalQty > 0 ? Math.round((allocatedTotal / totalQty) * 100) : 0;
+    const progressPct = totalQty > 0 ? Math.round((allocatedTotal / totalQty) * 100) : 0;
 
     // 日付情報
     const dueDate = line?.due_date ?? null;
@@ -59,11 +55,9 @@ export function useOrderLineComputed(
     const warehouses = Array.from(
       new Set(
         allocatedLots
-          .map((a) =>
-            formatCodeAndName(a.warehouse_code ?? "", a.warehouse_name ?? "")
-          )
-          .filter((w) => !!w)
-      )
+          .map((a) => formatCodeAndName(a.warehouse_code ?? "", a.warehouse_name ?? ""))
+          .filter((w) => !!w),
+      ),
     );
 
     return {

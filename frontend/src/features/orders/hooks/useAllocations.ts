@@ -10,10 +10,9 @@ import type {
   WarehouseAlloc,
   OrdersListParams,
   AllocationCancelRequest,
-} from "@/types";
+} from "@/types/legacy";
 
-const keyOrderLine = (orderLineId: number) =>
-  ["orders", "line", orderLineId] as const;
+const keyOrderLine = (orderLineId: number) => ["orders", "line", orderLineId] as const;
 const keyCandidates = (orderLineId: number) =>
   ["orders", "line", orderLineId, "candidates"] as const;
 
@@ -23,7 +22,7 @@ const keyCandidates = (orderLineId: number) =>
 export function useCandidateLots(
   orderLineId: number | undefined,
   productCode?: string,
-  customerCode?: string
+  customerCode?: string,
 ) {
   return useQuery<LotCandidateResponse>({
     queryKey: orderLineId
@@ -48,10 +47,7 @@ export function useCandidateLots(
 /**
  * ロット引当を作成（楽観的更新対応）
  */
-export function useCreateAllocations(
-  orderLineId: number,
-  refetchParams?: OrdersListParams
-) {
+export function useCreateAllocations(orderLineId: number, refetchParams?: OrdersListParams) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: LotAllocationRequest) =>
@@ -59,10 +55,10 @@ export function useCreateAllocations(
     onMutate: async (newAlloc) => {
       // 進行中のクエリをキャンセル
       await qc.cancelQueries({ queryKey: ["orders"] });
-      
+
       // 現在のデータを保存（ロールバック用）
       const previousData = qc.getQueryData(["orders"]);
-      
+
       // 楽観的更新: 候補ロットの在庫を即座に減算
       qc.setQueriesData(
         { queryKey: keyCandidates(orderLineId) },
@@ -71,23 +67,14 @@ export function useCreateAllocations(
           return {
             ...old,
             items: old.items.map((lot) => {
-              const allocItem = newAlloc.allocations.find(
-                (item) => item.lot_id === lot.lot_id
-              );
+              const allocItem = newAlloc.allocations.find((item) => item.lot_id === lot.lot_id);
               if (!allocItem) return lot;
-              const nextAvailable = Math.max(
-                0,
-                lot.available_qty - allocItem.qty
-              );
-              const factor = lot.conversion_factor && lot.conversion_factor > 0
-                ? lot.conversion_factor
-                : 1;
+              const nextAvailable = Math.max(0, lot.available_qty - allocItem.qty);
+              const factor =
+                lot.conversion_factor && lot.conversion_factor > 0 ? lot.conversion_factor : 1;
               const nextLotUnitQty =
                 typeof lot.lot_unit_qty === "number"
-                  ? Math.max(
-                      0,
-                      lot.lot_unit_qty - allocItem.qty / factor
-                    )
+                  ? Math.max(0, lot.lot_unit_qty - allocItem.qty / factor)
                   : lot.lot_unit_qty;
 
               return {
@@ -97,9 +84,9 @@ export function useCreateAllocations(
               };
             }),
           };
-        }
+        },
       );
-      
+
       return { previousData };
     },
     onError: (_err, _vars, context) => {
@@ -161,8 +148,7 @@ export function useSaveWarehouseAllocations(orderLineId: number) {
 export function useUpdateOrderLineStatus(orderLineId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (newStatus: string) =>
-      ordersApi.updateOrderLineStatus(orderLineId, newStatus),
+    mutationFn: (newStatus: string) => ordersApi.updateOrderLineStatus(orderLineId, newStatus),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["orders"] });
     },

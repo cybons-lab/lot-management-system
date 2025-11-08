@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as ordersApi from "@/features/orders/api";
 import { api } from "@/lib/api-client";
 
-import type { OrdersListParams, OrderWithLinesResponse } from "@/types";
+import type { OrdersListParams, OrderWithLinesResponse } from "@/types/legacy";
 
 export const queryKeys = {
   orders: (params: OrdersListParams) => ["orders", params] as const,
@@ -35,6 +35,6 @@ export function useOrdersWithAllocations() {
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: false,
     // ここで常に「配列」に正規化して返す
-    select: (raw: any) => (Array.isArray(raw) ? raw : raw?.items ?? []),
+    select: (raw: any) => (Array.isArray(raw) ? raw : (raw?.items ?? [])),
   });
 }

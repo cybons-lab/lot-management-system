@@ -5,7 +5,7 @@
  */
 
 import { http } from "./http";
-import type { components } from "@/types/api";
+import type { components } from "@/types/legacy/api";
 
 // ========================================
 // 型定義
@@ -38,8 +38,7 @@ export const api = {
    * ダッシュボード統計を取得
    * @returns ダッシュボード統計情報
    */
-  getDashboardStats: () =>
-    http.get<DashboardStats>("/admin/stats").then((r) => r.data),
+  getDashboardStats: () => http.get<DashboardStats>("/admin/stats").then((r) => r.data),
 
   // ===== 受注 =====
   /**
@@ -74,9 +73,7 @@ export const api = {
    * @returns 引当結果
    */
   dragAssignAllocation: (body: DragAssignRequest) =>
-    http
-      .post<DragAssignResponse>("/allocations/drag-assign", body)
-      .then((r) => r.data),
+    http.post<DragAssignResponse>("/allocations/drag-assign", body).then((r) => r.data),
 
   // ===== Forecast =====
   /**

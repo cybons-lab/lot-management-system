@@ -2,7 +2,7 @@
 import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { formatCodeAndName } from "@/lib/utils";
-import type { LotCandidate, WarehouseAlloc } from "@/types";
+import type { LotCandidate, WarehouseAlloc } from "@/types/legacy";
 
 type Props = {
   /** 表示モード。既定は 'modal'（後方互換） */

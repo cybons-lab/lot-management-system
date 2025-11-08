@@ -3,19 +3,19 @@
  * 受注関連のテストデータ生成ファクトリー
  */
 
-import { faker } from '@faker-js/faker/locale/ja';
-import type { OrderResponse, OrderLine, OrderWithLinesResponse } from '@/types';
+import { faker } from "@faker-js/faker/locale/ja";
+import type { OrderResponse, OrderLine, OrderWithLinesResponse } from "@/types/legacy";
 
 /**
  * ランダムな受注データを生成
  */
 export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
-  const statuses = ['pending', 'allocated', 'shipped', 'cancelled'] as const;
+  const statuses = ["pending", "allocated", "shipped", "cancelled"] as const;
 
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
     order_number: `ORD-${faker.string.alphanumeric(8).toUpperCase()}`,
-    order_date: faker.date.recent({ days: 30 }).toISOString().split('T')[0],
+    order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0],
     customer_code: `CUST-${faker.string.alphanumeric(4).toUpperCase()}`,
     customer_name: faker.company.name(),
     status: faker.helpers.arrayElement(statuses),
@@ -38,7 +38,7 @@ export function createOrderLine(overrides?: Partial<OrderLine>): OrderLine {
     line_number: faker.number.int({ min: 1, max: 10 }),
     product_code: `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
     quantity,
-    unit: faker.helpers.arrayElement(['EA', 'CASE', 'BOX']),
+    unit: faker.helpers.arrayElement(["EA", "CASE", "BOX"]),
     allocated_quantity: allocatedQuantity,
     ...overrides,
   };
@@ -49,14 +49,14 @@ export function createOrderLine(overrides?: Partial<OrderLine>): OrderLine {
  */
 export function createOrderWithLines(
   lineCount: number = 3,
-  overrides?: Partial<OrderWithLinesResponse>
+  overrides?: Partial<OrderWithLinesResponse>,
 ): OrderWithLinesResponse {
   const order = createOrder(overrides);
   const lines = Array.from({ length: lineCount }, (_, index) =>
     createOrderLine({
       order_id: order.id,
       line_number: index + 1,
-    })
+    }),
   );
 
   return {
@@ -76,9 +76,11 @@ export function createOrders(count: number, overrides?: Partial<OrderResponse>):
 /**
  * 保留中の受注を生成
  */
-export function createPendingOrder(overrides?: Partial<OrderWithLinesResponse>): OrderWithLinesResponse {
+export function createPendingOrder(
+  overrides?: Partial<OrderWithLinesResponse>,
+): OrderWithLinesResponse {
   return createOrderWithLines(3, {
-    status: 'pending',
+    status: "pending",
     ...overrides,
   });
 }
@@ -86,9 +88,11 @@ export function createPendingOrder(overrides?: Partial<OrderWithLinesResponse>):
 /**
  * 引当済みの受注を生成
  */
-export function createAllocatedOrder(overrides?: Partial<OrderWithLinesResponse>): OrderWithLinesResponse {
+export function createAllocatedOrder(
+  overrides?: Partial<OrderWithLinesResponse>,
+): OrderWithLinesResponse {
   const order = createOrderWithLines(3, {
-    status: 'allocated',
+    status: "allocated",
     ...overrides,
   });
 
@@ -104,9 +108,11 @@ export function createAllocatedOrder(overrides?: Partial<OrderWithLinesResponse>
 /**
  * 出荷済みの受注を生成
  */
-export function createShippedOrder(overrides?: Partial<OrderWithLinesResponse>): OrderWithLinesResponse {
+export function createShippedOrder(
+  overrides?: Partial<OrderWithLinesResponse>,
+): OrderWithLinesResponse {
   return createOrderWithLines(3, {
-    status: 'shipped',
+    status: "shipped",
     ...overrides,
   });
 }
@@ -114,9 +120,11 @@ export function createShippedOrder(overrides?: Partial<OrderWithLinesResponse>):
 /**
  * キャンセル済みの受注を生成
  */
-export function createCancelledOrder(overrides?: Partial<OrderWithLinesResponse>): OrderWithLinesResponse {
+export function createCancelledOrder(
+  overrides?: Partial<OrderWithLinesResponse>,
+): OrderWithLinesResponse {
   return createOrderWithLines(3, {
-    status: 'cancelled',
+    status: "cancelled",
     ...overrides,
   });
 }

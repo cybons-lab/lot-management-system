@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { formatCodeAndName } from "@/lib/utils";
 import { getOrders, getOrder } from "@/features/orders/api";
-import type { OrderLine } from "@/types/orders";
+import type { OrderLine } from "@/types/legacy/orders";
 import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
 import { createAllocations, type CreateAllocationPayload } from "@/features/allocations/api";
 

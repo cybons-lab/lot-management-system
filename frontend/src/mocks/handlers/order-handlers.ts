@@ -3,16 +3,14 @@
  * 受注関連のAPIモックハンドラー
  */
 
-import { http, HttpResponse } from 'msw';
-import { createOrders, createOrderWithLines } from '@/factories/order-factory';
-import type { OrderResponse, OrderWithLinesResponse } from '@/types';
+import { http, HttpResponse } from "msw";
+import { createOrders, createOrderWithLines } from "@/factories/order-factory";
+import type { OrderResponse, OrderWithLinesResponse } from "@/types/legacy";
 
-const API_BASE = '/api';
+const API_BASE = "/api";
 
 // メモリ上の受注データ
-let orders: OrderWithLinesResponse[] = Array.from({ length: 15 }, () =>
-  createOrderWithLines()
-);
+let orders: OrderWithLinesResponse[] = Array.from({ length: 15 }, () => createOrderWithLines());
 
 export const orderHandlers = [
   /**
@@ -20,8 +18,8 @@ export const orderHandlers = [
    */
   http.get(`${API_BASE}/orders`, ({ request }) => {
     const url = new URL(request.url);
-    const status = url.searchParams.get('status');
-    const customerCode = url.searchParams.get('customer_code');
+    const status = url.searchParams.get("status");
+    const customerCode = url.searchParams.get("customer_code");
 
     let filteredOrders = [...orders];
 
@@ -61,7 +59,7 @@ export const orderHandlers = [
     const newOrder = createOrderWithLines(body.lines?.length || 1, {
       ...body,
       id: Math.max(...orders.map((o) => o.id)) + 1,
-      status: 'pending',
+      status: "pending",
     });
 
     orders.push(newOrder);

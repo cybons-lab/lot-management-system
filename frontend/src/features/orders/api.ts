@@ -13,23 +13,19 @@ import type {
   SaveAllocationsRequest,
   SaveAllocationsResponse,
   WarehouseAlloc,
-} from "@/types";
+} from "@/types/legacy";
 
 export const getOrders = (params: OrdersListParams) => {
   const searchParams = new URLSearchParams();
-  if (params.skip !== undefined)
-    searchParams.append("skip", params.skip.toString());
-  if (params.limit !== undefined)
-    searchParams.append("limit", params.limit.toString());
+  if (params.skip !== undefined) searchParams.append("skip", params.skip.toString());
+  if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params.status) searchParams.append("status", params.status);
-  if (params.customer_code)
-    searchParams.append("customer_code", params.customer_code);
+  if (params.customer_code) searchParams.append("customer_code", params.customer_code);
 
   const queryString = searchParams.toString();
-  return fetchApi<OrderResponse[]>(
-    `/orders${queryString ? "?" + queryString : ""}`,
-    { method: "GET" }
-  );
+  return fetchApi<OrderResponse[]>(`/orders${queryString ? "?" + queryString : ""}`, {
+    method: "GET",
+  });
 };
 
 export const getOrder = (orderId: number) =>
@@ -50,29 +46,22 @@ export const getWarehouseAllocList = () =>
 
 export const getCandidateLots = (
   orderLineId: number,
-  params?: { product_code?: string; customer_code?: string }
+  params?: { product_code?: string; customer_code?: string },
 ) => {
   const searchParams = new URLSearchParams();
-  if (params?.product_code)
-    searchParams.append("product_code", params.product_code);
-  if (params?.customer_code)
-    searchParams.append("customer_code", params.customer_code);
+  if (params?.product_code) searchParams.append("product_code", params.product_code);
+  if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
 
   const queryString = searchParams.toString();
   return fetchApi<LotCandidateResponse>(
-    `/orders/${orderLineId}/candidate-lots${
-      queryString ? "?" + queryString : ""
-    }`,
+    `/orders/${orderLineId}/candidate-lots${queryString ? "?" + queryString : ""}`,
     {
       method: "GET",
-    }
+    },
   );
 };
 
-export const createLotAllocations = (
-  orderLineId: number,
-  request: LotAllocationRequest
-) =>
+export const createLotAllocations = (orderLineId: number, request: LotAllocationRequest) =>
   fetchApi<LotAllocationResponse>(`/orders/${orderLineId}/allocations`, {
     method: "POST",
     body: JSON.stringify(request),
@@ -80,24 +69,18 @@ export const createLotAllocations = (
 
 export const cancelLotAllocations = (
   orderLineId: number,
-  request: any /* AllocationCancelRequest 型は現行types未定義のためanyに退避 */
+  request: any /* AllocationCancelRequest 型は現行types未定義のためanyに退避 */,
 ) =>
-  fetchApi<any /* AllocationCancelResponse */>(
-    `/orders/${orderLineId}/allocations/cancel`,
-    { method: "POST", body: JSON.stringify(request) }
-  );
+  fetchApi<any /* AllocationCancelResponse */>(`/orders/${orderLineId}/allocations/cancel`, {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
 
-export const saveWarehouseAllocations = (
-  orderLineId: number,
-  allocations: WarehouseAlloc[]
-) =>
-  fetchApi<SaveAllocationsResponse>(
-    `/orders/${orderLineId}/warehouse-allocations`,
-    {
-      method: "POST",
-      body: JSON.stringify({ allocations } as SaveAllocationsRequest),
-    }
-  );
+export const saveWarehouseAllocations = (orderLineId: number, allocations: WarehouseAlloc[]) =>
+  fetchApi<SaveAllocationsResponse>(`/orders/${orderLineId}/warehouse-allocations`, {
+    method: "POST",
+    body: JSON.stringify({ allocations } as SaveAllocationsRequest),
+  });
 
 export const updateOrderLineStatus = (orderLineId: number, newStatus: string) =>
   fetchApi<{

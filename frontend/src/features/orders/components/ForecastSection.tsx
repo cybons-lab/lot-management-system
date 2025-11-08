@@ -3,7 +3,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getForecastByCodes } from "@/features/forecast/api";
-import type { ForecastResponse } from "@/types/forecast";
+import type { ForecastResponse } from "@/types/legacy/forecast";
 
 type Props = {
   productCode?: string;

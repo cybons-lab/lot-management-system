@@ -3,11 +3,11 @@
  * ロット関連のAPIモックハンドラー
  */
 
-import { http, HttpResponse } from 'msw';
-import { createLot, createLots, createLotWithStock } from '@/factories/lot-factory';
-import type { LotResponse } from '@/types';
+import { http, HttpResponse } from "msw";
+import { createLot, createLots, createLotWithStock } from "@/factories/lot-factory";
+import type { LotResponse } from "@/types/legacy";
 
-const API_BASE = '/api';
+const API_BASE = "/api";
 
 // メモリ上のロットデータ
 let lots: LotResponse[] = createLots(20);
@@ -18,9 +18,9 @@ export const lotHandlers = [
    */
   http.get(`${API_BASE}/lots`, ({ request }) => {
     const url = new URL(request.url);
-    const productCode = url.searchParams.get('product_code');
-    const supplierCode = url.searchParams.get('supplier_code');
-    const hasStock = url.searchParams.get('has_stock');
+    const productCode = url.searchParams.get("product_code");
+    const supplierCode = url.searchParams.get("supplier_code");
+    const hasStock = url.searchParams.get("has_stock");
 
     let filteredLots = [...lots];
 
@@ -31,7 +31,7 @@ export const lotHandlers = [
     if (supplierCode) {
       filteredLots = filteredLots.filter((lot) => lot.supplier_code === supplierCode);
     }
-    if (hasStock === 'true') {
+    if (hasStock === "true") {
       filteredLots = filteredLots.filter((lot) => lot.current_quantity > 0);
     }
 

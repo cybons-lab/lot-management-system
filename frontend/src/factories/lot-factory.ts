@@ -3,8 +3,8 @@
  * ロット関連のテストデータ生成ファクトリー
  */
 
-import { faker } from '@faker-js/faker/locale/ja';
-import type { LotResponse } from '@/types';
+import { faker } from "@faker-js/faker/locale/ja";
+import type { LotResponse } from "@/types/legacy";
 
 /**
  * ランダムなロットデータを生成
@@ -19,19 +19,14 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     product_code: `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
     supplier_code: `SUP-${faker.string.alphanumeric(3).toUpperCase()}`,
     lot_number: `LOT-${faker.string.alphanumeric(8).toUpperCase()}`,
-    receipt_date: receiptDate.toISOString().split('T')[0],
-    expiry_date: expiryDate.toISOString().split('T')[0],
-    warehouse_code: faker.helpers.arrayElement(['WH-A', 'WH-B', 'WH-C', null]),
-    warehouse_name: faker.helpers.arrayElement([
-      '東京倉庫',
-      '大阪倉庫',
-      '名古屋倉庫',
-      null,
-    ]),
+    receipt_date: receiptDate.toISOString().split("T")[0],
+    expiry_date: expiryDate.toISOString().split("T")[0],
+    warehouse_code: faker.helpers.arrayElement(["WH-A", "WH-B", "WH-C", null]),
+    warehouse_name: faker.helpers.arrayElement(["東京倉庫", "大阪倉庫", "名古屋倉庫", null]),
     current_quantity: faker.number.int({ min: 0, max: 1000 }),
     last_updated: faker.date.recent().toISOString(),
     product_name: faker.commerce.productName(),
-    unit: faker.helpers.arrayElement(['EA', 'CASE', 'BOX']),
+    unit: faker.helpers.arrayElement(["EA", "CASE", "BOX"]),
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
     ...overrides,
@@ -71,7 +66,7 @@ export function createLotWithoutStock(overrides?: Partial<LotResponse>): LotResp
 export function createExpiredLot(overrides?: Partial<LotResponse>): LotResponse {
   const expiryDate = faker.date.past();
   return createLot({
-    expiry_date: expiryDate.toISOString().split('T')[0],
+    expiry_date: expiryDate.toISOString().split("T")[0],
     ...overrides,
   });
 }
@@ -83,7 +78,7 @@ export function createExpiringLot(overrides?: Partial<LotResponse>): LotResponse
   const expiryDate = new Date();
   expiryDate.setDate(expiryDate.getDate() + faker.number.int({ min: 1, max: 30 }));
   return createLot({
-    expiry_date: expiryDate.toISOString().split('T')[0],
+    expiry_date: expiryDate.toISOString().split("T")[0],
     ...overrides,
   });
 }

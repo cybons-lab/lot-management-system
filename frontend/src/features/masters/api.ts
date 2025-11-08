@@ -1,12 +1,10 @@
 // Auto-generated from api-client.ts split
 import { fetchApi } from "@/lib/http";
-import type { Product, Supplier, OldWarehouse } from "@/types";
+import type { Product, Supplier, OldWarehouse } from "@/types/legacy";
 
-export const getProducts = () =>
-  fetchApi<Product[]>("/masters/products", { method: "GET" });
+export const getProducts = () => fetchApi<Product[]>("/masters/products", { method: "GET" });
 
-export const getSuppliers = () =>
-  fetchApi<Supplier[]>("/masters/suppliers", { method: "GET" });
+export const getSuppliers = () => fetchApi<Supplier[]>("/masters/suppliers", { method: "GET" });
 
 export const getWarehouses = () =>
   fetchApi<OldWarehouse[]>("/masters/warehouses", { method: "GET" });

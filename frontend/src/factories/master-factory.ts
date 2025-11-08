@@ -3,8 +3,8 @@
  * マスタデータ関連のテストデータ生成ファクトリー
  */
 
-import { faker } from '@faker-js/faker/locale/ja';
-import type { Product, Supplier, Warehouse } from '@/types';
+import { faker } from "@faker-js/faker/locale/ja";
+import type { Product, Supplier, Warehouse } from "@/types/legacy";
 
 /**
  * ランダムな製品データを生成
@@ -13,14 +13,8 @@ export function createProduct(overrides?: Partial<Product>): Product {
   return {
     product_code: `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
     product_name: faker.commerce.productName(),
-    unit: faker.helpers.arrayElement(['EA', 'CASE', 'BOX', 'KG']),
-    category: faker.helpers.arrayElement([
-      '原材料',
-      '資材',
-      '包装材',
-      '副資材',
-      '完成品',
-    ]),
+    unit: faker.helpers.arrayElement(["EA", "CASE", "BOX", "KG"]),
+    category: faker.helpers.arrayElement(["原材料", "資材", "包装材", "副資材", "完成品"]),
     ...overrides,
   };
 }
@@ -57,7 +51,7 @@ export function createSuppliers(count: number, overrides?: Partial<Supplier>): S
  * ランダムな倉庫データを生成
  */
 export function createWarehouse(overrides?: Partial<Warehouse>): Warehouse {
-  const cities = ['東京', '大阪', '名古屋', '福岡', '札幌', '仙台'];
+  const cities = ["東京", "大阪", "名古屋", "福岡", "札幌", "仙台"];
   const city = faker.helpers.arrayElement(cities);
 
   return {
