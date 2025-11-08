@@ -21,6 +21,7 @@ from app.api.routes import (
     lots_router,
     masters_router,
     orders_router,
+    products_router,
     receipts_router,
     warehouse_alloc_router,
     orders_validate_router
@@ -86,6 +87,7 @@ app.include_router(integration_router, prefix=settings.API_PREFIX)
 app.include_router(admin_router, prefix=settings.API_PREFIX)
 app.include_router(admin_presets_router, prefix=settings.API_PREFIX)
 app.include_router(forecast_router, prefix=settings.API_PREFIX)
+app.include_router(products_router, prefix=settings.API_PREFIX)
 app.include_router(warehouse_alloc_router, prefix=settings.API_PREFIX)
 app.include_router(health_router, prefix=settings.API_PREFIX)
 app.include_router(orders_validate_router, prefix=settings.API_PREFIX)
