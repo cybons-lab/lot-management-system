@@ -6,8 +6,6 @@
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import model_validator
-
 from .base import BaseSchema, TimestampMixin
 
 
@@ -79,68 +77,6 @@ class LotCurrentStockResponse(BaseSchema):
     lot_id: int
     current_quantity: float
     last_updated: Optional[datetime] = None
-
-
-# --- ReceiptHeader ---
-class ReceiptHeaderBase(BaseSchema):
-    receipt_no: str
-    supplier_code: str
-    warehouse_code: str
-    receipt_date: date
-    created_by: Optional[str] = None
-    notes: Optional[str] = None
-
-
-class ReceiptHeaderCreate(ReceiptHeaderBase):
-    pass
-
-
-class ReceiptHeaderResponse(ReceiptHeaderBase):
-    id: int
-    created_at: datetime
-
-
-# --- ReceiptLine ---
-class ReceiptLineBase(BaseSchema):
-    line_no: int
-    product_code: str
-    lot_id: Optional[int] = None
-    lot_number: Optional[str] = None
-    quantity: float
-    unit: Optional[str] = None
-    notes: Optional[str] = None
-
-    @model_validator(mode="after")
-    def _validate_lot_identifier(cls, data):
-        lot_id = getattr(data, "lot_id", None)
-        lot_number = getattr(data, "lot_number", None)
-        if not lot_id and not lot_number:
-            raise ValueError("lot_id または lot_number のいずれかが必須です")
-        return data
-
-
-class ReceiptLineCreate(ReceiptLineBase):
-    pass
-
-
-class ReceiptLineResponse(ReceiptLineBase):
-    id: int
-    receipt_id: int
-
-
-# ===== ✅ ここを修正 =====
-class ReceiptCreateRequest(ReceiptHeaderBase):
-    """入荷伝票作成リクエスト(ヘッダー+明細)"""
-    
-    lines: list[ReceiptLineCreate]
-# ========================
-
-
-class ReceiptResponse(BaseSchema):
-    """入荷伝票レスポンス"""
-
-    header: ReceiptHeaderResponse
-    lines: list[ReceiptLineResponse]
 
 
 # --- ExpiryRule ---
