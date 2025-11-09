@@ -4,6 +4,7 @@
 
 import logging
 import os
+import subprocess
 from pathlib import Path
 from typing import Generator
 
@@ -42,9 +43,34 @@ def get_db() -> Generator[Session, None, None]:
 def init_db() -> None:
     """
     DB初期化（テーブル作成はAlembicに委譲）
+    Alembicマイグレーションを実行してテーブルを作成します
     """
     import app.models  # noqa: F401  モデルのメタデータを読み込むための副作用import
-    logger.info("ℹ️ Skipped create_all; schema is managed by Alembic.")
+
+    # Alembicマイグレーションを実行してテーブルを作成
+    try:
+        # プロジェクトルートディレクトリ（alembic.iniがある場所）
+        backend_dir = Path(__file__).parent.parent.parent
+
+        logger.info("🔄 Running Alembic migrations to create tables...")
+        result = subprocess.run(
+            ["alembic", "upgrade", "head"],
+            cwd=backend_dir,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        logger.info("✅ Alembic migrations completed successfully")
+        if result.stdout:
+            logger.debug(f"Alembic output: {result.stdout}")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"❌ Alembic migration failed: {e}")
+        logger.error(f"stdout: {e.stdout}")
+        logger.error(f"stderr: {e.stderr}")
+        raise RuntimeError(f"Failed to run Alembic migrations: {e.stderr}")
+    except Exception as e:
+        logger.error(f"❌ Unexpected error running Alembic: {e}")
+        raise
 
 
 def _drop_dependent_views() -> None:
@@ -90,9 +116,11 @@ def drop_db() -> None:
         db_path = Path(db_path_str)
         if db_path.exists():
             os.remove(db_path)
+            logger.info("🗑️ Deleted SQLite database file")
         return
 
     # PostgreSQL: スキーマごと初期化
+    logger.info("🗑️ Dropping and recreating schema 'public'...")
     with engine.begin() as conn:
         # 必要なら別スキーマ名に変更（通常は public）
         schema = "public"
@@ -100,15 +128,8 @@ def drop_db() -> None:
         conn.execute(text(f'CREATE SCHEMA "{schema}";'))
         # 検索パスを戻す（任意）
         conn.execute(text(f'SET search_path TO "{schema}";'))
+        logger.info(f"✅ Schema '{schema}' has been recreated")
 
     # 接続プールを破棄
     engine.dispose()
-
-    # RDB（PostgreSQL 等）: 依存VIEW→テーブルの順でDROP
-    _drop_dependent_views()
-    try:
-        Base.metadata.drop_all(bind=engine)
-        logger.info("🗑️ Dropped all tables (metadata.drop_all)")
-    finally:
-        engine.dispose()
-        logger.info("ℹ️ DBエンジンを破棄しました (接続プールをクローズ)")
+    logger.info("ℹ️ DBエンジンを破棄しました (接続プールをクローズ)")
