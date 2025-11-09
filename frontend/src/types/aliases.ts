@@ -32,19 +32,24 @@ export type OldWarehouse = Warehouse; // 旧名の受け皿
 // ---- Inventory/Lot ----
 export type LotResponse = {
   id: number;
-  lot_no?: string | null;
-  lot_number?: string;
+  lot_number: string;
   product_code: string;
   product_name?: string | null;
+  supplier_code: string;
   warehouse_code?: string | null;
-  warehouse_name?: string | null;
-  unit?: string | null;
-  status?: string | null;
-  receipt_date?: string | null;
+  warehouse_id?: number | null;
+  lot_unit?: string | null;
+  receipt_date: string;
+  mfg_date?: string | null;
   expiry_date?: string | null;
-  current_quantity?: number | null;
+  current_quantity: number;
+  last_updated?: string | null;
   created_at: string;
   updated_at?: string | null;
+  // Backwards compatibility
+  lot_no?: string | null;
+  unit?: string | null;
+  status?: string | null;
 };
 export type LotCreate = Partial<LotResponse>;
 export type LotWithStock = LotResponse;
@@ -95,28 +100,42 @@ export type AllocationCancelRequest = {
 // ---- Orders ----
 export type OrderLine = {
   id: number;
+  order_id?: number;
   line_no?: number;
   product_code: string;
+  product_name?: string;
+  customer_code?: string;
+  supplier_code?: string;
   quantity: number;
-  unit?: string;
+  unit: string;
   status?: string;
   due_date?: string | null;
   allocated_qty?: number | null;
+  warehouse_allocations?: Array<{ warehouse_code: string; quantity: number }>;
+  related_lots?: Array<Record<string, unknown>>;
+  allocated_lots?: AllocatedLot[];
+  next_div?: string | null;
   forecast_qty?: number | null;
   forecast_version_no?: number | null;
-  allocated_lots?: AllocatedLot[];
 };
 export type OrderResponse = {
   id: number;
   order_no: string;
   customer_code: string;
   customer_name?: string | null;
-  order_date?: string | null;
-  due_date?: string | null;
+  order_date: string;
   status: string;
+  customer_order_no?: string | null;
+  customer_order_no_last6?: string | null;
+  delivery_mode?: string | null;
+  sap_order_id?: string | null;
+  sap_status?: string | null;
+  sap_sent_at?: string | null;
+  sap_error_msg?: string | null;
   created_at?: string;
   updated_at?: string | null;
-  sap_order_id?: string | null;
+  // Backwards compatibility
+  due_date?: string | null;
   remarks?: string | null;
   lines?: OrderLine[];
 };

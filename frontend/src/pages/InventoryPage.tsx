@@ -87,10 +87,10 @@ export function InventoryPage() {
   const columns: Column<LotResponse>[] = useMemo(
     () => [
       {
-        id: "lot_no",
+        id: "lot_number",
         header: "ロット番号",
         cell: (lot: LotResponse) => (
-          <span className="font-medium">{lot.lot_no || lot.lot_number}</span>
+          <span className="font-medium">{lot.lot_number || lot.lot_no || "-"}</span>
         ),
         sortable: true,
       },
@@ -108,15 +108,15 @@ export function InventoryPage() {
       {
         id: "warehouse_code",
         header: "倉庫",
-        cell: (lot: LotResponse) => lot.warehouse_name || lot.warehouse_code || "-",
+        cell: (lot: LotResponse) => lot.warehouse_code || "-",
         sortable: true,
       },
       {
         id: "current_quantity",
         header: "現在在庫",
         cell: (lot: LotResponse) => (
-          <span className={(lot.current_quantity ?? 0) > 0 ? "font-semibold" : "text-gray-400"}>
-            {(lot.current_quantity ?? 0).toLocaleString()}
+          <span className={lot.current_quantity > 0 ? "font-semibold" : "text-gray-400"}>
+            {lot.current_quantity.toLocaleString()}
           </span>
         ),
         sortable: true,
@@ -125,7 +125,7 @@ export function InventoryPage() {
       {
         id: "unit",
         header: "単位",
-        cell: (lot: LotResponse) => lot.unit || "EA",
+        cell: (lot: LotResponse) => lot.lot_unit || lot.unit || "EA",
         align: "center",
       },
       {
@@ -145,7 +145,11 @@ export function InventoryPage() {
       {
         id: "status",
         header: "ステータス",
-        cell: (lot: LotResponse) => <LotStatusBadge status={lot.status || "available"} />,
+        cell: (lot: LotResponse) => {
+          // Derive status from current_quantity
+          const status = lot.current_quantity > 0 ? "available" : "depleted";
+          return <LotStatusBadge status={lot.status || status} />;
+        },
         sortable: true,
         align: "center",
       },
@@ -161,9 +165,9 @@ export function InventoryPage() {
   // 統計情報
   const stats = useMemo(() => {
     const totalLots = allLots.length;
-    const activeLots = allLots.filter((lot: LotResponse) => lot.status === "active").length;
+    const activeLots = allLots.filter((lot: LotResponse) => lot.current_quantity > 0).length;
     const totalQuantity = allLots.reduce(
-      (sum: number, lot: LotResponse) => sum + (lot.current_quantity || 0),
+      (sum: number, lot: LotResponse) => sum + lot.current_quantity,
       0,
     );
 
@@ -345,14 +349,14 @@ function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps)
     const formData = new FormData(e.currentTarget);
 
     const data = {
-      lot_no: formData.get("lot_no") as string,
+      lot_number: formData.get("lot_number") as string,
       product_code: formData.get("product_code") as string,
+      supplier_code: formData.get("supplier_code") as string,
       warehouse_code: formData.get("warehouse_code") as string,
       quantity: Number(formData.get("quantity")),
-      unit: formData.get("unit") as string,
+      lot_unit: formData.get("lot_unit") as string,
       receipt_date: formData.get("receipt_date") as string,
       expiry_date: (formData.get("expiry_date") as string) || undefined,
-      status: "active",
     };
 
     await onSubmit(data);
@@ -362,13 +366,18 @@ function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps)
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="lot_no">ロット番号 *</Label>
-          <Input id="lot_no" name="lot_no" required placeholder="例: LOT-2024-001" />
+          <Label htmlFor="lot_number">ロット番号 *</Label>
+          <Input id="lot_number" name="lot_number" required placeholder="例: LOT-2024-001" />
         </div>
 
         <div>
           <Label htmlFor="product_code">製品コード *</Label>
           <Input id="product_code" name="product_code" required placeholder="例: P001" />
+        </div>
+
+        <div>
+          <Label htmlFor="supplier_code">仕入先コード *</Label>
+          <Input id="supplier_code" name="supplier_code" required placeholder="例: S001" />
         </div>
 
         <div>
@@ -390,8 +399,8 @@ function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps)
         </div>
 
         <div>
-          <Label htmlFor="unit">単位 *</Label>
-          <Input id="unit" name="unit" required placeholder="例: EA" defaultValue="EA" />
+          <Label htmlFor="lot_unit">単位 *</Label>
+          <Input id="lot_unit" name="lot_unit" required placeholder="例: EA" defaultValue="EA" />
         </div>
 
         <div>
@@ -399,7 +408,7 @@ function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps)
           <Input id="receipt_date" name="receipt_date" type="date" required />
         </div>
 
-        <div className="col-span-2">
+        <div>
           <Label htmlFor="expiry_date">有効期限</Label>
           <Input id="expiry_date" name="expiry_date" type="date" />
         </div>

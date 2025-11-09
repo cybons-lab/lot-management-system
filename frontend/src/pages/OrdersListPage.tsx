@@ -108,8 +108,7 @@ export function OrdersListPage() {
       {
         id: "order_date",
         header: "受注日",
-        cell: (order: OrderResponse) =>
-          order.order_date ? format(new Date(order.order_date), "yyyy/MM/dd") : "-",
+        cell: (order: OrderResponse) => format(new Date(order.order_date), "yyyy/MM/dd"),
         sortable: true,
       },
       {
@@ -380,8 +379,6 @@ function OrderCreateForm({ onSubmit, onCancel, isSubmitting }: OrderCreateFormPr
       order_no: formData.get("order_no") as string,
       customer_code: formData.get("customer_code") as string,
       order_date: formData.get("order_date") as string,
-      due_date: (formData.get("due_date") as string) || undefined,
-      ship_to: (formData.get("ship_to") as string) || undefined,
       status: "open",
       lines: [], // 明細は後で追加
     };

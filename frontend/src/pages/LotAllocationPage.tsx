@@ -269,7 +269,7 @@ export function LotAllocationPage() {
   const warehouseSummaries: WarehouseSummary[] = useMemo(() => {
     const map = new Map<string, WarehouseSummary>();
     candidateLots.forEach((lot) => {
-      const key = String(lot.warehouse_id ?? lot.warehouse_code ?? lot.id);
+      const key = String(lot.warehouse_code ?? lot.warehouse_id ?? lot.id);
       const existing = map.get(key) ?? {
         key,
         warehouseId: lot.warehouse_id ?? undefined,
