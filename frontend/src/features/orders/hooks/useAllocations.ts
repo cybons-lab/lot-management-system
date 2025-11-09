@@ -25,24 +25,40 @@ export function useCandidateLots(
     queryKey: enabled
       ? [...keyCandidates(orderLineId!), productCode ?? null, customerCode ?? null]
       : ["orders", "line", "candidates", "disabled"],
-    queryFn: () =>
-      orderLineId
-        ? ordersApi.getCandidateLots(orderLineId, {
-            product_code: productCode,
-            customer_code: customerCode,
-          })
-        : Promise.resolve<LotCandidateResponse>({ items: [] }),
-    enabled,
-    select: (data) => {
-      if (!productCode) {
-        return data;
+    queryFn: async () => {
+      if (!orderLineId) {
+        return { items: [] };
       }
 
+      const serverData = await ordersApi.getCandidateLots(orderLineId, {
+        product_code: productCode,
+        customer_code: customerCode,
+      });
+
+      // Map server FefoLotAllocation to LotCandidate format
+      const mappedItems = serverData.items.map((item) => ({
+        lot_id: item.lot_id,
+        lot_number: item.lot_number,
+        product_code: productCode ?? "", // inject from parameter since server doesn't return it
+        allocate_qty: item.allocate_qty,
+        expiry_date: item.expiry_date,
+        receipt_date: item.receipt_date,
+        // Optional fields that server doesn't provide
+        warehouse_code: null,
+        warehouse_name: null,
+        base_unit: null,
+        lot_unit: null,
+        lot_unit_qty: null,
+        conversion_factor: null,
+        available_qty: item.allocate_qty, // use allocate_qty as available
+      }));
+
       return {
-        ...data,
-        items: data.items.filter((lot) => lot.product_code === productCode),
+        items: mappedItems,
+        warnings: serverData.warnings,
       };
     },
+    enabled,
   });
 }
 
@@ -58,7 +74,7 @@ export function useCreateAllocations(orderLineId: number | undefined) {
       }
       return ordersApi.createLotAllocations(orderLineId, payload);
     },
-    onMutate: async (newAlloc) => {
+    onMutate: async (newAlloc: LotAllocationRequest) => {
       // 進行中のクエリをキャンセル
       await qc.cancelQueries({ queryKey: ["orders"] });
 
@@ -74,7 +90,7 @@ export function useCreateAllocations(orderLineId: number | undefined) {
             return {
               ...old,
               items: old.items.map((lot) => {
-                const allocItem = newAlloc.allocations.find((item) => item.lot_id === lot.lot_id);
+                const allocItem = newAlloc.allocations.find((item: { lot_id: number; qty: number }) => item.lot_id === lot.lot_id);
                 if (!allocItem) return lot;
                 const nextAvailable = Math.max(0, lot.available_qty ?? 0 - allocItem.qty);
                 const factor =
@@ -97,7 +113,7 @@ export function useCreateAllocations(orderLineId: number | undefined) {
 
       return { previousData };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_err: Error, _vars: LotAllocationRequest, context?: { previousData: unknown }) => {
       // エラー時はロールバック
       if (context?.previousData) {
         qc.setQueryData(["orders"], context.previousData);
@@ -151,7 +167,7 @@ export function useSaveWarehouseAllocations(orderLineId: number | undefined) {
       const previousData = qc.getQueryData(["orders"]);
       return { previousData };
     },
-    onError: (_err, _vars, context) => {
+    onError: (_err: Error, _vars: WarehouseAlloc[], context?: { previousData: unknown }) => {
       if (context?.previousData) {
         qc.setQueryData(["orders"], context.previousData);
       }

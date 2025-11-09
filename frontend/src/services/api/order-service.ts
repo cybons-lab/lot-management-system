@@ -4,15 +4,15 @@
  */
 
 import { http } from "@/services/http";
-import type { OrderResponse, OrderWithLinesResponse } from "@/types/aliases";
-import type { OrderCreateInput, OrderStatusUpdate, OrderSearchParams } from "@/utils/validators";
+import type { OrderResponse, OrderWithLinesResponse, OrdersListParams } from "@/types/aliases";
+import type { OrderCreate } from "@/utils/validators";
 
 const BASE_PATH = "/orders";
 
 /**
  * 受注一覧を取得
  */
-export async function listOrders(params?: OrderSearchParams): Promise<OrderResponse[]> {
+export async function listOrders(params?: OrdersListParams): Promise<OrderResponse[]> {
   const response = await http.get<OrderResponse[]>(BASE_PATH, { params });
   return response.data;
 }
@@ -28,7 +28,7 @@ export async function getOrderById(id: number): Promise<OrderWithLinesResponse> 
 /**
  * 受注を作成
  */
-export async function createOrder(data: OrderCreateInput): Promise<OrderWithLinesResponse> {
+export async function createOrder(data: OrderCreate): Promise<OrderWithLinesResponse> {
   const response = await http.post<OrderWithLinesResponse>(BASE_PATH, data);
   return response.data;
 }
@@ -38,7 +38,7 @@ export async function createOrder(data: OrderCreateInput): Promise<OrderWithLine
  */
 export async function updateOrderStatus(
   id: number,
-  data: OrderStatusUpdate,
+  data: { status: string },
 ): Promise<{ success: boolean; order: OrderWithLinesResponse }> {
   const response = await http.patch<{ success: boolean; order: OrderWithLinesResponse }>(
     `${BASE_PATH}/${id}/status`,

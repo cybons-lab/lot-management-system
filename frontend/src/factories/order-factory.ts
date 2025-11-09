@@ -124,14 +124,18 @@ export function createOrderWithLines(
         (line as { line_no?: number })?.line_no ??
         (line as { line_number?: number })?.line_number ??
         index + 1,
-      id: line?.id ?? index + 1,
+      id: 'id' in line ? (line.id as number) : index + 1,
       ...line,
-      customer_code: line?.customer_code ?? overrides?.customer_code ?? order.customer_code,
+      customer_code:
+        'customer_code' in line
+          ? (line.customer_code as string | null | undefined)
+          : overrides?.customer_code ?? order.customer_code,
       customer_name:
-        line?.customer_name ??
-        (overrides as { customer_name?: string | null })?.customer_name ??
-        (order as { customer_name?: string | null }).customer_name ??
-        null,
+        'customer_name' in line
+          ? (line.customer_name as string | null | undefined)
+          : (overrides as { customer_name?: string | null })?.customer_name ??
+            (order as { customer_name?: string | null }).customer_name ??
+            null,
     }),
   );
 

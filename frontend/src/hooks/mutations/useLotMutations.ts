@@ -8,7 +8,8 @@ import { useMutation, useQueryClient, type UseMutationResult } from "@tanstack/r
 
 import { createLot, updateLot, deleteLot } from "@/services/api/lot-service";
 import { QUERY_KEYS } from "@/services/api/query-keys";
-import type { LotCreate, LotUpdate, LotWithStock } from "@/utils/validators/lot-schemas";
+import type { LotResponse } from "@/types/aliases";
+import type { LotCreateInput, LotUpdateInput } from "@/utils/validators";
 
 /**
  * ロット作成フック
@@ -28,14 +29,14 @@ import type { LotCreate, LotUpdate, LotWithStock } from "@/utils/validators/lot-
  * ```
  */
 export function useCreateLot(options?: {
-  onSuccess?: (data: LotWithStock) => void;
+  onSuccess?: (data: LotResponse) => void;
   onError?: (error: Error) => void;
-}): UseMutationResult<LotWithStock, Error, LotCreate> {
+}): UseMutationResult<LotResponse, Error, LotCreateInput> {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: createLot,
-    onSuccess: (data) => {
+    onSuccess: (data: LotResponse) => {
       // ロット一覧のキャッシュを無効化
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.lots.all,
@@ -68,15 +69,15 @@ export function useCreateLot(options?: {
 export function useUpdateLot(
   lotId: number,
   options?: {
-    onSuccess?: (data: LotWithStock) => void;
+    onSuccess?: (data: LotResponse) => void;
     onError?: (error: Error) => void;
   },
-): UseMutationResult<LotWithStock, Error, LotUpdate> {
+): UseMutationResult<LotResponse, Error, LotUpdateInput> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => updateLot(lotId, data),
-    onSuccess: (data) => {
+    mutationFn: (data: LotUpdateInput) => updateLot(lotId, data),
+    onSuccess: (data: LotResponse) => {
       // 特定ロットのキャッシュを無効化
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.lots.detail(lotId),
@@ -118,7 +119,7 @@ export function useDeleteLot(options?: {
 
   return useMutation({
     mutationFn: deleteLot,
-    onSuccess: (_, lotId) => {
+    onSuccess: (_: void, lotId: number) => {
       // 削除されたロットのキャッシュを削除
       queryClient.removeQueries({
         queryKey: QUERY_KEYS.lots.detail(lotId),
@@ -142,15 +143,15 @@ export function useDeleteLot(options?: {
  * @returns ロット一括作成のMutation結果
  */
 export function useBulkCreateLots(options?: {
-  onSuccess?: (data: LotWithStock[]) => void;
+  onSuccess?: (data: LotResponse[]) => void;
   onError?: (error: Error) => void;
   onProgress?: (current: number, total: number) => void;
-}): UseMutationResult<LotWithStock[], Error, LotCreate[]> {
+}): UseMutationResult<LotResponse[], Error, LotCreateInput[]> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (lotsData: LotCreate[]) => {
-      const results: LotWithStock[] = [];
+    mutationFn: async (lotsData: LotCreateInput[]) => {
+      const results: LotResponse[] = [];
 
       for (let i = 0; i < lotsData.length; i++) {
         const lotData = lotsData[i];
@@ -163,7 +164,7 @@ export function useBulkCreateLots(options?: {
 
       return results;
     },
-    onSuccess: (data) => {
+    onSuccess: (data: LotResponse[]) => {
       // ロット一覧のキャッシュを無効化
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.lots.all,
@@ -186,15 +187,15 @@ export function useBulkCreateLots(options?: {
 export function useUpdateLotStatus(
   lotId: number,
   options?: {
-    onSuccess?: (data: LotWithStock) => void;
+    onSuccess?: (data: LotResponse) => void;
     onError?: (error: Error) => void;
   },
-): UseMutationResult<LotWithStock, Error, string> {
+): UseMutationResult<LotResponse, Error, LotUpdateInput> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (status: string) => updateLot(lotId, { status }),
-    onSuccess: (data) => {
+    mutationFn: (data: LotUpdateInput) => updateLot(lotId, data),
+    onSuccess: (data: LotResponse) => {
       queryClient.invalidateQueries({
         queryKey: QUERY_KEYS.lots.detail(lotId),
       });
