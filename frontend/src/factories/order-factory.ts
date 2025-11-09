@@ -5,7 +5,19 @@
 
 import { faker } from "@faker-js/faker/locale/ja";
 
-import type { OrderResponse, OrderWithLinesResponse, OrderLineCreate } from "@/types/aliases";
+import type {
+  OrderLine,
+  OrderResponse,
+  OrderWithLinesResponse,
+} from "@/types/aliases";
+
+type OrderLineFactoryExtras = {
+  product_name?: string | null;
+  customer_code?: string | null;
+  customer_name?: string | null;
+};
+
+export type OrderLineFactoryResult = OrderLine & OrderLineFactoryExtras;
 
 /**
  * ランダムな受注データを生成
@@ -29,17 +41,65 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 /**
  * 受注明細を生成
  */
-export function createOrderLine(overrides?: Partial<OrderLineCreate>): OrderLineCreate {
-  const quantity = faker.number.int({ min: 1, max: 100 });
-  const allocatedQuantity = faker.number.int({ min: 0, max: quantity });
+export function createOrderLine(
+  overrides?: Partial<OrderLineFactoryResult>,
+): OrderLineFactoryResult {
+  const quantity = overrides?.quantity ?? faker.number.int({ min: 1, max: 100 });
+  const allocatedFromLots = Array.isArray(overrides?.allocated_lots)
+    ? overrides?.allocated_lots.reduce(
+        (sum, allocation) => sum + (allocation.allocated_qty ?? 0),
+        0,
+      ) ?? 0
+    : 0;
+  const defaultAllocated = Math.min(
+    quantity,
+    allocatedFromLots > 0
+      ? allocatedFromLots
+      : faker.number.int({ min: 0, max: quantity }),
+  );
+  const allocatedQuantity = overrides?.allocated_qty ?? defaultAllocated;
+
+  const explicitLineNo =
+    overrides?.line_no ?? (overrides as { line_number?: number })?.line_number;
+  const lineNo = explicitLineNo ?? faker.number.int({ min: 1, max: 999 });
+  const unit = overrides?.unit ?? faker.helpers.arrayElement(["EA", "CASE", "BOX"]);
+
+  const allocatedLots = Array.isArray(overrides?.allocated_lots)
+    ? overrides.allocated_lots.map((lot) => ({
+        ...lot,
+        allocated_qty: lot.allocated_qty ?? 0,
+      }))
+    : [];
+
+  const dueDate =
+    overrides && "due_date" in overrides
+      ? overrides.due_date ?? null
+      : faker.date.soon({ days: 30 }).toISOString().split("T")[0];
+
+  const productName =
+    overrides && "product_name" in overrides
+      ? overrides.product_name ?? null
+      : faker.commerce.productName();
+  const customerCode =
+    overrides && "customer_code" in overrides ? overrides.customer_code ?? null : null;
+  const customerName =
+    overrides && "customer_name" in overrides ? overrides.customer_name ?? null : null;
 
   return {
-    id: faker.number.int({ min: 1, max: 10000 }),
-    product_code: `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
+    id: overrides?.id ?? faker.number.int({ min: 1, max: 10000 }),
+    line_no: lineNo,
+    product_code: overrides?.product_code ?? `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
     quantity,
-    unit: faker.helpers.arrayElement(["EA", "CASE", "BOX"]),
-    allocated_qty: allocatedQuantity,
-    ...overrides,
+    unit,
+    status: overrides?.status ?? faker.helpers.arrayElement(["open", "allocated", "shipped"]),
+    due_date: dueDate,
+    allocated_qty: overrides?.allocated_qty ?? allocatedQuantity,
+    forecast_qty: overrides?.forecast_qty ?? null,
+    forecast_version_no: overrides?.forecast_version_no ?? null,
+    allocated_lots: allocatedLots,
+    product_name: productName,
+    customer_code: customerCode,
+    customer_name: customerName,
   };
 }
 
@@ -48,22 +108,37 @@ export function createOrderLine(overrides?: Partial<OrderLineCreate>): OrderLine
  */
 export function createOrderWithLines(
   lineCount: number = 3,
-  overrides?: Partial<OrderWithLinesResponse>,
-): OrderWithLinesResponse {
+  overrides?: Partial<OrderWithLinesResponse> & {
+    lines?: Array<Partial<OrderLineFactoryResult>>;
+  },
+): OrderWithLinesResponse & { lines: OrderLineFactoryResult[] } {
   const order = createOrder(overrides);
+
+  const baseLines = overrides?.lines?.length
+    ? overrides.lines
+    : Array.from({ length: lineCount }, (_, index) => ({ line_no: index + 1 }));
+
+  const lines = baseLines.map((line, index) =>
+    createOrderLine({
+      line_no:
+        (line as { line_no?: number })?.line_no ??
+        (line as { line_number?: number })?.line_number ??
+        index + 1,
+      id: line?.id ?? index + 1,
+      ...line,
+      customer_code: line?.customer_code ?? overrides?.customer_code ?? order.customer_code,
+      customer_name:
+        line?.customer_name ??
+        (overrides as { customer_name?: string | null })?.customer_name ??
+        (order as { customer_name?: string | null }).customer_name ??
+        null,
+    }),
+  );
 
   return {
     ...order,
-    lines: (order.lines ?? []).map((l, i) => ({
-      ...l,
-      id: l.id ?? i + 1, // UIがOrderLine.id必須
-      unit: l.unit ?? "EA", // null→既定値
-      allocated_lots: (l.allocated_lots ?? []).map((a) => ({
-        ...a,
-        allocated_qty: a.allocated_qty ?? 0, // 名称/値の正規化
-      })),
-    })),
     ...overrides,
+    lines,
   };
 }
 
@@ -97,10 +172,13 @@ export function createAllocatedOrder(
     ...overrides,
   });
 
-  // 全明細の allocated_quantity を quantity と同じにする
   order.lines = (order.lines ?? []).map((line) => ({
     ...line,
-    allocated_quantity: line.quantity,
+    allocated_qty: line.quantity,
+    allocated_lots: (line.allocated_lots ?? []).map((lot) => ({
+      ...lot,
+      allocated_qty: lot.allocated_qty ?? line.quantity,
+    })),
   }));
 
   return order;

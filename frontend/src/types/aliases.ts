@@ -124,14 +124,27 @@ export type OrderWithLinesResponse = OrderResponse;
 
 // ---- Computed (UI-only) ----
 export type OrderLineComputed = {
-  id: number;
-  product_code: string;
-  product_name?: string;
+  ids: {
+    lineId?: number;
+    orderId?: number;
+  };
+  lineId?: number;
+  orderId?: number;
+  id?: number;
+  productCode: string;
+  productName: string;
+  status?: string;
+  orderDate?: string | null;
+  dueDate?: string | null;
+  shipDate?: string | null;
+  plannedShipDate?: string | null;
   totalQty: number; // UI用に必須化
   unit: string; // null→"EA"などで埋める
   allocatedTotal: number; // UI計算値
   remainingQty: number; // UI計算値
-  status: string;
+  progressPct: number; // UI計算値
+  customerCode?: string;
+  customerName?: string;
   warehouses: string[];
   shippingLeadTime?: string; // 任意表示
 };

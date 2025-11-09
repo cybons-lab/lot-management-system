@@ -20,8 +20,8 @@ export function useAllocationActions(
     productCode,
     customerCode
   );
-  const createAlloc = useCreateAllocations(lineId ?? 0);
-  const cancelAlloc = useCancelAllocations(lineId ?? 0);
-  const saveWareAlloc = useSaveWarehouseAllocations(lineId ?? 0);
+  const createAlloc = useCreateAllocations(enabled ? lineId : undefined);
+  const cancelAlloc = useCancelAllocations(enabled ? lineId : undefined);
+  const saveWareAlloc = useSaveWarehouseAllocations(enabled ? lineId : undefined);
   return { candidatesQ, createAlloc, cancelAlloc, saveWareAlloc, enabled };
 }
