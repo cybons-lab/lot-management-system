@@ -6,7 +6,10 @@ export type OrderCreate = {
   order_date?: string | null;
 };
 
-export type OrderUpdate = Partial<OrderCreate>;
+export type OrderUpdate = Partial<OrderCreate> & {
+  status?: string;
+  remarks?: string | null;
+};
 
 export type OrderDetail = {
   id: number;

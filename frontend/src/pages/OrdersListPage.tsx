@@ -38,7 +38,8 @@ import {
 import { useOrdersQuery } from "@/hooks/api";
 import { useCreateOrder } from "@/hooks/mutations";
 import { useDialog, useToast, useTable, useFilters } from "@/hooks/ui";
-import type { OrderResponse } from "@/types/aliases";
+import type { OrderResponse, OrderLine, AllocatedLot } from "@/types/aliases";
+import type { OrderCreate } from "@/utils/validators";
 
 /**
  * メインコンポーネント
@@ -128,10 +129,10 @@ export function OrdersListPage() {
         header: "引当状況",
         cell: (order: OrderResponse) => {
           const lines = order.lines || [];
-          const totalQty = lines.reduce((sum: number, line: any) => sum + line.quantity, 0);
-          const allocatedQty = lines.reduce((sum: number, line: any) => {
+          const totalQty = lines.reduce((sum: number, line: OrderLine) => sum + line.quantity, 0);
+          const allocatedQty = lines.reduce((sum: number, line: OrderLine) => {
             const allocated =
-              line.allocated_lots?.reduce((a: number, alloc: any) => a + (alloc.allocated_qty || 0), 0) || 0;
+              line.allocated_lots?.reduce((a: number, alloc: AllocatedLot) => a + (alloc.allocated_qty || 0), 0) || 0;
             return sum + allocated;
           }, 0);
 
@@ -349,7 +350,7 @@ export function OrdersListPage() {
  * 受注作成フォームコンポーネント
  */
 interface OrderCreateFormProps {
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: OrderCreate) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
 }

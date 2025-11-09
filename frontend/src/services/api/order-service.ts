@@ -5,7 +5,7 @@
 
 import { http } from "@/services/http";
 import type { OrderResponse, OrderWithLinesResponse, OrdersListParams } from "@/types/aliases";
-import type { OrderCreate } from "@/utils/validators";
+import type { OrderCreate, OrderUpdate } from "@/utils/validators";
 
 const BASE_PATH = "/orders";
 
@@ -88,12 +88,12 @@ export async function listShippedOrders(): Promise<OrderResponse[]> {
 export async function listOrdersByCustomer(customerCode: string): Promise<OrderResponse[]> {
   return listOrders({ customer_code: customerCode });
 }
-export async function getOrderDetail(orderId: number) {
-  const response = await http.get(`/orders/${orderId}`);
+export async function getOrderDetail(orderId: number): Promise<OrderWithLinesResponse> {
+  const response = await http.get<OrderWithLinesResponse>(`/orders/${orderId}`);
   return response.data;
 }
 
-export async function updateOrder(orderId: number, data: any) {
-  const response = await http.put(`/orders/${orderId}`, data);
+export async function updateOrder(orderId: number, data: OrderUpdate): Promise<OrderWithLinesResponse> {
+  const response = await http.put<OrderWithLinesResponse>(`/orders/${orderId}`, data);
   return response.data;
 }

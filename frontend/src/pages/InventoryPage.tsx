@@ -298,7 +298,7 @@ export function InventoryPage() {
       >
         <LotCreateForm
           onSubmit={async (data) => {
-            await createLotMutation.mutateAsync(data);
+            await createLotMutation.mutateAsync(data as Parameters<typeof createLotMutation.mutateAsync>[0]);
           }}
           onCancel={createDialog.close}
           isSubmitting={createLotMutation.isPending}
@@ -328,7 +328,7 @@ export function InventoryPage() {
  * ロット作成フォームコンポーネント
  */
 interface LotCreateFormProps {
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: Record<string, unknown>) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
 }

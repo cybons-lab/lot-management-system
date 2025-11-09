@@ -38,7 +38,7 @@ export function OrderDetailPage() {
       });
       queryClient.invalidateQueries({ queryKey: ["order", orderId] });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       toast({
         title: "再マッチング失敗",
         description: error.message || "再マッチング処理に失敗しました",

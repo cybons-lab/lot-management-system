@@ -1,9 +1,10 @@
 import { fetchApi, http } from "@/lib/http";
+import type { LotCandidate } from "@/types/aliases";
 
 /** ---- 型はフック側の想定に合わせる ---- */
 export type AllocationInputItem = {
-  lotId: any;
-  lot: any;
+  lotId: number;
+  lot: LotCandidate | null;
   warehouse_id?: number | null;
   warehouse_code?: string | null;
   quantity: number;

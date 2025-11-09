@@ -33,7 +33,8 @@ export function useOrdersWithAllocations() {
     gcTime: 5 * 60_000,
     refetchOnWindowFocus: false,
     // ここで常に「配列」に正規化して返す
-    select: (raw: any) => (Array.isArray(raw) ? raw : (raw?.items ?? [])),
+    select: (raw: OrderResponse[] | { items?: OrderResponse[] }) =>
+      Array.isArray(raw) ? raw : (raw?.items ?? []),
   });
 }
 export function useOrderDetail(orderId?: number) {

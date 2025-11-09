@@ -6,6 +6,7 @@
 import { useState } from "react";
 
 import { useOrders, useOrderDetail, useDragAssign } from "@/hooks/useOrders";
+import type { OrderWithLinesResponse, OrderLine } from "@/types/aliases";
 
 export const OrdersPage = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
@@ -71,13 +72,13 @@ export const OrdersPage = () => {
             <div>
               <div className="mb-4">
                 <div className="font-semibold">受注番号</div>
-                <div>{(orderDetail as any)?.order_no || '-'}</div>
+                <div>{(orderDetail as OrderWithLinesResponse)?.order_no || '-'}</div>
               </div>
 
               <div className="mb-4">
                 <div className="font-semibold">明細行</div>
                 <div className="space-y-2">
-                  {((orderDetail as any)?.lines as any[])?.map((line: any) => (
+                  {((orderDetail as OrderWithLinesResponse)?.lines as OrderLine[])?.map((line: OrderLine) => (
                     <div key={line.id} className="border p-3 rounded">
                       <div>明細ID: {line.id}</div>
                       <div>商品コード: {line.product_code}</div>
