@@ -287,25 +287,43 @@ export function LotAllocationPage() {
 
   // 倉庫配分の初期化(明細が変わったときのみリセット)
   useEffect(() => {
+    // 明細が変わったかチェック
+    const lineChanged = lastSelectedLineIdRef.current !== (selectedLineId ?? null);
+
     if (warehouseSummaries.length === 0) {
-      setWarehouseAllocations({});
-      lastSelectedLineIdRef.current = selectedLineId ?? null;
+      if (lineChanged) {
+        setWarehouseAllocations({});
+        lastSelectedLineIdRef.current = selectedLineId ?? null;
+      }
       return;
     }
 
-    // 明細が変わった場合のみリセット
-    const shouldReset = lastSelectedLineIdRef.current !== (selectedLineId ?? null);
+    // 倉庫のキー一覧を取得
+    const newKeys = warehouseSummaries.map((w) => w.key).sort();
 
     setWarehouseAllocations((prev) => {
+      const prevKeys = Object.keys(prev).sort();
+
+      // キーが同じで、明細も変わっていない場合は更新しない（無限ループ防止）
+      const keysMatch =
+        newKeys.length === prevKeys.length && newKeys.every((key, i) => key === prevKeys[i]);
+      if (!lineChanged && keysMatch) {
+        return prev;
+      }
+
+      // 新しい配分オブジェクトを作成
       const next: Record<string, number> = {};
       warehouseSummaries.forEach((warehouse) => {
-        next[warehouse.key] = shouldReset ? 0 : (prev[warehouse.key] ?? 0);
+        next[warehouse.key] = lineChanged ? 0 : (prev[warehouse.key] ?? 0);
       });
       return next;
     });
 
-    lastSelectedLineIdRef.current = selectedLineId ?? null;
-  }, [warehouseSummaries, selectedLineId]);
+    if (lineChanged) {
+      lastSelectedLineIdRef.current = selectedLineId ?? null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLineId, candidateLots.length]);
 
   // スクロール位置の保存
   useEffect(() => {
