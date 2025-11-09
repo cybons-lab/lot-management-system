@@ -171,18 +171,20 @@ The new migration is designed to work in the migration chain:
 ```
 664ac90c10f4 (initial - buggy schema)
     ↓
-5f68d2a452b8 (audit history)
-    ↓
 952dcae456fb (unify quantities)
+    ↓
+3f8a35b39c3d (denormalized code columns)
+    ↓
+5f68d2a452b8 (audit history)
     ↓
 744d13c795bd (lot_current_stock → VIEW)
     ↓
 c91377233966 (warehouses unique constraint)
     ↓
-3f8a35b39c3d (denormalized code columns)
-    ↓
 vh9a4atxbh4q ← NEW: Fix schema inconsistencies
 ```
+
+**Note:** The migration `vh9a4atxbh4q` initially had `down_revision = '3f8a35b39c3d'` which caused branched history (multiple heads). This was corrected to `down_revision = 'c91377233966'` to ensure a linear migration path.
 
 ## Files Modified
 
