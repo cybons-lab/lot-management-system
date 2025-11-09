@@ -5,7 +5,7 @@
 import logging
 import traceback
 import random  # ファイル冒頭に追加されていなければ
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -193,16 +193,26 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
                 if not warehouse:
                     continue
 
-                product_exists = (
+                # 製品の存在確認とid取得（StockMovementでproduct_idが必要）
+                product = (
                     db.query(Product)
                     .filter_by(product_code=lot_data.product_code)
                     .first()
                 )
-                if not product_exists:
+                if not product:
                     warn(
                         f"ロット {lot_data.lot_number}: 製品コード '{lot_data.product_code}' が存在しないためスキップしました"
                     )
                     continue
+
+                # サプライヤーの存在確認とid取得（lot.supplier_idに設定）
+                supplier = None
+                if lot_data.supplier_code:
+                    supplier = (
+                        db.query(Supplier)
+                        .filter_by(supplier_code=lot_data.supplier_code)
+                        .first()
+                    )
 
                 existing_lot = (
                     db.query(Lot)
@@ -231,27 +241,31 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
                     else None
                 )
 
+                # idフィールドとcodeフィールド両方を設定（デノーマライズ）
                 db_lot = Lot(
+                    product_id=product.id,           # id-based FK (required for StockMovement)
+                    product_code=lot_data.product_code,  # denormalized code
+                    supplier_id=supplier.id if supplier else None,
                     supplier_code=lot_data.supplier_code,
-                    product_code=lot_data.product_code,
+                    warehouse_id=warehouse.id,
+                    warehouse_code=warehouse.warehouse_code,
                     lot_number=lot_data.lot_number,
                     receipt_date=receipt_date_obj or date.today(),
                     expiry_date=expiry_date_obj,
-                    warehouse_id=warehouse.id,
                     lot_unit=getattr(lot_data, "lot_unit", "EA"),
                 )
                 db.add(db_lot)
                 db.flush()
 
-                # 現在在庫の初期化
+                # 現在在庫の初期化 - StockMovementモデルに合わせた正しいフィールド名を使用
                 recv_qty = getattr(lot_data, "initial_qty", None) or  rng.randint(5, 200)
                 db.add(StockMovement(
-                    product_id=db_lot.product_id,   # モデルに合わせて product_code 等なら置換
+                    product_id=product.id,          # INTEGER FK to products.id (必須)
                     lot_id=db_lot.id,
-                    warehouse_id=db_lot.warehouse_id,
-                    movement_type="receipt",        # enum/文字列はいずれかに合わせる
-                    quantity=recv_qty,              # qty_in / quantity などに合わせる
-                    movement_date=date.today(),
+                    warehouse_id=warehouse.id,
+                    reason="inbound",               # 正: reason (StockMovementReason enum)
+                    quantity_delta=recv_qty,        # 正: quantity_delta (NUMERIC)
+                    occurred_at=datetime.utcnow(),  # 正: occurred_at (TIMESTAMP)
                 ))
 
                 counts["lots"] += 1
@@ -268,6 +282,15 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
                 if existing_order:
                     continue
 
+                # 顧客の存在確認とid取得
+                customer = None
+                if order_data.customer_code:
+                    customer = (
+                        db.query(Customer)
+                        .filter_by(customer_code=order_data.customer_code)
+                        .first()
+                    )
+
                 order_date_raw = getattr(order_data, "order_date", None)
                 order_date_obj = (
                     _parse_iso_date(
@@ -280,8 +303,10 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
                 )
                 order_date_obj = order_date_obj or date.today()
 
+                # idフィールドとcodeフィールド両方を設定
                 db_order = Order(
                     order_no=order_data.order_no,
+                    customer_id=customer.id if customer else None,
                     customer_code=order_data.customer_code,
                     order_date=order_date_obj,
                     status="open",
@@ -326,10 +351,12 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
                         else None
                     )
 
+                    # idフィールドとcodeフィールド両方を設定
                     db_line = OrderLine(
                         order_id=db_order.id,
                         line_no=line_data.line_no,
-                        product_code=line_data.product_code,
+                        product_id=product.id,           # id-based FK
+                        product_code=line_data.product_code,  # denormalized code
                         quantity=line_data.quantity,
                         unit=line_data.unit,
                         due_date=due_date_obj,
