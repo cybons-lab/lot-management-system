@@ -340,64 +340,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/receipts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Receipts
-         * @description 入荷伝票一覧取得
-         */
-        get: operations["list_receipts_api_receipts_get"];
-        put?: never;
-        /**
-         * Create Receipt
-         * @description 入荷伝票作成(一括登録)
-         *
-         *     処理フロー:
-         *     1. 入荷ヘッダ作成
-         *     2. 各明細について:
-         *        - 入荷明細作成
-         *        - 在庫変動(receipt)記録
-         *        - 現在在庫更新
-         */
-        post: operations["create_receipt_api_receipts_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/receipts/{receipt_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Receipt
-         * @description 入荷伝票詳細取得(明細含む)
-         */
-        get: operations["get_receipt_api_receipts__receipt_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete Receipt
-         * @description 入荷伝票削除
-         *
-         *     注意: CASCADE削除により明細も削除されるが、
-         *     在庫変動は手動で逆仕訳する必要がある
-         */
-        delete: operations["delete_receipt_api_receipts__receipt_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/orders": {
         parameters: {
             query?: never;
@@ -407,13 +349,32 @@ export interface paths {
         };
         /**
          * List Orders
-         * @description 受注一覧取得
+         * @description 受注一覧取得（読み取り専用）
+         *
+         *     トランザクション不要のため、通常のSessionを使用
+         *
+         *     Note:
+         *         例外はグローバルハンドラで処理されるため、
+         *         ここではHTTPExceptionを投げない
          */
         get: operations["list_orders_api_orders_get"];
         put?: never;
         /**
          * Create Order
          * @description 受注作成
+         *
+         *     【修正#5】UnitOfWorkを依存注入で取得（SessionLocal直参照を回避）
+         *
+         *     トランザクション管理:
+         *         - 成功時: UnitOfWorkが自動commit
+         *         - 例外発生時: UnitOfWorkが自動rollback
+         *
+         *     例外処理:
+         *         - DuplicateOrderError → 409 Conflict
+         *         - OrderValidationError → 422 Unprocessable Entity
+         *         - ProductNotFoundError → 404 Not Found
+         *         - OrderDomainError → 400 Bad Request
+         *         上記はすべてグローバルハンドラで変換される
          */
         post: operations["create_order_api_orders_post"];
         delete?: never;
@@ -431,7 +392,12 @@ export interface paths {
         };
         /**
          * Get Order
-         * @description 受注詳細取得(明細含む)
+         * @description 受注詳細取得（読み取り専用、明細含む）
+         *
+         *     トランザクション不要のため、通常のSessionを使用
+         *
+         *     Note:
+         *         - OrderNotFoundError → 404はグローバルハンドラが処理
          */
         get: operations["get_order_api_orders__order_id__get"];
         put?: never;
@@ -458,6 +424,23 @@ export interface paths {
         /**
          * Update Order Status
          * @description 受注ステータス更新
+         *
+         *     【修正#2】dict入力を廃止し、OrderStatusUpdateスキーマを使用
+         *     【修正#5】UnitOfWorkを依存注入で取得
+         *
+         *     Args:
+         *         order_id: 受注ID
+         *         body: ステータス更新データ（Schema検証済み）
+         *         uow: UnitOfWork（依存注入）
+         *
+         *     トランザクション管理:
+         *         - 成功時: UnitOfWorkが自動commit
+         *         - 例外発生時: UnitOfWorkが自動rollback
+         *
+         *     例外処理:
+         *         - OrderNotFoundError → 404 Not Found
+         *         - InvalidOrderStatusError → 400 Bad Request
+         *         上記はグローバルハンドラで変換される
          */
         patch: operations["update_order_status_api_orders__order_id__status_patch"];
         trace?: never;
@@ -475,8 +458,103 @@ export interface paths {
         /**
          * Cancel Order
          * @description 受注キャンセル
+         *
+         *     【修正#5】UnitOfWorkを依存注入で取得
+         *
+         *     トランザクション管理:
+         *         - 成功時: UnitOfWorkが自動commit
+         *         - 例外発生時: UnitOfWorkが自動rollback
+         *
+         *     例外処理:
+         *         - OrderNotFoundError → 404 Not Found
+         *         - InvalidOrderStatusError → 400 Bad Request
+         *         上記はグローバルハンドラで変換される
+         *
+         *     Returns:
+         *         None (204 No Content)
          */
         delete: operations["cancel_order_api_orders__order_id__cancel_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/allocations/drag-assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Drag Assign Allocation
+         * @description 互換エンドポイント: ドラッグ引当
+         *     ※元々 orders.py に存在したものを再実装（URL・I/O変更なし）
+         */
+        post: operations["drag_assign_allocation_api_allocations_drag_assign_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/allocations/{allocation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Allocation
+         * @description 引当取消（DELETE API, ソフトキャンセル対応）
+         */
+        delete: operations["delete_allocation_api_allocations__allocation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/allocations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Allocations
+         * @description 在庫を変更しない FEFO 引当プレビュー
+         */
+        post: operations["preview_allocations_api_allocations_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/allocations/orders/{order_id}/allocate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Allocate Order
+         * @description 注文ID単位でのFEFO引当確定
+         */
+        post: operations["allocate_order_api_allocations_orders__order_id__allocate_post"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -631,8 +709,7 @@ export interface paths {
          *     処理順序:
          *     1. 製品マスタ
          *     2. ロット登録
-         *     3. 入荷伝票作成（在庫変動も自動）
-         *     4. 受注登録
+         *     3. 受注登録
          */
         post: operations["load_full_sample_data_api_admin_load_full_sample_data_post"];
         delete?: never;
@@ -833,6 +910,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Products
+         * @description List products with pagination and optional fuzzy search.
+         */
+        get: operations["list_products_api_products_get"];
+        put?: never;
+        /**
+         * Create Product
+         * @description Create a new product.
+         */
+        post: operations["create_product_api_products_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/products/{product_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Product
+         * @description Retrieve a single product.
+         */
+        get: operations["get_product_api_products__product_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Product
+         * @description Delete a product.
+         */
+        delete: operations["delete_product_api_products__product_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Product
+         * @description Partially update a product.
+         */
+        patch: operations["update_product_api_products__product_id__patch"];
+        trace?: never;
+    };
     "/api/warehouse-alloc/warehouses": {
         parameters: {
             query?: never;
@@ -853,68 +982,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/allocations/drag-assign": {
+    "/api/healthz": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /**
-         * Drag Assign Allocation
-         * @description 互換エンドポイント: ドラッグ引当
-         *     ※元々 orders.py に存在したものを再実装（URL・I/O変更なし）
-         */
-        post: operations["drag_assign_allocation_api_allocations_drag_assign_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocations/{allocation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
+        /** Healthz */
+        get: operations["healthz_api_healthz_get"];
         put?: never;
         post?: never;
-        /**
-         * Delete Allocation
-         * @description 引当取消（DELETE API, ソフトキャンセル対応）
-         */
-        delete: operations["delete_allocation_api_allocations__allocation_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocations/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preview Allocations
-         * @description 在庫を変更しない FEFO 引当プレビュー
-         */
-        post: operations["preview_allocations_api_allocations_preview_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/allocations/orders/{order_id}/allocate": {
+    "/api/readyz": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Readyz */
+        get: operations["readyz_api_readyz_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health */
+        get: operations["health_api_health_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/validate": {
         parameters: {
             query?: never;
             header?: never;
@@ -923,11 +1042,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * Allocate Order
-         * @description 注文ID単位でのFEFO引当確定
-         */
-        post: operations["allocate_order_api_allocations_orders__order_id__allocate_post"];
+        /** 受注在庫検証 */
+        post: operations["validate_order_stock_api_orders_validate_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1012,10 +1128,7 @@ export interface components {
             /** Unallocated Orders */
             unallocated_orders: number;
         };
-        /**
-         * DragAssignRequest
-         * @description ドラッグ引当リクエスト
-         */
+        /** DragAssignRequest */
         DragAssignRequest: {
             /** Order Line Id */
             order_line_id: number;
@@ -1156,14 +1269,10 @@ export interface components {
          * @description フォーキャスト作成リクエスト
          */
         ForecastCreate: {
-            /** Forecast Id */
-            forecast_id: string;
             /** Product Id */
             product_id: string;
             /** Customer Id */
             customer_id: string;
-            /** Supplier Id */
-            supplier_id: string;
             /**
              * Granularity
              * @enum {string}
@@ -1176,11 +1285,6 @@ export interface components {
              * @default 1
              */
             version_no: number;
-            /**
-             * Version Issued At
-             * Format: date-time
-             */
-            version_issued_at: string;
             /**
              * Source System
              * @default external
@@ -1197,6 +1301,11 @@ export interface components {
             date_dekad_start?: string | null;
             /** Year Month */
             year_month?: string | null;
+            /**
+             * Version Issued At
+             * Format: date-time
+             */
+            version_issued_at: string;
         };
         /**
          * ForecastItemOut
@@ -1212,7 +1321,7 @@ export interface components {
             /** Customer Code */
             customer_code: string;
             /** Supplier Code */
-            supplier_code: string;
+            supplier_code?: string | null;
             /** Granularity */
             granularity: string;
             /** Version No */
@@ -1340,14 +1449,10 @@ export interface components {
             created_at: string;
             /** Updated At */
             updated_at?: string | null;
-            /** Forecast Id */
-            forecast_id: string;
             /** Product Id */
             product_id: string;
             /** Customer Id */
             customer_id: string;
-            /** Supplier Id */
-            supplier_id: string;
             /**
              * Granularity
              * @enum {string}
@@ -1378,6 +1483,10 @@ export interface components {
             year_month?: string | null;
             /** Id */
             id: number;
+            /** Forecast Id */
+            forecast_id?: number | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
             /**
              * Version Issued At
              * Format: date-time
@@ -1425,15 +1534,13 @@ export interface components {
          * FullSampleDataRequest
          * @description 一括サンプルデータ投入リクエスト
          *
-         *     注意: 投入順序が重要 (マスタ -> ロット -> 入荷/受注)
+         *     注意: 投入順序が重要 (マスタ -> ロット -> 受注)
          */
         FullSampleDataRequest: {
             /** Products */
-            products?: components["schemas"]["ProductCreate"][] | null;
+            products?: components["schemas"]["app__schemas__masters__ProductCreate"][] | null;
             /** Lots */
             lots?: components["schemas"]["LotCreate"][] | null;
-            /** Receipts */
-            receipts?: components["schemas"]["ReceiptCreateRequest"][] | null;
             /** Orders */
             orders?: components["schemas"]["OcrOrderRecord"][] | null;
         };
@@ -1462,7 +1569,7 @@ export interface components {
             /** Warehouse Code */
             warehouse_code?: string | null;
             /** Warehouse Id */
-            warehouse_id?: string | null;
+            warehouse_id?: number | null;
             /** Lot Unit */
             lot_unit?: string | null;
             /** Kanban Class */
@@ -1507,7 +1614,7 @@ export interface components {
             /** Warehouse Code */
             warehouse_code?: string | null;
             /** Warehouse Id */
-            warehouse_id?: string | null;
+            warehouse_id?: number | null;
             /** Lot Unit */
             lot_unit?: string | null;
             /** Kanban Class */
@@ -1526,8 +1633,13 @@ export interface components {
             qc_certificate_file?: string | null;
             /** Id */
             id: number;
-            /** Current Stock */
-            current_stock?: number | null;
+            /**
+             * Current Quantity
+             * @default 0
+             */
+            current_quantity: number;
+            /** Last Updated */
+            last_updated?: string | null;
             /** Product Name */
             product_name?: string | null;
         };
@@ -1540,7 +1652,7 @@ export interface components {
             /** Warehouse Code */
             warehouse_code?: string | null;
             /** Warehouse Id */
-            warehouse_id?: string | null;
+            warehouse_id?: number | null;
             /** Lot Unit */
             lot_unit?: string | null;
             /** Qc Certificate Status */
@@ -1560,7 +1672,7 @@ export interface components {
             /** Customers */
             customers?: components["schemas"]["CustomerCreate"][];
             /** Products */
-            products?: components["schemas"]["ProductCreate"][];
+            products?: components["schemas"]["app__schemas__masters__ProductCreate"][];
         };
         /**
          * MasterBulkLoadResponse
@@ -1640,8 +1752,11 @@ export interface components {
             order_no: string;
             /** Customer Code */
             customer_code: string;
-            /** Order Date */
-            order_date?: string | null;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
             /**
              * Status
              * @default open
@@ -1649,8 +1764,20 @@ export interface components {
             status: string;
             /** Customer Order No */
             customer_order_no?: string | null;
+            /** Customer Order No Last6 */
+            customer_order_no_last6?: string | null;
+            /** Delivery Mode */
+            delivery_mode?: string | null;
+            /** Sap Order Id */
+            sap_order_id?: string | null;
+            /** Sap Status */
+            sap_status?: string | null;
+            /** Sap Sent At */
+            sap_sent_at?: string | null;
+            /** Sap Error Msg */
+            sap_error_msg?: string | null;
             /** Lines */
-            lines?: components["schemas"]["OrderLineCreate"][] | null;
+            lines?: components["schemas"]["OrderLineCreate"][];
         };
         /** OrderLineCreate */
         OrderLineCreate: {
@@ -1661,45 +1788,55 @@ export interface components {
             /** Quantity */
             quantity: number;
             /** Unit */
-            unit?: string | null;
+            unit: string;
             /** Due Date */
             due_date?: string | null;
+            /** Next Div */
+            next_div?: string | null;
+            /** Destination Id */
+            destination_id?: number | null;
             /** External Unit */
-            external_unit: string;
+            external_unit?: string | null;
         };
-        /** OrderLineResponse */
-        OrderLineResponse: {
-            /** Line No */
-            line_no: number;
+        /** OrderLineDemandSchema */
+        OrderLineDemandSchema: {
             /** Product Code */
             product_code: string;
+            /** Warehouse Code */
+            warehouse_code: string;
+            /** Quantity */
+            quantity: number;
+        };
+        /** OrderLineOut */
+        OrderLineOut: {
+            /** Id */
+            id: number;
+            /** Line No */
+            line_no?: number | null;
+            /** Product Code */
+            product_code: string;
+            /** Product Name */
+            product_name: string;
+            /** Customer Code */
+            customer_code?: string | null;
+            /** Supplier Code */
+            supplier_code?: string | null;
             /** Quantity */
             quantity: number;
             /** Unit */
-            unit?: string | null;
+            unit: string;
             /** Due Date */
             due_date?: string | null;
-            /** Id */
-            id: number;
-            /** Order Id */
-            order_id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
+            /** Warehouse Allocations */
+            warehouse_allocations?: components["schemas"]["WarehouseAllocOut"][];
+            /** Related Lots */
+            related_lots?: Record<string, never>[];
+            /** Allocated Lots */
+            allocated_lots?: Record<string, never>[];
             /** Allocated Qty */
             allocated_qty?: number | null;
-            /** Forecast Id */
-            forecast_id?: number | null;
-            /** Forecast Granularity */
-            forecast_granularity?: string | null;
-            /** Forecast Match Status */
-            forecast_match_status?: string | null;
-            /** Forecast Qty */
-            forecast_qty?: number | null;
-            /** Forecast Version No */
-            forecast_version_no?: number | null;
+            /** Next Div */
+            next_div?: string | null;
         };
         /** OrderResponse */
         OrderResponse: {
@@ -1714,8 +1851,11 @@ export interface components {
             order_no: string;
             /** Customer Code */
             customer_code: string;
-            /** Order Date */
-            order_date?: string | null;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
             /**
              * Status
              * @default open
@@ -1723,8 +1863,10 @@ export interface components {
             status: string;
             /** Customer Order No */
             customer_order_no?: string | null;
-            /** Id */
-            id: number;
+            /** Customer Order No Last6 */
+            customer_order_no_last6?: string | null;
+            /** Delivery Mode */
+            delivery_mode?: string | null;
             /** Sap Order Id */
             sap_order_id?: string | null;
             /** Sap Status */
@@ -1733,11 +1875,67 @@ export interface components {
             sap_sent_at?: string | null;
             /** Sap Error Msg */
             sap_error_msg?: string | null;
+            /** Id */
+            id: number;
         };
         /**
-         * OrderWithLinesResponse
-         * @description 受注詳細レスポンス(明細含む)
+         * OrderStatusUpdate
+         * @description 受注ステータス更新用スキーマ
+         *
+         *     Note:
+         *         constrを使用してstatusが空文字でないことを保証
          */
+        OrderStatusUpdate: {
+            /**
+             * Status
+             * @description 新しいステータス（open, allocated, shipped, closed, cancelled）
+             * @example allocated
+             * @example shipped
+             */
+            status: string;
+        };
+        /** OrderValidationDetails */
+        OrderValidationDetails: {
+            /** Warehouse Code */
+            warehouse_code: string;
+            /** Per Lot */
+            per_lot?: components["schemas"]["OrderValidationLotAvailability"][];
+            /** Ship Date */
+            ship_date?: string | null;
+        };
+        /** OrderValidationErrorData */
+        OrderValidationErrorData: {
+            /** Product Code */
+            product_code: string;
+            /** Required */
+            required: number;
+            /** Available */
+            available: number;
+            details: components["schemas"]["OrderValidationDetails"];
+        };
+        /** OrderValidationLotAvailability */
+        OrderValidationLotAvailability: {
+            /** Lot Id */
+            lot_id: number;
+            /** Available */
+            available: number;
+        };
+        /** OrderValidationRequest */
+        OrderValidationRequest: {
+            /** Lines */
+            lines: components["schemas"]["OrderLineDemandSchema"][];
+            /** Ship Date */
+            ship_date?: string | null;
+        };
+        /** OrderValidationResponse */
+        OrderValidationResponse: {
+            /** Ok */
+            ok: boolean;
+            /** Message */
+            message: string;
+            data?: components["schemas"]["OrderValidationErrorData"] | null;
+        };
+        /** OrderWithLinesResponse */
         OrderWithLinesResponse: {
             /**
              * Created At
@@ -1750,8 +1948,11 @@ export interface components {
             order_no: string;
             /** Customer Code */
             customer_code: string;
-            /** Order Date */
-            order_date?: string | null;
+            /**
+             * Order Date
+             * Format: date
+             */
+            order_date: string;
             /**
              * Status
              * @default open
@@ -1759,8 +1960,10 @@ export interface components {
             status: string;
             /** Customer Order No */
             customer_order_no?: string | null;
-            /** Id */
-            id: number;
+            /** Customer Order No Last6 */
+            customer_order_no_last6?: string | null;
+            /** Delivery Mode */
+            delivery_mode?: string | null;
             /** Sap Order Id */
             sap_order_id?: string | null;
             /** Sap Status */
@@ -1769,43 +1972,51 @@ export interface components {
             sap_sent_at?: string | null;
             /** Sap Error Msg */
             sap_error_msg?: string | null;
+            /** Id */
+            id: number;
             /** Lines */
-            lines?: components["schemas"]["OrderLineResponse"][];
+            lines?: components["schemas"]["OrderLineOut"][];
         };
-        /** ProductCreate */
-        ProductCreate: {
+        /** Page[ProductOut] */
+        Page_ProductOut_: {
+            /** Items */
+            items: components["schemas"]["ProductOut"][];
+            /** Total */
+            total: number;
+            /** Page */
+            page: number;
+            /** Per Page */
+            per_page: number;
+        };
+        /**
+         * ProductOut
+         * @description Product response model.
+         */
+        ProductOut: {
+            /** Id */
+            id: number;
             /** Product Code */
             product_code: string;
             /** Product Name */
             product_name: string;
-            /** Customer Part No */
-            customer_part_no?: string | null;
-            /** Maker Part No */
-            maker_part_no?: string | null;
-            /** Packaging Qty */
-            packaging_qty: number | string;
-            /** Packaging Unit */
-            packaging_unit: string;
             /** Internal Unit */
             internal_unit: string;
+            /** Customer Part No */
+            customer_part_no: string | null;
+            /** Maker Item Code */
+            maker_item_code: string | null;
+            /** Is Active */
+            is_active: boolean;
             /**
-             * Base Unit
-             * @default EA
+             * Created At
+             * Format: date-time
              */
-            base_unit: string;
-            /** Packaging */
-            packaging?: string | null;
-            /** Assemble Div */
-            assemble_div?: string | null;
-            /** Next Div */
-            next_div?: string | null;
-            /** Shelf Life Days */
-            shelf_life_days?: number | null;
+            created_at: string;
             /**
-             * Requires Lot Number
-             * @default true
+             * Updated At
+             * Format: date-time
              */
-            requires_lot_number: boolean;
+            updated_at: string;
         };
         /** ProductResponse */
         ProductResponse: {
@@ -1813,10 +2024,14 @@ export interface components {
             product_code: string;
             /** Product Name */
             product_name: string;
+            /** Supplier Code */
+            supplier_code?: string | null;
             /** Customer Part No */
             customer_part_no?: string | null;
-            /** Maker Part No */
-            maker_part_no?: string | null;
+            /** Maker Item Code */
+            maker_item_code?: string | null;
+            /** Supplier Item Code */
+            supplier_item_code?: string | null;
             /** Packaging Qty */
             packaging_qty: string;
             /** Packaging Unit */
@@ -1834,6 +2049,10 @@ export interface components {
             assemble_div?: string | null;
             /** Next Div */
             next_div?: string | null;
+            /** Ji Ku Text */
+            ji_ku_text?: string | null;
+            /** Kumitsuke Ku Text */
+            kumitsuke_ku_text?: string | null;
             /** Shelf Life Days */
             shelf_life_days?: number | null;
             /**
@@ -1841,157 +2060,12 @@ export interface components {
              * @default true
              */
             requires_lot_number: boolean;
-        };
-        /** ProductUpdate */
-        ProductUpdate: {
-            /** Product Name */
-            product_name?: string | null;
-            /** Customer Part No */
-            customer_part_no?: string | null;
-            /** Maker Part No */
-            maker_part_no?: string | null;
-            /** Packaging Qty */
-            packaging_qty?: number | string | null;
-            /** Packaging Unit */
-            packaging_unit?: string | null;
-            /** Internal Unit */
-            internal_unit?: string | null;
-            /** Base Unit */
-            base_unit?: string | null;
-            /** Packaging */
-            packaging?: string | null;
-            /** Assemble Div */
-            assemble_div?: string | null;
-            /** Next Div */
-            next_div?: string | null;
-            /** Shelf Life Days */
-            shelf_life_days?: number | null;
-            /** Requires Lot Number */
-            requires_lot_number?: boolean | null;
-        };
-        /**
-         * ReceiptCreateRequest
-         * @description 入荷伝票作成リクエスト(ヘッダー+明細)
-         */
-        ReceiptCreateRequest: {
-            /** Receipt No */
-            receipt_no: string;
-            /** Supplier Code */
-            supplier_code: string;
-            /** Warehouse Code */
-            warehouse_code: string;
-            /**
-             * Receipt Date
-             * Format: date
-             */
-            receipt_date: string;
-            /** Created By */
-            created_by?: string | null;
-            /** Notes */
-            notes?: string | null;
-            /** Lines */
-            lines: components["schemas"]["ReceiptLineCreate"][];
-        };
-        /** ReceiptHeaderResponse */
-        ReceiptHeaderResponse: {
-            /** Receipt No */
-            receipt_no: string;
-            /** Supplier Code */
-            supplier_code: string;
-            /** Warehouse Code */
-            warehouse_code: string;
-            /**
-             * Receipt Date
-             * Format: date
-             */
-            receipt_date: string;
-            /** Created By */
-            created_by?: string | null;
-            /** Notes */
-            notes?: string | null;
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /** ReceiptLineCreate */
-        ReceiptLineCreate: {
-            /** Line No */
-            line_no: number;
-            /** Product Code */
-            product_code: string;
-            /** Lot Id */
-            lot_id?: number | null;
-            /** Lot Number */
-            lot_number?: string | null;
-            /** Quantity */
-            quantity: number;
-            /** Unit */
-            unit?: string | null;
-            /** Notes */
-            notes?: string | null;
-        };
-        /** ReceiptLineResponse */
-        ReceiptLineResponse: {
-            /** Line No */
-            line_no: number;
-            /** Product Code */
-            product_code: string;
-            /** Lot Id */
-            lot_id?: number | null;
-            /** Lot Number */
-            lot_number?: string | null;
-            /** Quantity */
-            quantity: number;
-            /** Unit */
-            unit?: string | null;
-            /** Notes */
-            notes?: string | null;
-            /** Id */
-            id: number;
-            /** Header Id */
-            header_id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /**
-         * ReceiptResponse
-         * @description 入荷伝票レスポンス
-         */
-        ReceiptResponse: {
-            /** Receipt No */
-            receipt_no: string;
-            /** Supplier Code */
-            supplier_code: string;
-            /** Warehouse Code */
-            warehouse_code: string;
-            /**
-             * Receipt Date
-             * Format: date
-             */
-            receipt_date: string;
-            /** Created By */
-            created_by?: string | null;
-            /** Notes */
-            notes?: string | null;
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Lines
-             * @default []
-             */
-            lines: components["schemas"]["ReceiptLineResponse"][];
+            /** Delivery Place Id */
+            delivery_place_id?: number | null;
+            /** Delivery Place Name */
+            delivery_place_name?: string | null;
+            /** Shipping Warehouse Name */
+            shipping_warehouse_name?: string | null;
         };
         /**
          * ResponseBase
@@ -2087,7 +2161,7 @@ export interface components {
             /** Product Id */
             product_id: string;
             /** Warehouse Id */
-            warehouse_id: string;
+            warehouse_id?: number | null;
             /** Lot Id */
             lot_id?: number | null;
             /** Quantity Delta */
@@ -2118,7 +2192,7 @@ export interface components {
             /** Product Id */
             product_id: string;
             /** Warehouse Id */
-            warehouse_id: string;
+            warehouse_id?: number | null;
             /** Lot Id */
             lot_id?: number | null;
             /** Quantity Delta */
@@ -2178,6 +2252,13 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** WarehouseAllocOut */
+        WarehouseAllocOut: {
+            /** Warehouse Code */
+            warehouse_code: string;
+            /** Quantity */
+            quantity: number;
+        };
         /** WarehouseCreate */
         WarehouseCreate: {
             /** Warehouse Code */
@@ -2230,6 +2311,135 @@ export interface components {
              */
             is_active: number | null;
         };
+        /** ProductCreate */
+        app__schemas__masters__ProductCreate: {
+            /** Product Code */
+            product_code: string;
+            /** Product Name */
+            product_name: string;
+            /** Supplier Code */
+            supplier_code?: string | null;
+            /** Customer Part No */
+            customer_part_no?: string | null;
+            /** Maker Item Code */
+            maker_item_code?: string | null;
+            /** Supplier Item Code */
+            supplier_item_code?: string | null;
+            /** Packaging Qty */
+            packaging_qty: number | string;
+            /** Packaging Unit */
+            packaging_unit: string;
+            /** Internal Unit */
+            internal_unit: string;
+            /**
+             * Base Unit
+             * @default EA
+             */
+            base_unit: string;
+            /** Packaging */
+            packaging?: string | null;
+            /** Assemble Div */
+            assemble_div?: string | null;
+            /** Next Div */
+            next_div?: string | null;
+            /** Ji Ku Text */
+            ji_ku_text?: string | null;
+            /** Kumitsuke Ku Text */
+            kumitsuke_ku_text?: string | null;
+            /** Shelf Life Days */
+            shelf_life_days?: number | null;
+            /**
+             * Requires Lot Number
+             * @default true
+             */
+            requires_lot_number: boolean;
+            /** Delivery Place Id */
+            delivery_place_id?: number | null;
+            /** Delivery Place Name */
+            delivery_place_name?: string | null;
+            /** Shipping Warehouse Name */
+            shipping_warehouse_name?: string | null;
+        };
+        /** ProductUpdate */
+        app__schemas__masters__ProductUpdate: {
+            /** Product Name */
+            product_name?: string | null;
+            /** Supplier Code */
+            supplier_code?: string | null;
+            /** Customer Part No */
+            customer_part_no?: string | null;
+            /** Maker Item Code */
+            maker_item_code?: string | null;
+            /** Supplier Item Code */
+            supplier_item_code?: string | null;
+            /** Packaging Qty */
+            packaging_qty?: number | string | null;
+            /** Packaging Unit */
+            packaging_unit?: string | null;
+            /** Internal Unit */
+            internal_unit?: string | null;
+            /** Base Unit */
+            base_unit?: string | null;
+            /** Packaging */
+            packaging?: string | null;
+            /** Assemble Div */
+            assemble_div?: string | null;
+            /** Next Div */
+            next_div?: string | null;
+            /** Ji Ku Text */
+            ji_ku_text?: string | null;
+            /** Kumitsuke Ku Text */
+            kumitsuke_ku_text?: string | null;
+            /** Shelf Life Days */
+            shelf_life_days?: number | null;
+            /** Requires Lot Number */
+            requires_lot_number?: boolean | null;
+            /** Delivery Place Id */
+            delivery_place_id?: number | null;
+            /** Delivery Place Name */
+            delivery_place_name?: string | null;
+            /** Shipping Warehouse Name */
+            shipping_warehouse_name?: string | null;
+        };
+        /**
+         * ProductCreate
+         * @description Payload to create a product.
+         */
+        app__schemas__products__ProductCreate: {
+            /** Product Code */
+            product_code: string;
+            /** Product Name */
+            product_name: string;
+            /** Internal Unit */
+            internal_unit: string;
+            /** Customer Part No */
+            customer_part_no?: string | null;
+            /** Maker Item Code */
+            maker_item_code?: string | null;
+            /**
+             * Is Active
+             * @default true
+             */
+            is_active: boolean;
+        };
+        /**
+         * ProductUpdate
+         * @description Payload to partially update a product.
+         */
+        app__schemas__products__ProductUpdate: {
+            /** Product Code */
+            product_code?: string | null;
+            /** Product Name */
+            product_name?: string | null;
+            /** Internal Unit */
+            internal_unit?: string | null;
+            /** Customer Part No */
+            customer_part_no?: string | null;
+            /** Maker Item Code */
+            maker_item_code?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -2281,7 +2491,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProductCreate"];
+                "application/json": components["schemas"]["app__schemas__masters__ProductCreate"];
             };
         };
         responses: {
@@ -2347,7 +2557,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ProductUpdate"];
+                "application/json": components["schemas"]["app__schemas__masters__ProductUpdate"];
             };
         };
         responses: {
@@ -3143,131 +3353,6 @@ export interface operations {
             };
         };
     };
-    list_receipts_api_receipts_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReceiptHeaderResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_receipt_api_receipts_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ReceiptCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReceiptResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_receipt_api_receipts__receipt_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                receipt_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReceiptResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_receipt_api_receipts__receipt_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                receipt_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
     list_orders_api_orders_get: {
         parameters: {
             query?: {
@@ -3379,7 +3464,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": Record<string, never>;
+                "application/json": components["schemas"]["OrderStatusUpdate"];
             };
         };
         responses: {
@@ -3420,6 +3505,132 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    drag_assign_allocation_api_allocations_drag_assign_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DragAssignRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_allocation_api_allocations__allocation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                allocation_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_allocations_api_allocations_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FefoPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FefoPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    allocate_order_api_allocations_orders__order_id__allocate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FefoCommitResponse"];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -4005,9 +4216,13 @@ export interface operations {
             };
         };
     };
-    list_warehouses_api_warehouse_alloc_warehouses_get: {
+    list_products_api_products_get: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                per_page?: number;
+                q?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -4020,31 +4235,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WarehouseListResponse"];
-                };
-            };
-        };
-    };
-    drag_assign_allocation_api_allocations_drag_assign_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DragAssignRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
+                    "application/json": components["schemas"]["Page_ProductOut_"];
                 };
             };
             /** @description Validation Error */
@@ -4058,12 +4249,76 @@ export interface operations {
             };
         };
     };
-    delete_allocation_api_allocations__allocation_id__delete: {
+    create_product_api_products_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["app__schemas__products__ProductCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_product_api_products__product_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                allocation_id: number;
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_product_api_products__product_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: number;
             };
             cookie?: never;
         };
@@ -4087,16 +4342,18 @@ export interface operations {
             };
         };
     };
-    preview_allocations_api_allocations_preview_post: {
+    update_product_api_products__product_id__patch: {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                product_id: number;
+            };
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FefoPreviewRequest"];
+                "application/json": components["schemas"]["app__schemas__products__ProductUpdate"];
             };
         };
         responses: {
@@ -4106,7 +4363,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FefoPreviewResponse"];
+                    "application/json": components["schemas"]["ProductOut"];
                 };
             };
             /** @description Validation Error */
@@ -4120,13 +4377,11 @@ export interface operations {
             };
         };
     };
-    allocate_order_api_allocations_orders__order_id__allocate_post: {
+    list_warehouses_api_warehouse_alloc_warehouses_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                order_id: number;
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -4137,7 +4392,91 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FefoCommitResponse"];
+                    "application/json": components["schemas"]["WarehouseListResponse"];
+                };
+            };
+        };
+    };
+    healthz_api_healthz_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    readyz_api_readyz_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    health_api_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    validate_order_stock_api_orders_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderValidationRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderValidationResponse"];
                 };
             };
             /** @description Validation Error */

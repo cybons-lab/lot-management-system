@@ -3,9 +3,9 @@
  * アプリケーション全体のエラーをキャッチするコンポーネント
  */
 
-import * as React from 'react';
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { ApiError } from '@/utils/errors/custom-errors';
+import { Component, ErrorInfo, ReactNode } from "react";
+
+import { ApiError } from "@/utils/errors/custom-errors";
 
 interface Props {
   children: ReactNode;
@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
   reset = () => {
@@ -86,9 +86,7 @@ function DefaultErrorFallback({ error, reset }: { error: Error; reset: () => voi
                 ステータスコード: {(error as ApiError).status}
               </p>
               {(error as ApiError).code && (
-                <p className="text-xs text-gray-500">
-                  エラーコード: {(error as ApiError).code}
-                </p>
+                <p className="text-xs text-gray-500">エラーコード: {(error as ApiError).code}</p>
               )}
             </>
           )}

@@ -3,18 +3,18 @@
  * ローディングとエラー表示用の共通コンポーネント
  */
 
-import * as React from 'react';
-import { AlertCircle, Loader2 } from 'lucide-react';
-import { ApiError } from '@/utils/errors/custom-errors';
+import { AlertCircle, Loader2 } from "lucide-react";
+
+import { ApiError } from "@/utils/errors/custom-errors";
 
 /**
  * ローディングスピナー
  */
-export function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
+export function LoadingSpinner({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
   const sizeClasses = {
-    sm: 'h-4 w-4',
-    md: 'h-8 w-8',
-    lg: 'h-12 w-12',
+    sm: "h-4 w-4",
+    md: "h-8 w-8",
+    lg: "h-12 w-12",
   };
 
   return (
@@ -27,7 +27,7 @@ export function LoadingSpinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 /**
  * フルページローディング
  */
-export function LoadingPage({ message = '読み込み中...' }: { message?: string }) {
+export function LoadingPage({ message = "読み込み中..." }: { message?: string }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
       <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
@@ -39,13 +39,7 @@ export function LoadingPage({ message = '読み込み中...' }: { message?: stri
 /**
  * エラー表示
  */
-export function ErrorDisplay({
-  error,
-  onRetry,
-}: {
-  error: Error;
-  onRetry?: () => void;
-}) {
+export function ErrorDisplay({ error, onRetry }: { error: Error; onRetry?: () => void }) {
   const isApiError = error instanceof ApiError;
 
   return (
@@ -56,9 +50,7 @@ export function ErrorDisplay({
           <h3 className="font-medium text-red-900">エラーが発生しました</h3>
           <p className="mt-1 text-sm text-red-700">{error.message}</p>
           {isApiError && (
-            <p className="mt-1 text-xs text-red-600">
-              ステータス: {(error as ApiError).status}
-            </p>
+            <p className="mt-1 text-xs text-red-600">ステータス: {(error as ApiError).status}</p>
           )}
           {onRetry && (
             <button
@@ -77,13 +69,7 @@ export function ErrorDisplay({
 /**
  * フルページエラー表示
  */
-export function ErrorPage({
-  error,
-  onRetry,
-}: {
-  error: Error;
-  onRetry?: () => void;
-}) {
+export function ErrorPage({ error, onRetry }: { error: Error; onRetry?: () => void }) {
   const isApiError = error instanceof ApiError;
 
   return (
@@ -102,9 +88,7 @@ export function ErrorPage({
                 ステータスコード: {(error as ApiError).status}
               </p>
               {(error as ApiError).code && (
-                <p className="text-xs text-gray-500">
-                  エラーコード: {(error as ApiError).code}
-                </p>
+                <p className="text-xs text-gray-500">エラーコード: {(error as ApiError).code}</p>
               )}
             </>
           )}
@@ -135,7 +119,7 @@ export function ErrorPage({
  * 空のステート表示
  */
 export function EmptyState({
-  title = 'データがありません',
+  title = "データがありません",
   description,
   action,
 }: {
@@ -146,9 +130,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
       <p className="text-sm font-medium text-gray-900">{title}</p>
-      {description && (
-        <p className="mt-1 text-sm text-gray-500">{description}</p>
-      )}
+      {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

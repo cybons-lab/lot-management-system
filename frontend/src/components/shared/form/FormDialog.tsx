@@ -1,14 +1,16 @@
 /**
  * FormDialog.tsx
- * 
+ *
  * モーダルフォームコンポーネント
  * - ダイアログベースのフォーム
  * - 送信・キャンセルボタン
  * - ローディング状態
  */
 
-import * as React from 'react';
-import { useState } from 'react';
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -16,9 +18,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+} from "@/components/ui/dialog";
 
 // ============================================
 // 型定義
@@ -46,7 +46,7 @@ export interface FormDialogProps {
   /** 送信ボタンの無効化 */
   submitDisabled?: boolean;
   /** ダイアログのサイズ */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 // ============================================
@@ -60,11 +60,11 @@ export function FormDialog({
   onClose,
   onSubmit,
   children,
-  submitLabel = '保存',
-  cancelLabel = 'キャンセル',
+  submitLabel = "保存",
+  cancelLabel = "キャンセル",
   isLoading = false,
   submitDisabled = false,
-  size = 'md',
+  size = "md",
 }: FormDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -88,10 +88,10 @@ export function FormDialog({
 
   // サイズに応じたクラス
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    sm: "max-w-md",
+    md: "max-w-lg",
+    lg: "max-w-2xl",
+    xl: "max-w-4xl",
   };
 
   return (
@@ -106,21 +106,11 @@ export function FormDialog({
           <div className="py-4">{children}</div>
 
           <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
               {cancelLabel}
             </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || submitDisabled || isLoading}
-            >
-              {(isSubmitting || isLoading) && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" disabled={isSubmitting || submitDisabled || isLoading}>
+              {(isSubmitting || isLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {submitLabel}
             </Button>
           </DialogFooter>
@@ -150,7 +140,7 @@ export interface ConfirmDialogProps {
   /** キャンセルボタンのラベル */
   cancelLabel?: string;
   /** 確認ボタンのバリアント */
-  confirmVariant?: 'default' | 'destructive';
+  confirmVariant?: "default" | "destructive";
   /** ローディング状態 */
   isLoading?: boolean;
 }
@@ -165,9 +155,9 @@ export function ConfirmDialog({
   open,
   onClose,
   onConfirm,
-  confirmLabel = '確認',
-  cancelLabel = 'キャンセル',
-  confirmVariant = 'default',
+  confirmLabel = "確認",
+  cancelLabel = "キャンセル",
+  confirmVariant = "default",
   isLoading = false,
 }: ConfirmDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -198,12 +188,7 @@ export function ConfirmDialog({
         </DialogHeader>
 
         <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-          >
+          <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             {cancelLabel}
           </Button>
           <Button
@@ -212,9 +197,7 @@ export function ConfirmDialog({
             onClick={handleConfirm}
             disabled={isSubmitting || isLoading}
           >
-            {(isSubmitting || isLoading) && (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            )}
+            {(isSubmitting || isLoading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {confirmLabel}
           </Button>
         </DialogFooter>

@@ -8,18 +8,17 @@
  * - ヘルプテキスト
  */
 
-import * as React from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 // ============================================
 // 型定義
@@ -52,7 +51,7 @@ export interface TextFormFieldProps extends BaseFormFieldProps {
   /** プレースホルダー */
   placeholder?: string;
   /** 入力タイプ */
-  type?: 'text' | 'email' | 'password' | 'tel' | 'url' | 'number';
+  type?: "text" | "email" | "password" | "tel" | "url" | "number";
   /** 無効化 */
   disabled?: boolean;
 }
@@ -63,17 +62,17 @@ export function TextFormField({
   value,
   onChange,
   placeholder,
-  type = 'text',
+  type = "text",
   required = false,
   error,
   helpText,
   disabled = false,
   className,
 }: TextFormFieldProps) {
-  const fieldId = id || label.replace(/\s+/g, '-').toLowerCase();
+  const fieldId = id || label.replace(/\s+/g, "-").toLowerCase();
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label htmlFor={fieldId} className="text-sm font-medium">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
@@ -85,7 +84,7 @@ export function TextFormField({
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className={cn(error && 'border-red-500')}
+        className={cn(error && "border-red-500")}
       />
       {error && <p className="text-sm text-red-500">{error}</p>}
       {helpText && !error && <p className="text-sm text-gray-500">{helpText}</p>}
@@ -123,10 +122,10 @@ export function TextareaFormField({
   disabled = false,
   className,
 }: TextareaFormFieldProps) {
-  const fieldId = id || label.replace(/\s+/g, '-').toLowerCase();
+  const fieldId = id || label.replace(/\s+/g, "-").toLowerCase();
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label htmlFor={fieldId} className="text-sm font-medium">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
@@ -138,7 +137,7 @@ export function TextareaFormField({
         placeholder={placeholder}
         rows={rows}
         disabled={disabled}
-        className={cn(error && 'border-red-500')}
+        className={cn(error && "border-red-500")}
       />
       {error && <p className="text-sm text-red-500">{error}</p>}
       {helpText && !error && <p className="text-sm text-gray-500">{helpText}</p>}
@@ -174,23 +173,23 @@ export function SelectFormField({
   value,
   onChange,
   options,
-  placeholder = '選択してください',
+  placeholder = "選択してください",
   required = false,
   error,
   helpText,
   disabled = false,
   className,
 }: SelectFormFieldProps) {
-  const fieldId = id || label.replace(/\s+/g, '-').toLowerCase();
+  const fieldId = id || label.replace(/\s+/g, "-").toLowerCase();
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label htmlFor={fieldId} className="text-sm font-medium">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </Label>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger id={fieldId} className={cn(error && 'border-red-500')}>
+        <SelectTrigger id={fieldId} className={cn(error && "border-red-500")}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
@@ -231,10 +230,10 @@ export function DateFormField({
   disabled = false,
   className,
 }: DateFormFieldProps) {
-  const fieldId = id || label.replace(/\s+/g, '-').toLowerCase();
+  const fieldId = id || label.replace(/\s+/g, "-").toLowerCase();
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label htmlFor={fieldId} className="text-sm font-medium">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
@@ -245,7 +244,7 @@ export function DateFormField({
         value={value}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         disabled={disabled}
-        className={cn(error && 'border-red-500')}
+        className={cn(error && "border-red-500")}
       />
       {error && <p className="text-sm text-red-500">{error}</p>}
       {helpText && !error && <p className="text-sm text-gray-500">{helpText}</p>}
@@ -289,10 +288,10 @@ export function NumberFormField({
   disabled = false,
   className,
 }: NumberFormFieldProps) {
-  const fieldId = id || label.replace(/\s+/g, '-').toLowerCase();
+  const fieldId = id || label.replace(/\s+/g, "-").toLowerCase();
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label htmlFor={fieldId} className="text-sm font-medium">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
@@ -307,7 +306,7 @@ export function NumberFormField({
         max={max}
         step={step}
         disabled={disabled}
-        className={cn(error && 'border-red-500')}
+        className={cn(error && "border-red-500")}
       />
       {error && <p className="text-sm text-red-500">{error}</p>}
       {helpText && !error && <p className="text-sm text-gray-500">{helpText}</p>}

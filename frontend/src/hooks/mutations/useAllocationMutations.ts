@@ -11,6 +11,7 @@ import {
   type CreateAllocationPayload,
   type AllocationResult,
 } from "@/features/allocations/api";
+
 import { QUERY_KEYS } from "@/services/api/query-keys";
 
 /**
@@ -64,7 +65,7 @@ export function useCreateAllocations(options?: {
       // 引当に使用したロットのキャッシュも無効化
       variables.allocations.forEach((alloc) => {
         queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.lots.detail(alloc.lot_id),
+          queryKey: QUERY_KEYS.lots.detail(alloc.lot?.id ?? alloc.lotId),
         });
       });
 

@@ -1,17 +1,17 @@
 /**
  * FilterPanel.tsx
- * 
+ *
  * フィルターパネルコンポーネント
  * - 複数フィルター項目の表示
  * - 開閉機能
  * - リセット機能
  */
 
-import * as React from 'react';
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { ChevronDown, ChevronUp, X } from "lucide-react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // ============================================
 // 型定義
@@ -37,7 +37,7 @@ export interface FilterPanelProps {
 // ============================================
 
 export function FilterPanel({
-  title = 'フィルター',
+  title = "フィルター",
   children,
   defaultOpen = true,
   onReset,
@@ -47,12 +47,7 @@ export function FilterPanel({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div
-      className={cn(
-        'border border-gray-200 rounded-lg bg-white shadow-sm',
-        className
-      )}
-    >
+    <div className={cn("border border-gray-200 rounded-lg bg-white shadow-sm", className)}>
       {/* ヘッダー */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
         <div className="flex items-center gap-2">
@@ -60,25 +55,16 @@ export function FilterPanel({
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="text-gray-500 hover:text-gray-700 transition-colors"
-              aria-label={isOpen ? 'フィルターを閉じる' : 'フィルターを開く'}
+              aria-label={isOpen ? "フィルターを閉じる" : "フィルターを開く"}
             >
-              {isOpen ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
-              )}
+              {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </button>
           )}
           <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
         </div>
 
         {onReset && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onReset}
-            className="h-8 text-xs"
-          >
+          <Button variant="ghost" size="sm" onClick={onReset} className="h-8 text-xs">
             <X className="h-4 w-4 mr-1" />
             リセット
           </Button>
@@ -86,9 +72,7 @@ export function FilterPanel({
       </div>
 
       {/* フィルター項目 */}
-      {(!collapsible || isOpen) && (
-        <div className="p-4 space-y-4">{children}</div>
-      )}
+      {(!collapsible || isOpen) && <div className="p-4 space-y-4">{children}</div>}
     </div>
   );
 }
@@ -110,21 +94,12 @@ export interface CompactFilterPanelProps {
  * コンパクト版フィルターパネル
  * (タイトルなし、開閉なし)
  */
-export function CompactFilterPanel({
-  children,
-  onReset,
-  className,
-}: CompactFilterPanelProps) {
+export function CompactFilterPanel({ children, onReset, className }: CompactFilterPanelProps) {
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn("space-y-4", className)}>
       {onReset && (
         <div className="flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onReset}
-            className="h-8 text-xs"
-          >
+          <Button variant="outline" size="sm" onClick={onReset} className="h-8 text-xs">
             <X className="h-4 w-4 mr-1" />
             リセット
           </Button>
@@ -152,21 +127,12 @@ export interface InlineFilterPanelProps {
  * インラインフィルターパネル
  * (横並びレイアウト用)
  */
-export function InlineFilterPanel({
-  children,
-  onReset,
-  className,
-}: InlineFilterPanelProps) {
+export function InlineFilterPanel({ children, onReset, className }: InlineFilterPanelProps) {
   return (
-    <div className={cn('flex items-end gap-4 flex-wrap', className)}>
+    <div className={cn("flex items-end gap-4 flex-wrap", className)}>
       {children}
       {onReset && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onReset}
-          className="h-10"
-        >
+        <Button variant="outline" size="sm" onClick={onReset} className="h-10">
           <X className="h-4 w-4 mr-1" />
           リセット
         </Button>

@@ -16,7 +16,8 @@ import { format } from "date-fns";
 import { ja } from "date-fns/locale";
 import { formatCodeAndName } from "@/lib/utils";
 import { getOrders, getOrder } from "@/features/orders/api";
-import type { OrderLine } from "@/types/legacy/orders";
+import type { components } from "@/types/api";
+type OrderLine = components["schemas"]["OrderLineOut"];
 import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
 import { createAllocations, type CreateAllocationPayload } from "@/features/allocations/api";
 
@@ -504,24 +505,13 @@ export function LotAllocationPage() {
               </h2>
               {orderDetailQuery.data && (
                 <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                  <span>
-                    得意先:{" "}
-                    {orderDetailQuery.data.customer_name || orderDetailQuery.data.customer_code}
-                  </span>
+                  <span>得意先: {orderDetailQuery.data.customer_code}</span>
                   <span>
                     受注日:{" "}
                     {format(new Date(orderDetailQuery.data.order_date), "yyyy/MM/dd", {
                       locale: ja,
                     })}
                   </span>
-                  {orderDetailQuery.data.due_date && (
-                    <span>
-                      納期:{" "}
-                      {format(new Date(orderDetailQuery.data.due_date), "yyyy/MM/dd", {
-                        locale: ja,
-                      })}
-                    </span>
-                  )}
                 </div>
               )}
             </div>

@@ -1,22 +1,21 @@
-import * as React from 'react';
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { X, Plus, AlertCircle } from 'lucide-react';
+} from "@/components/ui/select";
+import { X, Plus, AlertCircle } from "lucide-react";
 
 interface WarehouseAllocation {
   warehouse_code: string;
@@ -45,7 +44,7 @@ export function WarehouseAllocationModal({
   availableWarehouses,
 }: WarehouseAllocationModalProps) {
   const [allocations, setAllocations] = useState<WarehouseAllocation[]>(
-    initialAllocations.length > 0 ? initialAllocations : []
+    initialAllocations.length > 0 ? initialAllocations : [],
   );
 
   useEffect(() => {
@@ -55,7 +54,7 @@ export function WarehouseAllocationModal({
   }, [initialAllocations]);
 
   const handleAdd = () => {
-    setAllocations([...allocations, { warehouse_code: '', quantity: 0 }]);
+    setAllocations([...allocations, { warehouse_code: "", quantity: 0 }]);
   };
 
   const handleRemove = (index: number) => {
@@ -74,7 +73,10 @@ export function WarehouseAllocationModal({
     setAllocations(newAllocations);
   };
 
-  const allocatedTotal = allocations.reduce((sum: number, alloc: WarehouseAllocation) => sum + alloc.quantity, 0);
+  const allocatedTotal = allocations.reduce(
+    (sum: number, alloc: WarehouseAllocation) => sum + alloc.quantity,
+    0,
+  );
   const isValid = Math.abs(allocatedTotal - totalQuantity) < 0.01; // 浮動小数点誤差を考慮
   const usedWarehouses = new Set(allocations.map((a: WarehouseAllocation) => a.warehouse_code));
 
@@ -132,7 +134,9 @@ export function WarehouseAllocationModal({
                           <SelectItem
                             key={wh.code}
                             value={wh.code}
-                            disabled={usedWarehouses.has(wh.code) && allocation.warehouse_code !== wh.code}
+                            disabled={
+                              usedWarehouses.has(wh.code) && allocation.warehouse_code !== wh.code
+                            }
                           >
                             {wh.code} - {wh.name}
                           </SelectItem>
@@ -144,8 +148,10 @@ export function WarehouseAllocationModal({
                     <Input
                       type="number"
                       step="0.01"
-                      value={allocation.quantity || ''}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleQuantityChange(index, e.target.value)}
+                      value={allocation.quantity || ""}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleQuantityChange(index, e.target.value)
+                      }
                       placeholder="0"
                     />
                   </div>
@@ -153,11 +159,7 @@ export function WarehouseAllocationModal({
                     <span className="text-sm text-muted-foreground">{unit}</span>
                   </div>
                   <div className="col-span-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemove(index)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleRemove(index)}>
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
@@ -184,19 +186,17 @@ export function WarehouseAllocationModal({
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">割当合計:</span>
               <span
-                className={`text-lg font-bold ${
-                  isValid ? 'text-green-600' : 'text-destructive'
-                }`}
+                className={`text-lg font-bold ${isValid ? "text-green-600" : "text-destructive"}`}
               >
                 {allocatedTotal.toLocaleString()} {unit} / {totalQuantity.toLocaleString()} {unit}
-                {isValid ? ' ✓' : ''}
+                {isValid ? " ✓" : ""}
               </span>
             </div>
             {!isValid && (
               <div className="mt-2 flex items-start gap-2 text-sm text-destructive">
                 <AlertCircle className="h-4 w-4 mt-0.5" />
                 <span>
-                  割当合計が総数量と一致していません。差分:{' '}
+                  割当合計が総数量と一致していません。差分:{" "}
                   {Math.abs(allocatedTotal - totalQuantity).toLocaleString()} {unit}
                 </span>
               </div>

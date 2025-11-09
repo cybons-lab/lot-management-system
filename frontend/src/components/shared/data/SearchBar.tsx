@@ -7,12 +7,12 @@
  * - デバウンス対応
  */
 
-import * as React from 'react';
-import { useState, useEffect, useCallback } from 'react';
-import { Search, X } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Search, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 // ============================================
 // 型定義
@@ -40,7 +40,7 @@ export interface SearchBarProps {
 export function SearchBar({
   value,
   onChange,
-  placeholder = '検索...',
+  placeholder = "検索...",
   debounceMs = 300,
   className,
   disabled = false,
@@ -65,12 +65,12 @@ export function SearchBar({
 
   // クリア処理
   const handleClear = useCallback(() => {
-    setLocalValue('');
-    onChange('');
+    setLocalValue("");
+    onChange("");
   }, [onChange]);
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn("relative", className)}>
       <div className="relative">
         {/* 検索アイコン */}
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -127,16 +127,16 @@ export interface InstantSearchBarProps {
 export function InstantSearchBar({
   value,
   onChange,
-  placeholder = '検索...',
+  placeholder = "検索...",
   className,
   disabled = false,
 }: InstantSearchBarProps) {
   const handleClear = () => {
-    onChange('');
+    onChange("");
   };
 
   return (
-    <div className={cn('relative', className)}>
+    <div className={cn("relative", className)}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
 

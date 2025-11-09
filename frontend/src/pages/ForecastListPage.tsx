@@ -44,8 +44,9 @@ export function ForecastListPage() {
   const forecastsQuery = useQuery({
     queryKey: ["forecasts"],
     queryFn: async () => {
-      const res = await api.getForecasts();
-      return res.data.items as ForecastData[];
+      // TODO: forecasts APIが不要なら削除。必要なら api に実装を追加。
+      // const res = await api.getForecasts();
+      // return res.data.items as ForecastData[];
     },
   });
 

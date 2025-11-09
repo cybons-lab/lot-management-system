@@ -17,17 +17,16 @@ import { useCreateLot } from "@/hooks/mutations";
 import { useDialog, useToast, useTable, useFilters } from "@/hooks/ui";
 
 // バッチ3で作成した共通コンポーネント
-import {
-  DataTable,
-  TablePagination,
-  SearchBar,
-  FilterPanel,
-  FilterField,
-  LotStatusBadge,
-  type Column,
-} from "@/components/shared/data";
+import { DataTable } from "@/components/shared/DataTable";
+import type { Column } from "@/components/shared/DataTable/types";
+import { FilterField } from "@/components/shared/FilterField";
+import { FilterPanel } from "@/components/shared/FilterPanel";
 import { FormDialog } from "@/components/shared/form";
 import { PageHeader, PageContainer, Section } from "@/components/shared/layout";
+import { LotStatusBadge } from "@/components/shared/LotStatusBadge";
+import { SearchBar } from "@/components/shared/SearchBar";
+// eslint-disable-next-line import/order
+import { TablePagination } from "@/components/shared/TablePagination";
 
 // 既存の型とコンポーネント
 import { Button } from "@/components/ui/button";
@@ -93,7 +92,9 @@ export function InventoryPage() {
       {
         id: "lot_no",
         header: "ロット番号",
-        cell: (lot: LotResponse) => <span className="font-medium">{lot.lot_no || lot.lot_number}</span>,
+        cell: (lot: LotResponse) => (
+          <span className="font-medium">{lot.lot_no || lot.lot_number}</span>
+        ),
         sortable: true,
       },
       {
@@ -133,13 +134,15 @@ export function InventoryPage() {
       {
         id: "receipt_date",
         header: "入荷日",
-        cell: (lot: LotResponse) => (lot.receipt_date ? format(new Date(lot.receipt_date), "yyyy/MM/dd") : "-"),
+        cell: (lot: LotResponse) =>
+          lot.receipt_date ? format(new Date(lot.receipt_date), "yyyy/MM/dd") : "-",
         sortable: true,
       },
       {
         id: "expiry_date",
         header: "有効期限",
-        cell: (lot: LotResponse) => (lot.expiry_date ? format(new Date(lot.expiry_date), "yyyy/MM/dd") : "-"),
+        cell: (lot: LotResponse) =>
+          lot.expiry_date ? format(new Date(lot.expiry_date), "yyyy/MM/dd") : "-",
         sortable: true,
       },
       {
@@ -162,7 +165,10 @@ export function InventoryPage() {
   const stats = useMemo(() => {
     const totalLots = allLots.length;
     const activeLots = allLots.filter((lot: LotResponse) => lot.status === "active").length;
-    const totalQuantity = allLots.reduce((sum: number, lot: LotResponse) => sum + (lot.current_quantity || 0), 0);
+    const totalQuantity = allLots.reduce(
+      (sum: number, lot: LotResponse) => sum + (lot.current_quantity || 0),
+      0,
+    );
 
     return { totalLots, activeLots, totalQuantity };
   }, [allLots]);

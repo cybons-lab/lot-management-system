@@ -8,19 +8,19 @@
  * - チェックボックスフィルター
  */
 
-import * as React from 'react';
-import type { ReactNode } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import type { ReactNode } from "react";
+
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 // ============================================
 // 共通フィルターラッパー
@@ -52,7 +52,7 @@ export function FilterField({
   className,
 }: FilterFieldProps) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label htmlFor={htmlFor} className="text-sm font-medium text-gray-700">
         {label}
       </Label>
@@ -99,7 +99,7 @@ export function TextFilterField({
   disabled,
 }: TextFilterFieldProps) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label className="text-sm font-medium">{label}</Label>
       <Input
         type="text"
@@ -138,12 +138,12 @@ export function SelectFilterField({
   value,
   onChange,
   options,
-  placeholder = '選択してください',
+  placeholder = "選択してください",
   className,
   disabled,
 }: SelectFilterFieldProps) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label className="text-sm font-medium">{label}</Label>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger>
@@ -186,7 +186,7 @@ export function DateFilterField({
   disabled,
 }: DateFilterFieldProps) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label className="text-sm font-medium">{label}</Label>
       <Input
         type="date"
@@ -229,7 +229,7 @@ export function DateRangeFilterField({
   disabled,
 }: DateRangeFilterFieldProps) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label className="text-sm font-medium">{label}</Label>
       <div className="grid grid-cols-2 gap-2">
         <Input
@@ -279,7 +279,7 @@ export function CheckboxFilterField({
   disabled,
 }: CheckboxFilterFieldProps) {
   return (
-    <div className={cn('flex items-start space-x-2', className)}>
+    <div className={cn("flex items-start space-x-2", className)}>
       <Checkbox
         id={label}
         checked={checked}
@@ -294,9 +294,7 @@ export function CheckboxFilterField({
         >
           {label}
         </Label>
-        {description && (
-          <p className="text-xs text-gray-500">{description}</p>
-        )}
+        {description && <p className="text-xs text-gray-500">{description}</p>}
       </div>
     </div>
   );
@@ -333,7 +331,7 @@ export function NumberRangeFilterField({
   disabled,
 }: NumberRangeFilterFieldProps) {
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn("space-y-2", className)}>
       <Label className="text-sm font-medium">{label}</Label>
       <div className="grid grid-cols-2 gap-2">
         <Input
