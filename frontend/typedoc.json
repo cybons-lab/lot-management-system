@@ -1,0 +1,20 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/features",
+    "src/services",
+    "src/hooks",
+    "src/types/augmentations.d.ts",
+    "src/types/api.d.ts"
+  ],
+  "tsconfig": "tsconfig.json",
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "docs/frontend",
+  "readme": "none",
+  "hideGenerator": true,
+  "categorizeByGroup": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "includeVersion": true
+}

@@ -9,9 +9,12 @@
     "preview": "vite preview",
     "lint": "eslint . --max-warnings=0",
     "format:check": "prettier --check .",
-    "typegen": "openapi-typescript openapi.json -o src/types/api.d.ts",
     "typegen:curl": "curl -s http://localhost:8000/api/openapi.json -o openapi.json && pnpm typegen",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typegen": "openapi-typescript http://localhost:8000/api/openapi.json -o src/types/api.d.ts",
+    "doc:api": "widdershins http://localhost:8000/api/openapi.json -o docs/api_reference.md --summary --omitHeader --expandBody --language_tabs 'typescript:TypeScript'",
+    "doc:fe": "typedoc --options typedoc.json",
+    "doc": "npm run typegen && npm run doc:api && npm run doc:fe"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -55,11 +58,15 @@
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "msw": "^2.12.0",
+    "openapi-typescript": "^7.10.1",
     "postcss": "^8.5.6",
     "prettier": "^3.6.2",
     "tailwindcss": "^4.1.16",
+    "typedoc": "^0.28.14",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
-    "vite": "^7.2.0"
+    "vite": "^7.2.0",
+    "widdershins": "^4.0.1"
   }
 }
