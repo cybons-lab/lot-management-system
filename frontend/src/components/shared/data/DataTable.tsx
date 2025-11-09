@@ -1,6 +1,6 @@
 /**
  * DataTable.tsx
- * 
+ *
  * 汎用データテーブルコンポーネント
  * - カラム定義ベースの表示
  * - ソート機能
@@ -9,23 +9,23 @@
  * - レスポンシブ対応
  */
 
-import { useMemo } from 'react';
-import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useMemo } from "react";
+
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 // ============================================
 // 型定義
 // ============================================
 
-export interface Column<T = any> {
+export interface Column<T = never> {
   /** カラムID */
   id: string;
   /** カラムヘッダー表示名 */
   header: string;
   /** セルの値を取得する関数 */
-  accessor?: (row: T) => any;
+  accessor?: (row: T) => never;
   /** セルのレンダリング関数(カスタム表示) */
   cell?: (row: T) => React.ReactNode;
   /** ソート可能かどうか */
@@ -33,17 +33,17 @@ export interface Column<T = any> {
   /** カラム幅(CSS) */
   width?: string;
   /** テキスト配置 */
-  align?: 'left' | 'center' | 'right';
+  align?: "left" | "center" | "right";
   /** カラムのクラス名 */
   className?: string;
 }
 
 export interface SortConfig {
   column: string;
-  direction: 'asc' | 'desc';
+  direction: "asc" | "desc";
 }
 
-export interface DataTableProps<T = any> {
+export interface DataTableProps<T = never> {
   /** 表示データ */
   data: T[];
   /** カラム定義 */
@@ -76,7 +76,7 @@ export interface DataTableProps<T = any> {
 // メインコンポーネント
 // ============================================
 
-export function DataTable<T = any>({
+export function DataTable<T = never>({
   data,
   columns,
   sort,
@@ -87,7 +87,7 @@ export function DataTable<T = any>({
   getRowId = (row: any) => row.id,
   onRowClick,
   rowActions,
-  emptyMessage = 'データがありません',
+  emptyMessage = "データがありません",
   isLoading = false,
   className,
 }: DataTableProps<T>) {
@@ -128,8 +128,7 @@ export function DataTable<T = any>({
   const handleSort = (columnId: string) => {
     if (!onSortChange) return;
 
-    const newDirection =
-      sort?.column === columnId && sort.direction === 'asc' ? 'desc' : 'asc';
+    const newDirection = sort?.column === columnId && sort.direction === "asc" ? "desc" : "asc";
 
     onSortChange({
       column: columnId,
@@ -143,7 +142,7 @@ export function DataTable<T = any>({
       return <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />;
     }
 
-    return sort.direction === 'asc' ? (
+    return sort.direction === "asc" ? (
       <ArrowUp className="ml-1 h-4 w-4" />
     ) : (
       <ArrowDown className="ml-1 h-4 w-4" />
@@ -172,7 +171,7 @@ export function DataTable<T = any>({
   }
 
   return (
-    <div className={cn('relative overflow-x-auto', className)}>
+    <div className={cn("relative overflow-x-auto", className)}>
       <table className="w-full border-collapse">
         <thead className="bg-gray-50 border-b border-gray-200">
           <tr>
@@ -193,10 +192,10 @@ export function DataTable<T = any>({
               <th
                 key={column.id}
                 className={cn(
-                  'px-4 py-3 text-sm font-medium text-gray-700',
-                  column.align === 'center' && 'text-center',
-                  column.align === 'right' && 'text-right',
-                  column.className
+                  "px-4 py-3 text-sm font-medium text-gray-700",
+                  column.align === "center" && "text-center",
+                  column.align === "right" && "text-right",
+                  column.className,
                 )}
                 style={{ width: column.width }}
               >
@@ -232,18 +231,15 @@ export function DataTable<T = any>({
               <tr
                 key={String(rowId)}
                 className={cn(
-                  'transition-colors',
-                  onRowClick && 'cursor-pointer hover:bg-gray-50',
-                  isSelected && 'bg-blue-50'
+                  "transition-colors",
+                  onRowClick && "cursor-pointer hover:bg-gray-50",
+                  isSelected && "bg-blue-50",
                 )}
                 onClick={() => onRowClick?.(row)}
               >
                 {/* 選択チェックボックス */}
                 {selectable && (
-                  <td
-                    className="px-4 py-3"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => handleSelectRow(rowId)}
@@ -261,10 +257,10 @@ export function DataTable<T = any>({
                     <td
                       key={column.id}
                       className={cn(
-                        'px-4 py-3 text-sm text-gray-900',
-                        column.align === 'center' && 'text-center',
-                        column.align === 'right' && 'text-right',
-                        column.className
+                        "px-4 py-3 text-sm text-gray-900",
+                        column.align === "center" && "text-center",
+                        column.align === "right" && "text-right",
+                        column.className,
                       )}
                     >
                       {cellContent}
@@ -274,10 +270,7 @@ export function DataTable<T = any>({
 
                 {/* アクションボタン */}
                 {rowActions && (
-                  <td
-                    className="px-4 py-3 text-sm text-right"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <td className="px-4 py-3 text-sm text-right" onClick={(e) => e.stopPropagation()}>
                     {rowActions(row)}
                   </td>
                 )}

@@ -1,5 +1,4 @@
 // frontend/src/features/orders/components/AllocationProgress.tsx
-import React from "react";
 
 type Props = {
   lineId?: number;

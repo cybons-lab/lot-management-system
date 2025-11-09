@@ -1,22 +1,20 @@
 // frontend/src/features/orders/components/OrderLineCard/index.tsx (改善版)
-import React from "react";
+import { RefreshCcw } from "lucide-react";
+
+import { InfoRow } from "@/components/common/InfoRow";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, Check } from "lucide-react";
-
-import OrderLineHeader from "@/features/orders/components/OrderLineHeader";
-import AllocationProgress from "@/features/orders/components/AllocationProgress";
-import LotListWithAllocation from "@/features/orders/components/LotListWithAllocation";
-import ForecastSection from "@/features/orders/components/ForecastSection";
-import InfoRow from "@/components/common/InfoRow";
-import { formatCodeAndName } from "@/lib/utils";
-
-import { useOrderLineComputed } from "@/features/orders/hooks/useOrderLineComputed";
+import { AllocationProgress } from "@/features/orders/components/AllocationProgress";
+import { ForecastSection } from "@/features/orders/components/ForecastSection";
+import { LotListWithAllocation } from "@/features/orders/components/LotListWithAllocation";
+import * as OrderLineHeader from "@/features/orders/components/OrderLineHeader";
 import { useAllocationActions } from "@/features/orders/hooks/useAllocationActions";
+import { useOrderLineComputed } from "@/features/orders/hooks/useOrderLineComputed";
+import { formatCodeAndName } from "@/lib/utils";
 import { formatYmd } from "@/lib/utils/date";
 
 type Props = {
-  order?: any;
-  line: any;
+  order?: unknown;
+  line: unknown;
   onRematch?: () => void;
 };
 
@@ -25,12 +23,12 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
 
   // ★ 品番を渡してフィルタリング
   const { candidatesQ, createAlloc, cancelAlloc } = useAllocationActions(
-    c.ids.lineId,
+    c.ids?.lineId,
     c.productCode,
     c.customerCode,
   );
 
-  const canRematch = !!onRematch && !!c.ids.orderId;
+  const canRematch = !!onRematch && !!c.ids?.orderId;
 
   // トースト表示
   const showToast = (message: { title: string; variant?: "default" | "destructive" }) => {
@@ -65,7 +63,7 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
 
   return (
     <div className="rounded-xl border bg-white shadow-sm">
-      <OrderLineHeader
+      <OrderLineHeader.OrderLineHeader
         productName={c.productName}
         productCode={c.productCode}
         status={c.status}
@@ -77,8 +75,8 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
           {/* 左カラム: 引当進捗 + ロット一覧 */}
           <div className="space-y-4">
             <AllocationProgress
-              lineId={c.ids.lineId}
-              progressPct={c.progressPct}
+              lineId={c.ids?.lineId}
+              progressPct={c.progressPct ?? 0}
               allocatedTotal={c.allocatedTotal}
               totalQty={c.totalQty}
               unit={c.unit}

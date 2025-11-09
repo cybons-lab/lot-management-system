@@ -1,9 +1,9 @@
-// frontend/src/features/orders/components/ForecastSection.tsx
-import React from "react";
 import { useQuery } from "@tanstack/react-query";
+import * as React from "react";
+// frontend/src/features/orders/components/ForecastSection.tsx
 
 import { getForecastByCodes } from "@/features/forecast/api";
-import type { ForecastResponse } from "@/types/legacy/forecast";
+import type { ForecastResponse } from "@/types/forecast";
 
 type Props = {
   productCode?: string;
@@ -68,10 +68,13 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
                     <div className="text-[11px] uppercase text-gray-400">{f.granularity}</div>
                     <div className="text-sm font-semibold text-gray-800">{renderPeriod(f)}</div>
                     <div className="mt-1 text-xs text-gray-500">
-                      予測数量: {f.qty_forecast.toLocaleString()} EA
+                      予測数量: {(f.qty_forecast ?? 0).toLocaleString()} EA
                     </div>
                     <div className="mt-1 text-[11px] text-gray-400">
-                      v{f.version_no}・{new Date(f.version_issued_at).toLocaleDateString()}
+                      v{f.version_no}・
+                      {f.version_issued_at
+                        ? new Date(f.version_issued_at).toLocaleDateString()
+                        : "日付不明"}
                     </div>
                   </div>
                 ))}

@@ -8,17 +8,15 @@
  * - 共通コンポーネント: PageHeader, Section, DataTable, etc.
  */
 
-import { useMemo } from "react";
 import { format } from "date-fns";
 import { Plus, RefreshCw } from "lucide-react";
+import { useMemo } from "react";
 
 // バッチ3で作成したフック
-import { useLotsQuery } from "@/hooks/api";
 import { useCreateLot } from "@/hooks/mutations";
 import { useDialog, useToast, useTable, useFilters } from "@/hooks/ui";
 
 // バッチ3で作成した共通コンポーネント
-import { PageHeader, PageContainer, Section } from "@/components/shared/layout";
 import {
   DataTable,
   TablePagination,
@@ -30,9 +28,9 @@ import {
   type Column,
 } from "@/components/shared/data";
 import { FormDialog } from "@/components/shared/form";
+import { PageHeader, PageContainer, Section } from "@/components/shared/layout";
 
 // 既存の型とコンポーネント
-import type { LotWithStock } from "@/utils/validators/lot-schemas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +41,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLotsQuery } from "@/hooks/api";
+import type { LotWithStock } from "@/utils/validators/lot-schemas";
 
 /**
  * メインコンポーネント
@@ -59,7 +59,7 @@ export function InventoryPage() {
   // フィルター状態管理
   const filters = useFilters({
     search: "",
-    productCode: "",
+    product_code: "",
     warehouseCode: "",
     status: "all",
     hasStock: false,
@@ -72,7 +72,7 @@ export function InventoryPage() {
     error,
     refetch,
   } = useLotsQuery({
-    productCode: filters.values.productCode || undefined,
+    product_code: filters.values.productCode || undefined,
     warehouseCode: filters.values.warehouseCode || undefined,
     status: filters.values.status !== "all" ? filters.values.status : undefined,
     search: filters.values.search || undefined,

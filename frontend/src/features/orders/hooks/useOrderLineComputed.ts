@@ -2,7 +2,7 @@
 import React from "react";
 import { isValidDate, diffDays } from "@/lib/utils/date";
 import { formatCodeAndName } from "@/lib/utils";
-import type { OrderLine, OrderLineComputed, AllocatedLot } from "@/types/aliases";
+import type { OrderLineComputed, AllocatedLot } from "@/types/aliases";
 
 /**
  * 受注明細の計算済み情報を取得
@@ -26,7 +26,7 @@ export function useOrderLineComputed(
 
     // 引当済み数量
     const allocatedLots: AllocatedLot[] = line?.allocated_lots ?? [];
-    const allocatedTotal = allocatedLots.reduce((sum, a) => sum + Number(a.allocated_qty ?? 0), 0);
+    const allocatedTotal = allocatedLots.reduce((sum, a) => sum + Number(a.allocate_qty ?? 0), 0);
 
     // 残数量と進捗率
     const remainingQty = Math.max(0, totalQty - allocatedTotal);

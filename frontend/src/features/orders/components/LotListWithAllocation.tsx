@@ -1,6 +1,7 @@
-// frontend/src/features/orders/components/LotListWithAllocation.tsx
-import React from "react";
 import { Check, X } from "lucide-react";
+import * as React from "react";
+
+// frontend/src/features/orders/components/LotListWithAllocation.tsx
 import { formatCodeAndName } from "@/lib/utils";
 import type { LotCandidate, AllocatedLot } from "@/types/legacy";
 
@@ -59,13 +60,13 @@ export function LotListWithAllocation({
 
       <div className="divide-y">
         {candidates.map((lot) => {
-          const allocation = getAllocationInfo(lot.lot_id);
+          const allocation = getAllocationInfo((lot as unknown).lot_id ?? (lot as unknown).id);
           const isAllocated = !!allocation;
-          const inputQty = allocQty[lot.lot_id] ?? 0;
+          const inputQty = allocQty[(lot as any).lot_id ?? (lot as any).id] ?? 0;
 
           return (
             <div
-              key={lot.lot_id}
+              key={(lot as any).lot_id ?? (lot as any).id}
               className={`p-3 ${isAllocated ? "bg-green-50" : "hover:bg-gray-50"}`}
             >
               <div className="flex items-start justify-between gap-3">
@@ -81,7 +82,7 @@ export function LotListWithAllocation({
 
                   <div className="text-xs text-gray-500 mt-2 space-y-0.5">
                     <div>
-                      在庫: {lot.available_qty.toLocaleString()} {lot.base_unit}
+                      在庫: {(lot.available_qty ?? 0).toLocaleString()} {lot.base_unit}
                       {typeof lot.lot_unit_qty === "number" &&
                         lot.lot_unit &&
                         lot.lot_unit !== lot.base_unit && (
@@ -127,7 +128,7 @@ export function LotListWithAllocation({
                       onChange={(e) =>
                         setAllocQty((prev) => ({
                           ...prev,
-                          [lot.lot_id]: Number(e.target.value),
+                          [(lot as any).lot_id ?? (lot as any).id]: Number(e.target.value),
                         }))
                       }
                       placeholder="数量"
@@ -137,8 +138,11 @@ export function LotListWithAllocation({
                       className="px-3 py-1 rounded bg-sky-600 text-white text-sm hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       disabled={inputQty <= 0}
                       onClick={() => {
-                        onAllocate(lot.lot_id, inputQty);
-                        setAllocQty((prev) => ({ ...prev, [lot.lot_id]: 0 }));
+                        onAllocate((lot as any).lot_id ?? (lot as any).id, inputQty);
+                        setAllocQty((prev) => ({
+                          ...prev,
+                          [(lot as any).lot_id ?? (lot as any).id]: 0,
+                        }));
                       }}
                     >
                       引当

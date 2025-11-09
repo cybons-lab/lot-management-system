@@ -60,7 +60,7 @@ export const OrdersPage = () => {
           >
             <div className="font-semibold">受注ID: {order.id}</div>
             <div className="text-sm text-gray-600">
-              受注番号: {order.order_number}
+              受注番号: {order.order_no}
             </div>
           </div>
         ))}

@@ -1,5 +1,4 @@
 // frontend/src/features/orders/components/OrderFilters.tsx
-import React from "react";
 import type { OrdersListParams } from "@/types/legacy";
 
 type Props = {

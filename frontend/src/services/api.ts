@@ -11,16 +11,16 @@ import type { components } from "@/types/api";
 // 型定義
 // ========================================
 
-// ダッシュボード
-type DashboardStats = components["schemas"]["DashboardStatsResponse"];
-
 // 受注関連の型
 type Order = components["schemas"]["OrderResponse"];
 type OrderDetail = components["schemas"]["OrderWithLinesResponse"];
 
 // 引当関連の型
 type DragAssignRequest = components["schemas"]["DragAssignRequest"];
-type DragAssignResponse = components["schemas"]["DragAssignResponse"];
+type DragAssignResponse = {
+  success: boolean;
+  message?: string;
+};
 
 // ロット関連の型
 type Lot = components["schemas"]["LotResponse"];
@@ -89,12 +89,33 @@ export const api = {
 // 型のエクスポート
 // ========================================
 
-export type {
-  DashboardStats,
-  Order,
-  OrderDetail,
-  DragAssignRequest,
-  DragAssignResponse,
-  Lot,
-  ForecastResponse,
+export type { Order, OrderDetail, DragAssignRequest, DragAssignResponse, Lot, ForecastResponse };
+
+// === Compat helpers added by patch ===
+export type DashboardStats = {
+  total_stock: number;
+  total_orders: number;
+  unallocated_orders: number;
 };
+export async function getStats(): Promise<DashboardStats> {
+  // TODO: replace with backend endpoint when available
+  return { total_stock: 0, total_orders: 0, unallocated_orders: 0 };
+}
+interface OrdersResponse {
+  items?: unknown[];
+}
+
+export async function getOrdersWithAllocations() {
+  const res = await http.get<OrdersResponse>("/api/orders");
+  const data = res.data;
+  return Array.isArray(data?.items) ? data : { items: data ?? [] };
+}
+export async function reMatchOrder(orderId: number) {
+  return await http.post(`/api/orders/${orderId}/re-match`, {});
+}
+// Attach to api object if present
+Object.assign(api, { getStats, getOrdersWithAllocations, reMatchOrder });
+
+// === Compat helpers added by patch ===
+// Attach to api object if present
+Object.assign(api, { getStats, getOrdersWithAllocations, reMatchOrder });

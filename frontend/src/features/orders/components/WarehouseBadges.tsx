@@ -1,5 +1,4 @@
 // frontend/src/features/orders/components/WarehouseBadges.tsx
-import React from "react";
 
 type Props = {
   warehouses: string[];

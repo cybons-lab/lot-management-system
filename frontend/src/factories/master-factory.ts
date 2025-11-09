@@ -4,6 +4,7 @@
  */
 
 import { faker } from "@faker-js/faker/locale/ja";
+
 import type { Product, Supplier, Warehouse } from "@/types/aliases";
 
 /**
@@ -13,8 +14,6 @@ export function createProduct(overrides?: Partial<Product>): Product {
   return {
     product_code: `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
     product_name: faker.commerce.productName(),
-    unit: faker.helpers.arrayElement(["EA", "CASE", "BOX", "KG"]),
-    category: faker.helpers.arrayElement(["原材料", "資材", "包装材", "副資材", "完成品"]),
     ...overrides,
   };
 }
@@ -34,8 +33,6 @@ export function createSupplier(overrides?: Partial<Supplier>): Supplier {
     supplier_code: `SUP-${faker.string.alphanumeric(3).toUpperCase()}`,
     supplier_name: faker.company.name(),
     contact_name: faker.person.fullName(),
-    phone: faker.phone.number(),
-    email: faker.internet.email(),
     ...overrides,
   };
 }
@@ -58,7 +55,7 @@ export function createWarehouse(overrides?: Partial<Warehouse>): Warehouse {
     warehouse_code: `WH-${city.charAt(0)}${faker.number.int({ min: 1, max: 99 })}`,
     warehouse_name: `${city}倉庫`,
     address: faker.location.streetAddress({ useFullAddress: true }),
-    is_active: faker.helpers.arrayElement([0, 1]),
+    is_active: faker.helpers.arrayElement([true, false]),
     ...overrides,
   };
 }
@@ -75,7 +72,7 @@ export function createWarehouses(count: number, overrides?: Partial<Warehouse>):
  */
 export function createActiveWarehouse(overrides?: Partial<Warehouse>): Warehouse {
   return createWarehouse({
-    is_active: 1,
+    is_active: true,
     ...overrides,
   });
 }
@@ -85,7 +82,7 @@ export function createActiveWarehouse(overrides?: Partial<Warehouse>): Warehouse
  */
 export function createInactiveWarehouse(overrides?: Partial<Warehouse>): Warehouse {
   return createWarehouse({
-    is_active: 0,
+    is_active: false,
     ...overrides,
   });
 }

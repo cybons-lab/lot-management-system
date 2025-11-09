@@ -1,7 +1,9 @@
+type DashboardStats = { total_stock: number; total_orders: number; unallocated_orders: number };
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api-client";
-import { StatCard } from "@/components/ui/StatCard";
 import { Archive, Library, AlertCircle } from "lucide-react";
+
+import { StatCard } from "@/components/ui/StatCard";
+import { getStats } from "@/services/api";
 
 export function DashboardStats() {
   const {
@@ -10,7 +12,7 @@ export function DashboardStats() {
     isError,
   } = useQuery({
     queryKey: ["dashboardStats"],
-    queryFn: api.getStats,
+    queryFn: getStats,
   });
 
   // ローディング中のスケルトン表示

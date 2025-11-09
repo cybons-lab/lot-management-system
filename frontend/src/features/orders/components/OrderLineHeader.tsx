@@ -1,6 +1,3 @@
-// frontend/src/features/orders/components/OrderLineHeader.tsx
-import React from "react";
-
 type Props = {
   productName?: string;
   productCode?: string;

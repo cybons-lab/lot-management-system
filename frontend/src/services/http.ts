@@ -105,6 +105,7 @@ export async function del(url: string, config?: AxiosRequestConfig): Promise<Axi
 }
 
 // http.delete は予約語なので別名でエクスポート
-http.delete = del;
+(http.delete as any) = del;
 
 export default http;
+

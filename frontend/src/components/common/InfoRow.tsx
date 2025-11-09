@@ -1,5 +1,4 @@
 // frontend/src/components/common/InfoRow.tsx
-import React from "react";
 
 type Props = {
   label: string;

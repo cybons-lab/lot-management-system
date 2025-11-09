@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui/button";
 import { AlertCircle } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 export function AdminPage() {
   return (

@@ -4,7 +4,8 @@
  */
 
 import { faker } from "@faker-js/faker/locale/ja";
-import type { OrderResponse, OrderLine, OrderWithLinesResponse } from "@/types/aliases";
+
+import type { OrderResponse, OrderLineCreate, OrderWithLinesResponse } from "@/types/aliases";
 
 /**
  * ランダムな受注データを生成
@@ -14,7 +15,7 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
-    order_number: `ORD-${faker.string.alphanumeric(8).toUpperCase()}`,
+    order_no: `ORD-${faker.string.alphanumeric(6).toUpperCase()}`,
     order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0],
     customer_code: `CUST-${faker.string.alphanumeric(4).toUpperCase()}`,
     customer_name: faker.company.name(),
@@ -28,18 +29,16 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 /**
  * 受注明細を生成
  */
-export function createOrderLine(overrides?: Partial<OrderLine>): OrderLine {
+export function createOrderLine(overrides?: Partial<OrderLineCreate>): OrderLineCreate {
   const quantity = faker.number.int({ min: 1, max: 100 });
   const allocatedQuantity = faker.number.int({ min: 0, max: quantity });
 
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
-    order_id: faker.number.int({ min: 1, max: 1000 }),
-    line_number: faker.number.int({ min: 1, max: 10 }),
     product_code: `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
     quantity,
     unit: faker.helpers.arrayElement(["EA", "CASE", "BOX"]),
-    allocated_quantity: allocatedQuantity,
+    allocated_qty: allocatedQuantity,
     ...overrides,
   };
 }
@@ -97,7 +96,7 @@ export function createAllocatedOrder(
   });
 
   // 全明細の allocated_quantity を quantity と同じにする
-  order.lines = order.lines.map((line) => ({
+  order.lines = (order.lines ?? []).map((line) => ({
     ...line,
     allocated_quantity: line.quantity,
   }));

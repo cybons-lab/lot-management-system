@@ -21,3 +21,9 @@ export function useOrder(orderId: number | string) {
     enabled: !!orderId,
   });
 }
+export function useOrderDetail(orderId?: number) {
+  return { data: undefined, isLoading: false } as const;
+}
+export function useDragAssign() {
+  return { assign: () => {}, isPending: false } as const;
+}

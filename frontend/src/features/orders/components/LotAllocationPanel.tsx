@@ -1,8 +1,9 @@
+import * as React from "react";
+
 // frontend/src/features/orders/components/LotAllocationPanel.tsx
-import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { formatCodeAndName } from "@/lib/utils";
-import type { LotCandidate, WarehouseAlloc } from "@/types/legacy";
+import type { LotCandidate, WarehouseAlloc } from "@/types/aliases";
 
 type Props = {
   /** 表示モード。既定は 'modal'（後方互換） */
@@ -22,7 +23,7 @@ type Props = {
   onAllocate: (payload: { items: { lot_id: number; qty: number }[] }) => void;
 
   /** 引当取消 */
-  onCancelAllocations: (payload: any) => void;
+  onCancelAllocations: (payload: unknown) => void;
 
   /** 倉庫別配分の保存 */
   onSaveWarehouseAllocations: (allocs: WarehouseAlloc[]) => void;
@@ -201,12 +202,12 @@ export function LotAllocationPanel(props: Props) {
                         className="border rounded px-2 py-0.5 w-24"
                         type="number"
                         min={0}
-                        max={c.available_qty}
-                        value={Number(selected[c.lot_id] ?? 0)}
+                        max={c.available_qty ?? undefined}
+                        value={Number(selected[c.lot_id ?? 0] ?? 0)}
                         onChange={(e) =>
                           setSelected((prev) => ({
                             ...prev,
-                            [c.lot_id]: Number(e.target.value),
+                            [Number(c.lot_id)]: Number(e.target.value),
                           }))
                         }
                       />

@@ -1,6 +1,6 @@
 // frontend/src/features/orders/components/OrderCard.tsx
-import type { OrderWithLinesResponse } from "@/types/legacy";
 import { formatCodeAndName } from "@/lib/utils";
+import type { OrderWithLinesResponse } from "@/types/legacy";
 
 type Props = {
   order: OrderWithLinesResponse;

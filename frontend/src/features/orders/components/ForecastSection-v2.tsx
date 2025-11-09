@@ -1,5 +1,5 @@
+import * as React from "react";
 // frontend/src/features/orders/components/ForecastSection.tsx (改善版)
-import React from "react";
 
 type Props = {
   productCode?: string;
@@ -83,3 +83,4 @@ export function ForecastSection({ productCode, fullWidth = false }: Props) {
     </div>
   );
 }
+

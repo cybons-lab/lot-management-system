@@ -58,7 +58,7 @@ export function OrdersListPage() {
   // フィルター状態管理
   const filters = useFilters({
     search: "",
-    customerCode: "",
+    customer_code: "",
     status: "all",
     unallocatedOnly: false,
   });
@@ -70,7 +70,7 @@ export function OrdersListPage() {
     error,
     refetch,
   } = useOrdersQuery({
-    customerCode: filters.values.customerCode || undefined,
+    customer_code: filters.values.customerCode || undefined,
     status: filters.values.status !== "all" ? filters.values.status : undefined,
     search: filters.values.search || undefined,
     unallocatedOnly: filters.values.unallocatedOnly,
@@ -416,3 +416,4 @@ function OrderCreateForm({ onSubmit, onCancel, isSubmitting }: OrderCreateFormPr
     </form>
   );
 }
+

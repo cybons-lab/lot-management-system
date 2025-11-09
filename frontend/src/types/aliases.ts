@@ -1,156 +1,158 @@
-import type { components, paths } from "@/types/api";
-
-type Schemas = components["schemas"];
-
-type RenameKeys<
-  T,
-  Map extends Record<string, keyof T>,
-> = T & { [K in keyof Map]: T[Map[K]] };
-
-type Replace<T, K extends keyof T, V> = Omit<T, K> & { [P in K]: V };
-
-export type LotResponse = RenameKeys<
-  Schemas["LotResponse"],
-  { current_quantity: "current_stock" }
-> & {
-  warehouse_name?: string | null;
+// src/types/aliases.ts
+// ---- Core masters ----
+export type Product = {
+  product_code: string;
+  product_name: string;
+  packaging_qty?: number | string | null;
+  packaging_unit?: string | null;
+  internal_unit?: string | null;
+  customer_part_no?: string | null;
+  maker_part_no?: string | null;
+  requires_lot_number?: boolean | null;
 };
-
-export type LotCreate = Schemas["LotCreate"] & {
-  initial_quantity?: number | null;
+export type Supplier = {
+  supplier_code: string;
+  supplier_name: string;
+  address?: string | null;
+  contact_name?: string | null; // factoryで使う
 };
-
-export type Product = Schemas["ProductResponse"];
-export type Supplier = Schemas["SupplierResponse"];
-export type Warehouse = Schemas["WarehouseResponse"];
-export type OldWarehouse = Warehouse;
-
-type OrderResponseBase = RenameKeys<
-  Schemas["OrderResponse"],
-  { order_number: "order_no" }
-> & {
+export type Customer = {
+  customer_code: string;
   customer_name?: string | null;
+  address?: string | null;
 };
+export type Warehouse = {
+  warehouse_code: string;
+  warehouse_name: string;
+  address?: string | null;
+  is_active?: boolean | null;
+};
+export type OldWarehouse = Warehouse; // 旧名の受け皿
 
-export type OrderResponse = OrderResponseBase;
-
-type OrderLineBase = RenameKeys<
-  Schemas["OrderLineResponse"],
-  {
-    line_number: "line_no";
-    allocated_quantity: "allocated_qty";
-  }
-> & {
+// ---- Inventory/Lot ----
+export type LotResponse = {
+  id: number;
+  lot_no?: string | null;
+  lot_number?: string;
+  product_code: string;
   product_name?: string | null;
-  ship_date?: string | null;
-  planned_ship_date?: string | null;
+  warehouse_code?: string | null;
+  warehouse_name?: string | null;
+  unit?: string | null;
   status?: string | null;
-  customer_code?: string | null;
-  customer_name?: string | null;
-  order_date?: string | null;
-  allocated_lots?: AllocatedLot[];
+  receipt_date?: string | null;
+  expiry_date?: string | null;
+  current_quantity?: number | null;
+  created_at: string;
+  updated_at?: string | null;
 };
+export type LotCreate = Partial<LotResponse>;
+export type LotWithStock = LotResponse;
 
-export type OrderLine = OrderLineBase;
-
-export interface OrderLineComputed {
-  ids: {
-    lineId?: number;
-    orderId?: number;
-  };
-  productCode?: string;
-  productName?: string;
-  totalQty: number;
-  unit: string;
-  allocatedTotal: number;
-  remainingQty: number;
-  progressPct: number;
-  status?: string;
-  customerCode?: string;
-  customerName?: string;
-  orderDate?: string;
-  dueDate?: string;
-  shipDate?: string;
-  plannedShipDate?: string;
-  shippingLeadTime?: string | null;
-  warehouses: string[];
-}
-
-export type AllocatedLot = Schemas["FefoLotAllocation"] & {
-  allocation_id?: number;
-  lot_code?: string;
-  warehouse_code?: string;
+// ---- Allocation ----
+export type AllocatedLot = {
+  lot_id: number;
+  allocated_qty: number | null;
+  allocation_id?: number; // UI参照あり
+  warehouse_code?: string | null;
   warehouse_name?: string | null;
 };
-
-export type OrderWithLinesResponse = Replace<
-  RenameKeys<Schemas["OrderWithLinesResponse"], { order_number: "order_no" }> & {
-    customer_name?: string | null;
-  },
-  "lines",
-  OrderLine[]
->;
-
-export type OrdersListParams = paths["/api/orders"]["get"]["parameters"]["query"];
-
-export type LotCandidate = Schemas["FefoLotAllocation"] & {
+export type LotCandidate = {
+  id?: number;
+  lot_id?: number;
   lot_code?: string;
-  available_qty?: number;
-  base_unit?: string;
-  lot_unit_qty?: number | null;
+  lot_number?: string;
+  product_code: string;
+  warehouse_code?: string | null;
+  warehouse_name?: string | null;
+  base_unit?: string | null;
   lot_unit?: string | null;
-  conversion_factor?: number | null;
-  warehouse_code?: string;
-  warehouse_name?: string | null;
+  lot_unit_qty?: number | null;
+  conversion_factor?: number | null; // UI参照あり
+  expiry_date?: string | null;
+  receipt_date?: string | null;
+  available_qty?: number | null;
+  allocate_qty?: number | null;
 };
-
-export type LotCandidateResponse = {
-  items: LotCandidate[];
-  warnings?: string[];
-};
-
-export type LotAllocationRequest = {
-  allocations: { lot_id: number; qty: number }[];
-};
-
-export type LotAllocationResponse = {
-  success?: boolean;
-  message?: string;
-  allocated_ids?: number[];
-};
-
-export type AllocationCancelRequest = {
-  order_line_id?: number;
-  allocation_ids?: number[];
-};
-
-export type SaveAllocationsRequest = {
-  allocations: WarehouseAlloc[];
-};
-
-export type SaveAllocationsResponse = {
-  success?: boolean;
-  message?: string;
-};
+export type LotCandidateResponse = { items: LotCandidate[]; warnings?: string[] };
 
 export type WarehouseAlloc = {
-  warehouse_id: number;
+  qty: number;
+  warehouse_id: number; // API保存時に必須に寄せる
   warehouse_code: string;
   warehouse_name?: string;
   lot_id: number;
   quantity: number;
-  qty?: number;
 };
 
-export type OrdersWithAllocResponse = unknown;
-export type ReMatchResponse = Schemas["FefoCommitResponse"];
-export type WarehouseListResponse = components["schemas"]["WarehouseListResponse"];
+export type LotAllocationRequest = {
+  allocations: { lot_id: number; qty: number }[]; // API実シグネチャに合わせる
+};
+export type AllocationCancelRequest = {
+  allocation_ids: number[];
+};
 
-export type LotAllocationPreviewRequest = paths["/api/allocations/preview"]["post"]["requestBody"]["content"]["application/json"];
-export type LotAllocationPreviewResponse = paths["/api/allocations/preview"]["post"]["responses"]["200"]["content"]["application/json"];
+// ---- Orders ----
+export type OrderLine = {
+  id: number;
+  line_no?: number;
+  product_code: string;
+  quantity: number;
+  unit?: string;
+  status?: string;
+  due_date?: string | null;
+  allocated_qty?: number | null;
+  forecast_qty?: number | null;
+  forecast_version_no?: number | null;
+  allocated_lots?: AllocatedLot[];
+};
+export type OrderResponse = {
+  id: number;
+  order_no: string;
+  customer_code: string;
+  customer_name?: string | null;
+  order_date?: string | null;
+  due_date?: string | null;
+  status: string;
+  created_at?: string;
+  updated_at?: string | null;
+  sap_order_id?: string | null;
+  remarks?: string | null;
+  lines?: OrderLine[];
+};
+export type OrderWithLinesResponse = OrderResponse;
 
-export type ForecastResponse = Schemas["ForecastResponse"];
-export type ForecastListParams = paths["/api/forecast/list"]["get"]["parameters"]["query"];
-export type ForecastListResponse = paths["/api/forecast/list"]["get"]["responses"]["200"]["content"]["application/json"];
-export type ForecastBulkRequest = paths["/api/forecast/bulk"]["post"]["requestBody"]["content"]["application/json"];
-export type ForecastBulkResponse = paths["/api/forecast/bulk"]["post"]["responses"]["200"]["content"]["application/json"];
+// ---- Computed (UI-only) ----
+export type OrderLineComputed = {
+  id: number;
+  product_code: string;
+  ordered_qty: number;
+  allocated_qty: number;
+  remaining_qty: number;
+  // 画面が参照する旧名も許容（暫定的に optional）
+  ids?: { lineId: number; orderId: number };
+  productName?: string;
+  productCode?: string;
+  customerCode?: string;
+  customerName?: string;
+  totalQty?: number;
+  unit?: string;
+  remainingQty?: number;
+  progressPct?: number;
+  status?: string;
+  orderDate?: string;
+  dueDate?: string;
+  shipDate?: string | null;
+  plannedShipDate?: string | null;
+};
+
+// ---- Query params ----
+export type OrdersListParams = {
+  skip?: number;
+  limit?: number;
+  status?: string | null;
+  customer_code?: string | null;
+  date_from?: string | null;
+  date_to?: string | null;
+  unallocatedOnly?: boolean | null;
+};
