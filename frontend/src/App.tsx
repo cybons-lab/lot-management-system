@@ -7,12 +7,10 @@ import { ForecastListPage } from "@/pages/ForecastListPage";
 import { InventoryPage } from "@/pages/InventoryPage";
 import { LotAllocationPage } from "@/pages/LotAllocationPage";
 import { OrdersListPage } from "@/pages/OrdersListPage";
-import { Toaster } from "@/components/ui/toaster";
 
 function AppTabs() {
   return (
     <div className="min-h-screen bg-background">
-      <Toaster />
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold">ロット管理システム (MVP)</h1>

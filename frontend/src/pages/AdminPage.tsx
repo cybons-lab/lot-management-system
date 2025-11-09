@@ -47,6 +47,13 @@ export function AdminPage() {
             <Button variant="outline" className="w-full justify-start">
               データインポート/エクスポート
             </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={() => setShowSeedData(true)}
+            >
+              テストデータ投入（開発用）
+            </Button>
             <Button variant="destructive" className="w-full justify-start">
               データベースリセット（開発用）
             </Button>

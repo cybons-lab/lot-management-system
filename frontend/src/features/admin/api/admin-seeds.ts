@@ -25,5 +25,5 @@ export type SeedResponse = {
 
 export async function postSeeds(body: SeedRequest): Promise<SeedResponse> {
   // http に baseURL が設定されている前提（/api など）
-  return http.post("admin/seeds", { json: body }).json<SeedResponse>();
+  return http.post<SeedResponse>("admin/seeds", body);
 }
