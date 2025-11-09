@@ -2,6 +2,13 @@ erDiagram
   alembic_version {
     VARCHAR version_num PK
   }
+  allocations_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
   customers {
     TEXT customer_code
     TEXT customer_name
@@ -13,6 +20,13 @@ erDiagram
     TIMESTAMP deleted_at
     INTEGER revision
     INTEGER id PK
+  }
+  customers_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
   }
   delivery_places {
     INTEGER id PK
@@ -27,6 +41,27 @@ erDiagram
     VARCHAR updated_by
     TIMESTAMP deleted_at
     INTEGER revision
+  }
+  delivery_places_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  expiry_rules_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  forecasts_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
   }
   inbound_submissions {
     INTEGER id PK
@@ -48,6 +83,89 @@ erDiagram
     TIMESTAMP deleted_at
     INTEGER revision
   }
+  inbound_submissions_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  lot_current_stock_history_backup {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  lots_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  next_div_map {
+    INTEGER id PK
+    TEXT customer_code
+    TEXT ship_to_code
+    TEXT product_code
+    TEXT next_div
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    VARCHAR created_by
+    VARCHAR updated_by
+    TIMESTAMP deleted_at
+    INTEGER revision
+  }
+  order_line_warehouse_allocation_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  order_lines_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  orders_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  products_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  purchase_requests_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  sap_sync_logs_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  stock_movements_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
   suppliers {
     TEXT supplier_code
     TEXT supplier_name
@@ -59,6 +177,33 @@ erDiagram
     TIMESTAMP deleted_at
     INTEGER revision
     INTEGER id PK
+  }
+  suppliers_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  unit_conversions_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
+  }
+  warehouse {
+    INTEGER id PK
+    VARCHAR warehouse_code
+    VARCHAR warehouse_name
+    TEXT address
+    INTEGER is_active
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    VARCHAR created_by
+    VARCHAR updated_by
+    TIMESTAMP deleted_at
+    INTEGER revision
   }
   warehouses {
     TEXT warehouse_code
@@ -72,6 +217,13 @@ erDiagram
     TIMESTAMP deleted_at
     INTEGER revision
     INTEGER id PK
+  }
+  warehouses_history {
+    BIGINT id PK
+    CHAR op
+    TIMESTAMP changed_at
+    TEXT changed_by
+    JSONB row_data
   }
   orders {
     INTEGER id PK
@@ -92,6 +244,7 @@ erDiagram
     TEXT delivery_mode
     INTEGER customer_id FK
     VARCHAR customer_order_no_last6
+    TEXT customer_code
   }
   products {
     TEXT product_code
@@ -120,6 +273,20 @@ erDiagram
     VARCHAR shipping_warehouse_name
     INTEGER id PK
     INTEGER supplier_id FK
+  }
+  receipt_headers {
+    INTEGER id PK
+    TEXT receipt_no
+    TEXT supplier_code FK
+    INTEGER warehouse_id FK
+    DATE receipt_date
+    TEXT created_by
+    TEXT notes
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    VARCHAR updated_by
+    TIMESTAMP deleted_at
+    INTEGER revision
   }
   expiry_rules {
     INTEGER id PK
@@ -186,6 +353,9 @@ erDiagram
     INTEGER warehouse_id FK
     INTEGER product_id FK
     INTEGER supplier_id FK
+    TEXT product_code
+    TEXT supplier_code
+    TEXT warehouse_code
   }
   order_lines {
     INTEGER id PK
@@ -200,6 +370,20 @@ erDiagram
     TIMESTAMP deleted_at
     INTEGER revision
     INTEGER product_id FK
+    TEXT product_code
+  }
+  product_uom_conversions {
+    INTEGER id PK
+    TEXT product_code FK
+    TEXT source_unit
+    FLOAT source_value
+    FLOAT internal_unit_value
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    VARCHAR created_by
+    VARCHAR updated_by
+    TIMESTAMP deleted_at
+    INTEGER revision
   }
   sap_sync_logs {
     INTEGER id PK
@@ -241,7 +425,7 @@ erDiagram
     INTEGER revision
     INTEGER destination_id FK
   }
-  lot_current_stock {
+  lot_current_stock_backup {
     INTEGER lot_id PK FK
     FLOAT current_quantity
     TIMESTAMP last_updated
@@ -284,6 +468,43 @@ erDiagram
     INTEGER product_id FK
     INTEGER supplier_id FK
   }
+  receipt_lines {
+    INTEGER id PK
+    INTEGER header_id FK
+    INTEGER line_no
+    TEXT product_code FK
+    INTEGER lot_id FK
+    FLOAT quantity
+    TEXT unit
+    TEXT notes
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    VARCHAR created_by
+    VARCHAR updated_by
+    TIMESTAMP deleted_at
+    INTEGER revision
+  }
+  shipping {
+    INTEGER id PK
+    INTEGER lot_id FK
+    INTEGER order_line_id FK
+    FLOAT shipped_qty
+    DATE shipped_date
+    TEXT shipping_address
+    TEXT contact_person
+    TEXT contact_phone
+    TEXT delivery_time_slot
+    TEXT tracking_number
+    TEXT carrier
+    TEXT carrier_service
+    TEXT notes
+    TIMESTAMP created_at
+    TIMESTAMP updated_at
+    VARCHAR created_by
+    VARCHAR updated_by
+    TIMESTAMP deleted_at
+    INTEGER revision
+  }
   stock_movements {
     INTEGER id PK
     INTEGER lot_id FK
@@ -305,25 +526,33 @@ erDiagram
   orders }o--|| customers : customer_id_to_id
   products }o--|| delivery_places : delivery_place_id_to_id
   products }o--|| suppliers : supplier_id_to_id
-  expiry_rules }o--|| suppliers : supplier_id_to_id
+  receipt_headers }o--|| warehouse : warehouse_id_to_id
+  receipt_headers }o--|| suppliers : supplier_code_to_supplier_code
   expiry_rules }o--|| products : product_id_to_id
+  expiry_rules }o--|| suppliers : supplier_id_to_id
   forecasts }o--|| products : product_id_to_id
   forecasts }o--|| customers : customer_id_to_id
-  lots }o--|| warehouses : warehouse_id_to_id
-  lots }o--|| products : product_id_to_id
   lots }o--|| suppliers : supplier_id_to_id
-  order_lines }o--|| orders : order_id_to_id
+  lots }o--|| products : product_id_to_id
+  lots }o--|| warehouses : warehouse_id_to_id
   order_lines }o--|| products : product_id_to_id
+  order_lines }o--|| orders : order_id_to_id
+  product_uom_conversions }o--|| products : product_code_to_product_code
   sap_sync_logs }o--|| orders : order_id_to_id
   unit_conversions }o--|| products : product_id_to_id
-  allocations }o--|| order_lines : order_line_id_to_id
   allocations }o--|| delivery_places : destination_id_to_id
   allocations }o--|| lots : lot_id_to_id
-  lot_current_stock }o--|| lots : lot_id_to_id
+  allocations }o--|| order_lines : order_line_id_to_id
+  lot_current_stock_backup }o--|| lots : lot_id_to_id
   order_line_warehouse_allocation }o--|| order_lines : order_line_id_to_id
   purchase_requests }o--|| order_lines : src_order_line_id_to_id
   purchase_requests }o--|| suppliers : supplier_id_to_id
   purchase_requests }o--|| products : product_id_to_id
-  stock_movements }o--|| lots : lot_id_to_id
+  receipt_lines }o--|| lots : lot_id_to_id
+  receipt_lines }o--|| products : product_code_to_product_code
+  receipt_lines }o--|| receipt_headers : header_id_to_id
+  shipping }o--|| order_lines : order_line_id_to_id
+  shipping }o--|| lots : lot_id_to_id
   stock_movements }o--|| warehouses : warehouse_id_to_id
+  stock_movements }o--|| lots : lot_id_to_id
   stock_movements }o--|| products : product_id_to_id
