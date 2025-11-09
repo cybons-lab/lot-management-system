@@ -1,5 +1,6 @@
 // src/hooks/api/useLotsQuery.ts
 import { useQuery } from "@tanstack/react-query";
+
 import { getLots } from "@/features/inventory/api";
 import type { paths } from "@/types/api";
 

@@ -203,7 +203,7 @@ export function useMultipleDialogs<T extends string>(
   const dialogs = {} as Record<T, ReturnType<typeof useDialog>>;
   
   dialogNames.forEach((name) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
+     
     dialogs[name] = useDialog();
   });
   

@@ -9,17 +9,18 @@
  * - 右ペイン: 候補ロット一覧と倉庫別配分入力
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { formatCodeAndName } from "@/lib/utils";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+
+import { createAllocations, type CreateAllocationPayload } from "@/features/allocations/api";
 import { getOrders, getOrder } from "@/features/orders/api";
+import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
+import { formatCodeAndName } from "@/lib/utils";
 import type { components } from "@/types/api";
 type OrderLine = components["schemas"]["OrderLineOut"];
-import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
-import { createAllocations, type CreateAllocationPayload } from "@/features/allocations/api";
 
 // ===== 型定義 =====
 interface Order {

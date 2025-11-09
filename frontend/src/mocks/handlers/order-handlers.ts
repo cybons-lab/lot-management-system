@@ -4,13 +4,14 @@
  */
 
 import { http, HttpResponse } from "msw";
+
 import { createOrderWithLines } from "@/factories/order-factory";
 import type { OrderResponse, OrderWithLinesResponse } from "@/types/aliases";
 
 const API_BASE = "/api";
 
 // メモリ上の受注データ
-let orders: OrderWithLinesResponse[] = Array.from({ length: 15 }, () => createOrderWithLines());
+const orders: OrderWithLinesResponse[] = Array.from({ length: 15 }, () => createOrderWithLines());
 
 export const orderHandlers = [
   /**

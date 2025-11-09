@@ -4,6 +4,7 @@
  */
 
 import { fetchApi } from "./http";
+
 import type {
   LotResponse,
   LotCreate,

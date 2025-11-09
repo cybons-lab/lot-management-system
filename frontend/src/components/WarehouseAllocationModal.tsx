@@ -1,6 +1,7 @@
+import { X, Plus, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -8,6 +9,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -15,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { X, Plus, AlertCircle } from "lucide-react";
 
 interface WarehouseAllocation {
   warehouse_code: string;

@@ -4,6 +4,7 @@
  */
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+
 import { createApiError, NetworkError } from '@/utils/errors/custom-errors';
 
 /**

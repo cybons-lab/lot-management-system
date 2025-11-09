@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api-client";
 import { format, parseISO } from "date-fns";
+
+import { Badge } from "@/components/ui/badge"; // Badgeコンポーネントも必要になります
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableHeader,
@@ -9,8 +11,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge"; // Badgeコンポーネントも必要になります
+import { api } from "@/lib/api-client";
 import { formatCodeAndName } from "@/lib/utils";
 
 export function OrderPage() {

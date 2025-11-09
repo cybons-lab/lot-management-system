@@ -4,13 +4,14 @@
  */
 
 import { http, HttpResponse } from "msw";
+
 import { createLots, createLotWithStock } from "@/factories/lot-factory";
 import type { LotResponse } from "@/types/aliases";
 
 const API_BASE = "/api";
 
 // メモリ上のロットデータ
-let lots: LotResponse[] = createLots(20);
+const lots: LotResponse[] = createLots(20);
 
 export const lotHandlers = [
   /**
