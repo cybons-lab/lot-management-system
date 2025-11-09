@@ -100,7 +100,14 @@ class Lot(Base):
         back_populates="lot",
         cascade="all, delete-orphan",
     )
-    
+    current_stock: Mapped["LotCurrentStock | None"] = relationship(
+        "LotCurrentStock",
+        foreign_keys="[LotCurrentStock.lot_id]",
+        primaryjoin="Lot.id == LotCurrentStock.lot_id",
+        uselist=False,
+        viewonly=True,  # VIEWなので読み取り専用
+    )
+
 class LotCurrentStock(Base):
     """Current stock aggregated per lot (VIEW)."""
 
@@ -114,9 +121,6 @@ class LotCurrentStock(Base):
     current_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 4), nullable=False)
     last_updated: Mapped[datetime | None] = mapped_column(DateTime)
 
-    current_quantity: Mapped[float] = mapped_column(Float, nullable=False)
-    last_updated: Mapped[datetime | None] = mapped_column(DateTime)
-    
     # VIEWなので書き込み用カラム/監査系カラム/relationshipは不要
 
 class StockMovement(Base):

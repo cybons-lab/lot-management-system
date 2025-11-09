@@ -44,6 +44,12 @@ interface OrderCardData extends Order {
   hasMissingFields: boolean;
 }
 
+// ===== 定数 =====
+// queryKeyの安定化のため、オブジェクトリテラルを定数化
+const QUERY_FILTERS = {
+  ORDERS_OPEN: { status: "open" } as const,
+} as const;
+
 // ===== ユーティリティ関数 =====
 
 /**
@@ -196,8 +202,8 @@ export function LotAllocationPage() {
 
   // 受注一覧を取得
   const ordersQuery = useQuery({
-    queryKey: ["orders", { status: "open" }],
-    queryFn: () => getOrders({ status: "open" }),
+    queryKey: ["orders", QUERY_FILTERS.ORDERS_OPEN],
+    queryFn: () => getOrders(QUERY_FILTERS.ORDERS_OPEN),
   });
 
   // 受注カードデータを作成(フィルタリングとソート)
@@ -322,8 +328,7 @@ export function LotAllocationPage() {
     if (lineChanged) {
       lastSelectedLineIdRef.current = selectedLineId ?? null;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedLineId, candidateLots.length]);
+  }, [selectedLineId, warehouseSummaries]);
 
   // スクロール位置の保存
   useEffect(() => {
