@@ -12,7 +12,7 @@ declare module "@/components/shared/data" {
   export type FilterPanelProps = {
     title: string;
     onReset: () => void;
-    children?: any;
+    children?: React.ReactNode;
     activeCount?: number;
   };
 }

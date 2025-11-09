@@ -231,26 +231,26 @@ export function filterData<T>(
 
 /**
  * 検索キーワードでデータをフィルタリングするヘルパー関数
- * 
+ *
  * @param data - フィルタリング対象のデータ
  * @param searchTerm - 検索キーワード
  * @param searchKeys - 検索対象のキー
  * @returns フィルタリングされたデータ
- * 
+ *
  * @example
  * ```tsx
  * const filtered = searchData(lots, searchTerm, ['lot_no', 'product_code', 'product_name']);
  * ```
  */
-export function searchData<T extends Record<string, any>>(
+export function searchData<T extends Record<string, unknown>>(
   data: T[],
   searchTerm: string,
   searchKeys: (keyof T)[]
 ): T[] {
   if (!searchTerm) return data;
-  
+
   const lowerSearchTerm = searchTerm.toLowerCase();
-  
+
   return data.filter((item) =>
     searchKeys.some((key) => {
       const value = item[key];

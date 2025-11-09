@@ -85,7 +85,7 @@ export function DataTable<T = never>({
   selectable = false,
   selectedIds = [],
   onSelectionChange,
-  getRowId = (row: any) => row.id,
+  getRowId = (row: T) => (row as Record<string, unknown>)['id'] as string | number,
   onRowClick,
   rowActions,
   emptyMessage = "データがありません",

@@ -6,7 +6,7 @@
  * - filename: "example.csv"
  * 文字コード: UTF-8 (BOM付与)
  */
-export function exportToCSV(data: any[], filename: string): void {
+export function exportToCSV(data: Record<string, unknown>[], filename: string): void {
   if (!data || data.length === 0) {
     console.warn("No data to export");
     return;

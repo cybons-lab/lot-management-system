@@ -120,31 +120,31 @@ export function useTable<T extends string = string>(options?: {
   
   // データをソート
   const sortData = useCallback(
-    <D extends Record<string, any>>(data: D[]): D[] => {
+    <D extends Record<string, unknown>>(data: D[]): D[] => {
       if (!sort.column || !sort.direction) {
         return data;
       }
-      
+
       return [...data].sort((a, b) => {
         const aValue = a[sort.column!];
         const bValue = b[sort.column!];
-        
+
         // null/undefined のハンドリング
         if (aValue == null && bValue == null) return 0;
         if (aValue == null) return sort.direction === 'asc' ? 1 : -1;
         if (bValue == null) return sort.direction === 'asc' ? -1 : 1;
-        
+
         // 数値の場合
         if (typeof aValue === 'number' && typeof bValue === 'number') {
-          return sort.direction === 'asc' 
-            ? aValue - bValue 
+          return sort.direction === 'asc'
+            ? aValue - bValue
             : bValue - aValue;
         }
-        
+
         // 文字列の場合
         const aStr = String(aValue).toLowerCase();
         const bStr = String(bValue).toLowerCase();
-        
+
         if (aStr < bStr) return sort.direction === 'asc' ? -1 : 1;
         if (aStr > bStr) return sort.direction === 'asc' ? 1 : -1;
         return 0;
@@ -205,18 +205,18 @@ export function useTable<T extends string = string>(options?: {
 
 /**
  * 選択状態管理フック
- * 
+ *
  * @param idKey - アイテムのID キー
  * @returns 選択状態と操作関数
- * 
+ *
  * @example
  * ```tsx
  * const selection = useSelection('id');
- * 
+ *
  * return (
  *   <Table>
  *     {items.map(item => (
- *       <TableRow 
+ *       <TableRow
  *         key={item.id}
  *         selected={selection.isSelected(item.id)}
  *         onClick={() => selection.toggle(item.id)}
@@ -226,15 +226,15 @@ export function useTable<T extends string = string>(options?: {
  * );
  * ```
  */
-export function useSelection<T extends Record<string, any>>(idKey: keyof T = 'id') {
-  const [selectedIds, setSelectedIds] = useState<Set<any>>(new Set());
-  
+export function useSelection<T extends Record<string, unknown>>(idKey: keyof T = 'id') {
+  const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
+
   const isSelected = useCallback(
-    (id: any) => selectedIds.has(id),
+    (id: string | number) => selectedIds.has(id),
     [selectedIds]
   );
-  
-  const toggle = useCallback((id: any) => {
+
+  const toggle = useCallback((id: string | number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -245,12 +245,12 @@ export function useSelection<T extends Record<string, any>>(idKey: keyof T = 'id
       return next;
     });
   }, []);
-  
-  const select = useCallback((id: any) => {
+
+  const select = useCallback((id: string | number) => {
     setSelectedIds((prev) => new Set(prev).add(id));
   }, []);
-  
-  const deselect = useCallback((id: any) => {
+
+  const deselect = useCallback((id: string | number) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       next.delete(id);
@@ -259,18 +259,18 @@ export function useSelection<T extends Record<string, any>>(idKey: keyof T = 'id
   }, []);
   
   const selectAll = useCallback((items: T[]) => {
-    const ids = items.map((item) => item[idKey]);
+    const ids = items.map((item) => item[idKey] as string | number);
     setSelectedIds(new Set(ids));
   }, [idKey]);
-  
+
   const deselectAll = useCallback(() => {
     setSelectedIds(new Set());
   }, []);
-  
+
   const toggleAll = useCallback((items: T[]) => {
-    const allIds = items.map((item) => item[idKey]);
+    const allIds = items.map((item) => item[idKey] as string | number);
     const allSelected = allIds.every((id) => selectedIds.has(id));
-    
+
     if (allSelected) {
       deselectAll();
     } else {
