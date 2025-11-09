@@ -25,7 +25,7 @@ export function AdminPage() {
         <p className="text-muted-foreground">システム管理と危険な操作を実行できます</p>
       </div>
 
-      <div className="rounded-lg border border-destructive bg-destructive/10 p-6 card-shadow">
+      <div className="rounded-lg border border-destructive bg-destructive/10 p-6">
         <div className="flex items-start gap-4">
           <AlertCircle className="h-6 w-6 text-destructive flex-shrink-0 mt-0.5" />
           <div>
@@ -38,7 +38,7 @@ export function AdminPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="rounded-lg border bg-card p-6 card-shadow">
+        <div className="rounded-lg border bg-card p-6">
           <h3 className="text-lg font-semibold mb-4">データベース操作</h3>
           <div className="space-y-2">
             <Button variant="outline" className="w-full justify-start">
@@ -60,7 +60,7 @@ export function AdminPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border bg-card p-6 card-shadow">
+        <div className="rounded-lg border bg-card p-6">
           <h3 className="text-lg font-semibold mb-4">システム設定</h3>
           <div className="space-y-2">
             <Button variant="outline" className="w-full justify-start">

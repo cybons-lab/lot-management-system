@@ -9,7 +9,7 @@
  */
 
 import { format } from "date-fns";
-import { Plus, RefreshCw, Layers, CheckCircle, Package } from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useMemo } from "react";
 
 // バッチ3で作成したフック
@@ -195,32 +195,17 @@ export function InventoryPage() {
 
       {/* 統計情報 */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="rounded-lg border bg-card p-4 card-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm text-muted-foreground">総ロット数</div>
-              <div className="mt-1 text-2xl font-bold">{stats.totalLots}</div>
-            </div>
-            <Layers className="h-5 w-5 text-blue-600 mt-1" />
-          </div>
+        <div className="rounded-lg border bg-white p-4">
+          <div className="text-sm text-gray-600">総ロット数</div>
+          <div className="mt-1 text-2xl font-bold">{stats.totalLots}</div>
         </div>
-        <div className="rounded-lg border bg-card p-4 card-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm text-muted-foreground">有効ロット数</div>
-              <div className="mt-1 text-2xl font-bold">{stats.activeLots}</div>
-            </div>
-            <CheckCircle className="h-5 w-5 text-green-600 mt-1" />
-          </div>
+        <div className="rounded-lg border bg-white p-4">
+          <div className="text-sm text-gray-600">有効ロット数</div>
+          <div className="mt-1 text-2xl font-bold">{stats.activeLots}</div>
         </div>
-        <div className="rounded-lg border bg-card p-4 card-shadow">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="text-sm text-muted-foreground">総在庫数</div>
-              <div className="mt-1 text-2xl font-bold">{stats.totalQuantity.toLocaleString()}</div>
-            </div>
-            <Package className="h-5 w-5 text-purple-600 mt-1" />
-          </div>
+        <div className="rounded-lg border bg-white p-4">
+          <div className="text-sm text-gray-600">総在庫数</div>
+          <div className="mt-1 text-2xl font-bold">{stats.totalQuantity.toLocaleString()}</div>
         </div>
       </div>
 

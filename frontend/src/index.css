@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-background: hsl(0 0% 96.1%);
+  --color-background: hsl(0 0% 100%);
   --color-foreground: hsl(0 0% 3.9%);
   --color-card: hsl(0 0% 100%);
   --color-card-foreground: hsl(0 0% 3.9%);
@@ -119,10 +119,5 @@
     body {
       @apply bg-background text-foreground;
     }
-  }
-
-  /* カードの統一シャドウスタイル */
-  .card-shadow {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 }

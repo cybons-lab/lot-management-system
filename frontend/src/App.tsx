@@ -11,7 +11,7 @@ import { OrdersListPage } from "@/pages/OrdersListPage";
 function AppTabs() {
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card card-shadow">
+      <header className="border-b">
         <div className="container mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold">ロット管理システム (MVP)</h1>
         </div>

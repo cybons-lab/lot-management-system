@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { TrendingUp, Filter } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -109,22 +108,15 @@ export function ForecastListPage() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center gap-3">
-        <TrendingUp className="h-8 w-8 text-blue-600" />
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Forecast 一覧</h2>
-          <p className="text-muted-foreground mt-1">
-            製品×得意先ごとの需要予測を日・旬・月の粒度で確認できます
-          </p>
-        </div>
+      <div>
+        <h2 className="text-3xl font-bold tracking-tight">Forecast 一覧</h2>
+        <p className="text-gray-600 mt-1">
+          製品×得意先ごとの需要予測を日・旬・月の粒度で確認できます
+        </p>
       </div>
 
       {/* 絞り込みフィルター */}
-      <div className="rounded-lg border bg-card p-4 card-shadow">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="h-5 w-5 text-gray-600" />
-          <h3 className="text-lg font-semibold">絞り込み</h3>
-        </div>
+      <div className="rounded-lg border bg-white p-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <Label className="text-sm font-medium mb-2 block">製品コード / 商品名</Label>
@@ -153,15 +145,15 @@ export function ForecastListPage() {
 
       {/* データ表示エリア */}
       {forecastsQuery.isLoading ? (
-        <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground card-shadow">
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           フォーキャストを読み込み中...
         </div>
       ) : forecastsQuery.isError ? (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-600 card-shadow">
+        <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-600">
           データの取得に失敗しました
         </div>
       ) : grouped.length === 0 ? (
-        <div className="rounded-lg border bg-card p-8 text-center text-muted-foreground card-shadow">
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           {filters.product_code || filters.customer_code
             ? "条件に一致するフォーキャストがありません"
             : "登録されているフォーキャストがありません"}
@@ -197,7 +189,7 @@ function ForecastGroupCard({ group }: { group: ForecastGroup }) {
   });
 
   return (
-    <div className="rounded-lg border bg-card p-6 space-y-4 card-shadow">
+    <div className="rounded-lg border bg-white p-6 space-y-4">
       {/* ヘッダー */}
       <div className="border-b pb-4">
         <div className="flex items-start justify-between">

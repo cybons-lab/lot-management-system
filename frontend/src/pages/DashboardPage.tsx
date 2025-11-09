@@ -4,7 +4,6 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { Package, ShoppingCart, AlertCircle, Activity } from "lucide-react";
 
 import { api } from "@/services/api";
 
@@ -69,29 +68,23 @@ export function DashboardPage() {
           value={Number(totalStock) || 0}
           colorClass="border-blue-500"
           description="現在の総在庫量"
-          icon={<Package className="h-5 w-5 text-blue-600" />}
         />
         <StatCard
           title="総受注数"
           value={Number(totalOrders) || 0}
           colorClass="border-green-500"
           description="登録された受注の総数"
-          icon={<ShoppingCart className="h-5 w-5 text-green-600" />}
         />
         <StatCard
           title="未引当受注"
           value={Number(unallocatedOrders) || 0}
           colorClass="border-amber-500"
           description="引当が必要な受注件数"
-          icon={<AlertCircle className="h-5 w-5 text-amber-600" />}
         />
       </div>
 
-      <div className="rounded-lg border bg-card p-6 card-shadow">
-        <div className="flex items-center gap-2 mb-4">
-          <Activity className="h-5 w-5 text-gray-600" />
-          <h3 className="text-lg font-semibold">最近の活動</h3>
-        </div>
+      <div className="rounded-lg border bg-card p-6">
+        <h3 className="text-lg font-semibold mb-4">最近の活動</h3>
         <p className="text-sm text-muted-foreground">アクティビティログは準備中です...</p>
       </div>
     </div>
@@ -104,21 +97,17 @@ interface StatCardProps {
   value: number;
   colorClass: string;
   description?: string;
-  icon?: React.ReactNode;
 }
 
-function StatCard({ title, value, colorClass, description, icon }: StatCardProps) {
+function StatCard({ title, value, colorClass, description }: StatCardProps) {
   return (
     <div
-      className={`rounded-lg border-l-4 bg-card p-6 text-card-foreground card-shadow ${colorClass}`}
+      className={`rounded-lg border-l-4 bg-card p-6 text-card-foreground shadow-sm ${colorClass}`}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex flex-col space-y-1.5">
-          <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-          <p className="text-2xl font-bold">{value.toLocaleString()}</p>
-          {description && <p className="text-xs text-muted-foreground">{description}</p>}
-        </div>
-        {icon && <div className="mt-1">{icon}</div>}
+      <div className="flex flex-col space-y-1.5">
+        <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+        <p className="text-2xl font-bold">{value.toLocaleString()}</p>
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>
     </div>
   );
@@ -127,7 +116,7 @@ function StatCard({ title, value, colorClass, description, icon }: StatCardProps
 // ===== Skeleton コンポーネント =====
 function StatCardSkeleton() {
   return (
-    <div className="rounded-lg border border-l-4 border-gray-300 bg-card p-6 text-card-foreground card-shadow animate-pulse">
+    <div className="rounded-lg border border-l-4 border-gray-300 bg-card p-6 text-card-foreground shadow-sm animate-pulse">
       <div className="flex flex-col space-y-1.5">
         <div className="h-4 w-24 bg-muted rounded"></div>
         <div className="h-8 w-16 bg-muted rounded"></div>

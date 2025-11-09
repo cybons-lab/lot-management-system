@@ -460,10 +460,10 @@ export function LotAllocationPage() {
   }, [orderDetailQuery.data, selectedLineId, setSearchParams]);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-gray-50">
       {/* 左ペイン: 受注一覧 */}
-      <div className="w-80 border-r bg-card card-shadow overflow-y-auto" ref={orderListRef}>
-        <div className="p-4 border-b bg-muted">
+      <div className="w-80 border-r bg-white overflow-y-auto" ref={orderListRef}>
+        <div className="p-4 border-b bg-gray-50">
           <h2 className="text-lg font-semibold">受注一覧</h2>
           <p className="text-xs text-gray-600 mt-1">{orderCards.length}件の受注</p>
         </div>
@@ -498,11 +498,11 @@ export function LotAllocationPage() {
       </div>
 
       {/* 中央ペイン: 明細一覧 */}
-      <div className="flex-[1.35] flex flex-col overflow-hidden bg-card card-shadow">
+      <div className="flex-[1.35] flex flex-col overflow-hidden">
         {selectedOrderId ? (
           <>
             {/* ヘッダー */}
-            <div className="p-4 border-b bg-card">
+            <div className="p-4 border-b bg-white">
               <h2 className="text-lg font-semibold">
                 受注明細: {orderDetailQuery.data?.order_no || `#${selectedOrderId}`}
               </h2>
@@ -556,7 +556,7 @@ export function LotAllocationPage() {
       </div>
 
       {/* 右ペイン: 候補ロット & 倉庫別配分 */}
-      <div className="w-[420px] border-l bg-card card-shadow overflow-y-auto">
+      <div className="w-[420px] border-l bg-white overflow-y-auto">
         {selectedLineId && selectedLine ? (
           <div className="p-4 space-y-6">
             <div>
