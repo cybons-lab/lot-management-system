@@ -30,9 +30,9 @@ export const getForecastList = (params?: ForecastListParams) => {
   if (params?.supplier_code) searchParams.append("supplier_code", params.supplier_code);
 
   const queryString = searchParams.toString();
-  return fetchApi<ForecastListResponse>(`/forecast/list${queryString ? "?" + queryString : ""}`, {
-    method: "GET",
-  });
+  return fetchApi.get<ForecastListResponse>(
+    `/forecast/list${queryString ? "?" + queryString : ""}`,
+  );
 };
 
 /**
@@ -53,19 +53,14 @@ export const getForecast = (params?: ForecastGetParams) => {
   if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
 
   const queryString = searchParams.toString();
-  return fetchApi<ForecastGetResponse>(`/forecast${queryString ? "?" + queryString : ""}`, {
-    method: "GET",
-  });
+  return fetchApi.get<ForecastGetResponse>(`/forecast${queryString ? "?" + queryString : ""}`);
 };
 
 /**
  * 予測一括インポート
  */
 export const bulkImportForecast = (data: ForecastBulkRequest) =>
-  fetchApi<ForecastBulkResponse>("/forecast/bulk", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  fetchApi.post<ForecastBulkResponse>("/forecast/bulk", data);
 
 /**
  * 予測データ取得（製品・得意先で検索）

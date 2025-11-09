@@ -15,11 +15,9 @@ export type ResetResponse = {
  * JWT は lib/http.ts 側で自動付与されます（localStorage "access_token" or "jwt"）。
  */
 
-export const getStats = () =>
-  fetchApi<DashboardStats>("/admin/stats", { method: "GET" });
+export const getStats = () => fetchApi.get<DashboardStats>("/admin/stats");
 
-export const resetDatabase = () =>
-  fetchApi<ResetResponse>("/admin/reset-database", { method: "POST" });
+export const resetDatabase = () => fetchApi.post<ResetResponse>("/admin/reset-database");
 
 export interface FullSampleDataRequest {
   products?: Array<{
@@ -64,7 +62,4 @@ export interface FullSampleDataRequest {
 }
 
 export const loadFullSampleData = (payload: FullSampleDataRequest) =>
-  fetchApi<{ success: boolean; message: string }>(
-    "/admin/load-full-sample-data",
-    { method: "POST", body: JSON.stringify(payload) }
-  );
+  fetchApi.post<{ success: boolean; message: string }>("/admin/load-full-sample-data", payload);

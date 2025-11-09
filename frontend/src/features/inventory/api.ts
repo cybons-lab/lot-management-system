@@ -30,21 +30,16 @@ export const getLots = (params?: LotsGetParams) => {
     searchParams.append("with_stock", params.with_stock.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi<LotsGetResponse>(`/lots${queryString ? "?" + queryString : ""}`, {
-    method: "GET",
-  });
+  return fetchApi.get<LotsGetResponse>(`/lots${queryString ? "?" + queryString : ""}`);
 };
 
 /**
  * ロット詳細取得
  */
-export const getLot = (id: number) => fetchApi<LotGetResponse>(`/lots/${id}`, { method: "GET" });
+export const getLot = (id: number) => fetchApi.get<LotGetResponse>(`/lots/${id}`);
 
 /**
  * ロット新規作成
  */
 export const createLot = (data: LotCreateRequest) =>
-  fetchApi<LotCreateResponse>("/lots", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
+  fetchApi.post<LotCreateResponse>("/lots", data);

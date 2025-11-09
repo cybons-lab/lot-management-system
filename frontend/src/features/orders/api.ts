@@ -32,40 +32,32 @@ export const getOrders = (params?: OrdersListParams) => {
   if (params?.date_to) searchParams.append("date_to", params.date_to);
 
   const queryString = searchParams.toString();
-  return fetchApi<OrdersGetResponse>(`/orders${queryString ? "?" + queryString : ""}`, {
-    method: "GET",
-  });
+  return fetchApi.get<OrdersGetResponse>(`/orders${queryString ? "?" + queryString : ""}`);
 };
 
 /**
  * 受注詳細取得
  */
 export const getOrder = (orderId: number) =>
-  fetchApi<OrderGetResponse>(`/orders/${orderId}`, { method: "GET" });
+  fetchApi.get<OrderGetResponse>(`/orders/${orderId}`);
 
 /**
  * FEFO再マッチング実行
  */
 export const reMatchOrder = (orderId: number) =>
-  fetchApi<components["schemas"]["FefoCommitResponse"]>(`/orders/${orderId}/re-match`, {
-    method: "POST",
-  });
+  fetchApi.post<components["schemas"]["FefoCommitResponse"]>(`/orders/${orderId}/re-match`);
 
 /**
  * 引当情報付き受注一覧取得
  */
 export const getOrdersWithAllocations = (): Promise<unknown> =>
-  fetchApi("/orders/orders-with-allocations", {
-    method: "GET",
-  });
+  fetchApi.get("/orders/orders-with-allocations");
 
 /**
  * 倉庫別引当情報取得
  */
 export const getWarehouseAllocList = (): Promise<components["schemas"]["WarehouseListResponse"]> =>
-  fetchApi("/warehouse-alloc/warehouses", {
-    method: "GET",
-  });
+  fetchApi.get("/warehouse-alloc/warehouses");
 
 /**
  * 引当候補ロット取得
@@ -79,12 +71,10 @@ export const getCandidateLots = (
   if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
 
   const queryString = searchParams.toString();
-  return fetchApi<{
+  return fetchApi.get<{
     items: components["schemas"]["FefoLotAllocation"][];
     warnings?: string[];
-  }>(`/orders/${orderLineId}/candidate-lots${queryString ? "?" + queryString : ""}`, {
-    method: "GET",
-  });
+  }>(`/orders/${orderLineId}/candidate-lots${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -94,14 +84,11 @@ export const createLotAllocations = (
   orderLineId: number,
   request: { allocations: { lot_id: number; qty: number }[] },
 ) =>
-  fetchApi<{
+  fetchApi.post<{
     success?: boolean;
     message?: string;
     allocated_ids?: number[];
-  }>(`/orders/${orderLineId}/allocations`, {
-    method: "POST",
-    body: JSON.stringify(request),
-  });
+  }>(`/orders/${orderLineId}/allocations`, request);
 
 /**
  * ロット引当キャンセル
@@ -110,10 +97,10 @@ export const cancelLotAllocations = (
   orderLineId: number,
   request: { order_line_id?: number; allocation_ids?: number[] },
 ) =>
-  fetchApi<{ success?: boolean; message?: string }>(`/orders/${orderLineId}/allocations/cancel`, {
-    method: "POST",
-    body: JSON.stringify(request),
-  });
+  fetchApi.post<{ success?: boolean; message?: string }>(
+    `/orders/${orderLineId}/allocations/cancel`,
+    request,
+  );
 
 /**
  * 倉庫別引当保存
@@ -128,24 +115,18 @@ export const saveWarehouseAllocations = (
     quantity: number;
   }>,
 ) =>
-  fetchApi<{ success?: boolean; message?: string }>(
+  fetchApi.post<{ success?: boolean; message?: string }>(
     `/orders/${orderLineId}/warehouse-allocations`,
-    {
-      method: "POST",
-      body: JSON.stringify({ allocations }),
-    },
+    { allocations },
   );
 
 /**
  * 受注明細ステータス更新
  */
 export const updateOrderLineStatus = (orderLineId: number, newStatus: string) =>
-  fetchApi<{
+  fetchApi.patch<{
     success: boolean;
     message: string;
     order_line_id: number;
     new_status: string;
-  }>(`/orders/${orderLineId}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ status: newStatus }),
-  });
+  }>(`/orders/${orderLineId}/status`, { status: newStatus });

@@ -8,5 +8,5 @@ type ForecastRes = paths["/api/forecast"]["get"]["responses"][200]["content"]["a
 
 export const getForecasts = (params?: ForecastQuery) => {
   const qs = params ? `?${toSearchParams(params as Record<string, unknown>)}` : "";
-  return fetchApi<ForecastRes>(`/forecasts${qs}`, { method: "GET" });
+  return fetchApi.get<ForecastRes>(`/forecasts${qs}`);
 };

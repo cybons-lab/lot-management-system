@@ -26,10 +26,7 @@ export async function createAllocations(
   payload: CreateAllocationPayload,
 ): Promise<AllocationResult> {
   try {
-    await fetchApi("/api/allocations", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    await fetchApi.post("/api/allocations", payload);
   } catch (e) {
     // バックエンド未実装/一時的な失敗でもUIを進める（ログだけ残す）
     console.warn("[allocations/api] createAllocations fallback:", e);
@@ -41,7 +38,7 @@ export async function createAllocations(
 /** 取消し（フックは戻り値を使っていないので void でOK） */
 export async function cancelAllocation(allocationId: number): Promise<void> {
   try {
-    await http.del(`/api/allocations/${allocationId}`);
+    await http.delete(`/api/allocations/${allocationId}`);
   } catch (e) {
     console.warn("[allocations/api] cancelAllocation fallback:", e);
   }

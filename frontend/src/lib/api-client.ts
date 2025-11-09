@@ -20,24 +20,20 @@ export const api = {
   // ========================================
   // ロット管理
   // ========================================
-  getLots: () => fetchApi<LotResponse[]>("/lots", { method: "GET" }),
+  getLots: () => fetchApi.get<LotResponse[]>("/lots"),
 
-  getLot: (id: number) => fetchApi<LotResponse>(`/lots/${id}`, { method: "GET" }),
+  getLot: (id: number) => fetchApi.get<LotResponse>(`/lots/${id}`),
 
-  createLot: (data: LotCreate) =>
-    fetchApi<LotResponse>("/lots", {
-      method: "POST",
-      body: JSON.stringify(data),
-    }),
+  createLot: (data: LotCreate) => fetchApi.post<LotResponse>("/lots", data),
 
   // ========================================
   // マスタデータ
   // ========================================
-  getProducts: () => fetchApi<Product[]>("/masters/products", { method: "GET" }),
+  getProducts: () => fetchApi.get<Product[]>("/masters/products"),
 
-  getSuppliers: () => fetchApi<Supplier[]>("/masters/suppliers", { method: "GET" }),
+  getSuppliers: () => fetchApi.get<Supplier[]>("/masters/suppliers"),
 
-  getWarehouses: () => fetchApi<Warehouse[]>("/masters/warehouses", { method: "GET" }),
+  getWarehouses: () => fetchApi.get<Warehouse[]>("/masters/warehouses"),
 
   // ========================================
   // 受注管理
@@ -50,11 +46,8 @@ export const api = {
     if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
 
     const queryString = searchParams.toString();
-    return fetchApi<OrderResponse[]>(`/orders${queryString ? "?" + queryString : ""}`, {
-      method: "GET",
-    });
+    return fetchApi.get<OrderResponse[]>(`/orders${queryString ? "?" + queryString : ""}`);
   },
 
-  getOrder: (orderId: number) =>
-    fetchApi<OrderWithLinesResponse>(`/orders/${orderId}`, { method: "GET" }),
+  getOrder: (orderId: number) => fetchApi.get<OrderWithLinesResponse>(`/orders/${orderId}`),
 };
