@@ -6,6 +6,7 @@ API Routes Package
 
 from .admin import router as admin_router
 from .admin_presets import router as admin_presets_router
+from .admin_healthcheck import router as admin_healthcheck_router
 from .allocations import router as allocations_router
 from .forecast import router as forecast_router
 from .health import router as health_router
@@ -25,6 +26,7 @@ __all__ = [
     "integration_router",
     "admin_router",
     "admin_presets_router",
+    "admin_healthcheck_router",
     "allocations_router",
     "forecast_router",
     "warehouse_alloc_router",

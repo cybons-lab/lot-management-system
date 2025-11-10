@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
-from app.schemas.admin_seeds import SeedRequest, SeedResponse, SeedSummary
+from app.schemas.admin_seeds import SeedRequest, SeedResponse, SeedSummary, ActualCounts
 from app.models.masters import Customer, Product, Warehouse  # 実際のモデル名に合わせる
 from app.models.inventory import Lot, StockMovement
 from app.models.orders import Order, OrderLine, Allocation  # Allocationはサマリ整合のため残置
@@ -195,6 +195,24 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
     else:
         db.commit()
 
+    # 実際のDB件数を取得（dry_run=falseの場合のみ）
+    actual_counts = None
+    if not req.dry_run:
+        from sqlalchemy import func
+        from app.models.masters import Supplier
+
+        actual_counts = ActualCounts(
+            customers=db.scalar(select(func.count()).select_from(Customer)) or 0,
+            products=db.scalar(select(func.count()).select_from(Product)) or 0,
+            warehouses=db.scalar(select(func.count()).select_from(Warehouse)) or 0,
+            suppliers=db.scalar(select(func.count()).select_from(Supplier)) or 0,
+            lots=db.scalar(select(func.count()).select_from(Lot)) or 0,
+            stock_movements=db.scalar(select(func.count()).select_from(StockMovement)) or 0,
+            orders=db.scalar(select(func.count()).select_from(Order)) or 0,
+            order_lines=db.scalar(select(func.count()).select_from(OrderLine)) or 0,
+            allocations=db.scalar(select(func.count()).select_from(Allocation)) or 0,
+        )
+
     return SeedResponse(
         dry_run=req.dry_run,
         seed=seed,
@@ -207,4 +225,5 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
             order_lines=len(created_lines),
             allocations=len(created_allocs),
         ),
+        actual_counts=actual_counts,
     )
