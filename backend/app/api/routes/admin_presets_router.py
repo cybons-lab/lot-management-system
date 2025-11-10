@@ -15,7 +15,7 @@ from app.schemas import (
     MasterBulkLoadRequest,
 )
 
-from .masters_bulk_load import perform_master_bulk_load
+from .masters_bulk_load_router import perform_master_bulk_load
 
 
 PRESET_DIR = Path(__file__).resolve().parents[2] / "sample_presets"
