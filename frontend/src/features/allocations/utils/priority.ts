@@ -62,7 +62,8 @@ export function calculatePriority(order: Order): PriorityLevel {
  * 受注カードデータを作成
  */
 export function createOrderCardData(order: Order): OrderCardData {
-  const lines = order.lines || [];
+  const hasLineData = Array.isArray(order.lines);
+  const lines = hasLineData ? (order.lines ?? []) : [];
   const priority = calculatePriority(order);
 
   // 未引当数量(allocated_lotsを使用)
@@ -82,9 +83,10 @@ export function createOrderCardData(order: Order): OrderCardData {
     daysTodue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  // 必須フィールド欠落チェック(緩和版: 明細に製品コードと数量があればOK)
-  const hasMissingFields =
-    lines.length === 0 || lines.every((l) => !l.product_code || !l.quantity || l.quantity === 0);
+  // 必須フィールド欠落チェック(緩和版: 明細データが提供されている場合のみ判定)
+  const hasMissingFields = hasLineData
+    ? lines.length === 0 || lines.every((l) => !l.product_code || !l.quantity || l.quantity === 0)
+    : false;
 
   return {
     ...order,
