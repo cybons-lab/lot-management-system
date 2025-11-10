@@ -31,11 +31,22 @@ export default function SeedDataPage() {
     },
     onError: async (err: unknown) => {
       // fetch/axios どちらでもだいたい拾える汎用ハンドリング
-      const msg =
-        (err as any)?.response?.data?.detail ??
-        (err as any)?.cause?.message ??
-        (err as Error)?.message ??
-        "Unknown error";
+      let msg = "Unknown error";
+      if (err && typeof err === "object") {
+        if ("response" in err && err.response && typeof err.response === "object") {
+          if ("data" in err.response && err.response.data && typeof err.response.data === "object") {
+            if ("detail" in err.response.data && typeof err.response.data.detail === "string") {
+              msg = err.response.data.detail;
+            }
+          }
+        } else if ("cause" in err && err.cause && typeof err.cause === "object") {
+          if ("message" in err.cause && typeof err.cause.message === "string") {
+            msg = err.cause.message;
+          }
+        } else if ("message" in err && typeof err.message === "string") {
+          msg = err.message;
+        }
+      }
       toast.error(`失敗: ${msg}`);
     },
   });

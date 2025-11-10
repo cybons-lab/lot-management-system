@@ -54,6 +54,7 @@ def list_lots(
         expiry_from: 有効期限開始日
         expiry_to: 有効期限終了日
         with_stock: 在庫あり(>0)のみ取得
+        db: データベースセッション
     """
     query = db.query(Lot).options(joinedload(Lot.product), joinedload(Lot.warehouse))
 

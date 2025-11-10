@@ -6,7 +6,6 @@ FEFOロジック、在庫チェック、ロット状態管理.
 
 from dataclasses import dataclass
 from datetime import date
-from typing import List, Optional
 
 from app.domain.errors import DomainError
 

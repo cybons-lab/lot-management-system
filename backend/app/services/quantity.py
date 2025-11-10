@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from decimal import ROUND_HALF_UP, ROUND_UP, Decimal, getcontext
-from typing import TYPE_CHECKING, Union
+from typing import TYPE_CHECKING
 
 
 getcontext().prec = 28
@@ -14,7 +14,7 @@ getcontext().prec = 28
 if TYPE_CHECKING:  # pragma: no cover - 型チェック専用
     from app.models import Product
 
-NumberLike = Union[Decimal, float, int, str]
+NumberLike = Decimal | float | int | str
 
 
 class QuantityConversionError(ValueError):

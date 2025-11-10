@@ -71,12 +71,12 @@ export function createOrderLine(
 
   const productName =
     overrides && "product_name" in overrides
-      ? (overrides.product_name ?? null)
+      ? (overrides.product_name ?? undefined)
       : faker.commerce.productName();
   const customerCode =
-    overrides && "customer_code" in overrides ? (overrides.customer_code ?? null) : null;
+    overrides && "customer_code" in overrides ? (overrides.customer_code ?? undefined) : undefined;
   const customerName =
-    overrides && "customer_name" in overrides ? (overrides.customer_name ?? null) : null;
+    overrides && "customer_name" in overrides ? (overrides.customer_name ?? undefined) : undefined;
 
   return {
     id: overrides?.id ?? faker.number.int({ min: 1, max: 10000 }),
@@ -91,8 +91,8 @@ export function createOrderLine(
     forecast_version_no: overrides?.forecast_version_no ?? null,
     allocated_lots: allocatedLots,
     product_name: productName,
-    customer_code: customerCode,
-    customer_name: customerName,
+    customer_code: customerCode ?? undefined,
+    customer_name: customerName ?? undefined,
   };
 }
 
@@ -121,14 +121,14 @@ export function createOrderWithLines(
       ...line,
       customer_code:
         "customer_code" in line
-          ? (line.customer_code as string | null | undefined)
+          ? ((line.customer_code as string | null | undefined) ?? undefined)
           : (overrides?.customer_code ?? order.customer_code),
       customer_name:
         "customer_name" in line
-          ? (line.customer_name as string | null | undefined)
+          ? ((line.customer_name as string | null | undefined) ?? undefined)
           : ((overrides as { customer_name?: string | null })?.customer_name ??
             (order as { customer_name?: string | null }).customer_name ??
-            null),
+            undefined),
     }),
   );
 

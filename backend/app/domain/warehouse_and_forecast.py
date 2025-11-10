@@ -5,6 +5,7 @@ Warehouse Domain Layer
 """
 
 from dataclasses import dataclass
+from datetime import date
 
 from app.domain.errors import DomainError
 
@@ -97,10 +98,8 @@ __all__ = [
 # backend/app/domain/forecast/__init__.py
 """
 Forecast Domain Layer
-フォーキャストマッチングロジック、需要予測ルール
+フォーキャストマッチングロジック、需要予測ルール.
 """
-
-from datetime import date
 
 
 class ForecastDomainError(DomainError):

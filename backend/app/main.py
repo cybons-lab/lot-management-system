@@ -30,6 +30,7 @@ from app.core.config import settings
 from app.core.database import init_db
 from app.core.logging import setup_json_logging
 from app.domain.errors import DomainError
+from app.middleware.request_id import RequestIdMiddleware
 
 
 logger = logging.getLogger(__name__)
@@ -66,9 +67,6 @@ app.add_exception_handler(DomainError, errors.domain_exception_handler)
 app.add_exception_handler(Exception, errors.generic_exception_handler)
 
 # ミドルウェア登録
-from app.middleware.request_id import RequestIdMiddleware
-
-
 app.add_middleware(RequestIdMiddleware)
 app.add_middleware(
     CORSMiddleware,
