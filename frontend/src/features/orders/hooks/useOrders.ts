@@ -2,8 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import * as ordersApi from "@/features/orders/api";
-import { api } from "@/lib/api-client";
-import type { OrderResponse, OrdersListParams } from "@/types/aliases";
+import type { OrderResponse, OrdersListParams } from "@/shared/types/aliases";
 
 export const queryKeys = {
   orders: (params: OrdersListParams) => ["orders", params] as const,
@@ -21,13 +20,13 @@ export function useOrdersList(params: OrdersListParams) {
 export const useOrders = () =>
   useQuery<OrderResponse[]>({
     queryKey: ["orders"],
-    queryFn: () => api.getOrders(), // 無引数クロージャに
+    queryFn: () => ordersApi.getOrders(), // 無引数クロージャに
   });
 /** 受注明細（行）の配列を返す */
 export function useOrdersWithAllocations() {
   useQuery<OrderResponse[]>({
     queryKey: ["orders"],
-    queryFn: () => api.getOrders(),
+    queryFn: () => ordersApi.getOrders(),
 
     staleTime: 30_000,
     gcTime: 5 * 60_000,

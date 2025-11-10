@@ -6,7 +6,7 @@ import { OrderCard } from "@/features/orders/components/OrderCard";
 import { OrderFilters } from "@/features/orders/components/OrderFilters";
 import { useOrdersList } from "@/features/orders/hooks/useOrders";
 import { useToast } from "@/hooks/use-toast";
-import type { OrderWithLinesResponse, OrdersListParams } from "@/types/aliases";
+import type { OrderWithLinesResponse, OrdersListParams } from "@/shared/types/aliases";
 
 const DEFAULT_FILTERS: OrdersListParams = { limit: 20, skip: 0 };
 
@@ -66,7 +66,7 @@ export function OrdersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">受注一覧</h1>
-          <p className="text-sm text-muted-foreground">受注と引当状況を確認します</p>
+          <p className="text-muted-foreground text-sm">受注と引当状況を確認します</p>
         </div>
         <Button
           variant="outline"
@@ -87,13 +87,13 @@ export function OrdersPage() {
 
       <div className="space-y-4">
         {ordersQuery.isLoading ? (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-2 text-sm">
             <Loader2 className="h-4 w-4 animate-spin" /> 受注データを読み込み中です
           </div>
         ) : null}
 
         {!ordersQuery.isLoading && orders.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+          <div className="text-muted-foreground rounded-lg border border-dashed p-6 text-center text-sm">
             条件に一致する受注は見つかりませんでした
           </div>
         ) : null}

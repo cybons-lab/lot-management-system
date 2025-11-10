@@ -4,7 +4,7 @@
  */
 
 import { http } from "@/services/http";
-import type { LotResponse } from "@/types/aliases";
+import type { LotResponse } from "@/shared/types/aliases";
 import type { LotCreateInput, LotUpdateInput, LotSearchParams } from "@/utils/validators";
 
 const BASE_PATH = "/lots";

@@ -4,7 +4,11 @@
  */
 
 import { http } from "@/services/http";
-import type { OrderResponse, OrderWithLinesResponse, OrdersListParams } from "@/types/aliases";
+import type {
+  OrderResponse,
+  OrderWithLinesResponse,
+  OrdersListParams,
+} from "@/shared/types/aliases";
 import type { OrderCreate, OrderUpdate } from "@/utils/validators";
 
 const BASE_PATH = "/orders";

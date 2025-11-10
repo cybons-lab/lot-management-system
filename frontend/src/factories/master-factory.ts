@@ -5,7 +5,7 @@
 
 import { faker } from "@faker-js/faker/locale/ja";
 
-import type { Product, Supplier, Warehouse } from "@/types/aliases";
+import type { Product, Supplier, Warehouse } from "@/shared/types/aliases";
 
 /**
  * ランダムな製品データを生成

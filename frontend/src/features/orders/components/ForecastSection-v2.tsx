@@ -13,9 +13,9 @@ export function ForecastSection({ productCode, fullWidth = false }: Props) {
   if (!productCode) return null;
 
   return (
-    <div className={`border rounded-lg ${fullWidth ? "w-full" : ""}`}>
+    <div className={`rounded-lg border ${fullWidth ? "w-full" : ""}`}>
       <button
-        className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
+        className="flex w-full items-center justify-between p-3 text-left hover:bg-gray-50"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-2">
@@ -26,7 +26,7 @@ export function ForecastSection({ productCode, fullWidth = false }: Props) {
       </button>
 
       {isOpen && (
-        <div className="border-t p-4 bg-gray-50 space-y-3">
+        <div className="space-y-3 border-t bg-gray-50 p-4">
           {/* 説明 */}
           <p className="text-xs text-gray-600">
             この製品の需要予測や在庫推移を確認できます。
@@ -35,15 +35,15 @@ export function ForecastSection({ productCode, fullWidth = false }: Props) {
 
           {/* サマリ情報（将来的に実装） */}
           <div className="grid grid-cols-3 gap-3">
-            <div className="p-2 rounded bg-white border">
+            <div className="rounded border bg-white p-2">
               <div className="text-xs text-gray-500">今月予測</div>
               <div className="text-lg font-semibold">120</div>
             </div>
-            <div className="p-2 rounded bg-white border">
+            <div className="rounded border bg-white p-2">
               <div className="text-xs text-gray-500">来月予測</div>
               <div className="text-lg font-semibold">150</div>
             </div>
-            <div className="p-2 rounded bg-white border">
+            <div className="rounded border bg-white p-2">
               <div className="text-xs text-gray-500">在庫予測</div>
               <div className="text-lg font-semibold text-green-600">安全</div>
             </div>
@@ -53,7 +53,7 @@ export function ForecastSection({ productCode, fullWidth = false }: Props) {
           <div className="flex gap-2">
             <a
               href={`/forecast?product=${encodeURIComponent(productCode)}`}
-              className="px-4 py-2 rounded bg-sky-600 text-white text-sm hover:bg-sky-700 inline-flex items-center gap-2"
+              className="inline-flex items-center gap-2 rounded bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-700"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -68,14 +68,14 @@ export function ForecastSection({ productCode, fullWidth = false }: Props) {
 
             <a
               href={`/forecast`}
-              className="px-4 py-2 rounded border text-sm hover:bg-gray-100 inline-flex items-center gap-2"
+              className="inline-flex items-center gap-2 rounded border px-4 py-2 text-sm hover:bg-gray-100"
             >
               フォーキャスト一覧
             </a>
           </div>
 
           {/* 注意事項 */}
-          <div className="text-xs text-gray-500 bg-white p-2 rounded border">
+          <div className="rounded border bg-white p-2 text-xs text-gray-500">
             💡 品番が一致する製品のみ表示されます。詳細な予測グラフは上記リンクから確認できます。
           </div>
         </div>

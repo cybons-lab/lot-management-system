@@ -1,16 +1,16 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Pages
-import { AdminPage } from "@/pages/AdminPage";
-import { DashboardPage } from "@/pages/DashboardPage";
-import { ForecastImportPage } from "@/pages/ForecastImportPage";
-import { ForecastListPage } from "@/pages/ForecastListPage";
-import { InventoryPage } from "@/pages/InventoryPage";
+import { AdminPage } from "@/features/admin/pages/AdminPage";
+import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
+import { ForecastImportPage } from "@/features/forecasts/pages/ForecastImportPage";
+import { ForecastListPage } from "@/features/forecasts/pages/ForecastListPage";
+import { InventoryPage } from "@/features/inventory/pages/InventoryPage";
+import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
 import { LotAllocationPage } from "@/pages/LotAllocationPage";
-import { OrdersListPage } from "@/pages/OrdersListPage";
 
 function AppTabs() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       <header className="border-b">
         <div className="container mx-auto px-4 py-4">
           <h1 className="text-2xl font-bold">ロット管理システム (MVP)</h1>

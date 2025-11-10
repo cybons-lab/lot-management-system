@@ -6,7 +6,7 @@
 import { http, HttpResponse } from "msw";
 
 import { createLots, createLotWithStock } from "@/factories/lot-factory";
-import type { LotResponse } from "@/types/aliases";
+import type { LotResponse } from "@/shared/types/aliases";
 
 const API_BASE = "/api";
 

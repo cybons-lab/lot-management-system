@@ -14,14 +14,14 @@ const statusColors: Record<string, string> = {
 
 export function OrderLineHeader({ productName, productCode, status, orderDate }: Props) {
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-sky-50 to-white">
+    <div className="flex items-center justify-between border-b bg-gradient-to-r from-sky-50 to-white px-6 py-4">
       <h2 className="text-lg font-semibold text-gray-900">
         {productName} <span className="text-gray-500">({productCode})</span>
       </h2>
       <div className="flex items-center gap-3">
         {status && (
           <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
+            className={`rounded-full px-2 py-1 text-xs font-medium ${
               statusColors[status] ?? statusColors.open
             }`}
           >

@@ -14,7 +14,7 @@ export function WarehouseBadges({ warehouses }: Props) {
       <div className="text-sm font-medium text-gray-600">出荷倉庫:</div>
       <div className="flex flex-wrap gap-1">
         {warehouses.map((wh) => (
-          <span key={wh} className="px-2 py-1 rounded bg-sky-100 text-sky-700 text-xs font-medium">
+          <span key={wh} className="rounded bg-sky-100 px-2 py-1 text-xs font-medium text-sky-700">
             {wh}
           </span>
         ))}

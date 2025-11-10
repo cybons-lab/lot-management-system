@@ -1,4 +1,4 @@
-import { fetchApi } from "@/lib/http";
+import { fetchApi } from "@/shared/libs/http";
 import type { paths } from "@/types/api";
 
 // api.d.ts から型を抽出

@@ -3,8 +3,11 @@
  * マスタデータ関連のAPI通信関数を提供
  */
 
+import type { Customer } from "@/features/customers/validators/customer-schema";
+import type { Product } from "@/features/products/validators/product-schema";
+import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
+import type { Warehouse } from "@/features/warehouses/validators/warehouse-schema";
 import { http } from "@/services/http";
-import type { Product, Supplier, Warehouse, Customer } from "@/utils/validators/master-schemas";
 
 const BASE_PATH = "/masters";
 

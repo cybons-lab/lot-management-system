@@ -1,5 +1,5 @@
 // frontend/src/features/orders/components/OrderFilters.tsx
-import type { OrdersListParams } from "@/types/legacy";
+import type { OrdersListParams } from "@/shared/types/legacy";
 
 type Props = {
   value: OrdersListParams;
@@ -10,14 +10,17 @@ type Props = {
 
 export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
   return (
-    <div className="rounded-lg border bg-white p-4 space-y-3">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div className="space-y-3 rounded-lg border bg-white p-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {/* 顧客コード */}
         <div>
-          <label className="block text-sm font-medium mb-1">顧客コード</label>
+          <label htmlFor="customer-code-input" className="mb-1 block text-sm font-medium">
+            顧客コード
+          </label>
           <input
+            id="customer-code-input"
             type="text"
-            className="w-full border rounded px-3 py-1.5 text-sm"
+            className="w-full rounded border px-3 py-1.5 text-sm"
             placeholder="部分一致で検索"
             value={value.customer_code ?? ""}
             onChange={(_) => onChange({ ...value, customer_code: _.target.value })}
@@ -26,9 +29,12 @@ export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
 
         {/* ステータス */}
         <div>
-          <label className="block text-sm font-medium mb-1">ステータス</label>
+          <label htmlFor="status-select" className="mb-1 block text-sm font-medium">
+            ステータス
+          </label>
           <select
-            className="w-full border rounded px-3 py-1.5 text-sm"
+            id="status-select"
+            className="w-full rounded border px-3 py-1.5 text-sm"
             value={value.status ?? ""}
             onChange={(_) => onChange({ ...value, status: _.target.value })}
           >
@@ -42,9 +48,12 @@ export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
 
         {/* 納期フィルタ */}
         <div>
-          <label className="block text-sm font-medium mb-1">納期</label>
+          <label htmlFor="due-date-select" className="mb-1 block text-sm font-medium">
+            納期
+          </label>
           <select
-            className="w-full border rounded px-3 py-1.5 text-sm"
+            id="due-date-select"
+            className="w-full rounded border px-3 py-1.5 text-sm"
             onChange={(_) =>
               onChange({
                 ...value,
@@ -61,10 +70,10 @@ export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
       {/* ボタン */}
       <div className="flex gap-2">
         <button
-          className="px-4 py-1.5 rounded border hover:bg-gray-100 text-sm flex items-center gap-2"
+          className="flex items-center gap-2 rounded border px-4 py-1.5 text-sm hover:bg-gray-100"
           onClick={onSearch}
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -75,7 +84,7 @@ export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
           再取得
         </button>
 
-        <button className="px-4 py-1.5 rounded border hover:bg-gray-100 text-sm" onClick={onReset}>
+        <button className="rounded border px-4 py-1.5 text-sm hover:bg-gray-100" onClick={onReset}>
           リセット
         </button>
       </div>

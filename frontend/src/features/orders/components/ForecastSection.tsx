@@ -3,7 +3,7 @@ import * as React from "react";
 // frontend/src/features/orders/components/ForecastSection.tsx
 
 import { getForecastByCodes } from "@/features/forecast/api";
-import type { ForecastResponse } from "@/types/forecast";
+import type { ForecastResponse } from "@/shared/types/forecast";
 
 type Props = {
   productCode?: string;
@@ -39,9 +39,9 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
   };
 
   return (
-    <div className={`border rounded-lg ${fullWidth ? "w-full" : ""}`}>
+    <div className={`rounded-lg border ${fullWidth ? "w-full" : ""}`}>
       <button
-        className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50"
+        className="flex w-full items-center justify-between p-3 text-left hover:bg-gray-50"
         onClick={() => setIsOpen((prev) => !prev)}
       >
         <div className="flex flex-col">
@@ -54,7 +54,7 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
       </button>
 
       {isOpen && (
-        <div className="border-t p-4 bg-gray-50 space-y-4">
+        <div className="space-y-4 border-t bg-gray-50 p-4">
           {forecastQ.isLoading ? (
             <div className="text-xs text-gray-500">フォーキャストを読み込み中...</div>
           ) : hasForecast ? (
@@ -62,10 +62,10 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
               <div className="text-xs text-gray-600">
                 アクティブなフォーキャストが {forecasts.length} 件見つかりました。
               </div>
-              <div className="grid gap-3 md:grid-cols-3 sm:grid-cols-2 text-xs">
+              <div className="grid gap-3 text-xs sm:grid-cols-2 md:grid-cols-3">
                 {forecasts.slice(0, 3).map((f) => (
                   <div key={f.id} className="rounded border bg-white p-3 shadow-sm">
-                    <div className="text-[11px] uppercase text-gray-400">{f.granularity}</div>
+                    <div className="text-[11px] text-gray-400 uppercase">{f.granularity}</div>
                     <div className="text-sm font-semibold text-gray-800">{renderPeriod(f)}</div>
                     <div className="mt-1 text-xs text-gray-500">
                       予測数量: {(f.qty_forecast ?? 0).toLocaleString()} EA

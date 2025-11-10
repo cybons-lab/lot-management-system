@@ -1,6 +1,6 @@
 // frontend/src/features/orders/components/OrderCard.tsx
-import { formatCodeAndName } from "@/lib/utils";
-import type { OrderWithLinesResponse } from "@/types/legacy";
+import { formatCodeAndName } from "@/shared/libs/utils";
+import type { OrderWithLinesResponse } from "@/shared/types/legacy";
 
 type Props = {
   order: OrderWithLinesResponse;
@@ -24,7 +24,7 @@ export function OrderCard({ order, onSelectLine, onReMatch }: Props) {
           </div>
         </div>
         {onReMatch && (
-          <button className="px-3 py-1 rounded bg-gray-800 text-white" onClick={onReMatch}>
+          <button className="rounded bg-gray-800 px-3 py-1 text-white" onClick={onReMatch}>
             ロット再マッチ
           </button>
         )}
@@ -51,7 +51,7 @@ export function OrderCard({ order, onSelectLine, onReMatch }: Props) {
                 <td className="py-1">
                   {onSelectLine && (
                     <button
-                      className="px-2 py-0.5 rounded border"
+                      className="rounded border px-2 py-0.5"
                       onClick={() => onSelectLine(ln.id)}
                     >
                       候補ロット

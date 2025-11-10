@@ -1,9 +1,14 @@
 // frontend/src/features/orders/hooks/useOrderLineComputed.ts
 import React from "react";
 
-import { formatCodeAndName } from "@/lib/utils";
-import { diffDays, isValidDate } from "@/lib/utils/date";
-import type { AllocatedLot, OrderLine, OrderLineComputed, OrderResponse } from "@/types/aliases";
+import { formatCodeAndName } from "@/shared/libs/utils";
+import { diffDays, isValidDate } from "@/shared/libs/utils/date";
+import type {
+  AllocatedLot,
+  OrderLine,
+  OrderLineComputed,
+  OrderResponse,
+} from "@/shared/types/aliases";
 
 export type OrderLineSource = Partial<OrderLine> & {
   order_id?: number;

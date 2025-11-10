@@ -8,7 +8,7 @@ import { useMutation, useQueryClient, type UseMutationResult } from "@tanstack/r
 
 import { createLot, updateLot, deleteLot } from "@/services/api/lot-service";
 import { QUERY_KEYS } from "@/services/api/query-keys";
-import type { LotResponse } from "@/types/aliases";
+import type { LotResponse } from "@/shared/types/aliases";
 import type { LotCreateInput, LotUpdateInput } from "@/utils/validators";
 
 /**

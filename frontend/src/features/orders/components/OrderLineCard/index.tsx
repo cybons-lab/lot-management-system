@@ -3,20 +3,20 @@ import * as React from "react";
 
 import { InfoRow } from "@/components/common/InfoRow";
 import { Button } from "@/components/ui/button";
-import { AllocationProgress } from "@/features/orders/components/AllocationProgress";
+import { AllocationProgress } from "@/features/allocations/components/AllocationProgress";
+import { useAllocationActions } from "@/features/allocations/hooks/useAllocationActions";
 import { ForecastSection } from "@/features/orders/components/ForecastSection";
 import { LotListWithAllocation } from "@/features/orders/components/LotListWithAllocation";
 import * as OrderLineHeader from "@/features/orders/components/OrderLineHeader";
-import { useAllocationActions } from "@/features/orders/hooks/useAllocationActions";
 import {
   useOrderLineComputed,
   type OrderLineSource,
   type OrderSource,
 } from "@/features/orders/hooks/useOrderLineComputed";
 import { useToast } from "@/hooks/use-toast";
-import { formatCodeAndName } from "@/lib/utils";
-import { formatYmd } from "@/lib/utils/date";
-import type { AllocatedLot } from "@/types/aliases";
+import { formatCodeAndName } from "@/shared/libs/utils";
+import { formatYmd } from "@/shared/libs/utils/date";
+import type { AllocatedLot } from "@/shared/types/aliases";
 
 type Props = {
   order?: OrderSource | null;

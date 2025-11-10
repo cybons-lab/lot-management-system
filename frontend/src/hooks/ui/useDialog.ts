@@ -194,6 +194,10 @@ export function useConfirmDialog() {
  *   </>
  * );
  * ```
+ *
+ * @deprecated This hook violates Rules of Hooks (calls useDialog in a loop).
+ * TODO: Refactor to use React.useMemo with a stable array, or remove if unused.
+ * Currently not used anywhere in the codebase.
  */
 export function useMultipleDialogs<T extends string>(
   dialogNames: readonly T[],

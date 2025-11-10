@@ -6,9 +6,11 @@
 
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
+import type { Customer } from "@/features/customers/validators/customer-schema";
+import type { Product } from "@/features/products/validators/product-schema";
+import type { Warehouse } from "@/features/warehouses/validators/warehouse-schema";
 import { listProducts, listCustomers, listWarehouses } from "@/services/api/master-service";
 import { QUERY_KEYS } from "@/services/api/query-keys";
-import type { Product, Customer, Warehouse } from "@/utils/validators/master-schemas";
 
 /**
  * 製品マスタ一覧を取得するフック

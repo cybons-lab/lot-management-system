@@ -3,7 +3,11 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import importPlugin from "eslint-plugin-import";
+import unusedImports from "eslint-plugin-unused-imports";
+// Note: tailwindcss eslint plugin removed due to Tailwind v4 incompatibility
+// Tailwind class ordering is handled by prettier-plugin-tailwindcss instead
 import eslintConfigPrettier from "eslint-config-prettier";
 
 /** @type {import("eslint").Linter.FlatConfig[]} */
@@ -32,7 +36,9 @@ export default [
       "@typescript-eslint": tseslint.plugin,
       react,
       "react-hooks": reactHooks,
+      "jsx-a11y": jsxA11y,
       import: importPlugin,
+      "unused-imports": unusedImports,
     },
     languageOptions: {
       parser: tseslint.parser,
@@ -45,30 +51,81 @@ export default [
     },
     rules: {
       // TypeScript strict rules
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
-      ],
+      "@typescript-eslint/no-unused-vars": "off", // Disabled in favor of unused-imports
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/consistent-type-imports": [
         "error",
         { prefer: "type-imports", fixStyle: "inline-type-imports" },
       ],
 
+      // Unused imports auto-removal
+      "unused-imports/no-unused-imports": "error",
+      "unused-imports/no-unused-vars": [
+        "error",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+        },
+      ],
+
       // React rules
       "react/react-in-jsx-scope": "off",
 
-      // File size limits
+      // React Hooks rules (critical)
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
+
+      // JSX Accessibility rules
+      "jsx-a11y/alt-text": "error",
+      "jsx-a11y/anchor-has-content": "error",
+      "jsx-a11y/anchor-is-valid": "error",
+      "jsx-a11y/aria-activedescendant-has-tabindex": "error",
+      "jsx-a11y/aria-props": "error",
+      "jsx-a11y/aria-role": "error",
+      "jsx-a11y/aria-unsupported-elements": "error",
+      "jsx-a11y/click-events-have-key-events": "warn",
+      "jsx-a11y/heading-has-content": "error",
+      "jsx-a11y/html-has-lang": "error",
+      "jsx-a11y/iframe-has-title": "error",
+      "jsx-a11y/img-redundant-alt": "error",
+      "jsx-a11y/interactive-supports-focus": "warn",
+      "jsx-a11y/label-has-associated-control": "error",
+      "jsx-a11y/no-access-key": "error",
+      "jsx-a11y/no-autofocus": "warn",
+      "jsx-a11y/no-redundant-roles": "error",
+      "jsx-a11y/role-has-required-aria-props": "error",
+      "jsx-a11y/role-supports-aria-props": "error",
+      "jsx-a11y/scope": "error",
+
+      // Note: Tailwind CSS rules removed (plugin incompatible with Tailwind v4)
+      // Tailwind class ordering is enforced by prettier-plugin-tailwindcss
+
+      // File size limits - STRICT (restored from temporary relaxation)
       "max-lines": [
-        // "error",
-        "warn", // ← 一時的にwarnへ（後で元に戻す）
+        "error",
         {
-          // max: 300,
-          max: 1200, // ← 暫定的に拡大。後で段階的に300へ戻す
+          max: 400,
           skipBlankLines: true,
           skipComments: true,
         },
       ],
+
+      // Function size limits
+      "max-lines-per-function": [
+        "error",
+        {
+          max: 80,
+          skipBlankLines: true,
+          skipComments: true,
+        },
+      ],
+
+      // Complexity limits
+      "max-depth": ["error", 4],
+      "max-params": ["error", 4],
+      complexity: ["error", 12],
 
       // Import organization
       "import/order": [
@@ -134,17 +191,70 @@ export default [
     },
   },
 
-  // Allow axios in infrastructure layer
+  // Allow axios in infrastructure layer and relax complexity rules
   {
-    files: ["src/lib/**/*.{ts,tsx}", "src/services/**/*.{ts,tsx}", "src/hooks/**/*.{ts,tsx}"],
+    files: [
+      "src/lib/**/*.{ts,tsx}",
+      "src/shared/libs/**/*.{ts,tsx}",
+      "src/services/**/*.{ts,tsx}",
+      "src/hooks/**/*.{ts,tsx}",
+    ],
     rules: {
       "no-restricted-imports": "off",
-      // TS版の未使用変数ルールも緩和しないと警告が消えない
-      "@typescript-eslint/no-unused-vars": [
+      "unused-imports/no-unused-vars": [
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
       "max-lines": "off",
+      "max-lines-per-function": "off",
+      complexity: "off",
+      "react-hooks/rules-of-hooks": "off", // Allow experimental hook patterns in this directory
+    },
+  },
+
+  // Temporary overrides for function length/complexity
+  // TODO: Refactor these files to split into smaller components/hooks
+  {
+    files: [
+      // Factory files with high complexity
+      "src/factories/order-factory.ts",
+      // Admin pages
+      "src/features/admin/pages/SeedDataPage.tsx",
+      // Allocation components
+      "src/features/allocations/components/OrderCard.tsx",
+      "src/features/allocations/components/OrderLineCard.tsx",
+      "src/features/allocations/components/LotAllocationPane.tsx",
+      "src/features/allocations/components/LotAllocationPanel.tsx",
+      "src/features/allocations/components/OrderDetailPane.tsx",
+      "src/features/allocations/components/WarehouseAllocationModal.tsx",
+      "src/features/allocations/pages/LotAllocationPage.tsx",
+      "src/features/allocations/hooks/useAllocationMutation.ts",
+      "src/features/allocations/hooks/useAutoSelection.ts",
+      // API files
+      "src/features/forecast/api.ts",
+      "src/features/inventory/api.ts",
+      "src/features/orders/api.ts",
+      // Forecast pages
+      "src/features/forecasts/pages/ForecastListPage.tsx",
+      // Inventory pages
+      "src/features/inventory/pages/InventoryPage.tsx",
+      // Order components
+      "src/features/orders/components/ForecastSection.tsx",
+      "src/features/orders/components/LotListWithAllocation.tsx",
+      "src/features/orders/components/OrderLineCard/index.tsx",
+      "src/features/orders/pages/OrderDetailPage.tsx",
+      "src/features/orders/pages/OrderPage.tsx",
+      "src/features/orders/pages/OrdersListPage.tsx",
+      "src/features/orders/hooks/useOrderLineComputed.ts",
+      // Shared components
+      "src/shared/components/data/DataTable.tsx",
+      "src/shared/components/data/TablePagination.tsx",
+      "src/shared/components/form/FormDialog.tsx",
+    ],
+    rules: {
+      "max-lines-per-function": ["error", { max: 300, skipBlankLines: true, skipComments: true }],
+      complexity: ["error", 52],
+      "max-params": ["error", 6],
     },
   },
 

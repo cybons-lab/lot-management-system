@@ -12,6 +12,14 @@ type Props = {
 };
 
 export function WarehouseSelector({ warehouses, selectedWarehouse, onSelectWarehouse }: Props) {
+  // 倉庫が1つの場合は自動選択
+  // NOTE: useEffect must be called before any early returns (Rules of Hooks)
+  React.useEffect(() => {
+    if (warehouses.length === 1 && !selectedWarehouse) {
+      onSelectWarehouse(warehouses[0]);
+    }
+  }, [warehouses, selectedWarehouse, onSelectWarehouse]);
+
   if (warehouses.length === 0) {
     return (
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
@@ -20,24 +28,17 @@ export function WarehouseSelector({ warehouses, selectedWarehouse, onSelectWareh
     );
   }
 
-  // 倉庫が1つの場合は自動選択
-  React.useEffect(() => {
-    if (warehouses.length === 1 && !selectedWarehouse) {
-      onSelectWarehouse(warehouses[0]);
-    }
-  }, [warehouses, selectedWarehouse, onSelectWarehouse]);
-
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-gray-700">
+      <div className="text-sm font-medium text-gray-700">
         出荷倉庫 <span className="text-red-500">*</span>
-      </label>
+      </div>
 
       {/* 倉庫が1つの場合は固定表示 */}
       {warehouses.length === 1 ? (
-        <div className="px-3 py-2 rounded-lg bg-sky-50 border border-sky-200">
+        <div className="rounded-lg border border-sky-200 bg-sky-50 px-3 py-2">
           <div className="text-sm font-medium text-sky-700">{warehouses[0]}</div>
-          <div className="text-xs text-gray-500 mt-0.5">かんばん指定倉庫</div>
+          <div className="mt-0.5 text-xs text-gray-500">かんばん指定倉庫</div>
         </div>
       ) : (
         // 倉庫が複数の場合は選択UI
@@ -45,10 +46,10 @@ export function WarehouseSelector({ warehouses, selectedWarehouse, onSelectWareh
           {warehouses.map((wh) => (
             <button
               key={wh}
-              className={`w-full px-3 py-2 rounded-lg border text-left transition-colors ${
+              className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${
                 selectedWarehouse === wh
-                  ? "bg-sky-600 text-white border-sky-700"
-                  : "bg-white border-gray-300 hover:bg-gray-50"
+                  ? "border-sky-700 bg-sky-600 text-white"
+                  : "border-gray-300 bg-white hover:bg-gray-50"
               }`}
               onClick={() => onSelectWarehouse(wh)}
             >

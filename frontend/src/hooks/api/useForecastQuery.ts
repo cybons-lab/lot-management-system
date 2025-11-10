@@ -1,6 +1,6 @@
 // src/features/forecast/api.ts
-import { fetchApi } from "@/lib/http";
-import { toSearchParams } from "@/lib/query";
+import { fetchApi } from "@/shared/libs/http";
+import { toSearchParams } from "@/shared/libs/query";
 import type { paths } from "@/types/api";
 
 type ForecastQuery = paths["/api/forecast"]["get"]["parameters"]["query"];

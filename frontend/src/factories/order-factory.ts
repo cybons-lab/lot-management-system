@@ -5,7 +5,7 @@
 
 import { faker } from "@faker-js/faker/locale/ja";
 
-import type { OrderLine, OrderResponse, OrderWithLinesResponse } from "@/types/aliases";
+import type { OrderLine, OrderResponse, OrderWithLinesResponse } from "@/shared/types/aliases";
 
 type OrderLineFactoryExtras = {
   product_name?: string | null;

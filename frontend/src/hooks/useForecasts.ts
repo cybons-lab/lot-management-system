@@ -1,7 +1,7 @@
 // src/hooks/useForecasts.ts
 import { useQuery } from "@tanstack/react-query";
 
-import { get } from "@/lib/apiClient";
+import { fetchApi } from "@/shared/libs/http";
 import type { paths } from "@/types/api";
 
 type ForecastList =
@@ -13,13 +13,13 @@ type ForecastDetail =
 export function useForecasts(params?: ForecastQuery) {
   return useQuery({
     queryKey: ["forecast", params],
-    queryFn: () => get<ForecastList>("/forecast", params),
+    queryFn: () => fetchApi.get<ForecastList>("/forecast", { params }),
   });
 }
 export function useForecast(id: number | string) {
   return useQuery({
     queryKey: ["forecast", id],
-    queryFn: () => get<ForecastDetail>(`/forecast/${id}`),
+    queryFn: () => fetchApi.get<ForecastDetail>(`/forecast/${id}`),
     enabled: !!id,
   });
 }

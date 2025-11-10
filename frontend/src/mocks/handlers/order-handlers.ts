@@ -6,7 +6,7 @@
 import { http, HttpResponse } from "msw";
 
 import { createOrderWithLines } from "@/factories/order-factory";
-import type { OrderResponse, OrderWithLinesResponse } from "@/types/aliases";
+import type { OrderResponse, OrderWithLinesResponse } from "@/shared/types/aliases";
 
 const API_BASE = "/api";
 

@@ -1,5 +1,5 @@
-import { fetchApi, http } from "@/lib/http";
-import type { LotCandidate } from "@/types/aliases";
+import { fetchApi, http } from "@/shared/libs/http";
+import type { LotCandidate } from "@/shared/types/aliases";
 
 /** ---- 型はフック側の想定に合わせる ---- */
 export type AllocationInputItem = {

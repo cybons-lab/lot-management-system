@@ -31,12 +31,12 @@ export function ForecastFileUploadCard({ onUpload, className }: ForecastFileUplo
 
   return (
     <div className={className}>
-      <h3 className="text-lg font-semibold mb-4">ファイルアップロード</h3>
+      <h3 className="mb-4 text-lg font-semibold">ファイルアップロード</h3>
 
       <div className="space-y-4">
-        <div className="border-2 border-dashed rounded-lg p-8 text-center">
+        <div className="rounded-lg border-2 border-dashed p-8 text-center">
           <div className="flex flex-col items-center gap-4">
-            <Upload className="h-12 w-12 text-muted-foreground" />
+            <Upload className="text-muted-foreground h-12 w-12" />
             <div>
               <Label htmlFor={inputId} className="cursor-pointer">
                 <span className="text-primary hover:underline">ファイルを選択</span>
@@ -49,14 +49,14 @@ export function ForecastFileUploadCard({ onUpload, className }: ForecastFileUplo
                 className="hidden"
                 onChange={handleFileChange}
               />
-              <p className="text-sm text-muted-foreground mt-2">CSV形式のみ対応</p>
+              <p className="text-muted-foreground mt-2 text-sm">CSV形式のみ対応</p>
             </div>
           </div>
         </div>
 
         {file && (
-          <div className="flex items-center gap-2 p-4 rounded-lg bg-muted">
-            <FileText className="h-5 w-5 text-primary" />
+          <div className="bg-muted flex items-center gap-2 rounded-lg p-4">
+            <FileText className="text-primary h-5 w-5" />
             <span className="flex-1">{file.name}</span>
             <Button variant="ghost" size="sm" onClick={() => setFile(null)}>
               削除

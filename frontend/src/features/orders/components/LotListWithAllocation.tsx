@@ -2,8 +2,8 @@ import { Check, X } from "lucide-react";
 import * as React from "react";
 
 // frontend/src/features/orders/components/LotListWithAllocation.tsx
-import { formatCodeAndName } from "@/lib/utils";
-import type { LotCandidate, AllocatedLot } from "@/types/legacy";
+import { formatCodeAndName } from "@/shared/libs/utils";
+import type { LotCandidate, AllocatedLot } from "@/shared/types/legacy";
 
 // lotが `lot_id` / `id` のどちらでも来るケースに対応するためのキー型とヘルパ
 type LotKey = { lot_id?: number; id?: number };
@@ -62,7 +62,7 @@ export function LotListWithAllocation({
 
   return (
     <div className="rounded-lg border">
-      <div className="p-3 border-b bg-gray-50">
+      <div className="border-b bg-gray-50 p-3">
         <div className="text-sm font-medium">ロット候補</div>
       </div>
 
@@ -78,16 +78,16 @@ export function LotListWithAllocation({
             <div key={id} className={`p-3 ${isAllocated ? "bg-green-50" : "hover:bg-gray-50"}`}>
               <div className="flex items-start justify-between gap-3">
                 {/* 左側: ロット情報 */}
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
                       {formatCodeAndName(lot.warehouse_code || "", lot.warehouse_name)}
                     </span>
-                    {isAllocated && <Check className="h-4 w-4 text-green-600 shrink-0" />}
-                    <div className="font-mono text-sm font-medium truncate">{lot.lot_code}</div>
+                    {isAllocated && <Check className="h-4 w-4 shrink-0 text-green-600" />}
+                    <div className="truncate font-mono text-sm font-medium">{lot.lot_code}</div>
                   </div>
 
-                  <div className="text-xs text-gray-500 mt-2 space-y-0.5">
+                  <div className="mt-2 space-y-0.5 text-xs text-gray-500">
                     <div>
                       在庫: {(lot.available_qty ?? 0).toLocaleString()} {lot.base_unit}
                       {typeof lot.lot_unit_qty === "number" &&
@@ -114,7 +114,7 @@ export function LotListWithAllocation({
                         引当済: {allocation.allocated_qty} {unit}
                       </span>
                       <button
-                        className="text-xs text-red-600 hover:text-red-700 flex items-center gap-1"
+                        className="flex items-center gap-1 text-xs text-red-600 hover:text-red-700"
                         onClick={() =>
                           allocation?.allocation_id && onCancelAllocation(allocation.allocation_id)
                         }
@@ -128,7 +128,7 @@ export function LotListWithAllocation({
 
                 {/* 右側: 引当操作 */}
                 {!isAllocated && (
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex shrink-0 items-center gap-2">
                     <input
                       type="number"
                       min={0}
@@ -139,10 +139,10 @@ export function LotListWithAllocation({
                         setAllocQty((prev) => ({ ...prev, [id]: next }));
                       }}
                       placeholder="数量"
-                      className="w-24 border rounded px-2 py-1 text-sm"
+                      className="w-24 rounded border px-2 py-1 text-sm"
                     />
                     <button
-                      className="px-3 py-1 rounded bg-sky-600 text-white text-sm hover:bg-sky-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="rounded bg-sky-600 px-3 py-1 text-sm text-white hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={inputQty <= 0}
                       onClick={() => {
                         onAllocate(id, inputQty);
