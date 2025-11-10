@@ -30,8 +30,9 @@ export function OrderLineCard({
   const progress = totalQuantity > 0 ? (displayedAllocated / totalQuantity) * 100 : 0;
 
   return (
-    <div
-      className={`cursor-pointer rounded-lg border p-3 transition-all ${
+    <button
+      type="button"
+      className={`w-full cursor-pointer rounded-lg border p-3 text-left transition-all ${
         isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -80,6 +81,6 @@ export function OrderLineCard({
           <div className="text-xs text-gray-600">引当数: {line.allocated_lots.length} 件</div>
         </div>
       )}
-    </div>
+    </button>
   );
 }

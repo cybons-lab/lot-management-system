@@ -46,14 +46,15 @@ export const OrdersPage = () => {
       {/* 受注一覧 */}
       <div className="mb-8 grid gap-4">
         {orders?.map((order) => (
-          <div
+          <button
             key={order.id}
-            className="cursor-pointer rounded border p-4 hover:bg-gray-50"
+            type="button"
+            className="cursor-pointer rounded border p-4 text-left hover:bg-gray-50"
             onClick={() => setSelectedOrderId(order.id)}
           >
             <div className="font-semibold">受注ID: {order.id}</div>
             <div className="text-sm text-gray-600">受注番号: {order.order_no}</div>
-          </div>
+          </button>
         ))}
       </div>
 

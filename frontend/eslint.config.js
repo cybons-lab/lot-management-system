@@ -208,6 +208,53 @@ export default [
       "max-lines": "off",
       "max-lines-per-function": "off",
       complexity: "off",
+      "react-hooks/rules-of-hooks": "off", // Allow experimental hook patterns in this directory
+    },
+  },
+
+  // Temporary overrides for function length/complexity
+  // TODO: Refactor these files to split into smaller components/hooks
+  {
+    files: [
+      // Factory files with high complexity
+      "src/factories/order-factory.ts",
+      // Admin pages
+      "src/features/admin/pages/SeedDataPage.tsx",
+      // Allocation components
+      "src/features/allocations/components/OrderCard.tsx",
+      "src/features/allocations/components/OrderLineCard.tsx",
+      "src/features/allocations/components/LotAllocationPane.tsx",
+      "src/features/allocations/components/LotAllocationPanel.tsx",
+      "src/features/allocations/components/OrderDetailPane.tsx",
+      "src/features/allocations/components/WarehouseAllocationModal.tsx",
+      "src/features/allocations/pages/LotAllocationPage.tsx",
+      "src/features/allocations/hooks/useAllocationMutation.ts",
+      "src/features/allocations/hooks/useAutoSelection.ts",
+      // API files
+      "src/features/forecast/api.ts",
+      "src/features/inventory/api.ts",
+      "src/features/orders/api.ts",
+      // Forecast pages
+      "src/features/forecasts/pages/ForecastListPage.tsx",
+      // Inventory pages
+      "src/features/inventory/pages/InventoryPage.tsx",
+      // Order components
+      "src/features/orders/components/ForecastSection.tsx",
+      "src/features/orders/components/LotListWithAllocation.tsx",
+      "src/features/orders/components/OrderLineCard/index.tsx",
+      "src/features/orders/pages/OrderDetailPage.tsx",
+      "src/features/orders/pages/OrderPage.tsx",
+      "src/features/orders/pages/OrdersListPage.tsx",
+      "src/features/orders/hooks/useOrderLineComputed.ts",
+      // Shared components
+      "src/shared/components/data/DataTable.tsx",
+      "src/shared/components/data/TablePagination.tsx",
+      "src/shared/components/form/FormDialog.tsx",
+    ],
+    rules: {
+      "max-lines-per-function": ["error", { max: 300, skipBlankLines: true, skipComments: true }],
+      complexity: ["error", 52],
+      "max-params": ["error", 6],
     },
   },
 

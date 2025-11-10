@@ -30,9 +30,9 @@ export function WarehouseSelector({ warehouses, selectedWarehouse, onSelectWareh
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium text-gray-700">
+      <div className="text-sm font-medium text-gray-700">
         出荷倉庫 <span className="text-red-500">*</span>
-      </label>
+      </div>
 
       {/* 倉庫が1つの場合は固定表示 */}
       {warehouses.length === 1 ? (

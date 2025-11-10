@@ -14,8 +14,11 @@ export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {/* 顧客コード */}
         <div>
-          <label className="mb-1 block text-sm font-medium">顧客コード</label>
+          <label htmlFor="customer-code-input" className="mb-1 block text-sm font-medium">
+            顧客コード
+          </label>
           <input
+            id="customer-code-input"
             type="text"
             className="w-full rounded border px-3 py-1.5 text-sm"
             placeholder="部分一致で検索"
@@ -26,8 +29,11 @@ export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
 
         {/* ステータス */}
         <div>
-          <label className="mb-1 block text-sm font-medium">ステータス</label>
+          <label htmlFor="status-select" className="mb-1 block text-sm font-medium">
+            ステータス
+          </label>
           <select
+            id="status-select"
             className="w-full rounded border px-3 py-1.5 text-sm"
             value={value.status ?? ""}
             onChange={(_) => onChange({ ...value, status: _.target.value })}
@@ -42,8 +48,11 @@ export function OrderFilters({ value, onChange, onSearch, onReset }: Props) {
 
         {/* 納期フィルタ */}
         <div>
-          <label className="mb-1 block text-sm font-medium">納期</label>
+          <label htmlFor="due-date-select" className="mb-1 block text-sm font-medium">
+            納期
+          </label>
           <select
+            id="due-date-select"
             className="w-full rounded border px-3 py-1.5 text-sm"
             onChange={(_) =>
               onChange({

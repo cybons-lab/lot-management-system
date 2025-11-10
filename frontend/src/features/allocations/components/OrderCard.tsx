@@ -29,14 +29,15 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
     : "―";
 
   return (
-    <div
-      className={`relative w-full cursor-pointer rounded-md border p-3 transition-all ${
+    <button
+      type="button"
+      className={`relative w-full cursor-pointer rounded-md border p-3 text-left transition-all ${
         isSelected
           ? "border-blue-400 bg-blue-50 shadow-sm ring-2 ring-blue-200"
           : "border-transparent hover:bg-gray-50"
       }`}
       onClick={onClick}
-      aria-selected={isSelected}
+      aria-pressed={isSelected}
     >
       <div className="flex items-start gap-2">
         {/* 優先度インジケータ */}
@@ -94,6 +95,6 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </button>
   );
 }
