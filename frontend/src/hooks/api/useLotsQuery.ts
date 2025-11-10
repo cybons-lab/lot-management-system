@@ -6,7 +6,8 @@ import { normalizeLot, type LotUI } from "@/shared/libs/normalize";
 import type { paths } from "@/types/api";
 
 type LotsQuery = paths["/api/lots"]["get"]["parameters"]["query"];
-type LotResponse = paths["/api/lots"]["get"]["responses"][200]["content"]["application/json"][number];
+type LotResponse =
+  paths["/api/lots"]["get"]["responses"][200]["content"]["application/json"][number];
 
 export const useLotsQuery = (params?: LotsQuery) =>
   useQuery<LotResponse[], Error, LotUI[]>({

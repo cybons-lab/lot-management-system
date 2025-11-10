@@ -122,9 +122,7 @@ export function OrdersListPage() {
       {
         id: "lines_count",
         header: "明細数",
-        cell: (order: OrderUI) => (
-          <span className="text-center">{order.lines?.length || 0}</span>
-        ),
+        cell: (order: OrderUI) => <span className="text-center">{order.lines?.length || 0}</span>,
         align: "center",
       },
       {

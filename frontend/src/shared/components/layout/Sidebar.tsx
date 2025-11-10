@@ -63,9 +63,7 @@ export function Sidebar() {
       <div className="flex h-full flex-col">
         {/* Header */}
         <div className="border-b p-6">
-          <h1 className="text-xl font-bold text-gray-900">
-            ロット管理システム
-          </h1>
+          <h1 className="text-xl font-bold text-gray-900">ロット管理システム</h1>
           <p className="text-sm text-gray-500">MVP</p>
         </div>
 
@@ -86,7 +84,7 @@ export function Sidebar() {
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                   item.variant === "danger" &&
                     !isActive &&
-                    "text-red-600 hover:bg-red-50 hover:text-red-700"
+                    "text-red-600 hover:bg-red-50 hover:text-red-700",
                 )}
               >
                 <Icon className="h-5 w-5" />
