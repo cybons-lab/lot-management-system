@@ -196,7 +196,7 @@ export function OrdersListPage() {
   const stats = useMemo(
     () => ({
       totalOrders: allOrders.length,
-      openOrders: allOrders.filter((o) => o.status === "open").length,
+      openOrders: allOrders.filter((o) => o.status === "draft").length,
       allocatedOrders: allOrders.filter((o) => o.status === "allocated").length,
       allocationRate:
         allOrders.length > 0
@@ -281,7 +281,7 @@ export function OrdersListPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">すべて</SelectItem>
-                  <SelectItem value="open">未処理</SelectItem>
+                  <SelectItem value="draft">未処理</SelectItem>
                   <SelectItem value="allocated">引当済</SelectItem>
                   <SelectItem value="shipped">出荷済</SelectItem>
                   <SelectItem value="closed">完了</SelectItem>
@@ -383,7 +383,7 @@ function OrderCreateForm({ onSubmit, onCancel, isSubmitting }: OrderCreateFormPr
       order_no: formData.get("order_no") as string,
       customer_code: formData.get("customer_code") as string,
       order_date: formData.get("order_date") as string,
-      status: "open",
+      status: "draft",
       lines: [], // 明細は後で追加
     };
 
