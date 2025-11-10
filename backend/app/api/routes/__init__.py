@@ -14,7 +14,7 @@ from .integration import router as integration_router
 from .lots import router as lots_router
 from .masters import router as masters_router
 from .products import router as products_router
-from .orders import router as orders_router
+from .orders_refactored import router as orders_router
 from .warehouse_alloc import router as warehouse_alloc_router
 from .orders_validate import router as orders_validate_router
 from .admin_seeds import router as admin_seeds_router
