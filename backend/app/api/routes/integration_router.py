@@ -21,13 +21,13 @@ from app.schemas import (
     SapRegisterResponse,
     SapSyncLogResponse,
 )
-from app.services.quantity import QuantityConversionError, to_internal_qty
+from app.services.quantity_service import QuantityConversionError, to_internal_qty
 
 
 logger = logging.getLogger(__name__)
 # フォーキャストマッチング機能（オプション）
 try:
-    from app.services.forecast import ForecastMatcher
+    from app.services.forecast_service import ForecastMatcher
 
     FORECAST_AVAILABLE = True
 except ImportError:

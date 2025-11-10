@@ -22,7 +22,7 @@ from app.models import (
     Supplier,
     Warehouse,  # 統合された新Warehouse
 )
-from app.models.inventory import StockMovement
+from app.models.inventory_models import StockMovement
 from app.schemas import (
     DashboardStatsResponse,
     FullSampleDataRequest,

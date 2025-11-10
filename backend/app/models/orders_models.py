@@ -28,9 +28,9 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .inventory import Lot
-    from .logs import SapSyncLog
-    from .masters import Customer, DeliveryPlace, Product, Supplier, Warehouse
+    from .inventory_models import Lot
+    from .logs_models import SapSyncLog
+    from .masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 
 
 class Order(Base):

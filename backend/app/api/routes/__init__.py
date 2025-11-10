@@ -15,20 +15,20 @@ logger = logging.getLogger(__name__)
 
 # List of (module_name, exported_name) tuples
 _ROUTER_DEFINITIONS = [
-    ("admin", "admin_router"),
-    ("admin_healthcheck", "admin_healthcheck_router"),
-    ("admin_presets", "admin_presets_router"),
-    ("admin_seeds", "admin_seeds_router"),
-    ("allocations", "allocations_router"),
-    ("forecast", "forecast_router"),
-    ("health", "health_router"),
-    ("integration", "integration_router"),
-    ("lots", "lots_router"),
-    ("masters", "masters_router"),
-    ("orders_refactored", "orders_router"),
-    ("orders_validate", "orders_validate_router"),
-    ("products", "products_router"),
-    ("warehouse_alloc", "warehouse_alloc_router"),
+    ("admin_router", "admin_router"),
+    ("admin_healthcheck_router", "admin_healthcheck_router"),
+    ("admin_presets_router", "admin_presets_router"),
+    ("admin_seeds_router", "admin_seeds_router"),
+    ("allocations_router", "allocations_router"),
+    ("forecast_router", "forecast_router"),
+    ("health_router", "health_router"),
+    ("integration_router", "integration_router"),
+    ("lots_router", "lots_router"),
+    ("masters_router", "masters_router"),
+    ("orders_router", "orders_router"),
+    ("orders_validate_router", "orders_validate_router"),
+    ("products_router", "products_router"),
+    ("warehouse_alloc_router", "warehouse_alloc_router"),
 ]
 
 # Dynamically import routers with error handling

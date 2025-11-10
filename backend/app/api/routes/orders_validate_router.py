@@ -12,7 +12,7 @@ from app.schemas import (
     OrderValidationRequest,
     OrderValidationResponse,
 )
-from app.services.orders.validation import OrderLineDemand, OrderValidationService
+from app.services.orders.validation_service import OrderLineDemand, OrderValidationService
 
 
 router = APIRouter(prefix="/orders", tags=["orders"])

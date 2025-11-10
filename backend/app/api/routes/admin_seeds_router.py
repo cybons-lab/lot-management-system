@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db  # 既存の依存解決に合わせて
-from app.schemas.admin_seeds import SeedRequest, SeedResponse
+from app.schemas.admin_seeds_schema import SeedRequest, SeedResponse
 from app.services.seeds_service import create_seed_data
 
 

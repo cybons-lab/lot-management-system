@@ -1,11 +1,17 @@
 """Models Package."""
 
 from .base_model import Base
-from .forecast import Forecast
-from .inventory import ExpiryRule, Lot, LotCurrentStock, StockMovement, StockMovementReason
-from .logs import InboundSubmission, OcrSubmission, SapSyncLog
-from .masters import Customer, DeliveryPlace, Product, Supplier, UnitConversion, Warehouse
-from .orders import Allocation, Order, OrderLine, OrderLineWarehouseAllocation, PurchaseRequest
+from .forecast_models import Forecast
+from .inventory_models import ExpiryRule, Lot, LotCurrentStock, StockMovement, StockMovementReason
+from .logs_models import InboundSubmission, OcrSubmission, SapSyncLog
+from .masters_models import Customer, DeliveryPlace, Product, Supplier, UnitConversion, Warehouse
+from .orders_models import (
+    Allocation,
+    Order,
+    OrderLine,
+    OrderLineWarehouseAllocation,
+    PurchaseRequest,
+)
 
 
 __all__ = [

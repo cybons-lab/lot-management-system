@@ -3,13 +3,13 @@
 
 from __future__ import annotations
 
-from .admin import (
+from .admin_schema import (
     AdminPresetListResponse,
     AdminPresetLoadResponse,
     DashboardStatsResponse,
     FullSampleDataRequest,
 )
-from .allocations import (
+from .allocations_schema import (
     DragAssignRequest,
     DragAssignResponse,
     FefoCommitResponse,
@@ -23,7 +23,7 @@ from .base import (
     ResponseBase,
     TimestampMixin,
 )
-from .forecast import (
+from .forecast_schema import (
     ForecastActivateRequest,
     ForecastActivateResponse,
     ForecastBase,
@@ -40,7 +40,7 @@ from .forecast import (
     ForecastVersionInfo,
     ForecastVersionListResponse,
 )
-from .integration import (
+from .integration_schema import (
     OcrOrderRecord,
     OcrSubmissionRequest,
     OcrSubmissionResponse,
@@ -50,7 +50,7 @@ from .integration import (
     SapRegisterTarget,
     SapSyncLogResponse,
 )
-from .inventory import (
+from .inventory_schema import (
     ExpiryRuleBase,
     ExpiryRuleCreate,
     ExpiryRuleResponse,
@@ -64,7 +64,7 @@ from .inventory import (
     StockMovementCreate,
     StockMovementResponse,
 )
-from .masters import (
+from .masters_schema import (
     CustomerBase,
     CustomerCreate,
     CustomerResponse,
@@ -88,7 +88,7 @@ from .masters import (
     WarehouseResponse,
     WarehouseUpdate,
 )
-from .orders import (
+from .orders_schema import (
     AllocationWarning,
     LotCandidateListResponse,
     LotCandidateOut,
@@ -112,7 +112,7 @@ from .orders import (
     WarehouseAllocIn,
     WarehouseAllocOut,
 )
-from .warehouses import (
+from .warehouses_schema import (
     WarehouseListResponse,
     WarehouseOut,
 )

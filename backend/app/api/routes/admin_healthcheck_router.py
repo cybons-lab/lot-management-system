@@ -6,9 +6,9 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.models.inventory import Lot, StockMovement
-from app.models.masters import Customer, Product, Supplier, Warehouse
-from app.models.orders import Allocation, Order, OrderLine
+from app.models.inventory_models import Lot, StockMovement
+from app.models.masters_models import Customer, Product, Supplier, Warehouse
+from app.models.orders_models import Allocation, Order, OrderLine
 
 
 router = APIRouter(prefix="/admin/healthcheck", tags=["admin"])

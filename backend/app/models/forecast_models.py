@@ -22,7 +22,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .masters import Customer, Product
+    from .masters_models import Customer, Product
 
 
 class Forecast(Base):

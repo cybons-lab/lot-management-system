@@ -26,8 +26,8 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .masters import Product, Supplier, Warehouse
-    from .orders import Allocation
+    from .masters_models import Product, Supplier, Warehouse
+    from .orders_models import Allocation
 
 
 class StockMovementReason(str, PyEnum):

@@ -10,10 +10,10 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
-from app.models.inventory import Lot, StockMovement
-from app.models.masters import Customer, DeliveryPlace, Product, Supplier, Warehouse
-from app.models.orders import Allocation, Order, OrderLine
-from app.schemas.admin_seeds import ActualCounts, SeedRequest, SeedResponse, SeedSummary
+from app.models.inventory_models import Lot, StockMovement
+from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
+from app.models.orders_models import Allocation, Order, OrderLine
+from app.schemas.admin_seeds_schema import ActualCounts, SeedRequest, SeedResponse, SeedSummary
 
 
 def _choose(rng: Random, seq: Sequence):

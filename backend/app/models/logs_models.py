@@ -22,7 +22,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .orders import Order
+    from .orders_models import Order
 
 
 class InboundSubmission(Base):

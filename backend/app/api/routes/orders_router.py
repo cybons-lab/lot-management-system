@@ -17,7 +17,7 @@ from app.schemas import (
     OrderWithLinesResponse,
 )
 from app.services.order_service import OrderService
-from app.services.uow import UnitOfWork
+from app.services.uow_service import UnitOfWork
 
 
 router = APIRouter(prefix="/orders", tags=["orders"])
