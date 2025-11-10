@@ -36,7 +36,7 @@ export function useOrderLineComputed(
 
     const productCode = line?.product_code ?? "";
     const productName = line?.product_name ?? "";
-    const status = line?.status ?? order?.status ?? "open";
+    const status = line?.status ?? order?.status ?? "draft";
     const orderDate = line?.order_date ?? order?.order_date ?? null;
     const dueDate = line?.due_date ?? order?.due_date ?? null;
     const shipDate = line?.ship_date ?? null;

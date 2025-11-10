@@ -23,17 +23,12 @@ import {
   useSnackbar,
   useOrderCards,
 } from "../hooks";
+import type { Order } from "../types";
 
 import { getOrders, getOrder } from "@/features/orders/api";
 import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
 import { normalizeOrder } from "@/shared/libs/normalize";
 import type { OrderResponse } from "@/shared/types/aliases";
-import type { Order } from "../types";
-
-// queryKeyの安定化のため、オブジェクトリテラルを定数化
-const QUERY_FILTERS = {
-  ORDERS_OPEN: { status: "open" } as const,
-} as const;
 
 export function LotAllocationPage() {
   const orderListRef = useRef<HTMLDivElement | null>(null);
@@ -46,11 +41,13 @@ export function LotAllocationPage() {
   // Snackbar管理
   const { snackbar, showSuccess, showError } = useSnackbar();
 
-  // 受注一覧を取得
+  // 受注一覧を取得（openと引当済みの両方を表示）
   const ordersQuery = useQuery<OrderResponse[], Error, Order[]>({
-    queryKey: ["orders", QUERY_FILTERS.ORDERS_OPEN],
-    queryFn: () => getOrders(QUERY_FILTERS.ORDERS_OPEN),
-    initialData: [],
+    queryKey: ["orders", "all-for-allocation"],
+    queryFn: () => getOrders(), // ステータスフィルタなしで全受注を取得
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
     select: (data) => (data ?? []).map(normalizeOrder) as Order[],
   });
 
@@ -126,7 +123,7 @@ export function LotAllocationPage() {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-100">
       {/* 左ペイン: 受注一覧 */}
       <OrderListPane
         ref={orderListRef}

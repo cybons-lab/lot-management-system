@@ -8,7 +8,6 @@
  * - 共通コンポーネント: PageHeader, Section, DataTable, etc.
  */
 
-import { format } from "date-fns";
 import { Plus, RefreshCw, ExternalLink } from "lucide-react";
 import { useMemo } from "react";
 
@@ -37,8 +36,9 @@ import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import { PageHeader, PageContainer, Section } from "@/shared/components/layout";
 // 既存の型とコンポーネント
-import type { OrderLine, AllocatedLot } from "@/shared/types/aliases";
 import type { OrderUI } from "@/shared/libs/normalize";
+import type { OrderLine, AllocatedLot } from "@/shared/types/aliases";
+import { formatDate } from "@/shared/utils/date";
 import type { OrderCreate } from "@/utils/validators";
 
 /**
@@ -109,14 +109,13 @@ export function OrdersListPage() {
       {
         id: "order_date",
         header: "受注日",
-        cell: (order: OrderUI) => format(new Date(order.order_date), "yyyy/MM/dd"),
+        cell: (order: OrderUI) => formatDate(order.order_date),
         sortable: true,
       },
       {
         id: "due_date",
         header: "納期",
-        cell: (order: OrderUI) =>
-          order.due_date ? format(new Date(order.due_date), "yyyy/MM/dd") : "-",
+        cell: (order: OrderUI) => formatDate(order.due_date),
         sortable: true,
       },
       {
@@ -197,7 +196,7 @@ export function OrdersListPage() {
   const stats = useMemo(
     () => ({
       totalOrders: allOrders.length,
-      openOrders: allOrders.filter((o) => o.status === "open").length,
+      openOrders: allOrders.filter((o) => o.status === "draft").length,
       allocatedOrders: allOrders.filter((o) => o.status === "allocated").length,
       allocationRate:
         allOrders.length > 0
@@ -227,22 +226,22 @@ export function OrdersListPage() {
       />
 
       {/* 統計情報 */}
-      <div className="mb-6 grid grid-cols-4 gap-4">
-        <div className="rounded-lg border bg-white p-4">
-          <div className="text-sm text-gray-600">総受注数</div>
-          <div className="mt-1 text-2xl font-bold">{stats.totalOrders}</div>
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md">
+          <div className="text-sm font-medium text-gray-600">総受注数</div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">{stats.totalOrders}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4">
-          <div className="text-sm text-gray-600">未処理</div>
-          <div className="mt-1 text-2xl font-bold text-yellow-600">{stats.openOrders}</div>
+        <div className="group rounded-xl border-t border-r border-b border-l-4 border-gray-200 border-l-yellow-500 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+          <div className="text-sm font-medium text-gray-600">未処理</div>
+          <div className="mt-2 text-3xl font-bold text-yellow-600">{stats.openOrders}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4">
-          <div className="text-sm text-gray-600">引当済</div>
-          <div className="mt-1 text-2xl font-bold text-blue-600">{stats.allocatedOrders}</div>
+        <div className="group rounded-xl border-t border-r border-b border-l-4 border-gray-200 border-l-blue-500 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+          <div className="text-sm font-medium text-gray-600">引当済</div>
+          <div className="mt-2 text-3xl font-bold text-blue-600">{stats.allocatedOrders}</div>
         </div>
-        <div className="rounded-lg border bg-white p-4">
-          <div className="text-sm text-gray-600">引当率</div>
-          <div className="mt-1 text-2xl font-bold text-green-600">
+        <div className="group rounded-xl border-t border-r border-b border-l-4 border-gray-200 border-l-green-500 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+          <div className="text-sm font-medium text-gray-600">引当率</div>
+          <div className="mt-2 text-3xl font-bold text-green-600">
             {stats.allocationRate.toFixed(1)}%
           </div>
         </div>
@@ -276,7 +275,7 @@ export function OrdersListPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">すべて</SelectItem>
-                  <SelectItem value="open">未処理</SelectItem>
+                  <SelectItem value="draft">未処理</SelectItem>
                   <SelectItem value="allocated">引当済</SelectItem>
                   <SelectItem value="shipped">出荷済</SelectItem>
                   <SelectItem value="closed">完了</SelectItem>
@@ -378,7 +377,7 @@ function OrderCreateForm({ onSubmit, onCancel, isSubmitting }: OrderCreateFormPr
       order_no: formData.get("order_no") as string,
       customer_code: formData.get("customer_code") as string,
       order_date: formData.get("order_date") as string,
-      status: "open",
+      status: "draft",
       lines: [], // 明細は後で追加
     };
 

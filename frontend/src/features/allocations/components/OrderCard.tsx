@@ -2,11 +2,10 @@
  * OrderCard component - displays an order in the order list
  */
 
-import { format } from "date-fns";
-import { ja } from "date-fns/locale";
-
 import type { OrderCardData } from "../types";
 import { getPriorityColor, getBadgeColor } from "../utils/priority";
+
+import { formatDate } from "@/shared/utils/date";
 
 interface OrderCardProps {
   order: OrderCardData;
@@ -24,9 +23,7 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
       ? `${primaryLine.quantity.toLocaleString()}${primaryLine.unit ? ` ${primaryLine.unit}` : ""}`
       : "―";
   const dueDateSource = primaryLine?.due_date ?? order.due_date ?? null;
-  const dueDateText = dueDateSource
-    ? format(new Date(dueDateSource), "MM/dd", { locale: ja })
-    : "―";
+  const dueDateText = formatDate(dueDateSource, { formatString: "MM/dd", fallback: "―" });
 
   return (
     <button

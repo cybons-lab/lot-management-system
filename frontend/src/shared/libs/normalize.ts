@@ -5,8 +5,8 @@
  * null/undefinedを安全な値に変換
  */
 
-import type { components } from "@/types/api";
 import type { OrderLine, OrderResponse as OrderResponseAlias } from "@/shared/types/aliases";
+import type { components } from "@/types/api";
 
 // ヘルパー関数
 export const S = (v: string | null | undefined, fallback = "-"): string => v ?? fallback;

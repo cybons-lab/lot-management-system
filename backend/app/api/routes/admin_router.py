@@ -296,7 +296,7 @@ def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get
                     customer_id=customer.id if customer else None,
                     customer_code=order_data.customer_code,
                     order_date=order_date_obj,
-                    status="open",
+                    status="draft",
                 )
                 db.add(db_order)
                 db.flush()

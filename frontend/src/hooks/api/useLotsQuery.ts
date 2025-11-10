@@ -14,6 +14,7 @@ export const useLotsQuery = (params?: LotsQuery) =>
     queryKey: ["lots", params],
     queryFn: () => getLots(params),
     staleTime: 30_000,
-    initialData: [],
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
     select: (data) => (data ?? []).map(normalizeLot),
   });

@@ -52,52 +52,51 @@ export function LotAllocationPane({
           <p className="mt-1 text-xs text-gray-500">製品コード: {selectedLine.product_code}</p>
         </div>
 
-        <div className="rounded-lg border p-3">
-          {lotsQuery.isLoading ? (
-            <div className="py-6 text-center text-sm text-gray-500">候補ロットを読み込み中...</div>
-          ) : lotsQuery.isError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-4">
-              <p className="text-center text-sm font-semibold text-red-800">
-                候補ロットの取得に失敗しました
-              </p>
-              <p className="mt-1 text-center text-xs text-red-600">
-                {lotsQuery.error instanceof Error
-                  ? lotsQuery.error.message
-                  : "サーバーエラーが発生しました"}
-              </p>
-            </div>
-          ) : candidateLots.length === 0 ? (
-            <div className="py-6 text-center">
-              <p className="text-sm font-medium text-gray-600">候補ロットがありません</p>
-              <p className="mt-1 text-xs text-gray-400">この製品の在庫が存在しません</p>
-            </div>
-          ) : (
-            <div className="max-h-56 overflow-y-auto">
-              <table className="w-full text-xs">
-                <thead className="sticky top-0 bg-gray-50">
-                  <tr>
-                    <th className="px-2 py-1 text-left font-medium">ロット番号</th>
-                    <th className="px-2 py-1 text-left font-medium">倉庫</th>
-                    <th className="px-2 py-1 text-right font-medium">在庫数</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {candidateLots.map((lot) => (
-                    <tr key={lot.id} className="border-t">
-                      <td className="px-2 py-1">{lot.lot_number}</td>
-                      <td className="px-2 py-1 text-gray-600">
-                        {lot.warehouse_name || lot.warehouse_code || "―"}
-                      </td>
-                      <td className="px-2 py-1 text-right">
-                        {(lot.current_stock?.current_quantity ?? 0).toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        {lotsQuery.isLoading ? (
+          <div className="rounded-lg border border-gray-200 bg-white p-6 text-center text-sm text-gray-500">
+            候補ロットを読み込み中...
+          </div>
+        ) : lotsQuery.isError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+            <p className="text-center text-sm font-semibold text-red-800">
+              候補ロットの取得に失敗しました
+            </p>
+            <p className="mt-1 text-center text-xs text-red-600">
+              {lotsQuery.error instanceof Error
+                ? lotsQuery.error.message
+                : "サーバーエラーが発生しました"}
+            </p>
+          </div>
+        ) : candidateLots.length === 0 ? (
+          <div className="rounded-lg border border-gray-200 bg-white p-6 text-center">
+            <p className="text-sm font-medium text-gray-600">候補ロットがありません</p>
+            <p className="mt-1 text-xs text-gray-400">この製品の在庫が存在しません</p>
+          </div>
+        ) : (
+          <div className="max-h-64 space-y-2 overflow-y-auto">
+            {candidateLots.map((lot) => (
+              <div
+                key={lot.id}
+                className="group rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-gray-900">{lot.lot_number}</div>
+                    <div className="mt-1 text-xs text-gray-600">
+                      倉庫: {lot.warehouse_name || lot.warehouse_code || "―"}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-gray-500">在庫数</div>
+                    <div className="mt-1 text-lg font-bold text-blue-600">
+                      {(lot.current_stock?.current_quantity ?? 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* 倉庫別配分入力 */}
         <div>

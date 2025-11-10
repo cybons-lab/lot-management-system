@@ -2,8 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 
 import * as ordersApi from "@/features/orders/api";
-import type { OrderResponse, OrdersListParams } from "@/shared/types/aliases";
 import { normalizeOrder, type OrderUI } from "@/shared/libs/normalize";
+import type { OrderResponse, OrdersListParams } from "@/shared/types/aliases";
 
 export const queryKeys = {
   orders: (params: OrdersListParams) => ["orders", params] as const,
