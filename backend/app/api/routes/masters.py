@@ -29,6 +29,5 @@ for module_name, _ in _sub_routers:
             logger.warning(f"Module {module_name} has no 'router' attribute")
     except (ImportError, ModuleNotFoundError) as e:
         logger.warning(
-            f"Failed to import {module_name}: {e}. "
-            f"Related endpoints will be unavailable."
+            f"Failed to import {module_name}: {e}. Related endpoints will be unavailable."
         )
