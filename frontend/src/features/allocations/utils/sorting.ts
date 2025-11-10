@@ -34,9 +34,13 @@ export function compareOrderCards(a: OrderCardData, b: OrderCardData): number {
  * Filter function for valid orders
  */
 export function isValidOrder(order: OrderCardData): boolean {
-  // Filter out orders with no lines
-  if ((order.lines?.length ?? 0) === 0) return false;
-  // Filter out orders with missing required fields
-  if (order.hasMissingFields) return false;
+  const hasLineData = Array.isArray(order.lines);
+
+  // フロント側に明細データが提供されている場合のみ検証する
+  if (hasLineData) {
+    if ((order.lines?.length ?? 0) === 0) return false;
+    if (order.hasMissingFields) return false;
+  }
+
   return true;
 }
