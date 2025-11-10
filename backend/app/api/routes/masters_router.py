@@ -11,11 +11,11 @@ router = APIRouter(prefix="/masters", tags=["masters"])
 
 # Safe import with fallback for optional sub-routers
 _sub_routers = [
-    ("masters_products", "products_router"),
-    ("masters_customers", "customers_router"),
-    ("masters_suppliers", "suppliers_router"),
-    ("masters_warehouses", "warehouses_router"),
-    ("masters_bulk_load", "bulk_router"),
+    ("masters_products_router", "products_router"),
+    ("masters_customers_router", "customers_router"),
+    ("masters_suppliers_router", "suppliers_router"),
+    ("masters_warehouses_router", "warehouses_router"),
+    ("masters_bulk_load_router", "bulk_router"),
 ]
 
 for module_name, _ in _sub_routers:
