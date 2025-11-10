@@ -239,21 +239,15 @@ export function LotsPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md">
           <div className="text-sm font-medium text-gray-600">総ロット数</div>
-          <div className="mt-2 text-3xl font-bold text-gray-900">
-            {fmt(stats.totalLots)}
-          </div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">{fmt(stats.totalLots)}</div>
         </div>
-        <div className="group rounded-xl border-l-4 border-l-blue-500 border-t border-r border-b border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+        <div className="group rounded-xl border-t border-r border-b border-l-4 border-gray-200 border-l-blue-500 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="text-sm font-medium text-gray-600">有効ロット数</div>
-          <div className="mt-2 text-3xl font-bold text-blue-600">
-            {fmt(stats.activeLots)}
-          </div>
+          <div className="mt-2 text-3xl font-bold text-blue-600">{fmt(stats.activeLots)}</div>
         </div>
         <div className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md">
           <div className="text-sm font-medium text-gray-600">総在庫数</div>
-          <div className="mt-2 text-3xl font-bold text-gray-900">
-            {fmt(stats.totalQuantity)}
-          </div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">{fmt(stats.totalQuantity)}</div>
         </div>
       </div>
 
@@ -388,7 +382,7 @@ export function LotsPage() {
       {toast.toasts.map((t) => (
         <div
           key={t.id}
-          className={`fixed bottom-6 right-6 rounded-lg px-4 py-3 text-sm shadow-lg ${
+          className={`fixed right-6 bottom-6 rounded-lg px-4 py-3 text-sm shadow-lg ${
             t.variant === "success"
               ? "bg-green-600 text-white"
               : t.variant === "error"

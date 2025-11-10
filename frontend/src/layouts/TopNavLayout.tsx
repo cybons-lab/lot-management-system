@@ -7,7 +7,6 @@
  * - 左サイドバーなし
  */
 
-import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -16,6 +15,8 @@ import {
   Settings,
   Sparkles,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
@@ -82,7 +83,7 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md shadow-sm">
+      <header className="sticky top-0 z-50 border-b bg-white/90 shadow-sm backdrop-blur-md">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* ロゴ & ブランド */}
@@ -91,7 +92,7 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
                 <Sparkles className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-lg font-bold text-transparent">
                   ロット管理システム
                 </h1>
                 <p className="text-xs text-gray-500">Smart Inventory Manager</p>
@@ -126,8 +127,8 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
 
             {/* 右側のユーザー情報など（将来拡張用） */}
             <div className="flex items-center gap-2">
-              <div className="hidden md:flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 px-3 py-1.5">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+              <div className="hidden items-center gap-2 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 px-3 py-1.5 md:flex">
+                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
                 <span className="text-xs font-medium text-gray-700">オンライン</span>
               </div>
             </div>
@@ -136,12 +137,10 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
       </header>
 
       {/* メインコンテンツ */}
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
 
       {/* フッター（オプション） */}
-      <footer className="border-t bg-white/50 backdrop-blur-sm mt-auto">
+      <footer className="mt-auto border-t bg-white/50 backdrop-blur-sm">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <p>© 2024 ロット管理システム - All rights reserved.</p>

@@ -81,9 +81,7 @@ export function LotAllocationPane({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="text-sm font-semibold text-gray-900">
-                      {lot.lot_number}
-                    </div>
+                    <div className="text-sm font-semibold text-gray-900">{lot.lot_number}</div>
                     <div className="mt-1 text-xs text-gray-600">
                       倉庫: {lot.warehouse_name || lot.warehouse_code || "―"}
                     </div>

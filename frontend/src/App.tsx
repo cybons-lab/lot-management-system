@@ -1,5 +1,4 @@
 import { Route, Routes, Navigate } from "react-router-dom";
-import { TopNavLayout } from "@/layouts/TopNavLayout";
 
 // Pages
 import { AdminPage } from "@/features/admin/pages/AdminPage";
@@ -7,10 +6,11 @@ import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
 import { ForecastImportPage } from "@/features/forecasts/pages/ForecastImportPage";
 import { ForecastListPage } from "@/features/forecasts/pages/ForecastListPage";
 import { InventoryLayout } from "@/features/inventory/pages/InventoryLayout";
-import { SummaryPage } from "@/features/inventory/pages/SummaryPage";
 import { LotsPage } from "@/features/inventory/pages/LotsPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
+import { SummaryPage } from "@/features/inventory/pages/SummaryPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
+import { TopNavLayout } from "@/layouts/TopNavLayout";
 import { LotAllocationPage } from "@/pages/LotAllocationPage";
 
 function App() {

@@ -23,12 +23,12 @@ import {
   useSnackbar,
   useOrderCards,
 } from "../hooks";
+import type { Order } from "../types";
 
 import { getOrders, getOrder } from "@/features/orders/api";
 import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
 import { normalizeOrder } from "@/shared/libs/normalize";
 import type { OrderResponse } from "@/shared/types/aliases";
-import type { Order } from "../types";
 
 export function LotAllocationPage() {
   const orderListRef = useRef<HTMLDivElement | null>(null);
@@ -44,7 +44,7 @@ export function LotAllocationPage() {
   // 受注一覧を取得（openと引当済みの両方を表示）
   const ordersQuery = useQuery<OrderResponse[], Error, Order[]>({
     queryKey: ["orders", "all-for-allocation"],
-    queryFn: () => getOrders(),  // ステータスフィルタなしで全受注を取得
+    queryFn: () => getOrders(), // ステータスフィルタなしで全受注を取得
     refetchOnMount: true,
     refetchOnWindowFocus: false,
     staleTime: 30_000,

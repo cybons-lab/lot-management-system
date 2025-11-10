@@ -10,7 +10,6 @@
 
 import { Plus, RefreshCw, ExternalLink } from "lucide-react";
 import { useMemo } from "react";
-import { formatDate } from "@/shared/utils/date";
 
 // バッチ3で作成したフック
 
@@ -37,8 +36,9 @@ import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import { PageHeader, PageContainer, Section } from "@/shared/components/layout";
 // 既存の型とコンポーネント
-import type { OrderLine, AllocatedLot } from "@/shared/types/aliases";
 import type { OrderUI } from "@/shared/libs/normalize";
+import type { OrderLine, AllocatedLot } from "@/shared/types/aliases";
+import { formatDate } from "@/shared/utils/date";
 import type { OrderCreate } from "@/utils/validators";
 
 /**
@@ -229,23 +229,17 @@ export function OrdersListPage() {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="group rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md">
           <div className="text-sm font-medium text-gray-600">総受注数</div>
-          <div className="mt-2 text-3xl font-bold text-gray-900">
-            {stats.totalOrders}
-          </div>
+          <div className="mt-2 text-3xl font-bold text-gray-900">{stats.totalOrders}</div>
         </div>
-        <div className="group rounded-xl border-l-4 border-l-yellow-500 border-t border-r border-b border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+        <div className="group rounded-xl border-t border-r border-b border-l-4 border-gray-200 border-l-yellow-500 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="text-sm font-medium text-gray-600">未処理</div>
-          <div className="mt-2 text-3xl font-bold text-yellow-600">
-            {stats.openOrders}
-          </div>
+          <div className="mt-2 text-3xl font-bold text-yellow-600">{stats.openOrders}</div>
         </div>
-        <div className="group rounded-xl border-l-4 border-l-blue-500 border-t border-r border-b border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+        <div className="group rounded-xl border-t border-r border-b border-l-4 border-gray-200 border-l-blue-500 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="text-sm font-medium text-gray-600">引当済</div>
-          <div className="mt-2 text-3xl font-bold text-blue-600">
-            {stats.allocatedOrders}
-          </div>
+          <div className="mt-2 text-3xl font-bold text-blue-600">{stats.allocatedOrders}</div>
         </div>
-        <div className="group rounded-xl border-l-4 border-l-green-500 border-t border-r border-b border-gray-200 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
+        <div className="group rounded-xl border-t border-r border-b border-l-4 border-gray-200 border-l-green-500 bg-white p-5 shadow-sm transition-all duration-200 hover:shadow-md">
           <div className="text-sm font-medium text-gray-600">引当率</div>
           <div className="mt-2 text-3xl font-bold text-green-600">
             {stats.allocationRate.toFixed(1)}%

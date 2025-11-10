@@ -1,4 +1,3 @@
-import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -7,6 +6,8 @@ import {
   TrendingUp,
   Settings,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+
 import { cn } from "@/shared/libs/utils";
 
 interface NavItem {
