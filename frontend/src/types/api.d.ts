@@ -1814,9 +1814,9 @@ export interface components {
       /** Line No */
       line_no?: number | null;
       /** Product Code */
-      product_code: string;
+      product_code?: string | null;
       /** Product Name */
-      product_name: string;
+      product_name?: string | null;
       /** Customer Code */
       customer_code?: string | null;
       /** Supplier Code */
@@ -1824,7 +1824,7 @@ export interface components {
       /** Quantity */
       quantity: number;
       /** Unit */
-      unit: string;
+      unit?: string | null;
       /** Due Date */
       due_date?: string | null;
       /** Warehouse Allocations */
@@ -1850,7 +1850,7 @@ export interface components {
       /** Order No */
       order_no: string;
       /** Customer Code */
-      customer_code: string;
+      customer_code?: string | null;
       /**
        * Order Date
        * Format: date
