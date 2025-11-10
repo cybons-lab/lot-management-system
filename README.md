@@ -88,6 +88,51 @@ npm run typecheck && npm run lint && npm run format:check
     └── architecture/ # アーキテクチャ設計書
 ```
 
+## バックエンド命名規約
+
+バックエンドのファイル命名は、役割を即座に識別できるよう標準化されています。
+
+### ファイル命名ルール
+
+| 役割 | 命名パターン | 例 |
+|-----|------------|-----|
+| ルータ | `*_router.py` | `orders_router.py`, `admin_router.py` |
+| サービス | `*_service.py` | `order_service.py`, `allocation_service.py` |
+| リポジトリ | `*_repository.py` | `order_repository.py`, `stock_repository.py` |
+| スキーマ | `*_schema.py` | `orders_schema.py`, `admin_schema.py` |
+| モデル | `*_models.py` | `orders_models.py`, `inventory_models.py` |
+| 設定/起動 | 単機能名 | `config.py`, `database.py`, `logging.py` |
+
+### ドメインプレフィックス
+
+- `admin_*`: 管理機能
+- `masters_*`: マスタ管理
+- `orders_*`: 受注管理
+- `inventory_*`: 在庫管理
+- `allocations_*`: 引当管理
+
+### OpenAPI スキーマ検証
+
+リネーム後も公開APIに変更がないことを確認できます：
+
+```bash
+cd backend
+
+# ベースラインを生成（リネーム前）
+python openapi_diff_check.py generate baseline_openapi.json
+
+# リネーム実施後、差分をチェック
+python openapi_diff_check.py generate current_openapi.json
+python openapi_diff_check.py compare baseline_openapi.json current_openapi.json
+```
+
+差分がある場合は終了コード1を返します。CI/CDパイプラインで使用可能です。
+
+### 詳細情報
+
+- リネームマッピング表: [RENAME_MAPPING.md](./RENAME_MAPPING.md)
+- OpenAPI検証スクリプト: [backend/openapi_diff_check.py](./backend/openapi_diff_check.py)
+
 ## ドキュメント
 
 - [Backend README](./backend/README.md)
