@@ -63,7 +63,7 @@ export function calculatePriority(order: Order): PriorityLevel {
  */
 export function createOrderCardData(order: Order): OrderCardData {
   const hasLineData = Array.isArray(order.lines);
-  const lines = hasLineData ? order.lines ?? [] : [];
+  const lines = hasLineData ? (order.lines ?? []) : [];
   const priority = calculatePriority(order);
 
   // 未引当数量(allocated_lotsを使用)
