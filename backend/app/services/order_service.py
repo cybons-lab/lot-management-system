@@ -19,7 +19,7 @@ from app.domain.order import (
 )
 from app.models import Customer, Order, OrderLine, Product
 from app.schemas import OrderCreate, OrderResponse, OrderWithLinesResponse
-from app.services.quantity import QuantityConversionError, to_internal_qty
+from app.services.quantity_service import QuantityConversionError, to_internal_qty
 
 
 class OrderService:

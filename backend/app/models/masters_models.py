@@ -25,9 +25,9 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .forecast import Forecast
-    from .inventory import ExpiryRule, Lot, StockMovement
-    from .orders import (
+    from .forecast_models import Forecast
+    from .inventory_models import ExpiryRule, Lot, StockMovement
+    from .orders_models import (
         Allocation,
         Order,
         OrderLine,

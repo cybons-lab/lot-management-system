@@ -4,7 +4,7 @@ from typing import Literal
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from app.models.forecast import Forecast
+from app.models.forecast_models import Forecast
 
 
 MatchStatus = Literal["EXACT", "PERIOD", "FALLBACK", "DIFF", "NONE"]

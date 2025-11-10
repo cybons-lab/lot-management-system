@@ -5,8 +5,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models import Product
-from app.repositories.products import ProductRepository
-from app.schemas.products import ProductCreate, ProductUpdate
+from app.repositories.products_repository import ProductRepository
+from app.schemas.products_schema import ProductCreate, ProductUpdate
 
 
 class ProductService:

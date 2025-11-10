@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.schemas.common import Page, PageQuery
-from app.schemas.products import ProductCreate, ProductOut, ProductUpdate
-from app.services.products import ProductService
+from app.schemas.products_schema import ProductCreate, ProductOut, ProductUpdate
+from app.services.products_service import ProductService
 
 
 router = APIRouter(prefix="/products", tags=["products"])

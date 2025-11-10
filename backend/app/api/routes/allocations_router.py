@@ -16,7 +16,7 @@ from app.schemas import (
 
 # ←ここまでは既存の import 群
 # ↓ここを修正版に置き換えてください
-from app.services.allocations import (
+from app.services.allocations_service import (
     AllocationCommitError,
     AllocationNotFoundError,
     cancel_allocation,
