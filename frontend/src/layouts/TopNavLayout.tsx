@@ -80,9 +80,9 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-gray-100">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-md shadow-sm">
+      <header className="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-md shadow-sm">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* ロゴ & ブランド */}
