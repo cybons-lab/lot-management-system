@@ -308,7 +308,6 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
     actual_counts = None
     if not req.dry_run:
         from sqlalchemy import func
-        from app.models.masters import Supplier
 
         actual_counts = ActualCounts(
             customers=db.scalar(select(func.count()).select_from(Customer)) or 0,
