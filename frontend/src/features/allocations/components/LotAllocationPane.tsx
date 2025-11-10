@@ -9,7 +9,6 @@ import type { OrderLine, WarehouseSummary } from "../types";
 import type { Lot as CandidateLot } from "@/hooks/useLotsQuery";
 import { formatCodeAndName } from "@/shared/libs/utils";
 
-
 interface LotAllocationPaneProps {
   selectedLineId: number | null;
   selectedLine: OrderLine | undefined;

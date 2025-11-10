@@ -27,7 +27,6 @@ import {
 import { getOrders, getOrder } from "@/features/orders/api";
 import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
 
-
 // queryKeyの安定化のため、オブジェクトリテラルを定数化
 const QUERY_FILTERS = {
   ORDERS_OPEN: { status: "open" } as const,

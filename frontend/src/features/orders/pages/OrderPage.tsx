@@ -84,9 +84,7 @@ export function OrderPage() {
               orders.map((order) => (
                 <TableRow key={order.id}>
                   <TableCell className="font-medium">{order.order_no}</TableCell>
-                  <TableCell>
-                    {formatCodeAndName(order.customer_code, undefined)}
-                  </TableCell>
+                  <TableCell>{formatCodeAndName(order.customer_code, undefined)}</TableCell>
                   <TableCell>
                     {order.order_date ? format(parseISO(order.order_date), "yyyy/MM/dd") : "-"}
                   </TableCell>

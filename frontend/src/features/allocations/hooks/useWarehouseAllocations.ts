@@ -9,7 +9,6 @@ import type { WarehouseSummary } from "../types";
 import type { AllocationInputItem } from "@/features/allocations/api";
 import type { Lot as CandidateLot } from "@/hooks/useLotsQuery";
 
-
 export function useWarehouseAllocations(
   candidateLots: CandidateLot[],
   selectedLineId: number | null,

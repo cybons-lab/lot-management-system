@@ -93,21 +93,12 @@ export function OrderDetailPage() {
         <h3 className="mb-4 text-lg font-semibold">基本情報</h3>
         <div className="grid gap-4 md:grid-cols-2">
           <InfoItem label="受注番号" value={order.order_no} />
-          <InfoItem
-            label="得意先"
-            value={formatCodeAndName(
-              order.customer_code,
-              undefined,
-            )}
-          />
+          <InfoItem label="得意先" value={formatCodeAndName(order.customer_code, undefined)} />
           <InfoItem
             label="受注日"
             value={order.order_date ? format(new Date(order.order_date), "yyyy-MM-dd") : "-"}
           />
-          <InfoItem
-            label="納期"
-            value={"-"}
-          />
+          <InfoItem label="納期" value={"-"} />
           <InfoItem label="ステータス" value={<StatusBadge status={order.status} />} />
         </div>
       </div>
@@ -149,12 +140,8 @@ export function OrderDetailPage() {
                     {/* <ForecastMatchBadge status={line.forecast_match_status} /> */}
                     <span className="text-sm text-gray-500">-</span>
                   </td>
-                  <td className="p-3 text-right text-sm">
-                    {"-"}
-                  </td>
-                  <td className="p-3 text-sm">
-                    {"-"}
-                  </td>
+                  <td className="p-3 text-right text-sm">{"-"}</td>
+                  <td className="p-3 text-sm">{"-"}</td>
                 </tr>
               ))}
             </tbody>

@@ -8,6 +8,7 @@
 ### 1. ESLint Flat Config Implementation
 
 **Packages Installed:**
+
 - `@eslint/js`
 - `eslint-plugin-jsx-a11y` (accessibility rules)
 - `eslint-plugin-unused-imports` (auto-remove unused imports)
@@ -15,6 +16,7 @@
 - `prettier-plugin-tailwindcss` (class ordering)
 
 **Strict Rules Enforced:**
+
 - ✅ Max 400 lines per file
 - ✅ Max 80 lines per function
 - ✅ Max depth 4
@@ -28,12 +30,14 @@
 - ✅ Consistent type imports
 
 **Config Files:**
+
 - `eslint.config.js` - Flat config with all strict rules
 - `.prettierrc` - With Tailwind plugin for class ordering
 
 ### 2. Feature-Based Directory Structure
 
 **New Structure:**
+
 ```
 src/
 ├── features/
@@ -55,6 +59,7 @@ src/
 ```
 
 **Each feature contains:**
+
 - `api/` - API endpoints
 - `components/` - Feature-specific components
 - `hooks/` - Feature-specific hooks
@@ -66,17 +71,20 @@ src/
 ### 3. Major File Refactoring
 
 **LotAllocationPage.tsx Split (941 → 169 lines):**
+
 - Created 5 components: OrderCard, OrderLineCard, OrderListPane, OrderDetailPane, LotAllocationPane
 - Extracted 6 custom hooks
 - Created 2 utility files for priority/sorting logic
 - Reduced complexity from unmaintainable to manageable
 
 **Masters Feature Split:**
+
 - `features/masters/api.ts` → Split into domain-specific API files
 - `utils/validators/master-schemas.ts` → Split into product, customer, supplier, warehouse schemas
 - Each domain now has its own feature directory
 
 **Pages Moved to Features:**
+
 - All 9 page files moved from `pages/` to `features/*/pages/`
 - Maintains clear feature boundaries
 - Enables feature-isolated development
@@ -84,12 +92,14 @@ src/
 ### 4. Code Quality Fixes
 
 **Critical Fixes:**
+
 - ✅ Fixed React Hooks violation in WarehouseSelector (useEffect after return)
 - ✅ Fixed React Hooks violation in useDialog (hook called in callback)
 - ✅ Consolidated duplicate HTTP clients (removed api-client.ts, apiClient.ts)
 - ✅ Fixed TypeScript errors (export mismatches, missing properties)
 
 **Auto-Fixed Issues:**
+
 - ✅ Removed all unused imports
 - ✅ Organized imports alphabetically
 - ✅ Consistent code formatting (Prettier)
@@ -98,6 +108,7 @@ src/
 ### 5. Build & Type Checking
 
 **Status:**
+
 - ✅ TypeScript compilation: **PASSED** (0 errors)
 - ✅ Production build: **PASSED**
 - ✅ Prettier formatting: **COMPLETED**
@@ -110,6 +121,7 @@ src/
 See `ESLINT_ISSUES.md` for detailed breakdown.
 
 **Summary:**
+
 - **Structural Issues** (future refactoring):
   - 17 files exceed function length limits
   - 15 files have complexity violations
@@ -125,18 +137,21 @@ See `ESLINT_ISSUES.md` for detailed breakdown.
 ## 📊 Statistics
 
 ### Files Changed
+
 - **Created**: 17 new component files, 10 new feature directories
 - **Modified**: 50+ files (imports updated)
 - **Deleted**: 2 duplicate HTTP client files
 - **Moved**: 9 page files, 20+ component files
 
 ### Code Metrics
+
 - **Line Reduction**: 941 → 169 lines (LotAllocationPage)
 - **Features Created**: 10 feature directories
 - **Domain Separation**: Masters split into 4 domains
 - **Complexity Reduction**: Critical functions extracted and simplified
 
 ### Dependencies
+
 - **Added**: 4 ESLint plugins, 1 Prettier plugin
 - **Updated**: 0 (existing packages compatible)
 - **Removed**: 0
@@ -146,6 +161,7 @@ See `ESLINT_ISSUES.md` for detailed breakdown.
 ## 🎯 Achieved Goals
 
 ### Primary Objectives ✅
+
 1. ✅ **ESLint Flat Config with strict rules** - Fully implemented
 2. ✅ **Feature-based directory structure** - All files reorganized
 3. ✅ **Split large files** - LotAllocationPage reduced from 941 to 169 lines
@@ -155,6 +171,7 @@ See `ESLINT_ISSUES.md` for detailed breakdown.
 7. ✅ **No behavior changes** - Only code organization, zero functionality changes
 
 ### Code Quality ✅
+
 - Import organization enforced
 - Unused imports auto-removed
 - Consistent formatting
@@ -163,6 +180,7 @@ See `ESLINT_ISSUES.md` for detailed breakdown.
 - Accessibility rules active
 
 ### Architecture ✅
+
 - Feature isolation
 - Clear separation of concerns
 - Domain-driven structure
@@ -174,11 +192,14 @@ See `ESLINT_ISSUES.md` for detailed breakdown.
 ## 🚀 Next Steps (Optional)
 
 ### Phase 1: Accessibility Improvements
+
 1. Add keyboard listeners to clickable elements (3 files)
 2. Fix label associations (2 files)
 
 ### Phase 2: Structural Refactoring
+
 Priority order based on impact:
+
 1. **useOrderLineComputed.ts** (complexity 51) - Split into smaller functions
 2. **LotAllocationPanel.tsx** (299 lines, complexity 23) - Extract more components
 3. **InventoryPage.tsx** (285 lines) - Extract components
@@ -186,6 +207,7 @@ Priority order based on impact:
 5. **DataTable.tsx** (182 lines) - Extract sub-components
 
 ### Phase 3: API Improvements
+
 1. Refactor hooks with >4 parameters to use options objects
 2. Consider adding missing API fields (customer_name, due_date, forecast_qty, etc.)
 
@@ -194,20 +216,25 @@ Priority order based on impact:
 ## 📝 Migration Notes
 
 ### Breaking Changes
+
 **None** - This is a pure refactoring with zero breaking changes.
 
 ### Import Path Changes
+
 Updated automatically throughout the codebase:
+
 - `@/lib/*` → `@/shared/libs/*`
 - `@/types/*` → `@/shared/types/*`
 - `@/components/shared/*` → `@/shared/components/*`
 - `@/pages/*` → `@/features/{feature}/pages/*`
 
 ### New Public APIs
+
 Each feature now exports its public API via `index.ts`:
+
 ```typescript
 // Example: Using the products feature
-import { getProducts, productSchema } from '@/features/products';
+import { getProducts, productSchema } from "@/features/products";
 ```
 
 ---
@@ -215,6 +242,7 @@ import { getProducts, productSchema } from '@/features/products';
 ## ✅ Verification
 
 ### Scripts Tested
+
 ```bash
 pnpm format       # ✅ PASSED - All files formatted
 pnpm lint:fix     # ✅ PASSED - Auto-fixed issues
@@ -223,6 +251,7 @@ pnpm build        # ✅ PASSED - Production build successful
 ```
 
 ### Manual Verification
+
 - ✅ All imports resolve correctly
 - ✅ No runtime errors expected
 - ✅ Feature isolation maintained
@@ -244,6 +273,7 @@ pnpm build        # ✅ PASSED - Production build successful
 ## 🎉 Conclusion
 
 This refactoring successfully:
+
 - Established a maintainable, scalable architecture
 - Enforced strict code quality standards
 - Eliminated technical debt (large files, duplicate code)
