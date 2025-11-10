@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 
 from .base import BaseSchema
-from .orders import OrderLineCreate
+from .orders_schema import OrderLineCreate
 
 
 # --- OCR Submission ---

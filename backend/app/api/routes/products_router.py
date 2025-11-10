@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.common import Page, PageQuery
+from app.schemas.common_schema import Page, PageQuery
 from app.schemas.products_schema import ProductCreate, ProductOut, ProductUpdate
 from app.services.products_service import ProductService
 
