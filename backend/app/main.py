@@ -11,9 +11,8 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import (
     admin_healthcheck_router,
-    admin_presets_router,
     admin_router,
-    admin_seeds_router,
+    admin_simulate_router,
     allocations_router,
     forecast_router,
     health_router,
@@ -82,13 +81,14 @@ app.include_router(orders_router, prefix=settings.API_PREFIX)
 app.include_router(allocations_router, prefix=settings.API_PREFIX)
 app.include_router(integration_router, prefix=settings.API_PREFIX)
 app.include_router(admin_router, prefix=settings.API_PREFIX)
-app.include_router(admin_presets_router, prefix=settings.API_PREFIX)
 app.include_router(admin_healthcheck_router, prefix=settings.API_PREFIX)
 app.include_router(forecast_router, prefix=settings.API_PREFIX)
 app.include_router(warehouse_alloc_router, prefix=settings.API_PREFIX)
 app.include_router(health_router, prefix=settings.API_PREFIX)
 app.include_router(orders_validate_router, prefix=settings.API_PREFIX)
-app.include_router(admin_seeds_router, prefix=settings.API_PREFIX)
+app.include_router(
+    admin_simulate_router, prefix=settings.API_PREFIX
+)  # NEW: Simulation API with YAML profiles
 
 
 @app.get("/")

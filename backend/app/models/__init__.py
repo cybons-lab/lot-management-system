@@ -12,6 +12,7 @@ from .orders_models import (
     OrderLineWarehouseAllocation,
     PurchaseRequest,
 )
+from .seed_snapshot_model import SeedSnapshot
 
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "OcrSubmission",
     "SapSyncLog",
     "Forecast",
+    "SeedSnapshot",
 ]

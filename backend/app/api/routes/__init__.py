@@ -17,8 +17,7 @@ logger = logging.getLogger(__name__)
 _ROUTER_DEFINITIONS = [
     ("admin_router", "admin_router"),
     ("admin_healthcheck_router", "admin_healthcheck_router"),
-    ("admin_presets_router", "admin_presets_router"),
-    ("admin_seeds_router", "admin_seeds_router"),
+    ("admin_simulate_router", "admin_simulate_router"),
     ("allocations_router", "allocations_router"),
     ("forecast_router", "forecast_router"),
     ("health_router", "health_router"),

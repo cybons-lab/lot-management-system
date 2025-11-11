@@ -5,9 +5,8 @@ APIルーティングの集約.
 """
 
 from .routes import (
-    admin_presets_router,
     admin_router,
-    admin_seeds_router,  # ⬅️ 追加
+    admin_simulate_router,
     allocations_router,
     forecast_router,
     integration_router,
@@ -15,7 +14,7 @@ from .routes import (
     masters_router,
     orders_router,
     orders_validate_router,
-    warehouse_alloc_router,  # ⬅️ [修正] 不足していたルータを追加
+    warehouse_alloc_router,
 )
 
 
@@ -25,10 +24,9 @@ __all__ = [
     "orders_router",
     "integration_router",
     "admin_router",
-    "admin_presets_router",
+    "admin_simulate_router",
     "allocations_router",
     "forecast_router",
-    "warehouse_alloc_router",  # ⬅️ [修正] __all__ にも追加
+    "warehouse_alloc_router",
     "orders_validate_router",
-    "admin_seeds_router",  # ⬅️ 追加
 ]

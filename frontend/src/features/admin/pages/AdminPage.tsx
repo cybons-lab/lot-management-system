@@ -2,10 +2,12 @@ import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { SeedSimulateDialog } from "@/features/admin/components/SeedSimulateDialog";
 import { SeedDataPage } from "@/features/admin/pages/SeedDataPage";
 
 export function AdminPage() {
   const [showSeedData, setShowSeedData] = useState(false);
+  const [showSimulateDialog, setShowSimulateDialog] = useState(false);
 
   if (showSeedData) {
     return (
@@ -50,9 +52,16 @@ export function AdminPage() {
             <Button
               variant="outline"
               className="w-full justify-start"
+              onClick={() => setShowSimulateDialog(true)}
+            >
+              テストデータ生成（開発用）
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
               onClick={() => setShowSeedData(true)}
             >
-              テストデータ投入（開発用）
+              旧：テストデータ投入（非推奨）
             </Button>
             <Button variant="destructive" className="w-full justify-start">
               データベースリセット（開発用）
@@ -75,6 +84,9 @@ export function AdminPage() {
           </div>
         </div>
       </div>
+
+      {/* Simulate Dialog */}
+      <SeedSimulateDialog open={showSimulateDialog} onOpenChange={setShowSimulateDialog} />
     </div>
   );
 }
