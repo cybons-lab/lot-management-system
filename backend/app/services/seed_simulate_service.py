@@ -93,8 +93,9 @@ def _expand_params(req: SimulateSeedRequest) -> dict[str, Any]:
         params["case_mix"] = req.case_mix
 
     # ★ forecasts（API指定があれば上書き。0=無効, 1=有効）
-    if hasattr(req, "forecasts") and req.forecasts is not None:
-        params["forecasts"] = 1 if req.forecasts else 0
+    if req.forecasts is not None:
+        params["forecasts"] = int(req.forecasts)
+
     return params
 
 

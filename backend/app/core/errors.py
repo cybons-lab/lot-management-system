@@ -137,7 +137,19 @@ async def validation_exception_handler(
     Returns:
         JSONResponse（Problem+JSON形式）
     """
-    errors = exc.errors()
+    # exc.errors()をJSON化可能な形式に変換
+    # Pydanticのエラーに含まれる例外オブジェクトを文字列化
+    errors = []
+    for error in exc.errors():
+        error_dict = dict(error)
+        # ctx内の例外オブジェクトを文字列化
+        if "ctx" in error_dict and error_dict["ctx"]:
+            ctx = error_dict["ctx"]
+            for key, value in ctx.items():
+                if isinstance(value, Exception):
+                    ctx[key] = str(value)
+            error_dict["ctx"] = ctx
+        errors.append(error_dict)
 
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

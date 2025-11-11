@@ -19,21 +19,25 @@ class SimulateSeedRequest(BaseModel):
         default=None,
         description="乱数シード（Noneの場合は現在時刻を使用）",
     )
-    warehouses: conint(ge=5, le=10) = Field(  # type: ignore
-        default=8,
-        description="倉庫数（5〜10のみ許可）",
+    warehouses: conint(ge=1, le=10) = Field(  # type: ignore
+        default=5,
+        description="倉庫数（1〜10、既定=5）",
     )
     lot_split_max_per_line: conint(ge=1, le=3) = Field(  # type: ignore
         default=3,
         description="1明細あたりロット分割上限（1〜3、既定=3）",
     )
     order_line_items_per_order: conint(ge=1, le=5) = Field(  # type: ignore
-        default=5,
-        description="受注明細行の上限（1〜5、既定=5）",
+        default=3,
+        description="受注明細行の上限（1〜5、既定=3）",
     )
     destinations_max_per_order: int = Field(
         default=5,
         description="受注の納品先上限（常に5固定）",
+    )
+    forecasts: conint(ge=0, le=1) | None = Field(  # type: ignore
+        default=0,
+        description="需要予測データ生成（0=無効, 1=有効）",
     )
     save_snapshot: bool = Field(
         default=True,

@@ -7,14 +7,14 @@ from pydantic import BaseModel, Field, conint
 class SeedRequest(BaseModel):
     seed: int | None = Field(default=42, description="Random seed for reproducibility")
     dry_run: bool = Field(default=False)
-    customers: conint(ge=0) = 10
-    suppliers: conint(ge=0) = 5
-    delivery_places: conint(ge=0) = 5
-    products: conint(ge=0) = 20
+    customers: conint(ge=0) = 3  # 最小テスト用に削減（旧: 10）
+    suppliers: conint(ge=0) = 2  # 最小テスト用に削減（旧: 5）
+    delivery_places: conint(ge=0) = 2  # 最小テスト用に削減（旧: 5）
+    products: conint(ge=0) = 5  # 最小テスト用に削減（旧: 20）
     forecasts: conint(ge=0) = 0  # 0=無効化、>0で有効
-    warehouses: conint(ge=0) = 3
-    lots: conint(ge=0) = 80
-    orders: conint(ge=0) = 25
+    warehouses: conint(ge=0) = 2  # 最小テスト用に削減（旧: 3）
+    lots: conint(ge=0) = 10  # 最小テスト用に削減（旧: 80）
+    orders: conint(ge=0) = 5  # 最小テスト用に削減（旧: 25）
 
 
 class SeedSummary(BaseModel):
