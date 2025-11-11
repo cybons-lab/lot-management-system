@@ -23,6 +23,10 @@ from .admin_simulate_schema import (
     SimulateSeedResponse,
 )
 from .allocations_schema import (
+    AllocatableLotItem,
+    AllocatableLotsResponse,
+    CandidateLotItem,
+    CandidateLotsResponse,
     DragAssignRequest,
     DragAssignResponse,
     FefoCommitResponse,
@@ -134,7 +138,11 @@ from .warehouses_schema import (
 __all__ = [
     "AdminPresetListResponse",
     "AdminPresetLoadResponse",
+    "AllocatableLotItem",
+    "AllocatableLotsResponse",
     "AllocationWarning",
+    "CandidateLotItem",
+    "CandidateLotsResponse",
     "CapCheckResult",
     "BaseSchema",
     "CustomerBase",

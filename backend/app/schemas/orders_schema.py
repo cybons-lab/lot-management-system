@@ -80,6 +80,7 @@ class OrderLineCreate(OrderLineBase):
 class OrderLineResponse(OrderLineBase, TimestampMixin):
     id: int
     order_id: int
+    product_id: int | None = None  # 追加: product_id基準の引当に必要
     allocated_qty: float | None = None
 
 
@@ -96,6 +97,7 @@ class WarehouseAllocIn(BaseSchema):
 class OrderLineOut(BaseSchema):
     id: int
     line_no: int | None = None
+    product_id: int | None = None  # 追加: product_id基準の引当に必要
     product_code: str | None = None
     product_name: str | None = None
     customer_code: str | None = None

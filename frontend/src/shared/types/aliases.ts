@@ -81,6 +81,24 @@ export type LotCandidate = {
 };
 export type LotCandidateResponse = { items: LotCandidate[]; warnings?: string[] };
 
+// CandidateLotItem (バックエンドのCandidateLotItemスキーマに対応)
+export type CandidateLotItem = {
+  lot_id: number;
+  lot_number: string;
+  free_qty: number;
+  current_quantity: number;
+  allocated_qty: number;
+  product_code?: string | null;
+  warehouse_code?: string | null;
+  expiry_date?: string | null;
+  last_updated?: string | null;
+};
+
+export type CandidateLotsResponse = {
+  items: CandidateLotItem[];
+  total: number;
+};
+
 export type WarehouseAlloc = {
   qty: number;
   warehouse_id: number; // API保存時に必須に寄せる
@@ -102,7 +120,8 @@ export type OrderLine = {
   id: number;
   order_id?: number;
   line_no?: number;
-  product_code: string;
+  product_id?: number | null; // product_id基準の引当に必要
+  product_code?: string | null; // Optional化（表示用のみ）
   product_name?: string;
   customer_code?: string;
   supplier_code?: string;
@@ -150,7 +169,8 @@ export type OrderLineComputed = {
   lineId?: number;
   orderId?: number;
   id?: number;
-  productCode: string;
+  productId?: number | null; // product_id基準の引当に必要
+  productCode?: string | null; // Optional化（表示用のみ）
   productName: string;
   status?: string;
   orderDate?: string | null;

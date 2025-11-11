@@ -31,8 +31,8 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
   const lineId = computed.lineId;
   const { candidatesQ, createAlloc, cancelAlloc } = useAllocationActions(
     lineId,
-    computed.productCode,
-    computed.customerCode,
+    computed.productId ?? undefined,
+    undefined, // warehouse_id は任意
   );
 
   const allocatedLots = React.useMemo<AllocatedLot[]>(() => {
@@ -118,7 +118,7 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
     <div className="rounded-xl border bg-white shadow-sm">
       <OrderLineHeader.OrderLineHeader
         productName={computed.productName}
-        productCode={computed.productCode}
+        productCode={computed.productCode ?? undefined}
         status={computed.status}
         orderDate={formatYmd(computed.orderDate) || undefined}
       />
@@ -196,7 +196,7 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
 
         <div className="mt-6">
           <ForecastSection
-            productCode={computed.productCode}
+            productCode={computed.productCode ?? undefined}
             customerCode={computed.customerCode}
             fullWidth
           />
