@@ -6,7 +6,7 @@ from __future__ import annotations
 import logging
 import traceback
 from collections.abc import Sequence
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from random import Random
 from typing import Any
 
@@ -271,7 +271,6 @@ def run_seed_simulation(
         )
 
         if generate_forecasts and all_customers and all_products:
-            from datetime import timezone
 
             # 既存のforecast_idを取得（重複防止）
             existing_forecast_ids = {
@@ -279,7 +278,7 @@ def run_seed_simulation(
             }
 
             forecast_rows = []
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             today = now.date()
 
             # 各customer × product ペアに対して forecasts を生成

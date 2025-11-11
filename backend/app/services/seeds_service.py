@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from random import Random
 
 from faker import Faker
@@ -174,8 +174,6 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
             existing_products = created_products
 
         if existing_customers and existing_products:
-            from datetime import timezone
-            from uuid import uuid4
 
             # 既存のforecast_idを取得（重複防止）
             existing_forecast_ids = (
@@ -185,7 +183,7 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
             )
 
             forecast_rows = []
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             today = now.date()
 
             # 各customer × product ペアに対して forecasts を生成
