@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict SDWP2yewA4j17ZNLug3y4aGmsp9Y4A44y3JbxPahWxhbn2Iv3pQiS7O1HhuBgPy
+\restrict cN2RWyKH80bhDwu9hp3hg73AUSFWAPHPAnidftIzZ7r9mcH7GqfIxClzMYOS4e9
 
 -- Dumped from database version 15.14
 -- Dumped by pg_dump version 15.14
@@ -2189,6 +2189,7 @@ ALTER TABLE public.v_lot_available_qty OWNER TO admin;
 
 CREATE VIEW public.v_order_line_context AS
  SELECT ol.id AS order_line_id,
+    o.id AS order_id,
     o.customer_id,
     ol.product_id,
     ol.warehouse_id,
@@ -2214,7 +2215,7 @@ CREATE VIEW public.v_candidate_lots_by_order_line AS
    FROM ((public.v_order_line_context c
      JOIN public.v_customer_daily_products f ON (((f.customer_id = c.customer_id) AND (f.product_id = c.product_id))))
      JOIN public.v_lot_available_qty l ON (((l.product_id = c.product_id) AND (l.available_qty > (0)::numeric))))
-  ORDER BY c.order_line_id, l.receipt_date;
+  ORDER BY c.order_line_id, l.expiry_date, l.receipt_date, l.lot_id;
 
 
 ALTER TABLE public.v_candidate_lots_by_order_line OWNER TO admin;
@@ -4608,5 +4609,5 @@ REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict SDWP2yewA4j17ZNLug3y4aGmsp9Y4A44y3JbxPahWxhbn2Iv3pQiS7O1HhuBgPy
+\unrestrict cN2RWyKH80bhDwu9hp3hg73AUSFWAPHPAnidftIzZ7r9mcH7GqfIxClzMYOS4e9
 
