@@ -119,9 +119,7 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
 
     product = db.query(Product).filter(Product.id == lot.product_id).first()
     if not product:
-        raise HTTPException(
-            status_code=404, detail=f"製品ID '{lot.product_id}' が見つかりません"
-        )
+        raise HTTPException(status_code=404, detail=f"製品ID '{lot.product_id}' が見つかりません")
 
     supplier = db.query(Supplier).filter(Supplier.supplier_code == lot.supplier_code).first()
     if not supplier:

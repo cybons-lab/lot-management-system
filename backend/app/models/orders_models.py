@@ -117,9 +117,7 @@ class OrderLine(Base):
         ForeignKey("warehouses.id", ondelete="RESTRICT"), nullable=True
     )
 
-    __table_args__ = (
-        UniqueConstraint("order_id", "line_no", name="uq_order_line"),
-    )
+    __table_args__ = (UniqueConstraint("order_id", "line_no", name="uq_order_line"),)
 
     order: Mapped[Order] = relationship("Order", back_populates="order_lines")
     product: Mapped[Product | None] = relationship("Product", back_populates="order_lines")
@@ -192,9 +190,7 @@ class Allocation(Base):
     destination_id: Mapped[int | None] = mapped_column(
         ForeignKey("delivery_places.id"), nullable=True
     )
-    status: Mapped[str] = mapped_column(
-        Text, nullable=False, server_default=text("'reserved'")
-    )
+    status: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'reserved'"))
 
     __table_args__ = (
         CheckConstraint(

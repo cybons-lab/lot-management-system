@@ -267,11 +267,10 @@ def run_seed_simulation(
         tracker.add_log(
             task_id,
             f"→ Forecast check: params.forecasts={params.get('forecasts', 0)}, "
-            f"generate={generate_forecasts}, customers={len(all_customers)}, products={len(all_products)}"
+            f"generate={generate_forecasts}, customers={len(all_customers)}, products={len(all_products)}",
         )
 
         if generate_forecasts and all_customers and all_products:
-
             # 既存のforecast_idを取得（重複防止）
             existing_forecast_ids = {
                 fid for (fid,) in db.execute(select(Forecast.forecast_id)).all()
@@ -369,7 +368,9 @@ def run_seed_simulation(
                 db.bulk_insert_mappings(Forecast, forecast_rows)
                 db.flush()
                 forecast_count = len(forecast_rows)
-                tracker.add_log(task_id, f"✓ Created {forecast_count} forecasts (daily/dekad/monthly)")
+                tracker.add_log(
+                    task_id, f"✓ Created {forecast_count} forecasts (daily/dekad/monthly)"
+                )
             else:
                 tracker.add_log(task_id, "→ No forecast rows to insert (all duplicates or empty)")
         else:

@@ -174,7 +174,6 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
             existing_products = created_products
 
         if existing_customers and existing_products:
-
             # 既存のforecast_idを取得（重複防止）
             existing_forecast_ids = (
                 {fid for (fid,) in db.execute(select(Forecast.forecast_id)).all()}
