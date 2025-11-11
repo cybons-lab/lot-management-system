@@ -26,6 +26,8 @@ from app.schemas import (
     FullSampleDataRequest,
     ResponseBase,
 )
+from app.schemas.admin_seeds_schema import SeedRequest, SeedResponse
+from app.services.seeds_service import create_seed_data
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -109,6 +111,21 @@ def reset_database(db: Session = Depends(get_db)):
 
 # DEPRECATED: This endpoint has been replaced by /api/admin/simulate-seed-data
 # Use the new simulation API with YAML profile support instead
+
+
+@router.post("/seeds", response_model=SeedResponse)
+def create_seeds(
+    req: SeedRequest,
+    db: Session = Depends(get_db),
+) -> SeedResponse:
+    """
+    シードデータ生成（UPSERT方式）.
+
+    - 既存データに追加する形でサンプルデータを投入
+    - UPSERT（ON CONFLICT DO NOTHING）で重複を防止
+    - dry_run=true で投入前のサマリのみ確認可能
+    """
+    return create_seed_data(db, req)
 
 
 def _parse_iso_date(value, context: str, field: str) -> date | None:
