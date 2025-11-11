@@ -65,7 +65,7 @@ class Order(Base):
     __table_args__ = (
         UniqueConstraint("order_no", name="orders_order_no_key"),
         CheckConstraint(
-            "status IN ('draft','confirmed','shipped','closed')",
+            "status IN ('draft','open','part_allocated','allocated','shipped','closed','cancelled')",
             name="ck_orders_status",
         ),
         CheckConstraint(

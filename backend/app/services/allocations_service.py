@@ -66,20 +66,38 @@ class AllocationNotFoundError(Exception):
     pass
 
 
-def _load_order(db: Session, order_id: int) -> Order:
-    stmt: Select[Order] = (
-        select(Order)
-        .options(
-            selectinload(Order.order_lines)
-            .joinedload(OrderLine.allocations)
-            .joinedload(Allocation.lot),
-            selectinload(Order.order_lines).joinedload(OrderLine.product),
-        )
-        .where(Order.id == order_id)
+def _load_order(db: Session, order_id: int | None = None, order_no: str | None = None) -> Order:
+    """
+    注文を取得（ID/コード両対応）.
+
+    Args:
+        db: データベースセッション
+        order_id: 注文ID（優先）
+        order_no: 注文番号（IDがない場合）
+
+    Returns:
+        Order: 注文エンティティ（子テーブル含む）
+
+    Raises:
+        ValueError: 注文が見つからない場合、またはパラメータ不足の場合
+    """
+    if not order_id and not order_no:
+        raise ValueError("Either order_id or order_no must be provided")
+
+    stmt: Select[Order] = select(Order).options(
+        selectinload(Order.order_lines).joinedload(OrderLine.allocations).joinedload(Allocation.lot),
+        selectinload(Order.order_lines).joinedload(OrderLine.product),
     )
+
+    if order_id:
+        stmt = stmt.where(Order.id == order_id)
+    else:
+        stmt = stmt.where(Order.order_no == order_no)
+
     order = db.execute(stmt).scalar_one_or_none()
     if not order:
-        raise ValueError("Order not found")
+        identifier = f"ID={order_id}" if order_id else f"order_no={order_no}"
+        raise ValueError(f"Order not found: {identifier}")
     return order
 
 
@@ -130,10 +148,27 @@ def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
 
 
 def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
+    """
+    FEFO引当プレビュー（状態: draft|open|part_allocated|allocated 許容）.
+
+    Args:
+        db: データベースセッション
+        order_id: 注文ID
+
+    Returns:
+        FefoPreviewResult: 引当プレビュー結果
+
+    Raises:
+        ValueError: 注文が見つからない、または状態が不正な場合
+    """
     order = _load_order(db, order_id)
 
-    if order.status not in {"open", "part_allocated"}:
-        raise ValueError("Order status does not allow allocation")
+    # プレビューは "見える" 状態のみ許容（draft|open|part_allocated|allocated）
+    if order.status not in {"draft", "open", "part_allocated", "allocated"}:
+        raise ValueError(
+            f"Order status '{order.status}' does not allow preview. "
+            f"Allowed: draft, open, part_allocated, allocated"
+        )
 
     available_per_lot: dict[int, float] = {}
     preview_lines: list[FefoLinePlan] = []
@@ -215,6 +250,28 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
 
 
 def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
+    """
+    FEFO引当確定（状態: open|part_allocated のみ許容）.
+
+    Args:
+        db: データベースセッション
+        order_id: 注文ID
+
+    Returns:
+        FefoCommitResult: 引当確定結果
+
+    Raises:
+        ValueError: 注文が見つからない、または状態が不正な場合
+        AllocationCommitError: 引当確定中にエラーが発生した場合
+    """
+    # 状態チェック（確定可能状態のみ）
+    order = _load_order(db, order_id)
+    if order.status not in {"open", "part_allocated"}:
+        raise ValueError(
+            f"Order status '{order.status}' does not allow commit. "
+            f"Allowed: open, part_allocated"
+        )
+
     preview = preview_fefo_allocation(db, order_id)
 
     created: list[Allocation] = []

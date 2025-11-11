@@ -13,6 +13,7 @@ from .orders_models import (
     PurchaseRequest,
 )
 from .seed_snapshot_model import SeedSnapshot
+from .views_models import VCandidateLotsByOrderLine, VLotAvailableQty, VOrderLineContext
 
 
 __all__ = [
@@ -38,4 +39,8 @@ __all__ = [
     "SapSyncLog",
     "Forecast",
     "SeedSnapshot",
+    # Views (read-only)
+    "VLotAvailableQty",
+    "VOrderLineContext",
+    "VCandidateLotsByOrderLine",
 ]
