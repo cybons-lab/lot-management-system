@@ -3,7 +3,7 @@
 import logging
 import random  # ファイル冒頭に追加されていなければ
 import traceback
-from datetime import date, datetime
+from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, text
@@ -15,14 +15,11 @@ from app.core.database import truncate_all_tables
 from app.models import (
     Allocation,
     Customer,
-    Lot,
     Order,
     OrderLine,
-    Product,
     Supplier,
     Warehouse,  # 統合された新Warehouse
 )
-from app.models.inventory_models import StockMovement
 from app.schemas import (
     DashboardStatsResponse,
     FullSampleDataRequest,

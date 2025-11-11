@@ -10,6 +10,7 @@ from typing import Any
 
 import yaml
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +33,7 @@ def load_profiles(path: str | Path) -> dict[str, Any]:
         raise FileNotFoundError(f"Profile file not found: {path}")
 
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             profiles = yaml.safe_load(f)
             if profiles is None:
                 raise ValueError("Empty YAML file")
