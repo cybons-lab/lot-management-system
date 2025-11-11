@@ -1,5 +1,5 @@
 // src/features/orders/hooks/useOrders.ts
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import * as ordersApi from "@/features/orders/api";
 import { normalizeOrder, type OrderUI } from "@/shared/libs/normalize";
@@ -52,5 +52,22 @@ export function useOrderDetail(orderId?: number) {
     },
     enabled: !!orderId,
     select: (data: OrderResponse) => normalizeOrder(data),
+  });
+}
+
+/**
+ * 注文ステータス更新のmutation hook
+ */
+export function useUpdateOrderStatus(orderId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (newStatus: string) => ordersApi.updateOrderStatus(orderId, newStatus),
+    onSuccess: () => {
+      // 注文詳細とリストのキャッシュを無効化
+      queryClient.invalidateQueries({ queryKey: ["orders", "detail", orderId] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["order", String(orderId)] });
+    },
   });
 }

@@ -123,6 +123,12 @@ export const saveWarehouseAllocations = (
   );
 
 /**
+ * 受注ステータス更新
+ */
+export const updateOrderStatus = (orderId: number, newStatus: string) =>
+  fetchApi.patch<OrderResponse>(`/orders/${orderId}/status`, { status: newStatus });
+
+/**
  * 受注明細ステータス更新
  */
 export const updateOrderLineStatus = (orderLineId: number, newStatus: string) =>

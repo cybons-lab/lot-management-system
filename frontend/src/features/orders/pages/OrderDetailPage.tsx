@@ -1,13 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import * as ordersApi from "@/features/orders/api";
+import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
+import { useUpdateOrderStatus } from "@/features/orders/hooks/useOrders";
 import { useToast } from "@/hooks/use-toast";
 import { formatCodeAndName } from "@/shared/libs/utils";
+import { OrderStatus, ORDER_STATUS_DISPLAY } from "@/shared/types/aliases";
 
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -15,6 +18,7 @@ export function OrderDetailPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [isRematching, setIsRematching] = useState(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
 
   const {
     data: order,
@@ -25,6 +29,8 @@ export function OrderDetailPage() {
     queryFn: () => ordersApi.getOrder(Number(orderId)),
     enabled: !!orderId,
   });
+
+  const updateStatusMutation = useUpdateOrderStatus(Number(orderId));
 
   const rematchMutation = useMutation({
     // mutationFn: () => api.reMatchOrder(Number(orderId)),
@@ -49,6 +55,25 @@ export function OrderDetailPage() {
       setIsRematching(false);
     },
   });
+
+  const handleStatusChange = (newStatus: OrderStatus) => {
+    updateStatusMutation.mutate(newStatus, {
+      onSuccess: () => {
+        toast({
+          title: "ステータス更新完了",
+          description: `ステータスを「${ORDER_STATUS_DISPLAY[newStatus].label}」に更新しました`,
+        });
+        setIsStatusDialogOpen(false);
+      },
+      onError: (error: Error) => {
+        toast({
+          title: "ステータス更新失敗",
+          description: error.message || "ステータス更新に失敗しました",
+          variant: "destructive",
+        });
+      },
+    });
+  };
 
   if (isLoading) {
     return <DetailSkeleton />;
@@ -90,7 +115,42 @@ export function OrderDetailPage() {
 
       {/* ヘッダ情報 */}
       <div className="bg-card rounded-lg border p-6">
-        <h3 className="mb-4 text-lg font-semibold">基本情報</h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold">基本情報</h3>
+          {isStatusDialogOpen && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">ステータスを選択:</span>
+              {Object.values(OrderStatus).map((status) => (
+                <Button
+                  key={status}
+                  size="sm"
+                  variant={order.status === status ? "default" : "outline"}
+                  onClick={() => handleStatusChange(status)}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  {ORDER_STATUS_DISPLAY[status].label}
+                </Button>
+              ))}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsStatusDialogOpen(false)}
+              >
+                キャンセル
+              </Button>
+            </div>
+          )}
+          {!isStatusDialogOpen && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsStatusDialogOpen(true)}
+            >
+              <CheckCircle2 className="mr-2 h-4 w-4" />
+              ステータス変更
+            </Button>
+          )}
+        </div>
         <div className="grid gap-4 md:grid-cols-2">
           <InfoItem label="受注番号" value={order.order_no} />
           <InfoItem label="得意先" value={formatCodeAndName(order.customer_code, undefined)} />
@@ -99,7 +159,7 @@ export function OrderDetailPage() {
             value={order.order_date ? format(new Date(order.order_date), "yyyy-MM-dd") : "-"}
           />
           <InfoItem label="納期" value={"-"} />
-          <InfoItem label="ステータス" value={<StatusBadge status={order.status} />} />
+          <InfoItem label="ステータス" value={<OrderStatusBadge status={order.status} />} />
         </div>
       </div>
 
@@ -158,25 +218,6 @@ function InfoItem({ label, value }: { label: string; value: React.ReactNode }) {
       <dt className="text-muted-foreground text-sm font-medium">{label}</dt>
       <dd className="mt-1 text-sm">{value}</dd>
     </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const variants: Record<string, { label: string; class: string }> = {
-    open: { label: "未処理", class: "bg-yellow-100 text-yellow-800" },
-    allocated: { label: "引当済", class: "bg-blue-100 text-blue-800" },
-    shipped: { label: "出荷済", class: "bg-green-100 text-green-800" },
-    completed: { label: "完了", class: "bg-gray-100 text-gray-800" },
-  };
-
-  const variant = variants[status] || { label: status, class: "bg-gray-100 text-gray-800" };
-
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ${variant.class}`}
-    >
-      {variant.label}
-    </span>
   );
 }
 

@@ -116,6 +116,39 @@ export type AllocationCancelRequest = {
 };
 
 // ---- Orders ----
+/**
+ * 注文ステータスEnum
+ * バックエンドの OrderStatus Enum に対応
+ */
+export enum OrderStatus {
+  DRAFT = "draft",
+  OPEN = "open",
+  PART_ALLOCATED = "part_allocated",
+  ALLOCATED = "allocated",
+  SHIPPED = "shipped",
+  CLOSED = "closed",
+  CANCELLED = "cancelled",
+}
+
+/**
+ * ステータス表示用のラベルと色
+ */
+export const ORDER_STATUS_DISPLAY: Record<
+  OrderStatus,
+  { label: string; variant: string }
+> = {
+  [OrderStatus.DRAFT]: { label: "下書き", variant: "bg-gray-100 text-gray-800" },
+  [OrderStatus.OPEN]: { label: "未処理", variant: "bg-yellow-100 text-yellow-800" },
+  [OrderStatus.PART_ALLOCATED]: {
+    label: "部分引当",
+    variant: "bg-orange-100 text-orange-800",
+  },
+  [OrderStatus.ALLOCATED]: { label: "引当済", variant: "bg-blue-100 text-blue-800" },
+  [OrderStatus.SHIPPED]: { label: "出荷済", variant: "bg-green-100 text-green-800" },
+  [OrderStatus.CLOSED]: { label: "完了", variant: "bg-gray-100 text-gray-800" },
+  [OrderStatus.CANCELLED]: { label: "キャンセル", variant: "bg-red-100 text-red-800" },
+};
+
 export type OrderLine = {
   id: number;
   order_id?: number;
