@@ -132,9 +132,7 @@ def _validate_profile(name: str, profile: dict[str, Any]) -> None:
             raise ValueError(f"Profile '{name}': missing required field '{field}'")
         value = profile[field]
         if not isinstance(value, int) or value < 0:
-            raise ValueError(
-                f"Profile '{name}': field '{field}' must be a non-negative integer"
-            )
+            raise ValueError(f"Profile '{name}': field '{field}' must be a non-negative integer")
 
     # 倉庫数の範囲チェック（5〜10）
     warehouses = profile.get("warehouses", 0)
@@ -162,17 +160,13 @@ def _validate_profile(name: str, profile: dict[str, Any]) -> None:
     if "destinations_max_per_order" in profile:
         dest_max = profile["destinations_max_per_order"]
         if dest_max != 5:
-            raise ValueError(
-                f"Profile '{name}': 'destinations_max_per_order' must be exactly 5"
-            )
+            raise ValueError(f"Profile '{name}': 'destinations_max_per_order' must be exactly 5")
 
     # lot_split_max_per_lineのチェック（1〜3）
     if "lot_split_max_per_line" in profile:
         lot_split_max = profile["lot_split_max_per_line"]
         if not (1 <= lot_split_max <= 3):
-            raise ValueError(
-                f"Profile '{name}': 'lot_split_max_per_line' must be between 1 and 3"
-            )
+            raise ValueError(f"Profile '{name}': 'lot_split_max_per_line' must be between 1 and 3")
 
     # case_mixの合計チェック（<=1.0）
     if "case_mix" in profile:

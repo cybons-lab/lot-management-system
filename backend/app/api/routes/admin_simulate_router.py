@@ -64,7 +64,10 @@ def simulate_seed_data(
     # ジョブ作成
     task_id = tracker.create_job()
     tracker.add_log(task_id, f"Simulation started with profile: {req.profile}")
-    tracker.add_log(task_id, f"Parameters: warehouses={req.warehouses}, lot_split_max={req.lot_split_max_per_line}")
+    tracker.add_log(
+        task_id,
+        f"Parameters: warehouses={req.warehouses}, lot_split_max={req.lot_split_max_per_line}",
+    )
 
     # バックグラウンドタスクで実行
     background_tasks.add_task(_run_simulation_task, db, req, task_id)

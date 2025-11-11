@@ -119,7 +119,9 @@ def run_seed_simulation(
         tracker.add_log(task_id, f"Parameters expanded from profile: {req.profile or 'default'}")
 
         # 乱数シード設定
-        seed = req.random_seed if req.random_seed is not None else int(datetime.utcnow().timestamp())
+        seed = (
+            req.random_seed if req.random_seed is not None else int(datetime.utcnow().timestamp())
+        )
         faker = Faker("ja_JP")
         faker.seed_instance(seed)
         rng = Random(seed)
@@ -305,11 +307,7 @@ def run_seed_simulation(
             order_line_max = params["order_line_items_per_order"]
             if isinstance(order_line_max, dict):
                 order_line_max = order_line_max.get("max", 5)
-            num_lines = rng.choices(
-                [1, 2, 3, 4, 5],
-                weights=[40, 40, 10, 5, 5],
-                k=1
-            )[0]
+            num_lines = rng.choices([1, 2, 3, 4, 5], weights=[40, 40, 10, 5, 5], k=1)[0]
             num_lines = min(num_lines, order_line_max)
 
             for line_no in range(1, num_lines + 1):
@@ -344,10 +342,7 @@ def run_seed_simulation(
         allocation_count = 0
         for line in lines_to_allocate:
             # 同じ製品のロットをFIFO順（receipt_date）で取得
-            matching_lots = [
-                lot for lot in all_lots
-                if lot.product_id == line.product_id
-            ]
+            matching_lots = [lot for lot in all_lots if lot.product_id == line.product_id]
             if not matching_lots:
                 continue
 
@@ -415,12 +410,12 @@ def run_seed_simulation(
                 GROUP BY order_line_id
                 HAVING COUNT(*) > :max_lots
             """),
-            {"max_lots": params["lot_split_max_per_line"]}
+            {"max_lots": params["lot_split_max_per_line"]},
         ).fetchall()
         lot_split_ok = len(lot_split_violations) == 0
         tracker.add_log(
             task_id,
-            f"Lot split check: {'OK' if lot_split_ok else f'NG ({len(lot_split_violations)} violations)'}"
+            f"Lot split check: {'OK' if lot_split_ok else f'NG ({len(lot_split_violations)} violations)'}",
         )
 
         # Check 2: 納品先数チェック (≤5) - 受注単位で納品先の種類数をカウント
@@ -436,12 +431,12 @@ def run_seed_simulation(
                 GROUP BY o.id
                 HAVING COUNT(DISTINCT a.destination_id) > :max_dests
             """),
-            {"max_dests": dest_max}
+            {"max_dests": dest_max},
         ).fetchall()
         dest_ok = len(dest_violations) == 0
         tracker.add_log(
             task_id,
-            f"Destinations check: {'OK' if dest_ok else f'NG ({len(dest_violations)} violations)'}"
+            f"Destinations check: {'OK' if dest_ok else f'NG ({len(dest_violations)} violations)'}",
         )
 
         # Check 3: 受注明細行数チェック (≤5)
@@ -456,12 +451,12 @@ def run_seed_simulation(
                 GROUP BY order_id
                 HAVING COUNT(*) > :max_lines
             """),
-            {"max_lines": order_line_max_check}
+            {"max_lines": order_line_max_check},
         ).fetchall()
         lines_ok = len(line_violations) == 0
         tracker.add_log(
             task_id,
-            f"Order lines check: {'OK' if lines_ok else f'NG ({len(line_violations)} violations)'}"
+            f"Order lines check: {'OK' if lines_ok else f'NG ({len(line_violations)} violations)'}",
         )
 
         # Check 4: 在庫整合式チェック（簡易版: lot_current_stock ビューを使用）
@@ -478,7 +473,7 @@ def run_seed_simulation(
             stock_equation_ok = negative_stock == 0
             tracker.add_log(
                 task_id,
-                f"Stock equation check: {'OK' if stock_equation_ok else f'NG ({negative_stock} negative stocks)'}"
+                f"Stock equation check: {'OK' if stock_equation_ok else f'NG ({negative_stock} negative stocks)'}",
             )
         except Exception as e:
             logger.warning(f"Stock equation check failed (view may not exist): {e}")
@@ -501,7 +496,9 @@ def run_seed_simulation(
 
         snapshot_id = None
         if req.save_snapshot:
-            snapshot_name = req.snapshot_name or f"snapshot_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            snapshot_name = (
+                req.snapshot_name or f"snapshot_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            )
             # 展開済みの最終パラメータを保存（完全再現用）
             params_snapshot = params.copy()
             params_snapshot["random_seed"] = seed  # 実際に使用したシード

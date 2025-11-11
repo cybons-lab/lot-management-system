@@ -86,7 +86,9 @@ app.include_router(forecast_router, prefix=settings.API_PREFIX)
 app.include_router(warehouse_alloc_router, prefix=settings.API_PREFIX)
 app.include_router(health_router, prefix=settings.API_PREFIX)
 app.include_router(orders_validate_router, prefix=settings.API_PREFIX)
-app.include_router(admin_simulate_router, prefix=settings.API_PREFIX)  # NEW: Simulation API with YAML profiles
+app.include_router(
+    admin_simulate_router, prefix=settings.API_PREFIX
+)  # NEW: Simulation API with YAML profiles
 
 
 @app.get("/")

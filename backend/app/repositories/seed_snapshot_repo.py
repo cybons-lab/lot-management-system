@@ -46,9 +46,11 @@ class SeedSnapshotRepository:
 
     def get_all(self) -> Sequence[SeedSnapshot]:
         """全スナップショットを取得（新しい順）."""
-        return self.db.execute(
-            select(SeedSnapshot).order_by(desc(SeedSnapshot.created_at))
-        ).scalars().all()
+        return (
+            self.db.execute(select(SeedSnapshot).order_by(desc(SeedSnapshot.created_at)))
+            .scalars()
+            .all()
+        )
 
     def get_latest(self) -> SeedSnapshot | None:
         """最新のスナップショットを取得."""
