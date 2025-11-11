@@ -102,7 +102,8 @@ export type OrderLine = {
   id: number;
   order_id?: number;
   line_no?: number;
-  product_code: string;
+  product_id?: number | null; // product_id基準の引当に必要
+  product_code?: string | null; // Optional化（表示用のみ）
   product_name?: string;
   customer_code?: string;
   supplier_code?: string;
@@ -150,7 +151,8 @@ export type OrderLineComputed = {
   lineId?: number;
   orderId?: number;
   id?: number;
-  productCode: string;
+  productId?: number | null; // product_id基準の引当に必要
+  productCode?: string | null; // Optional化（表示用のみ）
   productName: string;
   status?: string;
   orderDate?: string | null;

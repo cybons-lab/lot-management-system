@@ -1,11 +1,15 @@
 """Allocation endpoints using FEFO strategy and drag-assign compatibility."""
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.models import Allocation, Lot, LotCurrentStock, OrderLine
 from app.schemas import (
+    CandidateLotsResponse,
     DragAssignRequest,
     FefoCommitResponse,
     FefoLineAllocation,
@@ -13,9 +17,6 @@ from app.schemas import (
     FefoPreviewRequest,
     FefoPreviewResponse,
 )
-
-# ←ここまでは既存の import 群
-# ↓ここを修正版に置き換えてください
 from app.services.allocations_service import (
     AllocationCommitError,
     AllocationNotFoundError,
@@ -25,6 +26,7 @@ from app.services.allocations_service import (
 )
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/allocations", tags=["allocations"])
 
 
@@ -144,3 +146,100 @@ def allocate_order(order_id: int, db: Session = Depends(get_db)) -> FefoCommitRe
         created_allocation_ids=created_ids,
         preview=preview_response,
     )
+
+
+@router.get("/candidate-lots", response_model=CandidateLotsResponse)
+def get_candidate_lots(
+    product_id: int,
+    warehouse_id: int | None = None,
+    limit: int = 200,
+    db: Session = Depends(get_db),
+):
+    """
+    候補ロット一覧取得（product_id基準）.
+
+    Args:
+        product_id: 製品ID（必須）
+        warehouse_id: 倉庫ID（任意フィルタ）
+        limit: 最大取得件数（デフォルト200）
+        db: データベースセッション
+
+    Returns:
+        CandidateLotsResponse: 候補ロット一覧
+
+    Note:
+        - free_qty > 0 のみ返却
+        - ロック済み・期限切れは除外
+        - 並び順: expiry_date NULLS FIRST, lot_id
+    """
+    try:
+        # クエリタイムアウト設定（5秒）
+        db.execute(text("SET LOCAL statement_timeout = '5s'"))
+
+        # メインクエリ: product_id 基準で候補ロットを取得
+        query = text(
+            """
+            SELECT
+                lcs.lot_id,
+                l.lot_number,
+                lcs.current_quantity,
+                COALESCE(SUM(a.allocated_qty), 0) AS allocated_qty,
+                (lcs.current_quantity - COALESCE(SUM(a.allocated_qty), 0)) AS free_qty,
+                l.product_code,
+                l.warehouse_code,
+                l.expiry_date,
+                lcs.last_updated
+            FROM
+                public.lot_current_stock lcs
+                INNER JOIN public.lots l ON l.id = lcs.lot_id
+                LEFT JOIN public.allocations a ON a.lot_id = lcs.lot_id
+                    AND a.deleted_at IS NULL
+            WHERE
+                lcs.product_id = :product_id
+                AND lcs.current_quantity > 0
+                AND l.deleted_at IS NULL
+                AND (l.is_locked IS NULL OR l.is_locked = false)
+                AND (l.expiry_date IS NULL OR l.expiry_date >= CURRENT_DATE)
+                AND (:warehouse_id IS NULL OR lcs.warehouse_id = :warehouse_id)
+            GROUP BY
+                lcs.lot_id,
+                l.lot_number,
+                lcs.current_quantity,
+                l.product_code,
+                l.warehouse_code,
+                l.expiry_date,
+                lcs.last_updated
+            HAVING
+                (lcs.current_quantity - COALESCE(SUM(a.allocated_qty), 0)) > 0
+            ORDER BY
+                l.expiry_date NULLS FIRST,
+                lcs.lot_id
+            LIMIT :limit
+            """
+        )
+
+        result = db.execute(
+            query, {"product_id": product_id, "warehouse_id": warehouse_id, "limit": limit}
+        )
+        rows = result.fetchall()
+
+        items = [
+            {
+                "lot_id": row.lot_id,
+                "lot_number": row.lot_number,
+                "free_qty": float(row.free_qty),
+                "current_quantity": float(row.current_quantity),
+                "allocated_qty": float(row.allocated_qty),
+                "product_code": row.product_code,
+                "warehouse_code": row.warehouse_code,
+                "expiry_date": row.expiry_date,
+                "last_updated": row.last_updated.isoformat() if row.last_updated else None,
+            }
+            for row in rows
+        ]
+
+        return CandidateLotsResponse(items=items, total=len(items))
+
+    except Exception as e:
+        logger.error(f"候補ロット取得エラー (product_id={product_id}): {e}")
+        raise HTTPException(status_code=500, detail=f"候補ロット取得エラー: {str(e)}")

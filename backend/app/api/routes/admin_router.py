@@ -21,6 +21,7 @@ from app.models import (
     Warehouse,  # 統合された新Warehouse
 )
 from app.schemas import (
+    AllocatableLotsResponse,
     DashboardStatsResponse,
     FullSampleDataRequest,
     ResponseBase,
@@ -233,3 +234,110 @@ def _collect_customer_codes(data: FullSampleDataRequest) -> set[str]:
     if data.orders:
         codes.update(order.customer_code for order in data.orders if order.customer_code)
     return codes
+
+
+@router.get("/diagnostics/allocatable-lots", response_model=AllocatableLotsResponse)
+def get_allocatable_lots(
+    prod: str | None = None,
+    wh: str | None = None,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+):
+    """
+    診断API: 引当可能ロット一覧（読み取り専用）.
+
+    Args:
+        prod: 製品コード（任意フィルタ）
+        wh: 倉庫コード（任意フィルタ）
+        limit: 最大取得件数（デフォルト100）
+        db: データベースセッション
+
+    Returns:
+        AllocatableLotsResponse: 引当可能ロット一覧
+
+    Note:
+        - 読み取り専用トランザクション
+        - free_qty > 0 のみ
+        - ロック済み・期限切れは除外
+    """
+    # 読み取り専用トランザクション設定
+    db.execute(text("SET LOCAL transaction_read_only = on"))
+
+    # クエリタイムアウト設定（10秒）
+    db.execute(text("SET LOCAL statement_timeout = '10s'"))
+
+    try:
+        # メインクエリ: lot_current_stock + allocations 集計
+        query = text(
+            """
+            SELECT
+                lcs.lot_id,
+                l.lot_number,
+                lcs.product_id,
+                l.product_code,
+                lcs.warehouse_id,
+                l.warehouse_code,
+                lcs.current_quantity,
+                COALESCE(SUM(a.allocated_qty), 0) AS allocated_qty,
+                (lcs.current_quantity - COALESCE(SUM(a.allocated_qty), 0)) AS free_qty,
+                l.expiry_date,
+                l.is_locked,
+                lcs.last_updated
+            FROM
+                public.lot_current_stock lcs
+                INNER JOIN public.lots l ON l.id = lcs.lot_id
+                LEFT JOIN public.allocations a ON a.lot_id = lcs.lot_id
+                    AND a.deleted_at IS NULL
+            WHERE
+                lcs.current_quantity > 0
+                AND l.deleted_at IS NULL
+                AND (l.is_locked IS NULL OR l.is_locked = false)
+                AND (l.expiry_date IS NULL OR l.expiry_date >= CURRENT_DATE)
+                AND (:prod IS NULL OR l.product_code = :prod)
+                AND (:wh IS NULL OR l.warehouse_code = :wh)
+            GROUP BY
+                lcs.lot_id,
+                l.lot_number,
+                lcs.product_id,
+                l.product_code,
+                lcs.warehouse_id,
+                l.warehouse_code,
+                lcs.current_quantity,
+                l.expiry_date,
+                l.is_locked,
+                lcs.last_updated
+            HAVING
+                (lcs.current_quantity - COALESCE(SUM(a.allocated_qty), 0)) > 0
+            ORDER BY
+                l.expiry_date NULLS FIRST,
+                lcs.lot_id
+            LIMIT :limit
+            """
+        )
+
+        result = db.execute(query, {"prod": prod, "wh": wh, "limit": limit})
+        rows = result.fetchall()
+
+        items = [
+            {
+                "lot_id": row.lot_id,
+                "lot_number": row.lot_number,
+                "product_id": row.product_id,
+                "product_code": row.product_code,
+                "warehouse_id": row.warehouse_id,
+                "warehouse_code": row.warehouse_code,
+                "free_qty": float(row.free_qty),
+                "current_quantity": float(row.current_quantity),
+                "allocated_qty": float(row.allocated_qty),
+                "expiry_date": row.expiry_date,
+                "is_locked": row.is_locked or False,
+                "last_updated": row.last_updated.isoformat() if row.last_updated else None,
+            }
+            for row in rows
+        ]
+
+        return AllocatableLotsResponse(items=items, total=len(items))
+
+    except Exception as e:
+        logger.error(f"診断API実行エラー: {e}")
+        raise HTTPException(status_code=500, detail=f"診断API実行エラー: {str(e)}")

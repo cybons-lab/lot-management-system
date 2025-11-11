@@ -31,8 +31,8 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
   const lineId = computed.lineId;
   const { candidatesQ, createAlloc, cancelAlloc } = useAllocationActions(
     lineId,
-    computed.productCode,
-    computed.customerCode,
+    computed.productId ?? undefined,
+    undefined, // warehouse_id は任意
   );
 
   const allocatedLots = React.useMemo<AllocatedLot[]>(() => {

@@ -59,21 +59,23 @@ export const getWarehouseAllocList = (): Promise<components["schemas"]["Warehous
   fetchApi.get("/warehouse-alloc/warehouses");
 
 /**
- * 引当候補ロット取得
+ * 引当候補ロット取得（product_id基準）
  */
-export const getCandidateLots = (
-  orderLineId: number,
-  params?: { product_code?: string; customer_code?: string },
-) => {
+export const getCandidateLots = (params: {
+  product_id: number;
+  warehouse_id?: number;
+  limit?: number;
+}) => {
   const searchParams = new URLSearchParams();
-  if (params?.product_code) searchParams.append("product_code", params.product_code);
-  if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
+  searchParams.append("product_id", params.product_id.toString());
+  if (params.warehouse_id !== undefined)
+    searchParams.append("warehouse_id", params.warehouse_id.toString());
+  if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<{
-    items: components["schemas"]["FefoLotAllocation"][];
-    warnings?: string[];
-  }>(`/orders/${orderLineId}/candidate-lots${queryString ? "?" + queryString : ""}`);
+  return fetchApi.get<components["schemas"]["CandidateLotsResponse"]>(
+    `/allocations/candidate-lots${queryString ? "?" + queryString : ""}`,
+  );
 };
 
 /**

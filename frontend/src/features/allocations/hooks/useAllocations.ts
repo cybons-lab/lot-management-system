@@ -12,50 +12,50 @@ const keyCandidates = (orderLineId: number) =>
   ["orders", "line", orderLineId, "candidates"] as const;
 
 /**
- * ロット候補を取得（品番一致フィルタ対応）
+ * ロット候補を取得（product_id基準）
  */
 export function useCandidateLots(
   orderLineId: number | undefined,
-  productCode?: string,
-  customerCode?: string,
+  productId?: number,
+  warehouseId?: number,
 ) {
-  const enabled = typeof orderLineId === "number" && orderLineId > 0;
+  const enabled = typeof orderLineId === "number" && orderLineId > 0 && typeof productId === "number";
 
   return useQuery<LotCandidateResponse>({
     queryKey: enabled
-      ? [...keyCandidates(orderLineId!), productCode ?? null, customerCode ?? null]
+      ? [...keyCandidates(orderLineId!), productId ?? null, warehouseId ?? null]
       : ["orders", "line", "candidates", "disabled"],
     queryFn: async () => {
-      if (!orderLineId) {
+      if (!productId) {
         return { items: [] };
       }
 
-      const serverData = await ordersApi.getCandidateLots(orderLineId, {
-        product_code: productCode,
-        customer_code: customerCode,
+      const serverData = await ordersApi.getCandidateLots({
+        product_id: productId,
+        warehouse_id: warehouseId,
+        limit: 200,
       });
 
-      // Map server FefoLotAllocation to LotCandidate format
+      // Map CandidateLotItem to LotCandidate format
       const mappedItems = serverData.items.map((item) => ({
         lot_id: item.lot_id,
         lot_number: item.lot_number,
-        product_code: productCode ?? "", // inject from parameter since server doesn't return it
-        allocate_qty: item.allocate_qty,
+        product_code: item.product_code ?? "",
+        allocate_qty: item.free_qty,
         expiry_date: item.expiry_date,
-        receipt_date: item.receipt_date,
-        // Optional fields that server doesn't provide
-        warehouse_code: null,
+        receipt_date: null, // Not provided by new API
+        warehouse_code: item.warehouse_code,
         warehouse_name: null,
         base_unit: null,
         lot_unit: null,
         lot_unit_qty: null,
         conversion_factor: null,
-        available_qty: item.allocate_qty, // use allocate_qty as available
+        available_qty: item.free_qty,
       }));
 
       return {
         items: mappedItems,
-        warnings: serverData.warnings,
+        warnings: [],
       };
     },
     enabled,
