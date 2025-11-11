@@ -73,8 +73,11 @@ export function LotAllocationPage() {
   // 選択された明細行
   const selectedLine = orderDetailQuery.data?.lines?.find((line) => line.id === selectedLineId);
 
-  // ロット候補を取得
-  const lotsQuery = useLotsQuery(selectedLine?.product_code || undefined);
+  // ロット候補を取得（product_id を使用）
+  const lotsQuery = useLotsQuery(
+    selectedLine?.product_id ?? undefined,
+    selectedLine?.warehouse_id ?? undefined,
+  );
   const candidateLots: CandidateLot[] = lotsQuery.data ?? [];
 
   // 倉庫別配分の状態管理

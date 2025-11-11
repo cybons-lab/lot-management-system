@@ -49,7 +49,12 @@ export function LotAllocationPane({
       <div className="space-y-6 p-4">
         <div>
           <h3 className="text-lg font-semibold">候補ロット</h3>
-          <p className="mt-1 text-xs text-gray-500">製品コード: {selectedLine.product_code}</p>
+          <p className="mt-1 text-xs text-gray-500">
+            製品: {selectedLine.product_code || selectedLine.product_name || "—"}
+            {selectedLine.product_id && (
+              <span className="ml-2 text-gray-400">(ID: {selectedLine.product_id})</span>
+            )}
+          </p>
         </div>
 
         {lotsQuery.isLoading ? (
@@ -76,20 +81,28 @@ export function LotAllocationPane({
           <div className="max-h-64 space-y-2 overflow-y-auto">
             {candidateLots.map((lot) => (
               <div
-                key={lot.id}
+                key={lot.lot_id || lot.id}
                 className="group rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-all duration-200 hover:border-gray-300 hover:shadow-md"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-gray-900">{lot.lot_number}</div>
                     <div className="mt-1 text-xs text-gray-600">
-                      倉庫: {lot.warehouse_name || lot.warehouse_code || "―"}
+                      倉庫: {lot.warehouse_code || "―"}
                     </div>
+                    {lot.expiry_date && (
+                      <div className="mt-1 text-xs text-gray-500">
+                        期限: {new Date(lot.expiry_date).toLocaleDateString()}
+                      </div>
+                    )}
                   </div>
                   <div className="text-right">
-                    <div className="text-xs text-gray-500">在庫数</div>
+                    <div className="text-xs text-gray-500">利用可能</div>
                     <div className="mt-1 text-lg font-bold text-blue-600">
-                      {(lot.current_stock?.current_quantity ?? 0).toLocaleString()}
+                      {(lot.current_stock?.current_quantity ?? lot.free_qty ?? 0).toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      総在庫: {(lot.current_quantity ?? 0).toLocaleString()}
                     </div>
                   </div>
                 </div>
