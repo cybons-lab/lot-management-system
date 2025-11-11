@@ -76,6 +76,12 @@ def _expand_params(req: SimulateSeedRequest) -> dict[str, Any]:
     # 倉庫数（APIで必ず指定されている）
     params["warehouses"] = req.warehouses
 
+    # APIから明示された件数で上書き（Noneはプロファイル値を使用）
+    for key in ("customers", "suppliers", "products", "lots", "orders"):
+        value = getattr(req, key, None)
+        if value is not None:
+            params[key] = value
+
     # 明細行上限
     if isinstance(params.get("order_line_items_per_order"), dict):
         params["order_line_items_per_order"]["max"] = req.order_line_items_per_order
@@ -121,6 +127,15 @@ def run_seed_simulation(
     """
     tracker = get_job_tracker()
     tracker.set_running(task_id)
+
+    engine_loggers = [
+        logging.getLogger("sqlalchemy.engine"),
+        logging.getLogger("sqlalchemy.engine.Engine"),
+    ]
+    previous_levels = [logger.level for logger in engine_loggers]
+
+    for logger_instance in engine_loggers:
+        logger_instance.setLevel(logging.ERROR)
 
     try:
         # パラメータ展開（YAML + API明示指定）
@@ -677,6 +692,33 @@ def run_seed_simulation(
         tracker.add_log(task_id, "Simulation completed successfully")
         tracker.update_progress(task_id, JobPhase.DONE, 100)
 
+        total_customers = db.scalar(select(func.count()).select_from(Customer)) or 0
+        total_suppliers = db.scalar(select(func.count()).select_from(Supplier)) or 0
+        total_products = db.scalar(select(func.count()).select_from(Product)) or 0
+        total_delivery_places = (
+            db.scalar(select(func.count()).select_from(DeliveryPlace)) or 0
+        )
+
+        totals_message = (
+            "Totals => customers={customers}, suppliers={suppliers}, products={products}, "
+            "delivery_places={delivery_places}, warehouses={warehouses}, forecasts={forecasts}, "
+            "orders={orders}, order_lines={order_lines}, lots={lots}, allocations={allocations}"
+        ).format(
+            customers=total_customers,
+            suppliers=total_suppliers,
+            products=total_products,
+            delivery_places=total_delivery_places,
+            warehouses=total_warehouses,
+            forecasts=total_forecasts,
+            orders=total_orders,
+            order_lines=total_order_lines,
+            lots=total_lots,
+            allocations=total_allocations,
+        )
+
+        tracker.add_log(task_id, totals_message)
+        logger.info("Seed simulation completed. %s", totals_message)
+
         result = {
             "success": True,
             "summary": SimulateResultSummary(
@@ -707,3 +749,6 @@ def run_seed_simulation(
         tracker.set_failed(task_id, error_msg)
         db.rollback()
         raise
+    finally:
+        for logger_instance, level in zip(engine_loggers, previous_levels):
+            logger_instance.setLevel(level)

@@ -6,9 +6,15 @@ export type SimulateSeedRequest = {
   profile?: string | null;
   random_seed?: number | null;
   warehouses?: number;
+  customers?: number | null;
+  suppliers?: number | null;
+  products?: number | null;
+  lots?: number | null;
+  orders?: number | null;
   lot_split_max_per_line?: number;
   order_line_items_per_order?: number;
   destinations_max_per_order?: number;
+  forecasts?: number | null;
   save_snapshot?: boolean;
   snapshot_name?: string | null;
   use_last_snapshot?: boolean;

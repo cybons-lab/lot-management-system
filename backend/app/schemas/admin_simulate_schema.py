@@ -20,23 +20,43 @@ class SimulateSeedRequest(BaseModel):
         description="乱数シード（Noneの場合は現在時刻を使用）",
     )
     warehouses: conint(ge=1, le=10) = Field(  # type: ignore
+        default=2,
+        description="倉庫数（1〜10、既定=2）",
+    )
+    customers: conint(ge=0) | None = Field(
+        default=3,
+        description="顧客数（0以上、Noneの場合はプロファイル既定）",
+    )
+    suppliers: conint(ge=0) | None = Field(
+        default=2,
+        description="仕入先数（0以上、Noneの場合はプロファイル既定）",
+    )
+    products: conint(ge=0) | None = Field(
         default=5,
-        description="倉庫数（1〜10、既定=5）",
+        description="製品数（0以上、Noneの場合はプロファイル既定）",
+    )
+    lots: conint(ge=0) | None = Field(
+        default=10,
+        description="ロット数（0以上、Noneの場合はプロファイル既定）",
+    )
+    orders: conint(ge=0) | None = Field(
+        default=5,
+        description="受注数（0以上、Noneの場合はプロファイル既定）",
     )
     lot_split_max_per_line: conint(ge=1, le=3) = Field(  # type: ignore
-        default=3,
-        description="1明細あたりロット分割上限（1〜3、既定=3）",
+        default=1,
+        description="1明細あたりロット分割上限（1〜3、既定=1）",
     )
     order_line_items_per_order: conint(ge=1, le=5) = Field(  # type: ignore
-        default=3,
-        description="受注明細行の上限（1〜5、既定=3）",
+        default=1,
+        description="受注明細行の上限（1〜5、既定=1）",
     )
     destinations_max_per_order: int = Field(
         default=5,
         description="受注の納品先上限（常に5固定）",
     )
     forecasts: conint(ge=0, le=1) | None = Field(  # type: ignore
-        default=0,
+        default=1,
         description="需要予測データ生成（0=無効, 1=有効, Noneはプロファイル既定）",
     )
     save_snapshot: bool = Field(
