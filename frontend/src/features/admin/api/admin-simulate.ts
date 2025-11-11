@@ -68,7 +68,7 @@ export type SeedSnapshotListResponse = {
 
 // API関数
 export async function postSimulateSeedData(
-  body: SimulateSeedRequest
+  body: SimulateSeedRequest,
 ): Promise<SimulateSeedResponse> {
   return http.post<SimulateSeedResponse>("admin/simulate-seed-data", body);
 }
@@ -90,10 +90,10 @@ export async function deleteSeedSnapshot(snapshotId: number): Promise<{ success:
 }
 
 export async function restoreSeedSnapshot(
-  snapshotId: number
+  snapshotId: number,
 ): Promise<{ task_id: string; message: string }> {
   return http.post<{ task_id: string; message: string }>(
     `admin/seed-snapshots/${snapshotId}/restore`,
-    {}
+    {},
   );
 }

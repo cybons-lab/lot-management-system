@@ -139,7 +139,7 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
+      <DialogContent className="max-h-[90vh] max-w-3xl">
         <DialogHeader>
           <DialogTitle>テストデータ生成シミュレーション</DialogTitle>
           <DialogDescription>
@@ -269,13 +269,15 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
                     {taskId && <div className="text-xs opacity-70">Task: {taskId}</div>}
                   </div>
                   <Badge variant={progress.status === "completed" ? "default" : "secondary"}>
-                    {progress.status === "running" && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                    {progress.status === "running" && (
+                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                    )}
                     {progress.phase} - {progress.progress_pct}%
                   </Badge>
                 </div>
 
-                <div className="h-[200px] overflow-auto rounded border bg-muted p-3">
-                  <div className="space-y-1 text-xs font-mono">
+                <div className="bg-muted h-[200px] overflow-auto rounded border p-3">
+                  <div className="space-y-1 font-mono text-xs">
                     {progress.logs.map((log, i) => (
                       <div key={i} className="text-muted-foreground">
                         {log}
@@ -301,9 +303,10 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
                 </div>
 
                 {result.success && result.summary && (
-                  <div className="grid grid-cols-2 gap-3 rounded border bg-muted p-4 text-sm">
+                  <div className="bg-muted grid grid-cols-2 gap-3 rounded border p-4 text-sm">
                     <div>
-                      <span className="text-muted-foreground">倉庫:</span> {result.summary.warehouses}
+                      <span className="text-muted-foreground">倉庫:</span>{" "}
+                      {result.summary.warehouses}
                     </div>
                     <div>
                       <span className="text-muted-foreground">ロット:</span> {result.summary.lots}
@@ -312,10 +315,12 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
                       <span className="text-muted-foreground">受注:</span> {result.summary.orders}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">受注明細:</span> {result.summary.order_lines}
+                      <span className="text-muted-foreground">受注明細:</span>{" "}
+                      {result.summary.order_lines}
                     </div>
                     <div>
-                      <span className="text-muted-foreground">引当:</span> {result.summary.allocations}
+                      <span className="text-muted-foreground">引当:</span>{" "}
+                      {result.summary.allocations}
                     </div>
                     <div>
                       <span className="text-muted-foreground">スナップショットID:</span>{" "}
@@ -337,7 +342,9 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
                         <span className="text-muted-foreground">納品先:</span>
                         <Badge
                           variant={
-                            result.summary.cap_checks.destinations === "OK" ? "default" : "destructive"
+                            result.summary.cap_checks.destinations === "OK"
+                              ? "default"
+                              : "destructive"
                           }
                         >
                           {result.summary.cap_checks.destinations}
@@ -347,7 +354,9 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
                         <span className="text-muted-foreground">明細行:</span>
                         <Badge
                           variant={
-                            result.summary.cap_checks.order_lines === "OK" ? "default" : "destructive"
+                            result.summary.cap_checks.order_lines === "OK"
+                              ? "default"
+                              : "destructive"
                           }
                         >
                           {result.summary.cap_checks.order_lines}
@@ -355,7 +364,9 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-muted-foreground">在庫整合式:</span>
-                        <Badge variant={result.summary.stock_equation_ok ? "default" : "destructive"}>
+                        <Badge
+                          variant={result.summary.stock_equation_ok ? "default" : "destructive"}
+                        >
                           {result.summary.stock_equation_ok ? "OK" : "NG"}
                         </Badge>
                       </div>
@@ -379,7 +390,7 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
           </Button>
           <Button
             onClick={handleStart}
-            disabled={startMut.isPending || (progress?.status === "running")}
+            disabled={startMut.isPending || progress?.status === "running"}
           >
             {startMut.isPending ? (
               <>
