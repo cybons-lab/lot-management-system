@@ -140,6 +140,10 @@ class OrderService:
         if not order:
             raise OrderNotFoundError(order_id)
 
+        # 冪等化: 同一状態の場合は変更しない
+        if order.status == new_status:
+            return OrderResponse.model_validate(order)
+
         OrderStateMachine.validate_transition(order.status, new_status)
         order.status = new_status
 
