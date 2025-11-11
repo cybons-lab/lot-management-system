@@ -118,7 +118,7 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
     <div className="rounded-xl border bg-white shadow-sm">
       <OrderLineHeader.OrderLineHeader
         productName={computed.productName}
-        productCode={computed.productCode}
+        productCode={computed.productCode ?? undefined}
         status={computed.status}
         orderDate={formatYmd(computed.orderDate) || undefined}
       />
@@ -196,7 +196,7 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
 
         <div className="mt-6">
           <ForecastSection
-            productCode={computed.productCode}
+            productCode={computed.productCode ?? undefined}
             customerCode={computed.customerCode}
             fullWidth
           />

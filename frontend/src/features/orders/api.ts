@@ -1,5 +1,6 @@
 import { fetchApi } from "@/shared/libs/http";
 import type { paths, components } from "@/types/api";
+import type { CandidateLotsResponse } from "@/shared/types/aliases";
 
 // api.d.ts から型を抽出
 type OrdersGetParams = paths["/api/orders"]["get"]["parameters"]["query"];
@@ -73,7 +74,7 @@ export const getCandidateLots = (params: {
   if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<components["schemas"]["CandidateLotsResponse"]>(
+  return fetchApi.get<CandidateLotsResponse>(
     `/allocations/candidate-lots${queryString ? "?" + queryString : ""}`,
   );
 };
