@@ -83,21 +83,13 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
         ? keys.reduce((acc, key) => acc + (counts[key] as number), 0)
         : null;
 
-    const masters = sumIfKnown([
-      "warehouses",
-      "customers",
-      "suppliers",
-      "products",
-    ]);
+    const masters = sumIfKnown(["warehouses", "customers", "suppliers", "products"]);
     const inventory = counts.lots;
     const ordersTotal = counts.orders;
     const forecastsTotal = counts.forecasts;
 
     const overall =
-      masters != null &&
-      inventory != null &&
-      ordersTotal != null &&
-      forecastsTotal != null
+      masters != null && inventory != null && ordersTotal != null && forecastsTotal != null
         ? masters + inventory + ordersTotal + forecastsTotal
         : null;
 
@@ -204,8 +196,7 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
       return {
         ...prev,
         profile,
-        warehouses:
-          warehousesMap[profile] ?? prev.warehouses ?? DEFAULT_FORM.warehouses,
+        warehouses: warehousesMap[profile] ?? prev.warehouses ?? DEFAULT_FORM.warehouses,
       };
     });
   };
@@ -225,10 +216,7 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
             {/* プロファイル選択 */}
             <div className="space-y-2">
               <Label>プロファイル</Label>
-              <Select
-                value={form.profile ?? "__default__"}
-                onValueChange={handleProfileChange}
-              >
+              <Select value={form.profile ?? "__default__"} onValueChange={handleProfileChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="プロファイルを選択" />
                 </SelectTrigger>
@@ -360,7 +348,9 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
               <div className="space-y-2">
                 <Label>受注明細行上限（1〜5）</Label>
                 <Select
-                  value={String(form.order_line_items_per_order ?? DEFAULT_FORM.order_line_items_per_order)}
+                  value={String(
+                    form.order_line_items_per_order ?? DEFAULT_FORM.order_line_items_per_order,
+                  )}
                   onValueChange={(v) =>
                     setForm((prev) => ({
                       ...prev,
@@ -463,7 +453,7 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
                 </div>
 
                 <div className="border-t pt-3">
-                  <div className="text-xs font-semibold uppercase text-muted-foreground">
+                  <div className="text-muted-foreground text-xs font-semibold uppercase">
                     Totals
                   </div>
                   <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -490,7 +480,7 @@ export function SeedSimulateDialog({ open, onOpenChange }: Props) {
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   空欄の項目はプロファイル既定値が適用されます。
                 </p>
               </div>

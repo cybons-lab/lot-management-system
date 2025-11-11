@@ -715,21 +715,13 @@ def run_seed_simulation(
         total_products = db.scalar(select(func.count()).select_from(Product)) or 0
         total_delivery_places = db.scalar(select(func.count()).select_from(DeliveryPlace)) or 0
 
+        # 合計メッセージ出力部分
         totals_message = (
-            "Totals => customers={customers}, suppliers={suppliers}, products={products}, "
-            "delivery_places={delivery_places}, warehouses={warehouses}, forecasts={forecasts}, "
-            "orders={orders}, order_lines={order_lines}, lots={lots}, allocations={allocations}"
-        ).format(
-            customers=total_customers,
-            suppliers=total_suppliers,
-            products=total_products,
-            delivery_places=total_delivery_places,
-            warehouses=total_warehouses,
-            forecasts=total_forecasts,
-            orders=total_orders,
-            order_lines=total_order_lines,
-            lots=total_lots,
-            allocations=total_allocations,
+            f"Totals => customers={total_customers}, suppliers={total_suppliers}, "
+            f"products={total_products}, delivery_places={total_delivery_places}, "
+            f"warehouses={total_warehouses}, forecasts={total_forecasts}, "
+            f"orders={total_orders}, order_lines={total_order_lines}, "
+            f"lots={total_lots}, allocations={total_allocations}"
         )
 
         tracker.add_log(task_id, totals_message)
@@ -766,5 +758,5 @@ def run_seed_simulation(
         db.rollback()
         raise
     finally:
-        for lg, level in zip(engine_loggers, previous_levels):
+        for lg, level in zip(engine_loggers, previous_levels, strict=False):
             lg.setLevel(level)
