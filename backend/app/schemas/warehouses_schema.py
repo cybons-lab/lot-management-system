@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class WarehouseOut(BaseModel):
-    warehouse_code: str
+    warehouse_id: int
     warehouse_name: str
 
 

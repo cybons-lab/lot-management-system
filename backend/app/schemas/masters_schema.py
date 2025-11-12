@@ -10,7 +10,7 @@ from .base import BaseSchema
 
 # --- Warehouse ---
 class WarehouseBase(BaseSchema):
-    warehouse_code: str
+    warehouse_id: int | None = None
     warehouse_name: str
     address: str | None = None
     is_active: int = 1
@@ -88,6 +88,7 @@ class ProductBase(BaseSchema):
     shelf_life_days: int | None = None
     requires_lot_number: int | None = None
     delivery_place_id: int | None = None
+    delivery_place_code: str | None = None  # 納品先コード（nullable）
     delivery_place_name: str | None = None
     shipping_warehouse_name: str | None = None
 
@@ -112,6 +113,7 @@ class ProductUpdate(BaseSchema):
     shelf_life_days: int | None = None
     requires_lot_number: bool | None = None
     delivery_place_id: int | None = None
+    delivery_place_code: str | None = None  # 納品先コード（nullable）
     delivery_place_name: str | None = None
     shipping_warehouse_name: str | None = None
 

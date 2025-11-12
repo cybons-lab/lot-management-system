@@ -27,7 +27,6 @@ class FefoLineAllocation(BaseSchema):
     product_id: int | None = None
     product_code: str
     warehouse_id: int | None = None
-    warehouse_code: str | None = None
     required_qty: float
     already_allocated_qty: float
     allocations: list[FefoLotAllocation] = Field(default_factory=list)
@@ -71,7 +70,6 @@ class CandidateLotItem(BaseSchema):
     product_id: int | None = None
     product_code: str | None = None
     warehouse_id: int | None = None
-    warehouse_code: str | None = None
     expiry_date: date | None = None
     last_updated: str | None = None
 
@@ -91,7 +89,6 @@ class AllocatableLotItem(BaseSchema):
     product_id: int
     product_code: str | None = None
     warehouse_id: int
-    warehouse_code: str | None = None
     free_qty: float
     current_quantity: float
     allocated_qty: float

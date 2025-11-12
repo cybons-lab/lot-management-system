@@ -13,7 +13,6 @@ class LotBase(BaseSchema):
     receipt_date: date
     mfg_date: date | None = None
     expiry_date: date | None = None
-    warehouse_code: str | None = None
     warehouse_id: int | None = None
     product_id: int | None = None
     supplier_id: int | None = None
@@ -36,7 +35,6 @@ class LotCreate(LotBase):
 class LotUpdate(BaseSchema):
     mfg_date: date | None = None
     expiry_date: date | None = None
-    warehouse_code: str | None = None
     warehouse_id: int | None = None
     lot_unit: str | None = None
     qc_certificate_status: str | None = None
@@ -48,7 +46,6 @@ class LotResponse(LotBase, TimestampMixin):
     product_id: int | None = None
     product_code: str | None = None  # 後方互換性のため（非推奨: product_idを使用推奨）
     warehouse_id: int | None = None
-    warehouse_code: str | None = None
     supplier_id: int | None = None
     supplier_code: str | None = None
     current_quantity: float = 0.0

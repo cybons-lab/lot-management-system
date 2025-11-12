@@ -73,6 +73,8 @@ class OrderLineBase(BaseSchema):
     due_date: date | None = None
     next_div: str | None = None
     destination_id: int | None = None
+    delivery_place_id: int | None = None  # 納品先ID（nullable）
+    delivery_place_code: str | None = None  # 納品先コード（nullable）
 
 
 class OrderLineCreate(OrderLineBase):
@@ -90,12 +92,12 @@ class OrderLineResponse(OrderLineBase, TimestampMixin):
 
 
 class WarehouseAllocOut(BaseSchema):
-    warehouse_code: str
+    warehouse_id: int
     quantity: float
 
 
 class WarehouseAllocIn(BaseSchema):
-    warehouse_code: str
+    warehouse_id: int
     quantity: float
 
 
@@ -106,7 +108,6 @@ class OrderLineOut(BaseSchema):
     product_code: str | None = None
     product_name: str | None = None
     warehouse_id: int | None = None
-    warehouse_code: str | None = None
     customer_id: int | None = None
     customer_code: str | None = None
     supplier_id: int | None = None
@@ -114,6 +115,9 @@ class OrderLineOut(BaseSchema):
     quantity: float
     unit: str | None = None
     due_date: date | None = None
+    delivery_place_id: int | None = None  # 納品先ID（nullable）
+    delivery_place_code: str | None = None  # 納品先コード（nullable）
+    delivery_place_name: str | None = None  # 納品先名称（nullable）
     warehouse_allocations: list[WarehouseAllocOut] = Field(default_factory=list)
     related_lots: list[dict[str, Any]] = Field(default_factory=list)
     allocated_lots: list[dict[str, Any]] = Field(default_factory=list)
@@ -132,7 +136,6 @@ class LotCandidateOut(BaseSchema):
     lot_code: str
     lot_number: str
     product_code: str
-    warehouse_code: str | None = None
     available_qty: float
     base_unit: str
     lot_unit_qty: float | None = None
@@ -161,7 +164,7 @@ class OrderValidationLotAvailability(BaseSchema):
 
 
 class OrderValidationDetails(BaseSchema):
-    warehouse_code: str
+    warehouse_id: int | None = None
     per_lot: list[OrderValidationLotAvailability] = Field(default_factory=list)
     ship_date: date | None = None
 
@@ -175,7 +178,7 @@ class OrderValidationErrorData(BaseSchema):
 
 class OrderLineDemandSchema(BaseSchema):
     product_code: str
-    warehouse_code: str
+    warehouse_id: int | None = None
     quantity: PositiveInt
 
 
