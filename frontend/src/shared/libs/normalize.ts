@@ -49,7 +49,8 @@ export interface LotUI extends Record<string, unknown> {
   receipt_date: string;
   mfg_date: string;
   expiry_date: string;
-  warehouse_code: string;
+  delivery_place_code: string;
+  delivery_place_name: string;
   warehouse_id: number;
   lot_unit: string;
   kanban_class: string;
@@ -142,7 +143,8 @@ export function normalizeLot(lot: LotResponse): LotUI {
     receipt_date: S(lot.receipt_date),
     mfg_date: S(lot.mfg_date),
     expiry_date: S(lot.expiry_date),
-    warehouse_code: S(lot.warehouse_code),
+    delivery_place_code: S(lot.delivery_place_code),
+    delivery_place_name: S(lot.delivery_place_name),
     warehouse_id: N(lot.warehouse_id),
     lot_unit: S(lot.lot_unit, "EA"),
     kanban_class: S(lot.kanban_class),

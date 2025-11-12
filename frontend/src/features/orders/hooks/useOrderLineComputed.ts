@@ -18,7 +18,7 @@ export type OrderLineSource = Partial<OrderLine> & {
   order_date?: string | null;
   ship_date?: string | null;
   planned_ship_date?: string | null;
-  warehouses?: string[];
+  delivery_places?: string[]; // warehouses → delivery_places に変更
 };
 
 export type OrderSource = Partial<OrderResponse>;
@@ -64,15 +64,23 @@ export function useOrderLineComputed(
       shippingLeadTime = days >= 0 ? `${days}日` : `遅延${Math.abs(days)}日`;
     }
 
-    const warehousesFromLine = Array.isArray(line?.warehouses)
-      ? (line?.warehouses ?? []).filter((warehouse): warehouse is string => Boolean(warehouse))
+    // 納品先の集計（delivery_place_code/name）
+    const deliveryPlacesFromLine = Array.isArray(line?.delivery_places)
+      ? (line?.delivery_places ?? []).filter((deliveryPlace): deliveryPlace is string =>
+          Boolean(deliveryPlace),
+        )
       : [];
-    const warehousesFromAllocations = allocatedLots
+    const deliveryPlacesFromAllocations = allocatedLots
       .map((allocation) =>
-        formatCodeAndName(allocation.warehouse_code ?? "", allocation.warehouse_name ?? ""),
+        formatCodeAndName(
+          allocation.delivery_place_code ?? "",
+          allocation.delivery_place_name ?? "",
+        ),
       )
-      .filter((warehouse): warehouse is string => Boolean(warehouse));
-    const warehouses = Array.from(new Set([...warehousesFromLine, ...warehousesFromAllocations]));
+      .filter((deliveryPlace): deliveryPlace is string => Boolean(deliveryPlace));
+    const deliveryPlaces = Array.from(
+      new Set([...deliveryPlacesFromLine, ...deliveryPlacesFromAllocations]),
+    );
 
     return {
       ids: { lineId, orderId },
@@ -94,7 +102,7 @@ export function useOrderLineComputed(
       progressPct,
       customerCode,
       customerName,
-      warehouses,
+      deliveryPlaces, // warehouses → deliveryPlaces に変更
       shippingLeadTime,
     } satisfies OrderLineComputed;
   }, [line, order]);

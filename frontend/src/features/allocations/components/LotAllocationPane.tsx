@@ -85,7 +85,8 @@ export function LotAllocationPane({
                   <div className="flex-1">
                     <div className="text-sm font-semibold text-gray-900">{lot.lot_number}</div>
                     <div className="mt-1 text-xs text-gray-600">
-                      倉庫: {lot.warehouse_code || "―"}
+                      納品先:{" "}
+                      {formatCodeAndName(lot.delivery_place_code, lot.delivery_place_name) || "—"}
                     </div>
                     {lot.expiry_date && (
                       <div className="mt-1 text-xs text-gray-500">

@@ -36,6 +36,7 @@ import { LotStatusBadge } from "@/shared/components/data/StatusBadge";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import { PageHeader, PageContainer, Section } from "@/shared/components/layout";
+import { formatCodeAndName } from "@/shared/libs/utils";
 import type { LotUI } from "@/shared/libs/normalize";
 
 /**
@@ -54,7 +55,7 @@ export function InventoryPage() {
   const filters = useFilters({
     search: "",
     product_code: "",
-    warehouse_code: "",
+    delivery_place_code: "", // warehouse_code → delivery_place_code
     status: "all",
     hasStock: false,
   });
@@ -67,7 +68,7 @@ export function InventoryPage() {
     refetch,
   } = useLotsQuery({
     product_code: filters.values.product_code || undefined,
-    warehouse_code: filters.values.warehouse_code || undefined,
+    delivery_place_code: filters.values.delivery_place_code || undefined, // warehouse_code → delivery_place_code
     with_stock: filters.values.hasStock,
   });
 
@@ -103,9 +104,10 @@ export function InventoryPage() {
         cell: (lot: LotUI) => lot.product_name,
       },
       {
-        id: "warehouse_code",
-        header: "倉庫",
-        cell: (lot: LotUI) => lot.warehouse_code,
+        id: "delivery_place", // warehouse_code → delivery_place
+        header: "納品先", // 倉庫 → 納品先
+        cell: (lot: LotUI) =>
+          formatCodeAndName(lot.delivery_place_code, lot.delivery_place_name) || "—",
         sortable: true,
       },
       {
@@ -230,11 +232,12 @@ export function InventoryPage() {
               />
             </FilterField>
 
-            <FilterField label="倉庫コード">
+            <FilterField label="納品先コード">
+              {/* 倉庫コード → 納品先コード */}
               <Input
-                value={filters.values.warehouse_code}
-                onChange={(e) => filters.set("warehouse_code", e.target.value)}
-                placeholder="例: W01"
+                value={filters.values.delivery_place_code}
+                onChange={(e) => filters.set("delivery_place_code", e.target.value)}
+                placeholder="例: DP-001"
               />
             </FilterField>
 
@@ -374,7 +377,8 @@ function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps)
       lot_number: formData.get("lot_number") as string,
       product_code: formData.get("product_code") as string,
       supplier_code: formData.get("supplier_code") as string,
-      warehouse_code: formData.get("warehouse_code") as string,
+      delivery_place_code: formData.get("delivery_place_code") as string, // warehouse_code → delivery_place_code
+      delivery_place_name: formData.get("delivery_place_name") as string, // 追加
       quantity: Number(formData.get("quantity")),
       lot_unit: formData.get("lot_unit") as string,
       receipt_date: formData.get("receipt_date") as string,
@@ -403,8 +407,15 @@ function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps)
         </div>
 
         <div>
-          <Label htmlFor="warehouse_code">倉庫コード *</Label>
-          <Input id="warehouse_code" name="warehouse_code" required placeholder="例: W01" />
+          <Label htmlFor="delivery_place_code">納品先コード</Label>
+          {/* 倉庫コード → 納品先コード */}
+          <Input id="delivery_place_code" name="delivery_place_code" placeholder="例: DP-001" />
+        </div>
+
+        <div>
+          <Label htmlFor="delivery_place_name">納品先名</Label>
+          {/* 追加 */}
+          <Input id="delivery_place_name" name="delivery_place_name" placeholder="例: 東京倉庫" />
         </div>
 
         <div>

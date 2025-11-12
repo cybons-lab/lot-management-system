@@ -14,18 +14,15 @@ const keyCandidates = (orderLineId: number) =>
 
 /**
  * ロット候補を取得（product_id基準）
+ * 識別キー: customer_code + product_code (+ delivery_place_code optional)
  */
-export function useCandidateLots(
-  orderLineId: number | undefined,
-  productId?: number,
-  warehouseId?: number,
-) {
+export function useCandidateLots(orderLineId: number | undefined, productId?: number) {
   const enabled =
     typeof orderLineId === "number" && orderLineId > 0 && typeof productId === "number";
 
   return useQuery<LotCandidateResponse>({
     queryKey: enabled
-      ? [...keyCandidates(orderLineId!), productId ?? null, warehouseId ?? null]
+      ? [...keyCandidates(orderLineId!), productId ?? null]
       : ["orders", "line", "candidates", "disabled"],
     queryFn: async () => {
       if (!productId) {
@@ -34,7 +31,6 @@ export function useCandidateLots(
 
       const serverData = await ordersApi.getCandidateLots({
         product_id: productId,
-        warehouse_id: warehouseId,
         limit: 200,
       });
 
@@ -46,8 +42,8 @@ export function useCandidateLots(
         allocate_qty: item.free_qty,
         expiry_date: item.expiry_date,
         receipt_date: null, // Not provided by new API
-        warehouse_code: item.warehouse_code,
-        warehouse_name: null,
+        delivery_place_code: item.delivery_place_code ?? null,
+        delivery_place_name: item.delivery_place_name ?? null,
         base_unit: null,
         lot_unit: null,
         lot_unit_qty: null,
@@ -80,7 +76,7 @@ export function useCreateAllocations(orderLineId: number | undefined) {
       // 進行中のクエリをキャンセル
       await qc.cancelQueries({ queryKey: ["orders"] });
 
-      // 現在のデータを保存（ロールバック用）
+      // 現在のデータを保存(ロールバック用)
       const previousData = qc.getQueryData(["orders"]);
 
       // 楽観的更新: 候補ロットの在庫を即座に減算

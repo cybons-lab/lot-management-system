@@ -1,5 +1,6 @@
 /**
  * Custom hook for managing warehouse allocation state
+ * 倉庫ごとの在庫集計・配分管理（物理的な在庫所在の管理用）
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -16,15 +17,16 @@ export function useWarehouseAllocations(
   const [warehouseAllocations, setWarehouseAllocations] = useState<Record<string, number>>({});
   const lastSelectedLineIdRef = useRef<number | null>(null);
 
-  // 倉庫サマリーの計算
+  // 倉庫サマリーの計算（warehouse_idで集計）
   const warehouseSummaries: WarehouseSummary[] = useMemo(() => {
     const map = new Map<string, WarehouseSummary>();
     candidateLots.forEach((lot) => {
-      const key = String(lot.warehouse_code ?? lot.warehouse_id ?? lot.id);
+      // warehouse_idをキーとして使用（在庫所在の物理的な管理）
+      const key = String(lot.warehouse_id ?? lot.id);
       const existing = map.get(key) ?? {
         key,
         warehouseId: lot.warehouse_id ?? undefined,
-        warehouseCode: lot.warehouse_code ?? null,
+        warehouseCode: null, // warehouse_codeは廃止
         warehouseName: lot.warehouse_name ?? null,
         totalStock: 0,
       };
@@ -82,7 +84,7 @@ export function useWarehouseAllocations(
         lotId: 0, // TODO: ロット選択機能実装時に適切なlot_idを設定
         lot: null, // TODO: ロット選択機能実装時に適切なlotオブジェクトを設定
         warehouse_id: warehouse.warehouseId ?? null,
-        warehouse_code: warehouse.warehouseCode ?? null,
+        warehouse_code: null, // warehouse_codeは廃止
         quantity: Number(warehouseAllocations[warehouse.key] ?? 0),
       }))
       .filter((item) => item.quantity > 0);

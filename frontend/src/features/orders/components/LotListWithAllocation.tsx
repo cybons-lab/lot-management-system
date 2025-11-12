@@ -81,7 +81,10 @@ export function LotListWithAllocation({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">
-                      {formatCodeAndName(lot.warehouse_code || "", lot.warehouse_name)}
+                      {formatCodeAndName(
+                        lot.delivery_place_code || "",
+                        lot.delivery_place_name || "",
+                      ) || "納品先未設定"}
                     </span>
                     {isAllocated && <Check className="h-4 w-4 shrink-0 text-green-600" />}
                     <div className="truncate font-mono text-sm font-medium">{lot.lot_code}</div>
@@ -106,8 +109,8 @@ export function LotListWithAllocation({
                     <div className="mt-2 flex items-center gap-2">
                       <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
                         {formatCodeAndName(
-                          allocation.warehouse_code ?? lot.warehouse_code ?? "",
-                          allocation.warehouse_name,
+                          allocation.delivery_place_code ?? lot.delivery_place_code ?? "",
+                          allocation.delivery_place_name ?? lot.delivery_place_name ?? "",
                         ) || "—"}
                       </span>
                       <span className="text-xs font-medium text-green-700">

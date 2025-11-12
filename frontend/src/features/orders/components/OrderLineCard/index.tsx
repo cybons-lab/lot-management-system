@@ -16,7 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { formatCodeAndName } from "@/shared/libs/utils";
 import { formatYmd } from "@/shared/libs/utils/date";
-import type { AllocatedLot } from "@/shared/types/aliases";
+import type { AllocatedLot, LotCandidateResponse } from "@/shared/types/aliases";
 
 type Props = {
   order?: OrderSource | null;
@@ -32,7 +32,6 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
   const { candidatesQ, createAlloc, cancelAlloc } = useAllocationActions(
     lineId,
     computed.productId ?? undefined,
-    undefined, // warehouse_id は任意
   );
 
   const allocatedLots = React.useMemo<AllocatedLot[]>(() => {
@@ -45,6 +44,9 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
   }, [line]);
 
   const canRematch = Boolean(onRematch && computed.ids?.orderId);
+
+  // 型ガードでLotCandidateResponseにキャスト
+  const candidatesData = candidatesQ.data as LotCandidateResponse | undefined;
 
   const handleAllocate = React.useCallback(
     (lotId: number, qty: number) => {
@@ -144,16 +146,16 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
               )}
             </div>
 
-            {candidatesQ.data?.warnings?.length ? (
+            {candidatesData?.warnings && candidatesData.warnings.length > 0 ? (
               <div className="space-y-1 rounded-lg border border-amber-100 bg-amber-50 p-3 text-xs text-amber-800">
-                {candidatesQ.data.warnings.map((warning, index) => (
+                {candidatesData.warnings.map((warning: string, index: number) => (
                   <div key={index}>{warning}</div>
                 ))}
               </div>
             ) : null}
 
             <LotListWithAllocation
-              candidates={candidatesQ.data?.items ?? []}
+              candidates={candidatesData?.items ?? []}
               allocatedLots={allocatedLots}
               onAllocate={handleAllocate}
               onCancelAllocation={handleCancelAllocation}
@@ -169,19 +171,19 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
 
             <InfoRow
               label="製品"
-              value={`${computed.productCode ?? ""} ${computed.productName ?? ""}`.trim() || "―"}
+              value={`${computed.productCode ?? ""} ${computed.productName ?? ""}`.trim() || "—"}
               highlight
             />
             <InfoRow label="数量" value={`${computed.totalQty} ${computed.unit}`} />
             <InfoRow
               label="得意先"
-              value={formatCodeAndName(computed.customerCode, computed.customerName) || "―"}
+              value={formatCodeAndName(computed.customerCode, computed.customerName) || "—"}
             />
-            <InfoRow label="受注日" value={formatYmd(computed.orderDate) || "―"} />
-            <InfoRow label="納期" value={formatYmd(computed.dueDate) || "―"} />
+            <InfoRow label="受注日" value={formatYmd(computed.orderDate) || "—"} />
+            <InfoRow label="納期" value={formatYmd(computed.dueDate) || "—"} />
             <InfoRow
               label="出荷日(予定)"
-              value={formatYmd(computed.shipDate ?? computed.plannedShipDate) || "―"}
+              value={formatYmd(computed.shipDate ?? computed.plannedShipDate) || "—"}
             />
 
             {computed.shippingLeadTime ? (
