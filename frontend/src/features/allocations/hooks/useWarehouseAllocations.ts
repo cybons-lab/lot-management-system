@@ -8,10 +8,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { WarehouseSummary } from "../types";
 
 import type { AllocationInputItem } from "@/features/allocations/api";
-import type { Lot as CandidateLot } from "@/hooks/useLotsQuery";
+import type { LotCandidate } from "@/shared/types/aliases";
 
 export function useWarehouseAllocations(
-  candidateLots: CandidateLot[],
+  candidateLots: LotCandidate[],
   selectedLineId: number | null,
 ) {
   const [warehouseAllocations, setWarehouseAllocations] = useState<Record<string, number>>({});
@@ -21,17 +21,17 @@ export function useWarehouseAllocations(
   const warehouseSummaries: WarehouseSummary[] = useMemo(() => {
     const map = new Map<string, WarehouseSummary>();
     candidateLots.forEach((lot) => {
-      // delivery_place_idをキーとして使用（在庫所在の物理的な管理）
-      const key = String(lot.delivery_place_id ?? lot.id);
+      // delivery_place_codeをキーとして使用（在庫所在の物理的な管理）
+      const key = lot.delivery_place_code ?? String(lot.lot_id ?? lot.id);
       const existing = map.get(key) ?? {
         key,
-        warehouseId: lot.delivery_place_id ?? undefined,
-        warehouseCode: null, // delivery_place_codeは廃止
-        warehouseName: lot.warehouse_name ?? null,
+        warehouseId: undefined, // delivery_place_id は別途管理
+        warehouseCode: lot.delivery_place_code ?? null,
+        warehouseName: lot.delivery_place_name ?? null,
         totalStock: 0,
       };
 
-      existing.totalStock += lot.current_stock?.current_quantity ?? 0;
+      existing.totalStock += lot.available_qty ?? 0;
       map.set(key, existing);
     });
 
@@ -84,7 +84,7 @@ export function useWarehouseAllocations(
         lotId: 0, // TODO: ロット選択機能実装時に適切なlot_idを設定
         lot: null, // TODO: ロット選択機能実装時に適切なlotオブジェクトを設定
         delivery_place_id: warehouse.warehouseId ?? null,
-        delivery_place_code: null, // delivery_place_codeは廃止
+        delivery_place_code: warehouse.warehouseCode ?? null,
         quantity: Number(warehouseAllocations[warehouse.key] ?? 0),
       }))
       .filter((item) => item.quantity > 0);

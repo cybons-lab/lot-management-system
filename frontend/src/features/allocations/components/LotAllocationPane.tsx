@@ -6,14 +6,14 @@ import type { UseQueryResult } from "@tanstack/react-query";
 
 import type { OrderLine, WarehouseSummary } from "../types";
 
-import type { Lot as CandidateLot } from "@/hooks/useLotsQuery";
 import { formatCodeAndName } from "@/shared/libs/utils";
+import type { LotCandidate, LotCandidateResponse } from "@/shared/types/aliases";
 
 interface LotAllocationPaneProps {
   selectedLineId: number | null;
   selectedLine: OrderLine | undefined;
-  lotsQuery: UseQueryResult<CandidateLot[], Error>;
-  candidateLots: CandidateLot[];
+  lotsQuery: UseQueryResult<LotCandidateResponse, Error>;
+  candidateLots: LotCandidate[];
   warehouseSummaries: WarehouseSummary[];
   warehouseAllocations: Record<string, number>;
   allocationTotalAll: number;
@@ -97,10 +97,10 @@ export function LotAllocationPane({
                   <div className="text-right">
                     <div className="text-xs text-gray-500">利用可能</div>
                     <div className="mt-1 text-lg font-bold text-blue-600">
-                      {(lot.current_stock?.current_quantity ?? lot.free_qty ?? 0).toLocaleString()}
+                      {(lot.available_qty ?? 0).toLocaleString()}
                     </div>
                     <div className="text-xs text-gray-400">
-                      総在庫: {(lot.current_quantity ?? 0).toLocaleString()}
+                      総在庫: {(lot.available_qty ?? 0).toLocaleString()}
                     </div>
                   </div>
                 </div>

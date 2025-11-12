@@ -22,13 +22,13 @@ import {
   useAllocationMutation,
   useSnackbar,
   useOrderCards,
+  useCandidateLots,
 } from "../hooks";
 import type { Order } from "../types";
 
 import { getOrders, getOrder } from "@/features/orders/api";
-import { useLotsQuery, type Lot as CandidateLot } from "@/hooks/useLotsQuery";
 import { normalizeOrder } from "@/shared/libs/normalize";
-import type { OrderResponse } from "@/shared/types/aliases";
+import type { OrderResponse, LotCandidate } from "@/shared/types/aliases";
 
 export function LotAllocationPage() {
   const orderListRef = useRef<HTMLDivElement | null>(null);
@@ -75,10 +75,10 @@ export function LotAllocationPage() {
   // 選択された明細行
   const selectedLine = orderDetailQuery.data?.lines?.find((line) => line.id === selectedLineId);
 
-  // ロット候補を取得（product_code のみ）
-  // 注: warehouse_code は検索条件から削除。得意先×商品を基本キーとし、倉庫は在庫の所在情報のみ。
-  const lotsQuery = useLotsQuery(selectedLine?.product_code ?? undefined);
-  const candidateLots: CandidateLot[] = lotsQuery.data ?? [];
+  // ロット候補を取得（product_id ベース）
+  // 注: delivery_place は検索条件から削除。得意先×商品を基本キーとし、倉庫は在庫の所在情報のみ。
+  const lotsQuery = useCandidateLots(selectedLineId ?? undefined, selectedLine?.product_id ?? undefined);
+  const candidateLots: LotCandidate[] = lotsQuery.data?.items ?? [];
 
   // 倉庫別配分の状態管理
   const {
