@@ -59,7 +59,7 @@ export function LotsPage() {
   } = useLotsQuery({
     with_stock: filters.inStockOnly || undefined,
     product_code: filters.productCode ?? undefined,
-    warehouse_code: filters.warehouseCode ?? undefined,
+    delivery_place_code: filters.warehouseCode ?? undefined,
   });
 
   // ロット作成Mutation
@@ -94,9 +94,9 @@ export function LotsPage() {
         cell: (lot: LotUI) => lot.product_name,
       },
       {
-        id: "warehouse_code",
-        header: "倉庫",
-        cell: (lot: LotUI) => lot.warehouse_id, // warehouse_code → warehouse_id
+        id: "delivery_place_id",
+        header: "納品場所",
+        cell: (lot: LotUI) => lot.delivery_place_id ?? "–",
         sortable: true,
       },
       {
@@ -269,11 +269,11 @@ export function LotsPage() {
               />
             </FilterField>
 
-            <FilterField label="倉庫コード">
+            <FilterField label="納品場所コード">
               <Input
                 value={filters.warehouseCode ?? ""}
                 onChange={(e) => handleFilterChange("warehouseCode", e.target.value || null)}
-                placeholder="例: W01"
+                placeholder="例: DP01"
               />
             </FilterField>
 
@@ -416,7 +416,7 @@ function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps)
       lot_number: formData.get("lot_number") as string,
       product_code: formData.get("product_code") as string,
       supplier_code: formData.get("supplier_code") as string,
-      warehouse_code: formData.get("warehouse_code") as string,
+      delivery_place_code: formData.get("delivery_place_code") as string,
       quantity: Number(formData.get("quantity")),
       lot_unit: formData.get("lot_unit") as string,
       receipt_date: formData.get("receipt_date") as string,
@@ -445,8 +445,13 @@ function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps)
         </div>
 
         <div>
-          <Label htmlFor="warehouse_code">倉庫コード *</Label>
-          <Input id="warehouse_code" name="warehouse_code" required placeholder="例: W01" />
+          <Label htmlFor="delivery_place_code">納品場所コード *</Label>
+          <Input
+            id="delivery_place_code"
+            name="delivery_place_code"
+            required
+            placeholder="例: DP01"
+          />
         </div>
 
         <div>

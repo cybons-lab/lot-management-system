@@ -20,7 +20,7 @@ export const lotCreateSchema = z.object({
     .refine((date) => !isNaN(Date.parse(date)), "有効な日付を入力してください")
     .nullable()
     .optional(),
-  warehouse_code: z.string().nullable().optional(),
+  delivery_place_code: z.string().nullable().optional(),
   initial_quantity: z.number().min(0, "数量は0以上である必要があります").optional(),
 });
 
@@ -33,7 +33,7 @@ export const lotUpdateSchema = z.object({
     .refine((date) => !isNaN(Date.parse(date)), "有効な日付を入力してください")
     .nullable()
     .optional(),
-  warehouse_code: z.string().nullable().optional(),
+  delivery_place_code: z.string().nullable().optional(),
 });
 
 /**
@@ -43,7 +43,7 @@ export const lotSearchSchema = z.object({
   product_code: z.string().optional(),
   supplier_code: z.string().optional(),
   lot_number: z.string().optional(),
-  warehouse_code: z.string().optional(),
+  delivery_place_code: z.string().optional(),
   has_stock: z.boolean().optional(),
   skip: z.number().min(0).optional(),
   limit: z.number().min(1).max(100).optional(),
@@ -55,7 +55,7 @@ export type LotCreate = {
   product_code: string;
   lot_number: string;
   receipt_date: string;
-  warehouse_code?: string | null;
+  delivery_place_code?: string | null;
   expiry_date?: string | null;
   quantity?: number;
 };

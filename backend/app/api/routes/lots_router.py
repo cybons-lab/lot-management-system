@@ -90,9 +90,6 @@ def list_lots(
         if lot.product:
             response.product_name = lot.product.product_name
 
-        if lot.warehouse:
-            response.warehouse_code = lot.warehouse.warehouse_code
-
         if lot.current_stock:
             response.current_quantity = lot.current_stock.current_quantity
             response.last_updated = lot.current_stock.last_updated
@@ -175,8 +172,7 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
     response = LotResponse.model_validate(db_lot)
     response.current_quantity = 0.0
     response.last_updated = None
-    if db_lot.warehouse:
-        response.warehouse_code = db_lot.warehouse.warehouse_code
+
     return response
 
 
@@ -252,8 +248,7 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
     if db_lot.current_stock:
         response.current_quantity = db_lot.current_stock.current_quantity
         response.last_updated = db_lot.current_stock.last_updated
-    if db_lot.warehouse:
-        response.warehouse_code = db_lot.warehouse.warehouse_code
+
     return response
 
 

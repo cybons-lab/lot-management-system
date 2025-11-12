@@ -23,7 +23,8 @@ export const getLots = (params?: LotsGetParams) => {
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params?.product_code) searchParams.append("product_code", params.product_code);
   if (params?.supplier_code) searchParams.append("supplier_code", params.supplier_code);
-  if (params?.warehouse_code) searchParams.append("warehouse_code", params.warehouse_code);
+  if (params?.delivery_place_code)
+    searchParams.append("delivery_place_code", params.delivery_place_code);
   if (params?.expiry_from) searchParams.append("expiry_from", params.expiry_from);
   if (params?.expiry_to) searchParams.append("expiry_to", params.expiry_to);
   if (params?.with_stock !== undefined)

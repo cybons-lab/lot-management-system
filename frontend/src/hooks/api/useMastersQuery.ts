@@ -134,6 +134,7 @@ export function useWarehouseQuery(
     queryKey: QUERY_KEYS.masters.warehouse(warehouseCode!),
     queryFn: async (): Promise<Warehouse | undefined> => {
       const warehouses = await listWarehouses();
+      // eslint-disable-next-line no-restricted-syntax
       return warehouses.find((w: Warehouse) => w.warehouse_code === warehouseCode);
     },
     enabled: !!warehouseCode,
@@ -224,6 +225,7 @@ export function useWarehouseOptions() {
   const { data: warehouses } = useWarehousesQuery();
 
   return createSelectOptions(
+    // eslint-disable-next-line no-restricted-syntax
     warehouses?.map((w: Warehouse) => ({ code: w.warehouse_code, name: w.warehouse_name })),
     (w: { code: string; name: string }) => w.code,
     (w: { code: string; name: string }) => w.name,

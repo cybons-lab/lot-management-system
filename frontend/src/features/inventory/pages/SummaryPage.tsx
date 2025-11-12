@@ -28,14 +28,14 @@ export function SummaryPage() {
     const activeLots = allLots.filter((lot) => lot.current_quantity > 0).length;
     const totalQuantity = allLots.reduce((sum, lot) => sum + lot.current_quantity, 0);
     const uniqueProducts = new Set(allLots.map((lot) => lot.product_code)).size;
-    const uniqueWarehouses = new Set(allLots.map((lot) => lot.warehouse_code)).size;
+    const uniqueDeliveryPlaces = new Set(allLots.map((lot) => lot.delivery_place_code)).size;
 
     return {
       totalLots,
       activeLots,
       totalQuantity,
       uniqueProducts,
-      uniqueWarehouses,
+      uniqueDeliveryPlaces,
     };
   }, [allLots]);
 
@@ -102,11 +102,11 @@ export function SummaryPage() {
           description="登録されている製品の種類"
         />
 
-        {/* ユニーク倉庫数 */}
+        {/* ユニーク納品場所数 */}
         <StatCard
-          title="倉庫数"
-          value={fmt(stats.uniqueWarehouses)}
-          description="在庫がある倉庫の数"
+          title="納品場所数"
+          value={fmt(stats.uniqueDeliveryPlaces)}
+          description="在庫がある納品場所の数"
         />
 
         {/* 在庫利用率 */}

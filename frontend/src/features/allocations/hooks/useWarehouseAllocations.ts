@@ -17,16 +17,16 @@ export function useWarehouseAllocations(
   const [warehouseAllocations, setWarehouseAllocations] = useState<Record<string, number>>({});
   const lastSelectedLineIdRef = useRef<number | null>(null);
 
-  // 倉庫サマリーの計算（warehouse_idで集計）
+  // 倉庫サマリーの計算（delivery_place_idで集計）
   const warehouseSummaries: WarehouseSummary[] = useMemo(() => {
     const map = new Map<string, WarehouseSummary>();
     candidateLots.forEach((lot) => {
-      // warehouse_idをキーとして使用（在庫所在の物理的な管理）
-      const key = String(lot.warehouse_id ?? lot.id);
+      // delivery_place_idをキーとして使用（在庫所在の物理的な管理）
+      const key = String(lot.delivery_place_id ?? lot.id);
       const existing = map.get(key) ?? {
         key,
-        warehouseId: lot.warehouse_id ?? undefined,
-        warehouseCode: null, // warehouse_codeは廃止
+        warehouseId: lot.delivery_place_id ?? undefined,
+        warehouseCode: null, // delivery_place_codeは廃止
         warehouseName: lot.warehouse_name ?? null,
         totalStock: 0,
       };
@@ -83,8 +83,8 @@ export function useWarehouseAllocations(
       .map((warehouse) => ({
         lotId: 0, // TODO: ロット選択機能実装時に適切なlot_idを設定
         lot: null, // TODO: ロット選択機能実装時に適切なlotオブジェクトを設定
-        warehouse_id: warehouse.warehouseId ?? null,
-        warehouse_code: null, // warehouse_codeは廃止
+        delivery_place_id: warehouse.warehouseId ?? null,
+        delivery_place_code: null, // delivery_place_codeは廃止
         quantity: Number(warehouseAllocations[warehouse.key] ?? 0),
       }))
       .filter((item) => item.quantity > 0);

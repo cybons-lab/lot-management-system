@@ -1,6 +1,6 @@
 import { fetchApi } from "@/shared/libs/http";
-import type { paths, components } from "@/types/api";
 import type { CandidateLotsResponse } from "@/shared/types/aliases";
+import type { paths, components } from "@/types/api";
 
 // api.d.ts から型を抽出
 type OrdersGetParams = paths["/api/orders"]["get"]["parameters"]["query"];
@@ -64,13 +64,13 @@ export const getWarehouseAllocList = (): Promise<components["schemas"]["Warehous
  */
 export const getCandidateLots = (params: {
   product_id: number;
-  warehouse_id?: number;
+  delivery_place_id?: number;
   limit?: number;
 }) => {
   const searchParams = new URLSearchParams();
   searchParams.append("product_id", params.product_id.toString());
-  if (params.warehouse_id !== undefined)
-    searchParams.append("warehouse_id", params.warehouse_id.toString());
+  if (params.delivery_place_id !== undefined)
+    searchParams.append("delivery_place_id", params.delivery_place_id.toString());
   if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
 
   const queryString = searchParams.toString();
@@ -110,8 +110,8 @@ export const cancelLotAllocations = (
 export const saveWarehouseAllocations = (
   orderLineId: number,
   allocations: Array<{
-    warehouse_id: number;
-    warehouse_code: string;
+    delivery_place_id: number;
+    delivery_place_code: string;
     warehouse_name?: string;
     lot_id: number;
     quantity: number;

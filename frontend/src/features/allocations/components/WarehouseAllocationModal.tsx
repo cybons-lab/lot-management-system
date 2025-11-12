@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 
 interface WarehouseAllocation {
-  warehouse_code: string;
+  delivery_place_code: string;
   quantity: number;
 }
 
@@ -56,16 +56,16 @@ export function WarehouseAllocationModal({
   }, [initialAllocations]);
 
   const handleAdd = () => {
-    setAllocations([...allocations, { warehouse_code: "", quantity: 0 }]);
+    setAllocations([...allocations, { delivery_place_code: "", quantity: 0 }]);
   };
 
   const handleRemove = (index: number) => {
     setAllocations(allocations.filter((_: WarehouseAllocation, i: number) => i !== index));
   };
 
-  const handleWarehouseChange = (index: number, warehouseCode: string) => {
+  const handleWarehouseChange = (index: number, deliveryPlaceCode: string) => {
     const newAllocations = [...allocations];
-    newAllocations[index].warehouse_code = warehouseCode;
+    newAllocations[index].delivery_place_code = deliveryPlaceCode;
     setAllocations(newAllocations);
   };
 
@@ -80,7 +80,9 @@ export function WarehouseAllocationModal({
     0,
   );
   const isValid = Math.abs(allocatedTotal - totalQuantity) < 0.01; // 浮動小数点誤差を考慮
-  const usedWarehouses = new Set(allocations.map((a: WarehouseAllocation) => a.warehouse_code));
+  const usedWarehouses = new Set(
+    allocations.map((a: WarehouseAllocation) => a.delivery_place_code),
+  );
 
   const handleSave = () => {
     if (isValid) {
@@ -128,7 +130,7 @@ export function WarehouseAllocationModal({
                 <div key={index} className="grid grid-cols-12 items-center gap-2">
                   <div className="col-span-5">
                     <Select
-                      value={allocation.warehouse_code}
+                      value={allocation.delivery_place_code}
                       onValueChange={(value: string) => handleWarehouseChange(index, value)}
                     >
                       <SelectTrigger>
@@ -140,7 +142,8 @@ export function WarehouseAllocationModal({
                             key={wh.code}
                             value={wh.code}
                             disabled={
-                              usedWarehouses.has(wh.code) && allocation.warehouse_code !== wh.code
+                              usedWarehouses.has(wh.code) &&
+                              allocation.delivery_place_code !== wh.code
                             }
                           >
                             {wh.code} - {wh.name}

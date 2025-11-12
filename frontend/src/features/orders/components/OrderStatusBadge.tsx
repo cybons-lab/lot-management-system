@@ -1,4 +1,4 @@
-import { OrderStatus, ORDER_STATUS_DISPLAY } from "@/shared/types/aliases";
+import { type OrderStatus, ORDER_STATUS_DISPLAY } from "@/shared/types/aliases";
 
 interface OrderStatusBadgeProps {
   status: string;

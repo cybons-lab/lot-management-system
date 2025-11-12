@@ -1880,6 +1880,12 @@ export interface components {
       expiry_date?: string | null;
       /** Warehouse Id */
       warehouse_id?: number | null;
+      /** Delivery Place Id */
+      delivery_place_id?: number | null;
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
       /** Product Id */
       product_id?: number | null;
       /** Supplier Id */
@@ -3684,7 +3690,7 @@ export interface operations {
         limit?: number;
         product_code?: string | null;
         supplier_code?: string | null;
-        warehouse_code?: string | null;
+        delivery_place_code?: string | null;
         expiry_from?: string | null;
         expiry_to?: string | null;
         with_stock?: boolean;

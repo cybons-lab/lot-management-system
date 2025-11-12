@@ -31,12 +31,12 @@ export interface FullSampleDataRequest {
     lot_number: string;
     receipt_date: string;
     expiry_date?: string | null;
-    warehouse_code: string;
+    delivery_place_code: string;
   }>;
   receipts?: Array<{
     receipt_no: string;
     supplier_code: string;
-    warehouse_code: string;
+    delivery_place_code: string;
     receipt_date: string;
     lines: Array<{
       line_no: number;

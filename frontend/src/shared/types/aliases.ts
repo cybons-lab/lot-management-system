@@ -22,7 +22,7 @@ export type Customer = {
   address?: string | null;
 };
 export type Warehouse = {
-  warehouse_code: string;
+  warehouse_code: string; // eslint-disable-line no-restricted-syntax
   warehouse_name: string;
   address?: string | null;
   is_active?: boolean | null;
@@ -38,7 +38,7 @@ export type LotResponse = {
   product_name?: string | null;
   supplier_id?: number | null;
   supplier_code: string;
-  warehouse_id?: number | null; // 在庫所在のみ（識別キーには使わない）
+  delivery_place_id?: number | null;
   delivery_place_code: string | null;
   delivery_place_name: string | null;
   lot_unit?: string | null;
@@ -93,7 +93,7 @@ export type CandidateLotItem = {
   allocated_qty: number;
   product_id?: number | null;
   product_code?: string | null;
-  warehouse_id?: number | null; // 在庫所在のみ（識別キーには使わない）
+  delivery_place_id?: number | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
   expiry_date?: string | null;
@@ -105,14 +105,17 @@ export type CandidateLotsResponse = {
   total: number;
 };
 
-export type WarehouseAlloc = {
+export type DeliveryPlaceAlloc = {
   qty: number;
-  warehouse_id: number; // API保存時に必須に寄せる
-  warehouse_code: string;
-  warehouse_name?: string;
+  delivery_place_id: number;
+  delivery_place_code: string;
+  delivery_place_name?: string;
   lot_id: number;
   quantity: number;
 };
+
+// Backwards compatibility alias
+export type WarehouseAlloc = DeliveryPlaceAlloc;
 
 export type LotAllocationRequest = {
   allocations: { lot_id: number; qty: number }[]; // API実シグネチャに合わせる
@@ -159,7 +162,7 @@ export type OrderLine = {
   product_id?: number | null; // product_id基準の引当に必要
   product_code?: string | null; // Optional化(表示用のみ)
   product_name?: string;
-  warehouse_id?: number | null; // 在庫所在のみ（識別キーには使わない）
+  delivery_place_id?: number | null;
   customer_id?: number | null;
   customer_code?: string;
   supplier_id?: number | null;
@@ -171,7 +174,7 @@ export type OrderLine = {
   status?: string;
   due_date?: string | null;
   allocated_qty?: number | null;
-  warehouse_allocations?: Array<{ warehouse_code: string; quantity: number }>;
+  delivery_place_allocations?: Array<{ delivery_place_code: string; quantity: number }>;
   related_lots?: Array<Record<string, unknown>>;
   allocated_lots?: AllocatedLot[];
   next_div?: string | null;

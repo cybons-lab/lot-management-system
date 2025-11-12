@@ -5,8 +5,8 @@ import type { LotCandidate } from "@/shared/types/aliases";
 export type AllocationInputItem = {
   lotId: number;
   lot: LotCandidate | null;
-  warehouse_id?: number | null;
-  warehouse_code?: string | null;
+  delivery_place_id?: number | null;
+  delivery_place_code?: string | null;
   quantity: number;
 };
 

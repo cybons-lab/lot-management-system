@@ -36,8 +36,8 @@ import { LotStatusBadge } from "@/shared/components/data/StatusBadge";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import { PageHeader, PageContainer, Section } from "@/shared/components/layout";
-import { formatCodeAndName } from "@/shared/libs/utils";
 import type { LotUI } from "@/shared/libs/normalize";
+import { formatCodeAndName } from "@/shared/libs/utils";
 
 /**
  * メインコンポーネント
