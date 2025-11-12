@@ -43,12 +43,12 @@ export function useLotsQuery(productKey?: string, warehouseKey?: string) {
     queryFn: async () => {
       const res = await getLots({
         product_code: productKey!, // ← パラメータ名をAPIに合わせる
-        warehouse_code: warehouseKey!, // ← 同上
+        warehouse_code: warehouseKey, // ← オプショナルなのでそのまま渡す
         with_stock: true,
       });
       return normalizeLots(res);
     },
-    enabled: !!productKey && !!warehouseKey,
+    enabled: !!productKey, // warehouseKeyはオプショナルなので不要
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });

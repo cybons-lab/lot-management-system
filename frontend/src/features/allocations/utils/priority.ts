@@ -24,7 +24,8 @@ export function calculatePriority(order: Order): PriorityLevel {
   const unallocatedQty = lines.reduce((sum, line) => {
     const allocated =
       line.allocated_lots?.reduce((a, alloc) => a + (alloc.allocated_qty || 0), 0) || 0;
-    return sum + (line.quantity - allocated);
+    const quantity = line.quantity ?? 0; // null/undefined対策
+    return sum + (quantity - allocated);
   }, 0);
 
   // 引当済み(未引当なし)
@@ -43,6 +44,11 @@ export function calculatePriority(order: Order): PriorityLevel {
   dueDate.setHours(0, 0, 0, 0);
 
   const daysTodue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  // 無効な日付の場合はNaNになるので注意レベル
+  if (isNaN(daysTodue)) {
+    return "attention";
+  }
 
   // 優先度判定
   if (daysTodue < 0) {
@@ -70,7 +76,8 @@ export function createOrderCardData(order: Order): OrderCardData {
   const unallocatedQty = lines.reduce((sum, line) => {
     const allocated =
       line.allocated_lots?.reduce((a, alloc) => a + (alloc.allocated_qty || 0), 0) || 0;
-    return sum + (line.quantity - allocated);
+    const quantity = line.quantity ?? 0; // null/undefined対策
+    return sum + (quantity - allocated);
   }, 0);
 
   // 納期までの日数
@@ -80,7 +87,9 @@ export function createOrderCardData(order: Order): OrderCardData {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     dueDate.setHours(0, 0, 0, 0);
-    daysTodue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const calculatedDays = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    // 無効な日付の場合はNaNになるのでnullのままにする
+    daysTodue = isNaN(calculatedDays) ? null : calculatedDays;
   }
 
   // 必須フィールド欠落チェック(緩和版: 明細データが提供されている場合のみ判定)
