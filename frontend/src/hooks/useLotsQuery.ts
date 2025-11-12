@@ -34,21 +34,22 @@ function normalizeLots(res: unknown): CandidateLotItem[] {
 
 /**
  * 候補ロット一覧を取得
- * @param productId 商品ID（必須）
- * @param warehouseId 倉庫ID（オプション）
+ * @param productKey 商品コード（必須）
+ *
+ * 注: warehouse_code は検索条件から削除。
+ * 得意先コード × 商品コードを基本キーとし、倉庫は在庫の所在情報のみに使用。
  */
-export function useLotsQuery(productKey?: string, warehouseKey?: string) {
+export function useLotsQuery(productKey?: string) {
   return useQuery<CandidateLotItem[], Error>({
-    queryKey: ["lots", productKey, warehouseKey],
+    queryKey: ["lots", productKey],
     queryFn: async () => {
       const res = await getLots({
-        product_code: productKey!, // ← パラメータ名をAPIに合わせる
-        warehouse_code: warehouseKey, // ← オプショナルなのでそのまま渡す
+        product_code: productKey!,
         with_stock: true,
       });
       return normalizeLots(res);
     },
-    enabled: !!productKey, // warehouseKeyはオプショナルなので不要
+    enabled: !!productKey,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
   });

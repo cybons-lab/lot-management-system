@@ -17,7 +17,14 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
   const priorityColor = getPriorityColor(order.priority);
   const badgeColor = getBadgeColor(order.priority);
   const primaryLine = order.lines?.[0];
-  const deliveryDestination = order.ship_to ?? "";
+
+  // 納品先表示のフォールバック（優先順: delivery_place_name → delivery_place_code → ship_to → "―"）
+  const deliveryDestination =
+    (primaryLine as any)?.delivery_place_name ||
+    (primaryLine as any)?.delivery_place_code ||
+    order.ship_to ||
+    "―";
+
   const quantityText =
     primaryLine?.quantity != null
       ? `${primaryLine.quantity.toLocaleString()}${primaryLine.unit ? ` ${primaryLine.unit}` : ""}`
@@ -58,8 +65,8 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
               </span>
             )}
 
-            {/* 納期残バッジ */}
-            {order.daysTodue !== null && (
+            {/* 納期残バッジ（有限な数値のときのみ表示、NaN防止） */}
+            {typeof order.daysTodue === "number" && isFinite(order.daysTodue) && (
               <span
                 className={`rounded border px-2 py-0.5 text-xs font-medium ${
                   order.daysTodue < 0 ? "border-red-300 bg-red-100 text-red-700" : badgeColor
@@ -86,7 +93,7 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
 
           {/* 3行目: 納品先/個数/納期 */}
           <div className="mt-2 space-y-1 text-xs text-gray-600">
-            <div>納品先: {deliveryDestination || "―"}</div>
+            <div>納品先: {deliveryDestination}</div>
             <div>個数: {quantityText}</div>
             <div>納期: {dueDateText}</div>
           </div>
