@@ -74,9 +74,11 @@ export function LotAllocationPage() {
   const selectedLine = orderDetailQuery.data?.lines?.find((line) => line.id === selectedLineId);
 
   // ロット候補を取得（product_id を使用）
+  // TODO: 後でID参照に戻す（コード→ID解決API完成後）
+  // ロット候補を取得（product_code のみ。倉庫は未保持のため一時的に不使用）
   const lotsQuery = useLotsQuery(
-    selectedLine?.product_id ?? undefined,
-    selectedLine?.warehouse_id ?? undefined,
+    selectedLine?.product_code ?? undefined,
+    undefined, // TODO: line型に warehouse_code が入ったら渡す
   );
   const candidateLots: CandidateLot[] = lotsQuery.data ?? [];
 

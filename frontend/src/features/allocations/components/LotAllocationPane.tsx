@@ -51,9 +51,6 @@ export function LotAllocationPane({
           <h3 className="text-lg font-semibold">候補ロット</h3>
           <p className="mt-1 text-xs text-gray-500">
             製品: {selectedLine.product_code || selectedLine.product_name || "—"}
-            {selectedLine.product_id && (
-              <span className="ml-2 text-gray-400">(ID: {selectedLine.product_id})</span>
-            )}
           </p>
         </div>
 

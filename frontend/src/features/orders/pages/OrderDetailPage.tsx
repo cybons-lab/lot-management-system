@@ -119,7 +119,7 @@ export function OrderDetailPage() {
           <h3 className="text-lg font-semibold">基本情報</h3>
           {isStatusDialogOpen && (
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">ステータスを選択:</span>
+              <span className="text-muted-foreground text-sm">ステータスを選択:</span>
               {Object.values(OrderStatus).map((status) => (
                 <Button
                   key={status}
@@ -131,21 +131,13 @@ export function OrderDetailPage() {
                   {ORDER_STATUS_DISPLAY[status].label}
                 </Button>
               ))}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setIsStatusDialogOpen(false)}
-              >
+              <Button size="sm" variant="ghost" onClick={() => setIsStatusDialogOpen(false)}>
                 キャンセル
               </Button>
             </div>
           )}
           {!isStatusDialogOpen && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsStatusDialogOpen(true)}
-            >
+            <Button size="sm" variant="outline" onClick={() => setIsStatusDialogOpen(true)}>
               <CheckCircle2 className="mr-2 h-4 w-4" />
               ステータス変更
             </Button>

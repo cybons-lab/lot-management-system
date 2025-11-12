@@ -137,10 +137,7 @@ export enum OrderStatus {
 /**
  * ステータス表示用のラベルと色
  */
-export const ORDER_STATUS_DISPLAY: Record<
-  OrderStatus,
-  { label: string; variant: string }
-> = {
+export const ORDER_STATUS_DISPLAY: Record<OrderStatus, { label: string; variant: string }> = {
   [OrderStatus.DRAFT]: { label: "下書き", variant: "bg-gray-100 text-gray-800" },
   [OrderStatus.OPEN]: { label: "未処理", variant: "bg-yellow-100 text-yellow-800" },
   [OrderStatus.PART_ALLOCATED]: {

@@ -199,6 +199,7 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
         # Get warehouse_code from warehouse_id if needed
         if warehouse_id and not warehouse_code:
             from app.models import Warehouse
+
             warehouse = db.query(Warehouse).filter(Warehouse.id == warehouse_id).first()
             if warehouse:
                 warehouse_code = warehouse.warehouse_code
