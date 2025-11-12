@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict cN2RWyKH80bhDwu9hp3hg73AUSFWAPHPAnidftIzZ7r9mcH7GqfIxClzMYOS4e9
+\restrict LEYskYIMvtVT2DO4iKYJHnpgu78IhUNPbWqogEdqKUuzIAuOlyMgG7vIv1WlzKC
 
 -- Dumped from database version 15.14
 -- Dumped by pg_dump version 15.14
@@ -1233,8 +1233,9 @@ CREATE TABLE public.orders (
     customer_id integer,
     customer_order_no_last6 character varying(6) GENERATED ALWAYS AS ("right"(customer_order_no, 6)) STORED,
     customer_code text,
+    delivery_place_id integer,
     CONSTRAINT ck_orders_delivery_mode CHECK (((delivery_mode IS NULL) OR (delivery_mode = ANY (ARRAY['normal'::text, 'express'::text, 'pickup'::text])))),
-    CONSTRAINT ck_orders_status CHECK ((status = ANY (ARRAY['draft'::text, 'confirmed'::text, 'shipped'::text, 'closed'::text])))
+    CONSTRAINT ck_orders_status CHECK ((status = ANY (ARRAY['draft'::text, 'open'::text, 'part_allocated'::text, 'allocated'::text, 'shipped'::text, 'closed'::text, 'cancelled'::text])))
 );
 
 
@@ -2219,6 +2220,62 @@ CREATE VIEW public.v_candidate_lots_by_order_line AS
 
 
 ALTER TABLE public.v_candidate_lots_by_order_line OWNER TO admin;
+
+--
+-- Name: v_customer_code_to_id; Type: VIEW; Schema: public; Owner: admin
+--
+
+CREATE VIEW public.v_customer_code_to_id AS
+ SELECT c.customer_code,
+    c.id AS customer_id,
+    c.customer_name
+   FROM public.customers c;
+
+
+ALTER TABLE public.v_customer_code_to_id OWNER TO admin;
+
+--
+-- Name: v_delivery_place_code_to_id; Type: VIEW; Schema: public; Owner: admin
+--
+
+CREATE VIEW public.v_delivery_place_code_to_id AS
+ SELECT d.delivery_place_code,
+    d.id AS delivery_place_id,
+    d.delivery_place_name
+   FROM public.delivery_places d;
+
+
+ALTER TABLE public.v_delivery_place_code_to_id OWNER TO admin;
+
+--
+-- Name: v_forecast_order_pairs; Type: VIEW; Schema: public; Owner: admin
+--
+
+CREATE VIEW public.v_forecast_order_pairs AS
+ SELECT f.id AS forecast_id,
+    f.customer_id,
+    f.product_id,
+    o.id AS order_id,
+    o.delivery_place_id
+   FROM ((public.forecasts f
+     JOIN public.orders o ON ((o.customer_id = f.customer_id)))
+     JOIN public.order_lines l ON (((l.order_id = o.id) AND (l.product_id = f.product_id))));
+
+
+ALTER TABLE public.v_forecast_order_pairs OWNER TO admin;
+
+--
+-- Name: v_product_code_to_id; Type: VIEW; Schema: public; Owner: admin
+--
+
+CREATE VIEW public.v_product_code_to_id AS
+ SELECT p.product_code,
+    p.id AS product_id,
+    p.product_name
+   FROM public.products p;
+
+
+ALTER TABLE public.v_product_code_to_id OWNER TO admin;
 
 --
 -- Name: warehouse; Type: TABLE; Schema: public; Owner: admin
@@ -3388,6 +3445,13 @@ CREATE INDEX idx_order_lines_warehouse_id ON public.order_lines USING btree (war
 
 
 --
+-- Name: idx_orders_delivery_place; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_orders_delivery_place ON public.orders USING btree (delivery_place_id);
+
+
+--
 -- Name: idx_stock_movements_lot; Type: INDEX; Schema: public; Owner: admin
 --
 
@@ -4423,6 +4487,14 @@ ALTER TABLE ONLY public.orders
 
 
 --
+-- Name: orders fk_orders_delivery_place; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT fk_orders_delivery_place FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: products fk_products_delivery_place; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
@@ -4609,5 +4681,5 @@ REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict cN2RWyKH80bhDwu9hp3hg73AUSFWAPHPAnidftIzZ7r9mcH7GqfIxClzMYOS4e9
+\unrestrict LEYskYIMvtVT2DO4iKYJHnpgu78IhUNPbWqogEdqKUuzIAuOlyMgG7vIv1WlzKC
 
