@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict LEYskYIMvtVT2DO4iKYJHnpgu78IhUNPbWqogEdqKUuzIAuOlyMgG7vIv1WlzKC
+\restrict W7tXWeeLdnn248rMA6f6ABNo2zt5yPLucHc02S3D2BGMXCgs1WMgbLpujUMdSwW
 
 -- Dumped from database version 15.14
 -- Dumped by pg_dump version 15.14
@@ -1222,7 +1222,7 @@ CREATE TABLE public.orders (
     sap_status text,
     sap_sent_at timestamp without time zone,
     sap_error_msg text,
-    created_at timestamp without time zone,
+    created_at timestamp without time zone DEFAULT now(),
     updated_at timestamp without time zone,
     created_by character varying(50),
     updated_by character varying(50),
@@ -4681,5 +4681,5 @@ REVOKE USAGE ON SCHEMA public FROM PUBLIC;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict LEYskYIMvtVT2DO4iKYJHnpgu78IhUNPbWqogEdqKUuzIAuOlyMgG7vIv1WlzKC
+\unrestrict W7tXWeeLdnn248rMA6f6ABNo2zt5yPLucHc02S3D2BGMXCgs1WMgbLpujUMdSwW
 
