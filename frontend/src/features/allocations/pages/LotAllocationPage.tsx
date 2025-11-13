@@ -10,7 +10,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { LotAllocationPane } from "../components/LotAllocationPane";
 import { OrderDetailPane } from "../components/OrderDetailPane";
@@ -85,17 +85,21 @@ export function LotAllocationPage() {
 
   // ロット候補を取得
   // product_codeがnullの場合はproduct_idでフィルタする
-  const lotsQuery = useLotsQuery(
-    selectedLine
-      ? {
-          productId: selectedLine.product_id || undefined,
-          productCode: selectedLine.product_code || undefined,
-          deliveryPlaceCode: selectedLine.delivery_place_code || undefined,
-        }
-      : undefined,
+  const lotsQueryInput = useMemo(
+    () =>
+      selectedLine
+        ? {
+            productId: selectedLine.product_id || undefined,
+            productCode: selectedLine.product_code || undefined,
+            deliveryPlaceCode: selectedLine.delivery_place_code || undefined,
+          }
+        : undefined,
+    [selectedLine],
   );
 
-  const candidateLots: CandidateLot[] = lotsQuery.data ?? [];
+  const lotsQuery = useLotsQuery(lotsQueryInput);
+
+  const candidateLots: CandidateLot[] = useMemo(() => lotsQuery.data ?? [], [lotsQuery.data]);
 
   // 倉庫別配分の状態管理
   const {
