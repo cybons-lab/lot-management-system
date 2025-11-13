@@ -15,7 +15,10 @@ export function useWarehouseAllocations(
   selectedLineId: number | null,
 ) {
   const [warehouseAllocations, setWarehouseAllocations] = useState<Record<string, number>>({});
-  const lastSelectedLineIdRef = useRef<number | null>(null);
+
+  // 前回の「選択行」と「倉庫サマリのシグネチャ」を保持
+  const lastSelectedLineKeyRef = useRef<string | null>(null);
+  const lastSummarySignatureRef = useRef<string | null>(null);
 
   // delivery_place 単位でサマリ集計
   const warehouseSummaries: WarehouseSummary[] = useMemo(() => {
@@ -38,9 +41,28 @@ export function useWarehouseAllocations(
     return Array.from(map.values());
   }, [candidateLots]);
 
-  // 明細切替時は配分初期化／同一なら維持
+  // 「倉庫サマリが実質同じかどうか」を判定するシグネチャ
+  const warehouseSummarySignature = useMemo(
+    () =>
+      warehouseSummaries
+        .map((w) => `${w.key}:${w.totalStock}`)
+        .sort()
+        .join("|"),
+    [warehouseSummaries],
+  );
+
+  // 明細切替時 または 倉庫サマリが変わったときにだけ配分を調整
   useEffect(() => {
-    const lineChanged = lastSelectedLineIdRef.current !== (selectedLineId ?? null);
+    const currentLineKey = selectedLineId != null ? String(selectedLineId) : null;
+
+    const lineChanged = lastSelectedLineKeyRef.current !== currentLineKey;
+    const summaryChanged = lastSummarySignatureRef.current !== warehouseSummarySignature;
+
+    // 行もサマリも変わっていない → 何もしない（＝無限ループ防止）
+    if (!lineChanged && !summaryChanged) {
+      return;
+    }
+
     setWarehouseAllocations((prev) => {
       const next: Record<string, number> = {};
       for (const w of warehouseSummaries) {
@@ -48,8 +70,14 @@ export function useWarehouseAllocations(
       }
       return next;
     });
-    if (lineChanged) lastSelectedLineIdRef.current = selectedLineId ?? null;
-  }, [selectedLineId, warehouseSummaries]);
+
+    if (lineChanged) {
+      lastSelectedLineKeyRef.current = currentLineKey;
+    }
+    if (summaryChanged) {
+      lastSummarySignatureRef.current = warehouseSummarySignature;
+    }
+  }, [selectedLineId, warehouseSummarySignature, warehouseSummaries]);
 
   // 保存用の配分リスト
   const allocationList: AllocationInputItem[] = useMemo(() => {

@@ -35,46 +35,46 @@ services:
   # Backend (FastAPI)
   # ========================================
   backend:
-  build:
-    context: ./backend
-    dockerfile: Dockerfile
-  container_name: lot-backend
-  environment:
-    ENVIRONMENT: ${ENVIRONMENT:-development}
-    POSTGRES_DB: ${POSTGRES_DB:-lot_management}
-    POSTGRES_USER: ${POSTGRES_USER:-admin}
-    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
-    # psycopg2 のままなら postgresql://
-    DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-dev_password}@db-postgres:5432/${POSTGRES_DB:-lot_management}
-    CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
-    TZ: Asia/Tokyo
-    # 監視が弱い環境（Win/Mac+DockerDesktop）での安定化
-    WATCHFILES_FORCE_POLLING: "true"
-  ports:
-    - "8000:8000"
-  depends_on:
-    db-postgres:
-      condition: service_healthy
-  volumes:
-    # アプリ本体だけをコンテナへ同期（依存はイメージに保持）
-    - ./backend/app:/app/app:cached
-    - backend-cache:/root/.cache/pip
-  command: >
-    uvicorn app.main:app
-    --host 0.0.0.0 --port 8000
-    --reload --reload-dir /app/app --reload-include "*.py"
-  develop:
-    watch:
-      - path: ./backend/app
-        target: /app/app
-        action: sync
-      - path: ./backend/requirements.txt
-        action: rebuild
-      - path: ./backend/pyproject.toml
-        action: rebuild
-  networks:
-    - lot-network
-  restart: unless-stopped
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lot-backend
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      POSTGRES_DB: ${POSTGRES_DB:-lot_management}
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+      # psycopg2 のままなら postgresql://
+      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-dev_password}@db-postgres:5432/${POSTGRES_DB:-lot_management}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      TZ: Asia/Tokyo
+      # 監視が弱い環境（Win/Mac+DockerDesktop）での安定化
+      WATCHFILES_FORCE_POLLING: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db-postgres:
+        condition: service_healthy
+    volumes:
+      # アプリ本体だけをコンテナへ同期（依存はイメージに保持）
+      - ./backend/app:/app/app:cached
+      - backend-cache:/root/.cache/pip
+    command: >
+      uvicorn app.main:app
+      --host 0.0.0.0 --port 8000
+      --reload --reload-dir /app/app --reload-include "*.py"
+    develop:
+      watch:
+        - path: ./backend/app
+          target: /app/app
+          action: sync
+        - path: ./backend/requirements.txt
+          action: rebuild
+        - path: ./backend/pyproject.toml
+          action: rebuild
+    networks:
+      - lot-network
+    restart: unless-stopped
 
   # ========================================
   # Frontend (Vite)

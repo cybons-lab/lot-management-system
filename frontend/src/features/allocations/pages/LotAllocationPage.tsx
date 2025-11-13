@@ -77,6 +77,7 @@ export function LotAllocationPage() {
     selectedLineId != null && Number.isFinite(Number(selectedLineId))
       ? Number(selectedLineId)
       : null;
+
   const selectedLine =
     normalizedSelectedLineId != null
       ? orderDetailQuery.data?.lines?.find((line) => Number(line.id) === normalizedSelectedLineId)
@@ -93,6 +94,7 @@ export function LotAllocationPage() {
         }
       : undefined,
   );
+
   const candidateLots: CandidateLot[] = lotsQuery.data ?? [];
 
   // 倉庫別配分の状態管理

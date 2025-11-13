@@ -28,8 +28,10 @@ interface LotAllocationPaneProps {
 /** 倉庫サマリを candidateLots から計算（delivery_place 基準で集計） */
 function computeWarehouseSummaries(lots: CandidateLot[]): WarehouseSummary[] {
   const map = new Map<string, WarehouseSummary>();
+
   for (const lot of lots ?? []) {
     const key = String(lot.delivery_place_code ?? (lot as any).delivery_place_id ?? lot.id);
+
     const existing =
       map.get(key) ??
       ({
@@ -44,6 +46,7 @@ function computeWarehouseSummaries(lots: CandidateLot[]): WarehouseSummary[] {
     existing.totalStock += toQty(lot.free_qty ?? lot.current_quantity);
     map.set(key, existing);
   }
+
   return Array.from(map.values());
 }
 
@@ -69,10 +72,14 @@ export function LotAllocationPane({
     );
   }
 
-  // 渡されていなければ Pane 内で計算する
-  const computedWarehouseSummaries =
-    warehouseSummaries ??
-    useMemo(() => computeWarehouseSummaries(candidateLots ?? []), [candidateLots]);
+  // Hooks は常に呼び出す
+  const memoWarehouseSummaries = useMemo(
+    () => computeWarehouseSummaries(candidateLots ?? []),
+    [candidateLots],
+  );
+
+  // 渡されていなければ Pane 内で計算したものを使用
+  const computedWarehouseSummaries = warehouseSummaries ?? memoWarehouseSummaries;
 
   return (
     <div className="w-[420px] overflow-y-auto border-l bg-white">
