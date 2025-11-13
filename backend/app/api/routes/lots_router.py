@@ -33,6 +33,7 @@ router = APIRouter(prefix="/lots", tags=["lots"])
 def list_lots(
     skip: int = 0,
     limit: int = 100,
+    product_id: int | None = None,
     product_code: str | None = None,
     supplier_code: str | None = None,
     warehouse_code: str | None = None,
@@ -47,6 +48,7 @@ def list_lots(
     Args:
         skip: スキップ件数
         limit: 取得件数
+        product_id: 製品IDでフィルタ（優先）
         product_code: 製品コードでフィルタ
         supplier_code: 仕入先コードでフィルタ
         warehouse_code: 倉庫コードでフィルタ
@@ -58,7 +60,9 @@ def list_lots(
     query = db.query(Lot).options(joinedload(Lot.product), joinedload(Lot.warehouse))
 
     # フィルタ適用
-    if product_code:
+    if product_id is not None:
+        query = query.filter(Lot.product_id == product_id)
+    elif product_code:
         # product_code から product_id を取得してフィルタ
         product = db.query(Product).filter(Product.product_code == product_code).first()
         if product:

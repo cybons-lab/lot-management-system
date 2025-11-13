@@ -47,8 +47,16 @@ export function useAutoSelection(
     const lines = orderDetailData.lines ?? [];
     if (lines.length === 0) return;
 
+    const normalizedSelectedLineId =
+      selectedLineId != null && Number.isFinite(Number(selectedLineId))
+        ? Number(selectedLineId)
+        : null;
+
     // 現在選択中の明細が有効かチェック
-    const hasSelected = lines.some((line) => line.id === selectedLineId);
+    const hasSelected =
+      normalizedSelectedLineId != null &&
+      lines.some((line) => Number(line.id) === normalizedSelectedLineId);
+
     if (!hasSelected) {
       // 有効な明細を選択: 製品コードがあり、数量が0より大きい明細を優先
       const fallbackLine =
@@ -56,12 +64,15 @@ export function useAutoSelection(
         lines.find((line) => !!line.product_code) ??
         lines[0];
 
-      if (!fallbackLine) return;
+      if (!fallbackLine || fallbackLine.id == null) return;
+
+      const fallbackId = Number(fallbackLine.id);
+      if (!Number.isFinite(fallbackId)) return;
 
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.set("selected", String(orderDetailData.id));
-        next.set("line", String(fallbackLine.id));
+        next.set("line", String(fallbackId));
         return next;
       });
     }

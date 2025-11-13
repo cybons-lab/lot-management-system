@@ -15,7 +15,11 @@ export const D = (v: string | null | undefined, fallback = ""): string => v ?? f
 
 // API型のエイリアス
 type OrderResponse = OrderResponseAlias;
-type LotResponse = components["schemas"]["LotResponse"];
+type LotResponse = components["schemas"]["LotResponse"] & {
+  delivery_place_id?: number | null;
+  delivery_place_code?: string | null;
+  delivery_place_name?: string | null;
+};
 type ProductResponse = components["schemas"]["ProductResponse"];
 type OrderLineOut = components["schemas"]["OrderLineOut"];
 

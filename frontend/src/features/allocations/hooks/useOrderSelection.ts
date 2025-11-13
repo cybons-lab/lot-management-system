@@ -8,10 +8,14 @@ import { useSearchParams } from "react-router-dom";
 export function useOrderSelection() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const selectedOrderId = searchParams.get("selected")
-    ? Number(searchParams.get("selected"))
-    : null;
-  const selectedLineId = searchParams.get("line") ? Number(searchParams.get("line")) : null;
+  const parseNumericParam = (value: string | null) => {
+    if (value == null) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const selectedOrderId = parseNumericParam(searchParams.get("selected"));
+  const selectedLineId = parseNumericParam(searchParams.get("line"));
 
   // 受注一覧から受注を選択したときのハンドラー
   const handleSelectOrder = useCallback(
