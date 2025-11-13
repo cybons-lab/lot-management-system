@@ -35,32 +35,46 @@ services:
   # Backend (FastAPI)
   # ========================================
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: lot-backend
-    environment:
-      # ← ここは既存指定を引き継ぎつつ、将来切替しやすいよう .env 化
-      ENVIRONMENT: ${ENVIRONMENT:-development}
-      POSTGRES_DB: ${POSTGRES_DB:-lot_management}
-      POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
-      # psycopg2 のままなら postgresql:// でOK（psycopg3 に切替時は postgresql+psycopg:// へ）
-      DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-dev_password}@db-postgres:5432/${POSTGRES_DB:-lot_management}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
-      TZ: Asia/Tokyo
-    ports:
-      - "8000:8000"
-    depends_on:
-      db-postgres:
-        condition: service_healthy # ← DB が healthy になるまで待機
-    volumes:
-      - ./backend:/app
-      - backend-cache:/root/.cache/pip
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    networks:
-      - lot-network
-    restart: unless-stopped
+  build:
+    context: ./backend
+    dockerfile: Dockerfile
+  container_name: lot-backend
+  environment:
+    ENVIRONMENT: ${ENVIRONMENT:-development}
+    POSTGRES_DB: ${POSTGRES_DB:-lot_management}
+    POSTGRES_USER: ${POSTGRES_USER:-admin}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev_password}
+    # psycopg2 のままなら postgresql://
+    DATABASE_URL: postgresql://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-dev_password}@db-postgres:5432/${POSTGRES_DB:-lot_management}
+    CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+    TZ: Asia/Tokyo
+    # 監視が弱い環境（Win/Mac+DockerDesktop）での安定化
+    WATCHFILES_FORCE_POLLING: "true"
+  ports:
+    - "8000:8000"
+  depends_on:
+    db-postgres:
+      condition: service_healthy
+  volumes:
+    # アプリ本体だけをコンテナへ同期（依存はイメージに保持）
+    - ./backend/app:/app/app:cached
+    - backend-cache:/root/.cache/pip
+  command: >
+    uvicorn app.main:app
+    --host 0.0.0.0 --port 8000
+    --reload --reload-dir /app/app --reload-include "*.py"
+  develop:
+    watch:
+      - path: ./backend/app
+        target: /app/app
+        action: sync
+      - path: ./backend/requirements.txt
+        action: rebuild
+      - path: ./backend/pyproject.toml
+        action: rebuild
+  networks:
+    - lot-network
+  restart: unless-stopped
 
   # ========================================
   # Frontend (Vite)
@@ -71,16 +85,31 @@ services:
       dockerfile: Dockerfile
     container_name: lot-frontend
     environment:
-      # フロントから見えるAPIのエンドポイント (Viteプロキシを使用するため相対パス)
       VITE_API_BASE: "/api"
       TZ: Asia/Tokyo
+      # 監視をポーリングに切替（Win/Mac安定化）
+      CHOKIDAR_USEPOLLING: "1"
+      WATCHPACK_POLLING: "true"
     ports:
       - "5173:5173"
     depends_on:
       - backend
     volumes:
-      - ./frontend:/usr/src/app
+      - ./frontend:/usr/src/app:cached
       - frontend_node_modules:/usr/src/app/node_modules
+    # Vite のキャッシュを都度無効化（反映漏れ対策）
+    command: sh -c "npm run dev -- --host --force"
+    develop:
+      watch:
+        - path: ./frontend
+          target: /usr/src/app
+          action: sync
+        - path: ./frontend/package.json
+          action: rebuild
+        - path: ./frontend/pnpm-lock.yaml
+          action: rebuild
+        - path: ./frontend/yarn.lock
+          action: rebuild
     networks:
       - lot-network
     restart: unless-stopped
