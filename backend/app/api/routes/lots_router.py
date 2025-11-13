@@ -93,6 +93,7 @@ def list_lots(
 
         if lot.product:
             response.product_name = lot.product.product_name
+            response.product_code = lot.product.product_code
 
         if lot.current_stock:
             response.current_quantity = lot.current_stock.current_quantity

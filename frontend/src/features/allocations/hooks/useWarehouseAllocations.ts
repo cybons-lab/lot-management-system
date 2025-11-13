@@ -31,7 +31,7 @@ export function useWarehouseAllocations(
         totalStock: 0,
       };
 
-      existing.totalStock += lot.current_stock?.current_quantity ?? 0;
+      existing.totalStock += Number(lot.current_stock?.current_quantity ?? 0);
       map.set(key, existing);
     });
 

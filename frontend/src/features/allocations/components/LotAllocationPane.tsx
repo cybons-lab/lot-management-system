@@ -97,10 +97,10 @@ export function LotAllocationPane({
                   <div className="text-right">
                     <div className="text-xs text-gray-500">利用可能</div>
                     <div className="mt-1 text-lg font-bold text-blue-600">
-                      {(lot.current_stock?.current_quantity ?? lot.free_qty ?? 0).toLocaleString()}
+                      {Number(lot.current_stock?.current_quantity ?? lot.free_qty ?? 0).toLocaleString()}
                     </div>
                     <div className="text-xs text-gray-400">
-                      総在庫: {(lot.current_quantity ?? 0).toLocaleString()}
+                      総在庫: {Number(lot.current_quantity ?? 0).toLocaleString()}
                     </div>
                   </div>
                 </div>
