@@ -87,9 +87,9 @@ export function LotAllocationPage() {
   const lotsQuery = useLotsQuery(
     selectedLine
       ? {
-          productId: selectedLine.product_id ?? null,
-          productCode: selectedLine.product_code ?? null,
-          deliveryPlaceCode: selectedLine.delivery_place_code ?? null,
+          productId: selectedLine.product_id || undefined,
+          productCode: selectedLine.product_code || undefined,
+          deliveryPlaceCode: selectedLine.delivery_place_code || undefined,
         }
       : undefined,
   );

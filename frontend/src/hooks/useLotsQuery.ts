@@ -52,22 +52,31 @@ function normalizeLots(res: unknown): CandidateLotItem[] {
  * @param params 抽出条件
  */
 export function useLotsQuery(params?: UseLotsQueryParams) {
+  // Strengthen key validation: productId must be a positive finite number
   const hasLookupKey = Boolean(
     params &&
-      (params.productId != null ||
-        params.productCode ||
-        params.deliveryPlaceCode ||
-        params.supplierCode),
+      ((typeof params.productId === "number" &&
+        Number.isFinite(params.productId) &&
+        params.productId > 0) ||
+        !!params.productCode ||
+        !!params.deliveryPlaceCode ||
+        !!params.supplierCode),
   );
+
+  // Debug logging
+  if (process.env.NODE_ENV === "development") {
+    console.debug("useLotsQuery params:", params);
+    console.debug("useLotsQuery hasLookupKey:", hasLookupKey);
+  }
 
   return useQuery<Lot[], Error>({
     queryKey: [
       "lots",
       {
-        productId: params?.productId ?? null,
-        productCode: params?.productCode ?? null,
-        deliveryPlaceCode: params?.deliveryPlaceCode ?? null,
-        supplierCode: params?.supplierCode ?? null,
+        productId: params?.productId,
+        productCode: params?.productCode,
+        deliveryPlaceCode: params?.deliveryPlaceCode,
+        supplierCode: params?.supplierCode,
       },
     ],
     queryFn: async () => {

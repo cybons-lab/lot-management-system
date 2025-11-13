@@ -53,17 +53,63 @@ class OrderService:
         return [OrderResponse.model_validate(order) for order in orders]
 
     def get_order_detail(self, order_id: int) -> OrderWithLinesResponse:
+        from app.schemas import OrderLineOut
+
         stmt: Select[Order] = (
             select(Order)
-            .options(selectinload(Order.order_lines).selectinload(OrderLine.product))
+            .options(
+                selectinload(Order.order_lines)
+                .selectinload(OrderLine.product)
+                .selectinload(Product.delivery_place),
+                selectinload(Order.order_lines)
+                .selectinload(OrderLine.product)
+                .selectinload(Product.supplier),
+            )
             .where(Order.id == order_id)
         )
         order = self.db.execute(stmt).scalar_one_or_none()
         if not order:
             raise OrderNotFoundError(order_id)
 
-        order.lines = list(order.order_lines)
-        return OrderWithLinesResponse.model_validate(order)
+        # Build OrderLineOut manually to include product and delivery_place data
+        lines_out = []
+        for line in order.order_lines:
+            line_dict = {
+                "id": line.id,
+                "line_no": line.line_no,
+                "product_id": line.product_id,
+                "warehouse_id": line.warehouse_id,
+                "quantity": float(line.quantity),
+                "unit": line.unit,
+                "allocated_qty": 0.0,  # Will be calculated from allocations
+            }
+
+            # Add product information
+            if line.product:
+                line_dict["product_code"] = line.product.product_code
+                line_dict["product_name"] = line.product.product_name
+                line_dict["supplier_id"] = line.product.supplier_id
+
+                # Add supplier information
+                if line.product.supplier:
+                    line_dict["supplier_code"] = line.product.supplier.supplier_code
+
+                # Add delivery_place information
+                if line.product.delivery_place:
+                    line_dict["delivery_place_id"] = line.product.delivery_place.id
+                    line_dict["delivery_place_code"] = (
+                        line.product.delivery_place.delivery_place_code
+                    )
+                    line_dict["delivery_place_name"] = (
+                        line.product.delivery_place.delivery_place_name
+                    )
+
+            lines_out.append(OrderLineOut(**line_dict))
+
+        # Build OrderWithLinesResponse
+        order_dict = OrderResponse.model_validate(order).model_dump()
+        order_dict["lines"] = lines_out
+        return OrderWithLinesResponse(**order_dict)
 
     def create_order(self, order_data: OrderCreate) -> OrderWithLinesResponse:
         OrderBusinessRules.validate_order_no(order_data.order_no)
