@@ -60,7 +60,7 @@ export function LotAllocationPage() {
     queryFn: () => getOrder(selectedOrderId!),
     enabled: !!selectedOrderId,
     // 取得スキーマ（line_noがnull可など）が広いので、selectでUI用Orderへ正規化
-    select: (data) => normalizeOrder(data as any) as Order,
+    select: (data) => normalizeOrder(data as OrderResponse) as Order,
   });
 
   // 自動選択ロジック
@@ -73,11 +73,26 @@ export function LotAllocationPage() {
   );
 
   // 選択された明細行
-  const selectedLine = orderDetailQuery.data?.lines?.find((line) => line.id === selectedLineId);
+  const normalizedSelectedLineId =
+    selectedLineId != null && Number.isFinite(Number(selectedLineId))
+      ? Number(selectedLineId)
+      : null;
+  const selectedLine =
+    normalizedSelectedLineId != null
+      ? orderDetailQuery.data?.lines?.find((line) => Number(line.id) === normalizedSelectedLineId)
+      : undefined;
 
-  // ロット候補を取得（product_code のみ）
-  // 注: warehouse_code は検索条件から削除。得意先×商品を基本キーとし、倉庫は在庫の所在情報のみ。
-  const lotsQuery = useLotsQuery(selectedLine?.product_code ?? undefined);
+  // ロット候補を取得
+  // product_codeがnullの場合はproduct_idでフィルタする
+  const lotsQuery = useLotsQuery(
+    selectedLine
+      ? {
+          productId: selectedLine.product_id ?? null,
+          productCode: selectedLine.product_code ?? null,
+          deliveryPlaceCode: selectedLine.delivery_place_code ?? null,
+        }
+      : undefined,
+  );
   const candidateLots: CandidateLot[] = lotsQuery.data ?? [];
 
   // 倉庫別配分の状態管理

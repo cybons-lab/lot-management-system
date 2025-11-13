@@ -34,10 +34,10 @@ export type LotResponse = {
   id: number;
   lot_number: string;
   product_id?: number | null;
-  product_code: string;
+  product_code: string | null;
   product_name?: string | null;
   supplier_id?: number | null;
-  supplier_code: string;
+  supplier_code: string | null;
   delivery_place_id?: number | null;
   delivery_place_code: string | null;
   delivery_place_name: string | null;
@@ -70,7 +70,7 @@ export type LotCandidate = {
   lot_id?: number;
   lot_code?: string;
   lot_number?: string;
-  product_code: string;
+  product_code: string | null;
   delivery_place_code: string | null;
   delivery_place_name: string | null;
   base_unit?: string | null;
@@ -164,9 +164,9 @@ export type OrderLine = {
   product_name?: string;
   delivery_place_id?: number | null;
   customer_id?: number | null;
-  customer_code?: string;
+  customer_code?: string | null;
   supplier_id?: number | null;
-  supplier_code?: string;
+  supplier_code?: string | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
   quantity: number;

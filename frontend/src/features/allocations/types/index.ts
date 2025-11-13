@@ -11,7 +11,7 @@ export type PriorityLevel = "urgent" | "warning" | "attention" | "allocated" | "
 export interface Order {
   id: number;
   order_no: string;
-  customer_code: string;
+  customer_code: string | null;
   customer_name?: string;
   order_date: string;
   due_date?: string;

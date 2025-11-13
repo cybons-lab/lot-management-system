@@ -94,6 +94,53 @@ def test_list_lots_filters_by_warehouse_code():
     assert body[0]["warehouse_code"] == "W1"
 
 
+def test_list_lots_filters_by_product_id():
+    client = TestClient(app)
+    db: Session = next(override_get_db())
+
+    _truncate_all(db)
+
+    wh = Warehouse(warehouse_code="W1", warehouse_name="Main")
+    sup = Supplier(supplier_code="S1", supplier_name="Supplier")
+    product_a = Product(product_code="PA", product_name="Product A")
+    product_b = Product(product_code="PB", product_name="Product B")
+    db.add_all([wh, sup, product_a, product_b])
+    db.flush()
+
+    lot_a = Lot(
+        supplier_code="S1",
+        lot_number="L-A",
+        warehouse_id=wh.id,
+        receipt_date=date.today(),
+        expiry_date=date.today() + timedelta(days=15),
+        product_id=product_a.id,
+    )
+    lot_b = Lot(
+        supplier_code="S1",
+        lot_number="L-B",
+        warehouse_id=wh.id,
+        receipt_date=date.today(),
+        expiry_date=date.today() + timedelta(days=25),
+        product_id=product_b.id,
+    )
+    db.add_all([lot_a, lot_b])
+    db.flush()
+    db.add_all(
+        [
+            LotCurrentStock(lot_id=lot_a.id, current_quantity=3),
+            LotCurrentStock(lot_id=lot_b.id, current_quantity=6),
+        ]
+    )
+    db.commit()
+
+    r = client.get("/lots", params={"product_id": product_a.id, "with_stock": True})
+    assert r.status_code == 200
+    body = r.json()
+    assert len(body) == 1
+    assert body[0]["product_id"] == product_a.id
+    assert body[0]["lot_number"] == "L-A"
+
+
 def test_create_stock_movement_updates_current_stock():
     client = TestClient(app)
     db: Session = next(override_get_db())

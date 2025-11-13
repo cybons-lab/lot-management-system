@@ -41,7 +41,7 @@ export function OrderLineCard({
     >
       <div className="mb-2 flex items-start justify-between">
         <div>
-          <div className="font-medium">{line.product_code}</div>
+          <div className="font-medium">{line.product_code || line.product_name || "—"}</div>
           {line.product_name && <div className="text-xs text-gray-500">{line.product_name}</div>}
           <div className="text-xs text-gray-400">明細 #{line.line_no}</div>
         </div>
