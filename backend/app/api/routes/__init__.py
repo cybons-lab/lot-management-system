@@ -19,6 +19,8 @@ _ROUTER_DEFINITIONS = [
     ("admin_healthcheck_router", "admin_healthcheck_router"),
     ("admin_simulate_router", "admin_simulate_router"),
     ("allocations_router", "allocations_router"),
+    ("customer_items_router", "customer_items_router"),  # NEW: Phase 3-1
+    ("customers_router", "customers_router"),  # NEW: Phase 3-3
     ("forecast_router", "forecast_router"),
     ("forecasts_router", "forecasts_router"),  # NEW: Phase 2-1
     ("inbound_plans_router", "inbound_plans_router"),  # NEW: Phase 2-2
@@ -30,6 +32,11 @@ _ROUTER_DEFINITIONS = [
     ("masters_router", "masters_router"),
     ("orders_router", "orders_router"),
     ("orders_validate_router", "orders_validate_router"),
+    ("products_router", "products_router"),  # NEW: Phase 3-3
+    ("roles_router", "roles_router"),  # NEW: Phase 3-2
+    ("suppliers_router", "suppliers_router"),  # NEW: Phase 3-3
+    ("users_router", "users_router"),  # NEW: Phase 3-2
+    ("warehouses_router", "warehouses_router"),  # NEW: Phase 3-3
     ("warehouse_alloc_router", "warehouse_alloc_router"),
 ]
 

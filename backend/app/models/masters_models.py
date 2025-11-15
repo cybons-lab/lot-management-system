@@ -284,3 +284,40 @@ class UnitConversion(Base):
     )
 
     product: Mapped[Product] = relationship("Product", back_populates="unit_conversions")
+
+
+class CustomerItem(Base):
+    """Customer-specific product mappings (得意先品番マッピング)."""
+
+    __tablename__ = "customer_items"
+
+    customer_id: Mapped[int] = mapped_column(
+        ForeignKey("customers.id", ondelete="CASCADE"), primary_key=True, nullable=False
+    )
+    external_product_code: Mapped[str] = mapped_column(
+        String(100), primary_key=True, nullable=False
+    )
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey("products.id", ondelete="RESTRICT"), nullable=False
+    )
+    supplier_id: Mapped[int | None] = mapped_column(ForeignKey("suppliers.id", ondelete="SET NULL"))
+    base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
+    pack_unit: Mapped[str | None] = mapped_column(String(20))
+    pack_quantity: Mapped[int | None] = mapped_column(Integer)
+    special_instructions: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("ix_customer_items_customer_id", "customer_id"),
+        Index("ix_customer_items_product_id", "product_id"),
+    )
+
+    # Relationships
+    customer: Mapped[Customer] = relationship("Customer")
+    product: Mapped[Product] = relationship("Product")
+    supplier: Mapped[Supplier | None] = relationship("Supplier")
