@@ -25,9 +25,7 @@ export function CustomerItemTable({
         <thead className="border-b bg-gray-50">
           <tr>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">得意先ID</th>
-            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-              得意先品番
-            </th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">得意先品番</th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">製品ID</th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">仕入先ID</th>
             <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">基本単位</th>

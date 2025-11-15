@@ -111,7 +111,9 @@ export const useUpdateBusinessRuleByCode = () => {
       updateBusinessRuleByCode(ruleCode, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: businessRuleKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: businessRuleKeys.detailByCode(variables.ruleCode) });
+      queryClient.invalidateQueries({
+        queryKey: businessRuleKeys.detailByCode(variables.ruleCode),
+      });
     },
   });
 };

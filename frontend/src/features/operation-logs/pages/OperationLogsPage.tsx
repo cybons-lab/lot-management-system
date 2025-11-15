@@ -80,7 +80,8 @@ export function OperationLogsPage() {
       ) : (
         <div className="space-y-4">
           <div className="text-sm text-gray-600">
-            {response.total} 件のログ (ページ {response.page}/{Math.ceil(response.total / response.page_size)})
+            {response.total} 件のログ (ページ {response.page}/
+            {Math.ceil(response.total / response.page_size)})
           </div>
 
           {/* Table */}
@@ -98,9 +99,7 @@ export function OperationLogsPage() {
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     対象テーブル
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    対象ID
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">対象ID</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     IPアドレス
                   </th>

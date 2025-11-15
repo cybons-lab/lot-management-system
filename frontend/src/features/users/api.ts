@@ -66,7 +66,8 @@ export const getUsers = (params?: UsersListParams) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
-  if (params?.is_active !== undefined) searchParams.append("is_active", params.is_active.toString());
+  if (params?.is_active !== undefined)
+    searchParams.append("is_active", params.is_active.toString());
 
   const queryString = searchParams.toString();
   return fetchApi.get<User[]>(`/users${queryString ? "?" + queryString : ""}`);

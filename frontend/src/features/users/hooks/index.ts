@@ -10,14 +10,7 @@ import type {
   UpdateUserRequest,
   UserRoleAssignment,
 } from "../api";
-import {
-  getUsers,
-  getUser,
-  createUser,
-  updateUser,
-  deleteUser,
-  assignUserRoles,
-} from "../api";
+import { getUsers, getUser, createUser, updateUser, deleteUser, assignUserRoles } from "../api";
 
 // ===== Query Keys =====
 

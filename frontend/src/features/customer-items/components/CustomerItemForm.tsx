@@ -173,9 +173,7 @@ export function CustomerItemForm({
           id="pack_unit"
           type="text"
           value={formData.pack_unit ?? ""}
-          onChange={(e) =>
-            setFormData({ ...formData, pack_unit: e.target.value || null })
-          }
+          onChange={(e) => setFormData({ ...formData, pack_unit: e.target.value || null })}
           placeholder="梱包単位を入力（オプション）"
           disabled={isSubmitting}
           maxLength={20}

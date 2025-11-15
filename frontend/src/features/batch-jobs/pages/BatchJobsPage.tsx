@@ -11,7 +11,11 @@ export function BatchJobsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
 
   // Fetch batch jobs
-  const { data: response, isLoading, isError } = useBatchJobs({ status: statusFilter || undefined });
+  const {
+    data: response,
+    isLoading,
+    isError,
+  } = useBatchJobs({ status: statusFilter || undefined });
 
   // Execute mutation
   const executeMutation = useExecuteBatchJob();
@@ -99,7 +103,8 @@ export function BatchJobsPage() {
       ) : (
         <div className="space-y-4">
           <div className="text-sm text-gray-600">
-            {response.total} 件のジョブ (ページ {response.page}/{Math.ceil(response.total / response.page_size)})
+            {response.total} 件のジョブ (ページ {response.page}/
+            {Math.ceil(response.total / response.page_size)})
           </div>
 
           {/* Table */}
@@ -151,9 +156,7 @@ export function BatchJobsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleExecute(job.job_id)}
-                          disabled={
-                            executeMutation.isPending || job.status === "running"
-                          }
+                          disabled={executeMutation.isPending || job.status === "running"}
                         >
                           実行
                         </Button>

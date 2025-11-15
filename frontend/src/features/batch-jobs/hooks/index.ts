@@ -3,18 +3,9 @@
  * TanStack Query hooks for batch jobs
  */
 
-import { useQuery, useMutation, useQueryClient } from "@tantml:parameter>
-<parameter name="content">/**
- * Batch Jobs Hooks (v2.2 - Phase H-3)
- * TanStack Query hooks for batch jobs
- */
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type {
-  BatchJobsListParams,
-  CreateBatchJobRequest,
-  BatchJobExecuteRequest,
-} from "../api";
+
+import type { BatchJobsListParams, CreateBatchJobRequest, BatchJobExecuteRequest } from "../api";
 import {
   getBatchJobs,
   getBatchJob,

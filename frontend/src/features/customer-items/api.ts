@@ -67,9 +67,7 @@ export const getCustomerItems = (params?: CustomerItemsListParams) => {
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<CustomerItem[]>(
-    `/customer-items${queryString ? "?" + queryString : ""}`
-  );
+  return fetchApi.get<CustomerItem[]>(`/customer-items${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -95,11 +93,11 @@ export const createCustomerItem = (data: CreateCustomerItemRequest) => {
 export const updateCustomerItem = (
   customerId: number,
   externalProductCode: string,
-  data: UpdateCustomerItemRequest
+  data: UpdateCustomerItemRequest,
 ) => {
   return fetchApi.put<CustomerItem>(
     `/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
-    data
+    data,
   );
 };
 
@@ -109,6 +107,6 @@ export const updateCustomerItem = (
  */
 export const deleteCustomerItem = (customerId: number, externalProductCode: string) => {
   return fetchApi.delete(
-    `/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`
+    `/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
   );
 };

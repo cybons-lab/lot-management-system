@@ -70,7 +70,7 @@ export const getBusinessRules = (params?: BusinessRulesListParams) => {
 
   const queryString = searchParams.toString();
   return fetchApi.get<BusinessRuleListResponse>(
-    `/business-rules${queryString ? "?" + queryString : ""}`
+    `/business-rules${queryString ? "?" + queryString : ""}`,
   );
 };
 

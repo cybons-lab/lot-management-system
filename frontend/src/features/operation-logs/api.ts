@@ -62,7 +62,7 @@ export const getOperationLogs = (params?: OperationLogsListParams) => {
 
   const queryString = searchParams.toString();
   return fetchApi.get<OperationLogListResponse>(
-    `/operation-logs${queryString ? "?" + queryString : ""}`
+    `/operation-logs${queryString ? "?" + queryString : ""}`,
   );
 };
 
