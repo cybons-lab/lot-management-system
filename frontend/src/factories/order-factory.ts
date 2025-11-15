@@ -16,57 +16,65 @@ type OrderLineFactoryExtras = {
   product_name?: string | null;
   customer_code?: string | null;
   customer_name?: string | null;
+  order_id?: number;
+  allocated_quantity?: number | string | null;
 };
 
 export type OrderLineFactoryResult = OrderLine & OrderLineFactoryExtras;
 
 /**
- * ランダムな受注データを生成
+ * ランダムな受注データを生成 (DDL v2.2 compliant)
  */
 export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
   const statuses = ["pending", "allocated", "shipped", "cancelled"] as const;
 
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
-    order_no: `ORD-${faker.string.alphanumeric(6).toUpperCase()}`,
+    order_number: `ORD-${faker.string.alphanumeric(6).toUpperCase()}`, // DDL v2.2
     order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0],
-    customer_code: `CUST-${faker.string.alphanumeric(4).toUpperCase()}`,
-    customer_name: faker.company.name(),
+    customer_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2: FK to customers
+    delivery_place_id: faker.number.int({ min: 1, max: 10 }), // DDL v2.2: required
     status: faker.helpers.arrayElement(statuses),
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
+    // Legacy fields for backward compatibility
+    order_no: overrides?.order_no ?? `ORD-${faker.string.alphanumeric(6).toUpperCase()}`,
+    customer_code: overrides?.customer_code ?? `CUST-${faker.string.alphanumeric(4).toUpperCase()}`,
+    customer_name: overrides?.customer_name ?? faker.company.name(),
     ...overrides,
   };
 }
 
 /**
- * 受注明細を生成
+ * 受注明細を生成 (DDL v2.2 compliant)
  */
 export function createOrderLine(
   overrides?: Partial<OrderLineFactoryResult>,
 ): OrderLineFactoryResult {
-  const quantity = overrides?.quantity ?? faker.number.int({ min: 1, max: 100 });
+  const orderQuantity =
+    overrides?.order_quantity ?? overrides?.quantity ?? faker.number.int({ min: 1, max: 100 });
 
   const allocatedLots = coerceAllocatedLots(overrides?.allocated_lots);
 
   const allocatedFromLots = allocatedLots.reduce(
-    (sum, allocation) => sum + (allocation.allocated_qty ?? 0),
+    (sum, allocation) =>
+      sum + Number(allocation.allocated_quantity ?? allocation.allocated_qty ?? 0),
     0,
   );
   const defaultAllocated = Math.min(
-    quantity,
-    allocatedFromLots > 0 ? allocatedFromLots : faker.number.int({ min: 0, max: quantity }),
+    Number(orderQuantity),
+    allocatedFromLots > 0 ? allocatedFromLots : faker.number.int({ min: 0, max: Number(orderQuantity) }),
   );
-  const allocatedQuantity = overrides?.allocated_qty ?? defaultAllocated;
+  const allocatedQuantity = overrides?.allocated_quantity ?? overrides?.allocated_qty ?? String(defaultAllocated);
 
-  const explicitLineNo = overrides?.line_no ?? (overrides as { line_number?: number })?.line_number;
-  const lineNo = explicitLineNo ?? faker.number.int({ min: 1, max: 999 });
   const unit = overrides?.unit ?? faker.helpers.arrayElement(["EA", "CASE", "BOX"]);
 
-  const dueDate =
-    overrides && "due_date" in overrides
-      ? (overrides.due_date ?? null)
-      : faker.date.soon({ days: 30 }).toISOString().split("T")[0];
+  const deliveryDate =
+    overrides && "delivery_date" in overrides && overrides.delivery_date !== null
+      ? overrides.delivery_date
+      : overrides && "due_date" in overrides && overrides.due_date !== null
+        ? overrides.due_date
+        : faker.date.soon({ days: 30 }).toISOString().split("T")[0];
 
   const productName =
     overrides && "product_name" in overrides
@@ -79,12 +87,19 @@ export function createOrderLine(
 
   return {
     id: overrides?.id ?? faker.number.int({ min: 1, max: 10000 }),
-    line_no: lineNo,
-    product_code: overrides?.product_code ?? `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
-    quantity,
+    order_id: overrides?.order_id ?? faker.number.int({ min: 1, max: 10000 }), // DDL v2.2
+    product_id: overrides?.product_id ?? faker.number.int({ min: 1, max: 100 }), // DDL v2.2
+    order_quantity: String(orderQuantity), // DDL v2.2: DECIMAL as string
     unit,
+    delivery_date: deliveryDate, // DDL v2.2
+    created_at: faker.date.past().toISOString(), // DDL v2.2
+    updated_at: faker.date.recent().toISOString(), // DDL v2.2
+    // Legacy fields for backward compatibility
+    line_no: overrides?.line_no ?? (overrides as { line_number?: number })?.line_number ?? faker.number.int({ min: 1, max: 999 }),
+    product_code: overrides?.product_code ?? `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
+    quantity: overrides?.quantity ?? orderQuantity,
     status: overrides?.status ?? faker.helpers.arrayElement(["open", "allocated", "shipped"]),
-    due_date: dueDate,
+    due_date: overrides?.due_date ?? deliveryDate,
     allocated_qty: overrides?.allocated_qty ?? allocatedQuantity,
     forecast_qty: overrides?.forecast_qty ?? null,
     forecast_version_no: overrides?.forecast_version_no ?? null,
@@ -171,10 +186,12 @@ export function createAllocatedOrder(
 
   order.lines = (order.lines ?? []).map((line) => ({
     ...line,
-    allocated_qty: line.quantity,
+    allocated_quantity: line.order_quantity, // DDL v2.2
+    allocated_qty: line.order_quantity, // Legacy
     allocated_lots: coerceAllocatedLots(line.allocated_lots).map((lot) => ({
       ...lot,
-      allocated_qty: lot.allocated_qty ?? line.quantity,
+      allocated_quantity: lot.allocated_quantity ?? lot.allocated_qty ?? line.order_quantity, // DDL v2.2
+      allocated_qty: Number(lot.allocated_quantity ?? lot.allocated_qty ?? line.order_quantity), // Legacy
     })),
   }));
 
