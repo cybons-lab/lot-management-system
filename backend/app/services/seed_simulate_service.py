@@ -1,5 +1,9 @@
 # backend/app/services/seed_simulate_service.py
-"""Enhanced seed data simulation service with constraints and progress tracking."""
+"""
+Enhanced seed data simulation service with constraints and progress tracking.
+
+Refactored: 679-line god function split into phase-specific functions.
+"""
 
 from __future__ import annotations
 
@@ -33,6 +37,11 @@ from app.services.profile_loader import get_profile
 
 
 logger = logging.getLogger(__name__)
+
+
+# ============================
+# Helper Functions (Existing)
+# ============================
 
 
 def _choose(rng: Random, seq: Sequence):
@@ -128,6 +137,861 @@ def _expand_params(req: SimulateSeedRequest) -> dict[str, Any]:
     return params
 
 
+# ============================
+# Refactored: Phase Functions
+# ============================
+
+
+def initialize_random_generators(req: SimulateSeedRequest) -> tuple[Faker, Random, int]:
+    """
+    Initialize Faker and Random generators with seed.
+
+    Args:
+        req: Simulation request
+
+    Returns:
+        Tuple of (faker, rng, seed)
+    """
+    seed = req.random_seed if req.random_seed is not None else int(datetime.utcnow().timestamp())
+    faker = Faker("ja_JP")
+    faker.seed_instance(seed)
+    rng = Random(seed)
+    return faker, rng, seed
+
+
+def execute_database_reset(db: Session, tracker, task_id: str) -> None:
+    """
+    Phase 1: Reset database.
+
+    Args:
+        db: Database session
+        tracker: Job tracker
+        task_id: Task ID
+    """
+    tracker.add_log(task_id, "Phase 1: Database reset started")
+    tracker.update_progress(task_id, JobPhase.RESET, 5)
+    truncate_all_tables()
+    db.commit()
+    tracker.add_log(task_id, "Database reset completed")
+
+
+def create_master_data(
+    db: Session,
+    params: dict,
+    faker: Faker,
+    rng: Random,
+    tracker,
+    task_id: str,
+) -> dict:
+    """
+    Phase 2: Create all master data.
+
+    Args:
+        db: Database session
+        params: Expanded parameters
+        faker: Faker instance
+        rng: Random instance
+        tracker: Job tracker
+        task_id: Task ID
+
+    Returns:
+        Dictionary with master entities lists
+    """
+    tracker.add_log(task_id, "Phase 2: Creating master data")
+    tracker.update_progress(task_id, JobPhase.MASTERS, 10)
+
+    # Customers
+    num_customers = params.get("customers", params["warehouses"] * 10)
+    existing_customer_codes: set[str] = set()
+    customer_rows = [
+        {
+            "customer_code": _next_code("C", 4, rng, existing_customer_codes),
+            "customer_name": faker.company(),
+            "created_at": datetime.utcnow(),
+        }
+        for _ in range(num_customers)
+    ]
+    if customer_rows:
+        stmt = pg_insert(Customer).values(customer_rows)
+        stmt = stmt.on_conflict_do_nothing(index_elements=[Customer.customer_code])
+        db.execute(stmt)
+        db.flush()
+    tracker.add_log(task_id, f"Created {num_customers} customers")
+
+    existing_customers = db.execute(select(Customer)).scalars().all()
+
+    # Suppliers
+    num_suppliers = params.get("suppliers", params["warehouses"] * 5)
+    existing_supplier_codes: set[str] = set()
+    supplier_rows = [
+        {
+            "supplier_code": _next_code("S", 4, rng, existing_supplier_codes),
+            "supplier_name": f"{faker.company()}商事",
+            "created_at": datetime.utcnow(),
+        }
+        for _ in range(num_suppliers)
+    ]
+    if supplier_rows:
+        stmt = pg_insert(Supplier).values(supplier_rows)
+        stmt = stmt.on_conflict_do_nothing(index_elements=[Supplier.supplier_code])
+        db.execute(stmt)
+        db.flush()
+    tracker.add_log(task_id, f"Created {num_suppliers} suppliers")
+
+    # DeliveryPlaces
+    num_delivery_places = 5
+    existing_dp_codes: set[str] = set()
+    delivery_place_rows = []
+    if existing_customers:
+        for _ in range(num_delivery_places):
+            customer = _choose(rng, existing_customers)
+            delivery_place_rows.append(
+                {
+                    "jiku_code": None,
+                    "delivery_place_code": _next_code("D", 3, rng, existing_dp_codes),
+                    "delivery_place_name": f"{faker.city()}配送センター",
+                    "customer_id": customer.id,
+                    "created_at": datetime.utcnow(),
+                }
+            )
+
+    if delivery_place_rows:
+        stmt = pg_insert(DeliveryPlace).values(delivery_place_rows)
+        stmt = stmt.on_conflict_do_nothing(index_elements=[DeliveryPlace.delivery_place_code])
+        db.execute(stmt)
+        db.flush()
+        tracker.add_log(task_id, f"Created {len(delivery_place_rows)} delivery places")
+    else:
+        tracker.add_log(
+            task_id,
+            "Skipped delivery place creation because no customers were generated",
+        )
+
+    # Products
+    tracker.add_log(task_id, "→ Creating Products...")
+    num_products = params.get("products", params["warehouses"] * 20)
+    existing_product_codes: set[str] = set()
+    base_units = ["PCS", "BOX", "SET"]
+    product_rows = []
+    for _ in range(num_products):
+        row = {
+            "maker_part_code": _next_code("P", 5, rng, existing_product_codes),
+            "product_name": faker.bs().title(),
+            "base_unit": _choose(rng, base_units),
+            "consumption_limit_days": rng.randint(30, 180),
+            "created_at": datetime.utcnow(),
+        }
+        product_rows.append(row)
+
+    if product_rows:
+        stmt = pg_insert(Product).values(product_rows)
+        stmt = stmt.on_conflict_do_nothing(index_elements=[Product.maker_part_code])
+        db.execute(stmt)
+        db.flush()
+    tracker.add_log(task_id, f"✓ Created {num_products} products")
+
+    # Warehouses
+    tracker.add_log(task_id, "→ Creating Warehouses...")
+    num_warehouses = params["warehouses"]
+    existing_wh_codes: set[str] = set()
+    warehouse_types = ["internal", "external", "supplier"]
+    warehouse_rows = [
+        {
+            "warehouse_code": _next_code("W", 2, rng, existing_wh_codes),
+            "warehouse_name": f"{faker.city()}倉庫",
+            "warehouse_type": _choose(rng, warehouse_types),
+            "created_at": datetime.utcnow(),
+        }
+        for _ in range(num_warehouses)
+    ]
+    if warehouse_rows:
+        stmt = pg_insert(Warehouse).values(warehouse_rows)
+        stmt = stmt.on_conflict_do_nothing(index_elements=[Warehouse.warehouse_code])
+        db.execute(stmt)
+        db.flush()
+    tracker.add_log(task_id, f"✓ Created {num_warehouses} warehouses")
+
+    db.commit()
+    tracker.add_log(task_id, "✓ Master data committed to DB")
+
+    # Fetch all masters
+    all_customers: list[Customer] = db.execute(select(Customer)).scalars().all()
+    all_suppliers: list[Supplier] = db.execute(select(Supplier)).scalars().all()
+    all_delivery_places: list[DeliveryPlace] = db.execute(select(DeliveryPlace)).scalars().all()
+    all_products: list[Product] = db.execute(select(Product)).scalars().all()
+    all_warehouses: list[Warehouse] = db.execute(select(Warehouse)).scalars().all()
+
+    return {
+        "customers": all_customers,
+        "suppliers": all_suppliers,
+        "delivery_places": all_delivery_places,
+        "products": all_products,
+        "warehouses": all_warehouses,
+    }
+
+
+def create_forecast_data(
+    db: Session,
+    params: dict,
+    masters: dict,
+    rng: Random,
+    tracker,
+    task_id: str,
+) -> int:
+    """
+    Phase 2.5: Create forecast data.
+
+    Args:
+        db: Database session
+        params: Expanded parameters
+        masters: Master data dictionary
+        rng: Random instance
+        tracker: Job tracker
+        task_id: Task ID
+
+    Returns:
+        Number of forecast lines created
+    """
+    tracker.add_log(task_id, "Phase 2.5: Creating forecast data")
+    tracker.update_progress(task_id, JobPhase.MASTERS, 25)
+
+    all_customers = masters["customers"]
+    all_products = masters["products"]
+    all_delivery_places = masters["delivery_places"]
+
+    generate_forecasts = params.get("forecasts", 0) > 0
+    forecast_count = 0
+
+    tracker.add_log(
+        task_id,
+        f"→ Forecast check: params.forecasts={params.get('forecasts', 0)}, "
+        f"generate={generate_forecasts}, customers={len(all_customers)}, products={len(all_products)}",
+    )
+
+    if generate_forecasts and all_customers and all_products and all_delivery_places:
+        now = datetime.now(UTC)
+        today = now.date()
+        existing_numbers = {
+            number for (number,) in db.execute(select(ForecastHeader.forecast_number)).all()
+        }
+
+        forecast_headers: list[ForecastHeader] = []
+        for delivery_place in all_delivery_places:
+            start_date = today - timedelta(days=7)
+            end_date = today + timedelta(days=7)
+            base_number = f"SEED-{delivery_place.delivery_place_code}-{start_date:%Y%m%d}"
+            forecast_number = base_number
+            suffix = 1
+            while forecast_number in existing_numbers:
+                forecast_number = f"{base_number}-{suffix}"
+                suffix += 1
+            existing_numbers.add(forecast_number)
+
+            header = ForecastHeader(
+                customer_id=delivery_place.customer_id,
+                delivery_place_id=delivery_place.id,
+                forecast_number=forecast_number,
+                forecast_start_date=start_date,
+                forecast_end_date=end_date,
+                status="active",
+                created_at=now,
+                updated_at=now,
+            )
+            db.add(header)
+            forecast_headers.append(header)
+
+        db.flush()
+
+        forecast_lines: list[ForecastLine] = []
+        for header in forecast_headers:
+            if len(all_products) <= 5:
+                products_for_header = all_products
+            else:
+                products_for_header = rng.sample(all_products, 5)
+
+            days = (header.forecast_end_date - header.forecast_start_date).days + 1
+            for prod in products_for_header:
+                for day_offset in range(days):
+                    delivery_date = header.forecast_start_date + timedelta(days=day_offset)
+                    forecast_lines.append(
+                        ForecastLine(
+                            forecast_id=header.id,
+                            product_id=prod.id,
+                            delivery_date=delivery_date,
+                            forecast_quantity=Decimal(rng.randint(10, 1000)),
+                            unit=prod.base_unit or "PCS",
+                            created_at=now,
+                            updated_at=now,
+                        )
+                    )
+
+        if forecast_lines:
+            tracker.add_log(task_id, f"→ Inserting {len(forecast_lines)} forecast lines...")
+            db.bulk_save_objects(forecast_lines)
+            db.flush()
+            forecast_count = len(forecast_lines)
+            tracker.add_log(task_id, f"✓ Created {forecast_count} forecast line entries")
+        else:
+            tracker.add_log(task_id, "→ No forecast lines generated for headers")
+    else:
+        reasons = []
+        if not generate_forecasts:
+            reasons.append(f"forecasts={params.get('forecasts', 0)}")
+        if not all_customers:
+            reasons.append("no customers")
+        if not all_products:
+            reasons.append("no products")
+        if not all_delivery_places:
+            reasons.append("no delivery places")
+        tracker.add_log(task_id, f"→ Forecast generation skipped: {', '.join(reasons)}")
+
+    db.commit()
+    tracker.add_log(task_id, f"✓ Forecast data committed to DB (total={forecast_count})")
+
+    return forecast_count
+
+
+def create_lot_inventory(
+    db: Session,
+    params: dict,
+    masters: dict,
+    faker: Faker,
+    rng: Random,
+    tracker,
+    task_id: str,
+) -> int:
+    """
+    Phase 3: Create lots with inbound stock movements.
+
+    Args:
+        db: Database session
+        params: Expanded parameters
+        masters: Master data dictionary
+        faker: Faker instance
+        rng: Random instance
+        tracker: Job tracker
+        task_id: Task ID
+
+    Returns:
+        Number of lots created
+    """
+    tracker.add_log(task_id, "Phase 3: Creating lots and inbound stock movements")
+    tracker.update_progress(task_id, JobPhase.STOCK, 30)
+
+    all_products = masters["products"]
+    all_warehouses = masters["warehouses"]
+    all_suppliers = masters["suppliers"]
+
+    num_lots = params.get("lots", params["warehouses"] * 1000)
+    now_dt = datetime.utcnow()
+
+    for i in range(num_lots):
+        prod = _choose(rng, all_products) if all_products else None
+        wh = _choose(rng, all_warehouses) if all_warehouses else None
+        supplier = _choose(rng, all_suppliers) if all_suppliers else None
+        days = rng.randint(0, 360)
+        lot_unit = prod.base_unit if prod and getattr(prod, "base_unit", None) else "PCS"
+        lot = Lot(
+            product_id=prod.id if prod else None,
+            warehouse_id=wh.id if wh else None,
+            supplier_id=supplier.id if supplier else None,
+            lot_number=faker.unique.bothify(text="LOT-########"),
+            received_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 30)),
+            expiry_date=datetime.utcnow().date() + timedelta(days=360 - days),
+            current_quantity=Decimal(0),
+            allocated_quantity=Decimal(0),
+            unit=lot_unit,
+            status="active",
+            created_at=now_dt,
+            updated_at=now_dt,
+        )
+        db.add(lot)
+        db.flush()
+
+        # Inbound stock movement
+        recv_qty = Decimal(rng.randint(10, 500))
+        lot.current_quantity = lot.current_quantity + recv_qty
+        lot.updated_at = datetime.utcnow()
+        movement = StockMovement(
+            lot_id=lot.id,
+            transaction_type=StockTransactionType.INBOUND,
+            quantity_change=recv_qty,
+            quantity_after=lot.current_quantity,
+            reference_type="seed_simulation",
+            transaction_date=datetime.utcnow(),
+        )
+        db.add(movement)
+
+        if (i + 1) % 500 == 0:
+            db.flush()
+            tracker.add_log(task_id, f"Created {i + 1}/{num_lots} lots")
+
+    db.commit()
+    tracker.add_log(task_id, f"Created {num_lots} lots with inbound movements")
+
+    return num_lots
+
+
+def create_orders_with_constraints(
+    db: Session,
+    params: dict,
+    masters: dict,
+    faker: Faker,
+    rng: Random,
+    tracker,
+    task_id: str,
+) -> tuple[int, int]:
+    """
+    Phase 4: Create orders and order lines with constraints.
+
+    Args:
+        db: Database session
+        params: Expanded parameters
+        masters: Master data dictionary
+        faker: Faker instance
+        rng: Random instance
+        tracker: Job tracker
+        task_id: Task ID
+
+    Returns:
+        Tuple of (order_count, line_count)
+    """
+    tracker.add_log(task_id, "Phase 4: Creating orders with constraints")
+    tracker.update_progress(task_id, JobPhase.ORDERS, 50)
+
+    all_customers = masters["customers"]
+    all_products = masters["products"]
+    all_delivery_places = masters["delivery_places"]
+
+    num_orders = params.get("orders", params["warehouses"] * 375)
+    delivery_places_by_customer: dict[int, list[DeliveryPlace]] = {}
+    for dp in all_delivery_places:
+        delivery_places_by_customer.setdefault(dp.customer_id, []).append(dp)
+
+    line_count = 0
+    for i in range(num_orders):
+        cust = _choose(rng, all_customers) if all_customers else None
+        if not cust:
+            continue
+        delivery_choices = delivery_places_by_customer.get(cust.id)
+        if not delivery_choices:
+            delivery_choices = all_delivery_places
+        if not delivery_choices:
+            continue
+        delivery_place = _choose(rng, delivery_choices)
+        if not delivery_place:
+            continue
+        order = Order(
+            customer_id=cust.id,
+            delivery_place_id=delivery_place.id,
+            order_number=faker.unique.bothify(text="SO-########"),
+            order_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 14)),
+            status="pending",
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(order)
+        db.flush()
+
+        # 明細行数: 1-2が多い、稀に5（制約: ≤5）
+        order_line_max = params["order_line_items_per_order"]
+        if isinstance(order_line_max, dict):
+            order_line_max = order_line_max.get("max", 5)
+        num_lines = rng.choices([1, 2, 3, 4, 5], weights=[40, 40, 10, 5, 5], k=1)[0]
+        num_lines = min(num_lines, order_line_max)
+
+        for _ in range(num_lines):
+            prod = _choose(rng, all_products) if all_products else None
+            if not prod:
+                continue
+            req_qty = Decimal(rng.randint(10, 100))
+            delivery_date = order.order_date + timedelta(days=rng.randint(1, 14))
+            line = OrderLine(
+                order_id=order.id,
+                product_id=prod.id,
+                delivery_date=delivery_date,
+                order_quantity=req_qty,
+                unit=prod.base_unit,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(line)
+            line_count += 1
+
+        if (i + 1) % 500 == 0:
+            db.flush()
+            tracker.add_log(task_id, f"Created {i + 1}/{num_orders} orders")
+
+    db.commit()
+    tracker.add_log(task_id, f"Created {num_orders} orders with constrained line items")
+
+    return num_orders, line_count
+
+
+def create_allocations_with_constraints(
+    db: Session,
+    params: dict,
+    rng: Random,
+    tracker,
+    task_id: str,
+) -> int:
+    """
+    Phase 5: Create allocations with lot split constraints.
+
+    Args:
+        db: Database session
+        params: Expanded parameters
+        rng: Random instance
+        tracker: Job tracker
+        task_id: Task ID
+
+    Returns:
+        Number of allocations created
+    """
+    tracker.add_log(task_id, "Phase 5: Creating allocations with lot split constraints")
+    tracker.update_progress(task_id, JobPhase.ALLOCATIONS, 70)
+
+    all_lots: list[Lot] = db.execute(select(Lot)).scalars().all()
+    all_lines: list[OrderLine] = db.execute(select(OrderLine)).scalars().all()
+
+    # 全明細の約80%を引当（残り20%は未引当）
+    lines_to_allocate = rng.sample(all_lines, int(len(all_lines) * 0.8))
+
+    allocation_count = 0
+    for line in lines_to_allocate:
+        # 同じ製品のロットをFIFO順（received_date）で取得
+        matching_lots = [lot for lot in all_lots if lot.product_id == line.product_id]
+        if not matching_lots:
+            continue
+
+        # FIFO順でソート
+        matching_lots.sort(key=lambda x: x.received_date or datetime.min.date())
+
+        # ロット分割上限を適用
+        remaining_qty = Decimal(line.order_quantity)
+        lot_count = 0
+        max_lots = params["lot_split_max_per_line"]
+
+        for lot in matching_lots:
+            if remaining_qty <= 0 or lot_count >= max_lots:
+                break
+
+            available_quantity = max(Decimal(0), lot.current_quantity - lot.allocated_quantity)
+            if available_quantity <= 0:
+                continue
+
+            # このロットから引当可能な数量（簡易版: ランダム）
+            alloc_qty = min(
+                remaining_qty,
+                Decimal(rng.randint(10, 100)),
+                available_quantity,
+            )
+            if alloc_qty <= 0:
+                continue
+
+            allocation = Allocation(
+                order_line_id=line.id,
+                lot_id=lot.id,
+                allocated_quantity=alloc_qty,
+                status="shipped",
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+            )
+            db.add(allocation)
+
+            lot.current_quantity = max(Decimal(0), lot.current_quantity - alloc_qty)
+            lot.updated_at = datetime.utcnow()
+
+            # Outbound stock movement
+            outbound = StockMovement(
+                lot_id=lot.id,
+                transaction_type=StockTransactionType.SHIPMENT,
+                quantity_change=-alloc_qty,
+                quantity_after=lot.current_quantity,
+                reference_type="order_line",
+                reference_id=line.id,
+                transaction_date=datetime.utcnow(),
+            )
+            db.add(outbound)
+
+            remaining_qty -= alloc_qty
+            lot_count += 1
+            allocation_count += 1
+
+        if allocation_count % 1000 == 0:
+            db.flush()
+            tracker.add_log(task_id, f"Created {allocation_count} allocations")
+
+    db.commit()
+    tracker.add_log(task_id, f"Created {allocation_count} allocations with constraints")
+
+    return allocation_count
+
+
+def validate_simulation_constraints(
+    db: Session,
+    params: dict,
+    tracker,
+    task_id: str,
+) -> dict:
+    """
+    Phase 6: Validate simulation constraints.
+
+    Args:
+        db: Database session
+        params: Expanded parameters
+        tracker: Job tracker
+        task_id: Task ID
+
+    Returns:
+        Dictionary with validation results
+    """
+    tracker.add_log(task_id, "Phase 6: Running post-checks")
+    tracker.update_progress(task_id, JobPhase.POSTCHECK, 85)
+
+    # Check 1: ロット分割上限チェック (≤3)
+    lot_split_violations = db.execute(
+        text(
+            """
+            SELECT order_line_id, COUNT(*) as lot_count
+            FROM allocations
+            GROUP BY order_line_id
+            HAVING COUNT(*) > :max_lots
+            """
+        ),
+        {"max_lots": params["lot_split_max_per_line"]},
+    ).fetchall()
+    lot_split_ok = len(lot_split_violations) == 0
+    tracker.add_log(
+        task_id,
+        f"Lot split check: {'OK' if lot_split_ok else f'NG ({len(lot_split_violations)} violations)'}",
+    )
+
+    # Check 2: 納品先数チェック (≤5)
+    dest_max = params["destinations_max_per_order"]
+    dest_violations = db.execute(
+        text(
+            """
+            SELECT o.id
+            FROM orders o
+            GROUP BY o.id
+            HAVING COUNT(DISTINCT o.delivery_place_id) > :max_dests
+            """
+        ),
+        {"max_dests": dest_max},
+    ).fetchall()
+    missing_delivery = db.execute(
+        text(
+            """
+            SELECT id
+            FROM orders
+            WHERE delivery_place_id IS NULL
+            """
+        )
+    ).fetchall()
+    dest_ok = len(dest_violations) == 0 and len(missing_delivery) == 0
+    if dest_ok:
+        tracker.add_log(
+            task_id,
+            "Destinations check: OK (each order references ≤ configured delivery places)",
+        )
+    else:
+        tracker.add_log(
+            task_id,
+            f"Destinations check: NG ({len(dest_violations)} limit violations, {len(missing_delivery)} missing destinations)",
+        )
+
+    # Check 3: 受注明細行数チェック (≤5)
+    order_line_max_check = params["order_line_items_per_order"]
+    if isinstance(order_line_max_check, dict):
+        order_line_max_check = order_line_max_check.get("max", 5)
+    line_violations = db.execute(
+        text(
+            """
+            SELECT order_id, COUNT(*) as line_count
+            FROM order_lines
+            GROUP BY order_id
+            HAVING COUNT(*) > :max_lines
+            """
+        ),
+        {"max_lines": order_line_max_check},
+    ).fetchall()
+    lines_ok = len(line_violations) == 0
+    tracker.add_log(
+        task_id,
+        f"Order lines check: {'OK' if lines_ok else f'NG ({len(line_violations)} violations)'}",
+    )
+
+    # Check 4: 在庫整合式チェック（簡易版）
+    try:
+        negative_stock = db.execute(
+            text("""
+                SELECT COUNT(*)
+                FROM lot_current_stock
+                WHERE current_quantity < 0
+            """)
+        ).scalar()
+        stock_equation_ok = negative_stock == 0
+        tracker.add_log(
+            task_id,
+            f"Stock equation check: {'OK' if stock_equation_ok else f'NG ({negative_stock} negative stocks)'}",
+        )
+    except Exception as e:
+        logger.warning(f"Stock equation check failed (view may not exist): {e}")
+        db.rollback()
+        stock_equation_ok = True
+        tracker.add_log(task_id, "Stock equation check: SKIPPED (view not found)")
+
+    # Check 5: 孤児レコード数（簡易版）
+    orphan_count = 0  # TODO: 実装する場合はここで計算
+
+    return {
+        "lot_split_ok": lot_split_ok,
+        "dest_ok": dest_ok,
+        "lines_ok": lines_ok,
+        "stock_equation_ok": stock_equation_ok,
+        "orphan_count": orphan_count,
+    }
+
+
+def save_simulation_snapshot(
+    db: Session,
+    req: SimulateSeedRequest,
+    params: dict,
+    seed: int,
+    summary: dict,
+    checks: dict,
+    tracker,
+    task_id: str,
+) -> int | None:
+    """
+    Phase 7: Save simulation snapshot if requested.
+
+    Args:
+        db: Database session
+        req: Simulation request
+        params: Expanded parameters
+        seed: Random seed used
+        summary: Simulation summary
+        checks: Constraint check results
+        tracker: Job tracker
+        task_id: Task ID
+
+    Returns:
+        Snapshot ID if saved, None otherwise
+    """
+    tracker.add_log(task_id, "Phase 7: Saving snapshot")
+    tracker.update_progress(task_id, JobPhase.SNAPSHOT, 95)
+
+    snapshot_id = None
+    if req.save_snapshot:
+        snapshot_name = (
+            req.snapshot_name or f"snapshot_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        )
+        # 展開済みの最終パラメータを保存（完全再現用）
+        params_snapshot = params.copy()
+        params_snapshot["random_seed"] = seed  # 実際に使用したシード
+        params_snapshot["profile"] = req.profile  # 元のプロファイル名も保存
+
+        summary_json = {
+            **summary,
+            "cap_checks": {
+                "lot_split": "OK" if checks["lot_split_ok"] else "NG",
+                "destinations": "OK" if checks["dest_ok"] else "NG",
+                "order_lines": "OK" if checks["lines_ok"] else "NG",
+            },
+            "stock_equation_ok": checks["stock_equation_ok"],
+            "orphan_count": checks["orphan_count"],
+        }
+
+        snapshot_repo = SeedSnapshotRepository(db)
+        try:
+            snapshot = snapshot_repo.create(
+                name=snapshot_name,
+                params_json=params_snapshot,
+                profile_json={"profile": req.profile or "default"},
+                summary_json=summary_json,
+            )
+        except SQLAlchemyError as snapshot_err:
+            db.rollback()
+            tracker.add_log(
+                task_id,
+                "Snapshot skipped: seed_snapshots table is unavailable (migration not applied?)",
+            )
+            logger.warning(
+                "Skipping snapshot save because repository failed (table missing?): %s",
+                snapshot_err,
+            )
+        else:
+            snapshot_id = snapshot.id
+            tracker.add_log(task_id, f"Snapshot saved: {snapshot_name} (ID: {snapshot_id})")
+
+    return snapshot_id
+
+
+def build_simulation_result(
+    summary: dict,
+    checks: dict,
+    snapshot_id: int | None,
+    tracker,
+    task_id: str,
+) -> dict:
+    """
+    Build final simulation result.
+
+    Args:
+        summary: Simulation summary
+        checks: Constraint check results
+        snapshot_id: Snapshot ID if saved
+        tracker: Job tracker
+        task_id: Task ID
+
+    Returns:
+        Simulation result dictionary
+    """
+    tracker.add_log(task_id, "Simulation completed successfully")
+    tracker.update_progress(task_id, JobPhase.DONE, 100)
+
+    totals_message = (
+        f"Totals => customers={summary['customers']}, suppliers={summary['suppliers']}, "
+        f"products={summary['products']}, delivery_places={summary['delivery_places']}, "
+        f"warehouses={summary['warehouses']}, forecasts={summary['forecasts']}, "
+        f"orders={summary['orders']}, order_lines={summary['order_lines']}, "
+        f"lots={summary['lots']}, allocations={summary['allocations']}"
+    )
+
+    tracker.add_log(task_id, totals_message)
+    logger.info("Seed simulation completed. %s", totals_message)
+
+    result = {
+        "success": True,
+        "summary": SimulateResultSummary(
+            warehouses=summary["warehouses"],
+            forecasts=summary["forecasts"],
+            orders=summary["orders"],
+            order_lines=summary["order_lines"],
+            lots=summary["lots"],
+            allocations=summary["allocations"],
+            cap_checks=CapCheckResult(
+                lot_split="OK" if checks["lot_split_ok"] else "NG",
+                destinations="OK" if checks["dest_ok"] else "NG",
+                order_lines="OK" if checks["lines_ok"] else "NG",
+            ),
+            stock_equation_ok=checks["stock_equation_ok"],
+            orphan_count=checks["orphan_count"],
+        ).model_dump(),
+        "snapshot_id": snapshot_id,
+    }
+
+    tracker.set_completed(task_id, result)
+    return result
+
+
+# ============================
+# Main Orchestration Function
+# ============================
+
+
 def run_seed_simulation(
     db: Session,
     req: SimulateSeedRequest,
@@ -136,14 +1000,17 @@ def run_seed_simulation(
     """
     テストデータシミュレーションを実行.
 
+    Refactored: Split 679-line god function into phase-specific functions.
+
     処理フロー:
     1. Reset (データベースをクリア)
     2. Masters (マスタデータ投入)
-    3. Stock (ロット + 受入StockMovement)
-    4. Orders (受注 + 明細、制約: 納品先≤5, 明細行≤5)
-    5. Allocations (引当、制約: ロット分割≤3)
-    6. Post-check (制約違反チェック、在庫整合性チェック)
-    7. Snapshot (スナップショット保存)
+    3. Forecasts (需要予測データ)
+    4. Stock (ロット + 受入StockMovement)
+    5. Orders (受注 + 明細、制約: 納品先≤5, 明細行≤5)
+    6. Allocations (引当、制約: ロット分割≤3)
+    7. Post-check (制約違反チェック、在庫整合性チェック)
+    8. Snapshot (スナップショット保存)
     """
     tracker = get_job_tracker()
     tracker.set_running(task_id)
@@ -163,536 +1030,32 @@ def run_seed_simulation(
         tracker.add_log(task_id, f"Parameters expanded from profile: {req.profile or 'default'}")
 
         # 乱数シード設定
-        seed = (
-            req.random_seed if req.random_seed is not None else int(datetime.utcnow().timestamp())
-        )
-        faker = Faker("ja_JP")
-        faker.seed_instance(seed)
-        rng = Random(seed)
+        faker, rng, seed = initialize_random_generators(req)
 
         # Phase 1: Reset
-        tracker.add_log(task_id, "Phase 1: Database reset started")
-        tracker.update_progress(task_id, JobPhase.RESET, 5)
-        truncate_all_tables()
-        db.commit()
-        tracker.add_log(task_id, "Database reset completed")
+        execute_database_reset(db, tracker, task_id)
 
         # Phase 2: Masters
-        tracker.add_log(task_id, "Phase 2: Creating master data")
-        tracker.update_progress(task_id, JobPhase.MASTERS, 10)
+        masters = create_master_data(db, params, faker, rng, tracker, task_id)
 
-        # Customers (YAMLまたはデフォルト)
-        num_customers = params.get("customers", params["warehouses"] * 10)
-        existing_customer_codes: set[str] = set()
-        customer_rows = [
-            {
-                "customer_code": _next_code("C", 4, rng, existing_customer_codes),
-                "customer_name": faker.company(),
-                "created_at": datetime.utcnow(),
-            }
-            for _ in range(num_customers)
-        ]
-        if customer_rows:
-            stmt = pg_insert(Customer).values(customer_rows)
-            stmt = stmt.on_conflict_do_nothing(index_elements=[Customer.customer_code])
-            db.execute(stmt)
-            db.flush()
-        tracker.add_log(task_id, f"Created {num_customers} customers")
+        # Phase 2.5: Forecasts
+        forecast_count = create_forecast_data(db, params, masters, rng, tracker, task_id)
 
-        existing_customers = db.execute(select(Customer)).scalars().all()
+        # Phase 3: Stock
+        lot_count = create_lot_inventory(db, params, masters, faker, rng, tracker, task_id)
 
-        # Suppliers (YAMLまたはデフォルト)
-        num_suppliers = params.get("suppliers", params["warehouses"] * 5)
-        existing_supplier_codes: set[str] = set()
-        supplier_rows = [
-            {
-                "supplier_code": _next_code("S", 4, rng, existing_supplier_codes),
-                "supplier_name": f"{faker.company()}商事",
-                "created_at": datetime.utcnow(),
-            }
-            for _ in range(num_suppliers)
-        ]
-        if supplier_rows:
-            stmt = pg_insert(Supplier).values(supplier_rows)
-            stmt = stmt.on_conflict_do_nothing(index_elements=[Supplier.supplier_code])
-            db.execute(stmt)
-            db.flush()
-        tracker.add_log(task_id, f"Created {num_suppliers} suppliers")
-
-        # DeliveryPlaces (固定5箇所)
-        num_delivery_places = 5
-        existing_dp_codes: set[str] = set()
-        delivery_place_rows = []
-        if existing_customers:
-            for _ in range(num_delivery_places):
-                customer = _choose(rng, existing_customers)
-                delivery_place_rows.append(
-                    {
-                        "jiku_code": None,
-                        "delivery_place_code": _next_code("D", 3, rng, existing_dp_codes),
-                        "delivery_place_name": f"{faker.city()}配送センター",
-                        "customer_id": customer.id,
-                        "created_at": datetime.utcnow(),
-                    }
-                )
-
-        if delivery_place_rows:
-            stmt = pg_insert(DeliveryPlace).values(delivery_place_rows)
-            stmt = stmt.on_conflict_do_nothing(index_elements=[DeliveryPlace.delivery_place_code])
-            db.execute(stmt)
-            db.flush()
-            tracker.add_log(task_id, f"Created {len(delivery_place_rows)} delivery places")
-        else:
-            tracker.add_log(
-                task_id,
-                "Skipped delivery place creation because no customers were generated",
-            )
-
-        # Products (YAMLまたはデフォルト)
-        tracker.add_log(task_id, "→ Creating Products...")
-        num_products = params.get("products", params["warehouses"] * 20)
-        existing_product_codes: set[str] = set()
-        base_units = ["PCS", "BOX", "SET"]
-        product_rows = []
-        for _ in range(num_products):
-            row = {
-                "maker_part_code": _next_code("P", 5, rng, existing_product_codes),
-                "product_name": faker.bs().title(),
-                "base_unit": _choose(rng, base_units),
-                "consumption_limit_days": rng.randint(30, 180),
-                "created_at": datetime.utcnow(),
-            }
-            product_rows.append(row)
-
-        if product_rows:
-            stmt = pg_insert(Product).values(product_rows)
-            stmt = stmt.on_conflict_do_nothing(index_elements=[Product.maker_part_code])
-            db.execute(stmt)
-            db.flush()
-        tracker.add_log(task_id, f"✓ Created {num_products} products")
-
-        # Warehouses (params["warehouses"]: 5-10)
-        tracker.add_log(task_id, "→ Creating Warehouses...")
-        num_warehouses = params["warehouses"]
-        existing_wh_codes: set[str] = set()
-        warehouse_types = ["internal", "external", "supplier"]
-        warehouse_rows = [
-            {
-                "warehouse_code": _next_code("W", 2, rng, existing_wh_codes),
-                "warehouse_name": f"{faker.city()}倉庫",
-                "warehouse_type": _choose(rng, warehouse_types),
-                "created_at": datetime.utcnow(),
-            }
-            for _ in range(num_warehouses)
-        ]
-        if warehouse_rows:
-            stmt = pg_insert(Warehouse).values(warehouse_rows)
-            stmt = stmt.on_conflict_do_nothing(index_elements=[Warehouse.warehouse_code])
-            db.execute(stmt)
-            db.flush()
-        tracker.add_log(task_id, f"✓ Created {num_warehouses} warehouses")
-
-        db.commit()
-        tracker.add_log(task_id, "✓ Master data committed to DB")
-
-        # Fetch all masters
-        all_customers: list[Customer] = db.execute(select(Customer)).scalars().all()
-        all_suppliers: list[Supplier] = db.execute(select(Supplier)).scalars().all()
-        all_delivery_places: list[DeliveryPlace] = db.execute(select(DeliveryPlace)).scalars().all()
-        all_products: list[Product] = db.execute(select(Product)).scalars().all()
-        all_warehouses: list[Warehouse] = db.execute(select(Warehouse)).scalars().all()
-
-        # Phase 2.5: Forecasts (需要予測データ生成)
-        tracker.add_log(task_id, "Phase 2.5: Creating forecast data")
-        tracker.update_progress(task_id, JobPhase.MASTERS, 25)
-
-        # forecasts: YAMLまたはデフォルト（0=無効）
-        generate_forecasts = params.get("forecasts", 0) > 0
-        forecast_count = 0
-
-        # デバッグログ: 条件チェック
-        tracker.add_log(
-            task_id,
-            f"→ Forecast check: params.forecasts={params.get('forecasts', 0)}, "
-            f"generate={generate_forecasts}, customers={len(all_customers)}, products={len(all_products)}",
+        # Phase 4: Orders
+        order_count, line_count = create_orders_with_constraints(
+            db, params, masters, faker, rng, tracker, task_id
         )
 
-        if generate_forecasts and all_customers and all_products and all_delivery_places:
-            now = datetime.now(UTC)
-            today = now.date()
-            existing_numbers = {
-                number for (number,) in db.execute(select(ForecastHeader.forecast_number)).all()
-            }
-
-            forecast_headers: list[ForecastHeader] = []
-            for delivery_place in all_delivery_places:
-                start_date = today - timedelta(days=7)
-                end_date = today + timedelta(days=7)
-                base_number = f"SEED-{delivery_place.delivery_place_code}-{start_date:%Y%m%d}"
-                forecast_number = base_number
-                suffix = 1
-                while forecast_number in existing_numbers:
-                    forecast_number = f"{base_number}-{suffix}"
-                    suffix += 1
-                existing_numbers.add(forecast_number)
-
-                header = ForecastHeader(
-                    customer_id=delivery_place.customer_id,
-                    delivery_place_id=delivery_place.id,
-                    forecast_number=forecast_number,
-                    forecast_start_date=start_date,
-                    forecast_end_date=end_date,
-                    status="active",
-                    created_at=now,
-                    updated_at=now,
-                )
-                db.add(header)
-                forecast_headers.append(header)
-
-            db.flush()
-
-            forecast_lines: list[ForecastLine] = []
-            for header in forecast_headers:
-                # 各ヘッダーにつき最大5製品の予測を生成
-                if len(all_products) <= 5:
-                    products_for_header = all_products
-                else:
-                    products_for_header = rng.sample(all_products, 5)
-
-                days = (header.forecast_end_date - header.forecast_start_date).days + 1
-                for prod in products_for_header:
-                    for day_offset in range(days):
-                        delivery_date = header.forecast_start_date + timedelta(days=day_offset)
-                        forecast_lines.append(
-                            ForecastLine(
-                                forecast_id=header.id,
-                                product_id=prod.id,
-                                delivery_date=delivery_date,
-                                forecast_quantity=Decimal(rng.randint(10, 1000)),
-                                unit=prod.base_unit or "PCS",
-                                created_at=now,
-                                updated_at=now,
-                            )
-                        )
-
-            if forecast_lines:
-                tracker.add_log(task_id, f"→ Inserting {len(forecast_lines)} forecast lines...")
-                db.bulk_save_objects(forecast_lines)
-                db.flush()
-                forecast_count = len(forecast_lines)
-                tracker.add_log(task_id, f"✓ Created {forecast_count} forecast line entries")
-            else:
-                tracker.add_log(task_id, "→ No forecast lines generated for headers")
-        else:
-            reasons = []
-            if not generate_forecasts:
-                reasons.append(f"forecasts={params.get('forecasts', 0)}")
-            if not all_customers:
-                reasons.append("no customers")
-            if not all_products:
-                reasons.append("no products")
-            if not all_delivery_places:
-                reasons.append("no delivery places")
-            tracker.add_log(task_id, f"→ Forecast generation skipped: {', '.join(reasons)}")
-
-        db.commit()
-        tracker.add_log(task_id, f"✓ Forecast data committed to DB (total={forecast_count})")
-
-        # Phase 3: Stock (Lots + Inbound)
-        tracker.add_log(task_id, "Phase 3: Creating lots and inbound stock movements")
-        tracker.update_progress(task_id, JobPhase.STOCK, 30)
-
-        num_lots = params.get("lots", params["warehouses"] * 1000)  # YAMLまたはデフォルト
-        now_dt = datetime.utcnow()
-        for i in range(num_lots):
-            prod = _choose(rng, all_products) if all_products else None
-            wh = _choose(rng, all_warehouses) if all_warehouses else None
-            supplier = _choose(rng, all_suppliers) if all_suppliers else None
-            days = rng.randint(0, 360)
-            lot_unit = prod.base_unit if prod and getattr(prod, "base_unit", None) else "PCS"
-            lot = Lot(
-                product_id=prod.id if prod else None,
-                warehouse_id=wh.id if wh else None,
-                supplier_id=supplier.id if supplier else None,
-                lot_number=faker.unique.bothify(text="LOT-########"),
-                received_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 30)),
-                expiry_date=datetime.utcnow().date() + timedelta(days=360 - days),
-                current_quantity=Decimal(0),
-                allocated_quantity=Decimal(0),
-                unit=lot_unit,
-                status="active",
-                created_at=now_dt,
-                updated_at=now_dt,
-            )
-            db.add(lot)
-            db.flush()
-
-            # Inbound stock movement
-            recv_qty = Decimal(rng.randint(10, 500))
-            lot.current_quantity = lot.current_quantity + recv_qty
-            lot.updated_at = datetime.utcnow()
-            movement = StockMovement(
-                lot_id=lot.id,
-                transaction_type=StockTransactionType.INBOUND,
-                quantity_change=recv_qty,
-                quantity_after=lot.current_quantity,
-                reference_type="seed_simulation",
-                transaction_date=datetime.utcnow(),
-            )
-            db.add(movement)
-
-            if (i + 1) % 500 == 0:
-                db.flush()
-                tracker.add_log(task_id, f"Created {i + 1}/{num_lots} lots")
-
-        db.commit()
-        tracker.add_log(task_id, f"Created {num_lots} lots with inbound movements")
-
-        # Phase 4: Orders (受注 + 明細、制約適用)
-        tracker.add_log(task_id, "Phase 4: Creating orders with constraints")
-        tracker.update_progress(task_id, JobPhase.ORDERS, 50)
-
-        num_orders = params.get("orders", params["warehouses"] * 375)  # YAMLまたはデフォルト
-        delivery_places_by_customer: dict[int, list[DeliveryPlace]] = {}
-        for dp in all_delivery_places:
-            delivery_places_by_customer.setdefault(dp.customer_id, []).append(dp)
-
-        for i in range(num_orders):
-            cust = _choose(rng, all_customers) if all_customers else None
-            if not cust:
-                continue
-            delivery_choices = delivery_places_by_customer.get(cust.id)
-            if not delivery_choices:
-                delivery_choices = all_delivery_places
-            if not delivery_choices:
-                continue
-            delivery_place = _choose(rng, delivery_choices)
-            if not delivery_place:
-                continue
-            order = Order(
-                customer_id=cust.id,
-                delivery_place_id=delivery_place.id,
-                order_number=faker.unique.bothify(text="SO-########"),
-                order_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 14)),
-                status="pending",
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow(),
-            )
-            db.add(order)
-            db.flush()
-
-            # 明細行数: 1-2が多い、稀に5（制約: ≤5）
-            # 重み付き: [1, 2, 3, 4, 5] → [40%, 40%, 10%, 5%, 5%]
-            order_line_max = params["order_line_items_per_order"]
-            if isinstance(order_line_max, dict):
-                order_line_max = order_line_max.get("max", 5)
-            num_lines = rng.choices([1, 2, 3, 4, 5], weights=[40, 40, 10, 5, 5], k=1)[0]
-            num_lines = min(num_lines, order_line_max)
-
-            for _ in range(num_lines):
-                prod = _choose(rng, all_products) if all_products else None
-                if not prod:
-                    continue
-                req_qty = Decimal(rng.randint(10, 100))
-                delivery_date = order.order_date + timedelta(days=rng.randint(1, 14))
-                line = OrderLine(
-                    order_id=order.id,
-                    product_id=prod.id,
-                    delivery_date=delivery_date,
-                    order_quantity=req_qty,
-                    unit=prod.base_unit,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
-                )
-                db.add(line)
-
-            if (i + 1) % 500 == 0:
-                db.flush()
-                tracker.add_log(task_id, f"Created {i + 1}/{num_orders} orders")
-
-        db.commit()
-        tracker.add_log(task_id, f"Created {num_orders} orders with constrained line items")
-
-        # Phase 5: Allocations (引当、制約: ロット分割≤3)
-        tracker.add_log(task_id, "Phase 5: Creating allocations with lot split constraints")
-        tracker.update_progress(task_id, JobPhase.ALLOCATIONS, 70)
-
-        all_lots: list[Lot] = db.execute(select(Lot)).scalars().all()
-        all_lines: list[OrderLine] = db.execute(select(OrderLine)).scalars().all()
-
-        # 全明細の約80%を引当（残り20%は未引当）
-        lines_to_allocate = rng.sample(all_lines, int(len(all_lines) * 0.8))
-
-        allocation_count = 0
-        for line in lines_to_allocate:
-            # 同じ製品のロットをFIFO順（received_date）で取得
-            matching_lots = [lot for lot in all_lots if lot.product_id == line.product_id]
-            if not matching_lots:
-                continue
-
-            # FIFO順でソート
-            matching_lots.sort(key=lambda x: x.received_date or datetime.min.date())
-
-            # ロット分割上限を適用
-            remaining_qty = Decimal(line.order_quantity)
-            lot_count = 0
-            max_lots = params["lot_split_max_per_line"]
-
-            for lot in matching_lots:
-                if remaining_qty <= 0 or lot_count >= max_lots:
-                    break
-
-                available_quantity = max(Decimal(0), lot.current_quantity - lot.allocated_quantity)
-                if available_quantity <= 0:
-                    continue
-
-                # このロットから引当可能な数量（簡易版: ランダム）
-                alloc_qty = min(
-                    remaining_qty,
-                    Decimal(rng.randint(10, 100)),
-                    available_quantity,
-                )
-                if alloc_qty <= 0:
-                    continue
-
-                allocation = Allocation(
-                    order_line_id=line.id,
-                    lot_id=lot.id,
-                    allocated_quantity=alloc_qty,
-                    status="shipped",
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
-                )
-                db.add(allocation)
-
-                lot.current_quantity = max(Decimal(0), lot.current_quantity - alloc_qty)
-                lot.updated_at = datetime.utcnow()
-
-                # Outbound stock movement
-                outbound = StockMovement(
-                    lot_id=lot.id,
-                    transaction_type=StockTransactionType.SHIPMENT,
-                    quantity_change=-alloc_qty,
-                    quantity_after=lot.current_quantity,
-                    reference_type="order_line",
-                    reference_id=line.id,
-                    transaction_date=datetime.utcnow(),
-                )
-                db.add(outbound)
-
-                remaining_qty -= alloc_qty
-                lot_count += 1
-                allocation_count += 1
-
-            if allocation_count % 1000 == 0:
-                db.flush()
-                tracker.add_log(task_id, f"Created {allocation_count} allocations")
-
-        db.commit()
-        tracker.add_log(task_id, f"Created {allocation_count} allocations with constraints")
-
-        # Phase 6: Post-check (検証)
-        tracker.add_log(task_id, "Phase 6: Running post-checks")
-        tracker.update_progress(task_id, JobPhase.POSTCHECK, 85)
-
-        # Check 1: ロット分割上限チェック (≤3)
-        lot_split_violations = db.execute(
-            text(
-                """
-                SELECT order_line_id, COUNT(*) as lot_count
-                FROM allocations
-                GROUP BY order_line_id
-                HAVING COUNT(*) > :max_lots
-                """
-            ),
-            {"max_lots": params["lot_split_max_per_line"]},
-        ).fetchall()
-        lot_split_ok = len(lot_split_violations) == 0
-        tracker.add_log(
-            task_id,
-            f"Lot split check: {'OK' if lot_split_ok else f'NG ({len(lot_split_violations)} violations)'}",
+        # Phase 5: Allocations
+        allocation_count = create_allocations_with_constraints(
+            db, params, rng, tracker, task_id
         )
 
-        # Check 2: 納品先数チェック (≤5) - 受注単位で納品先の種類数をカウント
-        # 実際には明細ごとに1つの納品先なので、受注全体で5つ以内
-        dest_max = params["destinations_max_per_order"]
-        dest_violations = db.execute(
-            text(
-                """
-                SELECT o.id
-                FROM orders o
-                GROUP BY o.id
-                HAVING COUNT(DISTINCT o.delivery_place_id) > :max_dests
-                """
-            ),
-            {"max_dests": dest_max},
-        ).fetchall()
-        missing_delivery = db.execute(
-            text(
-                """
-                SELECT id
-                FROM orders
-                WHERE delivery_place_id IS NULL
-                """
-            )
-        ).fetchall()
-        dest_ok = len(dest_violations) == 0 and len(missing_delivery) == 0
-        if dest_ok:
-            tracker.add_log(
-                task_id,
-                "Destinations check: OK (each order references ≤ configured delivery places)",
-            )
-        else:
-            tracker.add_log(
-                task_id,
-                f"Destinations check: NG ({len(dest_violations)} limit violations, {len(missing_delivery)} missing destinations)",
-            )
-
-        # Check 3: 受注明細行数チェック (≤5)
-        order_line_max_check = params["order_line_items_per_order"]
-        if isinstance(order_line_max_check, dict):
-            order_line_max_check = order_line_max_check.get("max", 5)
-        line_violations = db.execute(
-            text(
-                """
-                SELECT order_id, COUNT(*) as line_count
-                FROM order_lines
-                GROUP BY order_id
-                HAVING COUNT(*) > :max_lines
-                """
-            ),
-            {"max_lines": order_line_max_check},
-        ).fetchall()
-        lines_ok = len(line_violations) == 0
-        tracker.add_log(
-            task_id,
-            f"Order lines check: {'OK' if lines_ok else f'NG ({len(line_violations)} violations)'}",
-        )
-
-        # Check 4: 在庫整合式チェック（簡易版: lot_current_stock ビューを使用）
-        # opening + inbound - outbound = current
-        # ここでは全倉庫のcurrent_quantityが負でないことを確認
-        try:
-            negative_stock = db.execute(
-                text("""
-                    SELECT COUNT(*)
-                    FROM lot_current_stock
-                    WHERE current_quantity < 0
-                """)
-            ).scalar()
-            stock_equation_ok = negative_stock == 0
-            tracker.add_log(
-                task_id,
-                f"Stock equation check: {'OK' if stock_equation_ok else f'NG ({negative_stock} negative stocks)'}",
-            )
-        except Exception as e:
-            logger.warning(f"Stock equation check failed (view may not exist): {e}")
-            db.rollback()  # 読み取りエラーでトランザクションが中断した場合に備えてクリア
-            stock_equation_ok = True  # ビューが存在しない場合はスキップ
-            tracker.add_log(task_id, "Stock equation check: SKIPPED (view not found)")
-
-        # Check 5: 孤児レコード数（簡易版）
-        orphan_count = 0  # TODO: 実装する場合はここで計算
+        # Phase 6: Post-check
+        checks = validate_simulation_constraints(db, params, tracker, task_id)
 
         # 集計
         total_warehouses = db.scalar(select(func.count()).select_from(Warehouse)) or 0
@@ -701,100 +1064,31 @@ def run_seed_simulation(
         total_order_lines = db.scalar(select(func.count()).select_from(OrderLine)) or 0
         total_lots = db.scalar(select(func.count()).select_from(Lot)) or 0
         total_allocations = db.scalar(select(func.count()).select_from(Allocation)) or 0
-
-        # Phase 7: Snapshot
-        tracker.add_log(task_id, "Phase 7: Saving snapshot")
-        tracker.update_progress(task_id, JobPhase.SNAPSHOT, 95)
-
-        snapshot_id = None
-        if req.save_snapshot:
-            snapshot_name = (
-                req.snapshot_name or f"snapshot_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-            )
-            # 展開済みの最終パラメータを保存（完全再現用）
-            params_snapshot = params.copy()
-            params_snapshot["random_seed"] = seed  # 実際に使用したシード
-            params_snapshot["profile"] = req.profile  # 元のプロファイル名も保存
-            summary_json = {
-                "warehouses": total_warehouses,
-                "forecasts": total_forecasts,
-                "orders": total_orders,
-                "order_lines": total_order_lines,
-                "lots": total_lots,
-                "allocations": total_allocations,
-                "cap_checks": {
-                    "lot_split": "OK" if lot_split_ok else "NG",
-                    "destinations": "OK" if dest_ok else "NG",
-                    "order_lines": "OK" if lines_ok else "NG",
-                },
-                "stock_equation_ok": stock_equation_ok,
-                "orphan_count": orphan_count,
-            }
-
-            snapshot_repo = SeedSnapshotRepository(db)
-            try:
-                snapshot = snapshot_repo.create(
-                    name=snapshot_name,
-                    params_json=params_snapshot,
-                    profile_json={"profile": req.profile or "default"},
-                    summary_json=summary_json,
-                )
-            except SQLAlchemyError as snapshot_err:
-                db.rollback()
-                tracker.add_log(
-                    task_id,
-                    "Snapshot skipped: seed_snapshots table is unavailable (migration not applied?)",
-                )
-                logger.warning(
-                    "Skipping snapshot save because repository failed (table missing?): %s",
-                    snapshot_err,
-                )
-            else:
-                snapshot_id = snapshot.id
-                tracker.add_log(task_id, f"Snapshot saved: {snapshot_name} (ID: {snapshot_id})")
-
-        # 完了
-        tracker.add_log(task_id, "Simulation completed successfully")
-        tracker.update_progress(task_id, JobPhase.DONE, 100)
-
         total_customers = db.scalar(select(func.count()).select_from(Customer)) or 0
         total_suppliers = db.scalar(select(func.count()).select_from(Supplier)) or 0
         total_products = db.scalar(select(func.count()).select_from(Product)) or 0
         total_delivery_places = db.scalar(select(func.count()).select_from(DeliveryPlace)) or 0
 
-        # 合計メッセージ出力部分
-        totals_message = (
-            f"Totals => customers={total_customers}, suppliers={total_suppliers}, "
-            f"products={total_products}, delivery_places={total_delivery_places}, "
-            f"warehouses={total_warehouses}, forecasts={total_forecasts}, "
-            f"orders={total_orders}, order_lines={total_order_lines}, "
-            f"lots={total_lots}, allocations={total_allocations}"
-        )
-
-        tracker.add_log(task_id, totals_message)
-        logger.info("Seed simulation completed. %s", totals_message)
-
-        result = {
-            "success": True,
-            "summary": SimulateResultSummary(
-                warehouses=total_warehouses,
-                forecasts=total_forecasts,
-                orders=total_orders,
-                order_lines=total_order_lines,
-                lots=total_lots,
-                allocations=total_allocations,
-                cap_checks=CapCheckResult(
-                    lot_split="OK" if lot_split_ok else "NG",
-                    destinations="OK" if dest_ok else "NG",
-                    order_lines="OK" if lines_ok else "NG",
-                ),
-                stock_equation_ok=stock_equation_ok,
-                orphan_count=orphan_count,
-            ).model_dump(),
-            "snapshot_id": snapshot_id,
+        summary = {
+            "customers": total_customers,
+            "suppliers": total_suppliers,
+            "products": total_products,
+            "delivery_places": total_delivery_places,
+            "warehouses": total_warehouses,
+            "forecasts": total_forecasts,
+            "orders": total_orders,
+            "order_lines": total_order_lines,
+            "lots": total_lots,
+            "allocations": total_allocations,
         }
 
-        tracker.set_completed(task_id, result)
+        # Phase 7: Snapshot
+        snapshot_id = save_simulation_snapshot(
+            db, req, params, seed, summary, checks, tracker, task_id
+        )
+
+        # 完了
+        result = build_simulation_result(summary, checks, snapshot_id, tracker, task_id)
         return result
 
     except Exception as e:
