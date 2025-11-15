@@ -116,7 +116,7 @@ export function OrdersListPage() {
       {
         id: "due_date",
         header: "納期",
-        cell: (order: OrderUI) => formatDate(order.due_date),
+        cell: (order: OrderUI) => formatDate(order.due_date ?? null),
         sortable: true,
       },
       {
@@ -130,11 +130,13 @@ export function OrdersListPage() {
         header: "引当状況",
         cell: (order: OrderUI) => {
           const lines = order.lines || [];
-          const totalQty = lines.reduce<number>((sum, line: OrderLine) => sum + line.quantity, 0);
+          // DDL v2.2: prefer order_quantity, fallback to quantity
+          const totalQty = lines.reduce<number>((sum, line: OrderLine) => sum + Number(line.order_quantity ?? line.quantity ?? 0), 0);
           const allocatedQty = lines.reduce<number>((sum, line: OrderLine) => {
             const lots = coerceAllocatedLots(line.allocated_lots);
+            // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
             const allocated = lots.reduce(
-              (acc, alloc) => acc + Number(alloc.allocated_qty ?? 0),
+              (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
               0,
             );
             return sum + allocated;

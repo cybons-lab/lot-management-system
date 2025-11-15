@@ -83,7 +83,9 @@ export function OrderPage() {
             ) : (
               orders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.order_no}</TableCell>
+                  {/* DDL v2.2: use order_number (primary) or order_no (legacy fallback) */}
+                  <TableCell className="font-medium">{order.order_number ?? order.order_no ?? "-"}</TableCell>
+                  {/* customer_code is legacy field, exists in OrderResponse type */}
                   <TableCell>{formatCodeAndName(order.customer_code, undefined)}</TableCell>
                   <TableCell>
                     {order.order_date ? format(parseISO(order.order_date), "yyyy/MM/dd") : "-"}
@@ -91,7 +93,8 @@ export function OrderPage() {
                   <TableCell>
                     <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
                   </TableCell>
-                  <TableCell>{order.sap_order_id || "-"}</TableCell>
+                  {/* sap_order_id removed in DDL v2.2 */}
+                  <TableCell>{"-"}</TableCell>
                   <TableCell>
                     <Button variant="outline" size="sm">
                       詳細・引当

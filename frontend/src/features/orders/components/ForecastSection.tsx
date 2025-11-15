@@ -2,8 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 // frontend/src/features/orders/components/ForecastSection.tsx
 
-import { getForecastByCodes } from "@/features/forecast/api";
-import type { ForecastResponse } from "@/shared/types/forecast";
+import { getForecastByCodes, type ForecastResponse } from "@/features/forecast/api";
 
 type Props = {
   productCode?: string;
@@ -27,14 +26,16 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
   const hasForecast = forecasts.length > 0;
 
   const renderPeriod = (forecast: ForecastResponse) => {
-    switch (forecast.granularity) {
+    // granularity can be string in legacy forecasts
+    const granularity = forecast.granularity as string | undefined;
+    switch (granularity) {
       case "daily":
-        return forecast.date_day ?? "日次";
+        return (forecast as unknown as { date_day?: string }).date_day ?? "日次";
       case "dekad":
-        return forecast.date_dekad_start ?? "旬次";
+        return (forecast as unknown as { date_dekad_start?: string }).date_dekad_start ?? "旬次";
       case "monthly":
       default:
-        return forecast.year_month ?? "月次";
+        return (forecast as unknown as { year_month?: string }).year_month ?? "月次";
     }
   };
 
@@ -63,17 +64,17 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
                 アクティブなフォーキャストが {forecasts.length} 件見つかりました。
               </div>
               <div className="grid gap-3 text-xs sm:grid-cols-2 md:grid-cols-3">
-                {forecasts.slice(0, 3).map((f) => (
-                  <div key={f.id} className="rounded border bg-white p-3 shadow-sm">
-                    <div className="text-[11px] text-gray-400 uppercase">{f.granularity}</div>
+                {forecasts.slice(0, 3).map((f, idx) => (
+                  <div key={(f as {id?: number}).id ?? idx} className="rounded border bg-white p-3 shadow-sm">
+                    <div className="text-[11px] text-gray-400 uppercase">{(f.granularity as string) ?? "unknown"}</div>
                     <div className="text-sm font-semibold text-gray-800">{renderPeriod(f)}</div>
                     <div className="mt-1 text-xs text-gray-500">
-                      予測数量: {(f.qty_forecast ?? 0).toLocaleString()} EA
+                      予測数量: {((f as unknown as {qty_forecast?: number}).qty_forecast ?? 0).toLocaleString()} EA
                     </div>
                     <div className="mt-1 text-[11px] text-gray-400">
-                      v{f.version_no}・
-                      {f.version_issued_at
-                        ? new Date(f.version_issued_at).toLocaleDateString()
+                      v{(f as unknown as {version_no?: number}).version_no ?? 0}・
+                      {(f as unknown as {version_issued_at?: string}).version_issued_at
+                        ? new Date((f as unknown as {version_issued_at?: string}).version_issued_at!).toLocaleDateString()
                         : "日付不明"}
                     </div>
                   </div>
