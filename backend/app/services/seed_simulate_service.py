@@ -13,6 +13,7 @@ from typing import Any
 
 from faker import Faker
 from sqlalchemy import func, select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -742,14 +743,28 @@ def run_seed_simulation(
             }
 
             snapshot_repo = SeedSnapshotRepository(db)
-            snapshot = snapshot_repo.create(
-                name=snapshot_name,
-                params_json=params_snapshot,
-                profile_json={"profile": req.profile or "default"},
-                summary_json=summary_json,
-            )
-            snapshot_id = snapshot.id
-            tracker.add_log(task_id, f"Snapshot saved: {snapshot_name} (ID: {snapshot_id})")
+            try:
+                snapshot = snapshot_repo.create(
+                    name=snapshot_name,
+                    params_json=params_snapshot,
+                    profile_json={"profile": req.profile or "default"},
+                    summary_json=summary_json,
+                )
+            except SQLAlchemyError as snapshot_err:
+                db.rollback()
+                tracker.add_log(
+                    task_id,
+                    "Snapshot skipped: seed_snapshots table is unavailable (migration not applied?)",
+                )
+                logger.warning(
+                    "Skipping snapshot save because repository failed (table missing?): %s",
+                    snapshot_err,
+                )
+            else:
+                snapshot_id = snapshot.id
+                tracker.add_log(
+                    task_id, f"Snapshot saved: {snapshot_name} (ID: {snapshot_id})"
+                )
 
         # 完了
         tracker.add_log(task_id, "Simulation completed successfully")
