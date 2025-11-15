@@ -7,17 +7,19 @@ import logging
 import traceback
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from random import Random
 from typing import Any
 
 from faker import Faker
 from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.database import truncate_all_tables
-from app.models.forecast_models import Forecast
-from app.models.inventory_models import Lot, StockMovement
+from app.models.forecast_models import ForecastHeader, ForecastLine
+from app.models.inventory_models import Lot, StockMovement, StockTransactionType
 from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 from app.models.orders_models import Allocation, Order, OrderLine
 from app.repositories.seed_snapshot_repo import SeedSnapshotRepository
@@ -197,6 +199,8 @@ def run_seed_simulation(
             db.flush()
         tracker.add_log(task_id, f"Created {num_customers} customers")
 
+        existing_customers = db.execute(select(Customer)).scalars().all()
+
         # Suppliers (YAMLまたはデフォルト)
         num_suppliers = params.get("suppliers", params["warehouses"] * 5)
         existing_supplier_codes: set[str] = set()
@@ -218,43 +222,51 @@ def run_seed_simulation(
         # DeliveryPlaces (固定5箇所)
         num_delivery_places = 5
         existing_dp_codes: set[str] = set()
-        delivery_place_rows = [
-            {
-                "delivery_place_code": _next_code("D", 3, rng, existing_dp_codes),
-                "delivery_place_name": f"{faker.city()}配送センター",
-                "address": faker.address(),
-                "postal_code": faker.postcode(),
-                "created_at": datetime.utcnow(),
-            }
-            for _ in range(num_delivery_places)
-        ]
+        delivery_place_rows = []
+        if existing_customers:
+            for _ in range(num_delivery_places):
+                customer = _choose(rng, existing_customers)
+                delivery_place_rows.append(
+                    {
+                        "jiku_code": None,
+                        "delivery_place_code": _next_code("D", 3, rng, existing_dp_codes),
+                        "delivery_place_name": f"{faker.city()}配送センター",
+                        "customer_id": customer.id,
+                        "created_at": datetime.utcnow(),
+                    }
+                )
+
         if delivery_place_rows:
             stmt = pg_insert(DeliveryPlace).values(delivery_place_rows)
             stmt = stmt.on_conflict_do_nothing(index_elements=[DeliveryPlace.delivery_place_code])
             db.execute(stmt)
             db.flush()
-        tracker.add_log(task_id, f"Created {num_delivery_places} delivery places")
+            tracker.add_log(task_id, f"Created {len(delivery_place_rows)} delivery places")
+        else:
+            tracker.add_log(
+                task_id,
+                "Skipped delivery place creation because no customers were generated",
+            )
 
         # Products (YAMLまたはデフォルト)
         tracker.add_log(task_id, "→ Creating Products...")
         num_products = params.get("products", params["warehouses"] * 20)
-        existing_dps = db.execute(select(DeliveryPlace)).scalars().all()
         existing_product_codes: set[str] = set()
+        base_units = ["PCS", "BOX", "SET"]
         product_rows = []
         for _ in range(num_products):
-            dp = _choose(rng, existing_dps) if existing_dps else None
             row = {
-                "product_code": _next_code("P", 5, rng, existing_product_codes),
+                "maker_part_code": _next_code("P", 5, rng, existing_product_codes),
                 "product_name": faker.bs().title(),
-                "internal_unit": "PCS",
-                "delivery_place_id": dp.id if dp else None,
+                "base_unit": _choose(rng, base_units),
+                "consumption_limit_days": rng.randint(30, 180),
                 "created_at": datetime.utcnow(),
             }
             product_rows.append(row)
 
         if product_rows:
             stmt = pg_insert(Product).values(product_rows)
-            stmt = stmt.on_conflict_do_nothing(index_elements=[Product.product_code])
+            stmt = stmt.on_conflict_do_nothing(index_elements=[Product.maker_part_code])
             db.execute(stmt)
             db.flush()
         tracker.add_log(task_id, f"✓ Created {num_products} products")
@@ -263,10 +275,12 @@ def run_seed_simulation(
         tracker.add_log(task_id, "→ Creating Warehouses...")
         num_warehouses = params["warehouses"]
         existing_wh_codes: set[str] = set()
+        warehouse_types = ["internal", "external", "supplier"]
         warehouse_rows = [
             {
                 "warehouse_code": _next_code("W", 2, rng, existing_wh_codes),
                 "warehouse_name": f"{faker.city()}倉庫",
+                "warehouse_type": _choose(rng, warehouse_types),
                 "created_at": datetime.utcnow(),
             }
             for _ in range(num_warehouses)
@@ -303,109 +317,72 @@ def run_seed_simulation(
             f"generate={generate_forecasts}, customers={len(all_customers)}, products={len(all_products)}",
         )
 
-        if generate_forecasts and all_customers and all_products:
-            # 既存のforecast_idを取得（重複防止）
-            existing_forecast_ids = {
-                fid for (fid,) in db.execute(select(Forecast.forecast_id)).all()
-            }
-
-            forecast_rows = []
+        if generate_forecasts and all_customers and all_products and all_delivery_places:
             now = datetime.now(UTC)
             today = now.date()
+            existing_numbers = {
+                number for (number,) in db.execute(select(ForecastHeader.forecast_number)).all()
+            }
 
-            # 各customer × product ペアに対して forecasts を生成
-            for cust in all_customers:
-                for prod in all_products:
-                    # daily: 今日±7日
-                    for day_offset in range(-7, 8):
-                        target_date = today + timedelta(days=day_offset)
-                        forecast_id = f"seed-{cust.id}-{prod.id}-daily-{target_date}"
-                        if forecast_id in existing_forecast_ids:
-                            continue
-                        forecast_rows.append(
-                            {
-                                "forecast_id": forecast_id,
-                                "granularity": "daily",
-                                "date_day": target_date,
-                                "date_dekad_start": None,
-                                "year_month": None,
-                                "qty_forecast": rng.randint(10, 1000),
-                                "version_no": 1,
-                                "version_issued_at": now,
-                                "source_system": "seed",
-                                "is_active": True,
-                                "product_id": prod.id,
-                                "customer_id": cust.id,
-                                "created_at": now,
-                                "updated_at": now,
-                            }
-                        )
-                        existing_forecast_ids.add(forecast_id)
+            forecast_headers: list[ForecastHeader] = []
+            for delivery_place in all_delivery_places:
+                start_date = today - timedelta(days=7)
+                end_date = today + timedelta(days=7)
+                base_number = f"SEED-{delivery_place.delivery_place_code}-{start_date:%Y%m%d}"
+                forecast_number = base_number
+                suffix = 1
+                while forecast_number in existing_numbers:
+                    forecast_number = f"{base_number}-{suffix}"
+                    suffix += 1
+                existing_numbers.add(forecast_number)
 
-                    # dekad: 当月の3区間（1日, 11日, 21日）
-                    for dekad_start_day in [1, 11, 21]:
-                        dekad_start = today.replace(day=dekad_start_day)
-                        forecast_id = f"seed-{cust.id}-{prod.id}-dekad-{dekad_start}"
-                        if forecast_id in existing_forecast_ids:
-                            continue
-                        forecast_rows.append(
-                            {
-                                "forecast_id": forecast_id,
-                                "granularity": "dekad",
-                                "date_day": None,
-                                "date_dekad_start": dekad_start,
-                                "year_month": None,
-                                "qty_forecast": rng.randint(10, 1000),
-                                "version_no": 1,
-                                "version_issued_at": now,
-                                "source_system": "seed",
-                                "is_active": True,
-                                "product_id": prod.id,
-                                "customer_id": cust.id,
-                                "created_at": now,
-                                "updated_at": now,
-                            }
-                        )
-                        existing_forecast_ids.add(forecast_id)
-
-                    # monthly: 当月〜+2ヶ月
-                    for month_offset in range(0, 3):
-                        target_month_date = today.replace(day=1) + timedelta(days=31 * month_offset)
-                        year_month = target_month_date.strftime("%Y-%m")
-                        forecast_id = f"seed-{cust.id}-{prod.id}-monthly-{year_month}"
-                        if forecast_id in existing_forecast_ids:
-                            continue
-                        forecast_rows.append(
-                            {
-                                "forecast_id": forecast_id,
-                                "granularity": "monthly",
-                                "date_day": None,
-                                "date_dekad_start": None,
-                                "year_month": year_month,
-                                "qty_forecast": rng.randint(10, 1000),
-                                "version_no": 1,
-                                "version_issued_at": now,
-                                "source_system": "seed",
-                                "is_active": True,
-                                "product_id": prod.id,
-                                "customer_id": cust.id,
-                                "created_at": now,
-                                "updated_at": now,
-                            }
-                        )
-                        existing_forecast_ids.add(forecast_id)
-
-            # bulk insert
-            if forecast_rows:
-                tracker.add_log(task_id, f"→ Inserting {len(forecast_rows)} forecast rows...")
-                db.bulk_insert_mappings(Forecast, forecast_rows)
-                db.flush()
-                forecast_count = len(forecast_rows)
-                tracker.add_log(
-                    task_id, f"✓ Created {forecast_count} forecasts (daily/dekad/monthly)"
+                header = ForecastHeader(
+                    customer_id=delivery_place.customer_id,
+                    delivery_place_id=delivery_place.id,
+                    forecast_number=forecast_number,
+                    forecast_start_date=start_date,
+                    forecast_end_date=end_date,
+                    status="active",
+                    created_at=now,
+                    updated_at=now,
                 )
+                db.add(header)
+                forecast_headers.append(header)
+
+            db.flush()
+
+            forecast_lines: list[ForecastLine] = []
+            for header in forecast_headers:
+                # 各ヘッダーにつき最大5製品の予測を生成
+                if len(all_products) <= 5:
+                    products_for_header = all_products
+                else:
+                    products_for_header = rng.sample(all_products, 5)
+
+                days = (header.forecast_end_date - header.forecast_start_date).days + 1
+                for prod in products_for_header:
+                    for day_offset in range(days):
+                        delivery_date = header.forecast_start_date + timedelta(days=day_offset)
+                        forecast_lines.append(
+                            ForecastLine(
+                                forecast_id=header.id,
+                                product_id=prod.id,
+                                delivery_date=delivery_date,
+                                forecast_quantity=Decimal(rng.randint(10, 1000)),
+                                unit=prod.base_unit or "PCS",
+                                created_at=now,
+                                updated_at=now,
+                            )
+                        )
+
+            if forecast_lines:
+                tracker.add_log(task_id, f"→ Inserting {len(forecast_lines)} forecast lines...")
+                db.bulk_save_objects(forecast_lines)
+                db.flush()
+                forecast_count = len(forecast_lines)
+                tracker.add_log(task_id, f"✓ Created {forecast_count} forecast line entries")
             else:
-                tracker.add_log(task_id, "→ No forecast rows to insert (all duplicates or empty)")
+                tracker.add_log(task_id, "→ No forecast lines generated for headers")
         else:
             reasons = []
             if not generate_forecasts:
@@ -414,6 +391,8 @@ def run_seed_simulation(
                 reasons.append("no customers")
             if not all_products:
                 reasons.append("no products")
+            if not all_delivery_places:
+                reasons.append("no delivery places")
             tracker.add_log(task_id, f"→ Forecast generation skipped: {', '.join(reasons)}")
 
         db.commit()
@@ -424,33 +403,41 @@ def run_seed_simulation(
         tracker.update_progress(task_id, JobPhase.STOCK, 30)
 
         num_lots = params.get("lots", params["warehouses"] * 1000)  # YAMLまたはデフォルト
+        now_dt = datetime.utcnow()
         for i in range(num_lots):
             prod = _choose(rng, all_products) if all_products else None
             wh = _choose(rng, all_warehouses) if all_warehouses else None
             supplier = _choose(rng, all_suppliers) if all_suppliers else None
             days = rng.randint(0, 360)
+            lot_unit = prod.base_unit if prod and getattr(prod, "base_unit", None) else "PCS"
             lot = Lot(
                 product_id=prod.id if prod else None,
                 warehouse_id=wh.id if wh else None,
                 supplier_id=supplier.id if supplier else None,
                 lot_number=faker.unique.bothify(text="LOT-########"),
-                receipt_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 30)),
+                received_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 30)),
                 expiry_date=datetime.utcnow().date() + timedelta(days=360 - days),
-                created_at=datetime.utcnow(),
+                current_quantity=Decimal(0),
+                allocated_quantity=Decimal(0),
+                unit=lot_unit,
+                status="active",
+                created_at=now_dt,
+                updated_at=now_dt,
             )
             db.add(lot)
             db.flush()
 
             # Inbound stock movement
-            recv_qty = rng.randint(10, 500)
+            recv_qty = Decimal(rng.randint(10, 500))
+            lot.current_quantity = lot.current_quantity + recv_qty
+            lot.updated_at = datetime.utcnow()
             movement = StockMovement(
-                product_id=lot.product_id,
-                warehouse_id=lot.warehouse_id,
                 lot_id=lot.id,
-                reason="receipt",
-                quantity_delta=recv_qty,
-                occurred_at=datetime.utcnow(),
-                created_at=datetime.utcnow(),
+                transaction_type=StockTransactionType.INBOUND,
+                quantity_change=recv_qty,
+                quantity_after=lot.current_quantity,
+                reference_type="seed_simulation",
+                transaction_date=datetime.utcnow(),
             )
             db.add(movement)
 
@@ -466,14 +453,30 @@ def run_seed_simulation(
         tracker.update_progress(task_id, JobPhase.ORDERS, 50)
 
         num_orders = params.get("orders", params["warehouses"] * 375)  # YAMLまたはデフォルト
+        delivery_places_by_customer: dict[int, list[DeliveryPlace]] = {}
+        for dp in all_delivery_places:
+            delivery_places_by_customer.setdefault(dp.customer_id, []).append(dp)
+
         for i in range(num_orders):
             cust = _choose(rng, all_customers) if all_customers else None
+            if not cust:
+                continue
+            delivery_choices = delivery_places_by_customer.get(cust.id)
+            if not delivery_choices:
+                delivery_choices = all_delivery_places
+            if not delivery_choices:
+                continue
+            delivery_place = _choose(rng, delivery_choices)
+            if not delivery_place:
+                continue
             order = Order(
-                customer_id=cust.id if cust else None,
-                order_no=faker.unique.bothify(text="SO-########"),
+                customer_id=cust.id,
+                delivery_place_id=delivery_place.id,
+                order_number=faker.unique.bothify(text="SO-########"),
                 order_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 14)),
-                status="draft",
+                status="pending",
                 created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
             )
             db.add(order)
             db.flush()
@@ -486,15 +489,20 @@ def run_seed_simulation(
             num_lines = rng.choices([1, 2, 3, 4, 5], weights=[40, 40, 10, 5, 5], k=1)[0]
             num_lines = min(num_lines, order_line_max)
 
-            for line_no in range(1, num_lines + 1):
+            for _ in range(num_lines):
                 prod = _choose(rng, all_products) if all_products else None
-                req_qty = rng.randint(10, 100)
+                if not prod:
+                    continue
+                req_qty = Decimal(rng.randint(10, 100))
+                delivery_date = order.order_date + timedelta(days=rng.randint(1, 14))
                 line = OrderLine(
                     order_id=order.id,
-                    product_id=prod.id if prod else None,
-                    line_no=line_no,
-                    quantity=req_qty,
+                    product_id=prod.id,
+                    delivery_date=delivery_date,
+                    order_quantity=req_qty,
+                    unit=prod.base_unit,
                     created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
                 )
                 db.add(line)
 
@@ -517,16 +525,16 @@ def run_seed_simulation(
 
         allocation_count = 0
         for line in lines_to_allocate:
-            # 同じ製品のロットをFIFO順（receipt_date）で取得
+            # 同じ製品のロットをFIFO順（received_date）で取得
             matching_lots = [lot for lot in all_lots if lot.product_id == line.product_id]
             if not matching_lots:
                 continue
 
             # FIFO順でソート
-            matching_lots.sort(key=lambda x: x.receipt_date or datetime.min.date())
+            matching_lots.sort(key=lambda x: x.received_date or datetime.min.date())
 
             # ロット分割上限を適用
-            remaining_qty = line.quantity
+            remaining_qty = Decimal(line.order_quantity)
             lot_count = 0
             max_lots = params["lot_split_max_per_line"]
 
@@ -534,31 +542,41 @@ def run_seed_simulation(
                 if remaining_qty <= 0 or lot_count >= max_lots:
                     break
 
-                # このロットから引当可能な数量（簡易版: ランダム）
-                alloc_qty = min(remaining_qty, rng.randint(10, 100))
+                available_quantity = max(Decimal(0), lot.current_quantity - lot.allocated_quantity)
+                if available_quantity <= 0:
+                    continue
 
-                # 納品先: 通常1-2、稀に5（制約: ≤5）
-                # 1つの明細は通常1つの納品先
-                dest = _choose(rng, all_delivery_places) if all_delivery_places else None
+                # このロットから引当可能な数量（簡易版: ランダム）
+                alloc_qty = min(
+                    remaining_qty,
+                    Decimal(rng.randint(10, 100)),
+                    available_quantity,
+                )
+                if alloc_qty <= 0:
+                    continue
 
                 allocation = Allocation(
                     order_line_id=line.id,
                     lot_id=lot.id,
-                    allocated_qty=alloc_qty,
-                    destination_id=dest.id if dest else None,
+                    allocated_quantity=alloc_qty,
+                    status="shipped",
                     created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
                 )
                 db.add(allocation)
 
+                lot.current_quantity = max(Decimal(0), lot.current_quantity - alloc_qty)
+                lot.updated_at = datetime.utcnow()
+
                 # Outbound stock movement
                 outbound = StockMovement(
-                    product_id=lot.product_id,
-                    warehouse_id=lot.warehouse_id,
                     lot_id=lot.id,
-                    reason="outbound",
-                    quantity_delta=-alloc_qty,
-                    occurred_at=datetime.utcnow(),
-                    created_at=datetime.utcnow(),
+                    transaction_type=StockTransactionType.SHIPMENT,
+                    quantity_change=-alloc_qty,
+                    quantity_after=lot.current_quantity,
+                    reference_type="order_line",
+                    reference_id=line.id,
+                    transaction_date=datetime.utcnow(),
                 )
                 db.add(outbound)
 
@@ -579,13 +597,14 @@ def run_seed_simulation(
 
         # Check 1: ロット分割上限チェック (≤3)
         lot_split_violations = db.execute(
-            text("""
+            text(
+                """
                 SELECT order_line_id, COUNT(*) as lot_count
                 FROM allocations
-                WHERE deleted_at IS NULL
                 GROUP BY order_line_id
                 HAVING COUNT(*) > :max_lots
-            """),
+                """
+            ),
             {"max_lots": params["lot_split_max_per_line"]},
         ).fetchall()
         lot_split_ok = len(lot_split_violations) == 0
@@ -598,35 +617,50 @@ def run_seed_simulation(
         # 実際には明細ごとに1つの納品先なので、受注全体で5つ以内
         dest_max = params["destinations_max_per_order"]
         dest_violations = db.execute(
-            text("""
-                SELECT o.id, COUNT(DISTINCT a.destination_id) as dest_count
+            text(
+                """
+                SELECT o.id
                 FROM orders o
-                JOIN order_lines ol ON ol.order_id = o.id
-                JOIN allocations a ON a.order_line_id = ol.id
-                WHERE o.deleted_at IS NULL AND ol.deleted_at IS NULL AND a.deleted_at IS NULL
                 GROUP BY o.id
-                HAVING COUNT(DISTINCT a.destination_id) > :max_dests
-            """),
+                HAVING COUNT(DISTINCT o.delivery_place_id) > :max_dests
+                """
+            ),
             {"max_dests": dest_max},
         ).fetchall()
-        dest_ok = len(dest_violations) == 0
-        tracker.add_log(
-            task_id,
-            f"Destinations check: {'OK' if dest_ok else f'NG ({len(dest_violations)} violations)'}",
-        )
+        missing_delivery = db.execute(
+            text(
+                """
+                SELECT id
+                FROM orders
+                WHERE delivery_place_id IS NULL
+                """
+            )
+        ).fetchall()
+        dest_ok = len(dest_violations) == 0 and len(missing_delivery) == 0
+        if dest_ok:
+            tracker.add_log(
+                task_id,
+                "Destinations check: OK (each order references ≤ configured delivery places)",
+            )
+        else:
+            tracker.add_log(
+                task_id,
+                f"Destinations check: NG ({len(dest_violations)} limit violations, {len(missing_delivery)} missing destinations)",
+            )
 
         # Check 3: 受注明細行数チェック (≤5)
         order_line_max_check = params["order_line_items_per_order"]
         if isinstance(order_line_max_check, dict):
             order_line_max_check = order_line_max_check.get("max", 5)
         line_violations = db.execute(
-            text("""
+            text(
+                """
                 SELECT order_id, COUNT(*) as line_count
                 FROM order_lines
-                WHERE deleted_at IS NULL
                 GROUP BY order_id
                 HAVING COUNT(*) > :max_lines
-            """),
+                """
+            ),
             {"max_lines": order_line_max_check},
         ).fetchall()
         lines_ok = len(line_violations) == 0
@@ -653,6 +687,7 @@ def run_seed_simulation(
             )
         except Exception as e:
             logger.warning(f"Stock equation check failed (view may not exist): {e}")
+            db.rollback()  # 読み取りエラーでトランザクションが中断した場合に備えてクリア
             stock_equation_ok = True  # ビューが存在しない場合はスキップ
             tracker.add_log(task_id, "Stock equation check: SKIPPED (view not found)")
 
@@ -661,7 +696,7 @@ def run_seed_simulation(
 
         # 集計
         total_warehouses = db.scalar(select(func.count()).select_from(Warehouse)) or 0
-        total_forecasts = db.scalar(select(func.count()).select_from(Forecast)) or 0
+        total_forecasts = db.scalar(select(func.count()).select_from(ForecastHeader)) or 0
         total_orders = db.scalar(select(func.count()).select_from(Order)) or 0
         total_order_lines = db.scalar(select(func.count()).select_from(OrderLine)) or 0
         total_lots = db.scalar(select(func.count()).select_from(Lot)) or 0
@@ -697,14 +732,26 @@ def run_seed_simulation(
             }
 
             snapshot_repo = SeedSnapshotRepository(db)
-            snapshot = snapshot_repo.create(
-                name=snapshot_name,
-                params_json=params_snapshot,
-                profile_json={"profile": req.profile or "default"},
-                summary_json=summary_json,
-            )
-            snapshot_id = snapshot.id
-            tracker.add_log(task_id, f"Snapshot saved: {snapshot_name} (ID: {snapshot_id})")
+            try:
+                snapshot = snapshot_repo.create(
+                    name=snapshot_name,
+                    params_json=params_snapshot,
+                    profile_json={"profile": req.profile or "default"},
+                    summary_json=summary_json,
+                )
+            except SQLAlchemyError as snapshot_err:
+                db.rollback()
+                tracker.add_log(
+                    task_id,
+                    "Snapshot skipped: seed_snapshots table is unavailable (migration not applied?)",
+                )
+                logger.warning(
+                    "Skipping snapshot save because repository failed (table missing?): %s",
+                    snapshot_err,
+                )
+            else:
+                snapshot_id = snapshot.id
+                tracker.add_log(task_id, f"Snapshot saved: {snapshot_name} (ID: {snapshot_id})")
 
         # 完了
         tracker.add_log(task_id, "Simulation completed successfully")
