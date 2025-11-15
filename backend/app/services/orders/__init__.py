@@ -1,7 +1,3 @@
-# backend/app/services/orders/__init__.py
-"""Order related service exports."""
+"""Orders services subpackage."""
 
-from .validation_service import OrderLineDemand, OrderValidationService
-
-
-__all__ = ["OrderLineDemand", "OrderValidationService"]
+from app.services.orders.order_service import *  # noqa: F403

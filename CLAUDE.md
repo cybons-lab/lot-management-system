@@ -131,10 +131,16 @@ Lot-management-system/
 │   │   │   ├── integration/      # Integration routers (2 files)
 │   │   │   └── __init__.py       # Unified router exports
 │   │   ├── services/             # Business logic layer (feature-based subpackages)
-│   │   │   ├── allocation/       # Allocation services
-│   │   │   ├── seed/             # Seed data services
-│   │   │   ├── integration/      # Integration services
-│   │   │   └── ... (20+ services at root level)
+│   │   │   ├── allocation/       # Allocation services (4 files)
+│   │   │   ├── seed/             # Seed data services (2 files)
+│   │   │   ├── integration/      # Integration services (1 file)
+│   │   │   ├── forecasts/        # Forecast services (2 files)
+│   │   │   ├── inventory/        # Inventory services (4 files)
+│   │   │   ├── masters/          # Master data services (2 files)
+│   │   │   ├── orders/           # Order services (1 file)
+│   │   │   ├── auth/             # Authentication services (2 files)
+│   │   │   ├── admin/            # Admin services (3 files)
+│   │   │   └── common/           # Common utilities (4 files)
 │   │   ├── repositories/         # Data access layer
 │   │   ├── models/               # SQLAlchemy models (11 files)
 │   │   │   ├── base_model.py
@@ -148,7 +154,17 @@ Lot-management-system/
 │   │   │   ├── seed_snapshot_model.py
 │   │   │   ├── system_config_model.py
 │   │   │   └── views_models.py
-│   │   ├── schemas/              # Pydantic schemas (22 files)
+│   │   ├── schemas/              # Pydantic schemas (feature-based subpackages)
+│   │   │   ├── common/           # Base schemas (2 files)
+│   │   │   ├── masters/          # Master data schemas (4 files)
+│   │   │   ├── orders/           # Order schemas (1 file)
+│   │   │   ├── allocations/      # Allocation schemas (2 files)
+│   │   │   ├── inventory/        # Inventory schemas (2 files)
+│   │   │   ├── forecasts/        # Forecast schemas (1 file)
+│   │   │   ├── integration/      # Integration schemas (1 file)
+│   │   │   ├── admin/            # Admin schemas (3 files)
+│   │   │   ├── system/           # System schemas (6 files)
+│   │   │   └── __init__.py       # Unified schema exports
 │   │   ├── domain/               # Pure business rules
 │   │   │   ├── errors.py         # Domain exceptions
 │   │   │   └── warehouse_and_forecast.py
