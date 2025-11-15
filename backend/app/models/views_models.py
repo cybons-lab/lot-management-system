@@ -1,9 +1,9 @@
 """Database view models (read-only)."""
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, Integer, Numeric, String
+from sqlalchemy import BigInteger, Date, DateTime, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
@@ -69,3 +69,44 @@ class VCandidateLotsByOrderLine(Base):
     available_qty: Mapped[Decimal] = mapped_column(Numeric(15, 4))
     receipt_date: Mapped[date | None] = mapped_column(Date)
     expiry_date: Mapped[date | None] = mapped_column(Date)
+
+
+class VLotDetails(Base):
+    """
+    v_lot_details ビュー（読み取り専用）.
+
+    ロット詳細情報を提供するビュー。
+    - lots テーブルをベースに、products, warehouses, suppliers を JOIN
+    - 在庫数量（current_quantity, allocated_quantity, available_quantity）を含む
+    - 賞味期限までの日数（days_to_expiry）を算出
+    """
+
+    __tablename__ = "v_lot_details"
+    __table_args__ = {"info": {"is_view": True}}
+
+    lot_id: Mapped[int] = mapped_column("lot_id", BigInteger, primary_key=True)
+    lot_number: Mapped[str] = mapped_column(String(100))
+    product_id: Mapped[int] = mapped_column(BigInteger)
+    maker_part_code: Mapped[str | None] = mapped_column(String)
+    product_name: Mapped[str] = mapped_column(String)
+    warehouse_id: Mapped[int] = mapped_column(BigInteger)
+    warehouse_code: Mapped[str] = mapped_column(String)
+    warehouse_name: Mapped[str] = mapped_column(String)
+    supplier_id: Mapped[int | None] = mapped_column(BigInteger)
+    supplier_code: Mapped[str | None] = mapped_column(String)
+    supplier_name: Mapped[str | None] = mapped_column(String)
+    received_date: Mapped[date] = mapped_column(Date)
+    expiry_date: Mapped[date | None] = mapped_column(Date)
+    current_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    available_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    unit: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(20))
+    days_to_expiry: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+# Backward compatibility alias for lot_current_stock (deprecated)
+# Use VLotDetails or Lot model instead
+LotDetails = VLotDetails

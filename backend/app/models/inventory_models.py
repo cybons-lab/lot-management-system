@@ -318,4 +318,11 @@ class AllocationSuggestion(Base):
 # Backward compatibility aliases (to be removed in later refactors)
 StockMovement = StockHistory
 StockMovementReason = StockTransactionType
+
+# DEPRECATED in v2.2: Use Lot model or VLotDetails view instead
+# LotCurrentStock was an alias for InventoryItem, which aggregated
+# stock by product and warehouse. In v2.2, use:
+# - Lot.current_quantity for lot-level inventory
+# - VLotDetails view for detailed lot information with joins
+# This alias is kept temporarily for backward compatibility but will be removed.
 LotCurrentStock = InventoryItem

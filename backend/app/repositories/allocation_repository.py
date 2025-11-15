@@ -2,6 +2,8 @@
 """
 引当リポジトリ
 DBアクセスのみを責務とし、ビジネスロジックは含まない.
+
+v2.2: lot_current_stock ビューは廃止。lots テーブルを直接使用。
 """
 
 from datetime import datetime
@@ -9,7 +11,7 @@ from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Allocation, LotCurrentStock
+from app.models import Allocation, Lot
 
 
 class AllocationRepository:
@@ -50,7 +52,7 @@ class AllocationRepository:
             select(Allocation)
             .options(joinedload(Allocation.lot))
             .where(Allocation.order_line_id == order_line_id)
-            .order_by(Allocation.allocation_date)
+            .order_by(Allocation.created_at)
         )
         return list(self.db.execute(stmt).scalars().all())
 
@@ -66,13 +68,13 @@ class AllocationRepository:
         """
         stmt = (
             select(Allocation)
-            .where(Allocation.lot_id == lot_id, Allocation.status == "active")
-            .order_by(Allocation.allocation_date)
+            .where(Allocation.lot_id == lot_id, Allocation.status == "reserved")
+            .order_by(Allocation.created_at)
         )
         return list(self.db.execute(stmt).scalars().all())
 
     def create(
-        self, order_line_id: int, lot_id: int, allocated_qty: float, status: str = "active"
+        self, order_line_id: int, lot_id: int, allocated_qty: float, status: str = "reserved"
     ) -> Allocation:
         """
         引当を作成.
@@ -81,7 +83,7 @@ class AllocationRepository:
             order_line_id: 受注明細ID
             lot_id: ロットID
             allocated_qty: 引当数量
-            status: ステータス
+            status: ステータス（デフォルト: 'reserved'）
 
         Returns:
             作成された引当エンティティ
@@ -91,7 +93,7 @@ class AllocationRepository:
             lot_id=lot_id,
             allocated_qty=allocated_qty,
             status=status,
-            allocation_date=datetime.now(),
+            created_at=datetime.now(),
         )
         self.db.add(allocation)
         # NOTE: commitはservice層で行う
@@ -106,6 +108,7 @@ class AllocationRepository:
             new_status: 新しいステータス
         """
         allocation.status = new_status
+        allocation.updated_at = datetime.now()
         # NOTE: commitはservice層で行う
 
     def delete(self, allocation: Allocation) -> None:
@@ -118,29 +121,53 @@ class AllocationRepository:
         self.db.delete(allocation)
         # NOTE: commitはservice層で行う
 
-    def get_lot_current_stock(self, lot_id: int) -> LotCurrentStock | None:
+    def get_lot(self, lot_id: int) -> Lot | None:
         """
-        ロットの現在在庫を取得.
+        ロットを取得.
+
+        v2.2: lot_current_stock の代わりに lots テーブルを直接参照。
 
         Args:
             lot_id: ロットID
 
         Returns:
-            現在在庫エンティティ（存在しない場合はNone）
+            ロットエンティティ（存在しない場合はNone）
         """
-        stmt = select(LotCurrentStock).where(LotCurrentStock.lot_id == lot_id)
+        stmt = select(Lot).where(Lot.id == lot_id)
         return self.db.execute(stmt).scalar_one_or_none()
 
-    def update_lot_current_stock(self, lot_id: int, quantity_delta: float) -> None:
+    def update_lot_quantities(self, lot_id: int, quantity_delta: float) -> None:
         """
-        ロット現在在庫を更新.
+        ロット在庫数量を更新.
+
+        v2.2: lots.current_quantity を直接更新。
 
         Args:
             lot_id: ロットID
             quantity_delta: 数量変動（正=増加、負=減少）
+
+        Note:
+            allocated_quantity の更新は別途行う必要があります。
+            このメソッドは current_quantity のみを更新します。
         """
-        current_stock = self.get_lot_current_stock(lot_id)
-        if current_stock:
-            current_stock.current_quantity += quantity_delta
-            current_stock.last_updated = datetime.utcnow()
+        lot = self.get_lot(lot_id)
+        if lot:
+            lot.current_quantity += quantity_delta
+            lot.updated_at = datetime.now()
+        # NOTE: commitはservice層で行う
+
+    def update_lot_allocated_quantity(self, lot_id: int, allocated_delta: float) -> None:
+        """
+        ロットの引当数量を更新.
+
+        v2.2: lots.allocated_quantity を直接更新。
+
+        Args:
+            lot_id: ロットID
+            allocated_delta: 引当数量変動（正=増加、負=減少）
+        """
+        lot = self.get_lot(lot_id)
+        if lot:
+            lot.allocated_quantity += allocated_delta
+            lot.updated_at = datetime.now()
         # NOTE: commitはservice層で行う

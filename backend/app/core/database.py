@@ -60,8 +60,7 @@ def _drop_dependent_views() -> None:
         return
 
     dependent_views = [
-        # 在庫集計ビュー（StockMovementに依存）
-        "lot_current_stock",
+        # v2.2: lot_current_stock ビューは廃止（lots テーブルに統合済み）
         # 追加のVIEWがあればここに追記
         # "lot_daily_stock",
     ]

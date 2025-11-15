@@ -23,7 +23,13 @@ from .orders_models import (
     PurchaseRequest,
 )
 from .seed_snapshot_model import SeedSnapshot
-from .views_models import VCandidateLotsByOrderLine, VLotAvailableQty, VOrderLineContext
+from .views_models import (
+    LotDetails,
+    VCandidateLotsByOrderLine,
+    VLotAvailableQty,
+    VLotDetails,
+    VOrderLineContext,
+)
 
 
 __all__ = [
@@ -63,4 +69,6 @@ __all__ = [
     "VLotAvailableQty",
     "VOrderLineContext",
     "VCandidateLotsByOrderLine",
+    "VLotDetails",
+    "LotDetails",  # Deprecated alias, use VLotDetails or Lot instead
 ]

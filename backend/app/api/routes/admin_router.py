@@ -6,7 +6,8 @@ import traceback
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func, text
+from sqlalchemy import func, select, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -15,6 +16,7 @@ from app.core.database import truncate_all_tables
 from app.models import (
     Allocation,
     Customer,
+    Lot,
     Order,
     OrderLine,
     Supplier,
@@ -37,21 +39,22 @@ rng = random.Random()
 
 @router.get("/stats", response_model=DashboardStatsResponse)
 def get_dashboard_stats(db: Session = Depends(get_db)):
-    """ダッシュボード用の統計情報を返す."""
-    # search_path 依存を避け、public スキーマを明示
-    # ビュー未作成時でも API 全体が 500 にならないようフォールバック
-    try:
-        total_stock = (
-            db.execute(
-                text("SELECT COALESCE(SUM(current_quantity), 0.0) FROM public.lot_current_stock")
-            ).scalar()
-            or 0.0
-        )
-    except Exception as e:
-        logger.warning("lot_current_stock 集計に失敗したため 0 扱いにします: %s", e)
-        total_stock = 0.0
+    """
+    ダッシュボード用の統計情報を返す.
 
-    # LotCurrentStock.current_quantity は内部単位数量を保持する
+    在庫総数は lots.current_quantity の合計値を使用。
+    lot_current_stock ビューは使用しない（v2.2 以降は廃止）。
+    """
+    try:
+        # lots テーブルから直接在庫を集計
+        total_stock_result = db.execute(
+            select(func.coalesce(func.sum(Lot.current_quantity), 0.0))
+        )
+        total_stock = total_stock_result.scalar_one()
+    except SQLAlchemyError as e:
+        logger.warning("在庫集計に失敗したため 0 扱いにします: %s", e)
+        db.rollback()
+        total_stock = 0.0
 
     total_orders = db.query(func.count(Order.id)).scalar() or 0
 
@@ -263,6 +266,9 @@ def get_allocatable_lots(
     """
     診断API: 引当可能ロット一覧（読み取り専用）.
 
+    v2.2: v_lot_details ビューを使用して在庫情報を取得。
+    lot_current_stock ビューは廃止。
+
     Args:
         prod: 製品コード（任意フィルタ）
         wh: 倉庫コード（任意フィルタ）
@@ -274,8 +280,8 @@ def get_allocatable_lots(
 
     Note:
         - 読み取り専用トランザクション
-        - free_qty > 0 のみ
-        - ロック済み・期限切れは除外
+        - available_quantity > 0 のみ
+        - 期限切れは除外
     """
     # 読み取り専用トランザクション設定
     db.execute(text("SET LOCAL transaction_read_only = on"))
@@ -284,50 +290,34 @@ def get_allocatable_lots(
     db.execute(text("SET LOCAL statement_timeout = '10s'"))
 
     try:
-        # メインクエリ: lot_current_stock + allocations 集計
+        # メインクエリ: v_lot_details ビューを使用
         query = text(
             """
             SELECT
-                lcs.lot_id,
-                l.lot_number,
-                lcs.product_id,
-                l.product_code,
-                lcs.warehouse_id,
-                l.warehouse_code,
-                lcs.current_quantity,
-                COALESCE(SUM(a.allocated_qty), 0) AS allocated_qty,
-                (lcs.current_quantity - COALESCE(SUM(a.allocated_qty), 0)) AS free_qty,
-                l.expiry_date,
-                l.is_locked,
-                lcs.last_updated
+                vld.lot_id,
+                vld.lot_number,
+                vld.product_id,
+                p.product_code,
+                vld.warehouse_id,
+                vld.warehouse_code,
+                vld.current_quantity,
+                vld.allocated_quantity,
+                vld.available_quantity AS free_qty,
+                vld.expiry_date,
+                false as is_locked,
+                vld.updated_at as last_updated
             FROM
-                public.lot_current_stock lcs
-                INNER JOIN public.lots l ON l.id = lcs.lot_id
-                LEFT JOIN public.allocations a ON a.lot_id = lcs.lot_id
-                    AND a.deleted_at IS NULL
+                v_lot_details vld
+                INNER JOIN products p ON p.id = vld.product_id
             WHERE
-                lcs.current_quantity > 0
-                AND l.deleted_at IS NULL
-                AND (l.is_locked IS NULL OR l.is_locked = false)
-                AND (l.expiry_date IS NULL OR l.expiry_date >= CURRENT_DATE)
-                AND (:prod IS NULL OR l.product_code = :prod)
-                AND (:wh IS NULL OR l.warehouse_code = :wh)
-            GROUP BY
-                lcs.lot_id,
-                l.lot_number,
-                lcs.product_id,
-                l.product_code,
-                lcs.warehouse_id,
-                l.warehouse_code,
-                lcs.current_quantity,
-                l.expiry_date,
-                l.is_locked,
-                lcs.last_updated
-            HAVING
-                (lcs.current_quantity - COALESCE(SUM(a.allocated_qty), 0)) > 0
+                vld.available_quantity > 0
+                AND vld.status = 'active'
+                AND (vld.expiry_date IS NULL OR vld.expiry_date >= CURRENT_DATE)
+                AND (:prod IS NULL OR p.product_code = :prod)
+                AND (:wh IS NULL OR vld.warehouse_code = :wh)
             ORDER BY
-                l.expiry_date NULLS FIRST,
-                lcs.lot_id
+                vld.expiry_date NULLS LAST,
+                vld.lot_id
             LIMIT :limit
             """
         )
@@ -345,7 +335,7 @@ def get_allocatable_lots(
                 "warehouse_code": row.warehouse_code,
                 "free_qty": float(row.free_qty),
                 "current_quantity": float(row.current_quantity),
-                "allocated_qty": float(row.allocated_qty),
+                "allocated_qty": float(row.allocated_quantity),
                 "expiry_date": row.expiry_date,
                 "is_locked": row.is_locked or False,
                 "last_updated": row.last_updated.isoformat() if row.last_updated else None,
@@ -357,4 +347,5 @@ def get_allocatable_lots(
 
     except Exception as e:
         logger.error(f"診断API実行エラー: {e}")
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"診断API実行エラー: {str(e)}")
