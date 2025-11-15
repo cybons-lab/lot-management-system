@@ -46,9 +46,9 @@ def init_db() -> None:
     現在は SQL / ダンプでスキーマを復元するため、ここでは何もしない。
     """
     import app.models  # noqa: F401
+
     logger.info("⏭️ init_db: skipping Alembic migrations (handled manually via SQL)")
     return
-
 
 
 def _drop_dependent_views() -> None:
