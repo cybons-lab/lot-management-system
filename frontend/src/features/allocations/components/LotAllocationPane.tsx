@@ -160,7 +160,10 @@ export function LotAllocationPane({
                         <button
                           type="button"
                           onClick={() => {
-                            const totalNeeded = selectedLine?.quantity ?? 0;
+                            // DDL v2.2: prefer order_quantity, fallback to quantity
+                            const totalNeeded = Number(
+                              selectedLine?.order_quantity ?? selectedLine?.quantity ?? 0,
+                            );
                             const otherLotsTotal = allocationTotalAll - allocatedQty;
                             const remainingNeeded = Math.max(0, totalNeeded - otherLotsTotal);
                             const maxAllocation = Math.min(remainingNeeded, availableQty);

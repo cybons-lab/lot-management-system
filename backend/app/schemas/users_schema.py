@@ -1,4 +1,7 @@
-"""User schemas (ユーザー管理)."""
+"""User schemas (ユーザー管理) - DDL v2.2 compliant.
+
+All schemas strictly follow the DDL as the single source of truth.
+"""
 
 from datetime import datetime
 
@@ -8,10 +11,10 @@ from app.schemas.base import BaseSchema
 
 
 class UserBase(BaseSchema):
-    """Base schema for users."""
+    """Base schema for users (DDL: users)."""
 
     username: str = Field(..., min_length=3, max_length=50, description="ユーザー名")
-    email: EmailStr = Field(..., description="メールアドレス")
+    email: EmailStr = Field(..., max_length=255, description="メールアドレス")
     display_name: str = Field(..., min_length=1, max_length=100, description="表示名")
     is_active: bool = Field(True, description="有効フラグ")
 
@@ -25,24 +28,19 @@ class UserCreate(UserBase):
 class UserUpdate(BaseSchema):
     """Schema for updating a user."""
 
-    email: EmailStr | None = Field(None, description="メールアドレス")
+    email: EmailStr | None = Field(None, max_length=255, description="メールアドレス")
     display_name: str | None = Field(None, min_length=1, max_length=100, description="表示名")
     is_active: bool | None = Field(None, description="有効フラグ")
     password: str | None = Field(None, min_length=8, description="パスワード（平文）")
 
 
 class UserResponse(UserBase):
-    """Schema for user response."""
+    """Schema for user response (DDL: users)."""
 
-    user_id: int
+    id: int
     last_login_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
 
 
 class UserWithRoles(UserResponse):

@@ -4,7 +4,6 @@
 OCR取込、SAP連携.
 """
 
-import json
 import logging
 from datetime import datetime
 
@@ -13,13 +12,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.deps import get_db
-from app.models import Customer, OcrSubmission, Order, OrderLine, Product, SapSyncLog
+from app.models import Customer, Order, OrderLine, Product
 from app.schemas import (
     OcrSubmissionRequest,
     OcrSubmissionResponse,
     SapRegisterRequest,
     SapRegisterResponse,
-    SapSyncLogResponse,
 )
 from app.services.quantity_service import QuantityConversionError, to_internal_qty
 
@@ -77,7 +75,7 @@ def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_
     for _idx, record in enumerate(submission.records):
         try:
             # 重複チェック
-            existing = db.query(Order).filter(Order.order_no == record.order_no).first()
+            existing = db.query(Order).filter(Order.order_number == record.order_no).first()
             if existing:
                 skipped_records += 1
                 error_details.append(f"受注番号 {record.order_no} は既に存在します")
@@ -94,10 +92,11 @@ def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_
 
             # 受注ヘッダ作成
             db_order = Order(
-                order_no=record.order_no,
-                customer_code=record.customer_code,
+                order_number=record.order_no,
+                customer_id=customer.id,
+                delivery_place_id=customer.id,  # TODO: Get from request if available
                 order_date=record.order_date if record.order_date else None,
-                status="open",
+                status="pending",
             )
             db.add(db_order)
             db.flush()
@@ -107,7 +106,7 @@ def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_
             for line in record.lines:
                 # 製品チェック
                 product = (
-                    db.query(Product).filter(Product.product_code == line.product_code).first()
+                    db.query(Product).filter(Product.maker_part_code == line.product_code).first()
                 )
                 if not product:
                     failed_records += 1
@@ -129,11 +128,10 @@ def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_
 
                 db_line = OrderLine(
                     order_id=db_order.id,
-                    line_no=line.line_no,
-                    product_code=line.product_code,
-                    quantity=float(internal_qty),
-                    unit=product.internal_unit,
-                    due_date=line.due_date,
+                    product_id=product.id,
+                    order_quantity=float(internal_qty),
+                    unit=product.base_unit,
+                    delivery_date=line.due_date,
                 )
                 db.add(db_line)
                 db.flush()
@@ -161,26 +159,14 @@ def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_
             failed_records += 1
             error_details.append(f"受注 {record.order_no}: {str(e)}")
 
-    # OCR取込ログ作成
+    # DDL v2.2: ocr_submissions テーブルは削除されました
+    # ログ記録は operation_logs または別のログシステムで行ってください
     status = (
         "success" if failed_records == 0 else ("partial" if processed_records > 0 else "failed")
     )
 
-    ocr_log = OcrSubmission(
-        submission_id=submission_id,
-        source_file=submission.file_name,
-        source=submission.source,
-        operator=submission.operator,
-        schema_version=submission.schema_version,
-        target_type="order",
-        status=status,
-        total_records=total_records,
-        processed_records=processed_records,
-        failed_records=failed_records,
-        skipped_records=skipped_records,
-        error_details="\n".join(error_details) if error_details else None,
-    )
-    db.add(ocr_log)
+    # Note: OcrSubmission モデルは DDL v2.2 で削除されました
+    # このエンドポイントは DEPRECATED であり、/api/submissions を使用してください
     db.commit()
 
     logger.info(
@@ -200,40 +186,23 @@ def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_
     )
 
 
-@router.get("/ai-ocr/submissions", response_model=list[OcrSubmissionResponse], deprecated=True)
+@router.get("/ai-ocr/submissions", deprecated=True)
 def list_ocr_submissions(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     OCR取込ログ一覧取得.
 
-    DEPRECATED: This endpoint will be removed in v3.0.
-    Use dedicated logs API instead.
+    DEPRECATED: This endpoint has been removed in DDL v2.2.
+    The ocr_submissions table no longer exists.
+    Use /api/operation-logs for logging instead.
     """
     logger.warning(
         "DEPRECATED: GET /integration/ai-ocr/submissions called. "
-        "This endpoint will be removed in future versions."
+        "This endpoint is no longer functional (DDL v2.2)."
     )
-    submissions = (
-        db.query(OcrSubmission)
-        .order_by(OcrSubmission.submission_date.desc())
-        .offset(skip)
-        .limit(limit)
-        .all()
+    raise HTTPException(
+        status_code=410,
+        detail="このエンドポイントは削除されました。ocr_submissionsテーブルはDDL v2.2で廃止されました。",
     )
-
-    return [
-        OcrSubmissionResponse(
-            status=s.status,
-            submission_id=s.submission_id,
-            created_orders=s.processed_records,
-            created_lines=0,  # 明細数は別途集計が必要
-            total_records=s.total_records,
-            processed_records=s.processed_records,
-            failed_records=s.failed_records,
-            skipped_records=s.skipped_records,
-            error_details=s.error_details,
-        )
-        for s in submissions
-    ]
 
 
 # ===== SAP Sync =====
@@ -255,7 +224,7 @@ def register_to_sap(request: SapRegisterRequest, db: Session = Depends(get_db)):
     orders = []
 
     if request.target.type == "order_no":
-        order = db.query(Order).filter(Order.order_no == request.target.value).first()
+        order = db.query(Order).filter(Order.order_number == request.target.value).first()
         if order:
             orders.append(order)
     elif request.target.type == "order_id":
@@ -276,37 +245,16 @@ def register_to_sap(request: SapRegisterRequest, db: Session = Depends(get_db)):
     sent = 0
     for order in orders:
         # SAP送信(モック)
-        payload = {
-            "order_no": order.order_no,
-            "customer_code": order.customer_code,
-            "order_date": str(order.order_date) if order.order_date else None,
-            "lines": [
-                {
-                    "line_no": line.line_no,
-                    "product_code": line.product_code,
-                    "quantity": line.quantity,
-                }
-                for line in getattr(order, "order_lines", [])
-            ],
-        }
 
         # モック: 成功として処理
-        sap_order_id = f"SAP-{order.order_no}"
+        sap_order_id = f"SAP-{order.order_number}"
         sap_status = "posted"
 
-        # 受注更新
-        order.sap_order_id = sap_order_id
-        order.sap_status = sap_status
-        order.sap_sent_at = datetime.now()
+        # Note: DDL v2.2 では sap_order_id, sap_status, sap_sent_at フィールドは削除されました
+        # SAP連携状態は別テーブルで管理する必要があります
 
-        # SAP連携ログ作成
-        log = SapSyncLog(
-            order_id=order.id,
-            payload=json.dumps(payload),
-            result=json.dumps({"sap_order_id": sap_order_id, "status": sap_status}),
-            status="success",
-        )
-        db.add(log)
+        # Note: SapSyncLog モデルも DDL v2.2 で削除されました
+        # SAP連携ログは operation_logs または別のログシステムで行ってください
         sent += 1
 
     db.commit()
@@ -319,18 +267,20 @@ def register_to_sap(request: SapRegisterRequest, db: Session = Depends(get_db)):
     )
 
 
-@router.get("/sap/logs", response_model=list[SapSyncLogResponse], deprecated=True)
+@router.get("/sap/logs", deprecated=True)
 def list_sap_logs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     SAP連携ログ一覧取得.
 
-    DEPRECATED: This endpoint will be moved to /api/sap-sync/logs in v3.0.
+    DEPRECATED: This endpoint has been removed in DDL v2.2.
+    The sap_sync_logs table no longer exists.
+    Use /api/operation-logs for logging instead.
     """
     logger.warning(
         "DEPRECATED: GET /integration/sap/logs called. "
-        "Please migrate to GET /sap-sync/logs in future versions."
+        "This endpoint is no longer functional (DDL v2.2)."
     )
-    logs = (
-        db.query(SapSyncLog).order_by(SapSyncLog.executed_at.desc()).offset(skip).limit(limit).all()
+    raise HTTPException(
+        status_code=410,
+        detail="このエンドポイントは削除されました。sap_sync_logsテーブルはDDL v2.2で廃止されました。",
     )
-    return logs

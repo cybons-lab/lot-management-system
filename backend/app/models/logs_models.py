@@ -1,9 +1,12 @@
-"""Logging and integration models."""
+"""Logging and integration models (DDL v2.2).
+
+All models strictly follow the DDL as the single source of truth.
+Legacy models (InboundSubmission/OcrSubmission, SapSyncLog) have been removed.
+"""
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -11,25 +14,25 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
-    Integer,
+    Index,
     String,
     Text,
-    UniqueConstraint,
     func,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
 
 
-if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .orders_models import Order
-
-
 class OperationLog(Base):
-    """操作ログ（監査証跡）."""
+    """操作ログ（監査証跡）.
+
+    DDL: operation_logs
+    Primary key: id (BIGSERIAL)
+    Foreign key: user_id -> users(id)
+    """
 
     __tablename__ = "operation_logs"
 
@@ -51,11 +54,20 @@ class OperationLog(Base):
             "operation_type IN ('create', 'update', 'delete', 'login', 'logout', 'export')",
             name="chk_operation_logs_type",
         ),
+        Index("idx_operation_logs_user", "user_id"),
+        Index("idx_operation_logs_type", "operation_type"),
+        Index("idx_operation_logs_table", "target_table"),
+        Index("idx_operation_logs_created", "created_at"),
     )
 
 
 class MasterChangeLog(Base):
-    """マスタ変更履歴."""
+    """マスタ変更履歴.
+
+    DDL: master_change_logs
+    Primary key: id (BIGSERIAL)
+    Foreign key: changed_by -> users(id)
+    """
 
     __tablename__ = "master_change_logs"
 
@@ -77,11 +89,19 @@ class MasterChangeLog(Base):
             "change_type IN ('insert', 'update', 'delete')",
             name="chk_master_change_logs_type",
         ),
+        Index("idx_master_change_logs_table", "table_name"),
+        Index("idx_master_change_logs_record", "record_id"),
+        Index("idx_master_change_logs_user", "changed_by"),
+        Index("idx_master_change_logs_changed", "changed_at"),
     )
 
 
 class BusinessRule(Base):
-    """業務ルール設定."""
+    """業務ルール設定.
+
+    DDL: business_rules
+    Primary key: id (BIGSERIAL)
+    """
 
     __tablename__ = "business_rules"
 
@@ -103,11 +123,22 @@ class BusinessRule(Base):
             "rule_type IN ('allocation', 'expiry_warning', 'kanban', 'other')",
             name="chk_business_rules_type",
         ),
+        Index("idx_business_rules_code", "rule_code"),
+        Index("idx_business_rules_type", "rule_type"),
+        Index(
+            "idx_business_rules_active",
+            "is_active",
+            postgresql_where=text("is_active = TRUE"),
+        ),
     )
 
 
 class BatchJob(Base):
-    """バッチジョブ管理."""
+    """バッチジョブ管理.
+
+    DDL: batch_jobs
+    Primary key: id (BIGSERIAL)
+    """
 
     __tablename__ = "batch_jobs"
 
@@ -135,67 +166,7 @@ class BatchJob(Base):
             "'inventory_sync', 'data_import', 'report_generation')",
             name="chk_batch_jobs_type",
         ),
+        Index("idx_batch_jobs_status", "status"),
+        Index("idx_batch_jobs_type", "job_type"),
+        Index("idx_batch_jobs_created", "created_at"),
     )
-
-
-class InboundSubmission(Base):
-    """Inbound submission logs."""
-
-    __tablename__ = "inbound_submissions"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    submission_id: Mapped[str | None] = mapped_column(Text)
-    source_uri: Mapped[str | None] = mapped_column(Text)
-    source: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'ocr'"))
-    operator: Mapped[str | None] = mapped_column(Text)
-    submission_date: Mapped[datetime | None] = mapped_column(DateTime)
-    status: Mapped[str | None] = mapped_column(Text)
-    total_records: Mapped[int | None] = mapped_column(Integer)
-    processed_records: Mapped[int | None] = mapped_column(Integer)
-    failed_records: Mapped[int | None] = mapped_column(Integer)
-    skipped_records: Mapped[int | None] = mapped_column(Integer)
-    error_details: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime | None] = mapped_column(DateTime)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
-    created_by: Mapped[str | None] = mapped_column(String(50))
-    updated_by: Mapped[str | None] = mapped_column(String(50))
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime)
-    revision: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
-
-    __table_args__ = (
-        UniqueConstraint("submission_id", name="ocr_submissions_submission_id_key"),
-        CheckConstraint(
-            "source IN ('ocr','manual','edi')",
-            name="ck_inbound_submissions_source",
-        ),
-    )
-
-
-class SapSyncLog(Base):
-    """SAP synchronisation logs."""
-
-    __tablename__ = "sap_sync_logs"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    order_id: Mapped[int | None] = mapped_column(ForeignKey("orders.id"))
-    payload: Mapped[str | None] = mapped_column(Text)
-    result: Mapped[str | None] = mapped_column(Text)
-    status: Mapped[str | None] = mapped_column(Text)
-    executed_at: Mapped[datetime | None] = mapped_column(DateTime)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
-    created_by: Mapped[str | None] = mapped_column(String(50))
-    updated_by: Mapped[str | None] = mapped_column(String(50))
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime)
-    revision: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
-
-    order: Mapped[Order | None] = relationship("Order", back_populates="sap_sync_logs")
-
-
-OcrSubmission = InboundSubmission

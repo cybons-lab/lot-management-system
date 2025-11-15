@@ -1,198 +1,148 @@
-# backend/app/schemas/orders.py
-"""受注関連のPydanticスキーマ（拡張版）."""
+"""Order management Pydantic schemas (DDL v2.2 compliant).
+
+All schemas strictly follow the DDL as the single source of truth.
+Legacy fields (sap_*, customer_order_no, delivery_mode, etc.) have been removed.
+"""
 
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import Any
+from decimal import Decimal
 
-from pydantic import Field, PositiveInt, constr
+from pydantic import Field, constr
 
-from .base import BaseSchema, TimestampMixin
+from .base import BaseSchema
 
 
-# --- Order ---
+# ============================================================
+# Order (受注ヘッダ)
+# ============================================================
+
+
 class OrderBase(BaseSchema):
-    order_no: str
-    customer_code: str | None = None
+    """Base order schema (DDL: orders)."""
+
+    order_number: str = Field(..., min_length=1, max_length=50)
+    customer_id: int = Field(..., gt=0)
+    delivery_place_id: int = Field(..., gt=0)
     order_date: date
-    status: str = "open"
-    customer_order_no: str | None = None
-    customer_order_no_last6: str | None = None
-    delivery_mode: str | None = None
-    sap_order_id: str | None = None
-    sap_status: str | None = None
-    sap_sent_at: datetime | None = None
-    sap_error_msg: str | None = None
+    status: str = Field(
+        default="pending",
+        pattern="^(pending|allocated|shipped|completed|cancelled)$",
+    )
 
 
 class OrderCreate(OrderBase):
-    customer_code: str  # 作成時は必須
+    """Create order request."""
+
     lines: list[OrderLineCreate] = Field(default_factory=list)
 
 
 class OrderUpdate(BaseSchema):
-    status: str | None = None
-    customer_order_no: str | None = None
-    delivery_mode: str | None = None
-    sap_status: str | None = None
+    """Update order request."""
+
+    status: str | None = Field(None, pattern="^(pending|allocated|shipped|completed|cancelled)$")
 
 
 class OrderStatusUpdate(BaseSchema):
-    """
-    受注ステータス更新用スキーマ.
-
-    Note:
-        constrを使用してstatusが空文字でないことを保証
-    """
+    """Order status update request."""
 
     status: constr(min_length=1) = Field(
         ...,
-        description="新しいステータス（open, allocated, shipped, closed, cancelled）",
+        description="新しいステータス（pending/allocated/shipped/completed/cancelled）",
         examples=["allocated", "shipped"],
     )
 
 
-class OrderResponse(OrderBase, TimestampMixin):
+class OrderResponse(OrderBase):
+    """Order response (DDL: orders)."""
+
     id: int
-    customer_id: int | None = None
+    created_at: datetime
+    updated_at: datetime
 
 
 class OrderWithLinesResponse(OrderResponse):
-    lines: list[OrderLineOut] = Field(default_factory=list)
+    """Order with lines response."""
+
+    lines: list[OrderLineResponse] = Field(default_factory=list)
 
 
-# --- OrderLine ---
+# ============================================================
+# OrderLine (受注明細)
+# ============================================================
+
+
 class OrderLineBase(BaseSchema):
-    line_no: int
-    product_code: str | None = None  # 後方互換性のため（非推奨: product_idを使用推奨）
-    product_id: int | None = None
-    warehouse_id: int | None = None
-    quantity: float
-    unit: str | None = None
-    due_date: date | None = None
-    next_div: str | None = None
-    destination_id: int | None = None
-    delivery_place_id: int | None = None  # 納品先ID（nullable）
-    delivery_place_code: str | None = None  # 納品先コード（nullable）
+    """Base order line schema (DDL: order_lines)."""
+
+    product_id: int = Field(..., gt=0)
+    delivery_date: date
+    order_quantity: Decimal = Field(..., gt=0, decimal_places=3, description="受注数量")
+    unit: str = Field(..., min_length=1, max_length=20)
 
 
 class OrderLineCreate(OrderLineBase):
-    product_id: int | None = None  # product_id または product_code のいずれかが必須
-    product_code: str | None = None  # 後方互換性のため
-    external_unit: str | None = None  # 外部単位（変換用）
+    """Create order line request."""
+
+    pass
 
 
-class OrderLineResponse(OrderLineBase, TimestampMixin):
+class OrderLineUpdate(BaseSchema):
+    """Update order line request."""
+
+    delivery_date: date | None = None
+    order_quantity: Decimal | None = Field(None, gt=0, decimal_places=3)
+    unit: str | None = Field(None, min_length=1, max_length=20)
+
+
+class OrderLineResponse(OrderLineBase):
+    """Order line response (DDL: order_lines)."""
+
     id: int
     order_id: int
-    product_id: int | None = None  # 追加: product_id基準の引当に必要
-    warehouse_id: int | None = None
-    allocated_qty: float | None = None
+    created_at: datetime
+    updated_at: datetime
 
 
-class WarehouseAllocOut(BaseSchema):
-    warehouse_id: int
-    quantity: float
+class OrderLineWithAllocationsResponse(OrderLineResponse):
+    """Order line with allocations response."""
+
+    allocations: list[AllocationResponse] = Field(default_factory=list)
+    allocated_quantity: Decimal = Field(default=Decimal("0"), description="引当済数量")
 
 
-class WarehouseAllocIn(BaseSchema):
-    warehouse_id: int
-    quantity: float
+# ============================================================
+# Allocation (引当実績) - Simplified for orders_schema
+# ============================================================
 
 
-class OrderLineOut(BaseSchema):
+class AllocationResponse(BaseSchema):
+    """Allocation response for order line (DDL: allocations)."""
+
     id: int
-    line_no: int | None = None
-    product_id: int | None = None  # 追加: product_id基準の引当に必要
-    product_code: str | None = None
+    order_line_id: int
+    lot_id: int
+    allocated_quantity: Decimal = Field(..., decimal_places=3)
+    status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
+# Backward Compatibility Helpers
+# ============================================================
+
+
+class OrderLineOut(OrderLineResponse):
+    """Deprecated: Use OrderLineResponse instead."""
+
+    # For backward compatibility with existing code
     product_name: str | None = None
-    warehouse_id: int | None = None
-    customer_id: int | None = None
-    customer_code: str | None = None
-    supplier_id: int | None = None
-    supplier_code: str | None = None
-    quantity: float
-    unit: str | None = None
-    due_date: date | None = None
-    delivery_place_id: int | None = None  # 納品先ID（nullable）
-    delivery_place_code: str | None = None  # 納品先コード（nullable）
-    delivery_place_name: str | None = None  # 納品先名称（nullable）
-    warehouse_allocations: list[WarehouseAllocOut] = Field(default_factory=list)
-    related_lots: list[dict[str, Any]] = Field(default_factory=list)
-    allocated_lots: list[dict[str, Any]] = Field(default_factory=list)
-    allocated_qty: float | None = None
-    next_div: str | None = None
-
-
-class AllocationWarning(BaseSchema):
-    code: str
-    message: str
-    meta: dict[str, Any] | None = None
-
-
-class LotCandidateOut(BaseSchema):
-    lot_id: int
-    lot_code: str
-    lot_number: str
-    product_code: str
-    available_qty: float
-    base_unit: str
-    lot_unit_qty: float | None = None
-    lot_unit: str | None = None
-    conversion_factor: float | None = None
-    expiry_date: str | None = None
-    mfg_date: str | None = None
-
-
-class LotCandidateListResponse(BaseSchema):
-    items: list[LotCandidateOut] = Field(default_factory=list)
-    warnings: list[AllocationWarning] = Field(default_factory=list)
-
-
-class SaveAllocationsRequest(BaseSchema):
-    allocations: list[WarehouseAllocIn] = Field(default_factory=list)
-
-
-class OrdersWithAllocResponse(BaseSchema):
-    items: list[OrderLineOut] = Field(default_factory=list)
-
-
-class OrderValidationLotAvailability(BaseSchema):
-    lot_id: int
-    available: int
-
-
-class OrderValidationDetails(BaseSchema):
-    warehouse_id: int | None = None
-    per_lot: list[OrderValidationLotAvailability] = Field(default_factory=list)
-    ship_date: date | None = None
-
-
-class OrderValidationErrorData(BaseSchema):
-    product_code: str
-    required: int
-    available: int
-    details: OrderValidationDetails
-
-
-class OrderLineDemandSchema(BaseSchema):
-    product_code: str
-    warehouse_id: int | None = None
-    quantity: PositiveInt
-
-
-class OrderValidationRequest(BaseSchema):
-    lines: list[OrderLineDemandSchema]
-    ship_date: date | None = None
-
-
-class OrderValidationResponse(BaseSchema):
-    ok: bool
-    message: str
-    data: OrderValidationErrorData | None = None
+    allocated_qty: Decimal | None = Field(None, description="Deprecated: use allocated_quantity")
 
 
 # Pydantic v2のforward reference解決
 OrderCreate.model_rebuild()
 OrderWithLinesResponse.model_rebuild()
+OrderLineWithAllocationsResponse.model_rebuild()

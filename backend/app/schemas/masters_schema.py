@@ -1,146 +1,210 @@
-# backend/app/schemas/masters.py
-"""マスタ関連のPydanticスキーマ."""
+"""Master data Pydantic schemas (DDL v2.2 compliant).
 
-from decimal import Decimal
+All schemas strictly follow the DDL as the single source of truth.
+Legacy fields have been removed.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
 
 from pydantic import Field
 
 from .base import BaseSchema
 
 
-# --- Warehouse ---
+# ============================================================
+# Warehouse (倉庫マスタ)
+# ============================================================
+
+
 class WarehouseBase(BaseSchema):
-    warehouse_id: int | None = None
-    warehouse_name: str
-    address: str | None = None
-    is_active: int = 1
+    """Base warehouse schema (DDL: warehouses)."""
+
+    warehouse_code: str = Field(..., min_length=1, max_length=50)
+    warehouse_name: str = Field(..., min_length=1, max_length=200)
+    warehouse_type: str = Field(
+        ..., pattern="^(internal|external|supplier)$", description="internal/external/supplier"
+    )
 
 
 class WarehouseCreate(WarehouseBase):
+    """Create warehouse request."""
+
     pass
 
 
 class WarehouseUpdate(BaseSchema):
-    warehouse_name: str | None = None
-    address: str | None = None
-    is_active: int | None = 1
+    """Update warehouse request."""
+
+    warehouse_name: str | None = Field(None, min_length=1, max_length=200)
+    warehouse_type: str | None = Field(
+        None, pattern="^(internal|external|supplier)$", description="internal/external/supplier"
+    )
 
 
 class WarehouseResponse(WarehouseBase):
-    pass
+    """Warehouse response (DDL: warehouses)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
 
 
-# --- Supplier ---
+class WarehouseOut(BaseSchema):
+    """Simplified warehouse output (for list views)."""
+
+    id: int = Field(serialization_alias="warehouse_id")
+    warehouse_code: str
+    warehouse_name: str
+    warehouse_type: str
+
+
+class WarehouseListResponse(BaseSchema):
+    """Warehouse list response."""
+
+    items: list[WarehouseOut]
+
+
+# ============================================================
+# Supplier (仕入先マスタ)
+# ============================================================
+
+
 class SupplierBase(BaseSchema):
-    supplier_code: str
-    supplier_name: str
-    address: str | None = None
+    """Base supplier schema (DDL: suppliers)."""
+
+    supplier_code: str = Field(..., min_length=1, max_length=50)
+    supplier_name: str = Field(..., min_length=1, max_length=200)
 
 
 class SupplierCreate(SupplierBase):
+    """Create supplier request."""
+
     pass
 
 
 class SupplierUpdate(BaseSchema):
-    supplier_name: str | None = None
-    address: str | None = None
+    """Update supplier request."""
+
+    supplier_name: str | None = Field(None, min_length=1, max_length=200)
 
 
 class SupplierResponse(SupplierBase):
-    pass
+    """Supplier response (DDL: suppliers)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
 
 
-# --- Customer ---
+# ============================================================
+# Customer (得意先マスタ)
+# ============================================================
+
+
 class CustomerBase(BaseSchema):
-    customer_code: str
-    customer_name: str
-    address: str | None = None
+    """Base customer schema (DDL: customers)."""
+
+    customer_code: str = Field(..., min_length=1, max_length=50)
+    customer_name: str = Field(..., min_length=1, max_length=200)
 
 
 class CustomerCreate(CustomerBase):
+    """Create customer request."""
+
     pass
 
 
 class CustomerUpdate(BaseSchema):
-    customer_name: str | None = None
-    address: str | None = None
+    """Update customer request."""
+
+    customer_name: str | None = Field(None, min_length=1, max_length=200)
 
 
 class CustomerResponse(CustomerBase):
+    """Customer response (DDL: customers)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
+# DeliveryPlace (納入先マスタ)
+# ============================================================
+
+
+class DeliveryPlaceBase(BaseSchema):
+    """Base delivery place schema (DDL: delivery_places)."""
+
+    jiku_code: str | None = Field(None, max_length=50, description="次区コード(SAP連携用)")
+    delivery_place_code: str = Field(..., min_length=1, max_length=50)
+    delivery_place_name: str = Field(..., min_length=1, max_length=200)
+    customer_id: int = Field(..., gt=0)
+
+
+class DeliveryPlaceCreate(DeliveryPlaceBase):
+    """Create delivery place request."""
+
     pass
 
 
-# --- Product ---
+class DeliveryPlaceUpdate(BaseSchema):
+    """Update delivery place request."""
+
+    jiku_code: str | None = Field(None, max_length=50)
+    delivery_place_name: str | None = Field(None, min_length=1, max_length=200)
+    customer_id: int | None = Field(None, gt=0)
+
+
+class DeliveryPlaceResponse(DeliveryPlaceBase):
+    """Delivery place response (DDL: delivery_places)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
+# Product (製品マスタ)
+# ============================================================
+
+
 class ProductBase(BaseSchema):
-    product_code: str
-    product_name: str
-    customer_part_no: str | None = None
-    maker_item_code: str | None = None
-    supplier_item_code: str | None = None
-    packaging_qty: Decimal = Field(..., gt=Decimal("0"))
-    packaging_unit: str = Field(..., min_length=1)
-    internal_unit: str = Field(..., min_length=1)
-    base_unit: str = "EA"
-    assemble_div: str | None = None
-    next_div: str | None = None
-    ji_ku_text: str | None = None
-    kumitsuke_ku_text: str | None = None
-    shelf_life_days: int | None = None
-    requires_lot_number: int | None = None
-    delivery_place_id: int | None = None
-    delivery_place_code: str | None = None  # 納品先コード（nullable）
-    delivery_place_name: str | None = None
-    shipping_warehouse_name: str | None = None
+    """Base product schema (DDL: products)."""
+
+    maker_part_code: str = Field(..., min_length=1, max_length=100, description="メーカー品番")
+    product_name: str = Field(..., min_length=1, max_length=200)
+    base_unit: str = Field(..., min_length=1, max_length=20, description="社内在庫単位")
+    consumption_limit_days: int | None = Field(None, ge=0, description="消費期限日数")
 
 
 class ProductCreate(ProductBase):
+    """Create product request."""
+
     pass
 
 
 class ProductUpdate(BaseSchema):
-    product_name: str | None = None
-    customer_part_no: str | None = None
-    maker_item_code: str | None = None
-    supplier_item_code: str | None = None
-    packaging_qty: Decimal | None = Field(default=None, gt=Decimal("0"))
-    packaging_unit: str | None = None
-    internal_unit: str | None = None
-    base_unit: str | None = None
-    assemble_div: str | None = None
-    next_div: str | None = None
-    ji_ku_text: str | None = None
-    kumitsuke_ku_text: str | None = None
-    shelf_life_days: int | None = None
-    requires_lot_number: bool | None = None
-    delivery_place_id: int | None = None
-    delivery_place_code: str | None = None  # 納品先コード（nullable）
-    delivery_place_name: str | None = None
-    shipping_warehouse_name: str | None = None
+    """Update product request."""
+
+    product_name: str | None = Field(None, min_length=1, max_length=200)
+    base_unit: str | None = Field(None, min_length=1, max_length=20)
+    consumption_limit_days: int | None = Field(None, ge=0)
 
 
 class ProductResponse(ProductBase):
-    pass
+    """Product response (DDL: products)."""
 
-
-# --- ProductUomConversion ---
-class ProductUomConversionBase(BaseSchema):
-    product_code: str
-    source_unit: str
-    source_value: float = 1.0
-    internal_unit_value: float
-
-
-class ProductUomConversionCreate(ProductUomConversionBase):
-    pass
-
-
-class ProductUomConversionUpdate(BaseSchema):
-    source_value: float | None = None
-    internal_unit_value: float | None = None
-
-
-class ProductUomConversionResponse(ProductUomConversionBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
+# Bulk Load (一括登録)
+# ============================================================
 
 
 class MasterBulkLoadRequest(BaseSchema):
@@ -150,6 +214,7 @@ class MasterBulkLoadRequest(BaseSchema):
     suppliers: list[SupplierCreate] = Field(default_factory=list)
     customers: list[CustomerCreate] = Field(default_factory=list)
     products: list[ProductCreate] = Field(default_factory=list)
+    delivery_places: list[DeliveryPlaceCreate] = Field(default_factory=list)
 
 
 class MasterBulkLoadResponse(BaseSchema):
@@ -157,3 +222,32 @@ class MasterBulkLoadResponse(BaseSchema):
 
     created: dict[str, list[str]] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
+
+
+# ============================================================
+# List Responses
+# ============================================================
+
+
+class CustomerListResponse(BaseSchema):
+    """Customer list response."""
+
+    items: list[CustomerResponse]
+
+
+class ProductListResponse(BaseSchema):
+    """Product list response."""
+
+    items: list[ProductResponse]
+
+
+class SupplierListResponse(BaseSchema):
+    """Supplier list response."""
+
+    items: list[SupplierResponse]
+
+
+class DeliveryPlaceListResponse(BaseSchema):
+    """Delivery place list response."""
+
+    items: list[DeliveryPlaceResponse]

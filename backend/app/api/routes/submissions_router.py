@@ -110,7 +110,7 @@ def _process_ocr_submission(
     for _idx, record in enumerate(records):
         try:
             # 重複チェック
-            existing = db.query(Order).filter(Order.order_no == record.order_no).first()
+            existing = db.query(Order).filter(Order.order_number == record.order_no).first()
             if existing:
                 skipped_records += 1
                 error_details.append(f"受注番号 {record.order_no} は既に存在します")
@@ -127,10 +127,11 @@ def _process_ocr_submission(
 
             # 受注ヘッダ作成
             db_order = Order(
-                order_no=record.order_no,
-                customer_code=record.customer_code,
+                order_number=record.order_no,
+                customer_id=customer.id,
+                delivery_place_id=customer.id,  # TODO: Get from request if available
                 order_date=record.order_date if record.order_date else None,
-                status="open",
+                status="pending",
             )
             db.add(db_order)
             db.flush()
@@ -140,7 +141,7 @@ def _process_ocr_submission(
             for line in record.lines:
                 # 製品チェック
                 product = (
-                    db.query(Product).filter(Product.product_code == line.product_code).first()
+                    db.query(Product).filter(Product.maker_part_code == line.product_code).first()
                 )
                 if not product:
                     failed_records += 1
@@ -163,11 +164,10 @@ def _process_ocr_submission(
 
                 db_line = OrderLine(
                     order_id=db_order.id,
-                    line_no=line.line_no,
-                    product_code=line.product_code,
-                    quantity=float(internal_qty),
-                    unit=product.internal_unit,
-                    due_date=line.due_date,
+                    product_id=product.id,
+                    order_quantity=float(internal_qty),
+                    unit=product.base_unit,
+                    delivery_date=line.due_date,
                 )
                 db.add(db_line)
                 db.flush()
@@ -177,7 +177,7 @@ def _process_ocr_submission(
                     try:
                         forecast_matcher.apply_forecast_to_order_line(
                             order_line=db_line,
-                            product_code=line.product_code,
+                            product_code=line.product_code,  # from request payload
                             customer_code=record.customer_code,
                             order_date=db_order.order_date,
                         )

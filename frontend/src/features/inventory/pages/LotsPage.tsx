@@ -99,24 +99,23 @@ export function LotsPage() {
       {
         id: "delivery_place_id",
         header: "納品場所",
-        cell: (lot: LotUI) => lot.delivery_place_id ?? "–",
+        cell: (lot: LotUI): string | number => lot.delivery_place_id ?? "–",
         sortable: true,
       },
       {
         id: "current_quantity",
         header: "現在在庫",
-        cell: (lot: LotUI) => (
-          <span className={lot.current_quantity > 0 ? "font-semibold" : "text-gray-400"}>
-            {fmt(lot.current_quantity)}
-          </span>
-        ),
+        cell: (lot: LotUI) => {
+          const qty = Number(lot.current_quantity);
+          return <span className={qty > 0 ? "font-semibold" : "text-gray-400"}>{fmt(qty)}</span>;
+        },
         sortable: true,
         align: "right",
       },
       {
         id: "unit",
         header: "単位",
-        cell: (lot: LotUI) => lot.lot_unit,
+        cell: (lot: LotUI): string => lot.unit,
         align: "center",
       },
       {
@@ -141,7 +140,7 @@ export function LotsPage() {
         id: "status",
         header: "ステータス",
         cell: (lot: LotUI) => {
-          const status = lot.current_quantity > 0 ? "available" : "depleted";
+          const status = Number(lot.current_quantity) > 0 ? "available" : "depleted";
           return <LotStatusBadge status={status} />;
         },
         sortable: true,
@@ -201,8 +200,11 @@ export function LotsPage() {
   // 統計情報
   const stats = useMemo(() => {
     const totalLots = allLots.length;
-    const activeLots = allLots.filter((lot) => lot.current_quantity > 0).length;
-    const totalQuantity = allLots.reduce((sum, lot) => sum + lot.current_quantity, 0);
+    const activeLots = allLots.filter((lot) => Number(lot.current_quantity) > 0).length;
+    const totalQuantity = allLots.reduce<number>(
+      (sum, lot) => sum + Number(lot.current_quantity),
+      0,
+    );
 
     return { totalLots, activeLots, totalQuantity };
   }, [allLots]);

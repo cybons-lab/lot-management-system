@@ -106,7 +106,7 @@ export function InventoryPage() {
       {
         id: "delivery_place",
         header: "納品先",
-        cell: (lot: LotUI) => {
+        cell: (lot: LotUI): string => {
           // LotUI から delivery_place_* を段階的に外しているため、存在時のみ安全にナローイング
           const codeUnknown = (lot as unknown as { delivery_place_code?: unknown })
             .delivery_place_code;
@@ -127,18 +127,21 @@ export function InventoryPage() {
       {
         id: "current_quantity",
         header: "現在在庫",
-        cell: (lot: LotUI) => (
-          <span className={lot.current_quantity > 0 ? "font-semibold" : "text-gray-400"}>
-            {lot.current_quantity.toLocaleString()}
-          </span>
-        ),
+        cell: (lot: LotUI) => {
+          const qty = Number(lot.current_quantity);
+          return (
+            <span className={qty > 0 ? "font-semibold" : "text-gray-400"}>
+              {qty.toLocaleString()}
+            </span>
+          );
+        },
         sortable: true,
         align: "right",
       },
       {
         id: "unit",
         header: "単位",
-        cell: (lot: LotUI) => lot.lot_unit,
+        cell: (lot: LotUI): string => lot.unit,
         align: "center",
       },
       {
@@ -163,8 +166,8 @@ export function InventoryPage() {
         id: "status",
         header: "ステータス",
         cell: (lot: LotUI) => {
-          // Derive status from current_quantity
-          const status = lot.current_quantity > 0 ? "available" : "depleted";
+          // Derive status from current_quantity (DDL v2.2: DECIMAL as string)
+          const status = Number(lot.current_quantity) > 0 ? "available" : "depleted";
           return <LotStatusBadge status={status} />;
         },
         sortable: true,
@@ -184,9 +187,11 @@ export function InventoryPage() {
   // 統計情報
   const stats = useMemo(() => {
     const totalLots = allLots?.length ?? 0;
-    const activeLots = (allLots ?? []).filter((lot: LotUI) => lot.current_quantity > 0).length;
+    const activeLots = (allLots ?? []).filter(
+      (lot: LotUI) => Number(lot.current_quantity) > 0,
+    ).length;
     const totalQuantity = (allLots ?? []).reduce<number>(
-      (sum, lot) => sum + lot.current_quantity,
+      (sum, lot) => sum + Number(lot.current_quantity),
       0,
     );
 

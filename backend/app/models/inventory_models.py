@@ -1,3 +1,9 @@
+"""Inventory and stock management models (DDL v2.2).
+
+All models strictly follow the DDL as the single source of truth.
+Legacy models (ExpiryRule) have been removed.
+"""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -7,13 +13,11 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
-    Boolean,
     CheckConstraint,
     Date,
     DateTime,
     ForeignKey,
     Index,
-    Integer,
     Numeric,
     String,
     Text,
@@ -44,7 +48,12 @@ class StockTransactionType(str, PyEnum):
 
 
 class Lot(Base):
-    """Represents physical inventory lots."""
+    """Represents physical inventory lots (ロット在庫).
+
+    DDL: lots
+    Primary key: id (BIGSERIAL)
+    Foreign keys: product_id, warehouse_id, supplier_id, expected_lot_id
+    """
 
     __tablename__ = "lots"
 
@@ -81,13 +90,13 @@ class Lot(Base):
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+        DateTime, nullable=False, server_default=func.current_timestamp()
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
-        server_default=func.now(),
-        onupdate=func.now(),
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
     )
 
     __table_args__ = (
@@ -101,6 +110,12 @@ class Lot(Base):
             "status IN ('active','depleted','expired','quarantine')",
             name="chk_lots_status",
         ),
+        UniqueConstraint(
+            "lot_number",
+            "product_id",
+            "warehouse_id",
+            name="uq_lots_number_product_warehouse",
+        ),
         Index("idx_lots_number", "lot_number"),
         Index("idx_lots_product_warehouse", "product_id", "warehouse_id"),
         Index("idx_lots_status", "status"),
@@ -113,6 +128,7 @@ class Lot(Base):
         ),
     )
 
+    # Relationships
     product: Mapped[Product] = relationship("Product", back_populates="lots")
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lots")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lots")
@@ -131,7 +147,12 @@ class Lot(Base):
 
 
 class StockHistory(Base):
-    """Tracks all stock transactions against lots."""
+    """Tracks all stock transactions against lots (在庫履歴).
+
+    DDL: stock_history
+    Primary key: id (BIGSERIAL)
+    Foreign key: lot_id -> lots(id)
+    """
 
     __tablename__ = "stock_history"
 
@@ -150,7 +171,7 @@ class StockHistory(Base):
     reference_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     reference_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     transaction_date: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+        DateTime, nullable=False, server_default=func.current_timestamp()
     )
 
     __table_args__ = (
@@ -160,8 +181,10 @@ class StockHistory(Base):
         ),
         Index("idx_stock_history_lot", "lot_id"),
         Index("idx_stock_history_date", "transaction_date"),
+        Index("idx_stock_history_type", "transaction_type"),
     )
 
+    # Relationships
     lot: Mapped[Lot] = relationship("Lot", back_populates="stock_history")
 
 
@@ -176,7 +199,12 @@ class AdjustmentType(str, PyEnum):
 
 
 class Adjustment(Base):
-    """Inventory adjustments linked to a lot."""
+    """Inventory adjustments linked to a lot (在庫調整).
+
+    DDL: adjustments
+    Primary key: id (BIGSERIAL)
+    Foreign keys: lot_id -> lots(id), adjusted_by -> users(id)
+    """
 
     __tablename__ = "adjustments"
 
@@ -195,7 +223,7 @@ class Adjustment(Base):
         nullable=False,
     )
     adjusted_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+        DateTime, nullable=False, server_default=func.current_timestamp()
     )
 
     __table_args__ = (
@@ -207,11 +235,17 @@ class Adjustment(Base):
         Index("idx_adjustments_date", "adjusted_at"),
     )
 
+    # Relationships
     lot: Mapped[Lot] = relationship("Lot", back_populates="adjustments")
 
 
 class InventoryItem(Base):
-    """Aggregated inventory quantities per product and warehouse."""
+    """Aggregated inventory quantities per product and warehouse (在庫サマリ).
+
+    DDL: inventory_items
+    Primary key: id (BIGSERIAL)
+    Foreign keys: product_id, warehouse_id
+    """
 
     __tablename__ = "inventory_items"
 
@@ -236,7 +270,7 @@ class InventoryItem(Base):
         Numeric(15, 3), nullable=False, server_default=text("0")
     )
     last_updated: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+        DateTime, nullable=False, server_default=func.current_timestamp()
     )
 
     __table_args__ = (
@@ -245,44 +279,18 @@ class InventoryItem(Base):
         Index("idx_inventory_items_warehouse", "warehouse_id"),
     )
 
+    # Relationships
     product: Mapped[Product] = relationship("Product", back_populates="inventory_items")
     warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="inventory_items")
 
 
-class ExpiryRule(Base):
-    """Shelf-life calculation rules (legacy, kept for backward compatibility)."""
-
-    __tablename__ = "expiry_rules"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    rule_type: Mapped[str] = mapped_column(Text, nullable=False)
-    days: Mapped[int | None] = mapped_column(Integer)
-    fixed_date: Mapped[date | None] = mapped_column(Date)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
-    priority: Mapped[int] = mapped_column(Integer, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
-    )
-    created_by: Mapped[str | None] = mapped_column(String(50))
-    updated_by: Mapped[str | None] = mapped_column(String(50))
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime)
-    revision: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
-    product_id: Mapped[int | None] = mapped_column(
-        ForeignKey("products.id", ondelete="SET NULL"), nullable=True
-    )
-    supplier_id: Mapped[int | None] = mapped_column(
-        ForeignKey("suppliers.id", ondelete="SET NULL"), nullable=True
-    )
-
-    product: Mapped[Product | None] = relationship("Product", back_populates="expiry_rules")
-    supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="expiry_rules")
-
-
 class AllocationSuggestion(Base):
-    """引当推奨（システムが提案する引当案）."""
+    """引当推奨（システムが提案する引当案）.
+
+    DDL: allocation_suggestions
+    Primary key: id (BIGSERIAL)
+    Foreign keys: forecast_line_id, lot_id
+    """
 
     __tablename__ = "allocation_suggestions"
 
@@ -309,6 +317,7 @@ class AllocationSuggestion(Base):
         Index("idx_allocation_suggestions_lot", "lot_id"),
     )
 
+    # Relationships
     forecast_line: Mapped[ForecastLine] = relationship("ForecastLine")
     lot: Mapped[Lot] = relationship("Lot")
 

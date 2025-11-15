@@ -19,22 +19,24 @@ export const lotHandlers = [
    */
   http.get(`${API_BASE}/lots`, ({ request }) => {
     const url = new URL(request.url);
-    const productCode = url.searchParams.get("product_code");
+    const productCode = url.searchParams.get("product_code"); // Note: API uses product_code but LotResponse has product_id
     // const supplierCode = url.searchParams.get("supplier_code");
     const hasStock = url.searchParams.get("has_stock");
 
     let filteredLots = [...lots];
 
     // フィルタリング
-    if (productCode) {
-      filteredLots = filteredLots.filter((lot) => lot.product_code === productCode);
+    // DDL v2.2: LotResponse has product_id (number), not product_code (string)
+    // For mock data, we skip product_code filtering or use legacy field
+    if (productCode && filteredLots[0] && "product_code" in filteredLots[0]) {
+      filteredLots = filteredLots.filter(
+        (lot) => (lot as { product_code?: string }).product_code === productCode,
+      );
     }
-    // supplier_code is not available in LotResponse, commenting out
-    // if (supplierCode) {
-    //   filteredLots = filteredLots.filter((lot) => lot.supplier_code === supplierCode);
-    // }
+
     if (hasStock === "true") {
-      filteredLots = filteredLots.filter((lot) => (lot.current_quantity ?? 0) > 0);
+      // DDL v2.2: current_quantity is string (DECIMAL)
+      filteredLots = filteredLots.filter((lot) => Number(lot.current_quantity ?? 0) > 0);
     }
 
     return HttpResponse.json(filteredLots);
@@ -45,7 +47,8 @@ export const lotHandlers = [
    */
   http.get(`${API_BASE}/lots/:id`, ({ params }) => {
     const { id } = params;
-    const lot = lots.find((l) => l.id === Number(id));
+    // DDL v2.2: LotResponse has lot_id, not id
+    const lot = lots.find((l) => l.lot_id === Number(id));
 
     if (!lot) {
       return new HttpResponse(null, { status: 404 });
@@ -61,7 +64,8 @@ export const lotHandlers = [
     const body = (await request.json()) as Partial<LotResponse>;
     const newLot = createLotWithStock({
       ...body,
-      id: Math.max(...lots.map((l) => l.id)) + 1,
+      // DDL v2.2: LotResponse has lot_id, not id
+      lot_id: Math.max(...lots.map((l) => l.lot_id)) + 1,
     });
 
     lots.push(newLot);
@@ -75,7 +79,8 @@ export const lotHandlers = [
   http.put(`${API_BASE}/lots/:id`, async ({ params, request }) => {
     const { id } = params;
     const body = (await request.json()) as Partial<LotResponse>;
-    const index = lots.findIndex((l) => l.id === Number(id));
+    // DDL v2.2: LotResponse has lot_id, not id
+    const index = lots.findIndex((l) => l.lot_id === Number(id));
 
     if (index === -1) {
       return new HttpResponse(null, { status: 404 });
@@ -95,7 +100,8 @@ export const lotHandlers = [
    */
   http.delete(`${API_BASE}/lots/:id`, ({ params }) => {
     const { id } = params;
-    const index = lots.findIndex((l) => l.id === Number(id));
+    // DDL v2.2: LotResponse has lot_id, not id
+    const index = lots.findIndex((l) => l.lot_id === Number(id));
 
     if (index === -1) {
       return new HttpResponse(null, { status: 404 });

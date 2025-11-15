@@ -56,8 +56,8 @@ def perform_master_bulk_load(db: Session, request: MasterBulkLoadRequest) -> Mas
             created["customers"].append(code)
 
         for product in request.products:
-            code = product.product_code
-            exists = db.query(Product).filter(Product.product_code == code).first()
+            code = product.maker_part_code
+            exists = db.query(Product).filter(Product.maker_part_code == code).first()
             if exists:
                 warnings.append(f"製品コード {code} は既に存在します")
                 continue

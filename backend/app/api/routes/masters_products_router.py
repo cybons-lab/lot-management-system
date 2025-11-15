@@ -23,17 +23,17 @@ def list_products(
 
     if search:
         query = query.filter(
-            (Product.product_code.contains(search)) | (Product.product_name.contains(search))
+            (Product.maker_part_code.contains(search)) | (Product.product_name.contains(search))
         )
 
-    products = query.order_by(Product.product_code).offset(skip).limit(limit).all()
+    products = query.order_by(Product.maker_part_code).offset(skip).limit(limit).all()
     return products
 
 
 @router.get("/{product_code}", response_model=ProductResponse)
 def get_product(product_code: str, db: Session = Depends(get_db)):
-    """Fetch a product by its code."""
-    product = db.query(Product).filter(Product.product_code == product_code).first()
+    """Fetch a product by its code (maker_part_code)."""
+    product = db.query(Product).filter(Product.maker_part_code == product_code).first()
     if not product:
         raise HTTPException(status_code=404, detail="製品が見つかりません")
     return product
@@ -42,7 +42,7 @@ def get_product(product_code: str, db: Session = Depends(get_db)):
 @router.post("", response_model=ProductResponse, status_code=201)
 def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     """Create a new product."""
-    exists = db.query(Product).filter(Product.product_code == product.product_code).first()
+    exists = db.query(Product).filter(Product.maker_part_code == product.maker_part_code).first()
     if exists:
         raise HTTPException(status_code=400, detail="製品コードが既に存在します")
 
@@ -62,8 +62,8 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
 
 @router.put("/{product_code}", response_model=ProductResponse)
 def update_product(product_code: str, product: ProductUpdate, db: Session = Depends(get_db)):
-    """Update an existing product."""
-    db_product = db.query(Product).filter(Product.product_code == product_code).first()
+    """Update an existing product (by maker_part_code)."""
+    db_product = db.query(Product).filter(Product.maker_part_code == product_code).first()
     if not db_product:
         raise HTTPException(status_code=404, detail="製品が見つかりません")
 
@@ -82,8 +82,8 @@ def update_product(product_code: str, product: ProductUpdate, db: Session = Depe
 
 @router.delete("/{product_code}", status_code=204)
 def delete_product(product_code: str, db: Session = Depends(get_db)):
-    """Delete a product by its code."""
-    db_product = db.query(Product).filter(Product.product_code == product_code).first()
+    """Delete a product by its code (maker_part_code)."""
+    db_product = db.query(Product).filter(Product.maker_part_code == product_code).first()
     if not db_product:
         raise HTTPException(status_code=404, detail="製品が見つかりません")
 

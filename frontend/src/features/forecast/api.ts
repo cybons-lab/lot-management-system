@@ -15,7 +15,10 @@ type ForecastBulkResponse =
 
 // 互換性のためのエイリアス
 export type { ForecastListParams, ForecastListResponse, ForecastBulkRequest, ForecastBulkResponse };
-export type ForecastResponse = components["schemas"]["ForecastResponse"];
+export type ForecastResponse = components["schemas"]["LegacyForecastResponse"]; // Use legacy schema for backward compatibility
+export type ForecastHeaderResponse = components["schemas"]["ForecastHeaderResponse"];
+export type ForecastLineResponse = components["schemas"]["ForecastLineResponse"];
+export type ForecastHeaderDetailResponse = components["schemas"]["ForecastHeaderDetailResponse"];
 
 /**
  * 予測サマリー一覧取得（フロント表示用）

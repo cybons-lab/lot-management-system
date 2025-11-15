@@ -354,13 +354,16 @@ def match_forecasts(request: ForecastMatchRequest, db: Session = Depends(get_db)
 
     for line in order_lines:
         order = line.order
+        # Get product_code from relationship (DDL v2.2: maker_part_code)
+        product_code = line.product.maker_part_code if line.product else "UNKNOWN"
+
         if not order.order_date:
             results.append(
                 ForecastMatchResult(
                     order_line_id=line.id,
-                    order_no=order.order_no,
-                    line_no=line.line_no,
-                    product_code=line.product_code,
+                    order_no=order.order_number,
+                    line_no=line.id,  # DDL v2.2: line_no doesn't exist, use id
+                    product_code=product_code,
                     matched=False,
                 )
             )
@@ -368,7 +371,7 @@ def match_forecasts(request: ForecastMatchRequest, db: Session = Depends(get_db)
 
         success = matcher.apply_forecast_to_order_line(
             order_line=line,
-            product_code=line.product_code,
+            product_code=product_code,
             customer_code=order.customer_code,
             order_date=order.order_date,
         )
@@ -376,9 +379,9 @@ def match_forecasts(request: ForecastMatchRequest, db: Session = Depends(get_db)
         results.append(
             ForecastMatchResult(
                 order_line_id=line.id,
-                order_no=order.order_no,
-                line_no=line.line_no,
-                product_code=line.product_code,
+                order_no=order.order_number,
+                line_no=line.id,  # DDL v2.2: line_no doesn't exist, use id
+                product_code=product_code,
                 matched=success,
                 forecast_id=line.forecast_id,
                 forecast_granularity=line.forecast_granularity,

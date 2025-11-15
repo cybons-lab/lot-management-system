@@ -1,4 +1,7 @@
-"""Role schemas (ロール管理)."""
+"""Role schemas (ロール管理) - DDL v2.2 compliant.
+
+All schemas strictly follow the DDL as the single source of truth.
+"""
 
 from datetime import datetime
 
@@ -8,7 +11,7 @@ from app.schemas.base import BaseSchema
 
 
 class RoleBase(BaseSchema):
-    """Base schema for roles."""
+    """Base schema for roles (DDL: roles)."""
 
     role_code: str = Field(..., min_length=1, max_length=50, description="ロールコード")
     role_name: str = Field(..., min_length=1, max_length=100, description="ロール名")
@@ -29,13 +32,8 @@ class RoleUpdate(BaseSchema):
 
 
 class RoleResponse(RoleBase):
-    """Schema for role response."""
+    """Schema for role response (DDL: roles)."""
 
-    role_id: int
+    id: int
     created_at: datetime
     updated_at: datetime
-
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True

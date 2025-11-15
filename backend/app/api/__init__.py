@@ -13,7 +13,7 @@ from .routes import (
     lots_router,
     masters_router,
     orders_router,
-    orders_validate_router,
+    # orders_validate_router,  # Disabled: requires OrderValidation* schemas not in DDL v2.2
     warehouse_alloc_router,
 )
 
@@ -28,5 +28,5 @@ __all__ = [
     "allocations_router",
     "forecast_router",
     "warehouse_alloc_router",
-    "orders_validate_router",
+    # "orders_validate_router",  # Disabled: requires OrderValidation* schemas not in DDL v2.2
 ]

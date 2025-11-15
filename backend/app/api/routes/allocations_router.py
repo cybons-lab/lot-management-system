@@ -63,8 +63,8 @@ def drag_assign_allocation(request: DragAssignRequest, db: Session = Depends(get
     allocation = Allocation(
         order_line_id=request.order_line_id,
         lot_id=request.lot_id,
-        allocated_qty=float(request.allocate_qty),
-        status="active",
+        allocated_quantity=float(request.allocate_qty),
+        status="allocated",
     )
     db.add(allocation)
 

@@ -48,7 +48,8 @@ export type LotWithStock = LotResponse;
 // ---- Allocation ----
 export type AllocatedLot = {
   lot_id: number;
-  allocated_qty: number | null;
+  allocated_quantity: number | string | null; // DDL v2.2: DECIMAL(15,3)
+  allocated_qty?: number | null; // Deprecated: use allocated_quantity
   allocation_id?: number; // UI参照あり
   delivery_place_code: string | null;
   delivery_place_name: string | null;
@@ -78,7 +79,8 @@ export type CandidateLotItem = {
   lot_number: string;
   free_qty: number;
   current_quantity: number;
-  allocated_qty: number;
+  allocated_quantity: number | string; // DDL v2.2: DECIMAL(15,3)
+  allocated_qty?: number; // Deprecated: use allocated_quantity
   product_id?: number | null;
   product_code?: string | null;
   delivery_place_id?: number | null;
@@ -143,22 +145,33 @@ export const ORDER_STATUS_DISPLAY: Record<OrderStatus, { label: string; variant:
   [OrderStatus.CANCELLED]: { label: "キャンセル", variant: "bg-red-100 text-red-800" },
 };
 
-type ApiOrderLine = components["schemas"]["OrderLineOut"];
-type ApiOrderLineBase = Omit<ApiOrderLine, "allocated_lots">;
+type ApiOrderLine = components["schemas"]["OrderLineResponse"];
 
-export type OrderLine = ApiOrderLineBase & {
-  allocated_lots?: ApiOrderLine["allocated_lots"] | AllocatedLot[];
+export type OrderLine = ApiOrderLine & {
+  // Legacy fields for backward compatibility (will be removed)
+  line_no?: number | null;
+  product_code?: string | null;
+  product_name?: string | null;
+  quantity?: number | string | null; // Deprecated: use order_quantity
+  due_date?: string | null; // Deprecated: use delivery_date
+  allocated_qty?: number | string | null; // Deprecated: use allocated_quantity
+  allocated_lots?: AllocatedLot[];
   delivery_place_allocations?: Array<{ delivery_place_code: string; quantity: number }>;
   forecast_qty?: number | null;
   forecast_version_no?: number | null;
   status?: string | null;
+  customer_code?: string | null;
+  customer_name?: string | null;
 };
 
 type ApiOrderResponse = components["schemas"]["OrderResponse"];
 type ApiOrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
 
 export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
-  customer_name?: string | null;
+  // Legacy fields for backward compatibility (will be removed)
+  order_no?: string | null; // Deprecated: use order_number
+  customer_code?: string | null; // Deprecated: use customer_id lookup
+  customer_name?: string | null; // Join field (not in DDL)
   delivery_place?: string | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
@@ -169,7 +182,10 @@ export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
 };
 
 export type OrderWithLinesResponse = Omit<ApiOrderWithLinesResponse, "lines"> & {
-  customer_name?: string | null;
+  // Legacy fields for backward compatibility (will be removed)
+  order_no?: string | null; // Deprecated: use order_number
+  customer_code?: string | null; // Deprecated: use customer_id lookup
+  customer_name?: string | null; // Join field (not in DDL)
   delivery_place?: string | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;

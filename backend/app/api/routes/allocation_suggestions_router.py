@@ -235,6 +235,9 @@ def create_manual_suggestion(
         f"lot_id={request.lot_id}, quantity={request.quantity}"
     )
 
+    # Get product_code from relationship (DDL v2.2: maker_part_code)
+    product_code = order_line.product.maker_part_code if order_line.product else "UNKNOWN"
+
     return AllocationSuggestionManualResponse(
         order_line_id=request.order_line_id,
         lot_id=request.lot_id,
@@ -242,7 +245,7 @@ def create_manual_suggestion(
         suggested_quantity=request.quantity,
         available_quantity=available_qty,
         product_id=order_line.product_id,
-        product_code=order_line.product_code,
+        product_code=product_code,
         warehouse_id=getattr(lot, "warehouse_id", None),
         expiry_date=lot.expiry_date,
         status="preview",

@@ -31,7 +31,7 @@ from app.api.routes import (
     masters_router,
     operation_logs_router,
     orders_router,
-    orders_validate_router,
+    # orders_validate_router,  # Disabled: requires OrderValidation* schemas not in DDL v2.2
     products_router,
     roles_router,
     submissions_router,
@@ -117,7 +117,7 @@ app.include_router(customers_router, prefix=settings.API_PREFIX)  # NEW: /api/cu
 app.include_router(products_router, prefix=settings.API_PREFIX)  # NEW: /api/products
 app.include_router(warehouse_alloc_router, prefix=settings.API_PREFIX)
 app.include_router(health_router, prefix=settings.API_PREFIX)
-app.include_router(orders_validate_router, prefix=settings.API_PREFIX)
+# app.include_router(orders_validate_router, prefix=settings.API_PREFIX)  # Disabled: requires OrderValidation* schemas not in DDL v2.2
 app.include_router(
     admin_simulate_router, prefix=settings.API_PREFIX
 )  # NEW: Simulation API with YAML profiles

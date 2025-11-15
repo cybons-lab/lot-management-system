@@ -1,148 +1,194 @@
-# backend/app/schemas/allocations.py
-"""FEFO引当およびドラッグ引当関連のスキーマ."""
+"""Allocation and lot assignment schemas (DDL v2.2 compliant).
+
+All schemas strictly follow the DDL as the single source of truth.
+Column names: allocated_qty → allocated_quantity
+"""
 
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from pydantic import Field
 
 from .base import BaseSchema
 
 
+# ============================================================
+# FEFO Allocation (FEFO引当)
+# ============================================================
+
+
 class FefoPreviewRequest(BaseSchema):
+    """FEFO preview request."""
+
     order_id: int
 
 
 class FefoLotAllocation(BaseSchema):
+    """FEFO lot allocation detail."""
+
     lot_id: int
     lot_number: str
-    allocate_qty: float
+    allocated_quantity: Decimal = Field(..., decimal_places=3, description="引当数量")
     expiry_date: date | None = None
-    receipt_date: date | None = None
+    received_date: date | None = None
 
 
 class FefoLineAllocation(BaseSchema):
+    """FEFO line allocation detail."""
+
     order_line_id: int
-    product_id: int | None = None
-    product_code: str
-    warehouse_id: int | None = None
-    required_qty: float
-    already_allocated_qty: float
+    product_id: int
+    order_quantity: Decimal = Field(..., decimal_places=3, description="受注数量")
+    already_allocated_quantity: Decimal = Field(
+        default=Decimal("0"), decimal_places=3, description="既存引当数量"
+    )
     allocations: list[FefoLotAllocation] = Field(default_factory=list)
-    next_div: str | None = None
     warnings: list[str] = Field(default_factory=list)
 
 
 class FefoPreviewResponse(BaseSchema):
+    """FEFO preview response."""
+
     order_id: int
     lines: list[FefoLineAllocation] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
 
 class FefoCommitResponse(BaseSchema):
+    """FEFO commit response."""
+
     order_id: int
     created_allocation_ids: list[int] = Field(default_factory=list)
     preview: FefoPreviewResponse
 
 
-class DragAssignRequest(BaseSchema):
+# ============================================================
+# Manual Allocation (手動引当)
+# ============================================================
+
+
+class ManualAllocationRequest(BaseSchema):
+    """Manual allocation request (v2.2.1)."""
+
     order_line_id: int
     lot_id: int
-    allocate_qty: float
+    allocated_quantity: Decimal = Field(..., gt=0, decimal_places=3)
 
 
-class DragAssignResponse(BaseSchema):
-    success: bool
-    message: str
-    allocated_id: int
-    remaining_lot_qty: float
+class ManualAllocationResponse(BaseSchema):
+    """Manual allocation response (v2.2.1)."""
 
-
-class CandidateLotItem(BaseSchema):
-    """候補ロット項目（product_id基準）."""
-
+    order_line_id: int
     lot_id: int
     lot_number: str
-    free_qty: float
-    current_quantity: float
-    allocated_qty: float
-    product_id: int | None = None
-    product_code: str | None = None
-    warehouse_id: int | None = None
-    expiry_date: date | None = None
-    last_updated: str | None = None
-
-
-class CandidateLotsResponse(BaseSchema):
-    """候補ロット一覧レスポンス."""
-
-    items: list[CandidateLotItem] = Field(default_factory=list)
-    total: int = 0
-
-
-class AllocatableLotItem(BaseSchema):
-    """診断用引当可能ロット項目."""
-
-    lot_id: int
-    lot_number: str
+    allocated_quantity: Decimal = Field(..., decimal_places=3)
+    available_quantity: Decimal = Field(..., decimal_places=3)
     product_id: int
-    product_code: str | None = None
-    warehouse_id: int
-    free_qty: float
-    current_quantity: float
-    allocated_qty: float
-    expiry_date: date | None = None
-    is_locked: bool = False
-    last_updated: str | None = None
-
-
-class AllocatableLotsResponse(BaseSchema):
-    """診断用引当可能ロット一覧レスポンス."""
-
-    items: list[AllocatableLotItem] = Field(default_factory=list)
-    total: int = 0
-
-
-# --- Phase 3-4: v2.2.1 新スキーマ ---
-
-
-class AllocationSuggestionManualRequest(BaseSchema):
-    """手動仮引当リクエスト（v2.2.1）."""
-
-    order_line_id: int
-    lot_id: int
-    quantity: float
-
-
-class AllocationSuggestionManualResponse(BaseSchema):
-    """手動仮引当レスポンス（v2.2.1）."""
-
-    order_line_id: int
-    lot_id: int
-    lot_number: str
-    suggested_quantity: float
-    available_quantity: float
-    product_id: int | None = None
-    product_code: str | None = None
-    warehouse_id: int | None = None
     expiry_date: date | None = None
     status: str = "preview"
     message: str | None = None
 
 
+# ============================================================
+# Allocation Commit (引当確定)
+# ============================================================
+
+
 class AllocationCommitRequest(BaseSchema):
-    """引当確定リクエスト（v2.2.1）."""
+    """Allocation commit request (v2.2.1)."""
 
     order_id: int
-    # 将来: suggestion_ids のリストでの確定も対応可能
 
 
 class AllocationCommitResponse(BaseSchema):
-    """引当確定レスポンス（v2.2.1）."""
+    """Allocation commit response (v2.2.1)."""
 
     order_id: int
     created_allocation_ids: list[int] = Field(default_factory=list)
     preview: FefoPreviewResponse | None = None
     status: str = "committed"
     message: str | None = None
+
+
+# ============================================================
+# Candidate Lots (候補ロット)
+# ============================================================
+
+
+class CandidateLotItem(BaseSchema):
+    """Candidate lot item (DDL: lots)."""
+
+    lot_id: int
+    lot_number: str
+    current_quantity: Decimal = Field(..., decimal_places=3)
+    allocated_quantity: Decimal = Field(..., decimal_places=3)
+    available_quantity: Decimal = Field(..., decimal_places=3, description="引当可能数量")
+    product_id: int
+    warehouse_id: int
+    expiry_date: date | None = None
+    received_date: date | None = None
+
+
+class CandidateLotsResponse(BaseSchema):
+    """Candidate lots list response."""
+
+    items: list[CandidateLotItem] = Field(default_factory=list)
+    total: int = 0
+
+
+# ============================================================
+# Allocation Response (引当実績レスポンス)
+# ============================================================
+
+
+class AllocationDetail(BaseSchema):
+    """Allocation detail (DDL: allocations)."""
+
+    id: int
+    order_line_id: int
+    lot_id: int
+    allocated_quantity: Decimal = Field(..., decimal_places=3)
+    status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
+
+
+class AllocationListResponse(BaseSchema):
+    """Allocation list response."""
+
+    items: list[AllocationDetail] = Field(default_factory=list)
+    total: int = 0
+
+
+# ============================================================
+# Backward Compatibility Aliases (v2.1 互換)
+# ============================================================
+
+
+class DragAssignRequest(ManualAllocationRequest):
+    """Deprecated: Use ManualAllocationRequest instead."""
+
+    allocate_qty: Decimal | None = Field(None, description="Deprecated: use allocated_quantity")
+
+
+class DragAssignResponse(BaseSchema):
+    """Deprecated: Use ManualAllocationResponse instead."""
+
+    success: bool
+    message: str
+    allocated_id: int
+    remaining_lot_qty: Decimal | None = None
+
+
+class AllocationSuggestionManualRequest(ManualAllocationRequest):
+    """Deprecated: Use ManualAllocationRequest instead."""
+
+    quantity: Decimal | None = Field(None, description="Deprecated: use allocated_quantity")
+
+
+class AllocationSuggestionManualResponse(ManualAllocationResponse):
+    """Deprecated: Use ManualAllocationResponse instead."""
+
+    suggested_quantity: Decimal | None = Field(
+        None, description="Deprecated: use allocated_quantity"
+    )

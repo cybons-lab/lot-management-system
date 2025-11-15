@@ -188,9 +188,9 @@ class LegacyForecastMatchResult(BaseSchema):
     """Deprecated match result for legacy forecasts."""
 
     order_line_id: int
-    order_no: str
-    line_no: int
-    product_code: str
+    order_no: str  # Note: バックエンドでorder_numberに変換してから返すこと
+    line_no: int  # Note: DDL v2.2ではline_noフィールドは削除されました（idを使用）
+    product_code: str  # Note: バックエンドでmaker_part_codeから変換して返すこと
     matched: bool
     forecast_id: int | None = None
     forecast_granularity: str | None = None

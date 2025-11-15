@@ -8,28 +8,31 @@ import { faker } from "@faker-js/faker/locale/ja";
 import type { LotResponse } from "@/shared/types/aliases";
 
 /**
- * ランダムなロットデータを生成
+ * ランダムなロットデータを生成 (DDL v2.2 compliant)
  */
 export function createLot(overrides?: Partial<LotResponse>): LotResponse {
-  const receiptDate = faker.date.recent({ days: 90 });
-  const expiryDate = new Date(receiptDate);
+  const receivedDate = faker.date.recent({ days: 90 });
+  const expiryDate = new Date(receivedDate);
   expiryDate.setDate(expiryDate.getDate() + faker.number.int({ min: 30, max: 365 }));
 
+  const currentQty = faker.number.int({ min: 0, max: 1000 });
+  const allocatedQty = faker.number.int({ min: 0, max: currentQty });
+
   return {
-    id: faker.number.int({ min: 1, max: 10000 }),
-    supplier_code: `SUP-${faker.string.alphanumeric(3).toUpperCase()}`,
-    product_code: `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
+    lot_id: faker.number.int({ min: 1, max: 10000 }), // DDL v2.2
     lot_number: `LOT-${faker.string.alphanumeric(8).toUpperCase()}`,
-    lot_status: overrides?.lot_status ?? "available",
-    receipt_date: receiptDate.toISOString().split("T")[0],
+    product_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2
+    warehouse_id: faker.number.int({ min: 1, max: 10 }), // DDL v2.2
+    supplier_id: faker.number.int({ min: 1, max: 50 }), // DDL v2.2
+    received_date: receivedDate.toISOString().split("T")[0], // DDL v2.2
     expiry_date: expiryDate.toISOString().split("T")[0],
-    delivery_place_code: faker.helpers.arrayElement(["DP-001", "DP-002", "DP-003", null]),
-    delivery_place_name: faker.helpers.arrayElement(["納品先A", "納品先B", "納品先C", null]),
-    current_quantity: faker.number.int({ min: 0, max: 1000 }),
-    updated_at: faker.date.recent().toISOString(),
-    product_name: faker.commerce.productName(),
+    current_quantity: String(currentQty), // DDL v2.2: DECIMAL as string
+    allocated_quantity: String(allocatedQty), // DDL v2.2: DECIMAL as string
     unit: faker.helpers.arrayElement(["EA", "CASE", "BOX"]),
+    status: faker.helpers.arrayElement(["active", "depleted", "expired", "quarantine"]), // DDL v2.2
+    expected_lot_id: null, // DDL v2.2
     created_at: faker.date.past().toISOString(),
+    updated_at: faker.date.recent().toISOString(),
     ...overrides,
   };
 }
@@ -46,7 +49,7 @@ export function createLots(count: number, overrides?: Partial<LotResponse>): Lot
  */
 export function createLotWithStock(overrides?: Partial<LotResponse>): LotResponse {
   return createLot({
-    current_quantity: faker.number.int({ min: 100, max: 1000 }),
+    current_quantity: String(faker.number.int({ min: 100, max: 1000 })),
     ...overrides,
   });
 }
@@ -56,7 +59,8 @@ export function createLotWithStock(overrides?: Partial<LotResponse>): LotRespons
  */
 export function createLotWithoutStock(overrides?: Partial<LotResponse>): LotResponse {
   return createLot({
-    current_quantity: 0,
+    current_quantity: "0",
+    status: "depleted",
     ...overrides,
   });
 }
@@ -68,6 +72,7 @@ export function createExpiredLot(overrides?: Partial<LotResponse>): LotResponse 
   const expiryDate = faker.date.past();
   return createLot({
     expiry_date: expiryDate.toISOString().split("T")[0],
+    status: "expired",
     ...overrides,
   });
 }
