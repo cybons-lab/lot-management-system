@@ -321,8 +321,7 @@ def run_seed_simulation(
             now = datetime.now(UTC)
             today = now.date()
             existing_numbers = {
-                number
-                for (number,) in db.execute(select(ForecastHeader.forecast_number)).all()
+                number for (number,) in db.execute(select(ForecastHeader.forecast_number)).all()
             }
 
             forecast_headers: list[ForecastHeader] = []
@@ -381,9 +380,7 @@ def run_seed_simulation(
                 db.bulk_save_objects(forecast_lines)
                 db.flush()
                 forecast_count = len(forecast_lines)
-                tracker.add_log(
-                    task_id, f"✓ Created {forecast_count} forecast line entries"
-                )
+                tracker.add_log(task_id, f"✓ Created {forecast_count} forecast line entries")
             else:
                 tracker.add_log(task_id, "→ No forecast lines generated for headers")
         else:
@@ -412,9 +409,7 @@ def run_seed_simulation(
             wh = _choose(rng, all_warehouses) if all_warehouses else None
             supplier = _choose(rng, all_suppliers) if all_suppliers else None
             days = rng.randint(0, 360)
-            lot_unit = (
-                prod.base_unit if prod and getattr(prod, "base_unit", None) else "PCS"
-            )
+            lot_unit = prod.base_unit if prod and getattr(prod, "base_unit", None) else "PCS"
             lot = Lot(
                 product_id=prod.id if prod else None,
                 warehouse_id=wh.id if wh else None,
@@ -536,9 +531,7 @@ def run_seed_simulation(
                 continue
 
             # FIFO順でソート
-            matching_lots.sort(
-                key=lambda x: x.received_date or datetime.min.date()
-            )
+            matching_lots.sort(key=lambda x: x.received_date or datetime.min.date())
 
             # ロット分割上限を適用
             remaining_qty = Decimal(line.order_quantity)
@@ -549,9 +542,7 @@ def run_seed_simulation(
                 if remaining_qty <= 0 or lot_count >= max_lots:
                     break
 
-                available_quantity = max(
-                    Decimal(0), lot.current_quantity - lot.allocated_quantity
-                )
+                available_quantity = max(Decimal(0), lot.current_quantity - lot.allocated_quantity)
                 if available_quantity <= 0:
                     continue
 
@@ -705,9 +696,7 @@ def run_seed_simulation(
 
         # 集計
         total_warehouses = db.scalar(select(func.count()).select_from(Warehouse)) or 0
-        total_forecasts = (
-            db.scalar(select(func.count()).select_from(ForecastHeader)) or 0
-        )
+        total_forecasts = db.scalar(select(func.count()).select_from(ForecastHeader)) or 0
         total_orders = db.scalar(select(func.count()).select_from(Order)) or 0
         total_order_lines = db.scalar(select(func.count()).select_from(OrderLine)) or 0
         total_lots = db.scalar(select(func.count()).select_from(Lot)) or 0
@@ -762,9 +751,7 @@ def run_seed_simulation(
                 )
             else:
                 snapshot_id = snapshot.id
-                tracker.add_log(
-                    task_id, f"Snapshot saved: {snapshot_name} (ID: {snapshot_id})"
-                )
+                tracker.add_log(task_id, f"Snapshot saved: {snapshot_name} (ID: {snapshot_id})")
 
         # 完了
         tracker.add_log(task_id, "Simulation completed successfully")
