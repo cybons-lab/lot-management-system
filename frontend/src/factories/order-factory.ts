@@ -91,7 +91,7 @@ export function createOrderLine(
     product_id: overrides?.product_id ?? faker.number.int({ min: 1, max: 100 }), // DDL v2.2
     order_quantity: String(orderQuantity), // DDL v2.2: DECIMAL as string
     unit,
-    delivery_date: deliveryDate, // DDL v2.2
+    delivery_date: deliveryDate ?? faker.date.soon({ days: 30 }).toISOString().split("T")[0], // DDL v2.2
     created_at: faker.date.past().toISOString(), // DDL v2.2
     updated_at: faker.date.recent().toISOString(), // DDL v2.2
     // Legacy fields for backward compatibility
@@ -99,7 +99,7 @@ export function createOrderLine(
     product_code: overrides?.product_code ?? `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
     quantity: overrides?.quantity ?? orderQuantity,
     status: overrides?.status ?? faker.helpers.arrayElement(["open", "allocated", "shipped"]),
-    due_date: overrides?.due_date ?? deliveryDate,
+    due_date: overrides?.due_date ?? deliveryDate ?? faker.date.soon({ days: 30 }).toISOString().split("T")[0],
     allocated_qty: overrides?.allocated_qty ?? allocatedQuantity,
     forecast_qty: overrides?.forecast_qty ?? null,
     forecast_version_no: overrides?.forecast_version_no ?? null,

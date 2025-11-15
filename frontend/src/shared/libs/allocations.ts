@@ -13,10 +13,12 @@ export function coerceAllocatedLots(
     }
 
     const typed = allocation as AllocatedLot;
+    const quantity = typed.allocated_quantity ?? typed.allocated_qty ?? "0"; // DDL v2.2: prefer allocated_quantity
     acc.push({
       allocation_id: typed.allocation_id,
       lot_id: typed.lot_id,
-      allocated_qty: typed.allocated_qty ?? 0,
+      allocated_quantity: quantity, // DDL v2.2
+      allocated_qty: Number(quantity), // Legacy field
       delivery_place_code: typed.delivery_place_code ?? null,
       delivery_place_name: typed.delivery_place_name ?? null,
     });

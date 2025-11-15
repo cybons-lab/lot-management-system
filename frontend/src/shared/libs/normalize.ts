@@ -41,28 +41,29 @@ export interface OrderUI extends Record<string, unknown> {
 }
 
 export interface LotUI extends Record<string, unknown> {
-  id: number;
-  supplier_code: string;
-  product_code: string;
+  lot_id: number; // DDL v2.2
   lot_number: string;
-  receipt_date: string;
-  mfg_date: string;
+  product_id: number; // DDL v2.2
+  warehouse_id: number; // DDL v2.2
+  supplier_id: number | null; // DDL v2.2
+  received_date: string; // DDL v2.2
   expiry_date: string;
-  delivery_place_id: number | null;
-  delivery_place_code: string | null;
-  lot_unit: string;
-  kanban_class: string;
-  sales_unit: string;
-  inventory_unit: string;
-  received_by: string;
-  source_doc: string;
-  qc_certificate_status: string;
-  qc_certificate_file: string;
-  current_quantity: number;
-  last_updated: string;
-  product_name: string;
+  current_quantity: string; // DDL v2.2: DECIMAL as string
+  allocated_quantity: string; // DDL v2.2: DECIMAL as string
+  unit: string;
+  status: string; // DDL v2.2: active/depleted/expired/quarantine
+  expected_lot_id: number | null; // DDL v2.2
   created_at: string;
   updated_at: string;
+  // Legacy fields (deprecated, for backward compatibility)
+  id?: number;
+  product_code?: string;
+  supplier_code?: string;
+  warehouse_code?: string;
+  receipt_date?: string;
+  delivery_place_id?: number | null;
+  delivery_place_code?: string | null;
+  product_name?: string;
 }
 
 export interface ProductUI extends Record<string, unknown> {
@@ -145,28 +146,26 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
  */
 export function normalizeLot(lot: LotResponse): LotUI {
   return {
-    id: lot.id,
-    supplier_code: S(lot.supplier_code),
-    product_code: S(lot.product_code),
+    lot_id: lot.lot_id,
     lot_number: S(lot.lot_number),
-    receipt_date: S(lot.receipt_date),
-    mfg_date: S(lot.mfg_date),
+    product_id: lot.product_id,
+    warehouse_id: lot.warehouse_id,
+    supplier_id: lot.supplier_id ?? null,
+    received_date: S(lot.received_date),
     expiry_date: S(lot.expiry_date),
-    delivery_place_id: lot.delivery_place_id ?? null,
-    delivery_place_code: lot.delivery_place_code ?? null,
-    lot_unit: S(lot.lot_unit, "EA"),
-    kanban_class: S(lot.kanban_class),
-    sales_unit: S(lot.sales_unit),
-    inventory_unit: S(lot.inventory_unit),
-    received_by: S(lot.received_by),
-    source_doc: S(lot.source_doc),
-    qc_certificate_status: S(lot.qc_certificate_status),
-    qc_certificate_file: S(lot.qc_certificate_file),
-    current_quantity: N(lot.current_quantity),
-    last_updated: S(lot.last_updated),
-    product_name: S(lot.product_name),
+    current_quantity: S(lot.current_quantity, "0"),
+    allocated_quantity: S(lot.allocated_quantity, "0"),
+    unit: S(lot.unit, "EA"),
+    status: S(lot.status, "active"),
+    expected_lot_id: lot.expected_lot_id ?? null,
     created_at: S(lot.created_at),
     updated_at: S(lot.updated_at),
+    // Legacy fields (for backward compatibility)
+    id: lot.lot_id,
+    receipt_date: S(lot.received_date),
+    delivery_place_id: (lot as Record<string, unknown>).delivery_place_id as number | null ?? null,
+    delivery_place_code: (lot as Record<string, unknown>).delivery_place_code as string | null ?? null,
+    product_name: (lot as Record<string, unknown>).product_name as string | undefined,
   };
 }
 
