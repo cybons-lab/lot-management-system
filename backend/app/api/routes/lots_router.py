@@ -10,7 +10,6 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_db
 from app.models import (
     Lot,
-    LotCurrentStock,
     Product,
     StockMovement,
     StockMovementReason,
@@ -76,11 +75,9 @@ def list_lots(
     if expiry_to:
         query = query.filter(Lot.expiry_date <= expiry_to)
 
-    # 在庫ありのみ
+    # 在庫ありのみ（v2.2: Lot モデルから直接計算）
     if with_stock:
-        query = query.outerjoin(LotCurrentStock, Lot.id == LotCurrentStock.lot_id).filter(
-            LotCurrentStock.current_quantity > 0
-        )
+        query = query.filter((Lot.current_quantity - Lot.allocated_quantity) > 0)
 
     # FEFO(先入先出): 有効期限昇順
     query = query.order_by(Lot.expiry_date.asc().nullslast())
@@ -95,12 +92,9 @@ def list_lots(
             response.product_name = lot.product.product_name
             response.product_code = lot.product.product_code
 
-        if lot.current_stock:
-            response.current_quantity = lot.current_stock.current_quantity
-            response.last_updated = lot.current_stock.last_updated
-        else:
-            response.current_quantity = 0.0
-            response.last_updated = None
+        # v2.2: Use Lot model directly for stock quantities
+        response.current_quantity = float(lot.current_quantity or 0.0)
+        response.last_updated = lot.updated_at
 
         responses.append(response)
 
@@ -173,28 +167,24 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
 
     db.refresh(db_lot)
 
-    # レスポンス
+    # レスポンス（v2.2: Lot モデルから直接取得）
     response = LotResponse.model_validate(db_lot)
-    response.current_quantity = 0.0
-    response.last_updated = None
+    response.current_quantity = float(db_lot.current_quantity or 0.0)
+    response.last_updated = db_lot.updated_at
 
     return response
 
 
 @router.get("/{lot_id}", response_model=LotResponse)
 def get_lot(lot_id: int, db: Session = Depends(get_db)):
-    """ロット詳細取得."""
+    """ロット詳細取得（v2.2: Lot モデルから直接取得）."""
     lot = db.query(Lot).filter(Lot.id == lot_id).first()
     if not lot:
         raise HTTPException(status_code=404, detail="ロットが見つかりません")
 
     response = LotResponse.model_validate(lot)
-    if lot.current_stock:
-        response.current_quantity = lot.current_stock.current_quantity
-        response.last_updated = lot.current_stock.last_updated
-    else:
-        response.current_quantity = 0.0
-        response.last_updated = None
+    response.current_quantity = float(lot.current_quantity or 0.0)
+    response.last_updated = lot.updated_at
     return response
 
 
@@ -249,10 +239,10 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
 
     db.refresh(db_lot)
 
+    # v2.2: Use Lot model directly for stock quantities
     response = LotResponse.model_validate(db_lot)
-    if db_lot.current_stock:
-        response.current_quantity = db_lot.current_stock.current_quantity
-        response.last_updated = db_lot.current_stock.last_updated
+    response.current_quantity = float(db_lot.current_quantity or 0.0)
+    response.last_updated = db_lot.updated_at
 
     return response
 
@@ -323,29 +313,29 @@ def create_stock_movement(movement: StockMovementCreate, db: Session = Depends(g
     )
     db.add(db_movement)
 
-    # 現在在庫チェック（VIEW なので読み取り専用）
+    # 現在在庫チェック（v2.2: Lot モデルから直接確認）
     if movement.lot_id:
-        current_stock = (
-            db.query(LotCurrentStock).filter(LotCurrentStock.lot_id == movement.lot_id).first()
-        )
+        lot = db.query(Lot).filter(Lot.id == movement.lot_id).first()
+        if not lot:
+            db.rollback()
+            raise HTTPException(status_code=404, detail="ロットが見つかりません")
 
         # マイナス在庫チェック
-        if current_stock:
-            projected_quantity = current_stock.current_quantity + movement.quantity_delta
-        else:
-            # 既存の在庫移動がない場合
-            projected_quantity = movement.quantity_delta
+        projected_quantity = float(lot.current_quantity or 0.0) + movement.quantity_delta
 
         if projected_quantity < 0:
             db.rollback()
             raise HTTPException(
                 status_code=400,
                 detail=(
-                    "在庫不足: 現在在庫 "
-                    f"{current_stock.current_quantity if current_stock else 0}, "
+                    f"在庫不足: 現在在庫 {lot.current_quantity or 0}, "
                     f"要求 {abs(movement.quantity_delta)}"
                 ),
             )
+
+        # Lot の current_quantity を更新
+        lot.current_quantity = projected_quantity
+        lot.updated_at = datetime.now()
 
     db.commit()
     db.refresh(db_movement)
