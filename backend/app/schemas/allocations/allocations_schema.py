@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from pydantic import Field
 
-from .base import BaseSchema
+from app.schemas.common.base import BaseSchema
 
 
 # ============================================================

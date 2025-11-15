@@ -8,7 +8,7 @@ from enum import Enum
 
 from pydantic import Field
 
-from .base import BaseSchema, TimestampMixin
+from app.schemas.common.base import BaseSchema, TimestampMixin
 
 
 class ForecastStatus(str, Enum):

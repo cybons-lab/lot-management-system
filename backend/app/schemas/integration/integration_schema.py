@@ -7,8 +7,8 @@ OCR取込、SAP連携.
 from datetime import datetime
 from typing import Any
 
-from .base import BaseSchema
-from .orders_schema import OrderLineCreate
+from app.schemas.common.base import BaseSchema
+from app.schemas.orders.orders_schema import OrderLineCreate
 
 
 # --- OCR Submission ---

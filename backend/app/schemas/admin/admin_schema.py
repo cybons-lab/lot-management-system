@@ -2,9 +2,9 @@
 
 from pydantic import BaseModel
 
-from .integration_schema import OcrOrderRecord
-from .inventory_schema import LotCreate
-from .masters_schema import MasterBulkLoadResponse, ProductCreate
+from app.schemas.integration.integration_schema import OcrOrderRecord
+from app.schemas.inventory.inventory_schema import LotCreate
+from app.schemas.masters.masters_schema import MasterBulkLoadResponse, ProductCreate
 
 
 class FullSampleDataRequest(BaseModel):
