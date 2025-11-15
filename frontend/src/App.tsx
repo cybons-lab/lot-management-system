@@ -21,6 +21,9 @@ import { LotsPage } from "@/features/inventory/pages/LotsPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
 import { SummaryPage } from "@/features/inventory/pages/SummaryPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
+import { RolesListPage } from "@/features/roles/pages/RolesListPage";
+import { UsersListPage } from "@/features/users/pages/UsersListPage";
+import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
 
 function App() {
@@ -74,6 +77,11 @@ function App() {
 
         {/* Masters - Phase G-1 */}
         <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
+
+        {/* Settings - Phase G-2 */}
+        <Route path={ROUTES.SETTINGS.USERS} element={<UsersListPage />} />
+        <Route path="/settings/users/:id" element={<UserDetailPage />} />
+        <Route path={ROUTES.SETTINGS.ROLES} element={<RolesListPage />} />
 
         {/* Admin */}
         <Route path={ROUTES.ADMIN.INDEX} element={<AdminPage />} />
