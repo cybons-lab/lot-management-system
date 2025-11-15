@@ -16,8 +16,13 @@ const sanitizeDateValue = (value?: string | null) => {
 const sumUnallocatedQuantity = (lines: OrderLine[] | undefined): number => {
   return (lines ?? []).reduce((sum, line) => {
     const allocated =
-      line.allocated_lots?.reduce((acc, alloc) => acc + (alloc.allocated_qty || 0), 0) ?? 0;
-    const quantity = line.quantity ?? 0;
+      line.allocated_lots?.reduce((acc, alloc) => {
+        // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
+        const qty = Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0);
+        return acc + qty;
+      }, 0) ?? 0;
+    // DDL v2.2: prefer order_quantity, fallback to quantity
+    const quantity = Number(line.order_quantity ?? line.quantity ?? 0);
     return sum + (quantity - allocated);
   }, 0);
 };
@@ -47,11 +52,21 @@ const hasMissingRequiredFields = (
   if (!hasLineData) return false;
   const safeLines = lines ?? [];
   if (safeLines.length === 0) return true;
-  return safeLines.every((line) => !line.product_code || !line.quantity || line.quantity === 0);
+  return safeLines.every((line) => {
+    // DDL v2.2: prefer product_id, fallback to product_code
+    const hasProduct = line.product_id || line.product_code;
+    // DDL v2.2: prefer order_quantity, fallback to quantity
+    const qty = Number(line.order_quantity ?? line.quantity ?? 0);
+    return !hasProduct || qty === 0;
+  });
 };
 
 const computeTotalOrderQuantity = (lines: OrderLine[] | undefined): number => {
-  return (lines ?? []).reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
+  return (lines ?? []).reduce((sum, line) => {
+    // DDL v2.2: prefer order_quantity, fallback to quantity
+    const qty = Number(line.order_quantity ?? line.quantity ?? 0);
+    return sum + qty;
+  }, 0);
 };
 
 const resolvePrimaryDeliveryPlace = (order: Order, primaryLine?: OrderLine): string | null => {
@@ -74,7 +89,11 @@ const normalizeLines = (lines: Order["lines"]): { items: OrderLine[]; hasLineDat
 };
 
 const resolveDueDateValue = (order: Order, primaryLine?: OrderLine): string | null => {
-  return sanitizeDateValue(order.due_date) ?? sanitizeDateValue(primaryLine?.due_date ?? null);
+  // DDL v2.2: prefer delivery_date, fallback to due_date
+  return (
+    sanitizeDateValue(order.due_date) ??
+    sanitizeDateValue(primaryLine?.delivery_date ?? primaryLine?.due_date ?? null)
+  );
 };
 
 const buildOrderCardMetrics = (
@@ -95,7 +114,10 @@ const buildOrderCardMetrics = (
   return {
     primaryLine,
     unallocatedQty: sumUnallocatedQuantity(lines),
-    daysTodue: computeDaysUntilDue(order.due_date ?? null, primaryLine?.due_date ?? null),
+    daysTodue: computeDaysUntilDue(
+      order.due_date ?? null,
+      primaryLine?.delivery_date ?? primaryLine?.due_date ?? null,
+    ),
     hasMissingFields: hasMissingRequiredFields(lines, hasLineData),
     totalQuantity: computeTotalOrderQuantity(lines),
     primaryDeliveryPlace: resolvePrimaryDeliveryPlace(order, primaryLine),

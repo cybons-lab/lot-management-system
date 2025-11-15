@@ -59,9 +59,14 @@ export function useAutoSelection(
 
     if (!hasSelected) {
       // 有効な明細を選択: 製品コードがあり、数量が0より大きい明細を優先
+      // DDL v2.2: prefer order_quantity, fallback to quantity
       const fallbackLine =
-        lines.find((line) => line.product_code && line.quantity > 0) ??
-        lines.find((line) => !!line.product_code) ??
+        lines.find((line) => {
+          const hasProduct = line.product_id || line.product_code;
+          const qty = Number(line.order_quantity ?? line.quantity ?? 0);
+          return hasProduct && qty > 0;
+        }) ??
+        lines.find((line) => !!(line.product_id || line.product_code)) ??
         lines[0];
 
       if (!fallbackLine || fallbackLine.id == null) return;
