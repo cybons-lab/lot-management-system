@@ -6,7 +6,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from backend.app.models.inventory_models import ExpiryRule
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -23,6 +22,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
+from .inventory_models import ExpiryRule
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
@@ -118,7 +118,7 @@ class Customer(Base):
 
     __tablename__ = "customers"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)  # int に統一
     customer_code: Mapped[str] = mapped_column(Text, nullable=False)
     customer_name: Mapped[str] = mapped_column(Text, nullable=False)
     address: Mapped[str | None] = mapped_column(Text)

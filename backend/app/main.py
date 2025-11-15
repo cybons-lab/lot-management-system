@@ -10,13 +10,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.routes import (
+    adjustments_router,
     admin_healthcheck_router,
     admin_router,
     admin_simulate_router,
     allocations_router,
     forecast_router,
+    forecasts_router,
     health_router,
+    inbound_plans_router,
     integration_router,
+    inventory_items_router,
     lots_router,
     masters_router,
     orders_router,
@@ -82,7 +86,11 @@ app.include_router(allocations_router, prefix=settings.API_PREFIX)
 app.include_router(integration_router, prefix=settings.API_PREFIX)
 app.include_router(admin_router, prefix=settings.API_PREFIX)
 app.include_router(admin_healthcheck_router, prefix=settings.API_PREFIX)
-app.include_router(forecast_router, prefix=settings.API_PREFIX)
+app.include_router(forecast_router, prefix=settings.API_PREFIX)  # Legacy
+app.include_router(forecasts_router, prefix=settings.API_PREFIX)  # NEW: Phase 2-1
+app.include_router(inbound_plans_router, prefix=settings.API_PREFIX)  # NEW: Phase 2-2
+app.include_router(adjustments_router, prefix=settings.API_PREFIX)  # NEW: Phase 2-3
+app.include_router(inventory_items_router, prefix=settings.API_PREFIX)  # NEW: Phase 2-3
 app.include_router(warehouse_alloc_router, prefix=settings.API_PREFIX)
 app.include_router(health_router, prefix=settings.API_PREFIX)
 app.include_router(orders_validate_router, prefix=settings.API_PREFIX)

@@ -3,12 +3,12 @@
 ビジネスロジック層.
 """
 
-from .forecast_service import ForecastMatcher
+from .forecast_service import ForecastService
 from .quantity_service import QuantityConversionError, to_internal_qty
 
 
 __all__ = [
-    "ForecastMatcher",
+    "ForecastService",
     "QuantityConversionError",
     "to_internal_qty",
 ]

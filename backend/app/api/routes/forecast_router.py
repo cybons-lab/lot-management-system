@@ -24,7 +24,7 @@ from app.schemas import (
     ForecastVersionListResponse,
 )
 from app.services.forecast_service import (
-    ForecastMatcher,
+    ForecastService,
     assign_auto_forecast_identifier,
 )
 
@@ -325,7 +325,7 @@ def activate_version(request: ForecastActivateRequest, db: Session = Depends(get
 @router.post("/match", response_model=ForecastMatchResponse)
 def match_forecasts(request: ForecastMatchRequest, db: Session = Depends(get_db)):
     """フォーキャストと受注明細の手動マッチング."""
-    matcher = ForecastMatcher(db)
+    matcher = ForecastService(db)
 
     query = db.query(OrderLine).join(Order)
 

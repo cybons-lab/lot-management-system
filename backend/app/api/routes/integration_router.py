@@ -27,12 +27,12 @@ from app.services.quantity_service import QuantityConversionError, to_internal_q
 logger = logging.getLogger(__name__)
 # フォーキャストマッチング機能（オプション）
 try:
-    from app.services.forecast_service import ForecastMatcher
+    from app.services.forecast_service import ForecastService
 
     FORECAST_AVAILABLE = True
 except ImportError:
     FORECAST_AVAILABLE = False
-    logger.warning("⚠️ ForecastMatcher not available - forecast matching will be skipped")
+    logger.warning("⚠️ ForecastService not available - forecast matching will be skipped")
 
 router = APIRouter(prefix="/integration", tags=["integration"])
 
@@ -64,7 +64,7 @@ def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_
     error_details = []
 
     # フォーキャストマッチャーの初期化
-    forecast_matcher = ForecastMatcher(db) if FORECAST_AVAILABLE else None
+    forecast_matcher = ForecastService(db) if FORECAST_AVAILABLE else None
 
     # 各受注レコードを処理
     for _idx, record in enumerate(submission.records):

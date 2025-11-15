@@ -20,6 +20,10 @@ _ROUTER_DEFINITIONS = [
     ("admin_simulate_router", "admin_simulate_router"),
     ("allocations_router", "allocations_router"),
     ("forecast_router", "forecast_router"),
+    ("forecasts_router", "forecasts_router"),  # NEW: Phase 2-1
+    ("inbound_plans_router", "inbound_plans_router"),  # NEW: Phase 2-2
+    ("adjustments_router", "adjustments_router"),  # NEW: Phase 2-3
+    ("inventory_items_router", "inventory_items_router"),  # NEW: Phase 2-3
     ("health_router", "health_router"),
     ("integration_router", "integration_router"),
     ("lots_router", "lots_router"),

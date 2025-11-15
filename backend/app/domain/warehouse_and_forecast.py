@@ -138,7 +138,7 @@ class ForecastMatch:
     granularity: str  # "exact", "monthly", "quarterly"
 
 
-class ForecastMatcher:
+class ForecastService:
     """フォーキャストマッチングロジック."""
 
     @staticmethod
@@ -169,7 +169,7 @@ class ForecastMatcher:
         Returns:
             信頼度（0.0 ~ 1.0）
         """
-        order_month = ForecastMatcher.calculate_month_key(order_date)
+        order_month = ForecastService.calculate_month_key(order_date)
 
         if order_month == forecast_month:
             return 1.0  # 完全一致
@@ -204,6 +204,6 @@ __all__ = [
     "ForecastNotFoundError",
     "InvalidForecastError",
     "ForecastMatch",
-    "ForecastMatcher",
+    "ForecastService",
     "ForecastValidator",
 ]
