@@ -59,10 +59,10 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
     unallocated_subquery = (
         db.query(OrderLine.order_id)
         .outerjoin(Allocation, Allocation.order_line_id == OrderLine.id)
-        .group_by(OrderLine.id, OrderLine.order_id, OrderLine.quantity)
+        .group_by(OrderLine.id, OrderLine.order_id, OrderLine.order_quantity)
         .having(
-            func.coalesce(func.sum(Allocation.actual_quantity), 0)
-            < func.coalesce(OrderLine.quantity, 0)
+            func.coalesce(func.sum(Allocation.allocated_quantity), 0)
+            < func.coalesce(OrderLine.order_quantity, 0)
         )
         .subquery()
     )
@@ -202,7 +202,7 @@ def _ensure_warehouses(db: Session, warehouse_codes: set[str], warn_cb) -> None:
         warehouse = Warehouse(
             warehouse_code=code,
             warehouse_name=f"倉庫_{code}（自動作成）",
-            is_active=1,
+            warehouse_type="internal",
         )
         db.add(warehouse)
         warn_cb(f"倉庫マスタ '{code}' が存在しないため自動作成しました")
@@ -223,7 +223,7 @@ def _ensure_warehouse(db: Session, warehouse_code: str, warn_cb) -> Warehouse | 
     warehouse = Warehouse(
         warehouse_code=warehouse_code,
         warehouse_name=f"倉庫_{warehouse_code}（自動作成）",
-        is_active=1,
+        warehouse_type="internal",
     )
     db.add(warehouse)
     db.flush()
