@@ -17,6 +17,8 @@ from app.api.routes import (
     allocation_candidates_router,
     allocation_suggestions_router,
     allocations_router,
+    batch_jobs_router,
+    business_rules_router,
     customer_items_router,
     customers_router,
     forecast_router,
@@ -27,6 +29,7 @@ from app.api.routes import (
     inventory_items_router,
     lots_router,
     masters_router,
+    operation_logs_router,
     orders_router,
     orders_validate_router,
     products_router,
@@ -118,6 +121,10 @@ app.include_router(orders_validate_router, prefix=settings.API_PREFIX)
 app.include_router(
     admin_simulate_router, prefix=settings.API_PREFIX
 )  # NEW: Simulation API with YAML profiles
+# Phase 4: Low-priority APIs (audit logs, business rules, batch jobs)
+app.include_router(operation_logs_router, prefix=settings.API_PREFIX)  # NEW: Phase 4-1
+app.include_router(business_rules_router, prefix=settings.API_PREFIX)  # NEW: Phase 4-2
+app.include_router(batch_jobs_router, prefix=settings.API_PREFIX)  # NEW: Phase 4-3
 
 
 @app.get("/")

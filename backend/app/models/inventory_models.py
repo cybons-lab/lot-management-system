@@ -27,6 +27,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
+    from .forecast_models import ForecastLine
     from .inbound_models import ExpectedLot
     from .masters_models import Product, Supplier, Warehouse
     from .orders_models import Allocation
@@ -282,6 +283,42 @@ class ExpiryRule(Base):
 
     product: Mapped[Product | None] = relationship("Product", back_populates="expiry_rules")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="expiry_rules")
+
+
+class AllocationSuggestion(Base):
+    """引当推奨（システムが提案する引当案）."""
+
+    __tablename__ = "allocation_suggestions"
+
+    suggestion_id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True, name="suggestion_id"
+    )
+    forecast_line_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("forecast_lines.forecast_line_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    lot_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("lots.lot_id", ondelete="CASCADE"), nullable=False
+    )
+    suggested_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
+    allocation_logic: Mapped[str] = mapped_column(String(50), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+
+    __table_args__ = (
+        Index("idx_allocation_suggestions_forecast", "forecast_line_id"),
+        Index("idx_allocation_suggestions_lot", "lot_id"),
+    )
+
+    forecast_line: Mapped[ForecastLine] = relationship(
+        "ForecastLine", back_populates="allocation_suggestions"
+    )
+    lot: Mapped[Lot] = relationship("Lot")
 
 
 # Backward compatibility aliases (to be removed in later refactors)

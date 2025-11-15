@@ -41,6 +41,10 @@ _ROUTER_DEFINITIONS = [
     ("users_router", "users_router"),  # NEW: Phase 3-2
     ("warehouses_router", "warehouses_router"),  # NEW: Phase 3-3
     ("warehouse_alloc_router", "warehouse_alloc_router"),
+    # Phase 4: Low-priority APIs
+    ("operation_logs_router", "operation_logs_router"),  # NEW: Phase 4-1
+    ("business_rules_router", "business_rules_router"),  # NEW: Phase 4-2
+    ("batch_jobs_router", "batch_jobs_router"),  # NEW: Phase 4-3
 ]
 
 # Dynamically import routers with error handling

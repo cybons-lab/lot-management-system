@@ -1,12 +1,19 @@
-"""Allocation suggestions API (Phase 3-4: v2.2.1)."""
+"""Allocation suggestions API (Phase 3-4: v2.2.1 + Phase 4)."""
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.models import Lot, LotCurrentStock, OrderLine
+from app.core.database import get_db
+from app.models.inventory_models import Lot, LotCurrentStock
+from app.models.orders_models import OrderLine
+from app.schemas.allocation_suggestions_schema import (
+    AllocationSuggestionGenerateRequest,
+    AllocationSuggestionGenerateResponse,
+    AllocationSuggestionListResponse,
+    AllocationSuggestionResponse,
+)
 from app.schemas.allocations_schema import (
     AllocationSuggestionManualRequest,
     AllocationSuggestionManualResponse,
@@ -15,11 +22,172 @@ from app.schemas.allocations_schema import (
     FefoPreviewRequest,
     FefoPreviewResponse,
 )
+from app.services.allocation_suggestions_service import AllocationSuggestionService
 from app.services.allocations_service import preview_fefo_allocation
 
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/allocation-suggestions", tags=["allocation-suggestions"])
+
+
+# ========================================
+# Phase 4: 引当推奨テーブルベースのAPI
+# ========================================
+
+
+@router.get("", response_model=AllocationSuggestionListResponse)
+def list_allocation_suggestions(
+    skip: int = Query(0, ge=0, description="スキップ件数"),
+    limit: int = Query(100, ge=1, le=1000, description="取得件数上限"),
+    forecast_line_id: int | None = Query(None, description="フォーキャスト明細IDでフィルタ"),
+    lot_id: int | None = Query(None, description="ロットIDでフィルタ"),
+    db: Session = Depends(get_db),
+):
+    """
+    引当推奨一覧取得（Phase 4）.
+
+    Args:
+        skip: スキップ件数
+        limit: 取得件数上限
+        forecast_line_id: フォーキャスト明細IDでフィルタ（オプション）
+        lot_id: ロットIDでフィルタ（オプション）
+        db: データベースセッション
+
+    Returns:
+        引当推奨のリスト
+    """
+    service = AllocationSuggestionService(db)
+    suggestions, total = service.get_all(
+        skip=skip, limit=limit, forecast_line_id=forecast_line_id, lot_id=lot_id
+    )
+
+    return AllocationSuggestionListResponse(
+        suggestions=[AllocationSuggestionResponse.model_validate(s) for s in suggestions],
+        total=total,
+    )
+
+
+@router.get("/{suggestion_id}", response_model=AllocationSuggestionResponse)
+def get_allocation_suggestion(suggestion_id: int, db: Session = Depends(get_db)):
+    """
+    引当推奨詳細取得（Phase 4）.
+
+    Args:
+        suggestion_id: 推奨ID
+        db: データベースセッション
+
+    Returns:
+        引当推奨詳細
+
+    Raises:
+        HTTPException: 推奨が存在しない場合
+    """
+    service = AllocationSuggestionService(db)
+    suggestion = service.get_by_id(suggestion_id)
+    if not suggestion:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Allocation suggestion not found"
+        )
+
+    return AllocationSuggestionResponse.model_validate(suggestion)
+
+
+@router.get("/forecast-line/{forecast_line_id}", response_model=list[AllocationSuggestionResponse])
+def get_suggestions_by_forecast_line(forecast_line_id: int, db: Session = Depends(get_db)):
+    """
+    フォーキャスト明細別の引当推奨取得（Phase 4）.
+
+    Args:
+        forecast_line_id: フォーキャスト明細ID
+        db: データベースセッション
+
+    Returns:
+        引当推奨のリスト（降順）
+    """
+    service = AllocationSuggestionService(db)
+    suggestions = service.get_by_forecast_line(forecast_line_id)
+
+    return [AllocationSuggestionResponse.model_validate(s) for s in suggestions]
+
+
+@router.post("/generate", response_model=AllocationSuggestionGenerateResponse)
+def generate_allocation_suggestions(
+    request: AllocationSuggestionGenerateRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    引当推奨生成（Phase 4）.
+
+    指定されたフォーキャスト明細に対して、引当推奨を自動生成します。
+    既存の推奨は削除され、新しい推奨が作成されます。
+
+    注意: これはスタブ実装です。本番環境では、より高度な引当アルゴリズムを使用してください。
+
+    Args:
+        request: 引当推奨生成リクエスト
+        db: データベースセッション
+
+    Returns:
+        生成された引当推奨のリスト
+    """
+    service = AllocationSuggestionService(db)
+
+    suggestions = service.generate_suggestions(
+        forecast_line_id=request.forecast_line_id,
+        logic=request.logic,
+        max_suggestions=request.max_suggestions,
+    )
+
+    return AllocationSuggestionGenerateResponse(
+        forecast_line_id=request.forecast_line_id,
+        suggestions_created=len(suggestions),
+        suggestions=[AllocationSuggestionResponse.model_validate(s) for s in suggestions],
+    )
+
+
+@router.delete("/{suggestion_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_allocation_suggestion(suggestion_id: int, db: Session = Depends(get_db)):
+    """
+    引当推奨削除（Phase 4）.
+
+    Args:
+        suggestion_id: 推奨ID
+        db: データベースセッション
+
+    Raises:
+        HTTPException: 推奨が存在しない場合
+    """
+    service = AllocationSuggestionService(db)
+    deleted = service.delete(suggestion_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Allocation suggestion not found"
+        )
+
+    return None
+
+
+@router.delete("/forecast-line/{forecast_line_id}/clear", status_code=status.HTTP_204_NO_CONTENT)
+def delete_suggestions_by_forecast_line(forecast_line_id: int, db: Session = Depends(get_db)):
+    """
+    フォーキャスト明細別の引当推奨一括削除（Phase 4）.
+
+    Args:
+        forecast_line_id: フォーキャスト明細ID
+        db: データベースセッション
+
+    Returns:
+        None
+    """
+    service = AllocationSuggestionService(db)
+    service.delete_by_forecast_line(forecast_line_id)
+
+    return None
+
+
+# ========================================
+# 既存API（v2.2.1）- 受注明細ベースの引当プレビュー
+# ========================================
 
 
 @router.post("/manual", response_model=AllocationSuggestionManualResponse)
