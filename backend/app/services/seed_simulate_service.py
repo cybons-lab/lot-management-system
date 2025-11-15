@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import truncate_all_tables
 from app.models.forecast_models import ForecastHeader, ForecastLine
-from app.models.inventory_models import Lot, StockMovement
+from app.models.inventory_models import Lot, StockMovement, StockTransactionType
 from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 from app.models.orders_models import Allocation, Order, OrderLine
 from app.repositories.seed_snapshot_repo import SeedSnapshotRepository
@@ -405,33 +405,43 @@ def run_seed_simulation(
         tracker.update_progress(task_id, JobPhase.STOCK, 30)
 
         num_lots = params.get("lots", params["warehouses"] * 1000)  # YAMLまたはデフォルト
+        now_dt = datetime.utcnow()
         for i in range(num_lots):
             prod = _choose(rng, all_products) if all_products else None
             wh = _choose(rng, all_warehouses) if all_warehouses else None
             supplier = _choose(rng, all_suppliers) if all_suppliers else None
             days = rng.randint(0, 360)
+            lot_unit = (
+                prod.base_unit if prod and getattr(prod, "base_unit", None) else "PCS"
+            )
             lot = Lot(
                 product_id=prod.id if prod else None,
                 warehouse_id=wh.id if wh else None,
                 supplier_id=supplier.id if supplier else None,
                 lot_number=faker.unique.bothify(text="LOT-########"),
-                receipt_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 30)),
+                received_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 30)),
                 expiry_date=datetime.utcnow().date() + timedelta(days=360 - days),
-                created_at=datetime.utcnow(),
+                current_quantity=Decimal(0),
+                allocated_quantity=Decimal(0),
+                unit=lot_unit,
+                status="active",
+                created_at=now_dt,
+                updated_at=now_dt,
             )
             db.add(lot)
             db.flush()
 
             # Inbound stock movement
-            recv_qty = rng.randint(10, 500)
+            recv_qty = Decimal(rng.randint(10, 500))
+            lot.current_quantity = lot.current_quantity + recv_qty
+            lot.updated_at = datetime.utcnow()
             movement = StockMovement(
-                product_id=lot.product_id,
-                warehouse_id=lot.warehouse_id,
                 lot_id=lot.id,
-                reason="receipt",
-                quantity_delta=recv_qty,
-                occurred_at=datetime.utcnow(),
-                created_at=datetime.utcnow(),
+                transaction_type=StockTransactionType.INBOUND,
+                quantity_change=recv_qty,
+                quantity_after=lot.current_quantity,
+                reference_type="seed_simulation",
+                transaction_date=datetime.utcnow(),
             )
             db.add(movement)
 
@@ -447,14 +457,30 @@ def run_seed_simulation(
         tracker.update_progress(task_id, JobPhase.ORDERS, 50)
 
         num_orders = params.get("orders", params["warehouses"] * 375)  # YAMLまたはデフォルト
+        delivery_places_by_customer: dict[int, list[DeliveryPlace]] = {}
+        for dp in all_delivery_places:
+            delivery_places_by_customer.setdefault(dp.customer_id, []).append(dp)
+
         for i in range(num_orders):
             cust = _choose(rng, all_customers) if all_customers else None
+            if not cust:
+                continue
+            delivery_choices = delivery_places_by_customer.get(cust.id)
+            if not delivery_choices:
+                delivery_choices = all_delivery_places
+            if not delivery_choices:
+                continue
+            delivery_place = _choose(rng, delivery_choices)
+            if not delivery_place:
+                continue
             order = Order(
-                customer_id=cust.id if cust else None,
-                order_no=faker.unique.bothify(text="SO-########"),
+                customer_id=cust.id,
+                delivery_place_id=delivery_place.id,
+                order_number=faker.unique.bothify(text="SO-########"),
                 order_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 14)),
-                status="draft",
+                status="pending",
                 created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
             )
             db.add(order)
             db.flush()
@@ -467,15 +493,20 @@ def run_seed_simulation(
             num_lines = rng.choices([1, 2, 3, 4, 5], weights=[40, 40, 10, 5, 5], k=1)[0]
             num_lines = min(num_lines, order_line_max)
 
-            for line_no in range(1, num_lines + 1):
+            for _ in range(num_lines):
                 prod = _choose(rng, all_products) if all_products else None
-                req_qty = rng.randint(10, 100)
+                if not prod:
+                    continue
+                req_qty = Decimal(rng.randint(10, 100))
+                delivery_date = order.order_date + timedelta(days=rng.randint(1, 14))
                 line = OrderLine(
                     order_id=order.id,
-                    product_id=prod.id if prod else None,
-                    line_no=line_no,
-                    quantity=req_qty,
+                    product_id=prod.id,
+                    delivery_date=delivery_date,
+                    order_quantity=req_qty,
+                    unit=prod.base_unit,
                     created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
                 )
                 db.add(line)
 
@@ -498,16 +529,18 @@ def run_seed_simulation(
 
         allocation_count = 0
         for line in lines_to_allocate:
-            # 同じ製品のロットをFIFO順（receipt_date）で取得
+            # 同じ製品のロットをFIFO順（received_date）で取得
             matching_lots = [lot for lot in all_lots if lot.product_id == line.product_id]
             if not matching_lots:
                 continue
 
             # FIFO順でソート
-            matching_lots.sort(key=lambda x: x.receipt_date or datetime.min.date())
+            matching_lots.sort(
+                key=lambda x: x.received_date or datetime.min.date()
+            )
 
             # ロット分割上限を適用
-            remaining_qty = line.quantity
+            remaining_qty = Decimal(line.order_quantity)
             lot_count = 0
             max_lots = params["lot_split_max_per_line"]
 
@@ -515,31 +548,43 @@ def run_seed_simulation(
                 if remaining_qty <= 0 or lot_count >= max_lots:
                     break
 
-                # このロットから引当可能な数量（簡易版: ランダム）
-                alloc_qty = min(remaining_qty, rng.randint(10, 100))
+                available_quantity = max(
+                    Decimal(0), lot.current_quantity - lot.allocated_quantity
+                )
+                if available_quantity <= 0:
+                    continue
 
-                # 納品先: 通常1-2、稀に5（制約: ≤5）
-                # 1つの明細は通常1つの納品先
-                dest = _choose(rng, all_delivery_places) if all_delivery_places else None
+                # このロットから引当可能な数量（簡易版: ランダム）
+                alloc_qty = min(
+                    remaining_qty,
+                    Decimal(rng.randint(10, 100)),
+                    available_quantity,
+                )
+                if alloc_qty <= 0:
+                    continue
 
                 allocation = Allocation(
                     order_line_id=line.id,
                     lot_id=lot.id,
-                    allocated_qty=alloc_qty,
-                    destination_id=dest.id if dest else None,
+                    allocated_quantity=alloc_qty,
+                    status="shipped",
                     created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
                 )
                 db.add(allocation)
 
+                lot.current_quantity = max(Decimal(0), lot.current_quantity - alloc_qty)
+                lot.updated_at = datetime.utcnow()
+
                 # Outbound stock movement
                 outbound = StockMovement(
-                    product_id=lot.product_id,
-                    warehouse_id=lot.warehouse_id,
                     lot_id=lot.id,
-                    reason="outbound",
-                    quantity_delta=-alloc_qty,
-                    occurred_at=datetime.utcnow(),
-                    created_at=datetime.utcnow(),
+                    transaction_type=StockTransactionType.SHIPMENT,
+                    quantity_change=-alloc_qty,
+                    quantity_after=lot.current_quantity,
+                    reference_type="order_line",
+                    reference_id=line.id,
+                    transaction_date=datetime.utcnow(),
                 )
                 db.add(outbound)
 
@@ -560,13 +605,14 @@ def run_seed_simulation(
 
         # Check 1: ロット分割上限チェック (≤3)
         lot_split_violations = db.execute(
-            text("""
+            text(
+                """
                 SELECT order_line_id, COUNT(*) as lot_count
                 FROM allocations
-                WHERE deleted_at IS NULL
                 GROUP BY order_line_id
                 HAVING COUNT(*) > :max_lots
-            """),
+                """
+            ),
             {"max_lots": params["lot_split_max_per_line"]},
         ).fetchall()
         lot_split_ok = len(lot_split_violations) == 0
@@ -579,35 +625,50 @@ def run_seed_simulation(
         # 実際には明細ごとに1つの納品先なので、受注全体で5つ以内
         dest_max = params["destinations_max_per_order"]
         dest_violations = db.execute(
-            text("""
-                SELECT o.id, COUNT(DISTINCT a.destination_id) as dest_count
+            text(
+                """
+                SELECT o.id
                 FROM orders o
-                JOIN order_lines ol ON ol.order_id = o.id
-                JOIN allocations a ON a.order_line_id = ol.id
-                WHERE o.deleted_at IS NULL AND ol.deleted_at IS NULL AND a.deleted_at IS NULL
                 GROUP BY o.id
-                HAVING COUNT(DISTINCT a.destination_id) > :max_dests
-            """),
+                HAVING COUNT(DISTINCT o.delivery_place_id) > :max_dests
+                """
+            ),
             {"max_dests": dest_max},
         ).fetchall()
-        dest_ok = len(dest_violations) == 0
-        tracker.add_log(
-            task_id,
-            f"Destinations check: {'OK' if dest_ok else f'NG ({len(dest_violations)} violations)'}",
-        )
+        missing_delivery = db.execute(
+            text(
+                """
+                SELECT id
+                FROM orders
+                WHERE delivery_place_id IS NULL
+                """
+            )
+        ).fetchall()
+        dest_ok = len(dest_violations) == 0 and len(missing_delivery) == 0
+        if dest_ok:
+            tracker.add_log(
+                task_id,
+                "Destinations check: OK (each order references ≤ configured delivery places)",
+            )
+        else:
+            tracker.add_log(
+                task_id,
+                f"Destinations check: NG ({len(dest_violations)} limit violations, {len(missing_delivery)} missing destinations)",
+            )
 
         # Check 3: 受注明細行数チェック (≤5)
         order_line_max_check = params["order_line_items_per_order"]
         if isinstance(order_line_max_check, dict):
             order_line_max_check = order_line_max_check.get("max", 5)
         line_violations = db.execute(
-            text("""
+            text(
+                """
                 SELECT order_id, COUNT(*) as line_count
                 FROM order_lines
-                WHERE deleted_at IS NULL
                 GROUP BY order_id
                 HAVING COUNT(*) > :max_lines
-            """),
+                """
+            ),
             {"max_lines": order_line_max_check},
         ).fetchall()
         lines_ok = len(line_violations) == 0
@@ -642,7 +703,9 @@ def run_seed_simulation(
 
         # 集計
         total_warehouses = db.scalar(select(func.count()).select_from(Warehouse)) or 0
-        total_forecasts = db.scalar(select(func.count()).select_from(Forecast)) or 0
+        total_forecasts = (
+            db.scalar(select(func.count()).select_from(ForecastHeader)) or 0
+        )
         total_orders = db.scalar(select(func.count()).select_from(Order)) or 0
         total_order_lines = db.scalar(select(func.count()).select_from(OrderLine)) or 0
         total_lots = db.scalar(select(func.count()).select_from(Lot)) or 0
