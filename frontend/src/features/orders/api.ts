@@ -61,6 +61,7 @@ export const getWarehouseAllocList = (): Promise<components["schemas"]["Warehous
 
 /**
  * 引当候補ロット取得（product_id基準）
+ * @endpoint GET /allocation-candidates (was /allocations/candidate-lots - deprecated 2026-02-15)
  */
 export const getCandidateLots = (params: {
   product_id: number;
@@ -75,7 +76,7 @@ export const getCandidateLots = (params: {
 
   const queryString = searchParams.toString();
   return fetchApi.get<CandidateLotsResponse>(
-    `/allocations/candidate-lots${queryString ? "?" + queryString : ""}`,
+    `/allocation-candidates${queryString ? "?" + queryString : ""}`,
   );
 };
 

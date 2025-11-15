@@ -1,39 +1,41 @@
 /**
- * ForecastListPage (v2.2 - Phase B-3)
- * Forecast headers list page with header/lines separation
+ * InboundPlansListPage (v2.2 - Phase C-3)
+ * Inbound plans list page
  */
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForecastHeaders, useDeleteForecastHeader } from "../hooks";
+import { useInboundPlans, useDeleteInboundPlan } from "../hooks";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROUTES } from "@/constants/routes";
 
-export function ForecastListPage() {
+export function InboundPlansListPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
-    customer_id: "",
-    delivery_place_id: "",
-    status: "" as "" | "active" | "completed" | "cancelled",
+    supplier_id: "",
+    status: "" as "" | "pending" | "received" | "cancelled",
+    date_from: "",
+    date_to: "",
   });
 
   // Build query params
   const queryParams = {
-    customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
-    delivery_place_id: filters.delivery_place_id ? Number(filters.delivery_place_id) : undefined,
+    supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
     status: filters.status || undefined,
+    date_from: filters.date_from || undefined,
+    date_to: filters.date_to || undefined,
   };
 
-  // Fetch forecast headers
-  const { data: headers, isLoading, isError, refetch } = useForecastHeaders(queryParams);
+  // Fetch inbound plans
+  const { data: plans, isLoading, isError, refetch } = useInboundPlans(queryParams);
 
   // Delete mutation
-  const deleteMutation = useDeleteForecastHeader();
+  const deleteMutation = useDeleteInboundPlan();
 
   const handleDelete = async (id: number) => {
-    if (!confirm("このフォーキャストヘッダを削除しますか？")) return;
+    if (!confirm("この入荷予定を削除しますか？")) return;
 
     try {
       await deleteMutation.mutateAsync(id);
@@ -45,7 +47,7 @@ export function ForecastListPage() {
   };
 
   const handleViewDetail = (id: number) => {
-    navigate(ROUTES.FORECASTS.DETAIL(id));
+    navigate(ROUTES.INBOUND_PLANS.DETAIL(id));
   };
 
   return (
@@ -53,31 +55,21 @@ export function ForecastListPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">フォーキャスト一覧</h2>
-          <p className="mt-1 text-gray-600">ヘッダ・明細分離構造（v2.2）</p>
+          <h2 className="text-3xl font-bold tracking-tight">入荷予定一覧</h2>
+          <p className="mt-1 text-gray-600">入荷予定管理（ロット自動生成対応）</p>
         </div>
-        <Button onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>一括インポート</Button>
       </div>
 
       {/* Filters */}
       <div className="rounded-lg border bg-white p-4">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <div>
-            <Label className="mb-2 block text-sm font-medium">得意先ID</Label>
+            <Label className="mb-2 block text-sm font-medium">仕入先ID</Label>
             <Input
               type="number"
-              value={filters.customer_id}
-              onChange={(e) => setFilters({ ...filters, customer_id: e.target.value })}
-              placeholder="得意先IDで絞り込み"
-            />
-          </div>
-          <div>
-            <Label className="mb-2 block text-sm font-medium">納入場所ID</Label>
-            <Input
-              type="number"
-              value={filters.delivery_place_id}
-              onChange={(e) => setFilters({ ...filters, delivery_place_id: e.target.value })}
-              placeholder="納入場所IDで絞り込み"
+              value={filters.supplier_id}
+              onChange={(e) => setFilters({ ...filters, supplier_id: e.target.value })}
+              placeholder="仕入先IDで絞り込み"
             />
           </div>
           <div>
@@ -87,16 +79,32 @@ export function ForecastListPage() {
               onChange={(e) =>
                 setFilters({
                   ...filters,
-                  status: e.target.value as "" | "active" | "completed" | "cancelled",
+                  status: e.target.value as "" | "pending" | "received" | "cancelled",
                 })
               }
               className="w-full rounded-md border px-3 py-2 text-sm"
             >
               <option value="">すべて</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="pending">Pending（予定）</option>
+              <option value="received">Received（入荷済）</option>
+              <option value="cancelled">Cancelled（キャンセル）</option>
             </select>
+          </div>
+          <div>
+            <Label className="mb-2 block text-sm font-medium">入荷予定日（開始）</Label>
+            <Input
+              type="date"
+              value={filters.date_from}
+              onChange={(e) => setFilters({ ...filters, date_from: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label className="mb-2 block text-sm font-medium">入荷予定日（終了）</Label>
+            <Input
+              type="date"
+              value={filters.date_to}
+              onChange={(e) => setFilters({ ...filters, date_to: e.target.value })}
+            />
           </div>
         </div>
       </div>
@@ -110,13 +118,13 @@ export function ForecastListPage() {
         <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-600">
           データの取得に失敗しました
         </div>
-      ) : !headers || headers.length === 0 ? (
+      ) : !plans || plans.length === 0 ? (
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
-          フォーキャストヘッダが登録されていません
+          入荷予定が登録されていません
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">{headers.length} 件のヘッダが見つかりました</div>
+          <div className="text-sm text-gray-600">{plans.length} 件の入荷予定が見つかりました</div>
 
           {/* Table */}
           <div className="overflow-x-auto rounded-lg border bg-white">
@@ -124,11 +132,11 @@ export function ForecastListPage() {
               <thead className="border-b bg-gray-50">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    フォーキャスト番号
+                    入荷予定番号
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">得意先</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">仕入先</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    納入場所
+                    入荷予定日
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     ステータス
@@ -140,44 +148,44 @@ export function ForecastListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {headers.map((header) => (
-                  <tr key={header.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{header.forecast_number}</td>
+                {plans.map((plan) => (
+                  <tr key={plan.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm">{plan.plan_number}</td>
                     <td className="px-4 py-3 text-sm">
-                      {header.customer_name || `ID: ${header.customer_id}`}
+                      {plan.supplier_name || `ID: ${plan.supplier_id}`}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {header.delivery_place_name || `ID: ${header.delivery_place_id}`}
+                      {new Date(plan.planned_arrival_date).toLocaleDateString("ja-JP")}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
                         className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          header.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : header.status === "completed"
-                              ? "bg-blue-100 text-blue-800"
+                          plan.status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : plan.status === "received"
+                              ? "bg-green-100 text-green-800"
                               : "bg-gray-100 text-gray-800"
                         }`}
                       >
-                        {header.status}
+                        {plan.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(header.created_at).toLocaleDateString("ja-JP")}
+                      {new Date(plan.created_at).toLocaleDateString("ja-JP")}
                     </td>
                     <td className="px-4 py-3 text-right text-sm">
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleViewDetail(header.id)}
+                          onClick={() => handleViewDetail(plan.id)}
                         >
                           詳細
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDelete(header.id)}
+                          onClick={() => handleDelete(plan.id)}
                           disabled={deleteMutation.isPending}
                         >
                           削除

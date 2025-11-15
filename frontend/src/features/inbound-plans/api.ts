@@ -1,0 +1,194 @@
+/**
+ * Inbound Plans API Client (v2.2 - Phase C)
+ * 入荷予定管理（ロット自動生成対応）
+ */
+
+import { fetchApi } from "@/shared/libs/http";
+
+// ===== Types =====
+
+/**
+ * Inbound Plan Header
+ */
+export interface InboundPlan {
+  id: number;
+  plan_number: string;
+  supplier_id: number;
+  planned_arrival_date: string;
+  status: "pending" | "received" | "cancelled";
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined data (optional)
+  supplier_name?: string;
+}
+
+/**
+ * Inbound Plan Line
+ */
+export interface InboundPlanLine {
+  id: number;
+  inbound_plan_id: number;
+  line_number: number;
+  product_id: number;
+  quantity: number;
+  warehouse_id: number;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+  // Joined data (optional)
+  product_code?: string;
+  product_name?: string;
+  warehouse_name?: string;
+}
+
+/**
+ * Inbound Plan with Lines
+ */
+export interface InboundPlanWithLines extends InboundPlan {
+  lines: InboundPlanLine[];
+}
+
+/**
+ * Request types
+ */
+export interface CreateInboundPlanRequest {
+  plan_number: string;
+  supplier_id: number;
+  planned_arrival_date: string;
+  status?: "pending" | "received" | "cancelled";
+  notes?: string;
+  lines?: CreateInboundPlanLineRequest[];
+}
+
+export interface UpdateInboundPlanRequest {
+  plan_number?: string;
+  supplier_id?: number;
+  planned_arrival_date?: string;
+  status?: "pending" | "received" | "cancelled";
+  notes?: string;
+}
+
+export interface CreateInboundPlanLineRequest {
+  line_number?: number;
+  product_id: number;
+  quantity: number;
+  warehouse_id: number;
+  notes?: string;
+}
+
+export interface UpdateInboundPlanLineRequest {
+  line_number?: number;
+  product_id?: number;
+  quantity?: number;
+  warehouse_id?: number;
+  notes?: string;
+}
+
+/**
+ * Receive Inbound Request (重要: ロット自動生成)
+ */
+export interface ReceiveInboundRequest {
+  lines: Array<{
+    inbound_plan_line_id: number;
+    received_quantity: number;
+  }>;
+}
+
+/**
+ * Receive Inbound Response (生成されたロット情報)
+ */
+export interface ReceiveInboundResponse {
+  generated_lots: Array<{
+    lot_id: number;
+    lot_number: string;
+    product_id: number;
+    quantity: number;
+    warehouse_id: number;
+  }>;
+}
+
+export interface InboundPlansListParams {
+  skip?: number;
+  limit?: number;
+  supplier_id?: number;
+  status?: "pending" | "received" | "cancelled";
+  date_from?: string;
+  date_to?: string;
+}
+
+// ===== API Functions =====
+
+/**
+ * Get inbound plans list
+ * @endpoint GET /inbound-plans
+ */
+export const getInboundPlans = (params?: InboundPlansListParams) => {
+  const searchParams = new URLSearchParams();
+  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
+  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
+  if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
+  if (params?.status) searchParams.append("status", params.status);
+  if (params?.date_from) searchParams.append("date_from", params.date_from);
+  if (params?.date_to) searchParams.append("date_to", params.date_to);
+
+  const queryString = searchParams.toString();
+  return fetchApi.get<InboundPlan[]>(`/inbound-plans${queryString ? "?" + queryString : ""}`);
+};
+
+/**
+ * Get inbound plan detail (with lines)
+ * @endpoint GET /inbound-plans/{id}
+ */
+export const getInboundPlan = (id: number) => {
+  return fetchApi.get<InboundPlanWithLines>(`/inbound-plans/${id}`);
+};
+
+/**
+ * Create inbound plan (with optional lines)
+ * @endpoint POST /inbound-plans
+ */
+export const createInboundPlan = (data: CreateInboundPlanRequest) => {
+  return fetchApi.post<InboundPlan>("/inbound-plans", data);
+};
+
+/**
+ * Update inbound plan
+ * @endpoint PUT /inbound-plans/{id}
+ */
+export const updateInboundPlan = (id: number, data: UpdateInboundPlanRequest) => {
+  return fetchApi.put<InboundPlan>(`/inbound-plans/${id}`, data);
+};
+
+/**
+ * Delete inbound plan
+ * @endpoint DELETE /inbound-plans/{id}
+ */
+export const deleteInboundPlan = (id: number) => {
+  return fetchApi.delete<void>(`/inbound-plans/${id}`);
+};
+
+/**
+ * Get inbound plan lines
+ * @endpoint GET /inbound-plans/{id}/lines
+ */
+export const getInboundPlanLines = (planId: number) => {
+  return fetchApi.get<InboundPlanLine[]>(`/inbound-plans/${planId}/lines`);
+};
+
+/**
+ * Add inbound plan line
+ * @endpoint POST /inbound-plans/{id}/lines
+ */
+export const createInboundPlanLine = (planId: number, data: CreateInboundPlanLineRequest) => {
+  return fetchApi.post<InboundPlanLine>(`/inbound-plans/${planId}/lines`, data);
+};
+
+/**
+ * Record inbound receipt (auto-generate lots)
+ * @endpoint POST /inbound-plans/{id}/receive
+ * @important This endpoint automatically generates lots based on received quantities
+ */
+export const receiveInbound = (planId: number, data: ReceiveInboundRequest) => {
+  return fetchApi.post<ReceiveInboundResponse>(`/inbound-plans/${planId}/receive`, data);
+};

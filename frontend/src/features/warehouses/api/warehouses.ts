@@ -1,5 +1,9 @@
-// Auto-generated from api-client.ts split
+// API client for warehouses (v2.2 - Phase F)
 import { fetchApi } from "@/shared/libs/http";
 import type { OldWarehouse } from "@/shared/types/aliases";
 
-export const getWarehouses = () => fetchApi.get<OldWarehouse[]>("/masters/warehouses");
+/**
+ * Get all warehouses
+ * @endpoint GET /warehouses (was /masters/warehouses)
+ */
+export const getWarehouses = () => fetchApi.get<OldWarehouse[]>("/warehouses");
