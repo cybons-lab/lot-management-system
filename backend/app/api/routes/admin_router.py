@@ -47,9 +47,7 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
     """
     try:
         # lots テーブルから直接在庫を集計
-        total_stock_result = db.execute(
-            select(func.coalesce(func.sum(Lot.current_quantity), 0.0))
-        )
+        total_stock_result = db.execute(select(func.coalesce(func.sum(Lot.current_quantity), 0.0)))
         total_stock = total_stock_result.scalar_one()
     except SQLAlchemyError as e:
         logger.warning("在庫集計に失敗したため 0 扱いにします: %s", e)

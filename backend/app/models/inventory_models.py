@@ -286,9 +286,7 @@ class AllocationSuggestion(Base):
 
     __tablename__ = "allocation_suggestions"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     forecast_line_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("forecast_lines.id", ondelete="CASCADE"),

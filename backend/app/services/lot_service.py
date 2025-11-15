@@ -49,13 +49,10 @@ class LotRepository:
         if not product:
             return []
 
-        stmt: Select[tuple[Lot]] = (
-            select(Lot)
-            .where(
-                Lot.product_id == product.id,
-                Lot.status == "active",
-                (Lot.current_quantity - Lot.allocated_quantity) > min_quantity,
-            )
+        stmt: Select[tuple[Lot]] = select(Lot).where(
+            Lot.product_id == product.id,
+            Lot.status == "active",
+            (Lot.current_quantity - Lot.allocated_quantity) > min_quantity,
         )
 
         if warehouse_code:

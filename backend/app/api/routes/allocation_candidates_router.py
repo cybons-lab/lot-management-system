@@ -70,7 +70,9 @@ def get_allocation_candidates(
         # v2.2: メインクエリ - lots テーブルから直接取得
         # 並び順はFEFO戦略の場合: expiry_date NULLS FIRST（期限が近いものを優先）
         order_by_clause = (
-            "l.expiry_date NULLS FIRST, l.id" if strategy == "fefo" else "l.id"  # fifoやcustomは将来実装
+            "l.expiry_date NULLS FIRST, l.id"
+            if strategy == "fefo"
+            else "l.id"  # fifoやcustomは将来実装
         )
 
         query = text(

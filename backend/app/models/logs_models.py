@@ -33,9 +33,7 @@ class OperationLog(Base):
 
     __tablename__ = "operation_logs"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL")
     )
@@ -61,9 +59,7 @@ class MasterChangeLog(Base):
 
     __tablename__ = "master_change_logs"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     table_name: Mapped[str] = mapped_column(String(50), nullable=False)
     record_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     change_type: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -89,9 +85,7 @@ class BusinessRule(Base):
 
     __tablename__ = "business_rules"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     rule_code: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     rule_name: Mapped[str] = mapped_column(String(100), nullable=False)
     rule_type: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -117,9 +111,7 @@ class BatchJob(Base):
 
     __tablename__ = "batch_jobs"
 
-    id: Mapped[int] = mapped_column(
-        BigInteger, primary_key=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     job_name: Mapped[str] = mapped_column(String(100), nullable=False)
     job_type: Mapped[str] = mapped_column(String(50), nullable=False)
     status: Mapped[str] = mapped_column(
