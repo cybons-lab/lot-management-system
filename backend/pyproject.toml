@@ -9,7 +9,7 @@ target-version = "py312"
 # D: pydocstyle (docstring conventions)
 # UP: pyupgrade (Python version upgrades)
 # B: flake8-bugbear (likely bugs and design problems)
-select = ["E", "F", "I", "D", "UP", "B"]
+select = ["E", "F", "I", "D", "UP", "B", "PLR0912", "PLR0913", "PLR0915"]
 
 ignore = [
   "D203",  # one-blank-line-before-class (conflicts with D211)
