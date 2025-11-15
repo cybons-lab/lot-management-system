@@ -111,15 +111,11 @@ export function AdjustmentsListPage() {
             <table className="w-full">
               <thead className="border-b bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    調整ID
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">調整ID</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     ロット番号
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    製品
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">製品</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     調整タイプ
                   </th>

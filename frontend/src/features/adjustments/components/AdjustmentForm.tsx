@@ -119,9 +119,7 @@ export function AdjustmentForm({ onSubmit, onCancel, isSubmitting = false }: Adj
         {errors.adjusted_quantity && (
           <p className="mt-1 text-sm text-red-600">{errors.adjusted_quantity}</p>
         )}
-        <p className="mt-1 text-xs text-gray-500">
-          正の値は在庫増加、負の値は在庫減少を意味します
-        </p>
+        <p className="mt-1 text-xs text-gray-500">正の値は在庫増加、負の値は在庫減少を意味します</p>
       </div>
 
       {/* Reason */}

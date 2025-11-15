@@ -91,9 +91,7 @@ export const getInventoryItems = (params?: InventoryItemsListParams) => {
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<InventoryItem[]>(
-    `/inventory-items${queryString ? "?" + queryString : ""}`,
-  );
+  return fetchApi.get<InventoryItem[]>(`/inventory-items${queryString ? "?" + queryString : ""}`);
 };
 
 /**

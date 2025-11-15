@@ -232,5 +232,6 @@ function AllocationWorkflow({ orderLineId, orderId }: Props) {
 ## Support
 
 For questions or issues, please refer to:
+
 - Backend API docs: `/docs/architecture/api_refactor_plan_v2.2.md`
 - Frontend refactor plan: `/docs/frontend/frontend_refactor_plan_v2.2.md`

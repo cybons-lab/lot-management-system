@@ -179,9 +179,7 @@ export function SummaryPage() {
                   <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
                     総在庫数
                   </th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
-                    引当済
-                  </th>
+                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">引当済</th>
                   <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
                     利用可能
                   </th>
