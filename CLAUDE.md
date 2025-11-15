@@ -823,29 +823,88 @@ draft → open → part_allocated → allocated → shipped → closed
 
 ### Key API Endpoints
 
+**Updated for v2.2** (Phase 1〜4 complete - 2025-11-15)
+
+See full API documentation: [API Reference](./docs/api_reference.md) | [Migration Guide](./docs/api_migration_guide_v2.2.md)
+
 #### Master Data
-- `GET /api/masters/warehouses` - List warehouses
-- `GET /api/masters/products` - List products
-- `GET /api/masters/suppliers` - List suppliers
-- `GET /api/masters/customers` - List customers
+- `GET /api/warehouses` - List warehouses (NEW: direct access)
+- `GET /api/products` - List products (NEW: direct access)
+- `GET /api/suppliers` - List suppliers (NEW: direct access)
+- `GET /api/customers` - List customers (NEW: direct access)
+- `GET /api/customer-items` - Get customer item mappings (NEW)
+- `GET /api/masters/*` - Legacy master endpoints (still supported for compatibility)
+
+#### Forecasts (ヘッダ・明細分離構造 - Phase 2 完了)
+- `GET /api/forecasts/headers` - List forecast headers
+- `POST /api/forecasts/headers` - Create forecast header (with lines)
+- `GET /api/forecasts/headers/{id}` - Get forecast header detail (with lines)
+- `PUT /api/forecasts/headers/{id}` - Update forecast header
+- `DELETE /api/forecasts/headers/{id}` - Delete forecast header
+- `GET /api/forecasts/headers/{id}/lines` - List forecast lines
+- `POST /api/forecasts/headers/{id}/lines` - Add forecast line
+- `PUT /api/forecasts/lines/{id}` - Update forecast line
+- `DELETE /api/forecasts/lines/{id}` - Delete forecast line
+- `POST /api/forecasts/headers/bulk-import` - Bulk import forecasts
+
+#### Inbound Plans (入荷予定管理 - Phase 2 完了)
+- `GET /api/inbound-plans` - List inbound plans
+- `POST /api/inbound-plans` - Create inbound plan (with lines)
+- `GET /api/inbound-plans/{id}` - Get inbound plan detail
+- `PUT /api/inbound-plans/{id}` - Update inbound plan
+- `DELETE /api/inbound-plans/{id}` - Delete inbound plan
+- `GET /api/inbound-plans/{id}/lines` - List inbound plan lines
+- `POST /api/inbound-plans/{id}/lines` - Add inbound plan line
+- `POST /api/inbound-plans/{id}/receive` - **Record inbound receipt (auto-generate lots)**
 
 #### Lots & Inventory
 - `GET /api/lots?with_stock=true` - List lots with current stock
 - `POST /api/lots` - Register new lot
 - `GET /api/lots/{id}` - Get lot detail
-- `POST /api/lots/movements` - Record stock movement
+- `PUT /api/lots/{id}` - Update lot
+- `DELETE /api/lots/{id}` - Delete lot
+- `GET /api/inventory-items` - **Get inventory summary (NEW - Phase 2)**
+- `GET /api/inventory-items/{product_id}/{warehouse_id}` - **Get inventory summary detail (NEW)**
+- `GET /api/adjustments` - **Get adjustment history (NEW - Phase 2)**
+- `POST /api/adjustments` - **Record inventory adjustment (NEW - Phase 2)**
 
 #### Orders
 - `GET /api/orders` - List orders (supports filters)
 - `POST /api/orders` - Create order
 - `GET /api/orders/{id}` - Get order with lines
 - `PATCH /api/orders/{id}/status` - Update order status
+- `DELETE /api/orders/{id}` - Delete/cancel order
 
-#### Allocations
-- `POST /api/orders/allocations/drag-assign` - Manual allocation (drag & drop)
-- `POST /api/orders/allocations/fefo-preview` - Preview FEFO allocation
-- `POST /api/orders/allocations/fefo-commit` - Commit FEFO allocation
-- `GET /api/orders/{id}/allocations` - Get allocations for order
+#### Allocations (リファクタ版 - Phase 3 完了)
+- `POST /api/allocations/commit` - **Commit allocation (NEW - v2.2.1)**
+- `DELETE /api/allocations/{id}` - Cancel allocation
+- `GET /api/allocation-candidates` - **Get candidate lots (NEW - Phase 3)**
+- `GET /api/allocation-suggestions` - **Get allocation suggestions (NEW - Phase 4)**
+- `POST /api/allocation-suggestions/manual` - **Manual allocation (NEW - Phase 3)**
+- `POST /api/allocation-suggestions/fefo` - **FEFO allocation preview (NEW - Phase 3)**
+
+**Deprecated** (移行期限: 2026-02-15):
+- `POST /api/allocations/drag-assign` → Use `/allocation-suggestions/manual`
+- `POST /api/allocations/preview` → Use `/allocation-suggestions/fefo`
+- `POST /api/allocations/orders/{id}/allocate` → Use `/allocations/commit`
+- `GET /api/allocations/candidate-lots` → Use `/allocation-candidates`
+
+#### Users & Roles (Phase 3 完了)
+- `GET /api/users` - List users (NEW)
+- `POST /api/users` - Create user (NEW)
+- `GET /api/users/{id}` - Get user detail (NEW)
+- `PUT /api/users/{id}` - Update user (NEW)
+- `DELETE /api/users/{id}` - Delete user (NEW)
+- `PATCH /api/users/{id}/roles` - Assign roles to user (NEW)
+- `GET /api/roles` - List roles (NEW)
+- `POST /api/roles` - Create role (NEW)
+
+#### Admin & Logs (Phase 4 完了)
+- `GET /api/operation-logs` - **Get operation logs (NEW - Phase 4)**
+- `GET /api/business-rules` - **Get business rules (NEW - Phase 4)**
+- `PUT /api/business-rules/{code}` - **Update business rule (NEW - Phase 4)**
+- `GET /api/batch-jobs` - **Get batch jobs (NEW - Phase 4)**
+- `POST /api/batch-jobs/{id}/execute` - **Execute batch job (NEW - Phase 4)**
 
 #### Integration
 - `POST /api/integration/ai-ocr/submit` - Submit OCR order
