@@ -84,7 +84,7 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black">
       <div className="w-full max-w-4xl rounded-lg bg-white p-6 shadow-xl">
         <h3 className="mb-4 text-xl font-semibold">入荷実績登録</h3>
 
@@ -107,8 +107,8 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
                 <ul className="space-y-1 text-sm">
                   {result.generatedLots.map((lot, index) => (
                     <li key={index}>
-                      • ロット番号: <span className="font-mono">{lot.lot_number}</span> -
-                      製品ID: {lot.product_id} - 数量: {lot.quantity}
+                      • ロット番号: <span className="font-mono">{lot.lot_number}</span> - 製品ID:{" "}
+                      {lot.product_id} - 数量: {lot.quantity}
                     </li>
                   ))}
                 </ul>
@@ -134,18 +134,14 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                       行番号
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      製品
-                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">製品</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                       計画数量
                     </th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                       実績数量
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      差異
-                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">差異</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">

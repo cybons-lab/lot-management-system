@@ -134,9 +134,7 @@ export function ForecastDetailPage() {
       <div className="rounded-lg border bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold">明細一覧</h3>
-          <div className="text-sm text-gray-600">
-            {forecast.lines?.length || 0} 件の明細
-          </div>
+          <div className="text-sm text-gray-600">{forecast.lines?.length || 0} 件の明細</div>
         </div>
 
         {!forecast.lines || forecast.lines.length === 0 ? (
@@ -146,21 +144,11 @@ export function ForecastDetailPage() {
             <table className="w-full">
               <thead className="border-b bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    行番号
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    製品
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    数量
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    予測日
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    粒度
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">行番号</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">製品</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">数量</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">予測日</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">粒度</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     バージョン
                   </th>

@@ -134,18 +134,14 @@ export function InboundPlansListPage() {
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     入荷予定番号
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    仕入先
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">仕入先</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     入荷予定日
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     ステータス
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    作成日
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">作成日</th>
                   <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
                     アクション
                   </th>

@@ -56,9 +56,7 @@ export function ForecastListPage() {
           <h2 className="text-3xl font-bold tracking-tight">フォーキャスト一覧</h2>
           <p className="mt-1 text-gray-600">ヘッダ・明細分離構造（v2.2）</p>
         </div>
-        <Button onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>
-          一括インポート
-        </Button>
+        <Button onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>一括インポート</Button>
       </div>
 
       {/* Filters */}
@@ -128,18 +126,14 @@ export function ForecastListPage() {
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     フォーキャスト番号
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    得意先
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">得意先</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     納入場所
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     ステータス
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    作成日
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">作成日</th>
                   <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
                     アクション
                   </th>

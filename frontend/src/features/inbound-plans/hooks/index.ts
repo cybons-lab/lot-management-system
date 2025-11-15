@@ -5,15 +5,11 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
-  InboundPlan,
-  InboundPlanWithLines,
-  InboundPlanLine,
   InboundPlansListParams,
   CreateInboundPlanRequest,
   UpdateInboundPlanRequest,
   CreateInboundPlanLineRequest,
   ReceiveInboundRequest,
-  ReceiveInboundResponse,
 } from "../api";
 import {
   getInboundPlans,

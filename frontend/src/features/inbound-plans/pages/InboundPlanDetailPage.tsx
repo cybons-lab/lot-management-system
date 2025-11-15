@@ -65,11 +65,7 @@ export function InboundPlanDetailPage() {
           <Button variant="outline" onClick={handleBack}>
             一覧に戻る
           </Button>
-          {canReceive && (
-            <Button onClick={() => setIsReceiveModalOpen(true)}>
-              入荷実績登録
-            </Button>
-          )}
+          {canReceive && <Button onClick={() => setIsReceiveModalOpen(true)}>入荷実績登録</Button>}
         </div>
       </div>
 
@@ -99,9 +95,7 @@ export function InboundPlanDetailPage() {
           </div>
           <div>
             <div className="text-sm font-medium text-gray-500">仕入先</div>
-            <div className="mt-1 text-base">
-              {plan.supplier_name || `ID: ${plan.supplier_id}`}
-            </div>
+            <div className="mt-1 text-base">{plan.supplier_name || `ID: ${plan.supplier_id}`}</div>
           </div>
           <div>
             <div className="text-sm font-medium text-gray-500">入荷予定日</div>
@@ -134,9 +128,7 @@ export function InboundPlanDetailPage() {
       <div className="rounded-lg border bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold">明細一覧</h3>
-          <div className="text-sm text-gray-600">
-            {plan.lines?.length || 0} 件の明細
-          </div>
+          <div className="text-sm text-gray-600">{plan.lines?.length || 0} 件の明細</div>
         </div>
 
         {!plan.lines || plan.lines.length === 0 ? (
@@ -146,21 +138,11 @@ export function InboundPlanDetailPage() {
             <table className="w-full">
               <thead className="border-b bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    行番号
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    製品
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    数量
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    倉庫
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    備考
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">行番号</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">製品</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">数量</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">倉庫</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">備考</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
