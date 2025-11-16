@@ -6,13 +6,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.operation_logs_schema import (
+from app.schemas.system.operation_logs_schema import (
     MasterChangeLogListResponse,
     MasterChangeLogResponse,
     OperationLogListResponse,
     OperationLogResponse,
 )
-from app.services.operation_logs_service import MasterChangeLogService, OperationLogService
+from app.services.admin.operation_logs_service import MasterChangeLogService, OperationLogService
 
 
 router = APIRouter(tags=["logs"])

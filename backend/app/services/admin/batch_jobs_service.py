@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.logs_models import BatchJob
-from app.schemas.batch_jobs_schema import BatchJobCreate
+from app.schemas.system.batch_jobs_schema import BatchJobCreate
 
 
 class BatchJobService:

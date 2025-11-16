@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.masters_models import Customer
-from app.schemas.masters_schema import CustomerCreate, CustomerResponse, CustomerUpdate
+from app.schemas.masters.masters_schema import CustomerCreate, CustomerResponse, CustomerUpdate
 
 
 router = APIRouter(prefix="/customers", tags=["customers"])

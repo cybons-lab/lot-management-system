@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.logs_models import BusinessRule
-from app.schemas.business_rules_schema import BusinessRuleCreate, BusinessRuleUpdate
+from app.schemas.system.business_rules_schema import BusinessRuleCreate, BusinessRuleUpdate
 
 
 class BusinessRuleService:

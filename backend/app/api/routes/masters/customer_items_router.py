@@ -4,12 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.customer_items_schema import (
+from app.schemas.masters.customer_items_schema import (
     CustomerItemCreate,
     CustomerItemResponse,
     CustomerItemUpdate,
 )
-from app.services.customer_items_service import CustomerItemsService
+from app.services.masters.customer_items_service import CustomerItemsService
 
 
 router = APIRouter(prefix="/customer-items", tags=["customer-items"])

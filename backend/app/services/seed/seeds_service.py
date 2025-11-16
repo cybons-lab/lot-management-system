@@ -20,7 +20,12 @@ from app.models.forecast_models import Forecast
 from app.models.inventory_models import Lot, StockMovement
 from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 from app.models.orders_models import Allocation, Order, OrderLine
-from app.schemas.admin_seeds_schema import ActualCounts, SeedRequest, SeedResponse, SeedSummary
+from app.schemas.admin.admin_seeds_schema import (
+    ActualCounts,
+    SeedRequest,
+    SeedResponse,
+    SeedSummary,
+)
 
 
 # ============================

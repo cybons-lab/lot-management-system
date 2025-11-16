@@ -9,7 +9,7 @@ from __future__ import annotations
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.schemas.allocations_schema import CandidateLotRow
+from app.schemas.allocations.allocations_schema import CandidateLotItem
 
 
 def build_candidate_lot_filter(
@@ -42,7 +42,7 @@ def execute_candidate_lot_query(
     order_line_id: int | None = None,
     strategy: str = "fefo",
     limit: int = 200,
-) -> list[CandidateLotRow]:
+) -> list[CandidateLotItem]:
     """
     Execute candidate lot query with FEFO ordering.
 
@@ -60,37 +60,25 @@ def execute_candidate_lot_query(
         limit: Maximum number of candidates to return
 
     Returns:
-        List of candidate lot rows with allocation info
+        List of candidate lot items with allocation info
     """
     # Build SQL query with dynamic filters
     sql_parts = []
     params = {}
 
-    # Base query
+    # Base query - simplified to only select fields from CandidateLotItem
     base_sql = """
         SELECT
             l.id AS lot_id,
             l.lot_number,
             l.product_id,
-            p.product_code,
-            p.product_name,
             l.warehouse_id,
-            w.warehouse_code,
-            w.warehouse_name,
-            l.supplier_id,
-            s.supplier_code,
-            s.supplier_name,
             l.received_date,
             l.expiry_date,
             l.current_quantity,
             l.allocated_quantity,
-            (l.current_quantity - l.allocated_quantity) AS available_quantity,
-            l.unit,
-            l.status
+            (l.current_quantity - l.allocated_quantity) AS available_quantity
         FROM lots l
-        LEFT JOIN products p ON l.product_id = p.id
-        LEFT JOIN warehouses w ON l.warehouse_id = w.id
-        LEFT JOIN suppliers s ON l.supplier_id = s.id
         WHERE l.status = 'active'
             AND (l.current_quantity - l.allocated_quantity) > 0
     """
@@ -145,29 +133,20 @@ def execute_candidate_lot_query(
     full_sql = "".join(sql_parts)
     result = db.execute(text(full_sql), params).fetchall()
 
-    # Convert to schema objects
+    # Convert to schema objects using only CandidateLotItem fields
     candidates = []
     for row in result:
         candidates.append(
-            CandidateLotRow(
+            CandidateLotItem(
                 lot_id=row.lot_id,
                 lot_number=row.lot_number,
                 product_id=row.product_id,
-                product_code=row.product_code,
-                product_name=row.product_name,
                 warehouse_id=row.warehouse_id,
-                warehouse_code=row.warehouse_code,
-                warehouse_name=row.warehouse_name,
-                supplier_id=row.supplier_id,
-                supplier_code=row.supplier_code,
-                supplier_name=row.supplier_name,
                 received_date=row.received_date,
                 expiry_date=row.expiry_date,
                 current_quantity=float(row.current_quantity or 0),
                 allocated_quantity=float(row.allocated_quantity or 0),
                 available_quantity=float(row.available_quantity or 0),
-                unit=row.unit,
-                status=row.status,
             )
         )
 

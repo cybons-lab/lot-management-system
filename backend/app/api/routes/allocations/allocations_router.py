@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.models import Allocation, Lot, OrderLine
-from app.schemas.allocations_schema import (
+from app.schemas.allocations.allocations_schema import (
     AllocationCommitRequest,
     AllocationCommitResponse,
     CandidateLotsResponse,
@@ -19,7 +19,7 @@ from app.schemas.allocations_schema import (
     FefoPreviewRequest,
     FefoPreviewResponse,
 )
-from app.services.allocations_service import (
+from app.services.allocation.allocations_service import (
     AllocationCommitError,
     AllocationNotFoundError,
     cancel_allocation,

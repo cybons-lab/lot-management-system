@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.masters_models import Product
-from app.schemas.masters_schema import ProductCreate, ProductResponse, ProductUpdate
+from app.schemas.masters.masters_schema import ProductCreate, ProductResponse, ProductUpdate
 
 
 router = APIRouter(prefix="/products", tags=["products"])

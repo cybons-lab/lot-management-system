@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.forecast_schema import (
+from app.schemas.forecasts.forecast_schema import (
     ForecastHeaderCreate,
     ForecastHeaderDetailResponse,
     ForecastHeaderResponse,
@@ -13,7 +13,7 @@ from app.schemas.forecast_schema import (
     ForecastLineResponse,
     ForecastLineUpdate,
 )
-from app.services.forecast_service import ForecastService
+from app.services.forecasts.forecast_service import ForecastService
 
 
 router = APIRouter(prefix="/forecasts", tags=["forecasts"])

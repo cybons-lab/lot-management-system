@@ -6,7 +6,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.models.inventory_models import Adjustment, Lot, StockHistory, StockTransactionType
-from app.schemas.inventory_schema import AdjustmentCreate, AdjustmentResponse
+from app.schemas.inventory.inventory_schema import AdjustmentCreate, AdjustmentResponse
 
 
 class AdjustmentService:

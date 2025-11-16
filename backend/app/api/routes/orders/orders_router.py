@@ -16,8 +16,8 @@ from app.schemas.orders.orders_schema import (
     OrderStatusUpdate,
     OrderWithLinesResponse,
 )
-from app.services.order_service import OrderService
-from app.services.uow_service import UnitOfWork
+from app.services.common.uow_service import UnitOfWork
+from app.services.orders.order_service import OrderService
 
 
 router = APIRouter(prefix="/orders", tags=["orders"])

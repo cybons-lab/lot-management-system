@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.domain.order import InvalidOrderStatusError, OrderStateMachine, OrderStatus
 from app.models import Customer, Order, OrderLine, Product
-from app.services.allocations_service import _load_order
+from app.services.allocation.allocations_service import _load_order
 
 
 class TestOrderStatusEnum:
@@ -176,7 +176,7 @@ class TestAllocationPreviewStatus:
 
     def test_preview_allowed_statuses(self, db_session: Session):
         """プレビューは draft|open|part_allocated|allocated を許容."""
-        from app.services.allocations_service import preview_fefo_allocation
+        from app.services.allocation.allocations_service import preview_fefo_allocation
 
         # テストデータ作成
         customer = Customer(customer_code="CUST003", customer_name="Test Customer 3")
@@ -205,7 +205,7 @@ class TestAllocationPreviewStatus:
 
     def test_preview_disallowed_statuses(self, db_session: Session):
         """プレビューは shipped|closed|cancelled を拒否."""
-        from app.services.allocations_service import preview_fefo_allocation
+        from app.services.allocation.allocations_service import preview_fefo_allocation
 
         # テストデータ作成
         customer = Customer(customer_code="CUST004", customer_name="Test Customer 4")
@@ -234,7 +234,7 @@ class TestAllocationCommitStatus:
 
     def test_commit_allowed_statuses(self, db_session: Session):
         """確定は open|part_allocated のみ許容."""
-        from app.services.allocations_service import commit_fefo_allocation
+        from app.services.allocation.allocations_service import commit_fefo_allocation
 
         # テストデータ作成
         customer = Customer(customer_code="CUST005", customer_name="Test Customer 5")
@@ -272,7 +272,7 @@ class TestAllocationCommitStatus:
 
     def test_commit_disallowed_statuses(self, db_session: Session):
         """確定は draft|allocated|shipped|closed|cancelled を拒否."""
-        from app.services.allocations_service import commit_fefo_allocation
+        from app.services.allocation.allocations_service import commit_fefo_allocation
 
         # テストデータ作成
         customer = Customer(customer_code="CUST006", customer_name="Test Customer 6")

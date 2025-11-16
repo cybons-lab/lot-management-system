@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.forecast_models import ForecastLine
 from app.models.inventory_models import AllocationSuggestion, Lot
-from app.schemas.allocation_suggestions_schema import AllocationSuggestionCreate
+from app.schemas.allocations.allocation_suggestions_schema import AllocationSuggestionCreate
 
 
 class AllocationSuggestionService:

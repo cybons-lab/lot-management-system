@@ -7,7 +7,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.schemas.base import BaseSchema
+from app.schemas.common.base import BaseSchema
 
 
 class SystemConfigBase(BaseSchema):

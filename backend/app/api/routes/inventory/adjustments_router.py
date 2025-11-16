@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.inventory_schema import AdjustmentCreate, AdjustmentResponse
-from app.services.adjustment_service import AdjustmentService
+from app.schemas.inventory.inventory_schema import AdjustmentCreate, AdjustmentResponse
+from app.services.inventory.adjustment_service import AdjustmentService
 
 
 router = APIRouter(prefix="/adjustments", tags=["adjustments"])

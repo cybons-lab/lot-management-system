@@ -6,7 +6,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.auth_models import User, UserRole
-from app.schemas.users_schema import UserCreate, UserRoleAssignment, UserUpdate
+from app.schemas.system.users_schema import UserCreate, UserRoleAssignment, UserUpdate
 
 
 class UserService:

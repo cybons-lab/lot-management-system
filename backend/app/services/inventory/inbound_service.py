@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.inbound_models import ExpectedLot, InboundPlan, InboundPlanLine
 from app.models.inventory_models import Lot, StockHistory, StockTransactionType
-from app.schemas.inbound_schema import (
+from app.schemas.inventory.inbound_schema import (
     ExpectedLotResponse,
     InboundPlanCreate,
     InboundPlanDetailResponse,

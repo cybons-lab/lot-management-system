@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.schemas.common_schema import ORMModel
+from app.schemas.common.common_schema import ORMModel
 
 
 class ProductBase(BaseModel):

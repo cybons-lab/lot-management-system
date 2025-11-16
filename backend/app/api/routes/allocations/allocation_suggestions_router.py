@@ -8,13 +8,13 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.inventory_models import Lot
 from app.models.orders_models import OrderLine
-from app.schemas.allocation_suggestions_schema import (
+from app.schemas.allocations.allocation_suggestions_schema import (
     AllocationSuggestionGenerateRequest,
     AllocationSuggestionGenerateResponse,
     AllocationSuggestionListResponse,
     AllocationSuggestionResponse,
 )
-from app.schemas.allocations_schema import (
+from app.schemas.allocations.allocations_schema import (
     AllocationSuggestionManualRequest,
     AllocationSuggestionManualResponse,
     FefoLineAllocation,
@@ -22,8 +22,8 @@ from app.schemas.allocations_schema import (
     FefoPreviewRequest,
     FefoPreviewResponse,
 )
-from app.services.allocation_suggestions_service import AllocationSuggestionService
-from app.services.allocations_service import preview_fefo_allocation
+from app.services.allocation.allocation_suggestions_service import AllocationSuggestionService
+from app.services.allocation.allocations_service import preview_fefo_allocation
 
 
 logger = logging.getLogger(__name__)

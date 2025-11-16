@@ -23,7 +23,7 @@ from app.schemas.forecasts.forecast_schema import (
     ForecastVersionInfo,
     ForecastVersionListResponse,
 )
-from app.services.forecast_service import (
+from app.services.forecasts.forecast_service import (
     ForecastService,
     assign_auto_forecast_identifier,
 )

@@ -9,7 +9,7 @@ from collections.abc import Generator
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal
-from app.services.uow_service import UnitOfWork
+from app.services.common.uow_service import UnitOfWork
 
 
 def get_db() -> Generator[Session, None, None]:

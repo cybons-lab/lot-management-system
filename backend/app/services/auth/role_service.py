@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.auth_models import Role
-from app.schemas.roles_schema import RoleCreate, RoleUpdate
+from app.schemas.system.roles_schema import RoleCreate, RoleUpdate
 
 
 class RoleService:

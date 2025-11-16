@@ -23,6 +23,7 @@ from app.models import (
     Warehouse,
 )
 
+
 # ✅ 修正: conftest.pyのdb_sessionを使用（独自engineを削除）
 
 

@@ -17,9 +17,9 @@ from app.schemas.integration.integration_schema import (
     OcrSubmissionResponse,
     SapRegisterRequest,
     SapRegisterResponse,
+    SubmissionRequest,
 )
-from app.schemas.integration_schema import SubmissionRequest
-from app.services.integration import process_external_submission
+from app.services.integration.submissions_service import process_external_submission
 
 
 logger = logging.getLogger(__name__)

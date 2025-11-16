@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.masters_models import CustomerItem
-from app.schemas.customer_items_schema import CustomerItemCreate, CustomerItemUpdate
+from app.schemas.masters.customer_items_schema import CustomerItemCreate, CustomerItemUpdate
 
 
 class CustomerItemsService:

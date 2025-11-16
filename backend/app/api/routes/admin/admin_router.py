@@ -25,7 +25,7 @@ from app.schemas.admin.admin_schema import DashboardStatsResponse, FullSampleDat
 from app.schemas.admin.admin_seeds_schema import SeedRequest, SeedResponse
 from app.schemas.allocations.allocations_schema import CandidateLotsResponse
 from app.schemas.common.base import ResponseBase
-from app.services.seeds_service import create_seed_data
+from app.services.seed.seeds_service import create_seed_data
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])

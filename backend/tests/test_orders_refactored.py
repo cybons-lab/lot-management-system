@@ -4,13 +4,15 @@
 既存API入出力の挙動を保証する回帰テスト
 """
 
-import pytest
 from datetime import date
+
+import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
-from app.models import Order, OrderLine, Customer, Product
 from app.api.deps import get_db, get_uow
+from app.main import app
+from app.models import Customer, Order, OrderLine, Product
+
 
 # ✅ 修正: conftest.pyのdb_sessionを使用（独自engineを削除）
 
@@ -26,7 +28,6 @@ def client(db_session):
     
     def override_get_uow():
         """テスト用UnitOfWorkをオーバーライド"""
-        from app.services.uow import UnitOfWork
         # db_sessionを直接使用する簡易UnitOfWork
         class TestUnitOfWork:
             def __init__(self, session):
@@ -207,7 +208,7 @@ class TestOrderStateMachine:
     
     def test_invalid_transitions(self):
         """禁止された状態遷移"""
-        from app.domain.order import OrderStateMachine, InvalidOrderStatusError
+        from app.domain.order import InvalidOrderStatusError, OrderStateMachine
         
         assert OrderStateMachine.can_transition("closed", "open") is False
         

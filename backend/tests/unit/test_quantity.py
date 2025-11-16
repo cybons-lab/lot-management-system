@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from app.services.quantity import QuantityConversionError, to_internal_qty
+from app.services.common.quantity_service import QuantityConversionError, to_internal_qty
 
 
 class DummyProduct:

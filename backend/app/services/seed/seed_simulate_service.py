@@ -27,13 +27,13 @@ from app.models.inventory_models import Lot, StockMovement, StockTransactionType
 from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 from app.models.orders_models import Allocation, Order, OrderLine
 from app.repositories.seed_snapshot_repo import SeedSnapshotRepository
-from app.schemas.admin_simulate_schema import (
+from app.schemas.admin.admin_simulate_schema import (
     CapCheckResult,
     SimulateResultSummary,
     SimulateSeedRequest,
 )
-from app.services.job_tracker import JobPhase, get_job_tracker
-from app.services.profile_loader import get_profile
+from app.services.common.job_tracker import JobPhase, get_job_tracker
+from app.services.common.profile_loader import get_profile
 
 
 logger = logging.getLogger(__name__)

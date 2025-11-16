@@ -23,7 +23,7 @@ from app.schemas.orders.orders_schema import (
     OrderResponse,
     OrderWithLinesResponse,
 )
-from app.services.quantity_service import QuantityConversionError, to_internal_qty
+from app.services.common.quantity_service import QuantityConversionError, to_internal_qty
 
 
 class OrderService:

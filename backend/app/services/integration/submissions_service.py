@@ -16,15 +16,19 @@ from sqlalchemy.orm import Session
 
 from app.models.masters_models import Customer, Product
 from app.models.orders_models import Order, OrderLine
-from app.schemas.integration_schema import OcrOrderRecord, SubmissionRequest, SubmissionResponse
-from app.services.quantity_service import QuantityConversionError, to_internal_qty
+from app.schemas.integration.integration_schema import (
+    OcrOrderRecord,
+    SubmissionRequest,
+    SubmissionResponse,
+)
+from app.services.common.quantity_service import QuantityConversionError, to_internal_qty
 
 
 logger = logging.getLogger(__name__)
 
 # Optional forecast matching
 try:
-    from app.services.forecast_service import ForecastService
+    from app.services.forecasts.forecast_service import ForecastService
 
     FORECAST_AVAILABLE = True
 except ImportError:

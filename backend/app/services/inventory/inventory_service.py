@@ -3,7 +3,7 @@
 from sqlalchemy.orm import Session
 
 from app.models.inventory_models import InventoryItem
-from app.schemas.inventory_schema import InventoryItemResponse
+from app.schemas.inventory.inventory_schema import InventoryItemResponse
 
 
 class InventoryService:

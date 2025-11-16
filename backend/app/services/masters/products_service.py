@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Product
 from app.repositories.products_repository import ProductRepository
-from app.schemas.products_schema import ProductCreate, ProductUpdate
+from app.schemas.masters.products_schema import ProductCreate, ProductUpdate
 
 
 class ProductService:

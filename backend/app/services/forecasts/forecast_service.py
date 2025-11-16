@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.forecast_models import ForecastHeader, ForecastLine
-from app.schemas.forecast_schema import (
+from app.schemas.forecasts.forecast_schema import (
     ForecastHeaderCreate,
     ForecastHeaderDetailResponse,
     ForecastHeaderResponse,

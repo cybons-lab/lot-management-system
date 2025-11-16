@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.inbound_schema import (
+from app.schemas.inventory.inbound_schema import (
     InboundPlanCreate,
     InboundPlanDetailResponse,
     InboundPlanLineCreate,
@@ -15,7 +15,7 @@ from app.schemas.inbound_schema import (
     InboundPlanResponse,
     InboundPlanUpdate,
 )
-from app.services.inbound_service import InboundService
+from app.services.inventory.inbound_service import InboundService
 
 
 router = APIRouter(prefix="/inbound-plans", tags=["inbound-plans"])

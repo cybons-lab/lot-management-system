@@ -4,13 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.business_rules_schema import (
+from app.schemas.system.business_rules_schema import (
     BusinessRuleCreate,
     BusinessRuleListResponse,
     BusinessRuleResponse,
     BusinessRuleUpdate,
 )
-from app.services.business_rules_service import BusinessRuleService
+from app.services.admin.business_rules_service import BusinessRuleService
 
 
 router = APIRouter(prefix="/business-rules", tags=["business-rules"])
