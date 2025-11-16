@@ -5,4 +5,5 @@
 export * from "./useDialog";
 export * from "./useToast";
 export * from "./useTable";
+export * from "./useSelection";
 export * from "./useFilters";
