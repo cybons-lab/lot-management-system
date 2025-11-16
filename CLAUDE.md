@@ -1219,6 +1219,178 @@ cd frontend && npm run typecheck && npm run lint && npm run format:check
 
 ---
 
+## Common Type Candidates (共通型候補)
+
+### Overview
+
+We have identified common type patterns that appear repeatedly across both backend and frontend codebases. These candidates are documented for future refactoring considerations to improve type safety, reduce code duplication, and maintain consistency between backend and frontend.
+
+**Documentation Location:**
+- Backend: `docs/architecture/common_type_candidates_backend.md`
+- Frontend: `docs/architecture/common_type_candidates_frontend.md`
+
+### Backend Common Type Candidates
+
+**High Priority:**
+
+1. **Master Data Summary Types** (`*Summary`)
+   - `WarehouseSummary`: id + warehouse_code + warehouse_name
+   - `SupplierSummary`: id + supplier_code + supplier_name
+   - `CustomerSummary`: id + customer_code + customer_name
+   - `DeliveryPlaceSummary`: id + delivery_place_code + delivery_place_name
+   - `ProductSummary`: id + maker_part_code + product_name + base_unit
+   - `UserSummary`: id + username + display_name
+   - `RoleSummary`: id + role_code + role_name
+
+2. **ListResponse[T] Pattern**
+   - Common pattern: `items: list[T]` + `total: int`
+   - Used in 10+ schemas (WarehouseListResponse, CustomerListResponse, etc.)
+   - Should be extracted as a generic type
+
+3. **Duplicate Definitions** (Immediate Action Required)
+   - `ProductBase` defined in both `masters_schema.py` and `products_schema.py`
+   - `WarehouseOut` defined in both `masters_schema.py` and `warehouses_schema.py`
+
+**Medium Priority:**
+
+4. **Domain Summaries**
+   - `LotSummary`: Lot information subset for allocation displays
+   - `AllocationSummary`: Allocation information (duplicated in orders_schema and allocations_schema)
+
+**Already Well-Defined:**
+- `TimestampMixin`: Widely used, no issues
+- `Page[T]`: Defined but underutilized
+- Status Enums: Appropriately domain-specific
+
+### Frontend Common Type Candidates
+
+**High Priority:**
+
+1. **Master Data Display Types** (corresponds to backend `*Summary`)
+   - `CustomerDisplay`: customerId + customerCode + customerName
+   - `ProductDisplay`: productId + productCode + productName + unit
+   - `WarehouseDisplay`: warehouseId + warehouseCode + warehouseName
+   - `DeliveryPlaceDisplay`: deliveryPlaceId + deliveryPlaceCode + deliveryPlaceName
+   - `SupplierDisplay`: supplierId + supplierCode + supplierName
+
+   **Location:** Should be defined in `frontend/src/shared/types/master-displays.ts`
+
+2. **Legacy Field Cleanup**
+   - `allocations/types/index.ts` has mixed DDL v2.2 and legacy fields
+   - `Order` type: Contains both `order_number` (v2.2) and `order_no` (legacy)
+   - `OrderLine` type: Contains both `product_id` and `product_code` (legacy)
+   - **Migration deadline:** 2026-02-15 (aligned with backend API migration)
+
+3. **ListResponse / PageResponse Pattern**
+   - `ListResponse<T>`: items + total
+   - `PageResponse<T>`: items + total + page + pageSize
+   - **Location:** Should be defined in `frontend/src/shared/types/api-responses.ts`
+
+**Medium Priority:**
+
+4. **Domain Type Embedding**
+   - `OrderHeaderSummary`: Embed `CustomerDisplay` + `DeliveryPlaceDisplay`
+   - Simplifies component code: `order.customer.customerName`
+
+5. **Existing WarehouseSummary**
+   - Already defined in `allocations/types/index.ts`
+   - Should be promoted to shared types
+
+**Case Convention (snake_case vs camelCase):**
+- **Current:** API types use `snake_case` (OpenAPI generated)
+- **Recommendation:** Keep `snake_case` for consistency with backend
+- **Alternative:** Add conversion layer if TypeScript conventions are prioritized
+
+### Guidelines for Using Common Types
+
+**When to use common types:**
+
+1. **Master Data Display** - When showing id + code + name combinations
+   ```typescript
+   // ✅ Good
+   type OrderHeader = {
+     customer: CustomerDisplay;  // Common type
+     deliveryPlace: DeliveryPlaceDisplay;  // Common type
+   }
+
+   // ❌ Avoid
+   type OrderHeader = {
+     customer_id: number;
+     customer_code: string;
+     customer_name: string;
+     delivery_place_id: number;
+     // ... repeated fields
+   }
+   ```
+
+2. **List Responses** - When returning lists from API
+   ```python
+   # Backend
+   class WarehouseListResponse(ListResponse[WarehouseSummary]):
+       pass  # Inherits items + total
+   ```
+
+3. **Embedded References** - When including related entities
+   ```typescript
+   // Frontend
+   type LotSummary = {
+     lotId: number;
+     lotNumber: string;
+     product: ProductDisplay;  // Embedded common type
+     warehouse: WarehouseDisplay;  // Embedded common type
+   }
+   ```
+
+**When NOT to use common types:**
+
+1. **Full Entity Responses** - When all fields including timestamps are needed
+   - Use: `CustomerResponse` (full)
+   - Not: `CustomerSummary` (subset)
+
+2. **Create/Update Requests** - When different validation rules apply
+   - Use: `CustomerCreate`, `CustomerUpdate`
+   - Not: `CustomerSummary`
+
+3. **Domain-Specific Extensions** - When adding UI-specific fields
+   ```typescript
+   // UI Extension (separate type)
+   type OrderCardData = OrderHeaderSummary & {
+     priority: PriorityLevel;  // UI-specific
+     unallocatedQty: number;   // Calculated field
+   }
+   ```
+
+### Migration Strategy
+
+**Phase 1: High Priority (Immediate)**
+1. Define master data summary types (backend + frontend)
+2. Fix duplicate definitions (ProductBase, WarehouseOut)
+3. Define ListResponse/PageResponse generics
+
+**Phase 2: Medium Priority (Within 3 months)**
+4. Migrate existing code to use common types
+5. Clean up legacy fields (frontend)
+6. Promote existing WarehouseSummary to shared types
+
+**Phase 3: Low Priority (As needed)**
+7. Add embedded references to domain types
+8. Standardize UI extension patterns
+9. Consider case conversion strategy
+
+### Review Process
+
+Before implementing common types:
+1. Review candidate documentation with team
+2. Agree on naming conventions (snake_case vs camelCase)
+3. Define migration timeline and backward compatibility strategy
+4. Update this guide with final decisions
+
+For detailed analysis, see:
+- `docs/architecture/common_type_candidates_backend.md`
+- `docs/architecture/common_type_candidates_frontend.md`
+
+---
+
 ## Additional Resources
 
 ### Documentation Files
