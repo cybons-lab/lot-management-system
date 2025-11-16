@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.models import OrderLine
-from app.schemas.allocations_schema import CandidateLotsResponse
+from app.schemas.allocations.allocations_schema import CandidateLotItem, CandidateLotsResponse
 
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ def get_allocation_candidates(
         CandidateLotsResponse: 候補ロット一覧
 
     Note:
-        - free_qty > 0 のみ返却
+        - available_quantity > 0 のみ返却
         - ロック済み・期限切れは除外
         - 並び順: expiry_date NULLS FIRST, lot_id（FEFO戦略の場合）
     """
@@ -81,14 +81,12 @@ def get_allocation_candidates(
                 l.id AS lot_id,
                 l.lot_number,
                 l.current_quantity,
-                l.allocated_quantity AS allocated_qty,
-                (l.current_quantity - l.allocated_quantity) AS free_qty,
+                l.allocated_quantity,
+                (l.current_quantity - l.allocated_quantity) AS available_quantity,
                 l.product_id,
-                l.product_code,
                 l.warehouse_id,
-                l.warehouse_code,
                 l.expiry_date,
-                l.updated_at AS last_updated
+                l.received_date
             FROM
                 public.lots l
             WHERE
@@ -110,20 +108,19 @@ def get_allocation_candidates(
         )
         rows = result.fetchall()
 
+        # Convert to CandidateLotItem objects matching the schema
         items = [
-            {
-                "lot_id": row.lot_id,
-                "lot_number": row.lot_number,
-                "free_qty": float(row.free_qty),
-                "current_quantity": float(row.current_quantity),
-                "allocated_qty": float(row.allocated_qty),
-                "product_id": row.product_id,
-                "product_code": row.product_code,
-                "warehouse_id": row.warehouse_id,
-                "warehouse_code": row.warehouse_code,
-                "expiry_date": row.expiry_date,
-                "last_updated": row.last_updated.isoformat() if row.last_updated else None,
-            }
+            CandidateLotItem(
+                lot_id=row.lot_id,
+                lot_number=row.lot_number,
+                current_quantity=float(row.current_quantity),
+                allocated_quantity=float(row.allocated_quantity),
+                available_quantity=float(row.available_quantity),
+                product_id=row.product_id,
+                warehouse_id=row.warehouse_id,
+                expiry_date=row.expiry_date,
+                received_date=row.received_date,
+            )
             for row in rows
         ]
 
