@@ -22,17 +22,16 @@ from app.api.routes.masters_warehouses import (
     get_warehouse,
     update_warehouse,
 )
-from app.schemas import (
+from app.schemas.masters.masters_schema import (
     CustomerCreate,
     CustomerUpdate,
     MasterBulkLoadRequest,
-    ProductCreate,
-    ProductUpdate,
     SupplierCreate,
     SupplierUpdate,
     WarehouseCreate,
     WarehouseUpdate,
 )
+from app.schemas.masters.products_schema import ProductCreate, ProductUpdate
 
 
 def test_master_crud_bulk_and_presets(db_session):

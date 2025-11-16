@@ -7,15 +7,14 @@ from app.api.routes.masters_suppliers import create_supplier
 from app.api.routes.masters_warehouses import create_warehouse
 from app.api.routes.orders import create_order
 from app.models import Lot, LotCurrentStock, Order, Warehouse
-from app.schemas import (
-    FefoPreviewRequest,
-    OrderCreate,
-    OrderLineCreate,
-    ProductCreate,
-    SupplierCreate,
+from app.schemas.allocations.allocations_schema import FefoPreviewRequest
+from app.schemas.masters.masters_schema import (
     CustomerCreate,
+    SupplierCreate,
     WarehouseCreate,
 )
+from app.schemas.masters.products_schema import ProductCreate
+from app.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
 
 
 def test_order_to_fefo_allocation_flow(db_session):

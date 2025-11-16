@@ -1,76 +1,99 @@
 # app/api/routes/__init__.py
 """
 API Routes Package
-全ルーターのエクスポート.
+全ルーターのエクスポート（サブパッケージ構造対応版）.
 
-This module dynamically imports all route modules with fallback handling.
-If a module is missing or has import errors, it will log a warning and continue.
+Organized into feature-based subpackages:
+- masters/ - Master data management (11 routers)
+- orders/ - Order management (2 routers)
+- allocations/ - Allocation management (4 routers)
+- inventory/ - Inventory management (4 routers)
+- forecasts/ - Forecast management (2 routers)
+- admin/ - Admin and system management (9 routers)
+- integration/ - External integrations (2 routers)
 """
 
-import logging
-from typing import Any
+from app.api.routes.admin import (
+    admin_healthcheck_router,
+    admin_router,
+    admin_simulate_router,
+    batch_jobs_router,
+    business_rules_router,
+    health_router,
+    operation_logs_router,
+    roles_router,
+    users_router,
+)
+from app.api.routes.allocations import (
+    allocation_candidates_router,
+    allocation_suggestions_router,
+    allocations_router,
+    warehouse_alloc_router,
+)
+from app.api.routes.forecasts import forecast_router, forecasts_router
+from app.api.routes.integration import integration_router, submissions_router
+from app.api.routes.inventory import (
+    adjustments_router,
+    inbound_plans_router,
+    inventory_items_router,
+    lots_router,
+)
+from app.api.routes.masters import (
+    customer_items_router,
+    customers_router,
+    masters_bulk_load_router,
+    masters_customers_router,
+    masters_products_router,
+    masters_router,
+    masters_suppliers_router,
+    masters_warehouses_router,
+    products_router,
+    suppliers_router,
+    warehouses_router,
+)
+from app.api.routes.orders import orders_router, orders_validate_router
 
 
-logger = logging.getLogger(__name__)
-
-# List of (module_name, exported_name) tuples
-_ROUTER_DEFINITIONS = [
-    ("admin_router", "admin_router"),
-    ("admin_healthcheck_router", "admin_healthcheck_router"),
-    ("admin_simulate_router", "admin_simulate_router"),
-    ("allocations_router", "allocations_router"),
-    ("allocation_candidates_router", "allocation_candidates_router"),  # NEW: Phase 3-4
-    ("allocation_suggestions_router", "allocation_suggestions_router"),  # NEW: Phase 3-4
-    ("customer_items_router", "customer_items_router"),  # NEW: Phase 3-1
-    ("customers_router", "customers_router"),  # NEW: Phase 3-3
-    ("forecast_router", "forecast_router"),
-    ("forecasts_router", "forecasts_router"),  # NEW: Phase 2-1
-    ("inbound_plans_router", "inbound_plans_router"),  # NEW: Phase 2-2
-    ("adjustments_router", "adjustments_router"),  # NEW: Phase 2-3
-    ("inventory_items_router", "inventory_items_router"),  # NEW: Phase 2-3
-    ("health_router", "health_router"),
-    ("integration_router", "integration_router"),
-    ("lots_router", "lots_router"),
-    ("masters_router", "masters_router"),
-    ("orders_router", "orders_router"),
-    ("orders_validate_router", "orders_validate_router"),
-    ("products_router", "products_router"),  # NEW: Phase 3-3
-    ("roles_router", "roles_router"),  # NEW: Phase 3-2
-    ("submissions_router", "submissions_router"),  # NEW: Phase 3-5
-    ("suppliers_router", "suppliers_router"),  # NEW: Phase 3-3
-    ("users_router", "users_router"),  # NEW: Phase 3-2
-    ("warehouses_router", "warehouses_router"),  # NEW: Phase 3-3
-    ("warehouse_alloc_router", "warehouse_alloc_router"),
-    # Phase 4: Low-priority APIs
-    ("operation_logs_router", "operation_logs_router"),  # NEW: Phase 4-1
-    ("business_rules_router", "business_rules_router"),  # NEW: Phase 4-2
-    ("batch_jobs_router", "batch_jobs_router"),  # NEW: Phase 4-3
+__all__ = [
+    # Masters (11)
+    "customer_items_router",
+    "customers_router",
+    "masters_bulk_load_router",
+    "masters_customers_router",
+    "masters_products_router",
+    "masters_router",
+    "masters_suppliers_router",
+    "masters_warehouses_router",
+    "products_router",
+    "suppliers_router",
+    "warehouses_router",
+    # Orders (2)
+    "orders_router",
+    "orders_validate_router",
+    # Allocations (4)
+    "allocation_candidates_router",
+    "allocation_suggestions_router",
+    "allocations_router",
+    "warehouse_alloc_router",
+    # Inventory (4)
+    "adjustments_router",
+    "inbound_plans_router",
+    "inventory_items_router",
+    "lots_router",
+    # Forecasts (2)
+    "forecast_router",
+    "forecasts_router",
+    # Admin (9)
+    "admin_healthcheck_router",
+    "admin_router",
+    "admin_simulate_router",
+    "batch_jobs_router",
+    "business_rules_router",
+    "health_router",
+    "operation_logs_router",
+    "roles_router",
+    "users_router",
+    # Integration (2)
+    "integration_router",
+    "submissions_router",
 ]
-
-# Dynamically import routers with error handling
-_loaded_routers: dict[str, Any] = {}
-
-for module_name, export_name in _ROUTER_DEFINITIONS:
-    try:
-        module = __import__(f"app.api.routes.{module_name}", fromlist=["router"])
-        router_obj = getattr(module, "router", None)
-        if router_obj is not None:
-            _loaded_routers[export_name] = router_obj
-            globals()[export_name] = router_obj
-        else:
-            logger.warning(
-                f"Module 'app.api.routes.{module_name}' has no 'router' attribute. "
-                f"Skipping {export_name}."
-            )
-    except (ImportError, ModuleNotFoundError) as e:
-        logger.warning(
-            f"Failed to import module 'app.api.routes.{module_name}': {e}. "
-            f"{export_name} will be unavailable."
-        )
-    except Exception as e:
-        logger.error(
-            f"Unexpected error importing 'app.api.routes.{module_name}': {e}",
-            exc_info=True,
-        )
-
-__all__ = list(_loaded_routers.keys())

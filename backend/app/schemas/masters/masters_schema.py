@@ -1,0 +1,253 @@
+"""Master data Pydantic schemas (DDL v2.2 compliant).
+
+All schemas strictly follow the DDL as the single source of truth.
+Legacy fields have been removed.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from pydantic import Field
+
+from app.schemas.common.base import BaseSchema
+
+
+# ============================================================
+# Warehouse (倉庫マスタ)
+# ============================================================
+
+
+class WarehouseBase(BaseSchema):
+    """Base warehouse schema (DDL: warehouses)."""
+
+    warehouse_code: str = Field(..., min_length=1, max_length=50)
+    warehouse_name: str = Field(..., min_length=1, max_length=200)
+    warehouse_type: str = Field(
+        ..., pattern="^(internal|external|supplier)$", description="internal/external/supplier"
+    )
+
+
+class WarehouseCreate(WarehouseBase):
+    """Create warehouse request."""
+
+    pass
+
+
+class WarehouseUpdate(BaseSchema):
+    """Update warehouse request."""
+
+    warehouse_name: str | None = Field(None, min_length=1, max_length=200)
+    warehouse_type: str | None = Field(
+        None, pattern="^(internal|external|supplier)$", description="internal/external/supplier"
+    )
+
+
+class WarehouseResponse(WarehouseBase):
+    """Warehouse response (DDL: warehouses)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class WarehouseOut(BaseSchema):
+    """Simplified warehouse output (for list views)."""
+
+    id: int = Field(serialization_alias="warehouse_id")
+    warehouse_code: str
+    warehouse_name: str
+    warehouse_type: str
+
+
+class WarehouseListResponse(BaseSchema):
+    """Warehouse list response."""
+
+    items: list[WarehouseOut]
+
+
+# ============================================================
+# Supplier (仕入先マスタ)
+# ============================================================
+
+
+class SupplierBase(BaseSchema):
+    """Base supplier schema (DDL: suppliers)."""
+
+    supplier_code: str = Field(..., min_length=1, max_length=50)
+    supplier_name: str = Field(..., min_length=1, max_length=200)
+
+
+class SupplierCreate(SupplierBase):
+    """Create supplier request."""
+
+    pass
+
+
+class SupplierUpdate(BaseSchema):
+    """Update supplier request."""
+
+    supplier_name: str | None = Field(None, min_length=1, max_length=200)
+
+
+class SupplierResponse(SupplierBase):
+    """Supplier response (DDL: suppliers)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
+# Customer (得意先マスタ)
+# ============================================================
+
+
+class CustomerBase(BaseSchema):
+    """Base customer schema (DDL: customers)."""
+
+    customer_code: str = Field(..., min_length=1, max_length=50)
+    customer_name: str = Field(..., min_length=1, max_length=200)
+
+
+class CustomerCreate(CustomerBase):
+    """Create customer request."""
+
+    pass
+
+
+class CustomerUpdate(BaseSchema):
+    """Update customer request."""
+
+    customer_name: str | None = Field(None, min_length=1, max_length=200)
+
+
+class CustomerResponse(CustomerBase):
+    """Customer response (DDL: customers)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
+# DeliveryPlace (納入先マスタ)
+# ============================================================
+
+
+class DeliveryPlaceBase(BaseSchema):
+    """Base delivery place schema (DDL: delivery_places)."""
+
+    jiku_code: str | None = Field(None, max_length=50, description="次区コード(SAP連携用)")
+    delivery_place_code: str = Field(..., min_length=1, max_length=50)
+    delivery_place_name: str = Field(..., min_length=1, max_length=200)
+    customer_id: int = Field(..., gt=0)
+
+
+class DeliveryPlaceCreate(DeliveryPlaceBase):
+    """Create delivery place request."""
+
+    pass
+
+
+class DeliveryPlaceUpdate(BaseSchema):
+    """Update delivery place request."""
+
+    jiku_code: str | None = Field(None, max_length=50)
+    delivery_place_name: str | None = Field(None, min_length=1, max_length=200)
+    customer_id: int | None = Field(None, gt=0)
+
+
+class DeliveryPlaceResponse(DeliveryPlaceBase):
+    """Delivery place response (DDL: delivery_places)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
+# Product (製品マスタ)
+# ============================================================
+
+
+class ProductBase(BaseSchema):
+    """Base product schema (DDL: products)."""
+
+    maker_part_code: str = Field(..., min_length=1, max_length=100, description="メーカー品番")
+    product_name: str = Field(..., min_length=1, max_length=200)
+    base_unit: str = Field(..., min_length=1, max_length=20, description="社内在庫単位")
+    consumption_limit_days: int | None = Field(None, ge=0, description="消費期限日数")
+
+
+class ProductCreate(ProductBase):
+    """Create product request."""
+
+    pass
+
+
+class ProductUpdate(BaseSchema):
+    """Update product request."""
+
+    product_name: str | None = Field(None, min_length=1, max_length=200)
+    base_unit: str | None = Field(None, min_length=1, max_length=20)
+    consumption_limit_days: int | None = Field(None, ge=0)
+
+
+class ProductResponse(ProductBase):
+    """Product response (DDL: products)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
+# Bulk Load (一括登録)
+# ============================================================
+
+
+class MasterBulkLoadRequest(BaseSchema):
+    """Bulk load payload for master data."""
+
+    warehouses: list[WarehouseCreate] = Field(default_factory=list)
+    suppliers: list[SupplierCreate] = Field(default_factory=list)
+    customers: list[CustomerCreate] = Field(default_factory=list)
+    products: list[ProductCreate] = Field(default_factory=list)
+    delivery_places: list[DeliveryPlaceCreate] = Field(default_factory=list)
+
+
+class MasterBulkLoadResponse(BaseSchema):
+    """Bulk load result summary."""
+
+    created: dict[str, list[str]] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
+
+
+# ============================================================
+# List Responses
+# ============================================================
+
+
+class CustomerListResponse(BaseSchema):
+    """Customer list response."""
+
+    items: list[CustomerResponse]
+
+
+class ProductListResponse(BaseSchema):
+    """Product list response."""
+
+    items: list[ProductResponse]
+
+
+class SupplierListResponse(BaseSchema):
+    """Supplier list response."""
+
+    items: list[SupplierResponse]
+
+
+class DeliveryPlaceListResponse(BaseSchema):
+    """Delivery place list response."""
+
+    items: list[DeliveryPlaceResponse]
