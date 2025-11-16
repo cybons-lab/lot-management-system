@@ -51,7 +51,11 @@ from app.api.routes.masters import (
     suppliers_router,
     warehouses_router,
 )
-from app.api.routes.orders import orders_router, orders_validate_router
+from app.api.routes.orders import orders_router
+
+
+# orders_validate_router is disabled: requires OrderValidation* schemas not in DDL v2.2
+# from app.api.routes.orders import orders_validate_router
 
 
 __all__ = [
@@ -67,9 +71,9 @@ __all__ = [
     "products_router",
     "suppliers_router",
     "warehouses_router",
-    # Orders (2)
+    # Orders (1 - validate router disabled)
     "orders_router",
-    "orders_validate_router",
+    # "orders_validate_router",  # Disabled: requires OrderValidation* schemas
     # Allocations (4)
     "allocation_candidates_router",
     "allocation_suggestions_router",
