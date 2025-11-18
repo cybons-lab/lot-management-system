@@ -23,9 +23,7 @@ export function ForecastCreatePage() {
       {/* Coming Soon */}
       <div className="rounded-lg border bg-white p-8 text-center">
         <p className="text-lg text-gray-500">Coming Soon</p>
-        <p className="mt-2 text-sm text-gray-400">
-          ヘッダ入力フォーム、明細入力テーブルを実装予定
-        </p>
+        <p className="mt-2 text-sm text-gray-400">ヘッダ入力フォーム、明細入力テーブルを実装予定</p>
       </div>
     </div>
   );
