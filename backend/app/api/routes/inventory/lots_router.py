@@ -56,7 +56,10 @@ def list_lots(
         with_stock: 在庫あり(>0)のみ取得
         db: データベースセッション
     """
-    query = db.query(Lot).options(joinedload(Lot.product), joinedload(Lot.warehouse))
+    query = (
+        db.query(Lot)
+        .options(joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier))
+    )
 
     # フィルタ適用
     if product_id is not None:
@@ -67,9 +70,9 @@ def list_lots(
         if product:
             query = query.filter(Lot.product_id == product.id)
     if supplier_code:
-        query = query.filter(Lot.supplier_code == supplier_code)
+        query = query.join(Supplier).filter(Supplier.supplier_code == supplier_code)
     if warehouse_code:
-        query = query.filter(Lot.warehouse_code == warehouse_code)
+        query = query.join(Warehouse).filter(Warehouse.warehouse_code == warehouse_code)
     if expiry_from:
         query = query.filter(Lot.expiry_date >= expiry_from)
     if expiry_to:
@@ -88,9 +91,18 @@ def list_lots(
     for lot in lots:
         response = LotResponse.model_validate(lot)
 
+        # Populate joined fields from relationships
         if lot.product:
             response.product_name = lot.product.product_name
             response.product_code = lot.product.product_code
+
+        if lot.warehouse:
+            response.warehouse_name = lot.warehouse.warehouse_name
+            response.warehouse_code = lot.warehouse.warehouse_code
+
+        if lot.supplier:
+            response.supplier_name = lot.supplier.supplier_name
+            response.supplier_code = lot.supplier.supplier_code
 
         # v2.2: Use Lot model directly for stock quantities
         response.current_quantity = float(lot.current_quantity or 0.0)
@@ -167,8 +179,30 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
 
     db.refresh(db_lot)
 
+    # Eagerly load relationships for response
+    db_lot = (
+        db.query(Lot)
+        .options(joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier))
+        .filter(Lot.id == db_lot.id)
+        .first()
+    )
+
     # レスポンス（v2.2: Lot モデルから直接取得）
     response = LotResponse.model_validate(db_lot)
+
+    # Populate joined fields
+    if db_lot.product:
+        response.product_name = db_lot.product.product_name
+        response.product_code = db_lot.product.product_code
+
+    if db_lot.warehouse:
+        response.warehouse_name = db_lot.warehouse.warehouse_name
+        response.warehouse_code = db_lot.warehouse.warehouse_code
+
+    if db_lot.supplier:
+        response.supplier_name = db_lot.supplier.supplier_name
+        response.supplier_code = db_lot.supplier.supplier_code
+
     response.current_quantity = float(db_lot.current_quantity or 0.0)
     response.last_updated = db_lot.updated_at
 
@@ -178,11 +212,30 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
 @router.get("/{lot_id}", response_model=LotResponse)
 def get_lot(lot_id: int, db: Session = Depends(get_db)):
     """ロット詳細取得（v2.2: Lot モデルから直接取得）."""
-    lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    lot = (
+        db.query(Lot)
+        .options(joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier))
+        .filter(Lot.id == lot_id)
+        .first()
+    )
     if not lot:
         raise HTTPException(status_code=404, detail="ロットが見つかりません")
 
     response = LotResponse.model_validate(lot)
+
+    # Populate joined fields
+    if lot.product:
+        response.product_name = lot.product.product_name
+        response.product_code = lot.product.product_code
+
+    if lot.warehouse:
+        response.warehouse_name = lot.warehouse.warehouse_name
+        response.warehouse_code = lot.warehouse.warehouse_code
+
+    if lot.supplier:
+        response.supplier_name = lot.supplier.supplier_name
+        response.supplier_code = lot.supplier.supplier_code
+
     response.current_quantity = float(lot.current_quantity or 0.0)
     response.last_updated = lot.updated_at
     return response
@@ -239,8 +292,30 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
 
     db.refresh(db_lot)
 
+    # Eagerly load relationships for response
+    db_lot = (
+        db.query(Lot)
+        .options(joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier))
+        .filter(Lot.id == db_lot.id)
+        .first()
+    )
+
     # v2.2: Use Lot model directly for stock quantities
     response = LotResponse.model_validate(db_lot)
+
+    # Populate joined fields
+    if db_lot.product:
+        response.product_name = db_lot.product.product_name
+        response.product_code = db_lot.product.product_code
+
+    if db_lot.warehouse:
+        response.warehouse_name = db_lot.warehouse.warehouse_name
+        response.warehouse_code = db_lot.warehouse.warehouse_code
+
+    if db_lot.supplier:
+        response.supplier_name = db_lot.supplier.supplier_name
+        response.supplier_code = db_lot.supplier.supplier_code
+
     response.current_quantity = float(db_lot.current_quantity or 0.0)
     response.last_updated = db_lot.updated_at
 

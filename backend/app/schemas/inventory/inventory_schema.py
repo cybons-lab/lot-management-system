@@ -60,6 +60,15 @@ class LotResponse(LotBase, TimestampMixin):
 
     id: int = Field(serialization_alias="lot_id")
 
+    # Joined fields from related tables (populated by router)
+    product_name: str | None = None
+    product_code: str | None = None
+    warehouse_name: str | None = None
+    warehouse_code: str | None = None
+    supplier_name: str | None = None
+    supplier_code: str | None = None
+    last_updated: datetime | None = None
+
 
 class StockTransactionType(str, Enum):
     """Transaction types tracked in stock history."""
