@@ -24,6 +24,7 @@ export const ROUTES = {
   // Allocations
   ALLOCATIONS: {
     INDEX: "/allocations",
+    SUGGESTIONS: "/allocations/suggestions",
   },
 
   // Forecasts - New structure (v2.2)
@@ -31,12 +32,16 @@ export const ROUTES = {
     LIST: "/forecasts",
     DETAIL: (id: number | string) => `/forecasts/${id}`,
     IMPORT: "/forecasts/import",
+    NEW: "/forecasts/new",
+    EDIT: (id: number | string) => `/forecasts/${id}/edit`,
   },
 
   // Inbound Plans - New (v2.2)
   INBOUND_PLANS: {
     LIST: "/inbound-plans",
     DETAIL: (id: number | string) => `/inbound-plans/${id}`,
+    NEW: "/inbound-plans/new",
+    EDIT: (id: number | string) => `/inbound-plans/${id}/edit`,
   },
 
   // Inventory
@@ -44,6 +49,7 @@ export const ROUTES = {
     ROOT: "/inventory",
     SUMMARY: "/inventory/summary",
     LOTS: "/inventory/lots",
+    LOT_DETAIL: (lotId: number | string) => `/inventory/lots/${lotId}`,
     MOVES: "/inventory/moves",
     ADJUSTMENTS: {
       LIST: "/inventory/adjustments",
@@ -57,7 +63,12 @@ export const ROUTES = {
 
   // Masters
   MASTERS: {
+    WAREHOUSES: "/masters/warehouses",
+    SUPPLIERS: "/masters/suppliers",
+    CUSTOMERS: "/masters/customers",
+    PRODUCTS: "/masters/products",
     CUSTOMER_ITEMS: "/masters/customer-items",
+    BULK_LOAD: "/masters/bulk-load",
   },
 
   // Settings - New (v2.2)
@@ -72,6 +83,8 @@ export const ROUTES = {
     OPERATION_LOGS: "/admin/operation-logs",
     BUSINESS_RULES: "/admin/business-rules",
     BATCH_JOBS: "/admin/batch-jobs",
+    MASTER_CHANGE_LOGS: "/admin/master-change-logs",
+    SEED_SNAPSHOTS: "/admin/seed-snapshots",
   },
 } as const;
 
