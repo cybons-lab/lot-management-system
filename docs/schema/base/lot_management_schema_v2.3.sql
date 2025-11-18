@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict fJdbPDX7P6CBDE5c8kCroDJlnLuImOykEYxMPh6EnYjcPjzLpF9oflpv40Qx3IJ
+\restrict hdZn6NiwXMYQy8yOKdLn1qbI2I3ldAu949k0nCJNGfKLUdKaTpD493iqyHnmwen
 
 -- Dumped from database version 15.15
 -- Dumped by pg_dump version 15.15
@@ -468,40 +468,6 @@ ALTER SEQUENCE public.inbound_plans_id_seq OWNED BY public.inbound_plans.id;
 
 
 --
--- Name: inventory_items; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.inventory_items (
-    id bigint NOT NULL,
-    product_id bigint NOT NULL,
-    warehouse_id bigint NOT NULL,
-    total_quantity numeric(15,3) DEFAULT 0 NOT NULL,
-    allocated_quantity numeric(15,3) DEFAULT 0 NOT NULL,
-    available_quantity numeric(15,3) DEFAULT 0 NOT NULL,
-    last_updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
---
--- Name: inventory_items_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.inventory_items_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: inventory_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.inventory_items_id_seq OWNED BY public.inventory_items.id;
-
-
---
 -- Name: lots; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -920,27 +886,6 @@ CREATE TABLE public.warehouses (
 
 
 --
--- Name: v_inventory_summary; Type: VIEW; Schema: public; Owner: -
---
-
-CREATE VIEW public.v_inventory_summary AS
- SELECT p.id AS product_id,
-    p.maker_part_code,
-    p.product_name,
-    w.id AS warehouse_id,
-    w.warehouse_name,
-    ii.total_quantity,
-    ii.allocated_quantity,
-    ii.available_quantity,
-    ii.last_updated
-   FROM ((public.inventory_items ii
-     JOIN public.products p ON ((ii.product_id = p.id)))
-     JOIN public.warehouses w ON ((ii.warehouse_id = w.id)))
-  WHERE (ii.total_quantity > (0)::numeric)
-  ORDER BY p.maker_part_code, w.warehouse_name;
-
-
---
 -- Name: warehouses_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -1041,13 +986,6 @@ ALTER TABLE ONLY public.inbound_plan_lines ALTER COLUMN id SET DEFAULT nextval('
 --
 
 ALTER TABLE ONLY public.inbound_plans ALTER COLUMN id SET DEFAULT nextval('public.inbound_plans_id_seq'::regclass);
-
-
---
--- Name: inventory_items id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.inventory_items ALTER COLUMN id SET DEFAULT nextval('public.inventory_items_id_seq'::regclass);
 
 
 --
@@ -1279,14 +1217,6 @@ ALTER TABLE ONLY public.inbound_plans
 
 
 --
--- Name: inventory_items inventory_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.inventory_items
-    ADD CONSTRAINT inventory_items_pkey PRIMARY KEY (id);
-
-
---
 -- Name: lots lots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1404,14 +1334,6 @@ ALTER TABLE ONLY public.system_configs
 
 ALTER TABLE ONLY public.system_configs
     ADD CONSTRAINT system_configs_pkey PRIMARY KEY (id);
-
-
---
--- Name: inventory_items uq_inventory_items_product_warehouse; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.inventory_items
-    ADD CONSTRAINT uq_inventory_items_product_warehouse UNIQUE (product_id, warehouse_id);
 
 
 --
@@ -1685,20 +1607,6 @@ CREATE INDEX idx_inbound_plans_status ON public.inbound_plans USING btree (statu
 --
 
 CREATE INDEX idx_inbound_plans_supplier ON public.inbound_plans USING btree (supplier_id);
-
-
---
--- Name: idx_inventory_items_product; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_inventory_items_product ON public.inventory_items USING btree (product_id);
-
-
---
--- Name: idx_inventory_items_warehouse; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_inventory_items_warehouse ON public.inventory_items USING btree (warehouse_id);
 
 
 --
@@ -2098,22 +2006,6 @@ ALTER TABLE ONLY public.inbound_plans
 
 
 --
--- Name: inventory_items fk_inventory_items_product; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.inventory_items
-    ADD CONSTRAINT fk_inventory_items_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
-
-
---
--- Name: inventory_items fk_inventory_items_warehouse; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.inventory_items
-    ADD CONSTRAINT fk_inventory_items_warehouse FOREIGN KEY (warehouse_id) REFERENCES public.warehouses(id) ON DELETE CASCADE;
-
-
---
 -- Name: lots fk_lots_expected; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2221,5 +2113,5 @@ ALTER TABLE ONLY public.user_roles
 -- PostgreSQL database dump complete
 --
 
-\unrestrict fJdbPDX7P6CBDE5c8kCroDJlnLuImOykEYxMPh6EnYjcPjzLpF9oflpv40Qx3IJ
+\unrestrict hdZn6NiwXMYQy8yOKdLn1qbI2I3ldAu949k0nCJNGfKLUdKaTpD493iqyHnmwen
 
