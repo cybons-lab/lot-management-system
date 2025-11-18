@@ -172,7 +172,7 @@ class DeliveryPlace(Base):
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer", back_populates="delivery_places")
-    orders: Mapped[list[Order]] = relationship("Order", back_populates="delivery_place")
+    customer: Mapped[Customer] = relationship("Customer", back_populates="delivery_places")
     forecast_headers: Mapped[list[ForecastHeader]] = relationship(
         "ForecastHeader", back_populates="delivery_place"
     )

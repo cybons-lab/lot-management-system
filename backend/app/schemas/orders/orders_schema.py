@@ -24,7 +24,6 @@ class OrderBase(BaseSchema):
 
     order_number: str = Field(..., min_length=1, max_length=50)
     customer_id: int = Field(..., gt=0)
-    delivery_place_id: int = Field(..., gt=0)
     order_date: date
 
 

@@ -51,11 +51,7 @@ class Order(Base):
         ForeignKey("customers.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    delivery_place_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("delivery_places.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
+
     order_date: Mapped[date] = mapped_column(Date, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -68,13 +64,11 @@ class Order(Base):
     __table_args__ = (
         UniqueConstraint("order_number", name="uq_orders_order_number"),
         Index("idx_orders_customer", "customer_id"),
-        Index("idx_orders_delivery_place", "delivery_place_id"),
         Index("idx_orders_date", "order_date"),
     )
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer", back_populates="orders")
-    delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace", back_populates="orders")
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine", back_populates="order", cascade="all, delete-orphan"
     )
