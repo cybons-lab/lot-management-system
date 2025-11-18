@@ -239,16 +239,49 @@ class Adjustment(Base):
     lot: Mapped[Lot] = relationship("Lot", back_populates="adjustments")
 
 
-# REMOVED: InventoryItem model
-# The inventory_items table has been deprecated in favor of real-time aggregation
-# from the lots table. Inventory summaries are now computed on-demand using
-# SQLAlchemy aggregation queries in the InventoryService layer.
-# See: app/services/inventory/inventory_service.py
-#
-# Historical context:
-# - Previously: inventory_items table stored aggregated inventory data
-# - Now: Inventory summaries are computed from lots table using GROUP BY queries
-# - Benefits: Single source of truth, no sync issues, always up-to-date
+class InventoryItem(Base):
+    """Inventory summary by product and warehouse (在庫アイテム).
+
+    DDL: inventory_items
+    Primary key: id (BIGSERIAL)
+    Foreign keys: product_id -> products(id), warehouse_id -> warehouses(id)
+    """
+
+    __tablename__ = "inventory_items"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    product_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    warehouse_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("warehouses.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    total_quantity: Mapped[Decimal] = mapped_column(
+        Numeric(15, 3), nullable=False, server_default=text("0")
+    )
+    allocated_quantity: Mapped[Decimal] = mapped_column(
+        Numeric(15, 3), nullable=False, server_default=text("0")
+    )
+    available_quantity: Mapped[Decimal] = mapped_column(
+        Numeric(15, 3), nullable=False, server_default=text("0")
+    )
+    last_updated: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+
+    __table_args__ = (
+        UniqueConstraint("product_id", "warehouse_id", name="uq_inventory_items_product_warehouse"),
+        Index("idx_inventory_items_product", "product_id"),
+        Index("idx_inventory_items_warehouse", "warehouse_id"),
+    )
+
+    # Relationships
+    product: Mapped[Product] = relationship("Product")
+    warehouse: Mapped[Warehouse] = relationship("Warehouse")
 
 
 class AllocationSuggestion(Base):
@@ -293,7 +326,5 @@ class AllocationSuggestion(Base):
 StockMovement = StockHistory
 StockMovementReason = StockTransactionType
 
-# REMOVED: LotCurrentStock alias
-# LotCurrentStock was an alias for InventoryItem, which has been removed.
-# Inventory summaries are now computed on-demand from the lots table.
-# Use InventoryService to get aggregated inventory data.
+# LotCurrentStock alias for backward compatibility if needed, though InventoryItem is preferred.
+LotCurrentStock = InventoryItem
