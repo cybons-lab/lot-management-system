@@ -155,8 +155,12 @@ export type OrderLine = ApiOrderLine & {
   quantity?: number | string | null; // Deprecated: use order_quantity
   due_date?: string | null; // Deprecated: use delivery_date
   allocated_qty?: number | string | null; // Deprecated: use allocated_quantity
+  allocated_quantity?: number | string | null; // API may expose the canonical column name
   allocated_lots?: AllocatedLot[];
   delivery_place_allocations?: Array<{ delivery_place_code: string; quantity: number }>;
+  delivery_place?: string | null;
+  delivery_place_code?: string | null;
+  delivery_place_name?: string | null;
   forecast_qty?: number | null;
   forecast_version_no?: number | null;
   status?: string | null;
@@ -178,6 +182,10 @@ export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
   total_quantity?: number | null;
   due_date?: string | null;
   remarks?: string | null;
+  received_at?: string | null;
+  sap_received_at?: string | null;
+  received_date?: string | null;
+  document_date?: string | null;
   lines?: OrderLine[];
 };
 
@@ -192,6 +200,10 @@ export type OrderWithLinesResponse = Omit<ApiOrderWithLinesResponse, "lines"> & 
   total_quantity?: number | null;
   due_date?: string | null;
   remarks?: string | null;
+  received_at?: string | null;
+  sap_received_at?: string | null;
+  received_date?: string | null;
+  document_date?: string | null;
   lines?: OrderLine[];
 };
 

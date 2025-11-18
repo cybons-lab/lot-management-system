@@ -15,16 +15,23 @@ import { cn } from "@/shared/libs/utils";
 import { formatDate } from "@/shared/utils/date";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
+export interface OrderLineStockStatus {
+  hasShortage: boolean;
+  totalAvailable: number | null;
+  requiredQty: number;
+  dbAllocated: number;
+  uiAllocated: number;
+  remainingQty: number;
+  progress: number;
+}
+
 interface OrderLinesPaneProps {
   orderLines: OrderLine[];
   selectedOrderLineId: number | null;
   onSelectOrderLine: (lineId: number) => void;
   orderDetail?: OrderWithLinesResponse | null;
   renderInlineLots?: boolean;
-  lineStockStatus?: Record<
-    number,
-    { hasShortage: boolean; totalAvailable: number; requiredQty: number }
-  >;
+  lineStockStatus?: Record<number, OrderLineStockStatus>;
   inlineLotContent?: (line: OrderLine) => React.ReactNode;
   isLoading?: boolean;
   error?: Error | null;
@@ -44,15 +51,40 @@ export function OrderLinesPane({
   // インライン展開状態（renderInlineLots が true の場合のみ使用）
   const [expandedLineId, setExpandedLineId] = useState<number | null>(null);
 
+  const stockStatusMap = lineStockStatus ?? {};
+
   // 在庫不足判定（lineStockStatusマップを使用）
   const isLowStock = (line: OrderLine) => {
-    if (!line.id || !lineStockStatus[line.id]) {
-      // フォールバック: lineStockStatusがない場合は簡易判定
-      const required = Number(line.order_quantity || line.quantity || 0);
-      const allocated = Number(line.allocated_qty || 0);
-      return allocated < required;
+    if (!line.id) return false;
+    return stockStatusMap[line.id]?.hasShortage ?? false;
+  };
+
+  const getDeliveryPlaceLabel = (line: OrderLine) => {
+    const lineCode = line.delivery_place_code ?? null;
+    const lineName = line.delivery_place_name ?? null;
+    if (lineCode || lineName) {
+      return lineCode && lineName
+        ? `${lineCode} / ${lineName}`
+        : (lineCode ?? lineName ?? "未設定");
     }
-    return lineStockStatus[line.id].hasShortage;
+
+    if (line.delivery_place) {
+      return line.delivery_place;
+    }
+
+    const orderCode = orderDetail?.delivery_place_code ?? null;
+    const orderName = orderDetail?.delivery_place_name ?? null;
+    if (orderCode || orderName) {
+      return orderCode && orderName
+        ? `${orderCode} / ${orderName}`
+        : (orderCode ?? orderName ?? "未設定");
+    }
+
+    if (orderDetail?.delivery_place) {
+      return orderDetail.delivery_place;
+    }
+
+    return "未設定";
   };
 
   const handleLineClick = (line: OrderLine) => {
@@ -109,10 +141,18 @@ export function OrderLinesPane({
           const isSelected = line.id === selectedOrderLineId;
           const isExpanded = renderInlineLots && expandedLineId === line.id;
           const showLowStockBadge = isLowStock(line);
-
-          const requiredQty = Number(line.order_quantity || line.quantity || 0);
-          const allocatedQty = Number(line.allocated_qty || 0);
-          const remainingQty = Math.max(0, requiredQty - allocatedQty);
+          const status = line.id ? stockStatusMap[line.id] : undefined;
+          const requiredQty =
+            status?.requiredQty ?? Number(line.order_quantity ?? line.quantity ?? 0);
+          const dbAllocated =
+            status?.dbAllocated ?? Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
+          const uiAllocated = status?.uiAllocated ?? 0;
+          const allocatedQty = dbAllocated + uiAllocated;
+          const remainingQty = status?.remainingQty ?? Math.max(0, requiredQty - allocatedQty);
+          const progressPercent =
+            status?.progress ??
+            (requiredQty > 0 ? Math.min(100, (allocatedQty / requiredQty) * 100) : 0);
+          const deliveryPlaceDisplay = getDeliveryPlaceLabel(line);
 
           return (
             <div key={line.id} className="rounded-lg">
@@ -166,18 +206,10 @@ export function OrderLinesPane({
                       {formatDate(line.delivery_date || line.due_date, { fallback: "未設定" })}
                     </span>
                   </div>
-                  {orderDetail && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">納入先</span>
-                      <span className="font-medium text-gray-700">
-                        {orderDetail.delivery_place_code && orderDetail.delivery_place_name
-                          ? `${orderDetail.delivery_place_code} / ${orderDetail.delivery_place_name}`
-                          : orderDetail.delivery_place_code ||
-                            orderDetail.delivery_place_name ||
-                            "未設定"}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">納入先</span>
+                    <span className="font-medium text-gray-700">{deliveryPlaceDisplay}</span>
+                  </div>
                 </div>
 
                 {/* 数量情報 */}
@@ -193,6 +225,11 @@ export function OrderLinesPane({
                     <div className="mt-1 font-semibold text-blue-600">
                       {allocatedQty.toLocaleString()}
                     </div>
+                    {uiAllocated > 0 && (
+                      <p className="text-[11px] text-gray-500">
+                        仮入力: +{uiAllocated.toLocaleString()}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <div className="text-gray-500">残り</div>
@@ -211,12 +248,10 @@ export function OrderLinesPane({
                 <div className="mt-3">
                   <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
                     <span>引当進捗</span>
-                    <span className="font-medium">
-                      {Math.round((allocatedQty / requiredQty) * 100)}%
-                    </span>
+                    <span className="font-medium">{Math.round(progressPercent)}%</span>
                   </div>
                   <Progress
-                    value={(allocatedQty / requiredQty) * 100}
+                    value={progressPercent}
                     className={cn(
                       "h-2",
                       allocatedQty >= requiredQty ? "bg-green-200" : "bg-gray-200",

@@ -36,6 +36,7 @@ export interface CandidateLotItem {
   lot_number: string;
   free_qty: number;
   current_quantity: number;
+  available_qty?: number;
   allocated_qty: number;
   product_id?: number;
   product_code?: string;
@@ -125,6 +126,18 @@ export interface AllocationCommitResponse {
   message?: string;
 }
 
+/** Manual allocation save payload/response */
+export interface ManualAllocationSavePayload {
+  order_line_id: number;
+  allocations: Array<{ lot_id: number; quantity: number }>;
+}
+
+export interface ManualAllocationSaveResponse {
+  success?: boolean;
+  message?: string;
+  allocated_ids?: number[];
+}
+
 // ===== New API Functions (v2.2.1) =====
 
 /**
@@ -169,6 +182,16 @@ export const createFefoAllocationSuggestion = (data: FefoPreviewRequest) => {
  */
 export const commitAllocation = (data: AllocationCommitRequest) => {
   return fetchApi.post<AllocationCommitResponse>("/allocations/commit", data);
+};
+
+/**
+ * Save manual allocations for a specific order line
+ * @endpoint POST /orders/{order_line_id}/allocations
+ */
+export const saveManualAllocations = (data: ManualAllocationSavePayload) => {
+  return fetchApi.post<ManualAllocationSaveResponse>(`/orders/${data.order_line_id}/allocations`, {
+    allocations: data.allocations,
+  });
 };
 
 /**

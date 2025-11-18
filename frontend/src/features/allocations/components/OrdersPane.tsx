@@ -28,6 +28,34 @@ export function OrdersPane({
   isLoading = false,
   error = null,
 }: OrdersPaneProps) {
+  const getCustomerDisplay = (order: OrderWithLinesResponse) => {
+    if (order.customer_code && order.customer_name) {
+      return `${order.customer_code} ${order.customer_name}`;
+    }
+    if (order.customer_code) return order.customer_code;
+    if (order.customer_name) return order.customer_name;
+
+    const firstLine = order.lines?.[0];
+    const lineCode = firstLine?.customer_code ?? null;
+    const lineName = firstLine?.customer_name ?? null;
+    if (lineCode && lineName) return `${lineCode} ${lineName}`;
+    if (lineCode) return lineCode;
+    if (lineName) return lineName;
+
+    return "未設定";
+  };
+
+  const getReceivedDate = (order: OrderWithLinesResponse) => {
+    return (
+      order.received_at ??
+      order.sap_received_at ??
+      order.received_date ??
+      order.document_date ??
+      order.order_date ??
+      order.created_at
+    );
+  };
+
   // ステータスバッジのバリアント
   const getStatusBadgeVariant = (status?: string | null) => {
     switch (status) {
@@ -108,6 +136,10 @@ export function OrdersPane({
       {orders.map((order) => {
         const isSelected = order.id === selectedOrderId;
         const orderNumber = order.order_number || order.order_no || `#${order.id}`;
+        const lineCount = order.lines?.length ?? 0;
+        const lineCountLabel = `${lineCount}行`;
+        const customerDisplay = getCustomerDisplay(order);
+        const receivedDate = getReceivedDate(order);
 
         return (
           <button
@@ -123,41 +155,36 @@ export function OrdersPane({
                 : "border-gray-200",
             )}
           >
-            {/* 受注番号 */}
             <div className="mb-2 flex items-start justify-between gap-2">
-              <h3 className="text-sm font-semibold text-gray-900">{orderNumber}</h3>
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900">{orderNumber}</h3>
+                <p className="mt-1 text-xs text-gray-600">
+                  得意先: <span className="font-medium text-gray-900">{customerDisplay}</span>
+                </p>
+                <p className="mt-1 text-xs text-gray-600">
+                  受信日:{" "}
+                  <span className="font-medium text-gray-900">
+                    {formatDate(receivedDate, { fallback: "未設定" })}
+                  </span>
+                </p>
+              </div>
               <Badge variant={getStatusBadgeVariant(order.status)}>
                 {getStatusLabel(order.status)}
               </Badge>
             </div>
 
-            {/* 顧客情報 */}
-            {(order.customer_code || order.customer_name) && (
-              <div className="mb-2 text-xs text-gray-600">
-                <span className="font-medium">
-                  {order.customer_code ? `${order.customer_code}` : ""}
-                </span>
-                {order.customer_name && <span className="ml-1">/ {order.customer_name}</span>}
-              </div>
-            )}
-
-            {/* 納期 */}
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
               <span>納期</span>
               <span className="font-medium text-gray-700">
                 {formatDate(order.due_date, { fallback: "未設定" })}
               </span>
             </div>
 
-            {/* 明細数 */}
-            {order.lines && order.lines.length > 0 && (
-              <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
-                <span>明細</span>
-                <span className="font-medium text-gray-700">{order.lines.length}行</span>
-              </div>
-            )}
+            <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+              <span>行数</span>
+              <span className="font-semibold text-gray-900">{lineCountLabel}</span>
+            </div>
 
-            {/* 選択インジケーター */}
             {isSelected && (
               <div className="absolute top-0 left-0 h-full w-1 rounded-l-lg bg-blue-500" />
             )}

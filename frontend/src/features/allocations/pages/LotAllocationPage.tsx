@@ -24,15 +24,25 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrdersForAllocation } from "../hooks/useOrdersForAllocation";
 import { useOrderDetailForAllocation } from "../hooks/useOrderDetailForAllocation";
-import { useAllocationCandidates } from "../hooks/useAllocationCandidates";
-import { dragAssignAllocation } from "../api";
+import {
+  useAllocationCandidates,
+  allocationCandidatesKeys,
+} from "../hooks/useAllocationCandidates";
+import { saveManualAllocations, type ManualAllocationSaveResponse } from "../api";
 import { OrdersPane } from "../components/OrdersPane";
-import { OrderLinesPane } from "../components/OrderLinesPane";
+import { OrderLinesPane, type OrderLineStockStatus } from "../components/OrderLinesPane";
 import { LotAllocationPanel } from "../components/LotAllocationPanel";
 import type { CandidateLotItem } from "../api";
 import type { OrderLine } from "@/shared/types/aliases";
+
+type SaveAllocationsVariables = {
+  orderLineId: number;
+  orderId: number | null;
+  allocations: Array<{ lot_id: number; quantity: number }>;
+};
 
 export function LotAllocationPage() {
   // ローカル選択状態
@@ -46,9 +56,7 @@ export function LotAllocationPage() {
   const [toast, setToast] = useState<{ message: string; variant: "success" | "error" } | null>(
     null,
   );
-
-  // 保存中状態
-  const [isSaving, setIsSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   // レスポンシブ判定（画面幅によるレイアウト切り替え）
   const [isWideScreen, setIsWideScreen] = useState(window.innerWidth >= 1280); // 3カラム表示
@@ -85,6 +93,42 @@ export function LotAllocationPage() {
     [candidatesQuery.data?.items],
   );
 
+  const uiAllocatedSum = useMemo(
+    () => Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0),
+    [lotAllocations],
+  );
+
+  const saveAllocationsMutation = useMutation<
+    ManualAllocationSaveResponse,
+    unknown,
+    SaveAllocationsVariables
+  >({
+    mutationFn: ({ orderLineId, allocations }) =>
+      saveManualAllocations({
+        order_line_id: orderLineId,
+        allocations,
+      }),
+    onSuccess: (response, variables) => {
+      setToast({ message: response?.message ?? "引当を登録しました", variant: "success" });
+      setLotAllocations({});
+      queryClient.invalidateQueries({ queryKey: ["orders", "for-allocation"] });
+      if (variables.orderId) {
+        queryClient.invalidateQueries({ queryKey: ["order-detail", variables.orderId] });
+      }
+      queryClient.invalidateQueries({ queryKey: allocationCandidatesKeys.all });
+    },
+    onError: (error: unknown) => {
+      setToast({
+        message: error instanceof Error ? error.message : "引当の登録に失敗しました",
+        variant: "error",
+      });
+    },
+  });
+
+  const canSaveAllocations = selectedOrderLineId !== null && uiAllocatedSum > 0;
+  const isSavingAllocations = saveAllocationsMutation.isPending;
+  const allocationPanelCanSave = canSaveAllocations && !isSavingAllocations;
+
   // 選択中の受注明細
   const selectedOrderLine = useMemo<OrderLine | null>(() => {
     if (!selectedOrderLineId || !orderDetailQuery.data) return null;
@@ -112,7 +156,7 @@ export function LotAllocationPage() {
 
       for (const lot of candidateLots) {
         const lotId = lot.lot_id;
-        const maxQty = lot.free_qty ?? 0;
+        const maxQty = Number(lot.free_qty ?? lot.current_quantity ?? 0);
         const prevQty = prev[lotId] ?? 0;
         const clampedQty = Math.min(Math.max(prevQty, 0), maxQty);
 
@@ -173,7 +217,9 @@ export function LotAllocationPage() {
   const handleLotAllocationChange = useCallback(
     (lotId: number, value: number) => {
       const targetLot = candidateLots.find((lot) => lot.lot_id === lotId);
-      const maxQty = targetLot ? (targetLot.free_qty ?? 0) : Number.POSITIVE_INFINITY;
+      const maxQty = targetLot
+        ? Number(targetLot.free_qty ?? targetLot.current_quantity ?? Number.POSITIVE_INFINITY)
+        : Number.POSITIVE_INFINITY;
 
       const clampedValue = Math.max(0, Math.min(maxQty, Number.isFinite(value) ? value : 0));
 
@@ -189,6 +235,27 @@ export function LotAllocationPage() {
       });
     },
     [candidateLots],
+  );
+
+  const handleFillAllFromLot = useCallback(
+    (lotId: number) => {
+      if (!selectedOrderLine) return;
+      const targetLot = candidateLots.find((lot) => lot.lot_id === lotId);
+      if (!targetLot) return;
+
+      const requiredQty = Number(
+        selectedOrderLine.order_quantity ?? selectedOrderLine.quantity ?? 0,
+      );
+      const dbAllocated = Number(
+        selectedOrderLine.allocated_qty ?? selectedOrderLine.allocated_quantity ?? 0,
+      );
+      const remainingNeeded = Math.max(0, requiredQty - dbAllocated);
+      const availableQty = Number(targetLot.free_qty ?? targetLot.current_quantity ?? 0);
+      const maxAllocation = Math.min(remainingNeeded, availableQty);
+
+      setLotAllocations(maxAllocation > 0 ? { [lotId]: maxAllocation } : {});
+    },
+    [selectedOrderLine, candidateLots],
   );
 
   // 自動引当（FEFO）ハンドラー
@@ -209,7 +276,7 @@ export function LotAllocationPage() {
       if (remaining <= 0) break;
 
       const lotId = lot.lot_id;
-      const freeQty = lot.free_qty ?? 0;
+      const freeQty = Number(lot.free_qty ?? lot.current_quantity ?? 0);
       const allocateQty = Math.min(remaining, freeQty);
 
       if (allocateQty > 0) {
@@ -226,87 +293,73 @@ export function LotAllocationPage() {
     setLotAllocations({});
   }, []);
 
-  // 引当確定ハンドラー（手動引当用）
-  const handleCommitAllocation = useCallback(async () => {
-    if (!selectedOrderLineId || Object.keys(lotAllocations).length === 0) return;
+  // 引当保存ハンドラー
+  const handleSaveAllocations = useCallback(() => {
+    if (!selectedOrderLineId) return;
 
-    setIsSaving(true);
+    const allocations = Object.entries(lotAllocations)
+      .map(([lotIdStr, qty]) => {
+        const numericQty = Number(qty);
+        return {
+          lot_id: Number(lotIdStr),
+          quantity: Number.isFinite(numericQty) ? numericQty : 0,
+        };
+      })
+      .filter((item) => item.quantity > 0);
 
-    try {
-      // 各ロットごとに drag-assign API を呼び出し
-      const promises = Object.entries(lotAllocations).map(([lotIdStr, quantity]) => {
-        const lotId = Number(lotIdStr);
-        if (quantity <= 0) return null;
+    if (allocations.length === 0) return;
 
-        return dragAssignAllocation({
-          order_line_id: selectedOrderLineId,
-          lot_id: lotId,
-          allocated_quantity: quantity,
-        });
-      });
-
-      // すべての引当を並列実行
-      await Promise.all(promises.filter((p) => p !== null));
-
-      // 成功後の処理
-      setToast({ message: "引当を登録しました", variant: "success" });
-      setLotAllocations({});
-
-      // クエリを再取得して最新の状態を反映
-      orderDetailQuery.refetch();
-      candidatesQuery.refetch();
-    } catch (error) {
-      setToast({
-        message: error instanceof Error ? error.message : "引当の登録に失敗しました",
-        variant: "error",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  }, [selectedOrderLineId, lotAllocations, orderDetailQuery, candidatesQuery]);
+    saveAllocationsMutation.mutate({
+      orderLineId: selectedOrderLineId,
+      orderId: selectedOrderId,
+      allocations,
+    });
+  }, [selectedOrderLineId, selectedOrderId, lotAllocations, saveAllocationsMutation]);
 
   // 各明細の在庫状態を計算（在庫不足判定用）
-  const lineStockStatus = useMemo(() => {
-    const statusMap: Record<
-      number,
-      { hasShortage: boolean; totalAvailable: number; requiredQty: number }
-    > = {};
-
+  const lineStockStatus = useMemo<Record<number, OrderLineStockStatus>>(() => {
     const lines = orderDetailQuery.data?.lines ?? [];
+    if (!lines.length) return {};
+
+    const statusMap: Record<number, OrderLineStockStatus> = {};
+    const canEvaluateSelected = selectedOrderLineId !== null && candidatesQuery.isSuccess;
+    const totalAvailableForSelectedLine = canEvaluateSelected
+      ? candidateLots.reduce((sum, lot) => {
+          const freeQty = Number(lot.free_qty ?? lot.current_quantity ?? 0);
+          return sum + Math.max(0, freeQty);
+        }, 0)
+      : null;
+
     for (const line of lines) {
       if (!line.id) continue;
-
-      const requiredQty = Number(line.order_quantity ?? 0);
-      // allocated_qty might not be in the type yet, use optional chaining
-      const allocatedQty = Number((line as any).allocated_qty ?? 0);
-      const remainingNeeded = Math.max(0, requiredQty - allocatedQty);
-
-      // この明細の候補ロット合計在庫を計算
-      // 注: 現在はselectedOrderLineIdの候補ロットしか取得していないため、
-      // 他の明細の候補ロットは取得できない。
-      // 暫定的に、選択中の明細のみ正確に判定し、他は allocated_qty で判定
-      let totalAvailable = 0;
-      if (line.id === selectedOrderLineId && candidateLots.length > 0) {
-        totalAvailable = candidateLots.reduce((sum, lot) => {
-          const freeQty = Number(lot.free_qty ?? 0);
-          return sum + Math.max(0, freeQty);
-        }, 0);
-      }
-
-      const hasShortage =
-        line.id === selectedOrderLineId
-          ? totalAvailable < remainingNeeded
-          : allocatedQty < requiredQty;
+      const requiredQty = Number(line.order_quantity ?? line.quantity ?? 0);
+      const dbAllocated = Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
+      const uiAllocated = line.id === selectedOrderLineId ? uiAllocatedSum : 0;
+      const totalAllocated = dbAllocated + uiAllocated;
+      const remainingQty = Math.max(0, requiredQty - totalAllocated);
+      const progress = requiredQty > 0 ? Math.min(100, (totalAllocated / requiredQty) * 100) : 0;
+      const totalAvailable = line.id === selectedOrderLineId ? totalAvailableForSelectedLine : null;
+      const hasShortage = totalAvailable !== null ? totalAvailable < requiredQty : false;
 
       statusMap[line.id] = {
         hasShortage,
         totalAvailable,
         requiredQty,
+        dbAllocated,
+        uiAllocated,
+        remainingQty,
+        progress,
       };
     }
 
     return statusMap;
-  }, [orderDetailQuery.data, selectedOrderLineId, candidateLots]);
+  }, [
+    orderDetailQuery.data,
+    selectedOrderLineId,
+    candidateLots,
+    uiAllocatedSum,
+    candidatesQuery.isSuccess,
+  ]);
 
   // トースト自動非表示
   useEffect(() => {
@@ -358,13 +411,15 @@ export function LotAllocationPage() {
               candidateLots={candidateLots}
               lotAllocations={lotAllocations}
               onLotAllocationChange={handleLotAllocationChange}
+              onFillAllFromLot={handleFillAllFromLot}
               onAutoAllocate={handleAutoAllocate}
               onClearAllocations={handleClearAllocations}
-              onSaveAllocations={handleCommitAllocation}
+              onSaveAllocations={handleSaveAllocations}
+              canSave={allocationPanelCanSave}
               layout="sidePane"
               isLoading={candidatesQuery.isLoading}
               error={candidatesQuery.error}
-              isSaving={isSaving}
+              isSaving={isSavingAllocations}
             />
           </div>
         </>
@@ -405,13 +460,15 @@ export function LotAllocationPage() {
               candidateLots={candidateLots}
               lotAllocations={lotAllocations}
               onLotAllocationChange={handleLotAllocationChange}
+              onFillAllFromLot={handleFillAllFromLot}
               onAutoAllocate={handleAutoAllocate}
               onClearAllocations={handleClearAllocations}
-              onSaveAllocations={handleCommitAllocation}
+              onSaveAllocations={handleSaveAllocations}
+              canSave={allocationPanelCanSave}
               layout="sidePane"
               isLoading={candidatesQuery.isLoading}
               error={candidatesQuery.error}
-              isSaving={isSaving}
+              isSaving={isSavingAllocations}
             />
           </div>
         </>
@@ -443,13 +500,15 @@ export function LotAllocationPage() {
                   candidateLots={candidateLots}
                   lotAllocations={lotAllocations}
                   onLotAllocationChange={handleLotAllocationChange}
+                  onFillAllFromLot={handleFillAllFromLot}
                   onAutoAllocate={handleAutoAllocate}
                   onClearAllocations={handleClearAllocations}
-                  onSaveAllocations={handleCommitAllocation}
+                  onSaveAllocations={handleSaveAllocations}
+                  canSave={allocationPanelCanSave}
                   layout="inline"
                   isLoading={candidatesQuery.isLoading}
                   error={candidatesQuery.error}
-                  isSaving={isSaving}
+                  isSaving={isSavingAllocations}
                 />
               )}
               isLoading={orderDetailQuery.isLoading}

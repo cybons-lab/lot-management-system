@@ -4,9 +4,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getOrders } from "@/features/orders/api";
-import type { components } from "@/types/api";
-
-type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
+import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 export const useOrdersForAllocation = () => {
   return useQuery<OrderWithLinesResponse[]>({
