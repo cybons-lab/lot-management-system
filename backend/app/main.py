@@ -25,16 +25,13 @@ from app.api.routes import (
     forecasts_router,
     health_router,
     inbound_plans_router,
-    integration_router,
     inventory_items_router,
     lots_router,
-    masters_router,
     operation_logs_router,
     orders_router,
     # orders_validate_router,  # Disabled: requires OrderValidation* schemas not in DDL v2.2
     products_router,
     roles_router,
-    submissions_router,
     suppliers_router,
     users_router,
     warehouse_alloc_router,
@@ -92,39 +89,44 @@ app.add_middleware(
 )
 
 # ルーター登録
-app.include_router(masters_router, prefix=settings.API_PREFIX)  # Legacy: /api/masters/*
+# Core endpoints
 app.include_router(lots_router, prefix=settings.API_PREFIX)
 app.include_router(orders_router, prefix=settings.API_PREFIX)
 app.include_router(allocations_router, prefix=settings.API_PREFIX)
-app.include_router(allocation_candidates_router, prefix=settings.API_PREFIX)  # NEW: Phase 3-4
-app.include_router(allocation_suggestions_router, prefix=settings.API_PREFIX)  # NEW: Phase 3-4
-app.include_router(integration_router, prefix=settings.API_PREFIX)
-app.include_router(submissions_router, prefix=settings.API_PREFIX)  # NEW: Phase 3-5
+app.include_router(allocation_candidates_router, prefix=settings.API_PREFIX)
+app.include_router(allocation_suggestions_router, prefix=settings.API_PREFIX)
+app.include_router(warehouse_alloc_router, prefix=settings.API_PREFIX)
+
+# Forecast endpoints
+app.include_router(forecast_router, prefix=settings.API_PREFIX)  # Legacy: still in use
+app.include_router(forecasts_router, prefix=settings.API_PREFIX)  # v2.2
+
+# Inventory endpoints
+app.include_router(inbound_plans_router, prefix=settings.API_PREFIX)
+app.include_router(adjustments_router, prefix=settings.API_PREFIX)
+app.include_router(inventory_items_router, prefix=settings.API_PREFIX)
+
+# Master data endpoints (direct access)
+app.include_router(warehouses_router, prefix=settings.API_PREFIX)
+app.include_router(suppliers_router, prefix=settings.API_PREFIX)
+app.include_router(customers_router, prefix=settings.API_PREFIX)
+app.include_router(products_router, prefix=settings.API_PREFIX)
+app.include_router(customer_items_router, prefix=settings.API_PREFIX)
+
+# User & Role management
+app.include_router(users_router, prefix=settings.API_PREFIX)
+app.include_router(roles_router, prefix=settings.API_PREFIX)
+
+# Admin & system endpoints
 app.include_router(admin_router, prefix=settings.API_PREFIX)
 app.include_router(admin_healthcheck_router, prefix=settings.API_PREFIX)
-app.include_router(forecast_router, prefix=settings.API_PREFIX)  # Legacy
-app.include_router(forecasts_router, prefix=settings.API_PREFIX)  # NEW: Phase 2-1
-app.include_router(inbound_plans_router, prefix=settings.API_PREFIX)  # NEW: Phase 2-2
-app.include_router(adjustments_router, prefix=settings.API_PREFIX)  # NEW: Phase 2-3
-app.include_router(inventory_items_router, prefix=settings.API_PREFIX)  # NEW: Phase 2-3
-app.include_router(customer_items_router, prefix=settings.API_PREFIX)  # NEW: Phase 3-1
-app.include_router(users_router, prefix=settings.API_PREFIX)  # NEW: Phase 3-2
-app.include_router(roles_router, prefix=settings.API_PREFIX)  # NEW: Phase 3-2
-# Phase 3-3: Standalone master routers (simplified paths)
-app.include_router(warehouses_router, prefix=settings.API_PREFIX)  # NEW: /api/warehouses
-app.include_router(suppliers_router, prefix=settings.API_PREFIX)  # NEW: /api/suppliers
-app.include_router(customers_router, prefix=settings.API_PREFIX)  # NEW: /api/customers
-app.include_router(products_router, prefix=settings.API_PREFIX)  # NEW: /api/products
-app.include_router(warehouse_alloc_router, prefix=settings.API_PREFIX)
+app.include_router(admin_simulate_router, prefix=settings.API_PREFIX)
 app.include_router(health_router, prefix=settings.API_PREFIX)
-# app.include_router(orders_validate_router, prefix=settings.API_PREFIX)  # Disabled: requires OrderValidation* schemas not in DDL v2.2
-app.include_router(
-    admin_simulate_router, prefix=settings.API_PREFIX
-)  # NEW: Simulation API with YAML profiles
-# Phase 4: Low-priority APIs (audit logs, business rules, batch jobs)
-app.include_router(operation_logs_router, prefix=settings.API_PREFIX)  # NEW: Phase 4-1
-app.include_router(business_rules_router, prefix=settings.API_PREFIX)  # NEW: Phase 4-2
-app.include_router(batch_jobs_router, prefix=settings.API_PREFIX)  # NEW: Phase 4-3
+
+# Operation logs, business rules, batch jobs
+app.include_router(operation_logs_router, prefix=settings.API_PREFIX)
+app.include_router(business_rules_router, prefix=settings.API_PREFIX)
+app.include_router(batch_jobs_router, prefix=settings.API_PREFIX)
 
 
 @app.get("/")
