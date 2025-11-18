@@ -1,120 +1,81 @@
 /**
- * LotAllocationPage.tsx
+ * LotAllocationPageNew.tsx
  *
- * 設計書V2に基づく3ペイン構成のロット引当ページ
+ * ロット引当ページ（v2.2対応・ゼロベース再実装版）
  *
  * 構成:
- * - 左ペイン: 受注一覧(優先度バー、KPIバッジ付き)
- * - 中央ペイン: 選択した受注の明細一覧
- * - 右ペイン: 候補ロット一覧と倉庫別配分入力
+ * - 左ペイン: 受注一覧 + 受注明細一覧
+ * - 右ペイン: ロット候補一覧 + 引当入力
+ *
+ * 状態管理:
+ * - Jotai atoms: selectedOrderId, selectedLineId（グローバル選択状態）
+ * - useState: lotAllocations（ページ内ローカル引当入力）
+ *
+ * APIフロー:
+ * 1. 受注一覧取得: GET /api/orders
+ * 2. 受注詳細取得: GET /api/orders/{order_id}
+ * 3. ロット候補取得: GET /api/allocation-candidates?order_line_id=...
+ * 4. 引当確定: POST /api/allocations/commit
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-import { LotAllocationPane } from "../components/LotAllocationPane";
-import { OrderDetailPane } from "../components/OrderDetailPane";
-import { OrderListPane } from "../components/OrderListPane";
-import {
-  useOrderSelection,
-  useAutoSelection,
-  useAllocationMutation,
-  useSnackbar,
-  useOrderCards,
-} from "../hooks";
-import type { Order } from "../types";
-import { toQty } from "../utils/qty";
-
-import type { AllocationInputItem, CandidateLotItem } from "@/features/allocations/api";
-import { useAllocationCandidates } from "@/features/allocations/hooks/useAllocationCandidates";
-import { getOrders, getOrder } from "@/features/orders/api";
-import { normalizeOrder } from "@/shared/libs/normalize";
-import type { OrderResponse } from "@/shared/types/aliases";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useAtom } from "jotai";
+import { selectedOrderIdAtom, selectedLineIdAtom } from "../store/atoms";
+import { useOrdersForAllocation } from "../hooks/useOrdersForAllocation";
+import { useOrderDetailForAllocation } from "../hooks/useOrderDetailForAllocation";
+import { useAllocationCandidates } from "../hooks/useAllocationCandidates";
+import { useCommitAllocationMutation } from "../hooks/useCommitAllocationMutation";
+import { OrderAndLineListPane } from "../components/OrderAndLineListPane";
+import { LotCandidatesAndAllocationPane } from "../components/LotCandidatesAndAllocationPane";
+import type { CandidateLotItem } from "../api";
 
 export function LotAllocationPage() {
-  const orderListRef = useRef<HTMLDivElement | null>(null);
-  const [_orderListScrollTop, _setOrderListScrollTop] = useState(0);
+  // グローバル選択状態（Jotai）
+  const [selectedOrderId] = useAtom(selectedOrderIdAtom);
+  const [selectedLineId] = useAtom(selectedLineIdAtom);
 
-  // URL状態管理と選択ハンドラー
-  const { selectedOrderId, selectedLineId, setSearchParams, handleSelectOrder, handleSelectLine } =
-    useOrderSelection();
+  // ローカル引当入力状態
+  const [lotAllocations, setLotAllocations] = useState<Record<number, number>>({});
 
-  // Snackbar管理
-  const { snackbar, showSuccess, showError } = useSnackbar();
-
-  // 受注一覧を取得（openと引当済みの両方を表示）
-  const ordersQuery = useQuery<OrderResponse[], Error, Order[]>({
-    queryKey: ["orders", "all-for-allocation"],
-    queryFn: () => getOrders(), // ステータスフィルタなしで全受注を取得
-    refetchOnMount: true,
-    refetchOnWindowFocus: false,
-    staleTime: 30_000,
-    select: (data) => (data ?? []).map(normalizeOrder) as Order[],
-  });
-
-  // 受注カードデータを作成(フィルタリングとソート)
-  const orderCards = useOrderCards(ordersQuery.data);
-
-  // 選択された受注の詳細を取得
-  const orderDetailQuery = useQuery<unknown, Error, Order>({
-    queryKey: ["order-detail", selectedOrderId],
-    queryFn: () => getOrder(selectedOrderId!),
-    enabled: !!selectedOrderId,
-    // 取得スキーマ（line_noがnull可など）が広いので、selectでUI用Orderへ正規化
-    select: (data) => normalizeOrder(data as OrderResponse) as Order,
-  });
-
-  // 自動選択ロジック
-  useAutoSelection(
-    orderCards,
-    selectedOrderId,
-    orderDetailQuery.data,
-    selectedLineId,
-    setSearchParams,
+  // トースト通知状態
+  const [toast, setToast] = useState<{ message: string; variant: "success" | "error" } | null>(
+    null
   );
 
-  // 選択された明細行
-  const normalizedSelectedLineId =
-    selectedLineId != null && Number.isFinite(Number(selectedLineId))
-      ? Number(selectedLineId)
-      : null;
+  // API: 受注一覧取得
+  const ordersQuery = useOrdersForAllocation();
 
-  const selectedLine =
-    normalizedSelectedLineId != null
-      ? orderDetailQuery.data?.lines?.find((line) => Number(line.id) === normalizedSelectedLineId)
-      : undefined;
+  // API: 受注詳細取得
+  const orderDetailQuery = useOrderDetailForAllocation(selectedOrderId);
 
-  // ロット候補を取得（新API: /allocation-candidates）
-  const lotsQuery = useAllocationCandidates({
-    order_line_id: normalizedSelectedLineId ?? 0,
+  // API: ロット候補取得
+  const candidatesQuery = useAllocationCandidates({
+    order_line_id: selectedLineId ?? 0,
     strategy: "fefo",
     limit: 200,
   });
 
+  // API: 引当確定mutation
+  const commitMutation = useCommitAllocationMutation();
+
+  // ロット候補リスト
   const candidateLots: CandidateLotItem[] = useMemo(
-    () => lotsQuery.data?.items ?? [],
-    [lotsQuery.data?.items],
+    () => candidatesQuery.data?.items ?? [],
+    [candidatesQuery.data?.items]
   );
 
-  // ロット単位の配分状態
-  const [lotAllocations, setLotAllocations] = useState<Record<number, number>>({});
-  const lastSelectedLineIdRef = useRef<number | null>(null);
+  // 選択中の受注明細
+  const selectedLine = useMemo(() => {
+    if (!selectedLineId || !orderDetailQuery.data) return undefined;
+    return orderDetailQuery.data.lines?.find((line) => line.id === selectedLineId);
+  }, [selectedLineId, orderDetailQuery.data]);
 
-  // 明細が切り替わったら入力をリセット
+  // 明細が変わったら引当入力をリセット
   useEffect(() => {
-    if (!selectedLineId) {
-      setLotAllocations({});
-      lastSelectedLineIdRef.current = null;
-      return;
-    }
-
-    if (lastSelectedLineIdRef.current !== Number(selectedLineId)) {
-      setLotAllocations({});
-      lastSelectedLineIdRef.current = Number(selectedLineId);
-    }
+    setLotAllocations({});
   }, [selectedLineId]);
 
-  // 候補ロットの変化に応じて存在しないロットの入力を除去&上限クリップ
+  // ロット候補が変わったら、存在しないロットの入力を除去&上限クリップ
   useEffect(() => {
     if (!candidateLots.length) {
       setLotAllocations((prev) => (Object.keys(prev).length ? {} : prev));
@@ -127,9 +88,7 @@ export function LotAllocationPage() {
 
       for (const lot of candidateLots) {
         const lotId = lot.lot_id;
-        if (!lotId) continue;
-
-        const maxQty = toQty(lot.free_qty ?? 0);
+        const maxQty = lot.free_qty ?? 0;
         const prevQty = prev[lotId] ?? 0;
         const clampedQty = Math.min(Math.max(prevQty, 0), maxQty);
 
@@ -147,46 +106,11 @@ export function LotAllocationPage() {
     });
   }, [candidateLots]);
 
-  const allocationList: AllocationInputItem[] = useMemo(() => {
-    return candidateLots
-      .map<AllocationInputItem | null>((lot) => {
-        const lotId = lot.lot_id;
-        if (!lotId) return null;
-
-        const quantity = Number(lotAllocations[lotId] ?? 0);
-        if (!Number.isFinite(quantity) || quantity <= 0) return null;
-
-        return {
-          lotId,
-          lot: null,
-          delivery_place_id: null,
-          delivery_place_code: null,
-          quantity,
-        };
-      })
-      .filter((item): item is AllocationInputItem => item !== null);
-  }, [candidateLots, lotAllocations]);
-
-  const allocationTotalAll = useMemo(
-    () => allocationList.reduce((sum, allocation) => sum + allocation.quantity, 0),
-    [allocationList],
-  );
-
-  // 引当保存の処理
-  const { handleSaveAllocations, canSave } = useAllocationMutation(
-    selectedOrderId,
-    selectedLineId,
-    selectedLine,
-    allocationList,
-    showSuccess.bind(null, "保存しました"),
-    showError,
-  );
-
-  // ロット配分変更ハンドラー
+  // ロット引当数量変更ハンドラー
   const handleLotAllocationChange = useCallback(
     (lotId: number, value: number) => {
       const targetLot = candidateLots.find((lot) => lot.lot_id === lotId);
-      const maxQty = targetLot ? toQty(targetLot.free_qty ?? 0) : Number.POSITIVE_INFINITY;
+      const maxQty = targetLot ? targetLot.free_qty ?? 0 : Number.POSITIVE_INFINITY;
 
       const clampedValue = Math.max(0, Math.min(maxQty, Number.isFinite(value) ? value : 0));
 
@@ -201,66 +125,101 @@ export function LotAllocationPage() {
         return { ...prev, [lotId]: clampedValue };
       });
     },
-    [candidateLots],
+    [candidateLots]
   );
 
-  // スクロール位置の保存
-  useEffect(() => {
-    const el = orderListRef.current;
-    if (!el) return;
+  // 自動引当（FEFO）ハンドラー
+  const handleAutoAllocate = useCallback(() => {
+    if (!selectedLine || candidateLots.length === 0) return;
 
-    const handleScroll = () => {
-      _setOrderListScrollTop(el.scrollTop);
-    };
+    const orderQty = parseFloat(String(selectedLine.order_quantity ?? 0));
+    let remaining = orderQty;
 
-    el.addEventListener("scroll", handleScroll);
-    return () => {
-      el.removeEventListener("scroll", handleScroll);
-    };
+    const newAllocations: Record<number, number> = {};
+
+    // FEFO順（既にバックエンドから賞味期限順でソート済みと仮定）
+    for (const lot of candidateLots) {
+      if (remaining <= 0) break;
+
+      const lotId = lot.lot_id;
+      const freeQty = lot.free_qty ?? 0;
+      const allocateQty = Math.min(remaining, freeQty);
+
+      if (allocateQty > 0) {
+        newAllocations[lotId] = allocateQty;
+        remaining -= allocateQty;
+      }
+    }
+
+    setLotAllocations(newAllocations);
+  }, [selectedLine, candidateLots]);
+
+  // クリアハンドラー
+  const handleClearAllocations = useCallback(() => {
+    setLotAllocations({});
   }, []);
+
+  // 引当確定ハンドラー
+  const handleCommitAllocation = useCallback(() => {
+    if (!selectedOrderId) return;
+
+    commitMutation.mutate(
+      { order_id: selectedOrderId },
+      {
+        onSuccess: () => {
+          setToast({ message: "引当を登録しました", variant: "success" });
+          setLotAllocations({});
+          setTimeout(() => setToast(null), 3000);
+        },
+        onError: (error) => {
+          setToast({
+            message: error.message || "引当の登録に失敗しました",
+            variant: "error",
+          });
+          setTimeout(() => setToast(null), 5000);
+        },
+      }
+    );
+  }, [selectedOrderId, commitMutation]);
+
+  // トースト自動非表示
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* 左ペイン: 受注一覧 */}
-      <OrderListPane
-        ref={orderListRef}
-        orderCards={orderCards}
-        selectedOrderId={selectedOrderId}
-        ordersQuery={ordersQuery}
-        onSelectOrder={handleSelectOrder}
+      {/* 左ペイン: 受注一覧 + 受注明細一覧 */}
+      <OrderAndLineListPane
+        orders={ordersQuery.data ?? []}
+        isLoading={ordersQuery.isLoading}
+        selectedOrderDetail={orderDetailQuery.data}
       />
 
-      {/* 中央ペイン: 明細一覧 */}
-      <OrderDetailPane
-        selectedOrderId={selectedOrderId}
-        orderDetailQuery={orderDetailQuery}
-        selectedLineId={selectedLineId}
-        allocationTotalAll={allocationTotalAll}
-        onSelectLine={handleSelectLine}
-      />
-
-      {/* 右ペイン: 候補ロット & 倉庫別配分 */}
-      <LotAllocationPane
-        selectedLineId={normalizedSelectedLineId}
+      {/* 右ペイン: ロット候補 + 引当入力 */}
+      <LotCandidatesAndAllocationPane
         selectedLine={selectedLine}
-        isLoading={lotsQuery.isLoading}
-        error={lotsQuery.error ?? null}
         candidateLots={candidateLots}
+        isLoadingCandidates={candidatesQuery.isLoading}
+        candidatesError={candidatesQuery.error}
         lotAllocations={lotAllocations}
-        allocationTotalAll={allocationTotalAll}
-        canSave={canSave}
         onLotAllocationChange={handleLotAllocationChange}
-        onSaveAllocations={handleSaveAllocations}
+        onAutoAllocate={handleAutoAllocate}
+        onClearAllocations={handleClearAllocations}
+        onCommitAllocation={handleCommitAllocation}
+        isCommitting={commitMutation.isPending}
       />
 
-      {/* Snackbar通知 */}
-      {snackbar && (
+      {/* トースト通知 */}
+      {toast && (
         <div
           className={`fixed right-6 bottom-6 rounded-lg px-4 py-3 text-sm shadow-lg transition-opacity ${
-            snackbar.variant === "error" ? "bg-red-600 text-white" : "bg-slate-900 text-white"
+            toast.variant === "error" ? "bg-red-600 text-white" : "bg-slate-900 text-white"
           }`}
         >
-          {snackbar.message}
+          {toast.message}
         </div>
       )}
     </div>
