@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models import Order, OrderLine
+from app.models.masters_models import Customer
 
 
 class OrderRepository:
@@ -77,7 +78,11 @@ class OrderRepository:
         if status:
             stmt = stmt.where(Order.status == status)
         if customer_code:
-            stmt = stmt.where(Order.customer_code == customer_code)
+            # JOIN Customer table to filter by customer_code
+            # (Order table doesn't have customer_code column in DDL v2.2)
+            stmt = stmt.join(Customer, Order.customer_id == Customer.id).where(
+                Customer.customer_code == customer_code
+            )
         if date_from:
             stmt = stmt.where(Order.order_date >= date_from)
         if date_to:

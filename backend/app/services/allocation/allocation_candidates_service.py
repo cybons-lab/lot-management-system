@@ -86,20 +86,15 @@ def execute_candidate_lot_query(
 
     # Dynamic filters
     if order_line_id is not None:
-        # Extract product and warehouse from order line
+        # Extract product from order line
+        # Note: Order lines don't specify warehouse in DDL v2.2 - warehouse is chosen during allocation
         sql_parts.append("""
             AND l.product_id = (
                 SELECT product_id FROM order_lines WHERE id = :order_line_id
             )
         """)
         params["order_line_id"] = order_line_id
-
-        # Optional: also filter by warehouse if line has one
-        sql_parts.append("""
-            AND (l.warehouse_id = (
-                SELECT warehouse_id FROM order_lines WHERE id = :order_line_id
-            ) OR (SELECT warehouse_id FROM order_lines WHERE id = :order_line_id) IS NULL)
-        """)
+        # Warehouse filter removed - order_lines.warehouse_id doesn't exist in DDL v2.2
     else:
         if product_id is not None:
             sql_parts.append(" AND l.product_id = :product_id")
