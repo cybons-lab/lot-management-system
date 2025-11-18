@@ -9,7 +9,7 @@ from datetime import date
 from sqlalchemy import Select, or_, select
 from sqlalchemy.orm import Session
 
-from app.models import Lot, Warehouse
+from app.models import Lot
 
 
 class StockRepository:
@@ -20,39 +20,41 @@ class StockRepository:
 
     def find_fifo_lots_for_allocation(
         self,
-        product_code: str,
-        warehouse_code: str,
+        product_id: int,
+        warehouse_id: int,
         ship_date: date | None,
         for_update: bool = True,
     ) -> list[Lot]:
         """
         Fetch candidate lots in FIFO order with optional row locking.
 
-        v2.2: Removed joinedload(Lot.current_stock) - no longer needed.
+        v2.2: Updated to use product_id and warehouse_id (DDL compliant).
+        Removed joinedload(Lot.current_stock) - no longer needed.
+
+        Args:
+            product_id: Product ID (not product_code)
+            warehouse_id: Warehouse ID (not warehouse_code)
+            ship_date: Optional ship date for expiry filtering
+            for_update: Whether to lock rows for update
+
+        Returns:
+            List of candidate lots in FIFO order
         """
         stmt: Select[tuple[Lot]] = (
             select(Lot)
-            .join(Lot.warehouse)
-            .where(Lot.product_code == product_code)
-            .where(Warehouse.warehouse_code == warehouse_code)
+            .where(Lot.product_id == product_id)
+            .where(Lot.warehouse_id == warehouse_id)
+            .where(Lot.status == "active")  # DDL v2.2 compliant
         )
 
-        if hasattr(Lot, "is_active"):
-            stmt = stmt.where(Lot.is_active == True)  # noqa: E712
+        # Filter by expiry date if ship_date is provided
+        if ship_date is not None:
+            stmt = stmt.where(or_(Lot.expiry_date.is_(None), Lot.expiry_date >= ship_date))
 
-        if hasattr(Lot, "is_locked"):
-            stmt = stmt.where(Lot.is_locked == False)  # noqa: E712
+        # Order by received_date (FIFO) - DDL v2.2 uses received_date
+        stmt = stmt.order_by(Lot.received_date.asc(), Lot.id.asc())
 
-        expiry_column = getattr(Lot, "expiry_date", None)
-        if ship_date is not None and expiry_column is not None:
-            stmt = stmt.where(or_(expiry_column.is_(None), expiry_column >= ship_date))
-
-        received_column = getattr(Lot, "receipt_date", None) or getattr(Lot, "received_at", None)
-        if received_column is not None:
-            stmt = stmt.order_by(received_column.asc(), Lot.id.asc())
-        else:
-            stmt = stmt.order_by(Lot.id.asc())
-
+        # Row locking for PostgreSQL/MySQL
         bind = self._db.get_bind()
         dialect_name = bind.dialect.name if bind is not None else ""
         if for_update and dialect_name in {"postgresql", "mysql"}:

@@ -216,6 +216,7 @@ def get_candidate_lots(
         db.execute(text("SET LOCAL statement_timeout = '5s'"))
 
         # v2.2: メインクエリ - lots テーブルから直接取得
+        # Note: This is a DEPRECATED endpoint. Use GET /allocation-candidates instead.
         query = text(
             """
             SELECT
@@ -225,18 +226,17 @@ def get_candidate_lots(
                 l.allocated_quantity AS allocated_qty,
                 (l.current_quantity - l.allocated_quantity) AS free_qty,
                 l.product_id,
-                l.product_code,
+                NULL AS product_code,
                 l.warehouse_id,
-                l.warehouse_code,
+                NULL AS warehouse_code,
                 l.expiry_date,
                 l.updated_at AS last_updated
             FROM
                 public.lots l
             WHERE
                 l.product_id = :product_id
+                AND l.status = 'active'
                 AND l.current_quantity > 0
-                AND l.deleted_at IS NULL
-                AND (l.is_locked IS NULL OR l.is_locked = false)
                 AND (l.expiry_date IS NULL OR l.expiry_date >= CURRENT_DATE)
                 AND (:warehouse_id IS NULL OR l.warehouse_id = :warehouse_id)
                 AND (l.current_quantity - l.allocated_quantity) > 0

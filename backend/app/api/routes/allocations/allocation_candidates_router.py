@@ -91,9 +91,8 @@ def get_allocation_candidates(
                 public.lots l
             WHERE
                 l.product_id = :product_id
+                AND l.status = 'active'
                 AND l.current_quantity > 0
-                AND l.deleted_at IS NULL
-                AND (l.is_locked IS NULL OR l.is_locked = false)
                 AND (l.expiry_date IS NULL OR l.expiry_date >= CURRENT_DATE)
                 AND (:warehouse_id IS NULL OR l.warehouse_id = :warehouse_id)
                 AND (l.current_quantity - l.allocated_quantity) > 0
