@@ -108,16 +108,20 @@ src/
 
 ### Database Design
 
-**Pattern:** Event-sourced inventory with summary cache
+**Pattern:** Event-sourced inventory with real-time aggregation
 
 Key Tables:
 
 - **Masters:** warehouses, suppliers, customers, products, delivery_places
-- **Inventory:** lots, stock_movements (event log), lot_current_stock (summary)
+- **Inventory:** lots, stock_history (event log)
 - **Orders:** orders, order_lines, allocations, shipping
 - **Integration:** ocr_submissions, sap_sync_logs
 
-**Important:** `stock_movements` is an immutable event log. `lot_current_stock` is a summary table for performance.
+**Important:**
+- `stock_history` is an immutable event log tracking all inventory transactions.
+- `lots` table is the single source of truth for inventory quantities.
+- **REMOVED:** `inventory_items` table has been deprecated. Inventory summaries are now computed in real-time from `lots` using GROUP BY aggregation queries.
+- Benefits: Single source of truth, no sync issues, always up-to-date data.
 
 ---
 
@@ -935,10 +939,12 @@ See full API documentation: [API Reference](./docs/api_reference.md) | [Migratio
 - `GET /api/lots/{id}` - Get lot detail
 - `PUT /api/lots/{id}` - Update lot
 - `DELETE /api/lots/{id}` - Delete lot
-- `GET /api/inventory-items` - **Get inventory summary (NEW - Phase 2)**
-- `GET /api/inventory-items/{product_id}/{warehouse_id}` - **Get inventory summary detail (NEW)**
+- `GET /api/inventory-items` - **Get inventory summary (aggregated from lots in real-time)**
+- `GET /api/inventory-items/{product_id}/{warehouse_id}` - **Get inventory summary detail (aggregated from lots)**
 - `GET /api/adjustments` - **Get adjustment history (NEW - Phase 2)**
 - `POST /api/adjustments` - **Record inventory adjustment (NEW - Phase 2)**
+
+**Note:** The `inventory_items` table has been removed. Inventory summaries are now computed in real-time from the `lots` table using GROUP BY aggregation queries. This ensures a single source of truth and eliminates synchronization issues.
 
 #### Orders
 
