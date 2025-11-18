@@ -193,7 +193,7 @@ export function SummaryPage() {
               </thead>
               <tbody className="divide-y">
                 {inventoryItems.map((item) => (
-                  <tr key={item.inventory_item_id} className="hover:bg-gray-50">
+                  <tr key={`${item.product_id}-${item.warehouse_id}`} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm">
                       {item.product_name || item.product_code || `ID: ${item.product_id}`}
                     </td>

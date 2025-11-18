@@ -137,20 +137,19 @@ class AdjustmentResponse(AdjustmentBase):
     adjusted_at: datetime
 
 
-class InventoryItemBase(BaseSchema):
-    """Shared attributes for inventory item payloads."""
+class InventoryItemResponse(BaseSchema):
+    """API response model for inventory summary rows (aggregated from lots).
 
+    This schema represents aggregated inventory data from the lots table.
+    It is not backed by a database table but computed on-demand.
+    """
+
+    id: int = Field(serialization_alias="inventory_item_id")
     product_id: int
     warehouse_id: int
     total_quantity: Decimal
     allocated_quantity: Decimal
     available_quantity: Decimal
-
-
-class InventoryItemResponse(InventoryItemBase):
-    """API response model for inventory summary rows."""
-
-    id: int = Field(serialization_alias="inventory_item_id")
     last_updated: datetime
 
 
@@ -159,4 +158,7 @@ class InventoryItemResponse(InventoryItemBase):
 StockMovementBase = StockHistoryBase
 StockMovementCreate = StockHistoryCreate
 StockMovementResponse = StockHistoryResponse
+# LotCurrentStockResponse was an alias for InventoryItemResponse, which previously
+# represented the inventory_items table. Now it represents aggregated data from lots.
+# This alias is deprecated and will be removed in a future version.
 LotCurrentStockResponse = InventoryItemResponse

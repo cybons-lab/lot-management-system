@@ -1150,97 +1150,30 @@ ALTER SEQUENCE public.inbound_plans_inbound_plan_id_seq OWNED BY public.inbound_
 
 
 --
--- Name: inventory_items; Type: TABLE; Schema: public; Owner: admin
+-- DEPRECATED: inventory_items table (REMOVED)
 --
-
-CREATE TABLE public.inventory_items (
-    inventory_item_id bigint NOT NULL,
-    product_id bigint NOT NULL,
-    warehouse_id bigint NOT NULL,
-    total_quantity numeric(15,3) DEFAULT 0 NOT NULL,
-    allocated_quantity numeric(15,3) DEFAULT 0 NOT NULL,
-    available_quantity numeric(15,3) DEFAULT 0 NOT NULL,
-    last_updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-
-ALTER TABLE public.inventory_items OWNER TO admin;
-
+-- This table has been removed in favor of real-time aggregation from the lots table.
+-- Inventory summaries are now computed on-demand using GROUP BY queries.
 --
--- Name: TABLE inventory_items; Type: COMMENT; Schema: public; Owner: admin
+-- Migration notes:
+-- - API endpoint /api/inventory-items is preserved
+-- - Backend now aggregates from lots table instead of reading from inventory_items
+-- - Benefits: Single source of truth, no sync issues, always up-to-date
 --
-
-COMMENT ON TABLE public.inventory_items IS '在庫サマリ(トリガーで自動生成・同期)';
-
-
+-- To remove the table from an existing database:
+-- DROP TABLE IF EXISTS public.inventory_items CASCADE;
+-- DROP SEQUENCE IF EXISTS public.inventory_items_inventory_item_id_seq CASCADE;
 --
--- Name: COLUMN inventory_items.inventory_item_id; Type: COMMENT; Schema: public; Owner: admin
---
-
-COMMENT ON COLUMN public.inventory_items.inventory_item_id IS '在庫アイテムID(主キー)';
-
-
---
--- Name: COLUMN inventory_items.product_id; Type: COMMENT; Schema: public; Owner: admin
---
-
-COMMENT ON COLUMN public.inventory_items.product_id IS '製品ID(外部キー)';
-
-
---
--- Name: COLUMN inventory_items.warehouse_id; Type: COMMENT; Schema: public; Owner: admin
---
-
-COMMENT ON COLUMN public.inventory_items.warehouse_id IS '倉庫ID(外部キー)';
-
-
---
--- Name: COLUMN inventory_items.total_quantity; Type: COMMENT; Schema: public; Owner: admin
---
-
-COMMENT ON COLUMN public.inventory_items.total_quantity IS '合計在庫数';
-
-
---
--- Name: COLUMN inventory_items.allocated_quantity; Type: COMMENT; Schema: public; Owner: admin
---
-
-COMMENT ON COLUMN public.inventory_items.allocated_quantity IS '引当済数量';
-
-
---
--- Name: COLUMN inventory_items.available_quantity; Type: COMMENT; Schema: public; Owner: admin
---
-
-COMMENT ON COLUMN public.inventory_items.available_quantity IS '引当可能数量';
-
-
---
--- Name: COLUMN inventory_items.last_updated; Type: COMMENT; Schema: public; Owner: admin
---
-
-COMMENT ON COLUMN public.inventory_items.last_updated IS '最終更新日時';
-
-
---
--- Name: inventory_items_inventory_item_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
---
-
-CREATE SEQUENCE public.inventory_items_inventory_item_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE public.inventory_items_inventory_item_id_seq OWNER TO admin;
-
---
--- Name: inventory_items_inventory_item_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
---
-
-ALTER SEQUENCE public.inventory_items_inventory_item_id_seq OWNED BY public.inventory_items.inventory_item_id;
+-- Historical definition (for reference):
+-- CREATE TABLE public.inventory_items (
+--     inventory_item_id bigint NOT NULL,
+--     product_id bigint NOT NULL,
+--     warehouse_id bigint NOT NULL,
+--     total_quantity numeric(15,3) DEFAULT 0 NOT NULL,
+--     allocated_quantity numeric(15,3) DEFAULT 0 NOT NULL,
+--     available_quantity numeric(15,3) DEFAULT 0 NOT NULL,
+--     last_updated timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+-- );
 
 
 --

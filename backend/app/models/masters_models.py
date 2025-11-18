@@ -29,7 +29,7 @@ from .base_model import Base
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastHeader, ForecastLine
     from .inbound_models import InboundPlan, InboundPlanLine
-    from .inventory_models import InventoryItem, Lot
+    from .inventory_models import Lot
     from .orders_models import Order, OrderLine
 
 
@@ -65,9 +65,6 @@ class Warehouse(Base):
 
     # Relationships
     lots: Mapped[list[Lot]] = relationship("Lot", back_populates="warehouse")
-    inventory_items: Mapped[list[InventoryItem]] = relationship(
-        "InventoryItem", back_populates="warehouse"
-    )
 
 
 class Supplier(Base):
@@ -216,9 +213,6 @@ class Product(Base):
     )
     inbound_plan_lines: Mapped[list[InboundPlanLine]] = relationship(
         "InboundPlanLine", back_populates="product"
-    )
-    inventory_items: Mapped[list[InventoryItem]] = relationship(
-        "InventoryItem", back_populates="product"
     )
     customer_items: Mapped[list[CustomerItem]] = relationship(
         "CustomerItem", back_populates="product"

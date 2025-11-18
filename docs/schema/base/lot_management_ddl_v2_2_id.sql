@@ -477,34 +477,31 @@ CREATE INDEX idx_allocations_status ON allocations(status);
 -- 6. 在庫抽象化・履歴系テーブル
 -- ============================================================
 
--- 6.1 在庫サマリ(トリガーで自動生成)
-CREATE TABLE inventory_items (
-    id BIGSERIAL PRIMARY KEY,
-    product_id BIGINT NOT NULL,
-    warehouse_id BIGINT NOT NULL,
-    total_quantity DECIMAL(15,3) NOT NULL DEFAULT 0,
-    allocated_quantity DECIMAL(15,3) NOT NULL DEFAULT 0,
-    available_quantity DECIMAL(15,3) NOT NULL DEFAULT 0,
-    last_updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_inventory_items_product FOREIGN KEY (product_id) 
-        REFERENCES products(id) ON DELETE CASCADE,
-    CONSTRAINT fk_inventory_items_warehouse FOREIGN KEY (warehouse_id) 
-        REFERENCES warehouses(id) ON DELETE CASCADE,
-    CONSTRAINT uq_inventory_items_product_warehouse UNIQUE (product_id, warehouse_id)
-);
-
-COMMENT ON TABLE inventory_items IS '在庫サマリ(トリガーで自動生成・同期)';
-COMMENT ON COLUMN inventory_items.id IS '在庫アイテムID(主キー)';
-COMMENT ON COLUMN inventory_items.product_id IS '製品ID(外部キー)';
-COMMENT ON COLUMN inventory_items.warehouse_id IS '倉庫ID(外部キー)';
-COMMENT ON COLUMN inventory_items.total_quantity IS '合計在庫数';
-COMMENT ON COLUMN inventory_items.allocated_quantity IS '引当済数量';
-COMMENT ON COLUMN inventory_items.available_quantity IS '引当可能数量';
-COMMENT ON COLUMN inventory_items.last_updated IS '最終更新日時';
-
--- インデックス
-CREATE INDEX idx_inventory_items_product ON inventory_items(product_id);
-CREATE INDEX idx_inventory_items_warehouse ON inventory_items(warehouse_id);
+-- 6.1 在庫サマリ (REMOVED - リアルタイム集計に変更)
+-- DEPRECATED: inventory_items テーブルは廃止されました
+-- 在庫サマリは lots テーブルから GROUP BY 集計で取得します
+-- API エンドポイント: GET /api/inventory-items は維持されますが、
+-- バックエンドでは lots テーブルから集計して返却します。
+--
+-- 理由:
+-- - 単一の真実の源(lots テーブル)を維持
+-- - トリガー・同期の複雑さを排除
+-- - 常に最新のデータを保証
+--
+-- 集計クエリ例:
+-- SELECT
+--   product_id,
+--   warehouse_id,
+--   SUM(current_quantity) AS total_quantity,
+--   SUM(allocated_quantity) AS allocated_quantity,
+--   SUM(GREATEST(current_quantity - allocated_quantity, 0)) AS available_quantity,
+--   MAX(updated_at) AS last_updated
+-- FROM lots
+-- WHERE status = 'active'
+-- GROUP BY product_id, warehouse_id;
+--
+-- 既存のテーブルを削除する場合:
+-- DROP TABLE IF EXISTS inventory_items CASCADE;
 
 -- 6.2 在庫履歴
 CREATE TABLE stock_history (
