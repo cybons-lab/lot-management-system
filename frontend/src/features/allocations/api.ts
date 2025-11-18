@@ -39,6 +39,9 @@ export interface CandidateLotItem {
   allocated_qty: number;
   product_id?: number;
   product_code?: string;
+  warehouse_id?: number;
+  warehouse_code?: string;
+  warehouse_name?: string;
   delivery_place_id?: number;
   delivery_place_code?: string;
   delivery_place_name?: string;

@@ -127,6 +127,8 @@ class CandidateLotItem(BaseSchema):
     available_quantity: Decimal = Field(..., decimal_places=3, description="引当可能数量")
     product_id: int
     warehouse_id: int
+    warehouse_code: str | None = None
+    warehouse_name: str | None = None
     expiry_date: date | None = None
     received_date: date | None = None
 

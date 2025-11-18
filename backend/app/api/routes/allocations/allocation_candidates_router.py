@@ -85,10 +85,14 @@ def get_allocation_candidates(
                 (l.current_quantity - l.allocated_quantity) AS available_quantity,
                 l.product_id,
                 l.warehouse_id,
+                w.warehouse_code,
+                w.warehouse_name,
                 l.expiry_date,
                 l.received_date
             FROM
                 public.lots l
+            LEFT JOIN
+                public.warehouses w ON l.warehouse_id = w.id
             WHERE
                 l.product_id = :product_id
                 AND l.status = 'active'
@@ -117,6 +121,8 @@ def get_allocation_candidates(
                 available_quantity=float(row.available_quantity),
                 product_id=row.product_id,
                 warehouse_id=row.warehouse_id,
+                warehouse_code=row.warehouse_code,
+                warehouse_name=row.warehouse_name,
                 expiry_date=row.expiry_date,
                 received_date=row.received_date,
             )

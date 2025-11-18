@@ -12,12 +12,14 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/shared/libs/utils";
-import type { OrderLine } from "@/shared/types/aliases";
+import { formatDate } from "@/shared/utils/date";
+import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface OrderLinesPaneProps {
   orderLines: OrderLine[];
   selectedOrderLineId: number | null;
   onSelectOrderLine: (lineId: number) => void;
+  orderDetail?: OrderWithLinesResponse | null;
   renderInlineLots?: boolean;
   lineStockStatus?: Record<
     number,
@@ -32,6 +34,7 @@ export function OrderLinesPane({
   orderLines,
   selectedOrderLineId,
   onSelectOrderLine,
+  orderDetail = null,
   renderInlineLots = false,
   lineStockStatus = {},
   inlineLotContent,
@@ -152,6 +155,28 @@ export function OrderLinesPane({
                   </p>
                   {line.product_name && (
                     <p className="mt-1 text-xs text-gray-600">{line.product_name}</p>
+                  )}
+                </div>
+
+                {/* 納期・納入先情報 */}
+                <div className="mb-3 space-y-1 text-xs text-gray-600">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">納期</span>
+                    <span className="font-medium text-gray-700">
+                      {formatDate(line.delivery_date || line.due_date, { fallback: "未設定" })}
+                    </span>
+                  </div>
+                  {orderDetail && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">納入先</span>
+                      <span className="font-medium text-gray-700">
+                        {orderDetail.delivery_place_code && orderDetail.delivery_place_name
+                          ? `${orderDetail.delivery_place_code} / ${orderDetail.delivery_place_name}`
+                          : orderDetail.delivery_place_code ||
+                            orderDetail.delivery_place_name ||
+                            "未設定"}
+                      </span>
+                    </div>
                   )}
                 </div>
 
