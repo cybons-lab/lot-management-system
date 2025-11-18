@@ -129,9 +129,7 @@ export function LotAllocationPanel({
               </div>
               <p className="text-[11px] text-gray-500">
                 DB: {dbAllocated.toLocaleString()}
-                {uiAllocatedTotal > 0 && (
-                  <> / 入力: {uiAllocatedTotal.toLocaleString()}</>
-                )}
+                {uiAllocatedTotal > 0 && <> / 入力: {uiAllocatedTotal.toLocaleString()}</>}
               </p>
             </div>
             <div>

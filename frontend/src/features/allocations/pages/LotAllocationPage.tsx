@@ -27,7 +27,10 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrdersForAllocation } from "../hooks/useOrdersForAllocation";
 import { useOrderDetailForAllocation } from "../hooks/useOrderDetailForAllocation";
-import { useAllocationCandidates, allocationCandidatesKeys } from "../hooks/useAllocationCandidates";
+import {
+  useAllocationCandidates,
+  allocationCandidatesKeys,
+} from "../hooks/useAllocationCandidates";
 import { saveManualAllocations, type ManualAllocationSaveResponse } from "../api";
 import { OrdersPane } from "../components/OrdersPane";
 import { OrderLinesPane, type OrderLineStockStatus } from "../components/OrderLinesPane";
@@ -240,7 +243,9 @@ export function LotAllocationPage() {
       const targetLot = candidateLots.find((lot) => lot.lot_id === lotId);
       if (!targetLot) return;
 
-      const requiredQty = Number(selectedOrderLine.order_quantity ?? selectedOrderLine.quantity ?? 0);
+      const requiredQty = Number(
+        selectedOrderLine.order_quantity ?? selectedOrderLine.quantity ?? 0,
+      );
       const dbAllocated = Number(
         selectedOrderLine.allocated_qty ?? selectedOrderLine.allocated_quantity ?? 0,
       );
@@ -334,8 +339,7 @@ export function LotAllocationPage() {
       const remainingQty = Math.max(0, requiredQty - totalAllocated);
       const progress = requiredQty > 0 ? Math.min(100, (totalAllocated / requiredQty) * 100) : 0;
       const totalAvailable = line.id === selectedOrderLineId ? totalAvailableForSelectedLine : null;
-      const hasShortage =
-        totalAvailable !== null ? totalAvailable < requiredQty : false;
+      const hasShortage = totalAvailable !== null ? totalAvailable < requiredQty : false;
 
       statusMap[line.id] = {
         hasShortage,

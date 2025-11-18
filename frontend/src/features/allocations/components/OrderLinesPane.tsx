@@ -63,7 +63,9 @@ export function OrderLinesPane({
     const lineCode = line.delivery_place_code ?? null;
     const lineName = line.delivery_place_name ?? null;
     if (lineCode || lineName) {
-      return lineCode && lineName ? `${lineCode} / ${lineName}` : lineCode ?? lineName ?? "未設定";
+      return lineCode && lineName
+        ? `${lineCode} / ${lineName}`
+        : (lineCode ?? lineName ?? "未設定");
     }
 
     if (line.delivery_place) {
@@ -73,7 +75,9 @@ export function OrderLinesPane({
     const orderCode = orderDetail?.delivery_place_code ?? null;
     const orderName = orderDetail?.delivery_place_name ?? null;
     if (orderCode || orderName) {
-      return orderCode && orderName ? `${orderCode} / ${orderName}` : orderCode ?? orderName ?? "未設定";
+      return orderCode && orderName
+        ? `${orderCode} / ${orderName}`
+        : (orderCode ?? orderName ?? "未設定");
     }
 
     if (orderDetail?.delivery_place) {
@@ -138,12 +142,16 @@ export function OrderLinesPane({
           const isExpanded = renderInlineLots && expandedLineId === line.id;
           const showLowStockBadge = isLowStock(line);
           const status = line.id ? stockStatusMap[line.id] : undefined;
-          const requiredQty = status?.requiredQty ?? Number(line.order_quantity ?? line.quantity ?? 0);
-          const dbAllocated = status?.dbAllocated ?? Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
+          const requiredQty =
+            status?.requiredQty ?? Number(line.order_quantity ?? line.quantity ?? 0);
+          const dbAllocated =
+            status?.dbAllocated ?? Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
           const uiAllocated = status?.uiAllocated ?? 0;
           const allocatedQty = dbAllocated + uiAllocated;
           const remainingQty = status?.remainingQty ?? Math.max(0, requiredQty - allocatedQty);
-          const progressPercent = status?.progress ?? (requiredQty > 0 ? Math.min(100, (allocatedQty / requiredQty) * 100) : 0);
+          const progressPercent =
+            status?.progress ??
+            (requiredQty > 0 ? Math.min(100, (allocatedQty / requiredQty) * 100) : 0);
           const deliveryPlaceDisplay = getDeliveryPlaceLabel(line);
 
           return (
@@ -218,7 +226,9 @@ export function OrderLinesPane({
                       {allocatedQty.toLocaleString()}
                     </div>
                     {uiAllocated > 0 && (
-                      <p className="text-[11px] text-gray-500">仮入力: +{uiAllocated.toLocaleString()}</p>
+                      <p className="text-[11px] text-gray-500">
+                        仮入力: +{uiAllocated.toLocaleString()}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -238,9 +248,7 @@ export function OrderLinesPane({
                 <div className="mt-3">
                   <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
                     <span>引当進捗</span>
-                    <span className="font-medium">
-                      {Math.round(progressPercent)}%
-                    </span>
+                    <span className="font-medium">{Math.round(progressPercent)}%</span>
                   </div>
                   <Progress
                     value={progressPercent}

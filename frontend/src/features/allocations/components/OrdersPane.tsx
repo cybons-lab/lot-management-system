@@ -159,8 +159,7 @@ export function OrdersPane({
               <div>
                 <h3 className="text-sm font-semibold text-gray-900">{orderNumber}</h3>
                 <p className="mt-1 text-xs text-gray-600">
-                  得意先:{" "}
-                  <span className="font-medium text-gray-900">{customerDisplay}</span>
+                  得意先: <span className="font-medium text-gray-900">{customerDisplay}</span>
                 </p>
                 <p className="mt-1 text-xs text-gray-600">
                   受信日:{" "}
