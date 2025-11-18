@@ -47,17 +47,15 @@ export function OrderAndLineListPane({
   }
 
   return (
-    <div className="w-[480px] border-r bg-white flex flex-col">
+    <div className="flex w-[480px] flex-col border-r bg-white">
       {/* 受注一覧 */}
       <div className="flex-1 overflow-y-auto border-b">
-        <div className="sticky top-0 border-b bg-gray-50 px-4 py-3 z-10">
+        <div className="sticky top-0 z-10 border-b bg-gray-50 px-4 py-3">
           <h2 className="text-sm font-semibold text-gray-900">受注一覧</h2>
         </div>
-        <div className="p-2 space-y-2">
+        <div className="space-y-2 p-2">
           {orders.length === 0 ? (
-            <div className="p-8 text-center text-sm text-gray-500">
-              受注がありません
-            </div>
+            <div className="p-8 text-center text-sm text-gray-500">受注がありません</div>
           ) : (
             orders.map((order) => (
               <OrderCard
@@ -73,23 +71,17 @@ export function OrderAndLineListPane({
 
       {/* 受注明細一覧 */}
       <div className="flex-1 overflow-y-auto">
-        <div className="sticky top-0 border-b bg-gray-50 px-4 py-3 z-10">
+        <div className="sticky top-0 z-10 border-b bg-gray-50 px-4 py-3">
           <h2 className="text-sm font-semibold text-gray-900">受注明細</h2>
         </div>
         {!selectedOrderId ? (
-          <div className="p-8 text-center text-sm text-gray-500">
-            受注を選択してください
-          </div>
+          <div className="p-8 text-center text-sm text-gray-500">受注を選択してください</div>
         ) : !selectedOrderDetail ? (
-          <div className="p-8 text-center text-sm text-gray-500">
-            読み込み中...
-          </div>
+          <div className="p-8 text-center text-sm text-gray-500">読み込み中...</div>
         ) : (
-          <div className="p-2 space-y-2">
+          <div className="space-y-2 p-2">
             {(selectedOrderDetail.lines ?? []).length === 0 ? (
-              <div className="p-8 text-center text-sm text-gray-500">
-                明細がありません
-              </div>
+              <div className="p-8 text-center text-sm text-gray-500">明細がありません</div>
             ) : (
               (selectedOrderDetail.lines ?? []).map((line) => (
                 <OrderLineCard
@@ -119,7 +111,7 @@ interface OrderCardProps {
 function OrderCard({ order, isSelected, onSelect }: OrderCardProps) {
   return (
     <div
-      className={`rounded-lg border p-3 cursor-pointer transition ${
+      className={`cursor-pointer rounded-lg border p-3 transition ${
         isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
@@ -127,17 +119,13 @@ function OrderCard({ order, isSelected, onSelect }: OrderCardProps) {
       onClick={() => onSelect(order.id)}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 truncate">
-            {order.order_number}
-          </p>
-          <p className="mt-1 text-xs text-gray-600">
-            納期: {order.order_date}
-          </p>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-gray-900">{order.order_number}</p>
+          <p className="mt-1 text-xs text-gray-600">納期: {order.order_date}</p>
           <div className="mt-1 flex items-center gap-2">
             <span
               className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${getStatusColor(
-                order.status
+                order.status,
               )}`}
             >
               {getStatusLabel(order.status)}
@@ -163,7 +151,7 @@ function OrderLineCard({ line, isSelected, onSelect }: OrderLineCardProps) {
 
   return (
     <div
-      className={`rounded-lg border p-3 cursor-pointer transition ${
+      className={`cursor-pointer rounded-lg border p-3 transition ${
         isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
@@ -171,13 +159,9 @@ function OrderLineCard({ line, isSelected, onSelect }: OrderLineCardProps) {
       onClick={() => onSelect(line.id)}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900">
-            製品ID: {line.product_id}
-          </p>
-          <p className="mt-1 text-xs text-gray-600">
-            納入日: {line.delivery_date}
-          </p>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-gray-900">製品ID: {line.product_id}</p>
+          <p className="mt-1 text-xs text-gray-600">納入日: {line.delivery_date}</p>
           <div className="mt-2 flex items-center gap-4 text-xs">
             <div>
               <span className="text-gray-500">受注数量:</span>{" "}

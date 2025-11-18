@@ -39,7 +39,7 @@ export function LotAllocationPage() {
 
   // トースト通知状態
   const [toast, setToast] = useState<{ message: string; variant: "success" | "error" } | null>(
-    null
+    null,
   );
 
   // API: 受注一覧取得
@@ -61,7 +61,7 @@ export function LotAllocationPage() {
   // ロット候補リスト
   const candidateLots: CandidateLotItem[] = useMemo(
     () => candidatesQuery.data?.items ?? [],
-    [candidatesQuery.data?.items]
+    [candidatesQuery.data?.items],
   );
 
   // 選択中の受注明細
@@ -110,7 +110,7 @@ export function LotAllocationPage() {
   const handleLotAllocationChange = useCallback(
     (lotId: number, value: number) => {
       const targetLot = candidateLots.find((lot) => lot.lot_id === lotId);
-      const maxQty = targetLot ? targetLot.free_qty ?? 0 : Number.POSITIVE_INFINITY;
+      const maxQty = targetLot ? (targetLot.free_qty ?? 0) : Number.POSITIVE_INFINITY;
 
       const clampedValue = Math.max(0, Math.min(maxQty, Number.isFinite(value) ? value : 0));
 
@@ -125,7 +125,7 @@ export function LotAllocationPage() {
         return { ...prev, [lotId]: clampedValue };
       });
     },
-    [candidateLots]
+    [candidateLots],
   );
 
   // 自動引当（FEFO）ハンドラー
@@ -178,7 +178,7 @@ export function LotAllocationPage() {
           });
           setTimeout(() => setToast(null), 5000);
         },
-      }
+      },
     );
   }, [selectedOrderId, commitMutation]);
 
