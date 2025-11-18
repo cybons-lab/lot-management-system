@@ -17,6 +17,7 @@ interface OrdersPaneProps {
   orders: OrderWithLinesResponse[];
   selectedOrderId: number | null;
   onSelectOrder: (orderId: number) => void;
+  customerMap?: Record<string, string>;
   isLoading?: boolean;
   error?: Error | null;
 }
@@ -25,25 +26,32 @@ export function OrdersPane({
   orders,
   selectedOrderId,
   onSelectOrder,
+  customerMap = {},
   isLoading = false,
   error = null,
 }: OrdersPaneProps) {
   const getCustomerDisplay = (order: OrderWithLinesResponse) => {
-    if (order.customer_code && order.customer_name) {
-      return `${order.customer_code} ${order.customer_name}`;
+    if (order.customer_code) {
+      const name = order.customer_name || customerMap[order.customer_code];
+      if (name) return `${order.customer_code} ${name}`;
+      return order.customer_code;
     }
-    if (order.customer_code) return order.customer_code;
     if (order.customer_name) return order.customer_name;
 
     const firstLine = order.lines?.[0];
     const lineCode = firstLine?.customer_code ?? null;
     const lineName = firstLine?.customer_name ?? null;
-    if (lineCode && lineName) return `${lineCode} ${lineName}`;
-    if (lineCode) return lineCode;
+    if (lineCode) {
+       const name = lineName || customerMap[lineCode];
+       if (name) return `${lineCode} ${name}`;
+       return lineCode;
+    }
     if (lineName) return lineName;
 
     return "未設定";
   };
+
+
 
   const getReceivedDate = (order: OrderWithLinesResponse) => {
     return (
@@ -167,6 +175,7 @@ export function OrdersPane({
                     {formatDate(receivedDate, { fallback: "未設定" })}
                   </span>
                 </p>
+
               </div>
               <Badge variant={getStatusBadgeVariant(order.status)}>
                 {getStatusLabel(order.status)}

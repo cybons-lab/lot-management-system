@@ -87,6 +87,8 @@ export function OrderLinesPane({
     return "未設定";
   };
 
+
+
   const handleLineClick = (line: OrderLine) => {
     if (!line.id) return;
 
@@ -206,6 +208,7 @@ export function OrderLinesPane({
                       {formatDate(line.delivery_date || line.due_date, { fallback: "未設定" })}
                     </span>
                   </div>
+
                   <div className="flex justify-between">
                     <span className="text-gray-500">納入先</span>
                     <span className="font-medium text-gray-700">{deliveryPlaceDisplay}</span>

@@ -11,6 +11,7 @@
  * - layout prop により inline / sidePane で見た目調整
  */
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { formatDate } from "@/shared/utils/date";
@@ -62,6 +63,16 @@ export function LotAllocationPanel({
   error = null,
   isSaving = false,
 }: LotAllocationPanelProps) {
+  // Shake animation state for each lot input
+  const [shakingLotId, setShakingLotId] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (shakingLotId !== null) {
+      const timer = setTimeout(() => setShakingLotId(null), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [shakingLotId]);
+
   // スタイル調整（inline vs sidePane）
   const containerClasses = cn(
     "flex flex-col bg-white",
@@ -261,10 +272,29 @@ export function LotAllocationPanel({
                         max={availableQty}
                         value={allocatedQty}
                         onChange={(event) => {
-                          const parsed = Number(event.target.value);
+                          const inputValue = event.target.value;
+                          const parsed = Number(inputValue);
+                          
+                          // Check if input exceeds available quantity
+                          // Note: We don't know the exact "remaining needed" limit here easily without prop drilling or calculation duplication.
+                          // However, the parent component clamps the value. We can detect if the value didn't update as expected or if it exceeds availableQty.
+                          // A simpler heuristic: if user types a number > availableQty, shake.
+                          // For strict clamping to "remaining needed", we rely on the parent's clamping behavior.
+                          // If we want to shake on "remaining needed" limit, we'd need to know that limit here.
+                          // For now, let's shake if the user tries to input more than availableQty, which is a hard limit known here.
+                          // AND check if the parent clamped it (by comparing next render, but that's hard in onChange).
+                          
+                          // Better approach: Check if the input value is greater than availableQty
+                          if (parsed > availableQty) {
+                             setShakingLotId(lotId);
+                          }
+                          
                           onLotAllocationChange(lotId, Number.isFinite(parsed) ? parsed : 0);
                         }}
-                        className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                        className={cn(
+                          "flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none",
+                          shakingLotId === lotId && "animate-shake border-red-500 ring-red-500"
+                        )}
                       />
                       <Button
                         type="button"
@@ -305,16 +335,15 @@ export function LotAllocationPanel({
           <span>配分合計</span>
           <span className="font-semibold">{uiAllocatedTotal.toLocaleString()}</span>
         </div>
-        {onSaveAllocations && (
           <Button
             type="button"
-            className="mt-3 w-full"
+            size="sm"
             onClick={onSaveAllocations}
             disabled={!effectiveCanSave}
+            className="flex-1"
           >
             {isSaving ? "保存中..." : "保存"}
           </Button>
-        )}
       </div>
     </div>
   );
