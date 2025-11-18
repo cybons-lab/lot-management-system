@@ -1,14 +1,19 @@
 /**
- * LotAllocationPageNew.tsx
- *
- * ロット引当ページ（v2.2対応・ゼロベース再実装版）
+ * LotAllocationPage - ロット引当ページ（完全リファクタリング版）
  *
  * 構成:
- * - 左ペイン: 受注一覧 + 受注明細一覧
- * - 右ペイン: ロット候補一覧 + 引当入力
+ * - 3カラムレイアウト（広い画面）：
+ *   - 左カラム: 受注一覧（OrdersPane）
+ *   - 中カラム: 明細一覧（OrderLinesPane）
+ *   - 右カラム: ロット引当パネル（LotAllocationPanel）
+ *
+ * レスポンシブ対応:
+ * - 広い画面（1280px以上）: 3カラムレイアウト
+ * - 中程度の画面（768px〜1280px）: 2カラムレイアウト（受注＋明細を左、ロットを右）
+ * - 狭い画面（768px未満）: 明細行内にインライン表示
  *
  * 状態管理:
- * - Jotai atoms: selectedOrderId, selectedLineId（グローバル選択状態）
+ * - useState: selectedOrderId, selectedOrderLineId（ページ内ローカル）
  * - useState: lotAllocations（ページ内ローカル引当入力）
  *
  * APIフロー:
@@ -19,20 +24,20 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useAtom } from "jotai";
-import { selectedOrderIdAtom, selectedLineIdAtom } from "../store/atoms";
 import { useOrdersForAllocation } from "../hooks/useOrdersForAllocation";
 import { useOrderDetailForAllocation } from "../hooks/useOrderDetailForAllocation";
 import { useAllocationCandidates } from "../hooks/useAllocationCandidates";
 import { useCommitAllocationMutation } from "../hooks/useCommitAllocationMutation";
-import { OrderAndLineListPane } from "../components/OrderAndLineListPane";
-import { LotCandidatesAndAllocationPane } from "../components/LotCandidatesAndAllocationPane";
+import { OrdersPane } from "../components/OrdersPane";
+import { OrderLinesPane } from "../components/OrderLinesPane";
+import { LotAllocationPanel } from "../components/LotAllocationPanel";
 import type { CandidateLotItem } from "../api";
+import type { OrderLine } from "@/shared/types/aliases";
 
 export function LotAllocationPage() {
-  // グローバル選択状態（Jotai）
-  const [selectedOrderId] = useAtom(selectedOrderIdAtom);
-  const [selectedLineId] = useAtom(selectedLineIdAtom);
+  // ローカル選択状態
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [selectedOrderLineId, setSelectedOrderLineId] = useState<number | null>(null);
 
   // ローカル引当入力状態
   const [lotAllocations, setLotAllocations] = useState<Record<number, number>>({});
@@ -42,6 +47,22 @@ export function LotAllocationPage() {
     null,
   );
 
+  // レスポンシブ判定（画面幅によるレイアウト切り替え）
+  const [isWideScreen, setIsWideScreen] = useState(window.innerWidth >= 1280); // 3カラム表示
+  const [isMediumScreen, setIsMediumScreen] = useState(
+    window.innerWidth >= 768 && window.innerWidth < 1280,
+  ); // 2カラム表示
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsWideScreen(window.innerWidth >= 1280);
+      setIsMediumScreen(window.innerWidth >= 768 && window.innerWidth < 1280);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   // API: 受注一覧取得
   const ordersQuery = useOrdersForAllocation();
 
@@ -50,7 +71,7 @@ export function LotAllocationPage() {
 
   // API: ロット候補取得
   const candidatesQuery = useAllocationCandidates({
-    order_line_id: selectedLineId ?? 0,
+    order_line_id: selectedOrderLineId ?? 0,
     strategy: "fefo",
     limit: 200,
   });
@@ -65,15 +86,15 @@ export function LotAllocationPage() {
   );
 
   // 選択中の受注明細
-  const selectedLine = useMemo(() => {
-    if (!selectedLineId || !orderDetailQuery.data) return undefined;
-    return orderDetailQuery.data.lines?.find((line) => line.id === selectedLineId);
-  }, [selectedLineId, orderDetailQuery.data]);
+  const selectedOrderLine = useMemo<OrderLine | null>(() => {
+    if (!selectedOrderLineId || !orderDetailQuery.data) return null;
+    return (orderDetailQuery.data.lines?.find((line) => line.id === selectedOrderLineId) as OrderLine) || null;
+  }, [selectedOrderLineId, orderDetailQuery.data]);
 
   // 明細が変わったら引当入力をリセット
   useEffect(() => {
     setLotAllocations({});
-  }, [selectedLineId]);
+  }, [selectedOrderLineId]);
 
   // ロット候補が変わったら、存在しないロットの入力を除去&上限クリップ
   useEffect(() => {
@@ -106,6 +127,34 @@ export function LotAllocationPage() {
     });
   }, [candidateLots]);
 
+  // 受注選択ハンドラー（先頭明細を自動選択）
+  const handleSelectOrder = useCallback(
+    (orderId: number) => {
+      setSelectedOrderId(orderId);
+
+      // 明細が読み込まれたら先頭を自動選択
+      // ここでは orderDetailQuery を使うため、useEffect で処理
+    },
+    [],
+  );
+
+  // 明細選択ハンドラー
+  const handleSelectOrderLine = useCallback((lineId: number) => {
+    setSelectedOrderLineId(lineId);
+  }, []);
+
+  // 受注詳細が読み込まれたら先頭明細を自動選択
+  useEffect(() => {
+    if (orderDetailQuery.data?.lines && orderDetailQuery.data.lines.length > 0) {
+      const firstLineId = orderDetailQuery.data.lines[0]?.id;
+      if (firstLineId) {
+        setSelectedOrderLineId(firstLineId);
+      }
+    } else {
+      setSelectedOrderLineId(null);
+    }
+  }, [orderDetailQuery.data]);
+
   // ロット引当数量変更ハンドラー
   const handleLotAllocationChange = useCallback(
     (lotId: number, value: number) => {
@@ -130,10 +179,11 @@ export function LotAllocationPage() {
 
   // 自動引当（FEFO）ハンドラー
   const handleAutoAllocate = useCallback(() => {
-    if (!selectedLine || candidateLots.length === 0) return;
+    if (!selectedOrderLine || candidateLots.length === 0) return;
 
-    const orderQty = parseFloat(String(selectedLine.order_quantity ?? 0));
-    let remaining = orderQty;
+    const orderQty = Number(selectedOrderLine.order_quantity ?? selectedOrderLine.quantity ?? 0);
+    const allocatedQty = Number(selectedOrderLine.allocated_qty ?? 0);
+    let remaining = orderQty - allocatedQty;
 
     const newAllocations: Record<number, number> = {};
 
@@ -152,7 +202,7 @@ export function LotAllocationPage() {
     }
 
     setLotAllocations(newAllocations);
-  }, [selectedLine, candidateLots]);
+  }, [selectedOrderLine, candidateLots]);
 
   // クリアハンドラー
   const handleClearAllocations = useCallback(() => {
@@ -189,28 +239,143 @@ export function LotAllocationPage() {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  // レイアウト判定
+  // - isWideScreen (1280px以上): 3カラムレイアウト
+  // - isMediumScreen (768px〜1280px): 2カラムレイアウト（受注＋明細 | ロット）
+  // - 768px未満: 明細行内にインライン表示
+  const renderInlineLots = !isWideScreen && !isMediumScreen;
+
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* 左ペイン: 受注一覧 + 受注明細一覧 */}
-      <OrderAndLineListPane
-        orders={ordersQuery.data ?? []}
-        isLoading={ordersQuery.isLoading}
-        selectedOrderDetail={orderDetailQuery.data}
-      />
+      {/* 広い画面: 3カラムレイアウト（受注 | 明細 | ロット） */}
+      {isWideScreen && (
+        <>
+          {/* 左カラム: 受注一覧 */}
+          <div className="w-80">
+            <OrdersPane
+              orders={ordersQuery.data ?? []}
+              selectedOrderId={selectedOrderId}
+              onSelectOrder={handleSelectOrder}
+              isLoading={ordersQuery.isLoading}
+              error={ordersQuery.error}
+            />
+          </div>
 
-      {/* 右ペイン: ロット候補 + 引当入力 */}
-      <LotCandidatesAndAllocationPane
-        selectedLine={selectedLine}
-        candidateLots={candidateLots}
-        isLoadingCandidates={candidatesQuery.isLoading}
-        candidatesError={candidatesQuery.error}
-        lotAllocations={lotAllocations}
-        onLotAllocationChange={handleLotAllocationChange}
-        onAutoAllocate={handleAutoAllocate}
-        onClearAllocations={handleClearAllocations}
-        onCommitAllocation={handleCommitAllocation}
-        isCommitting={commitMutation.isPending}
-      />
+          {/* 中カラム: 明細一覧 */}
+          <div className="flex-1">
+            <OrderLinesPane
+              orderLines={orderDetailQuery.data?.lines ?? []}
+              selectedOrderLineId={selectedOrderLineId}
+              onSelectOrderLine={handleSelectOrderLine}
+              renderInlineLots={false}
+              isLoading={orderDetailQuery.isLoading}
+              error={orderDetailQuery.error}
+            />
+          </div>
+
+          {/* 右カラム: ロット引当パネル */}
+          <div className="w-96">
+            <LotAllocationPanel
+              orderLine={selectedOrderLine}
+              candidateLots={candidateLots}
+              lotAllocations={lotAllocations}
+              onLotAllocationChange={handleLotAllocationChange}
+              onAutoAllocate={handleAutoAllocate}
+              onClearAllocations={handleClearAllocations}
+              onSaveAllocations={handleCommitAllocation}
+              layout="sidePane"
+              isLoading={candidatesQuery.isLoading}
+              error={candidatesQuery.error}
+              isSaving={commitMutation.isPending}
+            />
+          </div>
+        </>
+      )}
+
+      {/* 中程度の画面: 2カラムレイアウト（受注＋明細 | ロット） */}
+      {isMediumScreen && (
+        <>
+          {/* 左カラム: 受注一覧＋明細一覧 */}
+          <div className="flex flex-1 flex-col">
+            <div className="h-1/2 overflow-hidden border-b">
+              <OrdersPane
+                orders={ordersQuery.data ?? []}
+                selectedOrderId={selectedOrderId}
+                onSelectOrder={handleSelectOrder}
+                isLoading={ordersQuery.isLoading}
+                error={ordersQuery.error}
+              />
+            </div>
+            <div className="h-1/2 overflow-hidden">
+              <OrderLinesPane
+                orderLines={orderDetailQuery.data?.lines ?? []}
+                selectedOrderLineId={selectedOrderLineId}
+                onSelectOrderLine={handleSelectOrderLine}
+                renderInlineLots={false}
+                isLoading={orderDetailQuery.isLoading}
+                error={orderDetailQuery.error}
+              />
+            </div>
+          </div>
+
+          {/* 右カラム: ロット引当パネル */}
+          <div className="w-96">
+            <LotAllocationPanel
+              orderLine={selectedOrderLine}
+              candidateLots={candidateLots}
+              lotAllocations={lotAllocations}
+              onLotAllocationChange={handleLotAllocationChange}
+              onAutoAllocate={handleAutoAllocate}
+              onClearAllocations={handleClearAllocations}
+              onSaveAllocations={handleCommitAllocation}
+              layout="sidePane"
+              isLoading={candidatesQuery.isLoading}
+              error={candidatesQuery.error}
+              isSaving={commitMutation.isPending}
+            />
+          </div>
+        </>
+      )}
+
+      {/* 狭い画面: インライン表示（768px未満） */}
+      {renderInlineLots && (
+        <div className="flex flex-1 flex-col">
+          <div className="h-1/3 overflow-hidden border-b">
+            <OrdersPane
+              orders={ordersQuery.data ?? []}
+              selectedOrderId={selectedOrderId}
+              onSelectOrder={handleSelectOrder}
+              isLoading={ordersQuery.isLoading}
+              error={ordersQuery.error}
+            />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <OrderLinesPane
+              orderLines={orderDetailQuery.data?.lines ?? []}
+              selectedOrderLineId={selectedOrderLineId}
+              onSelectOrderLine={handleSelectOrderLine}
+              renderInlineLots={true}
+              inlineLotContent={(line) => (
+                <LotAllocationPanel
+                  orderLine={line}
+                  candidateLots={candidateLots}
+                  lotAllocations={lotAllocations}
+                  onLotAllocationChange={handleLotAllocationChange}
+                  onAutoAllocate={handleAutoAllocate}
+                  onClearAllocations={handleClearAllocations}
+                  onSaveAllocations={handleCommitAllocation}
+                  layout="inline"
+                  isLoading={candidatesQuery.isLoading}
+                  error={candidatesQuery.error}
+                  isSaving={commitMutation.isPending}
+                />
+              )}
+              isLoading={orderDetailQuery.isLoading}
+              error={orderDetailQuery.error}
+            />
+          </div>
+        </div>
+      )}
 
       {/* トースト通知 */}
       {toast && (
