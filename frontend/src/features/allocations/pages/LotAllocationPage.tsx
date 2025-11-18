@@ -196,12 +196,15 @@ export function LotAllocationPage() {
     if (!selectedOrderLine || candidateLots.length === 0) return;
 
     const orderQty = Number(selectedOrderLine.order_quantity ?? selectedOrderLine.quantity ?? 0);
-    const allocatedQty = Number(selectedOrderLine.allocated_qty ?? 0);
-    let remaining = orderQty - allocatedQty;
+    const dbAllocatedQty = Number(selectedOrderLine.allocated_qty ?? 0);
+
+    // 残り必要数量 = 受注数量 - DB保存済み引当数量
+    let remaining = orderQty - dbAllocatedQty;
 
     const newAllocations: Record<number, number> = {};
 
-    // FEFO順（既にバックエンドから賞味期限順でソート済みと仮定）
+    // FEFO順（既にバックエンドから賞味期限順でソート済み）
+    // expiry_date NULLS FIRST でソートされている
     for (const lot of candidateLots) {
       if (remaining <= 0) break;
 
@@ -340,6 +343,7 @@ export function LotAllocationPage() {
               orderLines={orderDetailQuery.data?.lines ?? []}
               selectedOrderLineId={selectedOrderLineId}
               onSelectOrderLine={handleSelectOrderLine}
+              orderDetail={orderDetailQuery.data ?? null}
               renderInlineLots={false}
               lineStockStatus={lineStockStatus}
               isLoading={orderDetailQuery.isLoading}
@@ -385,6 +389,7 @@ export function LotAllocationPage() {
                 orderLines={orderDetailQuery.data?.lines ?? []}
                 selectedOrderLineId={selectedOrderLineId}
                 onSelectOrderLine={handleSelectOrderLine}
+                orderDetail={orderDetailQuery.data ?? null}
                 renderInlineLots={false}
                 lineStockStatus={lineStockStatus}
                 isLoading={orderDetailQuery.isLoading}
@@ -429,6 +434,7 @@ export function LotAllocationPage() {
               orderLines={orderDetailQuery.data?.lines ?? []}
               selectedOrderLineId={selectedOrderLineId}
               onSelectOrderLine={handleSelectOrderLine}
+              orderDetail={orderDetailQuery.data ?? null}
               renderInlineLots={true}
               lineStockStatus={lineStockStatus}
               inlineLotContent={(line) => (

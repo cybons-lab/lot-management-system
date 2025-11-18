@@ -182,12 +182,12 @@ export function LotAllocationPanel({
               const allocatedQty = lotAllocations[lotId] ?? 0;
               const lotLabel = lot.lot_number ?? `LOT-${lotId}`;
 
-              const deliveryCode = lot.delivery_place_code ?? null;
-              const deliveryName = lot.delivery_place_name ?? null;
-              const deliveryDisplay =
-                deliveryCode && deliveryName
-                  ? `${deliveryCode} / ${deliveryName}`
-                  : (deliveryCode ?? deliveryName ?? "-");
+              const warehouseCode = lot.warehouse_code ?? null;
+              const warehouseName = lot.warehouse_name ?? null;
+              const warehouseDisplay =
+                warehouseCode && warehouseName
+                  ? `${warehouseCode} / ${warehouseName}`
+                  : (warehouseCode ?? warehouseName ?? "-");
 
               return (
                 <div
@@ -199,8 +199,8 @@ export function LotAllocationPanel({
                       <p className="text-sm font-semibold text-gray-900">{lotLabel}</p>
                       <dl className="mt-2 space-y-1 text-xs text-gray-600">
                         <div className="flex justify-between">
-                          <dt className="text-gray-500">納品先</dt>
-                          <dd className="font-medium text-gray-700">{deliveryDisplay}</dd>
+                          <dt className="text-gray-500">倉庫</dt>
+                          <dd className="font-medium text-gray-700">{warehouseDisplay}</dd>
                         </div>
                         <div className="flex justify-between">
                           <dt className="text-gray-500">期限</dt>
