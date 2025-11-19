@@ -239,9 +239,6 @@ class Adjustment(Base):
     lot: Mapped[Lot] = relationship("Lot", back_populates="adjustments")
 
 
-
-
-
 class AllocationSuggestion(Base):
     """引当推奨（システムが提案する引当案）.
 

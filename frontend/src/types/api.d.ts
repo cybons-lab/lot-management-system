@@ -3776,9 +3776,10 @@ export interface components {
     };
     /**
      * InventoryItemResponse
-     * @description API response model for inventory items (DDL: inventory_items).
+     * @description API response model for inventory items (aggregated summary).
      *
-     *     This schema maps directly to the inventory_items table.
+     *     This schema represents a calculated summary of inventory from the lots table,
+     *     aggregated by product and warehouse. It does not map to a physical table.
      */
     InventoryItemResponse: {
       /** Inventory Item Id */
