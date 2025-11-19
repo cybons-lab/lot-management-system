@@ -7,14 +7,16 @@ Refactored: 679-line god function split into phase-specific functions.
 
 from __future__ import annotations
 
+import calendar
 import logging
 import traceback
 from collections.abc import Sequence
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from random import Random
 from typing import Any
 
+from dateutil.relativedelta import relativedelta
 from faker import Faker
 from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -330,6 +332,109 @@ def create_master_data(
     }
 
 
+def _create_daily_forecast_lines(
+    header: ForecastHeader,
+    products: list,
+    start_date: date,
+    end_date: date,
+    rng: Random,
+    now: datetime,
+) -> list[ForecastLine]:
+    """Create daily forecast lines for all products."""
+    lines = []
+    current_date = start_date
+    while current_date <= end_date:
+        for prod in products:
+            lines.append(
+                ForecastLine(
+                    forecast_id=header.id,
+                    product_id=prod.id,
+                    delivery_date=current_date,
+                    forecast_quantity=Decimal(rng.randint(10, 1000)),
+                    unit=prod.base_unit or "PCS",
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+        current_date += timedelta(days=1)
+    return lines
+
+
+def _create_dekad_forecast_lines(
+    header: ForecastHeader,
+    products: list,
+    start_date: date,
+    end_of_dekad_period: date,
+    rng: Random,
+    now: datetime,
+) -> list[ForecastLine]:
+    """Create dekad (10-day period) forecast lines for all products."""
+    lines = []
+
+    # Generate all dekads from start_date's month to end_of_dekad_period's month
+    current = start_date.replace(day=1)
+    end_month = end_of_dekad_period.replace(day=1)
+
+    while current <= end_month:
+        # Dekad 1: 1st of month
+        dekad_1 = current.replace(day=1)
+        # Dekad 2: 11th of month
+        dekad_2 = current.replace(day=11)
+        # Dekad 3: 21st of month
+        dekad_3 = current.replace(day=21)
+
+        for dekad_date in [dekad_1, dekad_2, dekad_3]:
+            # Only include if the dekad falls within the coverage period
+            if dekad_date >= start_date and dekad_date <= end_of_dekad_period:
+                for prod in products:
+                    lines.append(
+                        ForecastLine(
+                            forecast_id=header.id,
+                            product_id=prod.id,
+                            delivery_date=dekad_date,
+                            forecast_quantity=Decimal(rng.randint(10, 1000)),
+                            unit=prod.base_unit or "PCS",
+                            created_at=now,
+                            updated_at=now,
+                        )
+                    )
+
+        # Move to next month
+        current = current + relativedelta(months=1)
+
+    return lines
+
+
+def _create_monthly_forecast_lines(
+    header: ForecastHeader,
+    products: list,
+    base_date: date,
+    rng: Random,
+    now: datetime,
+) -> list[ForecastLine]:
+    """Create monthly forecast lines for all products (current month + 3 months)."""
+    lines = []
+
+    # Generate for current month through 3 months ahead (4 months total)
+    first_of_month = base_date.replace(day=1)
+    for month_offset in range(4):
+        monthly_date = first_of_month + relativedelta(months=month_offset)
+        for prod in products:
+            lines.append(
+                ForecastLine(
+                    forecast_id=header.id,
+                    product_id=prod.id,
+                    delivery_date=monthly_date,
+                    forecast_quantity=Decimal(rng.randint(10, 1000)),
+                    unit=prod.base_unit or "PCS",
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+
+    return lines
+
+
 def create_forecast_data(
     db: Session,
     params: dict,
@@ -339,7 +444,14 @@ def create_forecast_data(
     task_id: str,
 ) -> int:
     """
-    Phase 2.5: Create forecast data.
+    Phase 2.5: Create forecast data with extended date ranges.
+
+    Generates three types of forecast lines:
+    - Daily: from (today - 31 days) to (2 months later, 10th day)
+    - Dekad: from start_date to end of 2 months later
+    - Monthly: from current month to 3 months later (4 months total)
+
+    All products are included (not random sample).
 
     Args:
         db: Database session
@@ -370,16 +482,33 @@ def create_forecast_data(
 
     if generate_forecasts and all_customers and all_products and all_delivery_places:
         now = datetime.now(UTC)
-        today = now.date()
+        base_date = now.date()
+
+        # Calculate date ranges
+        # Daily: today - 31 days to 2 months later, 10th day
+        daily_start = base_date - timedelta(days=31)
+        first_of_month = base_date.replace(day=1)
+        two_months_later = first_of_month + relativedelta(months=2)
+        daily_end = date(two_months_later.year, two_months_later.month, 10)
+
+        # Dekad: start_date to end of 2 months later
+        dekad_end_month = first_of_month + relativedelta(months=2)
+        last_day = calendar.monthrange(dekad_end_month.year, dekad_end_month.month)[1]
+        dekad_end = date(dekad_end_month.year, dekad_end_month.month, last_day)
+
+        tracker.add_log(
+            task_id,
+            f"→ Date ranges: daily={daily_start} to {daily_end}, "
+            f"dekad={daily_start} to {dekad_end}, monthly={first_of_month} to +3 months",
+        )
+
         existing_numbers = {
             number for (number,) in db.execute(select(ForecastHeader.forecast_number)).all()
         }
 
         forecast_headers: list[ForecastHeader] = []
         for delivery_place in all_delivery_places:
-            start_date = today - timedelta(days=7)
-            end_date = today + timedelta(days=7)
-            base_number = f"SEED-{delivery_place.delivery_place_code}-{start_date:%Y%m%d}"
+            base_number = f"SEED-{delivery_place.delivery_place_code}-{daily_start:%Y%m%d}"
             forecast_number = base_number
             suffix = 1
             while forecast_number in existing_numbers:
@@ -391,8 +520,8 @@ def create_forecast_data(
                 customer_id=delivery_place.customer_id,
                 delivery_place_id=delivery_place.id,
                 forecast_number=forecast_number,
-                forecast_start_date=start_date,
-                forecast_end_date=end_date,
+                forecast_start_date=daily_start,
+                forecast_end_date=daily_end,
                 status="active",
                 created_at=now,
                 updated_at=now,
@@ -402,35 +531,42 @@ def create_forecast_data(
 
         db.flush()
 
+        # Generate forecast lines for all products (not random sample)
         forecast_lines: list[ForecastLine] = []
         for header in forecast_headers:
-            if len(all_products) <= 5:
-                products_for_header = all_products
-            else:
-                products_for_header = rng.sample(all_products, 5)
+            products_for_header = list(all_products)  # All products
 
-            days = (header.forecast_end_date - header.forecast_start_date).days + 1
-            for prod in products_for_header:
-                for day_offset in range(days):
-                    delivery_date = header.forecast_start_date + timedelta(days=day_offset)
-                    forecast_lines.append(
-                        ForecastLine(
-                            forecast_id=header.id,
-                            product_id=prod.id,
-                            delivery_date=delivery_date,
-                            forecast_quantity=Decimal(rng.randint(10, 1000)),
-                            unit=prod.base_unit or "PCS",
-                            created_at=now,
-                            updated_at=now,
-                        )
-                    )
+            # Daily lines
+            daily_lines = _create_daily_forecast_lines(
+                header, products_for_header, daily_start, daily_end, rng, now
+            )
+            forecast_lines.extend(daily_lines)
+
+            # Dekad lines
+            dekad_lines = _create_dekad_forecast_lines(
+                header, products_for_header, daily_start, dekad_end, rng, now
+            )
+            forecast_lines.extend(dekad_lines)
+
+            # Monthly lines
+            monthly_lines = _create_monthly_forecast_lines(
+                header, products_for_header, base_date, rng, now
+            )
+            forecast_lines.extend(monthly_lines)
 
         if forecast_lines:
             tracker.add_log(task_id, f"→ Inserting {len(forecast_lines)} forecast lines...")
             db.bulk_save_objects(forecast_lines)
             db.flush()
             forecast_count = len(forecast_lines)
-            tracker.add_log(task_id, f"✓ Created {forecast_count} forecast line entries")
+
+            # Calculate breakdown
+            daily_count = len(all_products) * len(all_delivery_places) * ((daily_end - daily_start).days + 1)
+            tracker.add_log(
+                task_id,
+                f"✓ Created {forecast_count} forecast line entries "
+                f"(headers={len(forecast_headers)}, products={len(all_products)})",
+            )
         else:
             tracker.add_log(task_id, "→ No forecast lines generated for headers")
     else:

@@ -102,19 +102,10 @@ def main():
         payload=product_payload,
     )
 
-    # 4. Forecast一括登録
-    forecast_payload = load_json("forecast_daily_PRD999_v1.json")
-    run_test(
-        "4. [テスト1] Forecastの一括登録 (PRD-999)",
-        "POST",
-        "/forecast/bulk",
-        payload=forecast_payload,
-    )
-
-    # 5. 受注作成、6.詳細、7.再マッチング
+    # 4. 受注作成、5.詳細、6.再マッチング
     order_payload = load_json("order_create_PRD999.json")
     created = run_test(
-        "5. [テスト2] 受注作成（自動マッチング） (PRD-999)",
+        "4. [テスト1] 受注作成（自動マッチング） (PRD-999)",
         "POST",
         "/orders",
         payload=order_payload,
@@ -122,12 +113,12 @@ def main():
     if created and isinstance(created, dict) and "id" in created:
         oid = created["id"]
         print_success(f"作成された受注 ID: {oid} を取得しました。")
-        run_test(f"6. [テスト3] 受注詳細確認 (ID: {oid})", "GET", f"/orders/{oid}")
+        run_test(f"5. [テスト2] 受注詳細確認 (ID: {oid})", "GET", f"/orders/{oid}")
         run_test(
-            f"7. [テスト4] 再マッチング (ID: {oid})", "POST", f"/orders/{oid}/re-match"
+            f"6. [テスト3] 再マッチング (ID: {oid})", "POST", f"/orders/{oid}/re-match"
         )
     else:
-        print_error("テスト2失敗のため、テスト3・4はスキップ。")
+        print_error("テスト1失敗のため、テスト2・3はスキップ。")
 
     print_header("全テスト完了")
 
