@@ -16,10 +16,13 @@ import { useMemo } from "react";
 
 import type { ForecastHeaderWithLines } from "../api";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface ForecastDetailCardProps {
   forecast: ForecastHeaderWithLines;
+  onDelete?: (id: number) => void;
+  isDeleting?: boolean;
 }
 
 interface ProductForecastData {
@@ -143,7 +146,7 @@ function calculateMonthlyAggregation(
   };
 }
 
-export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
+export function ForecastDetailCard({ forecast, onDelete, isDeleting }: ForecastDetailCardProps) {
   const productData = useMemo(() => {
     const productMap = new Map<number, ProductForecastData>();
 
@@ -220,6 +223,16 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
   const customerDisplay = forecast.customer_name ?? `得意先ID:${forecast.customer_id}`;
   const deliveryPlaceDisplay =
     forecast.delivery_place_name ?? `納入先ID:${forecast.delivery_place_id}`;
+  const status = forecast.status ?? "unknown";
+
+  const statusClass =
+    status === "active"
+      ? "bg-green-100 text-green-800"
+      : status === "completed"
+        ? "bg-blue-100 text-blue-800"
+        : status === "cancelled"
+          ? "bg-red-100 text-red-700"
+          : "bg-gray-100 text-gray-700";
 
   return (
     <div className="space-y-6">
@@ -228,30 +241,51 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
         const monthlyData = calculateMonthlyAggregation(product, monthlyMonth);
 
         return (
-          <Card key={`${forecast.forecast_id}-${product.productId}`} className="shadow-sm">
-            <CardContent className="space-y-5 p-4">
-              <div className="grid gap-4 text-sm text-gray-700 sm:grid-cols-3">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">得意先</p>
-                  <p className="font-medium text-gray-900">{customerDisplay}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">納入先</p>
-                  <p className="font-medium text-gray-900">{deliveryPlaceDisplay}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">製品</p>
-                  <p className="font-semibold text-gray-900">{product.productName}</p>
-                  <p className="text-xs text-gray-500">
-                    {product.productCode} / 単位: {product.unit}
-                  </p>
+          <Card
+            key={`${forecast.forecast_id}-${product.productId}`}
+            className="shadow-sm"
+            data-forecast-number={forecast.forecast_number}
+          >
+            <CardContent className="space-y-4 p-4">
+              <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                <p className="line-clamp-2 text-sm leading-relaxed text-gray-600">
+                  <span className="font-medium text-gray-700">{customerDisplay}</span>
+                  <span className="mx-1 text-gray-400">/</span>
+                  <span className="font-semibold text-gray-900">
+                    {product.productName}
+                    {product.productCode ? (
+                      <span className="font-semibold text-gray-700"> ({product.productCode})</span>
+                    ) : null}
+                  </span>
+                  <span className="mx-1 text-gray-400">/</span>
+                  <span className="font-medium text-gray-700">{deliveryPlaceDisplay}</span>
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 ${statusClass}`}>
+                    {status}
+                  </span>
+                  <span className="text-gray-500">{targetMonthLabel}</span>
+                  {onDelete ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-2 text-xs"
+                      onClick={() => onDelete(forecast.forecast_id)}
+                      disabled={isDeleting}
+                    >
+                      削除
+                    </Button>
+                  ) : null}
                 </div>
               </div>
 
-              <div>
-                <div className="mb-2 flex items-center justify-between text-sm font-semibold text-gray-700">
+              <div className="text-xs text-gray-500">単位: {product.unit}</div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
                   <span>日次予測</span>
-                  <span className="text-xs font-medium text-gray-500">{targetMonthLabel}</span>
+                  <span>{targetMonthLabel}</span>
                 </div>
                 <div className="grid grid-cols-10 gap-1">
                   {dates.map((date) => {

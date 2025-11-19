@@ -36,7 +36,7 @@ export function ForecastListPage() {
   const deleteMutation = useDeleteForecastHeader();
 
   const handleDelete = async (id: number) => {
-    if (!confirm("このフォーキャストヘッダを削除しますか？")) return;
+    if (!confirm("このフォーキャストを削除しますか？")) return;
 
     try {
       await deleteMutation.mutateAsync(id);
@@ -114,11 +114,11 @@ export function ForecastListPage() {
         </div>
       ) : !headers || headers.length === 0 ? (
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
-          フォーキャストヘッダが登録されていません
+          フォーキャストが登録されていません
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="text-sm text-gray-600">{headers.length} 件のヘッダが見つかりました</div>
+          <div className="text-sm text-gray-600">{headers.length} 件のフォーキャストが見つかりました</div>
 
           {/* Collapsible Cards */}
           <div className="space-y-3">
