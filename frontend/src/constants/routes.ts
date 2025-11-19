@@ -63,11 +63,11 @@ export const ROUTES = {
 
   // Masters
   MASTERS: {
-    WAREHOUSES: "/masters/warehouses",
-    SUPPLIERS: "/masters/suppliers",
-    CUSTOMERS: "/masters/customers",
-    PRODUCTS: "/masters/products",
-    CUSTOMER_ITEMS: "/masters/customer-items",
+    WAREHOUSES: "/warehouses",
+    SUPPLIERS: "/suppliers",
+    CUSTOMERS: "/customers",
+    PRODUCTS: "/products",
+    CUSTOMER_ITEMS: "/customer-items",
     BULK_LOAD: "/masters/bulk-load",
   },
 

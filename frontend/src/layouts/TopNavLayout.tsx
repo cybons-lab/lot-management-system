@@ -80,7 +80,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "マスタ",
-    href: "/masters/customer-items",
+    href: "/customer-items",
     icon: Database,
     color: "text-gray-600",
     activeColor: "text-teal-600 bg-teal-50",
