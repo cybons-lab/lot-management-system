@@ -20,7 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "sonner";
 
 import { cn } from "@/shared/libs/utils";
 
