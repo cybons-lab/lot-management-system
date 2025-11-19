@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { ForecastListCard } from "../components";
 import { useForecastHeaders, useDeleteForecastHeader } from "../hooks";
 
 import { Button } from "@/components/ui/button";
@@ -46,9 +47,8 @@ export function ForecastListPage() {
     }
   };
 
-  const handleViewDetail = (id: number) => {
-    navigate(ROUTES.FORECASTS.DETAIL(id));
-  };
+  // Keep for potential future use
+  void navigate;
 
   return (
     <div className="space-y-6 p-6">
@@ -120,76 +120,16 @@ export function ForecastListPage() {
         <div className="space-y-4">
           <div className="text-sm text-gray-600">{headers.length} 件のヘッダが見つかりました</div>
 
-          {/* Table */}
-          <div className="overflow-x-auto rounded-lg border bg-white">
-            <table className="w-full">
-              <thead className="border-b bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    フォーキャスト番号
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">得意先</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    納入場所
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ステータス
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">作成日</th>
-                  <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">
-                    アクション
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {headers.map((header) => (
-                  <tr key={header.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{header.forecast_number}</td>
-                    <td className="px-4 py-3 text-sm">
-                      {header.customer_name || `ID: ${header.customer_id}`}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {header.delivery_place_name || `ID: ${header.delivery_place_id}`}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          header.status === "active"
-                            ? "bg-green-100 text-green-800"
-                            : header.status === "completed"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
-                        }`}
-                      >
-                        {header.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(header.created_at).toLocaleDateString("ja-JP")}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewDetail(header.id)}
-                        >
-                          詳細
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(header.id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          削除
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Collapsible Cards */}
+          <div className="space-y-3">
+            {headers.map((header) => (
+              <ForecastListCard
+                key={header.id}
+                header={header}
+                onDelete={handleDelete}
+                isDeleting={deleteMutation.isPending}
+              />
+            ))}
           </div>
         </div>
       )}
