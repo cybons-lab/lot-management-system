@@ -20,6 +20,7 @@ import {
   Users,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner"
 
 import { cn } from "@/shared/libs/utils";
 
@@ -180,6 +181,7 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
 
       {/* メインコンテンツ */}
       <main className="mx-auto max-w-[1920px]">{children}</main>
+      <Toaster richColors position="top-right" />
     </div>
   );
 }
