@@ -560,8 +560,6 @@ def create_forecast_data(
             db.flush()
             forecast_count = len(forecast_lines)
 
-            # Calculate breakdown
-            daily_count = len(all_products) * len(all_delivery_places) * ((daily_end - daily_start).days + 1)
             tracker.add_log(
                 task_id,
                 f"✓ Created {forecast_count} forecast line entries "

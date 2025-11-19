@@ -8,7 +8,7 @@ Refactored: 441-line god function split into entity-specific seed functions.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from random import Random
 
 from faker import Faker

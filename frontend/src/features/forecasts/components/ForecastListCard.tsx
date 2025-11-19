@@ -24,7 +24,7 @@ export function ForecastListCard({ header, onDelete, isDeleting }: ForecastListC
 
   // Fetch full header with lines only when expanded
   const { data: fullForecast, isLoading: isLoadingDetail } = useForecastHeader(
-    isExpanded ? header.forecast_id : 0
+    isExpanded ? header.forecast_id : 0,
   );
 
   return (
@@ -39,12 +39,7 @@ export function ForecastListCard({ header, onDelete, isDeleting }: ForecastListC
             {/* Expand/Collapse Icon */}
             <div className="text-gray-400">
               {isExpanded ? (
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -53,12 +48,7 @@ export function ForecastListCard({ header, onDelete, isDeleting }: ForecastListC
                   />
                 </svg>
               ) : (
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"

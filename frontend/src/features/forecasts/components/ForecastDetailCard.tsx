@@ -131,7 +131,7 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
 
   // Selected product
   const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    productData[0]?.productId ?? null
+    productData[0]?.productId ?? null,
   );
 
   const selectedProduct = productData.find((p) => p.productId === selectedProductId);
@@ -225,9 +225,7 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
   if (productData.length === 0) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-gray-500">
-          明細データがありません
-        </CardContent>
+        <CardContent className="py-8 text-center text-gray-500">明細データがありません</CardContent>
       </Card>
     );
   }
@@ -358,9 +356,7 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
                   <div className="mt-1 text-xl font-bold text-green-900">{dekad.total}</div>
                 </div>
               ))}
-              {dekadData.length === 0 && (
-                <div className="text-sm text-gray-400">データなし</div>
-              )}
+              {dekadData.length === 0 && <div className="text-sm text-gray-400">データなし</div>}
             </div>
           </div>
 
