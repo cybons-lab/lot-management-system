@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.forecast_models import ForecastLine
+from app.models.forecast_models import ForecastCurrent
 from app.models.inventory_models import AllocationSuggestion, Lot
 from app.schemas.allocations.allocation_suggestions_schema import AllocationSuggestionCreate
 
@@ -30,7 +30,7 @@ class AllocationSuggestionService:
             tuple: (list of suggestions, total count)
         """
         query = self.db.query(AllocationSuggestion).options(
-            joinedload(AllocationSuggestion.lot), joinedload(AllocationSuggestion.forecast_line)
+            joinedload(AllocationSuggestion.lot), joinedload(AllocationSuggestion.forecast)
         )
 
         # Apply filters
@@ -55,9 +55,9 @@ class AllocationSuggestionService:
         return (
             self.db.query(AllocationSuggestion)
             .options(
-                joinedload(AllocationSuggestion.lot), joinedload(AllocationSuggestion.forecast_line)
+                joinedload(AllocationSuggestion.lot), joinedload(AllocationSuggestion.forecast)
             )
-            .filter(AllocationSuggestion.suggestion_id == suggestion_id)
+            .filter(AllocationSuggestion.id == suggestion_id)
             .first()
         )
 
@@ -127,17 +127,17 @@ class AllocationSuggestionService:
         Returns:
             List of created allocation suggestions
         """
-        # Get forecast line
-        forecast_line = (
-            self.db.query(ForecastLine)
-            .filter(ForecastLine.forecast_line_id == forecast_line_id)
+        # Get forecast entry
+        forecast = (
+            self.db.query(ForecastCurrent)
+            .filter(ForecastCurrent.id == forecast_line_id)
             .first()
         )
 
-        if not forecast_line:
+        if not forecast:
             return []
 
-        # Delete existing suggestions for this forecast line
+        # Delete existing suggestions for this forecast
         self.delete_by_forecast_line(forecast_line_id)
 
         # Get candidate lots (FEFO logic: earliest expiry first)
@@ -146,7 +146,7 @@ class AllocationSuggestionService:
         candidate_lots = (
             self.db.query(Lot)
             .filter(
-                Lot.product_id == forecast_line.product_id,
+                Lot.product_id == forecast.product_id,
                 Lot.status == "active",
                 Lot.current_quantity > Lot.allocated_quantity,
             )
@@ -157,7 +157,7 @@ class AllocationSuggestionService:
 
         # Generate suggestions
         suggestions = []
-        remaining_quantity = forecast_line.forecast_quantity
+        remaining_quantity = forecast.forecast_quantity
 
         for lot in candidate_lots:
             if remaining_quantity <= 0:

@@ -7,7 +7,6 @@ Refactored: 679-line god function split into phase-specific functions.
 
 from __future__ import annotations
 
-import calendar
 import logging
 import traceback
 from collections.abc import Sequence
@@ -24,7 +23,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.database import truncate_all_tables
-from app.models.forecast_models import ForecastHeader, ForecastLine
+from app.models.forecast_models import ForecastCurrent
 from app.models.inventory_models import Lot, StockMovement, StockTransactionType
 from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 from app.models.orders_models import Allocation, Order, OrderLine
@@ -332,107 +331,35 @@ def create_master_data(
     }
 
 
-def _create_daily_forecast_lines(
-    header: ForecastHeader,
+def _create_daily_forecasts(
+    customer_id: int,
+    delivery_place_id: int,
     products: list,
     start_date: date,
     end_date: date,
     rng: Random,
     now: datetime,
-) -> list[ForecastLine]:
-    """Create daily forecast lines for all products."""
-    lines = []
+) -> list[ForecastCurrent]:
+    """Create daily forecast entries for all products."""
+    entries = []
     current_date = start_date
     while current_date <= end_date:
         for prod in products:
-            lines.append(
-                ForecastLine(
-                    forecast_id=header.id,
+            entries.append(
+                ForecastCurrent(
+                    customer_id=customer_id,
+                    delivery_place_id=delivery_place_id,
                     product_id=prod.id,
-                    delivery_date=current_date,
+                    forecast_date=current_date,
                     forecast_quantity=Decimal(rng.randint(10, 1000)),
                     unit=prod.base_unit or "PCS",
+                    snapshot_at=now,
                     created_at=now,
                     updated_at=now,
                 )
             )
         current_date += timedelta(days=1)
-    return lines
-
-
-def _create_dekad_forecast_lines(
-    header: ForecastHeader,
-    products: list,
-    start_date: date,
-    end_of_dekad_period: date,
-    rng: Random,
-    now: datetime,
-) -> list[ForecastLine]:
-    """Create dekad (10-day period) forecast lines for all products."""
-    lines = []
-
-    # Generate all dekads from start_date's month to end_of_dekad_period's month
-    current = start_date.replace(day=1)
-    end_month = end_of_dekad_period.replace(day=1)
-
-    while current <= end_month:
-        # Dekad 1: 1st of month
-        dekad_1 = current.replace(day=1)
-        # Dekad 2: 11th of month
-        dekad_2 = current.replace(day=11)
-        # Dekad 3: 21st of month
-        dekad_3 = current.replace(day=21)
-
-        for dekad_date in [dekad_1, dekad_2, dekad_3]:
-            # Only include if the dekad falls within the coverage period
-            if dekad_date >= start_date and dekad_date <= end_of_dekad_period:
-                for prod in products:
-                    lines.append(
-                        ForecastLine(
-                            forecast_id=header.id,
-                            product_id=prod.id,
-                            delivery_date=dekad_date,
-                            forecast_quantity=Decimal(rng.randint(10, 1000)),
-                            unit=prod.base_unit or "PCS",
-                            created_at=now,
-                            updated_at=now,
-                        )
-                    )
-
-        # Move to next month
-        current = current + relativedelta(months=1)
-
-    return lines
-
-
-def _create_monthly_forecast_lines(
-    header: ForecastHeader,
-    products: list,
-    base_date: date,
-    rng: Random,
-    now: datetime,
-) -> list[ForecastLine]:
-    """Create monthly forecast lines for all products (current month + 3 months)."""
-    lines = []
-
-    # Generate for current month through 3 months ahead (4 months total)
-    first_of_month = base_date.replace(day=1)
-    for month_offset in range(4):
-        monthly_date = first_of_month + relativedelta(months=month_offset)
-        for prod in products:
-            lines.append(
-                ForecastLine(
-                    forecast_id=header.id,
-                    product_id=prod.id,
-                    delivery_date=monthly_date,
-                    forecast_quantity=Decimal(rng.randint(10, 1000)),
-                    unit=prod.base_unit or "PCS",
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
-
-    return lines
+    return entries
 
 
 def create_forecast_data(
@@ -444,14 +371,10 @@ def create_forecast_data(
     task_id: str,
 ) -> int:
     """
-    Phase 2.5: Create forecast data with extended date ranges.
+    Phase 2.5: Create forecast data with v2.4 schema.
 
-    Generates three types of forecast lines:
-    - Daily: from (today - 31 days) to (2 months later, 10th day)
-    - Dekad: from start_date to end of 2 months later
-    - Monthly: from current month to 3 months later (4 months total)
-
-    All products are included (not random sample).
+    Creates ForecastCurrent entries for each customer × delivery_place × product × date.
+    Generates daily forecasts from (today - 31 days) to (2 months later, 10th day).
 
     Args:
         db: Database session
@@ -462,12 +385,11 @@ def create_forecast_data(
         task_id: Task ID
 
     Returns:
-        Number of forecast lines created
+        Number of forecast entries created
     """
-    tracker.add_log(task_id, "Phase 2.5: Creating forecast data")
+    tracker.add_log(task_id, "Phase 2.5: Creating forecast data (v2.4 schema)")
     tracker.update_progress(task_id, JobPhase.MASTERS, 25)
 
-    all_customers = masters["customers"]
     all_products = masters["products"]
     all_delivery_places = masters["delivery_places"]
 
@@ -477,10 +399,11 @@ def create_forecast_data(
     tracker.add_log(
         task_id,
         f"→ Forecast check: params.forecasts={params.get('forecasts', 0)}, "
-        f"generate={generate_forecasts}, customers={len(all_customers)}, products={len(all_products)}",
+        f"generate={generate_forecasts}, delivery_places={len(all_delivery_places)}, "
+        f"products={len(all_products)}",
     )
 
-    if generate_forecasts and all_customers and all_products and all_delivery_places:
+    if generate_forecasts and all_products and all_delivery_places:
         now = datetime.now(UTC)
         base_date = now.date()
 
@@ -491,88 +414,42 @@ def create_forecast_data(
         two_months_later = first_of_month + relativedelta(months=2)
         daily_end = date(two_months_later.year, two_months_later.month, 10)
 
-        # Dekad: start_date to end of 2 months later
-        dekad_end_month = first_of_month + relativedelta(months=2)
-        last_day = calendar.monthrange(dekad_end_month.year, dekad_end_month.month)[1]
-        dekad_end = date(dekad_end_month.year, dekad_end_month.month, last_day)
-
         tracker.add_log(
             task_id,
-            f"→ Date ranges: daily={daily_start} to {daily_end}, "
-            f"dekad={daily_start} to {dekad_end}, monthly={first_of_month} to +3 months",
+            f"→ Date range: {daily_start} to {daily_end}",
         )
 
-        existing_numbers = {
-            number for (number,) in db.execute(select(ForecastHeader.forecast_number)).all()
-        }
-
-        forecast_headers: list[ForecastHeader] = []
+        # Generate forecast entries for each delivery_place × product × date
+        forecast_entries: list[ForecastCurrent] = []
         for delivery_place in all_delivery_places:
-            base_number = f"SEED-{delivery_place.delivery_place_code}-{daily_start:%Y%m%d}"
-            forecast_number = base_number
-            suffix = 1
-            while forecast_number in existing_numbers:
-                forecast_number = f"{base_number}-{suffix}"
-                suffix += 1
-            existing_numbers.add(forecast_number)
-
-            header = ForecastHeader(
+            daily_entries = _create_daily_forecasts(
                 customer_id=delivery_place.customer_id,
                 delivery_place_id=delivery_place.id,
-                forecast_number=forecast_number,
-                forecast_start_date=daily_start,
-                forecast_end_date=daily_end,
-                status="active",
-                created_at=now,
-                updated_at=now,
+                products=all_products,
+                start_date=daily_start,
+                end_date=daily_end,
+                rng=rng,
+                now=now,
             )
-            db.add(header)
-            forecast_headers.append(header)
+            forecast_entries.extend(daily_entries)
 
-        db.flush()
-
-        # Generate forecast lines for all products (not random sample)
-        forecast_lines: list[ForecastLine] = []
-        for header in forecast_headers:
-            products_for_header = list(all_products)  # All products
-
-            # Daily lines
-            daily_lines = _create_daily_forecast_lines(
-                header, products_for_header, daily_start, daily_end, rng, now
-            )
-            forecast_lines.extend(daily_lines)
-
-            # Dekad lines
-            dekad_lines = _create_dekad_forecast_lines(
-                header, products_for_header, daily_start, dekad_end, rng, now
-            )
-            forecast_lines.extend(dekad_lines)
-
-            # Monthly lines
-            monthly_lines = _create_monthly_forecast_lines(
-                header, products_for_header, base_date, rng, now
-            )
-            forecast_lines.extend(monthly_lines)
-
-        if forecast_lines:
-            tracker.add_log(task_id, f"→ Inserting {len(forecast_lines)} forecast lines...")
-            db.bulk_save_objects(forecast_lines)
+        if forecast_entries:
+            tracker.add_log(task_id, f"→ Inserting {len(forecast_entries)} forecast entries...")
+            db.bulk_save_objects(forecast_entries)
             db.flush()
-            forecast_count = len(forecast_lines)
+            forecast_count = len(forecast_entries)
 
             tracker.add_log(
                 task_id,
-                f"✓ Created {forecast_count} forecast line entries "
-                f"(headers={len(forecast_headers)}, products={len(all_products)})",
+                f"✓ Created {forecast_count} forecast entries "
+                f"(delivery_places={len(all_delivery_places)}, products={len(all_products)})",
             )
         else:
-            tracker.add_log(task_id, "→ No forecast lines generated for headers")
+            tracker.add_log(task_id, "→ No forecast entries generated")
     else:
         reasons = []
         if not generate_forecasts:
             reasons.append(f"forecasts={params.get('forecasts', 0)}")
-        if not all_customers:
-            reasons.append("no customers")
         if not all_products:
             reasons.append("no products")
         if not all_delivery_places:
@@ -1191,7 +1068,7 @@ def run_seed_simulation(
 
         # 集計
         total_warehouses = db.scalar(select(func.count()).select_from(Warehouse)) or 0
-        total_forecasts = db.scalar(select(func.count()).select_from(ForecastHeader)) or 0
+        total_forecasts = db.scalar(select(func.count()).select_from(ForecastCurrent)) or 0
         total_orders = db.scalar(select(func.count()).select_from(Order)) or 0
         total_order_lines = db.scalar(select(func.count()).select_from(OrderLine)) or 0
         total_lots = db.scalar(select(func.count()).select_from(Lot)) or 0
