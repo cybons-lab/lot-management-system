@@ -8,7 +8,7 @@ Refactored: 441-line god function split into entity-specific seed functions.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from random import Random
 
 from faker import Faker
@@ -16,7 +16,6 @@ from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
-from app.models.forecast_models import Forecast
 from app.models.inventory_models import Lot, StockMovement
 from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 from app.models.orders_models import Allocation, Order, OrderLine
@@ -262,142 +261,6 @@ def seed_products(
         db.flush()
 
     return [Product(**row) for row in product_rows]
-
-
-def seed_forecasts(
-    db: Session,
-    req: SeedRequest,
-    rng: Random,
-    created_customers: list[Customer],
-    created_products: list[Product],
-) -> list[Forecast]:
-    """
-    Create forecast data.
-
-    Args:
-        db: Database session
-        req: Seed request
-        rng: Random generator
-        created_customers: Previously created customers
-        created_products: Previously created products
-
-    Returns:
-        List of created forecasts
-    """
-    if req.forecasts <= 0:
-        return []
-
-    # Get existing customers and products
-    existing_customers = []
-    existing_products = []
-    if not req.dry_run:
-        existing_customers = db.execute(select(Customer)).scalars().all()
-        existing_products = db.execute(select(Product)).scalars().all()
-    elif created_customers and created_products:
-        existing_customers = created_customers
-        existing_products = created_products
-
-    if not existing_customers or not existing_products:
-        return []
-
-    existing_forecast_ids = (
-        {fid for (fid,) in db.execute(select(Forecast.forecast_id)).all()}
-        if not req.dry_run
-        else set()
-    )
-
-    forecast_rows = []
-    now = datetime.now(UTC)
-    today = now.date()
-
-    # Generate forecasts for each customer × product pair
-    for cust in existing_customers:
-        for prod in existing_products:
-            # Daily: today ± 7 days
-            for day_offset in range(-7, 8):
-                target_date = today + timedelta(days=day_offset)
-                forecast_id = f"seed-{cust.id if not req.dry_run else 'C'}-{prod.id if not req.dry_run else 'P'}-daily-{target_date}"
-                if forecast_id in existing_forecast_ids:
-                    continue
-                forecast_rows.append(
-                    {
-                        "forecast_id": forecast_id,
-                        "granularity": "daily",
-                        "date_day": target_date,
-                        "date_dekad_start": None,
-                        "year_month": None,
-                        "qty_forecast": rng.randint(10, 1000),
-                        "version_no": 1,
-                        "version_issued_at": now,
-                        "source_system": "seed",
-                        "is_active": True,
-                        "product_id": prod.id if not req.dry_run else None,
-                        "customer_id": cust.id if not req.dry_run else None,
-                        "created_at": now,
-                        "updated_at": now,
-                    }
-                )
-                existing_forecast_ids.add(forecast_id)
-
-            # Dekad: 3 periods per month (1st, 11th, 21st)
-            for dekad_start_day in [1, 11, 21]:
-                dekad_start = today.replace(day=dekad_start_day)
-                forecast_id = f"seed-{cust.id if not req.dry_run else 'C'}-{prod.id if not req.dry_run else 'P'}-dekad-{dekad_start}"
-                if forecast_id in existing_forecast_ids:
-                    continue
-                forecast_rows.append(
-                    {
-                        "forecast_id": forecast_id,
-                        "granularity": "dekad",
-                        "date_day": None,
-                        "date_dekad_start": dekad_start,
-                        "year_month": None,
-                        "qty_forecast": rng.randint(10, 1000),
-                        "version_no": 1,
-                        "version_issued_at": now,
-                        "source_system": "seed",
-                        "is_active": True,
-                        "product_id": prod.id if not req.dry_run else None,
-                        "customer_id": cust.id if not req.dry_run else None,
-                        "created_at": now,
-                        "updated_at": now,
-                    }
-                )
-                existing_forecast_ids.add(forecast_id)
-
-            # Monthly: current month + 2 months
-            for month_offset in range(0, 3):
-                target_month_date = today.replace(day=1) + timedelta(days=31 * month_offset)
-                year_month = target_month_date.strftime("%Y-%m")
-                forecast_id = f"seed-{cust.id if not req.dry_run else 'C'}-{prod.id if not req.dry_run else 'P'}-monthly-{year_month}"
-                if forecast_id in existing_forecast_ids:
-                    continue
-                forecast_rows.append(
-                    {
-                        "forecast_id": forecast_id,
-                        "granularity": "monthly",
-                        "date_day": None,
-                        "date_dekad_start": None,
-                        "year_month": year_month,
-                        "qty_forecast": rng.randint(10, 1000),
-                        "version_no": 1,
-                        "version_issued_at": now,
-                        "source_system": "seed",
-                        "is_active": True,
-                        "product_id": prod.id if not req.dry_run else None,
-                        "customer_id": cust.id if not req.dry_run else None,
-                        "created_at": now,
-                        "updated_at": now,
-                    }
-                )
-                existing_forecast_ids.add(forecast_id)
-
-    # Bulk insert
-    if forecast_rows and not req.dry_run:
-        db.bulk_insert_mappings(Forecast, forecast_rows)
-        db.flush()
-
-    return [Forecast(**row) for row in forecast_rows]
 
 
 def seed_warehouses(db: Session, req: SeedRequest, faker: Faker, rng: Random) -> list[Warehouse]:
@@ -713,7 +576,6 @@ def collect_actual_counts(db: Session, req: SeedRequest) -> ActualCounts | None:
         suppliers=db.scalar(select(func.count()).select_from(Supplier)) or 0,
         delivery_places=db.scalar(select(func.count()).select_from(DeliveryPlace)) or 0,
         products=db.scalar(select(func.count()).select_from(Product)) or 0,
-        forecasts=db.scalar(select(func.count()).select_from(Forecast)) or 0,
         warehouses=db.scalar(select(func.count()).select_from(Warehouse)) or 0,
         lots=db.scalar(select(func.count()).select_from(Lot)) or 0,
         stock_movements=db.scalar(select(func.count()).select_from(StockMovement)) or 0,
@@ -730,7 +592,6 @@ def build_seed_response(
     created_suppliers: list[Supplier],
     created_delivery_places: list[DeliveryPlace],
     created_products: list[Product],
-    created_forecasts: list[Forecast],
     created_warehouses: list[Warehouse],
     created_lots: list[Lot],
     created_orders: list[Order],
@@ -748,7 +609,6 @@ def build_seed_response(
         created_suppliers: Created suppliers
         created_delivery_places: Created delivery places
         created_products: Created products
-        created_forecasts: Created forecasts
         created_warehouses: Created warehouses
         created_lots: Created lots
         created_orders: Created orders
@@ -767,7 +627,6 @@ def build_seed_response(
             suppliers=len(created_suppliers),
             delivery_places=len(created_delivery_places),
             products=len(created_products),
-            forecasts=len(created_forecasts),
             warehouses=len(created_warehouses),
             lots=len(created_lots),
             orders=len(created_orders),
@@ -792,13 +651,15 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
     Processing flow:
     1. Initialize generators (Faker, Random)
     2. Seed master data (customers, suppliers, delivery_places, products, warehouses)
-    3. Seed forecasts
-    4. Load all masters for subsequent operations
-    5. Seed lots with inbound movements
-    6. Seed orders with lines
-    7. Seed allocations with outbound movements
-    8. Collect actual counts
-    9. Build response
+    3. Load all masters for subsequent operations
+    4. Seed lots with inbound movements
+    5. Seed orders with lines
+    6. Seed allocations with outbound movements
+    7. Collect actual counts
+    8. Build response
+
+    Note: Forecast generation has been removed from this service.
+    Use seed_simulate_service.py for forecast data generation.
 
     Args:
         db: Database session
@@ -815,7 +676,6 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
     created_suppliers = seed_suppliers(db, req, faker, rng)
     created_delivery_places = seed_delivery_places(db, req, faker, rng)
     created_products = seed_products(db, req, faker, rng, created_delivery_places)
-    created_forecasts = seed_forecasts(db, req, rng, created_customers, created_products)
     created_warehouses = seed_warehouses(db, req, faker, rng)
 
     # 3. Load all masters
@@ -845,7 +705,7 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
     # 8. Collect actual counts
     actual_counts = collect_actual_counts(db, req)
 
-    # 9. Build response
+    # 8. Build response
     return build_seed_response(
         req,
         seed,
@@ -853,7 +713,6 @@ def create_seed_data(db: Session, req: SeedRequest) -> SeedResponse:
         created_suppliers,
         created_delivery_places,
         created_products,
-        created_forecasts,
         created_warehouses,
         created_lots,
         created_orders,

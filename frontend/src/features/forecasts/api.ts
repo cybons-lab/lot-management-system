@@ -9,12 +9,15 @@ import { fetchApi } from "@/shared/libs/http";
 
 /**
  * Forecast Header
+ * Note: Backend uses serialization_alias, so id becomes forecast_id
  */
 export interface ForecastHeader {
-  id: number;
+  forecast_id: number;
   forecast_number: string;
   customer_id: number;
   delivery_place_id: number;
+  forecast_start_date: string;
+  forecast_end_date: string;
   status: "active" | "completed" | "cancelled";
   notes?: string;
   created_at: string;
@@ -26,17 +29,17 @@ export interface ForecastHeader {
 
 /**
  * Forecast Line
+ * Note: Backend uses serialization_alias:
+ * - id -> forecast_line_id
+ * - forecast_quantity -> quantity
  */
 export interface ForecastLine {
-  id: number;
-  forecast_header_id: number;
-  line_number: number;
+  forecast_line_id: number;
+  forecast_id: number;
   product_id: number;
+  delivery_date: string;
   quantity: number;
-  forecast_date: string;
-  granularity: "daily" | "dekad" | "monthly";
-  version_no?: number;
-  notes?: string;
+  unit: string;
   created_at: string;
   updated_at: string;
   // Joined data (optional)
@@ -58,6 +61,8 @@ export interface CreateForecastHeaderRequest {
   forecast_number: string;
   customer_id: number;
   delivery_place_id: number;
+  forecast_start_date: string;
+  forecast_end_date: string;
   status?: "active" | "completed" | "cancelled";
   notes?: string;
   lines?: CreateForecastLineRequest[];
@@ -72,23 +77,16 @@ export interface UpdateForecastHeaderRequest {
 }
 
 export interface CreateForecastLineRequest {
-  line_number?: number;
   product_id: number;
-  quantity: number;
-  forecast_date: string;
-  granularity: "daily" | "dekad" | "monthly";
-  version_no?: number;
-  notes?: string;
+  delivery_date: string;
+  forecast_quantity: number;
+  unit: string;
 }
 
 export interface UpdateForecastLineRequest {
-  line_number?: number;
-  product_id?: number;
-  quantity?: number;
-  forecast_date?: string;
-  granularity?: "daily" | "dekad" | "monthly";
-  version_no?: number;
-  notes?: string;
+  delivery_date?: string;
+  forecast_quantity?: number;
+  unit?: string;
 }
 
 export interface BulkImportForecastRequest {

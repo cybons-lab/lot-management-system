@@ -29,7 +29,7 @@ from app.api.routes.allocations import (
     allocations_router,
     warehouse_alloc_router,
 )
-from app.api.routes.forecasts import forecast_router, forecasts_router
+from app.api.routes.forecasts import forecasts_router
 from app.api.routes.inventory import (
     adjustments_router,
     inbound_plans_router,
@@ -70,8 +70,7 @@ __all__ = [
     "inbound_plans_router",
     "inventory_items_router",
     "lots_router",
-    # Forecasts (2)
-    "forecast_router",
+    # Forecasts (1)
     "forecasts_router",
     # Admin (9)
     "admin_healthcheck_router",

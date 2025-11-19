@@ -11,7 +11,6 @@ class SeedRequest(BaseModel):
     suppliers: conint(ge=0) = 2  # 最小テスト用に削減（旧: 5）
     delivery_places: conint(ge=0) = 2  # 最小テスト用に削減（旧: 5）
     products: conint(ge=0) = 5  # 最小テスト用に削減（旧: 20）
-    forecasts: conint(ge=0) = 0  # 0=無効化、>0で有効
     warehouses: conint(ge=0) = 2  # 最小テスト用に削減（旧: 3）
     lots: conint(ge=0) = 10  # 最小テスト用に削減（旧: 80）
     orders: conint(ge=0) = 5  # 最小テスト用に削減（旧: 25）
@@ -24,7 +23,6 @@ class SeedSummary(BaseModel):
     suppliers: int
     delivery_places: int
     products: int
-    forecasts: int
     warehouses: int
     lots: int
     orders: int
@@ -39,7 +37,6 @@ class ActualCounts(BaseModel):
     suppliers: int
     delivery_places: int
     products: int
-    forecasts: int
     warehouses: int
     lots: int
     stock_movements: int
