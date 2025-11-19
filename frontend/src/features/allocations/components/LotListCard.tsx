@@ -1,4 +1,6 @@
-// LotListCard.tsx
+import { useState, useEffect } from "react"; // 追加
+import { toast } from "sonner"; // 追加
+
 import type { CandidateLotItem } from "../api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,13 +20,24 @@ export function LotListCard({
   maxAllocatable,
   onAllocationChange,
 }: LotListCardProps) {
-  // 1. 正しいプロパティ名（free_qty / expiry_date）に戻しました
+  // シェイクアニメーション用のステート
+  const [isShaking, setIsShaking] = useState(false);
+
+  // シェイクを一定時間で止めるエフェクト
+  useEffect(() => {
+    if (isShaking) {
+      const timer = setTimeout(() => setIsShaking(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isShaking]);
+
   const freeQty = Number(lot.free_qty ?? lot.current_quantity ?? 0);
-
-  // 在庫表示: 入力分を差し引いた「残り」を計算
   const remainingInLot = Math.max(0, freeQty - allocatedQty);
-
   const isExpired = lot.expiry_date ? new Date(lot.expiry_date) < new Date() : false;
+
+  // 入力上限（ロット在庫 または 必要残数 の小さい方）
+  // ※maxAllocatable は「現在の入力値 + 残り必要数」なので、これを超えると過剰引当になる
+  const limit = Math.min(freeQty, maxAllocatable);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -36,24 +49,39 @@ export function LotListCard({
       return;
     }
 
-    if (!isNaN(numValue) && numValue >= 0) {
-      // 上限チェックを含めるならここ
-      // const limit = Math.min(freeQty, maxAllocatable);
-      // if (numValue > limit) { onAllocationChange(limit); return; }
+    if (isNaN(numValue)) return;
 
-      onAllocationChange(numValue);
+    // マイナスチェック
+    if (numValue < 0) {
+      setIsShaking(true);
+      toast.error("マイナスの数量は入力できません");
+      onAllocationChange(0);
+      return;
     }
+
+    // 上限チェック
+    // AllocationInputのロジックを移植：上限を超えたら警告を出して上限値に補正
+    if (numValue > limit) {
+      setIsShaking(true);
+      // 状況に応じてメッセージを出し分け
+      if (freeQty < maxAllocatable && numValue > freeQty) {
+        toast.warning(`在庫数量(${freeQty})を超えています`);
+      } else {
+        toast.warning(`必要数量を超えています`);
+      }
+
+      onAllocationChange(limit);
+      return;
+    }
+
+    onAllocationChange(numValue);
   };
 
   const handleFullAllocation = () => {
-    // 上限（必要残数 or ロット在庫の小さい方）まで埋める
-    const limit = Math.min(freeQty, maxAllocatable);
     onAllocationChange(limit);
   };
 
   const handleHalfAllocation = () => {
-    // 上限内で半量
-    const limit = Math.min(freeQty, maxAllocatable);
     const half = Math.floor(freeQty / 2);
     const target = Math.min(half, limit);
     onAllocationChange(target);
@@ -116,13 +144,16 @@ export function LotListCard({
           onChange={handleInputChange}
           className={cn(
             "h-8 w-20 text-center text-sm font-bold transition-all",
+            // 入力があるときは青枠、シェイク時は赤枠
             allocatedQty > 0
               ? "border-blue-500 text-blue-700 ring-1 ring-blue-500/20"
               : "border-gray-300 text-gray-900",
+            isShaking && "animate-shake border-red-500 text-red-600 ring-red-500",
           )}
           placeholder="0"
           min="0"
-          max={Math.min(freeQty, maxAllocatable)}
+          // maxはHTML上の入力補助として設定（JS制御も入れているので安心）
+          max={limit}
         />
 
         <Button

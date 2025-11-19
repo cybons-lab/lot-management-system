@@ -1,16 +1,20 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 
 // Route constants
+import { Toaster } from "sonner";
+
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 
 // Pages - all imported from features (Phase A cleanup)
+import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
+import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
 import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
 import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
-import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
-import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
-import { LotAllocationPage } from "@/features/allocations/pages/LotAllocationPage";
 import { AllocationSuggestionsPage } from "@/features/allocations/pages/AllocationSuggestionsPage";
+import { LotAllocationPage } from "@/features/allocations/pages/LotAllocationPage";
+import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
+import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
 import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
 import { CustomersPage } from "@/features/customers/pages/CustomersPage";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
@@ -30,19 +34,16 @@ import { LotsPage } from "@/features/inventory/pages/LotsPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
 import { SummaryPage } from "@/features/inventory/pages/SummaryPage";
 import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
+import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
 import { ProductsPage } from "@/features/products/pages/ProductsPage";
-import { SuppliersPage } from "@/features/suppliers/pages/SuppliersPage";
-import { WarehousesPage } from "@/features/warehouses/pages/WarehousesPage";
-import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
-import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
-import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
-import { UsersListPage } from "@/features/users/pages/UsersListPage";
+import { SuppliersPage } from "@/features/suppliers/pages/SuppliersPage";
 import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
+import { UsersListPage } from "@/features/users/pages/UsersListPage";
+import { WarehousesPage } from "@/features/warehouses/pages/WarehousesPage";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
-import { Toaster } from "sonner";
 
 function App() {
   return (
@@ -120,7 +121,6 @@ function App() {
         <Route path={ROUTES.ADMIN.BATCH_JOBS} element={<BatchJobsPage />} />
         <Route path={ROUTES.ADMIN.MASTER_CHANGE_LOGS} element={<MasterChangeLogsPage />} />
         <Route path={ROUTES.ADMIN.SEED_SNAPSHOTS} element={<SeedSnapshotsPage />} />
-
         {/* Catch all - redirect to dashboard */}
         <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
       </Routes>

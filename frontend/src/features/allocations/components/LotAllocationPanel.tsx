@@ -1,3 +1,4 @@
+// LotAllocationPanel.tsx
 import type { CandidateLotItem } from "../api";
 
 import { LotAllocationHeader } from "./LotAllocationHeader";
@@ -186,14 +187,20 @@ export function LotAllocationPanel({
                           "opacity-0",
                           "group-focus-within/item:!opacity-0 group-hover/item:!opacity-0",
                           // Panel自体がアクティブなら、リスト全体にホバーした時と同じ挙動
-                          "hover:opacity-100", // ←簡易的に hover でリスト全体が暗くなるようにCSSだけでやるのは難しいので
-                          // 厳密にやるならここもstate管理ですが、一旦CSSで「マウス乗ってないやつ」を暗くする
+                          "hover:opacity-100",
                         )}
                       />
                     )}
 
-                    <div className="px-1 py-1 transition-transform duration-200 hover:scale-[1.01]">
-                      <div className="rounded-lg hover:shadow-lg">
+                    {/* ★修正箇所: scale と shadow を削除し、ボーダー色変化のみに変更 */}
+                    <div className="px-1 py-1">
+                      <div
+                        className={cn(
+                          "rounded-lg border border-transparent transition-colors duration-200",
+                          // ホバー時・フォーカス時に青い枠線を表示（動きはなし）
+                          "group-focus-within/item:border-blue-400 group-hover/item:border-blue-400",
+                        )}
+                      >
                         <LotListCard
                           lot={lot}
                           allocatedQty={allocatedQty}
