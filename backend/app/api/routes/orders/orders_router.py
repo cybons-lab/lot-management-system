@@ -7,6 +7,7 @@ I/O整形のみを責務とし、例外変換はグローバルハンドラに�
 from datetime import date
 
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_uow
@@ -109,3 +110,24 @@ def cancel_order(order_id: int, uow: UnitOfWork = Depends(get_uow)):
     service = OrderService(uow.session)
     service.cancel_order(order_id)
     return None
+
+
+class ManualAllocationItem(BaseModel):
+    lot_id: int
+    quantity: float
+
+
+class ManualAllocationSavePayload(BaseModel):
+    allocations: list[ManualAllocationItem]
+
+
+@router.post("/{order_line_id}/allocations", status_code=200)
+def save_manual_allocations(order_line_id: int, payload: ManualAllocationSavePayload):
+    """
+    手動引当保存スタブ (Frontend V1用)
+    """
+    return {
+        "success": True,
+        "message": "Allocations saved successfully (STUB)",
+        "allocated_ids": [item.lot_id for item in payload.allocations]
+    }
