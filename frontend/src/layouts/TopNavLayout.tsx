@@ -181,7 +181,6 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
 
       {/* メインコンテンツ */}
       <main className="mx-auto max-w-[1920px]">{children}</main>
-      <Toaster richColors position="top-right" />
     </div>
   );
 }
