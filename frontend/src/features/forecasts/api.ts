@@ -15,6 +15,8 @@ export interface ForecastHeader {
   forecast_number: string;
   customer_id: number;
   delivery_place_id: number;
+  forecast_start_date: string;
+  forecast_end_date: string;
   status: "active" | "completed" | "cancelled";
   notes?: string;
   created_at: string;
@@ -26,17 +28,15 @@ export interface ForecastHeader {
 
 /**
  * Forecast Line
+ * Aligned with backend ForecastLineResponse schema
  */
 export interface ForecastLine {
   id: number;
-  forecast_header_id: number;
-  line_number: number;
+  forecast_id: number;
   product_id: number;
-  quantity: number;
-  forecast_date: string;
-  granularity: "daily" | "dekad" | "monthly";
-  version_no?: number;
-  notes?: string;
+  delivery_date: string;
+  forecast_quantity: number;
+  unit: string;
   created_at: string;
   updated_at: string;
   // Joined data (optional)
@@ -58,6 +58,8 @@ export interface CreateForecastHeaderRequest {
   forecast_number: string;
   customer_id: number;
   delivery_place_id: number;
+  forecast_start_date: string;
+  forecast_end_date: string;
   status?: "active" | "completed" | "cancelled";
   notes?: string;
   lines?: CreateForecastLineRequest[];
@@ -72,23 +74,16 @@ export interface UpdateForecastHeaderRequest {
 }
 
 export interface CreateForecastLineRequest {
-  line_number?: number;
   product_id: number;
-  quantity: number;
-  forecast_date: string;
-  granularity: "daily" | "dekad" | "monthly";
-  version_no?: number;
-  notes?: string;
+  delivery_date: string;
+  forecast_quantity: number;
+  unit: string;
 }
 
 export interface UpdateForecastLineRequest {
-  line_number?: number;
-  product_id?: number;
-  quantity?: number;
-  forecast_date?: string;
-  granularity?: "daily" | "dekad" | "monthly";
-  version_no?: number;
-  notes?: string;
+  delivery_date?: string;
+  forecast_quantity?: number;
+  unit?: string;
 }
 
 export interface BulkImportForecastRequest {
