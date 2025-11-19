@@ -2,7 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/libs/utils";
 import { formatDate } from "@/shared/utils/date";
-import type { OrderLine, Order } from "@/shared/types/aliases";
+import type { OrderLine } from "@/shared/types/aliases";
+
+type Order = {
+  order_number?: string | null;
+};
 
 interface LotAllocationHeaderProps {
   order?: Order;
@@ -45,7 +49,7 @@ export function LotAllocationHeader({
   isLoading,
   hasCandidates,
 }: LotAllocationHeaderProps) {
-  const orderNumber = order?.order_number || orderLine.order_number || "不明な受注";
+  const orderNumber = order?.order_number || "不明な受注";
   const productCode = orderLine.product_code || "CODE";
   const productName = propProductName || orderLine.product_name || "品名不明";
   const deliveryDate = formatDate(orderLine.delivery_date || orderLine.due_date, {

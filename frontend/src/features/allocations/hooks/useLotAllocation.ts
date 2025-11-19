@@ -1,11 +1,13 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
 import { useMutation, useQueryClient, useQuery, useQueries } from "@tanstack/react-query";
-import { useOrdersForAllocation } from "./useOrdersForAllocation";
-import { useAllocationCandidates, allocationCandidatesKeys } from "./useAllocationCandidates";
-import { listCustomers, listProducts } from "@/services/api/master-service";
+import { useState, useMemo, useCallback, useEffect } from "react";
+
 import { saveManualAllocations, type ManualAllocationSaveResponse } from "../api";
 import type { CandidateLotItem } from "../api";
-import type { OrderLine } from "@/shared/types/aliases";
+
+import { allocationCandidatesKeys } from "./useAllocationCandidates";
+import { useOrdersForAllocation } from "./useOrdersForAllocation";
+
+import { listCustomers, listProducts } from "@/services/api/master-service";
 
 // 各行の在庫状態定義
 export interface LineStockStatus {
@@ -62,7 +64,7 @@ export function useLotAllocation() {
   // 3. 全明細分の候補ロットを一括取得 (useQueriesを使用)
   // ※行数が多い場合、本来は仮想スクロールや遅延ロードを検討すべきですが、
   //   まずはUIを動かすために「表示されている全行分」を取得する構成にします。
-  const candidateQueriesResults = useQueries({
+  useQueries({
     queries: allLines.map((line) => ({
       queryKey: allocationCandidatesKeys.list({
         order_line_id: line.id!,

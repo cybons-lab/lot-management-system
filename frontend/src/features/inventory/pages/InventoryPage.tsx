@@ -359,22 +359,6 @@ export function InventoryPage() {
           isSubmitting={createLotMutation.isPending}
         />
       </FormDialog>
-
-      {/* トースト表示 */}
-      {toast.toasts.map((t) => (
-        <div
-          key={t.id}
-          className={`fixed right-6 bottom-6 rounded-lg px-4 py-3 text-sm shadow-lg ${
-            t.variant === "success"
-              ? "bg-green-600 text-white"
-              : t.variant === "error"
-                ? "bg-red-600 text-white"
-                : "bg-slate-900 text-white"
-          }`}
-        >
-          {t.message}
-        </div>
-      ))}
     </PageContainer>
   );
 }

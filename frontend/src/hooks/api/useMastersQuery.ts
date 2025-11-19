@@ -94,7 +94,7 @@ export function useProductQuery(
     queryKey: QUERY_KEYS.masters.product(productCode!),
     queryFn: async (): Promise<Product | undefined> => {
       const products = await listProducts();
-      return products.find((p: Product) => p.product_code === productCode);
+      return products.find((p: Product) => p.maker_part_code === productCode);
     },
     enabled: !!productCode,
     staleTime: 300000,
@@ -197,7 +197,7 @@ export function useProductOptions() {
 
   return createSelectOptions(
     products?.map((p) => ({
-      code: p.product_code,
+      code: p.maker_part_code,
       name: p.product_name,
     })),
     (p: { code: string; name: string }) => p.code,

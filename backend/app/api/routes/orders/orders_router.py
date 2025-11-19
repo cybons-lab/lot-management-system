@@ -123,11 +123,9 @@ class ManualAllocationSavePayload(BaseModel):
 
 @router.post("/{order_line_id}/allocations", status_code=200)
 def save_manual_allocations(order_line_id: int, payload: ManualAllocationSavePayload):
-    """
-    手動引当保存スタブ (Frontend V1用)
-    """
+    """手動引当保存スタブ (Frontend V1用)."""
     return {
         "success": True,
         "message": "Allocations saved successfully (STUB)",
-        "allocated_ids": [item.lot_id for item in payload.allocations]
+        "allocated_ids": [item.lot_id for item in payload.allocations],
     }

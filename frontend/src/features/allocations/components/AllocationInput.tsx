@@ -19,7 +19,7 @@ export function AllocationInput({ value, max, onChange, disabled = false }: Allo
     if (Number(inputValue) !== value) {
       setInputValue(value.toString());
     }
-  }, [value]);
+  }, [inputValue, value]);
 
   useEffect(() => {
     if (isShaking) {
@@ -37,7 +37,7 @@ export function AllocationInput({ value, max, onChange, disabled = false }: Allo
 
     if (parsed < 0) {
       setIsShaking(true);
-      toast({ variant: "destructive", title: "マイナスの数量は入力できません" });
+      toast.error("マイナスの数量は入力できません");
       onChange(0);
       setInputValue("0");
       return;
@@ -45,7 +45,7 @@ export function AllocationInput({ value, max, onChange, disabled = false }: Allo
 
     if (parsed > max) {
       setIsShaking(true);
-      toast({ variant: "warning", title: `在庫数量(${max})を超える入力はできません` });
+      toast.warning(`在庫数量(${max})を超える入力はできません`);
       onChange(max);
       setInputValue(max.toString());
       return;

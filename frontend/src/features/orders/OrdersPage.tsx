@@ -52,13 +52,9 @@ export function OrdersPage() {
 
   React.useEffect(() => {
     if (ordersQuery.error) {
-      toast({
-        title: "受注の取得に失敗しました",
-        description: ordersQuery.error instanceof Error ? ordersQuery.error.message : undefined,
-        variant: "destructive",
-      });
+      toast.error("受注の取得に失敗しました");
     }
-  }, [ordersQuery.error, toast]);
+  }, [ordersQuery.error]);
 
   return (
     <div className="space-y-6 p-6">

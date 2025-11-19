@@ -24,13 +24,13 @@ export function LotListCard({
   // 在庫表示: 入力分を差し引いた「残り」を計算
   const remainingInLot = Math.max(0, freeQty - allocatedQty);
 
-  const isExpired = new Date(lot.expiry_date) < new Date(); // expiry_date に修正
+  const isExpired = lot.expiry_date ? new Date(lot.expiry_date) < new Date() : false;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     const numValue = Number(value);
 
-    // 空文字の場合は0扱いで処理するか、入力中の挙動に合わせて調整
+    // 空文字の場合は0扱い
     if (value === "") {
       onAllocationChange(0);
       return;
@@ -38,9 +38,7 @@ export function LotListCard({
 
     if (!isNaN(numValue) && numValue >= 0) {
       // 上限チェックを含めるならここ
-      const limit = Math.min(freeQty, maxAllocatable);
-      // ここでは入力自体は許容しつつ、親側かBlurで制御する場合もありますが、
-      // UX的に上限キャップを入れるなら以下を有効化してください
+      // const limit = Math.min(freeQty, maxAllocatable);
       // if (numValue > limit) { onAllocationChange(limit); return; }
 
       onAllocationChange(numValue);
@@ -96,8 +94,7 @@ export function LotListCard({
         <div className="min-w-[80px] shrink-0 flex-grow">
           <div className="text-xs font-bold text-gray-400">期限</div>
           <div className="text-sm text-gray-800">
-            {/* expiry_date に修正 */}
-            {formatDate(lot.expiry_date, { format: "YYYY/MM/DD", fallback: "-" })}
+            {formatDate(lot.expiry_date, { fallback: "-" })}
           </div>
         </div>
       </div>
@@ -107,7 +104,6 @@ export function LotListCard({
         <div className="min-w-[120px] text-right">
           <div className="text-xs font-bold text-gray-400">REMAINING / TOTAL</div>
           <div className="text-sm font-bold text-gray-900">
-            {/* 計算済みの変数を使用 */}
             {remainingInLot.toLocaleString()} / {freeQty.toLocaleString()}
           </div>
         </div>
@@ -126,7 +122,6 @@ export function LotListCard({
           )}
           placeholder="0"
           min="0"
-          // max属性はHTML制御用（入力補助）
           max={Math.min(freeQty, maxAllocatable)}
         />
 
