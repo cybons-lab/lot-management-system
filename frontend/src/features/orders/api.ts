@@ -1,18 +1,18 @@
 import { fetchApi } from "@/shared/libs/http";
-import type { CandidateLotsResponse } from "@/shared/types/aliases";
+import type { CandidateLotsResponse, OrderResponse } from "@/shared/types/aliases";
 import type { paths, components } from "@/types/api";
 
 // api.d.ts から型を抽出
 type OrdersGetParams = paths["/api/orders"]["get"]["parameters"]["query"];
-type OrdersGetResponse =
-  paths["/api/orders"]["get"]["responses"][200]["content"]["application/json"];
+// type OrdersGetResponse =
+//   paths["/api/orders"]["get"]["responses"][200]["content"]["application/json"];
 type OrderGetResponse =
   paths["/api/orders/{order_id}"]["get"]["responses"][200]["content"]["application/json"];
 
 // 互換性のためのエイリアス型（既存コードで使用中）
 export type OrdersListParams = OrdersGetParams;
-export type OrderResponse = components["schemas"]["OrderResponse"];
-export type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
+// export type OrderResponse = components["schemas"]["OrderResponse"]; // Use alias
+// export type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"]; // Use alias
 
 /**
  * 受注一覧取得
@@ -33,7 +33,7 @@ export const getOrders = (params?: OrdersListParams) => {
   if (params?.date_to) searchParams.append("date_to", params.date_to);
 
   const queryString = searchParams.toString();
-  return fetchApi.get<OrdersGetResponse>(`/orders${queryString ? "?" + queryString : ""}`);
+  return fetchApi.get<OrderResponse[]>(`/orders${queryString ? "?" + queryString : ""}`);
 };
 
 /**

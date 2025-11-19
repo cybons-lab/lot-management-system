@@ -24,13 +24,14 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useOrdersForAllocation } from "../hooks/useOrdersForAllocation";
 import { useOrderDetailForAllocation } from "../hooks/useOrderDetailForAllocation";
 import {
   useAllocationCandidates,
   allocationCandidatesKeys,
 } from "../hooks/useAllocationCandidates";
+import { listCustomers } from "@/services/api/master-service";
 import { saveManualAllocations, type ManualAllocationSaveResponse } from "../api";
 import { OrdersPane } from "../components/OrdersPane";
 import { OrderLinesPane, type OrderLineStockStatus } from "../components/OrderLinesPane";
@@ -86,6 +87,25 @@ export function LotAllocationPage() {
     strategy: "fefo",
     limit: 200,
   });
+
+  // API: 得意先一覧取得（マッピング用）
+  const customersQuery = useQuery({
+    queryKey: ["masters", "customers"],
+    queryFn: listCustomers,
+    staleTime: 1000 * 60 * 5, // 5分
+  });
+
+  // 得意先マップ (code -> name)
+  const customerMap = useMemo(() => {
+    if (!customersQuery.data) return {};
+    return customersQuery.data.reduce(
+      (acc, customer) => {
+        acc[customer.customer_code] = customer.customer_name ?? "";
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+  }, [customersQuery.data]);
 
   // ロット候補リスト
   const candidateLots: CandidateLotItem[] = useMemo(
@@ -217,11 +237,28 @@ export function LotAllocationPage() {
   const handleLotAllocationChange = useCallback(
     (lotId: number, value: number) => {
       const targetLot = candidateLots.find((lot) => lot.lot_id === lotId);
-      const maxQty = targetLot
-        ? Number(targetLot.free_qty ?? targetLot.current_quantity ?? Number.POSITIVE_INFINITY)
-        : Number.POSITIVE_INFINITY;
+      const maxStock = targetLot
+        ? Number(targetLot.free_qty ?? targetLot.current_quantity ?? 0)
+        : 0;
 
-      const clampedValue = Math.max(0, Math.min(maxQty, Number.isFinite(value) ? value : 0));
+      // Calculate remaining needed quantity (Required - Allocated from other lots - DB Allocated)
+      const requiredQty = Number(
+        selectedOrderLine?.order_quantity ?? selectedOrderLine?.quantity ?? 0,
+      );
+      const dbAllocated = Number(
+        selectedOrderLine?.allocated_qty ?? selectedOrderLine?.allocated_quantity ?? 0,
+      );
+      const otherLotsAllocated = Object.entries(lotAllocations).reduce((sum, [id, qty]) => {
+        return Number(id) === lotId ? sum : sum + qty;
+      }, 0);
+
+      const remainingNeeded = Math.max(0, requiredQty - dbAllocated - otherLotsAllocated);
+
+      // Clamp to min(Stock, RemainingNeeded)
+      // User cannot enter more than what is needed for the order line
+      const maxAllowed = Math.min(maxStock, remainingNeeded);
+
+      const clampedValue = Math.max(0, Math.min(maxAllowed, Number.isFinite(value) ? value : 0));
 
       setLotAllocations((prev) => {
         if (clampedValue === 0) {
@@ -385,6 +422,7 @@ export function LotAllocationPage() {
               orders={ordersQuery.data ?? []}
               selectedOrderId={selectedOrderId}
               onSelectOrder={handleSelectOrder}
+              customerMap={customerMap}
               isLoading={ordersQuery.isLoading}
               error={ordersQuery.error}
             />
@@ -435,6 +473,7 @@ export function LotAllocationPage() {
                 orders={ordersQuery.data ?? []}
                 selectedOrderId={selectedOrderId}
                 onSelectOrder={handleSelectOrder}
+                customerMap={customerMap}
                 isLoading={ordersQuery.isLoading}
                 error={ordersQuery.error}
               />
@@ -482,6 +521,7 @@ export function LotAllocationPage() {
               orders={ordersQuery.data ?? []}
               selectedOrderId={selectedOrderId}
               onSelectOrder={handleSelectOrder}
+              customerMap={customerMap}
               isLoading={ordersQuery.isLoading}
               error={ordersQuery.error}
             />

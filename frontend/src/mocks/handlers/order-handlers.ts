@@ -61,7 +61,7 @@ export const orderHandlers = [
       ...body,
       id: Math.max(...orders.map((o) => o.id)) + 1,
       status: "pending",
-    });
+    } as OrderWithLinesResponse);
 
     orders.push(newOrder);
 

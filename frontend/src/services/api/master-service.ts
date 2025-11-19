@@ -39,7 +39,7 @@ export async function listWarehouses(): Promise<Warehouse[]> {
  * 得意先マスタ一覧を取得
  */
 export async function listCustomers(): Promise<Customer[]> {
-  const response = await http.get<Customer[]>(`${BASE_PATH}/customers`);
+  const response = await http.get<Customer[]>("/customers");
   return response.data;
 }
 

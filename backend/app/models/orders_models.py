@@ -31,7 +31,7 @@ from .base_model import Base
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .inventory_models import Lot
-    from .masters_models import Customer, DeliveryPlace, Product
+    from .masters_models import Customer, Product
 
 
 class Order(Base):
@@ -51,15 +51,9 @@ class Order(Base):
         ForeignKey("customers.id", ondelete="RESTRICT"),
         nullable=False,
     )
-    delivery_place_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("delivery_places.id", ondelete="RESTRICT"),
-        nullable=False,
-    )
+
     order_date: Mapped[date] = mapped_column(Date, nullable=False)
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default=text("'pending'")
-    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -69,19 +63,12 @@ class Order(Base):
 
     __table_args__ = (
         UniqueConstraint("order_number", name="uq_orders_order_number"),
-        CheckConstraint(
-            "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled')",
-            name="chk_orders_status",
-        ),
         Index("idx_orders_customer", "customer_id"),
-        Index("idx_orders_delivery_place", "delivery_place_id"),
         Index("idx_orders_date", "order_date"),
-        Index("idx_orders_status", "status"),
     )
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer", back_populates="orders")
-    delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace", back_populates="orders")
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine", back_populates="order", cascade="all, delete-orphan"
     )
@@ -117,11 +104,25 @@ class OrderLine(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
+    delivery_place_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("delivery_places.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default=text("'pending'")
+    )
 
     __table_args__ = (
         Index("idx_order_lines_order", "order_id"),
         Index("idx_order_lines_product", "product_id"),
         Index("idx_order_lines_date", "delivery_date"),
+        Index("idx_order_lines_delivery_place", "delivery_place_id"),
+        Index("idx_order_lines_status", "status"),
+        CheckConstraint(
+            "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled')",
+            name="chk_order_lines_status",
+        ),
     )
 
     # Relationships

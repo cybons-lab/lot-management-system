@@ -182,43 +182,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/orders/{order_id}/status": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Update Order Status
-     * @description 受注ステータス更新.
-     *
-     *     【修正#2】dict入力を廃止し、OrderStatusUpdateスキーマを使用
-     *     【修正#5】UnitOfWorkを依存注入で取得
-     *
-     *     Args:
-     *         order_id: 受注ID
-     *         body: ステータス更新データ（Schema検証済み）
-     *         uow: UnitOfWork（依存注入）
-     *
-     *     トランザクション管理:
-     *         - 成功時: UnitOfWorkが自動commit
-     *         - 例外発生時: UnitOfWorkが自動rollback
-     *
-     *     例外処理:
-     *         - OrderNotFoundError → 404 Not Found
-     *         - InvalidOrderStatusError → 400 Bad Request
-     *         上記はグローバルハンドラで変換される
-     */
-    patch: operations["update_order_status_api_orders__order_id__status_patch"];
-    trace?: never;
-  };
   "/api/orders/{order_id}/cancel": {
     parameters: {
       query?: never;
@@ -3127,6 +3090,10 @@ export interface components {
       product_id: number;
       /** Warehouse Id */
       warehouse_id: number;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
+      /** Warehouse Name */
+      warehouse_name?: string | null;
       /** Expiry Date */
       expiry_date?: string | null;
       /** Received Date */
@@ -3809,9 +3776,14 @@ export interface components {
     };
     /**
      * InventoryItemResponse
-     * @description API response model for inventory summary rows.
+     * @description API response model for inventory items (aggregated summary).
+     *
+     *     This schema represents a calculated summary of inventory from the lots table,
+     *     aggregated by product and warehouse. It does not map to a physical table.
      */
     InventoryItemResponse: {
+      /** Inventory Item Id */
+      inventory_item_id: number;
       /** Product Id */
       product_id: number;
       /** Warehouse Id */
@@ -3822,8 +3794,6 @@ export interface components {
       allocated_quantity: string;
       /** Available Quantity */
       available_quantity: string;
-      /** Inventory Item Id */
-      inventory_item_id: number;
       /**
        * Last Updated
        * Format: date-time
@@ -4414,18 +4384,11 @@ export interface components {
       order_number: string;
       /** Customer Id */
       customer_id: number;
-      /** Delivery Place Id */
-      delivery_place_id: number;
       /**
        * Order Date
        * Format: date
        */
       order_date: string;
-      /**
-       * Status
-       * @default pending
-       */
-      status: string;
       /** Lines */
       lines?: components["schemas"]["OrderLineCreate"][];
     };
@@ -4448,6 +4411,13 @@ export interface components {
       order_quantity: number | string;
       /** Unit */
       unit: string;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /**
+       * Status
+       * @default pending
+       */
+      status: string;
     };
     /**
      * OrderLineResponse
@@ -4468,6 +4438,13 @@ export interface components {
       order_quantity: string;
       /** Unit */
       unit: string;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /**
+       * Status
+       * @default pending
+       */
+      status: string;
       /** Id */
       id: number;
       /** Order Id */
@@ -4484,53 +4461,6 @@ export interface components {
       updated_at: string;
     };
     /**
-     * OrderResponse
-     * @description Order response (DDL: orders).
-     */
-    OrderResponse: {
-      /** Order Number */
-      order_number: string;
-      /** Customer Id */
-      customer_id: number;
-      /** Delivery Place Id */
-      delivery_place_id: number;
-      /**
-       * Order Date
-       * Format: date
-       */
-      order_date: string;
-      /**
-       * Status
-       * @default pending
-       */
-      status: string;
-      /** Id */
-      id: number;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
-    };
-    /**
-     * OrderStatusUpdate
-     * @description Order status update request.
-     */
-    OrderStatusUpdate: {
-      /**
-       * Status
-       * @description 新しいステータス（pending/allocated/shipped/completed/cancelled）
-       * @example allocated
-       * @example shipped
-       */
-      status: string;
-    };
-    /**
      * OrderWithLinesResponse
      * @description Order with lines response.
      */
@@ -4539,18 +4469,11 @@ export interface components {
       order_number: string;
       /** Customer Id */
       customer_id: number;
-      /** Delivery Place Id */
-      delivery_place_id: number;
       /**
        * Order Date
        * Format: date
        */
       order_date: string;
-      /**
-       * Status
-       * @default pending
-       */
-      status: string;
       /** Id */
       id: number;
       /**
@@ -5725,41 +5648,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["OrderWithLinesResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_order_status_api_orders__order_id__status_patch: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        order_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["OrderStatusUpdate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["OrderResponse"];
         };
       };
       /** @description Validation Error */

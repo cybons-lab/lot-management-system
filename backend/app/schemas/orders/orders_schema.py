@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import Field, constr
+from pydantic import Field
 
 from app.schemas.common.base import BaseSchema
 
@@ -24,12 +24,7 @@ class OrderBase(BaseSchema):
 
     order_number: str = Field(..., min_length=1, max_length=50)
     customer_id: int = Field(..., gt=0)
-    delivery_place_id: int = Field(..., gt=0)
     order_date: date
-    status: str = Field(
-        default="pending",
-        pattern="^(pending|allocated|shipped|completed|cancelled)$",
-    )
 
 
 class OrderCreate(OrderBase):
@@ -40,18 +35,6 @@ class OrderCreate(OrderBase):
 
 class OrderUpdate(BaseSchema):
     """Update order request."""
-
-    status: str | None = Field(None, pattern="^(pending|allocated|shipped|completed|cancelled)$")
-
-
-class OrderStatusUpdate(BaseSchema):
-    """Order status update request."""
-
-    status: constr(min_length=1) = Field(
-        ...,
-        description="新しいステータス（pending/allocated/shipped/completed/cancelled）",
-        examples=["allocated", "shipped"],
-    )
 
 
 class OrderResponse(OrderBase):
@@ -82,6 +65,11 @@ class OrderLineBase(BaseSchema):
     delivery_date: date
     order_quantity: Decimal = Field(..., gt=0, decimal_places=3, description="受注数量")
     unit: str = Field(..., min_length=1, max_length=20)
+    delivery_place_id: int = Field(..., gt=0)
+    status: str = Field(
+        default="pending",
+        pattern="^(pending|allocated|shipped|completed|cancelled)$",
+    )
 
 
 class OrderLineCreate(OrderLineBase):
@@ -96,6 +84,8 @@ class OrderLineUpdate(BaseSchema):
     delivery_date: date | None = None
     order_quantity: Decimal | None = Field(None, gt=0, decimal_places=3)
     unit: str | None = Field(None, min_length=1, max_length=20)
+    delivery_place_id: int | None = Field(None, gt=0)
+    status: str | None = Field(None, pattern="^(pending|allocated|shipped|completed|cancelled)$")
 
 
 class OrderLineResponse(OrderLineBase):

@@ -98,7 +98,9 @@ export function OrderPage() {
                       {order.order_date ? format(parseISO(order.order_date), "yyyy/MM/dd") : "-"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant(order.status)}>{order.status}</Badge>
+                      <Badge variant={getStatusVariant(order.status ?? "unknown")}>
+                        {order.status ?? "-"}
+                      </Badge>
                     </TableCell>
                     {/* sap_order_id removed in DDL v2.2 */}
                     <TableCell>{"-"}</TableCell>

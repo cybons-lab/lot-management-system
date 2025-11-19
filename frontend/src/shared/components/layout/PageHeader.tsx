@@ -33,13 +33,15 @@ interface PageHeaderProps {
  */
 export function PageHeader({ title, subtitle, actions, className = "" }: PageHeaderProps) {
   return (
-    <div className={`mb-6 flex items-start justify-between ${className}`}>
+    <div
+      className={`mb-4 flex items-center justify-between border-b border-gray-200 pb-4 ${className}`}
+    >
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>}
+        <h1 className="text-xl font-bold tracking-tight text-gray-900">{title}</h1>
+        {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
       </div>
 
-      {actions && <div className="flex items-center space-x-2">{actions}</div>}
+      {actions && <div className="flex items-center space-x-3">{actions}</div>}
     </div>
   );
 }

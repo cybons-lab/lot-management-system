@@ -239,18 +239,6 @@ class Adjustment(Base):
     lot: Mapped[Lot] = relationship("Lot", back_populates="adjustments")
 
 
-# REMOVED: InventoryItem model
-# The inventory_items table has been deprecated in favor of real-time aggregation
-# from the lots table. Inventory summaries are now computed on-demand using
-# SQLAlchemy aggregation queries in the InventoryService layer.
-# See: app/services/inventory/inventory_service.py
-#
-# Historical context:
-# - Previously: inventory_items table stored aggregated inventory data
-# - Now: Inventory summaries are computed from lots table using GROUP BY queries
-# - Benefits: Single source of truth, no sync issues, always up-to-date
-
-
 class AllocationSuggestion(Base):
     """引当推奨（システムが提案する引当案）.
 
@@ -293,7 +281,5 @@ class AllocationSuggestion(Base):
 StockMovement = StockHistory
 StockMovementReason = StockTransactionType
 
-# REMOVED: LotCurrentStock alias
-# LotCurrentStock was an alias for InventoryItem, which has been removed.
-# Inventory summaries are now computed on-demand from the lots table.
-# Use InventoryService to get aggregated inventory data.
+# LotCurrentStock alias for backward compatibility if needed, though InventoryItem is preferred.
+# LotCurrentStock = InventoryItem

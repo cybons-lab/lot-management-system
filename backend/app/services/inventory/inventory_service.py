@@ -4,8 +4,6 @@ This service aggregates inventory data from the lots table in real-time,
 providing product × warehouse summary information.
 """
 
-from decimal import Decimal
-
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -33,7 +31,7 @@ class InventoryService:
         warehouse_id: int | None = None,
     ) -> list[InventoryItemResponse]:
         """
-        Get inventory items aggregated from lots table.
+        Get inventory items from inventory_items table.
 
         Args:
             skip: Number of records to skip (pagination)
@@ -42,19 +40,19 @@ class InventoryService:
             warehouse_id: Filter by warehouse ID
 
         Returns:
-            List of inventory items aggregated from lots
+            List of inventory items
         """
-        # Aggregate lots by product_id and warehouse_id
-        query = self.db.query(
-            Lot.product_id,
-            Lot.warehouse_id,
-            func.sum(Lot.current_quantity).label("total_quantity"),
-            func.sum(Lot.allocated_quantity).label("allocated_quantity"),
-            func.sum(func.greatest(Lot.current_quantity - Lot.allocated_quantity, 0)).label(
-                "available_quantity"
-            ),
-            func.max(Lot.updated_at).label("last_updated"),
-        ).filter(Lot.status == "active")
+        query = (
+            self.db.query(
+                Lot.product_id,
+                Lot.warehouse_id,
+                func.sum(Lot.current_quantity).label("total_quantity"),
+                func.sum(Lot.allocated_quantity).label("allocated_quantity"),
+                func.max(Lot.updated_at).label("last_updated"),
+            )
+            .filter(Lot.status == "active")
+            .group_by(Lot.product_id, Lot.warehouse_id)
+        )
 
         if product_id is not None:
             query = query.filter(Lot.product_id == product_id)
@@ -62,33 +60,30 @@ class InventoryService:
         if warehouse_id is not None:
             query = query.filter(Lot.warehouse_id == warehouse_id)
 
-        query = (
-            query.group_by(Lot.product_id, Lot.warehouse_id)
-            .order_by(Lot.product_id, Lot.warehouse_id)
-            .offset(skip)
-            .limit(limit)
-        )
+        # Pagination on aggregated results is tricky in pure SQL without subqueries or window functions if we want total count.
+        # For simplicity in this refactor, we'll apply limit/offset to the grouped result.
+        query = query.order_by(Lot.product_id, Lot.warehouse_id).offset(skip).limit(limit)
 
         results = query.all()
 
         return [
             InventoryItemResponse(
-                id=row.product_id,  # Use product_id as id for compatibility
+                id=idx + 1,  # Dummy ID since it's an aggregation
                 product_id=row.product_id,
                 warehouse_id=row.warehouse_id,
-                total_quantity=row.total_quantity or Decimal("0"),
-                allocated_quantity=row.allocated_quantity or Decimal("0"),
-                available_quantity=row.available_quantity or Decimal("0"),
+                total_quantity=row.total_quantity,
+                allocated_quantity=row.allocated_quantity,
+                available_quantity=row.total_quantity - row.allocated_quantity,
                 last_updated=row.last_updated,
             )
-            for row in results
+            for idx, row in enumerate(results)
         ]
 
     def get_inventory_item_by_product_warehouse(
         self, product_id: int, warehouse_id: int
     ) -> InventoryItemResponse | None:
         """
-        Get inventory item by product ID and warehouse ID (aggregated from lots).
+        Get inventory item by product ID and warehouse ID.
 
         Args:
             product_id: Product ID
@@ -103,9 +98,6 @@ class InventoryService:
                 Lot.warehouse_id,
                 func.sum(Lot.current_quantity).label("total_quantity"),
                 func.sum(Lot.allocated_quantity).label("allocated_quantity"),
-                func.sum(func.greatest(Lot.current_quantity - Lot.allocated_quantity, 0)).label(
-                    "available_quantity"
-                ),
                 func.max(Lot.updated_at).label("last_updated"),
             )
             .filter(
@@ -121,11 +113,11 @@ class InventoryService:
             return None
 
         return InventoryItemResponse(
-            id=result.product_id,  # Use product_id as id for compatibility
+            id=1,  # Dummy ID
             product_id=result.product_id,
             warehouse_id=result.warehouse_id,
-            total_quantity=result.total_quantity or Decimal("0"),
-            allocated_quantity=result.allocated_quantity or Decimal("0"),
-            available_quantity=result.available_quantity or Decimal("0"),
+            total_quantity=result.total_quantity,
+            allocated_quantity=result.allocated_quantity,
+            available_quantity=result.total_quantity - result.allocated_quantity,
             last_updated=result.last_updated,
         )

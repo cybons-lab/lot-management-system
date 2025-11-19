@@ -8,10 +8,9 @@
 
 import { useAtom } from "jotai";
 import { selectedOrderIdAtom, selectedLineIdAtom } from "../store/atoms";
-import type { components } from "@/types/api";
-
-type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
-type OrderLineResponse = components["schemas"]["OrderLineResponse"];
+import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
+// type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
+// type OrderLineResponse = components["schemas"]["OrderLineResponse"];
 
 interface OrderAndLineListPaneProps {
   orders: OrderWithLinesResponse[];
@@ -125,10 +124,10 @@ function OrderCard({ order, isSelected, onSelect }: OrderCardProps) {
           <div className="mt-1 flex items-center gap-2">
             <span
               className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${getStatusColor(
-                order.status,
+                order.status ?? "unknown",
               )}`}
             >
-              {getStatusLabel(order.status)}
+              {getStatusLabel(order.status ?? "unknown")}
             </span>
           </div>
         </div>
@@ -141,7 +140,7 @@ function OrderCard({ order, isSelected, onSelect }: OrderCardProps) {
  * OrderLineCard - 受注明細カード
  */
 interface OrderLineCardProps {
-  line: OrderLineResponse;
+  line: OrderLine;
   isSelected: boolean;
   onSelect: (lineId: number) => void;
 }

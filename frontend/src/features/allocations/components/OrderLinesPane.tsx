@@ -9,11 +9,12 @@
  */
 
 import { useState } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/shared/libs/utils";
-import { formatDate } from "@/shared/utils/date";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
+import { formatDate } from "@/shared/utils/date";
 
 export interface OrderLineStockStatus {
   hasShortage: boolean;
@@ -41,7 +42,6 @@ export function OrderLinesPane({
   orderLines,
   selectedOrderLineId,
   onSelectOrderLine,
-  orderDetail = null,
   renderInlineLots = false,
   lineStockStatus = {},
   inlineLotContent,
@@ -70,18 +70,6 @@ export function OrderLinesPane({
 
     if (line.delivery_place) {
       return line.delivery_place;
-    }
-
-    const orderCode = orderDetail?.delivery_place_code ?? null;
-    const orderName = orderDetail?.delivery_place_name ?? null;
-    if (orderCode || orderName) {
-      return orderCode && orderName
-        ? `${orderCode} / ${orderName}`
-        : (orderCode ?? orderName ?? "未設定");
-    }
-
-    if (orderDetail?.delivery_place) {
-      return orderDetail.delivery_place;
     }
 
     return "未設定";
@@ -206,6 +194,7 @@ export function OrderLinesPane({
                       {formatDate(line.delivery_date || line.due_date, { fallback: "未設定" })}
                     </span>
                   </div>
+
                   <div className="flex justify-between">
                     <span className="text-gray-500">納入先</span>
                     <span className="font-medium text-gray-700">{deliveryPlaceDisplay}</span>

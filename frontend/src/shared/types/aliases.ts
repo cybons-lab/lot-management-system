@@ -168,8 +168,8 @@ export type OrderLine = ApiOrderLine & {
   customer_name?: string | null;
 };
 
-type ApiOrderResponse = components["schemas"]["OrderResponse"];
 type ApiOrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
+type ApiOrderResponse = Omit<ApiOrderWithLinesResponse, "lines">;
 
 export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
   // Legacy fields for backward compatibility (will be removed)
@@ -186,6 +186,7 @@ export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
   sap_received_at?: string | null;
   received_date?: string | null;
   document_date?: string | null;
+  status?: string | null; // Legacy field
   lines?: OrderLine[];
 };
 
@@ -204,6 +205,7 @@ export type OrderWithLinesResponse = Omit<ApiOrderWithLinesResponse, "lines"> & 
   sap_received_at?: string | null;
   received_date?: string | null;
   document_date?: string | null;
+  status?: string | null; // Legacy field
   lines?: OrderLine[];
 };
 

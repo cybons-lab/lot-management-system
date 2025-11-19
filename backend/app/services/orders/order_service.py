@@ -11,7 +11,6 @@ from app.domain.order import (
     DuplicateOrderError,
     InvalidOrderStatusError,
     OrderNotFoundError,
-    OrderStateMachine,
     OrderValidationError,
     ProductNotFoundError,
 )
@@ -40,8 +39,6 @@ class OrderService:
     ) -> list[OrderResponse]:
         stmt: Select[Order] = select(Order).options(selectinload(Order.order_lines))
 
-        if status:
-            stmt = stmt.where(Order.status == status)
         if customer_code:
             # JOIN Customer table to filter by customer_code
             stmt = stmt.join(Customer, Order.customer_id == Customer.id).where(
@@ -63,7 +60,6 @@ class OrderService:
             .options(
                 selectinload(Order.order_lines).selectinload(OrderLine.product),
                 selectinload(Order.customer),
-                selectinload(Order.delivery_place),
             )
             .where(Order.id == order_id)
         )
@@ -90,9 +86,7 @@ class OrderService:
         order = Order(
             order_number=order_data.order_number,
             customer_id=order_data.customer_id,
-            delivery_place_id=order_data.delivery_place_id,
             order_date=order_data.order_date,
-            status=order_data.status,
         )
         self.db.add(order)
         self.db.flush()
@@ -120,32 +114,19 @@ class OrderService:
 
         return OrderWithLinesResponse.model_validate(order)
 
-    def update_order_status(self, order_id: int, new_status: str) -> OrderResponse:
-        stmt = select(Order).where(Order.id == order_id)
-        order = self.db.execute(stmt).scalar_one_or_none()
-        if not order:
-            raise OrderNotFoundError(order_id)
-
-        # 冪等化: 同一状態の場合は変更しない
-        if order.status == new_status:
-            return OrderResponse.model_validate(order)
-
-        OrderStateMachine.validate_transition(order.status, new_status)
-        order.status = new_status
-
-        self.db.flush()
-        return OrderResponse.model_validate(order)
-
     def cancel_order(self, order_id: int) -> None:
-        stmt = select(Order).where(Order.id == order_id)
+        # Load order with lines
+        stmt = select(Order).options(selectinload(Order.order_lines)).where(Order.id == order_id)
         order = self.db.execute(stmt).scalar_one_or_none()
         if not order:
             raise OrderNotFoundError(order_id)
 
-        if order.status in {"shipped", "closed"}:
-            raise InvalidOrderStatusError(
-                f"Status が '{order.status}' の受注はキャンセルできません"
-            )
+        # Cancel all lines
+        for line in order.order_lines:
+            if line.status in {"shipped", "completed"}:
+                raise InvalidOrderStatusError(
+                    f"Line {line.id} status is '{line.status}' and cannot be cancelled"
+                )
+            line.status = "cancelled"
 
-        order.status = "cancelled"
         self.db.flush()

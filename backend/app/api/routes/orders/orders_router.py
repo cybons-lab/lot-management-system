@@ -12,8 +12,6 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db, get_uow
 from app.schemas.orders.orders_schema import (
     OrderCreate,
-    OrderResponse,
-    OrderStatusUpdate,
     OrderWithLinesResponse,
 )
 from app.services.common.uow_service import UnitOfWork
@@ -87,32 +85,6 @@ def create_order(order: OrderCreate, uow: UnitOfWork = Depends(get_uow)):
     """
     service = OrderService(uow.session)
     return service.create_order(order)
-
-
-@router.patch("/{order_id}/status", response_model=OrderResponse)
-def update_order_status(order_id: int, body: OrderStatusUpdate, uow: UnitOfWork = Depends(get_uow)):
-    """
-    受注ステータス更新.
-
-    【修正#2】dict入力を廃止し、OrderStatusUpdateスキーマを使用
-    【修正#5】UnitOfWorkを依存注入で取得
-
-    Args:
-        order_id: 受注ID
-        body: ステータス更新データ（Schema検証済み）
-        uow: UnitOfWork（依存注入）
-
-    トランザクション管理:
-        - 成功時: UnitOfWorkが自動commit
-        - 例外発生時: UnitOfWorkが自動rollback
-
-    例外処理:
-        - OrderNotFoundError → 404 Not Found
-        - InvalidOrderStatusError → 400 Bad Request
-        上記はグローバルハンドラで変換される
-    """
-    service = OrderService(uow.session)
-    return service.update_order_status(order_id, body.status)
 
 
 @router.delete("/{order_id}/cancel", status_code=204)

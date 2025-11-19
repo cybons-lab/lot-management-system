@@ -13,8 +13,10 @@ import type { components } from "@/types/api";
 // ========================================
 
 // 受注関連の型
-type Order = components["schemas"]["OrderResponse"];
-type OrderDetail = components["schemas"]["OrderWithLinesResponse"];
+import type {
+  OrderResponse as Order,
+  OrderWithLinesResponse as OrderDetail,
+} from "@/shared/types/aliases";
 
 // 引当関連の型
 // Note: DragAssignRequest is deprecated, use AllocationSuggestionManualRequest for new code

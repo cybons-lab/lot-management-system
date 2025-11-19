@@ -30,7 +30,6 @@ export interface OrderUI extends Record<string, unknown> {
   customer_name: string; // Join field (not in DDL)
   order_date: string;
   status: string;
-  delivery_place_id: number; // DDL v2.2: required field
   remarks: string;
   created_at: string;
   updated_at: string;
@@ -102,6 +101,7 @@ export interface OrderLineUI extends Record<string, unknown> {
   order_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
   unit: string;
   delivery_date: string; // DDL v2.2: changed from due_date
+  delivery_place_id: number; // DDL v2.2: required field
   warehouse_allocations: unknown[];
   related_lots: unknown[];
   allocated_lots: unknown[];
@@ -127,7 +127,6 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
     customer_name: S(order.customer_name),
     order_date: S(order.order_date),
     status: S(order.status, "pending"),
-    delivery_place_id: N(order.delivery_place_id),
     remarks: S(order.remarks),
     created_at: S(order.created_at),
     updated_at: S(order.updated_at),
@@ -138,8 +137,8 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
     delivery_place: (order as Record<string, unknown>).delivery_place ?? null,
     delivery_place_code: (order as Record<string, unknown>).delivery_place_code ?? null,
     delivery_place_name: (order as Record<string, unknown>).delivery_place_name ?? null,
-    total_quantity: (order as Record<string, unknown>).total_quantity ?? null,
-    lines: order.lines,
+    total_quantity: ((order as Record<string, unknown>).total_quantity as number | null) ?? null,
+    lines: [], // OrderResponse no longer has lines
   };
 }
 
@@ -202,6 +201,7 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
     order_quantity: String(line.order_quantity ?? "0"),
     unit: S(line.unit, "EA"),
     delivery_date: S(line.delivery_date),
+    delivery_place_id: N(line.delivery_place_id),
     warehouse_allocations:
       ((line as Record<string, unknown>).warehouse_allocations as unknown[]) ?? [],
     related_lots: ((line as Record<string, unknown>).related_lots as unknown[]) ?? [],

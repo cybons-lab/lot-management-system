@@ -80,7 +80,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "マスタ",
-    href: "/masters/customer-items",
+    href: "/customer-items",
     icon: Database,
     color: "text-gray-600",
     activeColor: "text-teal-600 bg-teal-50",
@@ -113,26 +113,28 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 border-b bg-white/90 shadow-sm backdrop-blur-md">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             {/* ロゴ & ブランド */}
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-                <Sparkles className="h-6 w-6 text-white" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-gray-900 shadow-sm">
+                <Sparkles className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-lg font-bold text-transparent">
+                <h1 className="text-base font-bold tracking-tight text-gray-900">
                   ロット管理システム
                 </h1>
-                <p className="text-xs text-gray-500">Smart Inventory Manager</p>
+                <p className="text-[10px] font-medium tracking-wider text-gray-500 uppercase">
+                  Smart Inventory Manager
+                </p>
               </div>
             </div>
 
             {/* ナビゲーション */}
-            <nav className="flex items-center gap-2">
+            <nav className="flex items-center gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive =
@@ -144,42 +146,40 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
                     key={item.href}
                     to={item.href}
                     className={cn(
-                      "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-200",
+                      "group flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200",
                       isActive
-                        ? `${item.activeColor} shadow-sm`
-                        : `${item.color} hover:bg-gray-100`,
+                        ? "bg-gray-100 text-gray-900"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                     )}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="hidden sm:inline">{item.title}</span>
+                    <Icon
+                      className={cn(
+                        "h-4 w-4 transition-colors",
+                        isActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
+                      )}
+                    />
+                    <span className="hidden lg:inline">{item.title}</span>
                   </Link>
                 );
               })}
             </nav>
 
-            {/* 右側のユーザー情報など（将来拡張用） */}
-            <div className="flex items-center gap-2">
-              <div className="hidden items-center gap-2 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 px-3 py-1.5 md:flex">
-                <div className="h-2 w-2 animate-pulse rounded-full bg-green-500" />
+            {/* 右側のユーザー情報など */}
+            <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
+              <div className="hidden items-center gap-2 rounded-full bg-gray-100 px-3 py-1 md:flex">
+                <div className="h-2 w-2 rounded-full bg-green-500" />
                 <span className="text-xs font-medium text-gray-700">オンライン</span>
               </div>
+              <button className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900">
+                <Settings className="h-5 w-5" />
+              </button>
             </div>
           </div>
         </div>
       </header>
 
       {/* メインコンテンツ */}
-      <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">{children}</main>
-
-      {/* フッター（オプション） */}
-      <footer className="mt-auto border-t bg-white/50 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <p>© 2024 ロット管理システム - All rights reserved.</p>
-            <p className="font-medium">Version 2.1.0</p>
-          </div>
-        </div>
-      </footer>
+      <main className="mx-auto max-w-[1920px]">{children}</main>
     </div>
   );
 }

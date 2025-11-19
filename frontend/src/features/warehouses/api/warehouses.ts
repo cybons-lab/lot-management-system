@@ -4,6 +4,6 @@ import type { OldWarehouse } from "@/shared/types/aliases";
 
 /**
  * Get all warehouses
- * @endpoint GET /warehouses (was /masters/warehouses)
+ * @endpoint GET /warehouses
  */
 export const getWarehouses = () => fetchApi.get<OldWarehouse[]>("/warehouses");

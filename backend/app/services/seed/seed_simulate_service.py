@@ -583,10 +583,10 @@ def create_orders_with_constraints(
             continue
         order = Order(
             customer_id=cust.id,
-            delivery_place_id=delivery_place.id,
+            # delivery_place_id=delivery_place.id,  # Moved to OrderLine in v2.3
             order_number=faker.unique.bothify(text="SO-########"),
             order_date=datetime.utcnow().date() - timedelta(days=rng.randint(0, 14)),
-            status="pending",
+            # status="pending",  # Removed in v2.3
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -612,6 +612,8 @@ def create_orders_with_constraints(
                 delivery_date=delivery_date,
                 order_quantity=req_qty,
                 unit=prod.base_unit,
+                delivery_place_id=delivery_place.id,  # Added in v2.3
+                status="pending",  # Added in v2.3
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
             )
@@ -772,10 +774,10 @@ def validate_simulation_constraints(
     dest_violations = db.execute(
         text(
             """
-            SELECT o.id
-            FROM orders o
-            GROUP BY o.id
-            HAVING COUNT(DISTINCT o.delivery_place_id) > :max_dests
+            SELECT ol.order_id
+            FROM order_lines ol
+            GROUP BY ol.order_id
+            HAVING COUNT(DISTINCT ol.delivery_place_id) > :max_dests
             """
         ),
         {"max_dests": dest_max},
@@ -784,7 +786,7 @@ def validate_simulation_constraints(
         text(
             """
             SELECT id
-            FROM orders
+            FROM order_lines
             WHERE delivery_place_id IS NULL
             """
         )
@@ -798,7 +800,7 @@ def validate_simulation_constraints(
     else:
         tracker.add_log(
             task_id,
-            f"Destinations check: NG ({len(dest_violations)} limit violations, {len(missing_delivery)} missing destinations)",
+            f"Destinations check: NG ({len(dest_violations)} violations, {len(missing_delivery)} missing delivery_place_id)",
         )
 
     # Check 3: 受注明細行数チェック (≤5)
