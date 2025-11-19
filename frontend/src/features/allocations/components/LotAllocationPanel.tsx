@@ -46,6 +46,10 @@ interface LotAllocationPanelProps {
   error?: Error | null;
   /** 保存中 */
   isSaving?: boolean;
+  /** 過剰引当フラグ */
+  isOverAllocated?: boolean;
+  /** 残り必要数量（負の値は過剰分） */
+  remainingQty?: number;
 }
 
 export function LotAllocationPanel({
@@ -62,6 +66,8 @@ export function LotAllocationPanel({
   isLoading = false,
   error = null,
   isSaving = false,
+  isOverAllocated = false,
+  remainingQty: propRemainingQty,
 }: LotAllocationPanelProps) {
   // Shake animation state for each lot input
   const [shakingLotId, setShakingLotId] = useState<number | null>(null);
@@ -95,11 +101,15 @@ export function LotAllocationPanel({
     : 0;
   const uiAllocatedTotal = Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
   const totalAllocated = dbAllocated + uiAllocatedTotal;
-  const remainingQty = Math.max(0, requiredQty - totalAllocated);
+
+  // Use prop remainingQty if provided, otherwise calculate locally (though prop is preferred for sync)
+  const remainingQty =
+    propRemainingQty !== undefined ? propRemainingQty : Math.max(0, requiredQty - totalAllocated);
+
   const progressPercent = requiredQty > 0 ? Math.min(100, (totalAllocated / requiredQty) * 100) : 0;
 
   // 保存可能判定
-  const autoCanSave = uiAllocatedTotal > 0 && !isSaving;
+  const autoCanSave = uiAllocatedTotal > 0 && !isSaving && !isOverAllocated;
   const effectiveCanSave = typeof canSave === "boolean" ? canSave : autoCanSave;
 
   if (!orderLine) {
@@ -148,10 +158,15 @@ export function LotAllocationPanel({
               <div
                 className={cn(
                   "mt-1 font-semibold",
-                  remainingQty > 0 ? "text-red-600" : "text-green-600",
+                  remainingQty > 0
+                    ? "text-red-600"
+                    : remainingQty < 0
+                      ? "text-red-600"
+                      : "text-green-600",
                 )}
               >
-                {remainingQty.toLocaleString()}
+                {Math.abs(remainingQty).toLocaleString()}
+                {remainingQty < 0 && <span className="ml-1 text-xs text-red-600">(過剰)</span>}
               </div>
             </div>
           </div>
@@ -178,7 +193,26 @@ export function LotAllocationPanel({
           >
             クリア
           </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={onSaveAllocations}
+            disabled={!effectiveCanSave}
+            className={cn(
+              "flex-1",
+              isOverAllocated ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700",
+            )}
+          >
+            {isSaving ? "保存中..." : "保存"}
+          </Button>
         </div>
+
+        {isOverAllocated && (
+          <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-2 text-xs text-red-600">
+            <span className="font-bold">警告:</span>{" "}
+            必要数量を超えて引当されています。数量を調整してください。
+          </div>
+        )}
 
         <div className="mt-3">
           <div className="mb-1 flex items-center justify-between text-xs text-gray-500">
@@ -276,15 +310,6 @@ export function LotAllocationPanel({
                           const parsed = Number(inputValue);
 
                           // Check if input exceeds available quantity
-                          // Note: We don't know the exact "remaining needed" limit here easily without prop drilling or calculation duplication.
-                          // However, the parent component clamps the value. We can detect if the value didn't update as expected or if it exceeds availableQty.
-                          // A simpler heuristic: if user types a number > availableQty, shake.
-                          // For strict clamping to "remaining needed", we rely on the parent's clamping behavior.
-                          // If we want to shake on "remaining needed" limit, we'd need to know that limit here.
-                          // For now, let's shake if the user tries to input more than availableQty, which is a hard limit known here.
-                          // AND check if the parent clamped it (by comparing next render, but that's hard in onChange).
-
-                          // Better approach: Check if the input value is greater than availableQty
                           if (parsed > availableQty) {
                             setShakingLotId(lotId);
                           }
@@ -312,6 +337,8 @@ export function LotAllocationPanel({
                             orderLine?.allocated_qty ?? orderLine?.allocated_quantity ?? 0,
                           );
                           const totalOtherAllocation = dbAllocated + otherLotsCurrentInput;
+                          // Use local calculation for fallback logic if needed, or rely on parent
+                          // Here we just try to fill remaining needed
                           const remainingNeeded = Math.max(0, requiredQty - totalOtherAllocation);
                           const maxAllocation = Math.min(remainingNeeded, availableQty);
                           onLotAllocationChange(lotId, maxAllocation);
@@ -319,6 +346,17 @@ export function LotAllocationPanel({
                         className="whitespace-nowrap"
                       >
                         全量
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={onSaveAllocations}
+                        disabled={!effectiveCanSave || allocatedQty === 0}
+                        className="whitespace-nowrap"
+                        title="この状態を保存"
+                      >
+                        保存
                       </Button>
                     </div>
                   </div>
@@ -333,17 +371,10 @@ export function LotAllocationPanel({
       <div className={footerClasses}>
         <div className="flex items-center justify-between text-sm text-gray-700">
           <span>配分合計</span>
-          <span className="font-semibold">{uiAllocatedTotal.toLocaleString()}</span>
+          <span className={cn("font-semibold", isOverAllocated ? "text-red-600" : "")}>
+            {uiAllocatedTotal.toLocaleString()}
+          </span>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          onClick={onSaveAllocations}
-          disabled={!effectiveCanSave}
-          className="flex-1"
-        >
-          {isSaving ? "保存中..." : "保存"}
-        </Button>
       </div>
     </div>
   );
