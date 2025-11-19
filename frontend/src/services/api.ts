@@ -17,7 +17,7 @@ import type {
   OrderResponse as Order,
   OrderWithLinesResponse as OrderDetail,
 } from "@/shared/types/aliases";
-import { ForecastResponse } from "../shared/types/forecast";
+import type { ForecastListResponse } from "@/features/forecasts/api";
 
 // 引当関連の型
 // Note: DragAssignRequest is deprecated, use AllocationSuggestionManualRequest for new code
@@ -26,9 +26,6 @@ type DragAssignResponse = components["schemas"]["AllocationSuggestionManualRespo
 
 // ロット関連の型
 type Lot = components["schemas"]["LotResponse"];
-
-// Forecast関連の型（存在する型を使用）
-// Note: ForecastResponse does not exist in OpenAPI, using LegacyForecastResponse
 
 // ========================================
 // APIクライアント
@@ -80,19 +77,19 @@ export const api = {
 
   // ===== Forecast =====
   /**
-   * Forecast一覧を取得
+   * Forecast一覧を取得 (v2.4)
    * @param params クエリパラメータ（フィルタ条件など）
-   * @returns Forecastリスト
+   * @returns Forecastグループリスト
    */
   listForecasts: (params?: Record<string, unknown>) =>
-    http.get<ForecastResponse[]>("/forecast", { params }).then((r) => r.data),
+    http.get<ForecastListResponse>("/forecasts", { params }).then((r) => r.data),
 };
 
 // ========================================
 // 型のエクスポート
 // ========================================
 
-export type { Order, OrderDetail, DragAssignRequest, DragAssignResponse, Lot, ForecastResponse };
+export type { Order, OrderDetail, DragAssignRequest, DragAssignResponse, Lot, ForecastListResponse };
 
 // === Compat helpers added by patch ===
 export type DashboardStats = {

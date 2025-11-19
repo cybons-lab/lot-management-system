@@ -1,13 +1,15 @@
-// Forecast types relaxed to accommodate current UI usage
-export type ForecastResponse = {
-  id?: number;
-  product_code?: string;
-  granularity?: "daily" | "dekad" | "monthly";
-  date_day?: string | null;
-  date_dekad_start?: string | null;
-  year_month?: string | null;
-  forecast_qty?: number | null;
-  qty_forecast?: number | null;
-  version_no?: number | null;
-  version_issued_at?: string | null;
-};
+/**
+ * Forecast types for v2.4 schema (forecast_current / forecast_history)
+ *
+ * Note: These types are re-exported from @/features/forecasts/api for convenience.
+ * For full type definitions, see that module.
+ */
+
+export type {
+  Forecast,
+  ForecastGroup,
+  ForecastGroupKey,
+  ForecastListResponse,
+  ForecastHistory,
+  ForecastListParams,
+} from "@/features/forecasts/api";

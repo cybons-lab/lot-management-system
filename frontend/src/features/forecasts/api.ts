@@ -209,17 +209,3 @@ export const getForecastHistory = (params?: ForecastListParams) => {
 export const bulkImportForecasts = (data: BulkImportForecastRequest) => {
   return fetchApi.post<BulkImportForecastSummary>("/forecasts/bulk-import", data);
 };
-
-// ===== Legacy compatibility =====
-// These exports maintain backward compatibility with existing code
-
-export type ForecastHeader = ForecastGroupKey & {
-  forecast_id: number;
-  forecasts: Forecast[];
-  snapshot_at: string | null;
-};
-
-export type ForecastLine = Forecast;
-
-export const getForecastHeaders = getForecasts;
-export const getForecastHeader = getForecast;

@@ -1,23 +1,22 @@
 /**
- * ForecastDetailPage (v2.2 - Phase B-3)
- * Forecast header detail page with visual grid layout
+ * ForecastDetailPage (v2.4)
+ * Single forecast entry detail page - placeholder for future implementation
  */
 
 import { useParams, useNavigate } from "react-router-dom";
 
-import { ForecastDetailCard } from "../components";
-import { useForecastHeader } from "../hooks";
+import { useForecast } from "../hooks";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { ROUTES } from "@/constants/routes";
 
 export function ForecastDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const headerId = Number(id);
+  const forecastId = Number(id);
 
-  // Fetch forecast header with lines
-  const { data: forecast, isLoading, isError } = useForecastHeader(headerId);
+  const { data: forecast, isLoading, isError } = useForecast(forecastId);
 
   const handleBack = () => {
     navigate(ROUTES.FORECASTS.LIST);
@@ -37,7 +36,7 @@ export function ForecastDetailPage() {
     return (
       <div className="p-6">
         <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-600">
-          フォーキャストヘッダの取得に失敗しました
+          フォーキャストの取得に失敗しました
         </div>
         <Button onClick={handleBack} className="mt-4">
           一覧に戻る
@@ -52,52 +51,63 @@ export function ForecastDetailPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">フォーキャスト詳細</h2>
-          <p className="mt-1 text-gray-600">{forecast.forecast_number}</p>
+          <p className="mt-1 text-gray-600">ID: {forecast.id}</p>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right text-sm">
-            <span
-              className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                forecast.status === "active"
-                  ? "bg-green-100 text-green-800"
-                  : forecast.status === "completed"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {forecast.status}
-            </span>
-          </div>
-          <Button variant="outline" onClick={handleBack}>
-            一覧に戻る
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleBack}>
+          一覧に戻る
+        </Button>
       </div>
 
-      {/* Forecast Detail Card */}
-      <ForecastDetailCard forecast={forecast} />
+      {/* Forecast Detail */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <div className="text-sm font-medium text-gray-500">日付</div>
+              <div className="text-lg">
+                {new Date(forecast.forecast_date).toLocaleDateString("ja-JP")}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-500">予測数量</div>
+              <div className="text-lg font-semibold">
+                {Number(forecast.forecast_quantity).toLocaleString()} {forecast.unit ?? "EA"}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-500">得意先</div>
+              <div className="text-lg">
+                {forecast.customer_name ?? `ID: ${forecast.customer_id}`}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-500">納入先</div>
+              <div className="text-lg">
+                {forecast.delivery_place_name ?? `ID: ${forecast.delivery_place_id}`}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-500">製品</div>
+              <div className="text-lg">
+                {forecast.product_name ?? `ID: ${forecast.product_id}`}
+                {forecast.product_code && (
+                  <span className="ml-2 text-sm text-gray-500">({forecast.product_code})</span>
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-500">スナップショット日時</div>
+              <div className="text-lg">
+                {new Date(forecast.snapshot_at).toLocaleString("ja-JP")}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Summary Info */}
-      <div className="grid grid-cols-2 gap-4 text-sm text-gray-600 md:grid-cols-4">
-        <div>
-          <span className="font-medium">明細数:</span> {forecast.lines?.length ?? 0} 件
-        </div>
-        <div>
-          <span className="font-medium">開始日:</span>{" "}
-          {forecast.forecast_start_date
-            ? new Date(forecast.forecast_start_date).toLocaleDateString("ja-JP")
-            : "-"}
-        </div>
-        <div>
-          <span className="font-medium">終了日:</span>{" "}
-          {forecast.forecast_end_date
-            ? new Date(forecast.forecast_end_date).toLocaleDateString("ja-JP")
-            : "-"}
-        </div>
-        <div>
-          <span className="font-medium">更新日:</span>{" "}
-          {new Date(forecast.updated_at).toLocaleString("ja-JP")}
-        </div>
+      {/* Meta Info */}
+      <div className="text-sm text-gray-500">
+        更新日: {new Date(forecast.updated_at).toLocaleString("ja-JP")}
       </div>
     </div>
   );

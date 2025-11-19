@@ -1,43 +1,42 @@
 import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
-// frontend/src/features/orders/components/ForecastSection.tsx
 
-import { getForecasts, type ForecastListResponse } from "@/features/forecasts/api";
+import { getForecasts, type ForecastListResponse, type Forecast } from "@/features/forecasts/api";
 
 type Props = {
-  productCode?: string;
-  customerCode?: string;
+  productId?: number;
+  customerId?: number;
   fullWidth?: boolean;
 };
 
-export function ForecastSection({ productCode, customerCode, fullWidth = false }: Props) {
+export function ForecastSection({ productId, customerId, fullWidth = false }: Props) {
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const forecastQ = useQuery<ForecastListResponse[]>({
-    queryKey: ["forecast", productCode, customerCode],
-    queryFn: () => getForecasts({ product_id: productCode!, customer_id: customerCode! }),
-    enabled: isOpen && !!productCode && !!customerCode,
+  const forecastQ = useQuery<ForecastListResponse>({
+    queryKey: ["forecast", productId, customerId],
+    queryFn: () => getForecasts({ product_id: productId, customer_id: customerId }),
+    enabled: isOpen && !!productId && !!customerId,
     staleTime: 1000 * 60,
   });
 
-  if (!productCode || !customerCode) return null;
+  if (!productId || !customerId) return null;
 
-  const forecasts = forecastQ.data ?? [];
-  const hasForecast = forecasts.length > 0;
-
-  const renderPeriod = (forecast: ForecastListResponse) => {
-    // granularity can be string in legacy forecasts
-    const granularity = forecast.granularity as string | undefined;
-    switch (granularity) {
-      case "daily":
-        return (forecast as unknown as { date_day?: string }).date_day ?? "日次";
-      case "dekad":
-        return (forecast as unknown as { date_dekad_start?: string }).date_dekad_start ?? "旬次";
-      case "monthly":
-      default:
-        return (forecast as unknown as { year_month?: string }).year_month ?? "月次";
+  // Extract forecasts from first group (or flatten all groups)
+  const allForecasts: Forecast[] = [];
+  if (forecastQ.data?.items) {
+    for (const group of forecastQ.data.items) {
+      allForecasts.push(...group.forecasts);
     }
-  };
+  }
+
+  // Sort by forecast_date ascending and take upcoming ones
+  const sortedForecasts = allForecasts
+    .filter((f) => new Date(f.forecast_date) >= new Date())
+    .sort((a, b) => new Date(a.forecast_date).getTime() - new Date(b.forecast_date).getTime())
+    .slice(0, 6);
+
+  const hasForecast = sortedForecasts.length > 0;
+  const totalGroups = forecastQ.data?.total ?? 0;
 
   return (
     <div className={`rounded-lg border ${fullWidth ? "w-full" : ""}`}>
@@ -48,7 +47,7 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
         <div className="flex flex-col">
           <span className="text-sm font-medium">フォーキャスト</span>
           <span className="text-xs text-gray-500">
-            {productCode} × {customerCode}
+            製品ID: {productId} × 得意先ID: {customerId}
           </span>
         </div>
         <span className="text-gray-400">{isOpen ? "▼" : "▶"}</span>
@@ -61,32 +60,23 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
           ) : hasForecast ? (
             <div className="space-y-3">
               <div className="text-xs text-gray-600">
-                アクティブなフォーキャストが {forecasts.length} 件見つかりました。
+                {totalGroups} グループ、今後のフォーキャスト {sortedForecasts.length} 件を表示
               </div>
               <div className="grid gap-3 text-xs sm:grid-cols-2 md:grid-cols-3">
-                {forecasts.slice(0, 3).map((f, idx) => (
-                  <div
-                    key={(f as { id?: number }).id ?? idx}
-                    className="rounded border bg-white p-3 shadow-sm"
-                  >
-                    <div className="text-[11px] text-gray-400 uppercase">
-                      {(f.granularity as string) ?? "unknown"}
+                {sortedForecasts.map((f) => (
+                  <div key={f.id} className="rounded border bg-white p-3 shadow-sm">
+                    <div className="text-[11px] uppercase text-gray-400">
+                      {new Date(f.forecast_date).toLocaleDateString("ja-JP", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </div>
-                    <div className="text-sm font-semibold text-gray-800">{renderPeriod(f)}</div>
-                    <div className="mt-1 text-xs text-gray-500">
-                      予測数量:{" "}
-                      {(
-                        (f as unknown as { qty_forecast?: number }).qty_forecast ?? 0
-                      ).toLocaleString()}{" "}
-                      EA
+                    <div className="text-sm font-semibold text-gray-800">
+                      {Number(f.forecast_quantity).toLocaleString()} {f.unit ?? "EA"}
                     </div>
                     <div className="mt-1 text-[11px] text-gray-400">
-                      v{(f as unknown as { version_no?: number }).version_no ?? 0}・
-                      {(f as unknown as { version_issued_at?: string }).version_issued_at
-                        ? new Date(
-                            (f as unknown as { version_issued_at?: string }).version_issued_at!,
-                          ).toLocaleDateString()
-                        : "日付不明"}
+                      {f.product_name ?? `製品ID: ${f.product_id}`}
                     </div>
                   </div>
                 ))}
@@ -94,7 +84,7 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
             </div>
           ) : (
             <div className="rounded border border-dashed border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
-              得意先 {customerCode} 向けの {productCode} フォーキャストは登録されていません。
+              得意先ID {customerId} 向けの製品ID {productId} フォーキャストは登録されていません。
             </div>
           )}
 
@@ -106,13 +96,13 @@ export function ForecastSection({ productCode, customerCode, fullWidth = false }
 
           <div className="flex flex-wrap gap-2 text-xs">
             <a
-              href={`/forecast?product=${encodeURIComponent(productCode)}&client=${encodeURIComponent(customerCode)}`}
+              href={`/forecasts?product_id=${productId}&customer_id=${customerId}`}
               className="inline-flex items-center gap-1 rounded bg-sky-600 px-3 py-1.5 text-white hover:bg-sky-700"
             >
               詳細を開く
             </a>
             <a
-              href="/forecast"
+              href="/forecasts"
               className="inline-flex items-center gap-1 rounded border px-3 py-1.5 hover:bg-gray-100"
             >
               フォーキャスト一覧

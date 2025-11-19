@@ -124,9 +124,3 @@ export const useBulkImportForecasts = () => {
     },
   });
 };
-
-// ===== Legacy compatibility =====
-// These exports maintain backward compatibility with existing code
-
-export const useForecastHeaders = useForecasts;
-export const useForecastHeader = useForecast;
