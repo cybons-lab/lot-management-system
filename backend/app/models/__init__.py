@@ -6,7 +6,7 @@ Legacy models have been removed.
 
 from .auth_models import Role, User, UserRole
 from .base_model import Base
-from .forecast_models import Forecast, ForecastHeader, ForecastLine, ForecastStatus
+from .forecast_models import Forecast, ForecastCurrent, ForecastHistory
 from .inbound_models import ExpectedLot, InboundPlan, InboundPlanLine, InboundPlanStatus
 from .inventory_models import (
     Adjustment,
@@ -61,9 +61,8 @@ __all__ = [
     "OrderLine",
     "Allocation",
     # Forecast
-    "ForecastHeader",
-    "ForecastLine",
-    "ForecastStatus",
+    "ForecastCurrent",
+    "ForecastHistory",
     "Forecast",  # Backward compatibility alias
     # Inbound
     "InboundPlan",

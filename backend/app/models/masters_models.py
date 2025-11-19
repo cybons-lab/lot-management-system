@@ -27,7 +27,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .forecast_models import ForecastHeader, ForecastLine
+    from .forecast_models import ForecastCurrent
     from .inbound_models import InboundPlan, InboundPlanLine
     from .inventory_models import Lot
     from .orders_models import Order, OrderLine
@@ -127,8 +127,8 @@ class Customer(Base):
 
     # Relationships
     orders: Mapped[list[Order]] = relationship("Order", back_populates="customer")
-    forecast_headers: Mapped[list[ForecastHeader]] = relationship(
-        "ForecastHeader", back_populates="customer"
+    forecast_current: Mapped[list[ForecastCurrent]] = relationship(
+        "ForecastCurrent", back_populates="customer"
     )
     delivery_places: Mapped[list[DeliveryPlace]] = relationship(
         "DeliveryPlace", back_populates="customer"
@@ -172,9 +172,8 @@ class DeliveryPlace(Base):
 
     # Relationships
     customer: Mapped[Customer] = relationship("Customer", back_populates="delivery_places")
-    customer: Mapped[Customer] = relationship("Customer", back_populates="delivery_places")
-    forecast_headers: Mapped[list[ForecastHeader]] = relationship(
-        "ForecastHeader", back_populates="delivery_place"
+    forecast_current: Mapped[list[ForecastCurrent]] = relationship(
+        "ForecastCurrent", back_populates="delivery_place"
     )
 
 
@@ -208,8 +207,8 @@ class Product(Base):
     # Relationships
     lots: Mapped[list[Lot]] = relationship("Lot", back_populates="product")
     order_lines: Mapped[list[OrderLine]] = relationship("OrderLine", back_populates="product")
-    forecast_lines: Mapped[list[ForecastLine]] = relationship(
-        "ForecastLine", back_populates="product"
+    forecast_current: Mapped[list[ForecastCurrent]] = relationship(
+        "ForecastCurrent", back_populates="product"
     )
     inbound_plan_lines: Mapped[list[InboundPlanLine]] = relationship(
         "InboundPlanLine", back_populates="product"

@@ -1,111 +1,124 @@
-"""Pydantic schemas for forecast headers and lines."""
+"""Pydantic schemas for forecast v2.4 (forecast_current / forecast_history)."""
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
 
 from pydantic import Field
 
 from app.schemas.common.base import BaseSchema, TimestampMixin
 
 
-class ForecastStatus(str, Enum):
-    """Lifecycle states for :class:`ForecastHeader`."""
-
-    ACTIVE = "active"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-
-
-class ForecastHeaderBase(BaseSchema):
-    """Common attributes shared by create/update operations."""
+class ForecastBase(BaseSchema):
+    """Common attributes for forecast entries."""
 
     customer_id: int
     delivery_place_id: int
-    forecast_number: str
-    forecast_start_date: date
-    forecast_end_date: date
-    status: ForecastStatus = ForecastStatus.ACTIVE
-
-
-class ForecastHeaderCreate(ForecastHeaderBase):
-    """Payload for creating a new forecast header."""
-
-    lines: list[ForecastLineCreate] | None = Field(
-        default=None,
-        description="Optional collection of forecast lines created together with the header.",
-    )
-
-
-class ForecastHeaderUpdate(BaseSchema):
-    """Mutable fields on a forecast header."""
-
-    delivery_place_id: int | None = None
-    forecast_number: str | None = None
-    forecast_start_date: date | None = None
-    forecast_end_date: date | None = None
-    status: ForecastStatus | None = None
-
-
-class ForecastHeaderResponse(ForecastHeaderBase, TimestampMixin):
-    """API response model for forecast headers."""
-
-    id: int = Field(serialization_alias="forecast_id")
-    customer_name: str | None = None
-    delivery_place_name: str | None = None
-
-
-class ForecastHeaderDetailResponse(ForecastHeaderResponse):
-    """Header representation bundled with its lines."""
-
-    lines: list[ForecastLineResponse] = Field(default_factory=list)
-
-
-class ForecastLineBase(BaseSchema):
-    """Shared fields for forecast line payloads."""
-
     product_id: int
-    delivery_date: date
-    forecast_quantity: Decimal = Field(serialization_alias="quantity")
-    unit: str
+    forecast_date: date
+    forecast_quantity: Decimal
+    unit: str | None = None
 
 
-class ForecastLineCreate(ForecastLineBase):
-    """Payload for adding a forecast line."""
+class ForecastCreate(ForecastBase):
+    """Payload for creating a new forecast entry."""
 
     pass
 
 
-class ForecastLineUpdate(BaseSchema):
-    """Mutable fields for forecast lines."""
+class ForecastUpdate(BaseSchema):
+    """Mutable fields for updating a forecast entry."""
 
-    delivery_date: date | None = None
     forecast_quantity: Decimal | None = None
     unit: str | None = None
 
 
-class ForecastLineResponse(ForecastLineBase, TimestampMixin):
-    """API response model for forecast lines."""
+class ForecastResponse(ForecastBase, TimestampMixin):
+    """API response model for forecast_current entries."""
 
-    id: int = Field(serialization_alias="forecast_line_id")
-    forecast_id: int
+    id: int
+    snapshot_at: datetime
+    # Joined master data
+    customer_code: str | None = None
+    customer_name: str | None = None
+    delivery_place_code: str | None = None
+    delivery_place_name: str | None = None
     product_code: str | None = None
     product_name: str | None = None
 
 
-class ForecastBulkImportResult(BaseSchema):
-    """Result entry for bulk import operations."""
+class ForecastHistoryResponse(ForecastBase):
+    """API response model for forecast_history entries."""
 
-    header: ForecastHeaderResponse
-    created_lines: list[ForecastLineResponse]
+    id: int
+    snapshot_at: datetime
+    archived_at: datetime
+    created_at: datetime
+    updated_at: datetime
+    # Joined master data
+    customer_code: str | None = None
+    customer_name: str | None = None
+    delivery_place_code: str | None = None
+    delivery_place_name: str | None = None
+    product_code: str | None = None
+    product_name: str | None = None
+
+
+class ForecastGroupKey(BaseSchema):
+    """Group key for customer × delivery_place × product."""
+
+    customer_id: int
+    delivery_place_id: int
+    product_id: int
+    customer_code: str | None = None
+    customer_name: str | None = None
+    delivery_place_code: str | None = None
+    delivery_place_name: str | None = None
+    product_code: str | None = None
+    product_name: str | None = None
+
+
+class ForecastGroupResponse(BaseSchema):
+    """Grouped forecasts by customer × delivery_place × product."""
+
+    group_key: ForecastGroupKey
+    forecasts: list[ForecastResponse] = Field(default_factory=list)
+    snapshot_at: datetime | None = None
+
+
+class ForecastListResponse(BaseSchema):
+    """List response with grouped forecasts."""
+
+    items: list[ForecastGroupResponse]
+    total: int
+
+
+class ForecastBulkImportItem(BaseSchema):
+    """Single item for bulk import."""
+
+    customer_code: str
+    delivery_place_code: str
+    product_code: str
+    forecast_date: date
+    forecast_quantity: Decimal
+    unit: str | None = None
+
+
+class ForecastBulkImportRequest(BaseSchema):
+    """Bulk import request payload."""
+
+    items: list[ForecastBulkImportItem]
+    replace_existing: bool = Field(
+        default=True,
+        description="If true, archive existing forecasts before importing new ones",
+    )
 
 
 class ForecastBulkImportSummary(BaseSchema):
     """Aggregated summary of bulk import outcomes."""
 
-    imported_headers: int
-    imported_lines: int
-    skipped_headers: int = 0
-    skipped_lines: int = 0
+    imported_count: int
+    archived_count: int
+    skipped_count: int = 0
+    errors: list[str] = Field(default_factory=list)

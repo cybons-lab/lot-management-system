@@ -1,17 +1,17 @@
-"""Forecast API endpoints with header/line structure."""
+"""Forecast API endpoints for v2.4 schema (forecast_current / forecast_history)."""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.schemas.forecasts.forecast_schema import (
-    ForecastHeaderCreate,
-    ForecastHeaderDetailResponse,
-    ForecastHeaderResponse,
-    ForecastHeaderUpdate,
-    ForecastLineCreate,
-    ForecastLineResponse,
-    ForecastLineUpdate,
+    ForecastBulkImportRequest,
+    ForecastBulkImportSummary,
+    ForecastCreate,
+    ForecastHistoryResponse,
+    ForecastListResponse,
+    ForecastResponse,
+    ForecastUpdate,
 )
 from app.services.forecasts.forecast_service import ForecastService
 
@@ -19,284 +19,206 @@ from app.services.forecasts.forecast_service import ForecastService
 router = APIRouter(prefix="/forecasts", tags=["forecasts"])
 
 
-# ===== Forecast Headers =====
-
-
-@router.get("/headers", response_model=list[ForecastHeaderResponse])
-def list_forecast_headers(
+@router.get("", response_model=ForecastListResponse)
+def list_forecasts(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=1000),
     customer_id: int | None = None,
     delivery_place_id: int | None = None,
-    status: str | None = None,
+    product_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     """
-    フォーキャストヘッダ一覧取得.
+    フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.
 
     Args:
         skip: スキップ件数（ページネーション用）
         limit: 取得件数上限
         customer_id: 得意先IDでフィルタ
         delivery_place_id: 納入先IDでフィルタ
-        status: ステータスでフィルタ（active/completed/cancelled）
+        product_id: 製品IDでフィルタ
         db: データベースセッション
 
     Returns:
-        フォーキャストヘッダのリスト
+        グループ化されたフォーキャストリスト
     """
     service = ForecastService(db)
-    return service.get_headers(
+    return service.get_forecasts(
         skip=skip,
         limit=limit,
         customer_id=customer_id,
         delivery_place_id=delivery_place_id,
-        status=status,
+        product_id=product_id,
     )
 
 
-@router.post(
-    "/headers",
-    response_model=ForecastHeaderDetailResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_forecast_header(
-    header: ForecastHeaderCreate,
+@router.get("/history", response_model=list[ForecastHistoryResponse])
+def list_forecast_history(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=1000),
+    customer_id: int | None = None,
+    delivery_place_id: int | None = None,
+    product_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     """
-    フォーキャストヘッダ作成（明細も同時登録可能）.
+    フォーキャスト履歴取得.
 
     Args:
-        header: フォーキャストヘッダ作成データ（明細含む）
+        skip: スキップ件数
+        limit: 取得件数上限
+        customer_id: 得意先IDでフィルタ
+        delivery_place_id: 納入先IDでフィルタ
+        product_id: 製品IDでフィルタ
         db: データベースセッション
 
     Returns:
-        作成されたフォーキャストヘッダ（明細含む）
+        アーカイブ済みフォーキャストリスト
     """
     service = ForecastService(db)
-    return service.create_header(header)
+    return service.get_history(
+        customer_id=customer_id,
+        delivery_place_id=delivery_place_id,
+        product_id=product_id,
+        skip=skip,
+        limit=limit,
+    )
 
 
-@router.get("/headers/{header_id}", response_model=ForecastHeaderDetailResponse)
-def get_forecast_header(
-    header_id: int,
+@router.get("/{forecast_id}", response_model=ForecastResponse)
+def get_forecast(
+    forecast_id: int,
     db: Session = Depends(get_db),
 ):
     """
-    フォーキャストヘッダ詳細取得（明細含む）.
+    フォーキャスト詳細取得.
 
     Args:
-        header_id: フォーキャストヘッダID
+        forecast_id: フォーキャストID
         db: データベースセッション
 
     Returns:
-        フォーキャストヘッダ（明細含む）
+        フォーキャスト
 
     Raises:
-        HTTPException: ヘッダが見つからない場合は404
+        HTTPException: 見つからない場合は404
     """
     service = ForecastService(db)
-    header = service.get_header_by_id(header_id)
-    if not header:
+    forecast = service.get_forecast_by_id(forecast_id)
+    if not forecast:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Forecast header with id={header_id} not found",
+            detail=f"Forecast with id={forecast_id} not found",
         )
-    return header
+    return forecast
 
 
-@router.put("/headers/{header_id}", response_model=ForecastHeaderResponse)
-def update_forecast_header(
-    header_id: int,
-    header: ForecastHeaderUpdate,
+@router.post(
+    "",
+    response_model=ForecastResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_forecast(
+    data: ForecastCreate,
     db: Session = Depends(get_db),
 ):
     """
-    フォーキャストヘッダ更新.
+    フォーキャスト作成.
 
     Args:
-        header_id: フォーキャストヘッダID
-        header: 更新データ
+        data: フォーキャスト作成データ
         db: データベースセッション
 
     Returns:
-        更新後のフォーキャストヘッダ
-
-    Raises:
-        HTTPException: ヘッダが見つからない場合は404
+        作成されたフォーキャスト
     """
     service = ForecastService(db)
-    updated = service.update_header(header_id, header)
+    return service.create_forecast(data)
+
+
+@router.put("/{forecast_id}", response_model=ForecastResponse)
+def update_forecast(
+    forecast_id: int,
+    data: ForecastUpdate,
+    db: Session = Depends(get_db),
+):
+    """
+    フォーキャスト更新.
+
+    Args:
+        forecast_id: フォーキャストID
+        data: 更新データ
+        db: データベースセッション
+
+    Returns:
+        更新後のフォーキャスト
+
+    Raises:
+        HTTPException: 見つからない場合は404
+    """
+    service = ForecastService(db)
+    updated = service.update_forecast(forecast_id, data)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Forecast header with id={header_id} not found",
+            detail=f"Forecast with id={forecast_id} not found",
         )
     return updated
 
 
-@router.delete("/headers/{header_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_forecast_header(
-    header_id: int,
+@router.delete("/{forecast_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_forecast(
+    forecast_id: int,
     db: Session = Depends(get_db),
 ):
     """
-    フォーキャストヘッダ削除（カスケード削除：明細も削除される）.
+    フォーキャスト削除.
 
     Args:
-        header_id: フォーキャストヘッダID
+        forecast_id: フォーキャストID
         db: データベースセッション
 
     Returns:
         None
 
     Raises:
-        HTTPException: ヘッダが見つからない場合は404
+        HTTPException: 見つからない場合は404
     """
     service = ForecastService(db)
-    deleted = service.delete_header(header_id)
+    deleted = service.delete_forecast(forecast_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Forecast header with id={header_id} not found",
+            detail=f"Forecast with id={forecast_id} not found",
         )
     return None
 
 
-# ===== Forecast Lines =====
-
-
-@router.get("/headers/{header_id}/lines", response_model=list[ForecastLineResponse])
-def list_forecast_lines(
-    header_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    フォーキャスト明細一覧取得.
-
-    Args:
-        header_id: フォーキャストヘッダID
-        db: データベースセッション
-
-    Returns:
-        フォーキャスト明細のリスト
-    """
-    service = ForecastService(db)
-    return service.get_lines_by_header(header_id)
-
-
 @router.post(
-    "/headers/{header_id}/lines",
-    response_model=ForecastLineResponse,
-    status_code=status.HTTP_201_CREATED,
-)
-def create_forecast_line(
-    header_id: int,
-    line: ForecastLineCreate,
-    db: Session = Depends(get_db),
-):
-    """
-    フォーキャスト明細追加.
-
-    Args:
-        header_id: フォーキャストヘッダID
-        line: 明細作成データ
-        db: データベースセッション
-
-    Returns:
-        作成された明細
-
-    Raises:
-        HTTPException: ヘッダが見つからない場合は404
-    """
-    service = ForecastService(db)
-    return service.create_line(header_id, line)
-
-
-@router.put("/lines/{line_id}", response_model=ForecastLineResponse)
-def update_forecast_line(
-    line_id: int,
-    line: ForecastLineUpdate,
-    db: Session = Depends(get_db),
-):
-    """
-    フォーキャスト明細更新.
-
-    Args:
-        line_id: 明細ID
-        line: 更新データ
-        db: データベースセッション
-
-    Returns:
-        更新後の明細
-
-    Raises:
-        HTTPException: 明細が見つからない場合は404
-    """
-    service = ForecastService(db)
-    updated = service.update_line(line_id, line)
-    if not updated:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Forecast line with id={line_id} not found",
-        )
-    return updated
-
-
-@router.delete("/lines/{line_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_forecast_line(
-    line_id: int,
-    db: Session = Depends(get_db),
-):
-    """
-    フォーキャスト明細削除.
-
-    Args:
-        line_id: 明細ID
-        db: データベースセッション
-
-    Returns:
-        None
-
-    Raises:
-        HTTPException: 明細が見つからない場合は404
-    """
-    service = ForecastService(db)
-    deleted = service.delete_line(line_id)
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Forecast line with id={line_id} not found",
-        )
-    return None
-
-
-# ===== Bulk Import =====
-
-
-@router.post(
-    "/headers/bulk-import",
-    response_model=list[ForecastHeaderDetailResponse],
+    "/bulk-import",
+    response_model=ForecastBulkImportSummary,
     status_code=status.HTTP_201_CREATED,
 )
 def bulk_import_forecasts(
-    headers: list[ForecastHeaderCreate],
+    request: ForecastBulkImportRequest,
     db: Session = Depends(get_db),
 ):
     """
-    フォーキャスト一括登録（ヘッダ・明細同時登録）.
+    フォーキャスト一括インポート.
+
+    CSVデータからフォーキャストを一括登録します。
+    replace_existing=True の場合、同じ顧客×納入先×製品の既存データを
+    履歴テーブルにアーカイブしてから新データを登録します。
 
     Args:
-        headers: フォーキャストヘッダリスト（各ヘッダに明細を含む）
+        request: インポートリクエスト（items + replace_existing）
         db: データベースセッション
 
     Returns:
-        作成されたフォーキャストヘッダリスト（明細含む）
-
-    Note:
-        - トランザクション単位で処理
-        - エラーが発生した場合は全体をロールバック
+        インポート結果サマリ
     """
     service = ForecastService(db)
-    return service.bulk_import_headers(headers)
+    return service.bulk_import(
+        items=request.items,
+        replace_existing=request.replace_existing,
+    )

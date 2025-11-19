@@ -1,453 +1,367 @@
-"""Forecast service layer with header/line structure support."""
+"""Forecast service for v2.4 schema (forecast_current / forecast_history)."""
 
+from collections import defaultdict
 from datetime import datetime
 
+from sqlalchemy import and_
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.forecast_models import ForecastHeader, ForecastLine
+from app.models.forecast_models import ForecastCurrent, ForecastHistory
+from app.models.masters_models import Customer, DeliveryPlace, Product
 from app.schemas.forecasts.forecast_schema import (
-    ForecastHeaderCreate,
-    ForecastHeaderDetailResponse,
-    ForecastHeaderResponse,
-    ForecastHeaderUpdate,
-    ForecastLineCreate,
-    ForecastLineResponse,
-    ForecastLineUpdate,
+    ForecastBulkImportItem,
+    ForecastBulkImportSummary,
+    ForecastCreate,
+    ForecastGroupKey,
+    ForecastGroupResponse,
+    ForecastHistoryResponse,
+    ForecastListResponse,
+    ForecastResponse,
+    ForecastUpdate,
 )
 
 
 class ForecastService:
-    """Business logic for forecast headers and lines."""
+    """Business logic for forecast_current and forecast_history."""
 
     def __init__(self, db: Session):
-        """
-        Initialize forecast service.
-
-        Args:
-            db: Database session
-        """
+        """Initialize forecast service."""
         self.db = db
 
-    # ===== Forecast Header Operations =====
-
-    def get_headers(
+    def get_forecasts(
         self,
         skip: int = 0,
         limit: int = 100,
         customer_id: int | None = None,
         delivery_place_id: int | None = None,
-        status: str | None = None,
-    ) -> list[ForecastHeaderResponse]:
-        """
-        Get forecast headers with optional filtering.
-
-        Args:
-            skip: Number of records to skip (pagination)
-            limit: Maximum number of records to return
-            customer_id: Filter by customer ID
-            delivery_place_id: Filter by delivery place ID
-            status: Filter by status (active/completed/cancelled)
-
-        Returns:
-            List of forecast headers
-        """
-        query = self.db.query(ForecastHeader).options(
-            joinedload(ForecastHeader.customer), joinedload(ForecastHeader.delivery_place)
+        product_id: int | None = None,
+    ) -> ForecastListResponse:
+        """Get current forecasts grouped by customer × delivery_place × product."""
+        query = self.db.query(ForecastCurrent).options(
+            joinedload(ForecastCurrent.customer),
+            joinedload(ForecastCurrent.delivery_place),
+            joinedload(ForecastCurrent.product),
         )
 
         if customer_id is not None:
-            query = query.filter(ForecastHeader.customer_id == customer_id)
-
+            query = query.filter(ForecastCurrent.customer_id == customer_id)
         if delivery_place_id is not None:
-            query = query.filter(ForecastHeader.delivery_place_id == delivery_place_id)
+            query = query.filter(ForecastCurrent.delivery_place_id == delivery_place_id)
+        if product_id is not None:
+            query = query.filter(ForecastCurrent.product_id == product_id)
 
-        if status is not None:
-            query = query.filter(ForecastHeader.status == status)
+        query = query.order_by(
+            ForecastCurrent.customer_id,
+            ForecastCurrent.delivery_place_id,
+            ForecastCurrent.product_id,
+            ForecastCurrent.forecast_date,
+        )
 
-        query = query.order_by(ForecastHeader.created_at.desc())
+        forecasts = query.all()
 
-        headers = query.offset(skip).limit(limit).all()
+        # Group by customer × delivery_place × product
+        grouped: dict[tuple[int, int, int], list[ForecastCurrent]] = defaultdict(list)
+        for forecast in forecasts:
+            key = (forecast.customer_id, forecast.delivery_place_id, forecast.product_id)
+            grouped[key].append(forecast)
 
-        return [
-            ForecastHeaderResponse(
-                id=header.id,
-                customer_id=header.customer_id,
-                delivery_place_id=header.delivery_place_id,
-                forecast_number=header.forecast_number,
-                forecast_start_date=header.forecast_start_date,
-                forecast_end_date=header.forecast_end_date,
-                status=header.status,
-                created_at=header.created_at,
-                updated_at=header.updated_at,
-                customer_name=getattr(header.customer, "customer_name", None),
-                delivery_place_name=getattr(header.delivery_place, "delivery_place_name", None),
+        # Build response
+        items: list[ForecastGroupResponse] = []
+        for (cust_id, dp_id, prod_id), forecast_list in grouped.items():
+            if not forecast_list:
+                continue
+
+            first = forecast_list[0]
+            group_key = ForecastGroupKey(
+                customer_id=cust_id,
+                delivery_place_id=dp_id,
+                product_id=prod_id,
+                customer_code=getattr(first.customer, "customer_code", None),
+                customer_name=getattr(first.customer, "customer_name", None),
+                delivery_place_code=getattr(first.delivery_place, "delivery_place_code", None),
+                delivery_place_name=getattr(first.delivery_place, "delivery_place_name", None),
+                product_code=getattr(first.product, "maker_part_code", None),
+                product_name=getattr(first.product, "product_name", None),
             )
-            for header in headers
-        ]
 
-    def get_header_by_id(self, header_id: int) -> ForecastHeaderDetailResponse | None:
-        """
-        Get forecast header by ID with associated lines.
+            forecast_responses = [
+                ForecastResponse(
+                    id=f.id,
+                    customer_id=f.customer_id,
+                    delivery_place_id=f.delivery_place_id,
+                    product_id=f.product_id,
+                    forecast_date=f.forecast_date,
+                    forecast_quantity=f.forecast_quantity,
+                    unit=f.unit,
+                    snapshot_at=f.snapshot_at,
+                    created_at=f.created_at,
+                    updated_at=f.updated_at,
+                    customer_code=getattr(f.customer, "customer_code", None),
+                    customer_name=getattr(f.customer, "customer_name", None),
+                    delivery_place_code=getattr(f.delivery_place, "delivery_place_code", None),
+                    delivery_place_name=getattr(f.delivery_place, "delivery_place_name", None),
+                    product_code=getattr(f.product, "maker_part_code", None),
+                    product_name=getattr(f.product, "product_name", None),
+                )
+                for f in forecast_list
+            ]
 
-        Args:
-            header_id: Forecast header ID
+            items.append(
+                ForecastGroupResponse(
+                    group_key=group_key,
+                    forecasts=forecast_responses,
+                    snapshot_at=first.snapshot_at,
+                )
+            )
 
-        Returns:
-            Forecast header with lines, or None if not found
-        """
-        header = (
-            self.db.query(ForecastHeader)
+        # Apply pagination
+        total = len(items)
+        paginated_items = items[skip : skip + limit]
+
+        return ForecastListResponse(items=paginated_items, total=total)
+
+    def get_forecast_by_id(self, forecast_id: int) -> ForecastResponse | None:
+        """Get single forecast entry by ID."""
+        forecast = (
+            self.db.query(ForecastCurrent)
             .options(
-                joinedload(ForecastHeader.customer),
-                joinedload(ForecastHeader.delivery_place),
-                joinedload(ForecastHeader.lines).joinedload(ForecastLine.product),
+                joinedload(ForecastCurrent.customer),
+                joinedload(ForecastCurrent.delivery_place),
+                joinedload(ForecastCurrent.product),
             )
-            .filter(ForecastHeader.id == header_id)
+            .filter(ForecastCurrent.id == forecast_id)
             .first()
         )
 
-        if not header:
+        if not forecast:
             return None
 
-        # Convert to response schema
-        return ForecastHeaderDetailResponse(
-            id=header.id,
-            customer_id=header.customer_id,
-            delivery_place_id=header.delivery_place_id,
-            forecast_number=header.forecast_number,
-            forecast_start_date=header.forecast_start_date,
-            forecast_end_date=header.forecast_end_date,
-            status=header.status,
-            created_at=header.created_at,
-            updated_at=header.updated_at,
-            customer_name=getattr(header.customer, "customer_name", None),
-            delivery_place_name=getattr(header.delivery_place, "delivery_place_name", None),
-            lines=[
-                ForecastLineResponse(
-                    id=line.id,
-                    forecast_id=line.forecast_id,
-                    product_id=line.product_id,
-                    delivery_date=line.delivery_date,
-                    forecast_quantity=line.forecast_quantity,
-                    unit=line.unit,
-                    created_at=line.created_at,
-                    updated_at=line.updated_at,
-                    product_code=getattr(line.product, "maker_part_code", None),
-                    product_name=getattr(line.product, "product_name", None),
-                )
-                for line in header.lines
-            ],
+        return ForecastResponse(
+            id=forecast.id,
+            customer_id=forecast.customer_id,
+            delivery_place_id=forecast.delivery_place_id,
+            product_id=forecast.product_id,
+            forecast_date=forecast.forecast_date,
+            forecast_quantity=forecast.forecast_quantity,
+            unit=forecast.unit,
+            snapshot_at=forecast.snapshot_at,
+            created_at=forecast.created_at,
+            updated_at=forecast.updated_at,
+            customer_code=getattr(forecast.customer, "customer_code", None),
+            customer_name=getattr(forecast.customer, "customer_name", None),
+            delivery_place_code=getattr(forecast.delivery_place, "delivery_place_code", None),
+            delivery_place_name=getattr(forecast.delivery_place, "delivery_place_name", None),
+            product_code=getattr(forecast.product, "maker_part_code", None),
+            product_name=getattr(forecast.product, "product_name", None),
         )
 
-    def create_header(self, header: ForecastHeaderCreate) -> ForecastHeaderDetailResponse:
-        """
-        Create forecast header (with optional lines).
-
-        Args:
-            header: Forecast header creation data
-
-        Returns:
-            Created forecast header with lines
-        """
-        # Create header
-        db_header = ForecastHeader(
-            customer_id=header.customer_id,
-            delivery_place_id=header.delivery_place_id,
-            forecast_number=header.forecast_number,
-            forecast_start_date=header.forecast_start_date,
-            forecast_end_date=header.forecast_end_date,
-            status=header.status,
+    def create_forecast(self, data: ForecastCreate) -> ForecastResponse:
+        """Create a new forecast entry."""
+        db_forecast = ForecastCurrent(
+            customer_id=data.customer_id,
+            delivery_place_id=data.delivery_place_id,
+            product_id=data.product_id,
+            forecast_date=data.forecast_date,
+            forecast_quantity=data.forecast_quantity,
+            unit=data.unit,
         )
 
-        self.db.add(db_header)
-        self.db.flush()  # Get header ID
-
-        # Create lines if provided
-        created_lines = []
-        if header.lines:
-            for line_data in header.lines:
-                db_line = ForecastLine(
-                    forecast_id=db_header.id,
-                    product_id=line_data.product_id,
-                    delivery_date=line_data.delivery_date,
-                    forecast_quantity=line_data.forecast_quantity,
-                    unit=line_data.unit,
-                )
-                self.db.add(db_line)
-                created_lines.append(db_line)
-
+        self.db.add(db_forecast)
         self.db.commit()
-        self.db.refresh(db_header)
+        self.db.refresh(db_forecast)
 
-        # Refresh lines to get IDs
-        for line in created_lines:
-            self.db.refresh(line)
+        return self.get_forecast_by_id(db_forecast.id)  # type: ignore
 
-        return ForecastHeaderDetailResponse(
-            id=db_header.id,
-            customer_id=db_header.customer_id,
-            delivery_place_id=db_header.delivery_place_id,
-            forecast_number=db_header.forecast_number,
-            forecast_start_date=db_header.forecast_start_date,
-            forecast_end_date=db_header.forecast_end_date,
-            status=db_header.status,
-            created_at=db_header.created_at,
-            updated_at=db_header.updated_at,
-            lines=[
-                ForecastLineResponse(
-                    id=line.id,
-                    forecast_id=line.forecast_id,
-                    product_id=line.product_id,
-                    delivery_date=line.delivery_date,
-                    forecast_quantity=line.forecast_quantity,
-                    unit=line.unit,
-                    created_at=line.created_at,
-                    updated_at=line.updated_at,
-                )
-                for line in created_lines
-            ],
+    def update_forecast(self, forecast_id: int, data: ForecastUpdate) -> ForecastResponse | None:
+        """Update a forecast entry."""
+        db_forecast = (
+            self.db.query(ForecastCurrent).filter(ForecastCurrent.id == forecast_id).first()
         )
 
-    def update_header(
-        self, header_id: int, header: ForecastHeaderUpdate
-    ) -> ForecastHeaderResponse | None:
-        """
-        Update forecast header.
-
-        Args:
-            header_id: Forecast header ID
-            header: Update data
-
-        Returns:
-            Updated forecast header, or None if not found
-        """
-        db_header = self.db.query(ForecastHeader).filter(ForecastHeader.id == header_id).first()
-
-        if not db_header:
+        if not db_forecast:
             return None
 
-        # Update fields
-        update_data = header.model_dump(exclude_unset=True)
+        update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
-            setattr(db_header, key, value)
+            setattr(db_forecast, key, value)
 
-        db_header.updated_at = datetime.now()
+        db_forecast.updated_at = datetime.now()
 
         self.db.commit()
-        self.db.refresh(db_header)
+        self.db.refresh(db_forecast)
 
-        return ForecastHeaderResponse(
-            id=db_header.id,
-            customer_id=db_header.customer_id,
-            delivery_place_id=db_header.delivery_place_id,
-            forecast_number=db_header.forecast_number,
-            forecast_start_date=db_header.forecast_start_date,
-            forecast_end_date=db_header.forecast_end_date,
-            status=db_header.status,
-            created_at=db_header.created_at,
-            updated_at=db_header.updated_at,
+        return self.get_forecast_by_id(forecast_id)
+
+    def delete_forecast(self, forecast_id: int) -> bool:
+        """Delete a forecast entry."""
+        db_forecast = (
+            self.db.query(ForecastCurrent).filter(ForecastCurrent.id == forecast_id).first()
         )
 
-    def delete_header(self, header_id: int) -> bool:
-        """
-        Delete forecast header (cascade delete lines).
-
-        Args:
-            header_id: Forecast header ID
-
-        Returns:
-            True if deleted, False if not found
-        """
-        db_header = self.db.query(ForecastHeader).filter(ForecastHeader.id == header_id).first()
-
-        if not db_header:
+        if not db_forecast:
             return False
 
-        self.db.delete(db_header)
+        self.db.delete(db_forecast)
         self.db.commit()
 
         return True
 
-    # ===== Forecast Line Operations =====
+    def get_history(
+        self,
+        customer_id: int | None = None,
+        delivery_place_id: int | None = None,
+        product_id: int | None = None,
+        skip: int = 0,
+        limit: int = 100,
+    ) -> list[ForecastHistoryResponse]:
+        """Get forecast history."""
+        query = self.db.query(ForecastHistory)
 
-    def get_lines_by_header(self, header_id: int) -> list[ForecastLineResponse]:
-        """
-        Get all forecast lines for a header.
+        if customer_id is not None:
+            query = query.filter(ForecastHistory.customer_id == customer_id)
+        if delivery_place_id is not None:
+            query = query.filter(ForecastHistory.delivery_place_id == delivery_place_id)
+        if product_id is not None:
+            query = query.filter(ForecastHistory.product_id == product_id)
 
-        Args:
-            header_id: Forecast header ID
-
-        Returns:
-            List of forecast lines
-        """
-        lines = (
-            self.db.query(ForecastLine)
-            .options(joinedload(ForecastLine.product))
-            .filter(ForecastLine.forecast_id == header_id)
-            .order_by(ForecastLine.delivery_date)
-            .all()
-        )
+        query = query.order_by(ForecastHistory.archived_at.desc())
+        history = query.offset(skip).limit(limit).all()
 
         return [
-            ForecastLineResponse(
-                id=line.id,
-                forecast_id=line.forecast_id,
-                product_id=line.product_id,
-                delivery_date=line.delivery_date,
-                forecast_quantity=line.forecast_quantity,
-                unit=line.unit,
-                created_at=line.created_at,
-                updated_at=line.updated_at,
-                product_code=getattr(line.product, "maker_part_code", None),
-                product_name=getattr(line.product, "product_name", None),
+            ForecastHistoryResponse(
+                id=h.id,
+                customer_id=h.customer_id,
+                delivery_place_id=h.delivery_place_id,
+                product_id=h.product_id,
+                forecast_date=h.forecast_date,
+                forecast_quantity=h.forecast_quantity,
+                unit=h.unit,
+                snapshot_at=h.snapshot_at,
+                archived_at=h.archived_at,
+                created_at=h.created_at,
+                updated_at=h.updated_at,
             )
-            for line in lines
+            for h in history
         ]
 
-    def create_line(self, header_id: int, line: ForecastLineCreate) -> ForecastLineResponse:
+    def bulk_import(
+        self, items: list[ForecastBulkImportItem], replace_existing: bool = True
+    ) -> ForecastBulkImportSummary:
+        """Bulk import forecasts from CSV-like data.
+
+        When replace_existing is True:
+        1. Move existing forecast_current rows to forecast_history
+        2. Insert new snapshot into forecast_current
         """
-        Create forecast line.
+        errors: list[str] = []
+        imported_count = 0
+        archived_count = 0
+        skipped_count = 0
 
-        Args:
-            header_id: Forecast header ID
-            line: Line creation data
+        # Resolve codes to IDs
+        code_to_id: dict[str, dict[str, int]] = {
+            "customer": {},
+            "delivery_place": {},
+            "product": {},
+        }
 
-        Returns:
-            Created forecast line
+        # Load all customers
+        customers = self.db.query(Customer).all()
+        for c in customers:
+            code_to_id["customer"][c.customer_code] = c.id
 
-        Raises:
-            ValueError: If header not found
-        """
-        # Verify header exists
-        header = self.db.query(ForecastHeader).filter(ForecastHeader.id == header_id).first()
+        # Load all delivery places
+        delivery_places = self.db.query(DeliveryPlace).all()
+        for dp in delivery_places:
+            code_to_id["delivery_place"][dp.delivery_place_code] = dp.id
 
-        if not header:
-            raise ValueError(f"Forecast header with id={header_id} not found")
+        # Load all products
+        products = self.db.query(Product).all()
+        for p in products:
+            code_to_id["product"][p.maker_part_code] = p.id
 
-        db_line = ForecastLine(
-            forecast_id=header_id,
-            product_id=line.product_id,
-            delivery_date=line.delivery_date,
-            forecast_quantity=line.forecast_quantity,
-            unit=line.unit,
-        )
+        # Group items by customer × delivery_place × product
+        grouped: dict[tuple[int, int, int], list[ForecastBulkImportItem]] = defaultdict(list)
 
-        self.db.add(db_line)
+        for i, item in enumerate(items):
+            # Resolve codes to IDs
+            customer_id = code_to_id["customer"].get(item.customer_code)
+            if customer_id is None:
+                errors.append(f"Row {i + 1}: Unknown customer_code '{item.customer_code}'")
+                skipped_count += 1
+                continue
+
+            delivery_place_id = code_to_id["delivery_place"].get(item.delivery_place_code)
+            if delivery_place_id is None:
+                errors.append(
+                    f"Row {i + 1}: Unknown delivery_place_code '{item.delivery_place_code}'"
+                )
+                skipped_count += 1
+                continue
+
+            product_id = code_to_id["product"].get(item.product_code)
+            if product_id is None:
+                errors.append(f"Row {i + 1}: Unknown product_code '{item.product_code}'")
+                skipped_count += 1
+                continue
+
+            key = (customer_id, delivery_place_id, product_id)
+            grouped[key].append(item)
+
+        # Process each group
+        snapshot_at = datetime.now()
+
+        for (customer_id, delivery_place_id, product_id), group_items in grouped.items():
+            if replace_existing:
+                # Archive existing forecasts
+                existing = (
+                    self.db.query(ForecastCurrent)
+                    .filter(
+                        and_(
+                            ForecastCurrent.customer_id == customer_id,
+                            ForecastCurrent.delivery_place_id == delivery_place_id,
+                            ForecastCurrent.product_id == product_id,
+                        )
+                    )
+                    .all()
+                )
+
+                for existing_fc in existing:
+                    # Move to history
+                    history = ForecastHistory(
+                        customer_id=existing_fc.customer_id,
+                        delivery_place_id=existing_fc.delivery_place_id,
+                        product_id=existing_fc.product_id,
+                        forecast_date=existing_fc.forecast_date,
+                        forecast_quantity=existing_fc.forecast_quantity,
+                        unit=existing_fc.unit,
+                        snapshot_at=existing_fc.snapshot_at,
+                        created_at=existing_fc.created_at,
+                        updated_at=existing_fc.updated_at,
+                    )
+                    self.db.add(history)
+                    self.db.delete(existing_fc)
+                    archived_count += 1
+
+            # Insert new forecasts
+            for item in group_items:
+                db_forecast = ForecastCurrent(
+                    customer_id=customer_id,
+                    delivery_place_id=delivery_place_id,
+                    product_id=code_to_id["product"][item.product_code],
+                    forecast_date=item.forecast_date,
+                    forecast_quantity=item.forecast_quantity,
+                    unit=item.unit,
+                    snapshot_at=snapshot_at,
+                )
+                self.db.add(db_forecast)
+                imported_count += 1
+
         self.db.commit()
-        self.db.refresh(db_line)
 
-        return ForecastLineResponse(
-            id=db_line.id,
-            forecast_id=db_line.forecast_id,
-            product_id=db_line.product_id,
-            delivery_date=db_line.delivery_date,
-            forecast_quantity=db_line.forecast_quantity,
-            unit=db_line.unit,
-            created_at=db_line.created_at,
-            updated_at=db_line.updated_at,
-            product_code=getattr(db_line.product, "maker_part_code", None),
-            product_name=getattr(db_line.product, "product_name", None),
+        return ForecastBulkImportSummary(
+            imported_count=imported_count,
+            archived_count=archived_count,
+            skipped_count=skipped_count,
+            errors=errors,
         )
-
-    def update_line(self, line_id: int, line: ForecastLineUpdate) -> ForecastLineResponse | None:
-        """
-        Update forecast line.
-
-        Args:
-            line_id: Forecast line ID
-            line: Update data
-
-        Returns:
-            Updated forecast line, or None if not found
-        """
-        db_line = self.db.query(ForecastLine).filter(ForecastLine.id == line_id).first()
-
-        if not db_line:
-            return None
-
-        # Update fields
-        update_data = line.model_dump(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(db_line, key, value)
-
-        db_line.updated_at = datetime.now()
-
-        self.db.commit()
-        self.db.refresh(db_line)
-
-        return ForecastLineResponse(
-            id=db_line.id,
-            forecast_id=db_line.forecast_id,
-            product_id=db_line.product_id,
-            delivery_date=db_line.delivery_date,
-            forecast_quantity=db_line.forecast_quantity,
-            unit=db_line.unit,
-            created_at=db_line.created_at,
-            updated_at=db_line.updated_at,
-            product_code=getattr(db_line.product, "maker_part_code", None),
-            product_name=getattr(db_line.product, "product_name", None),
-        )
-
-    def delete_line(self, line_id: int) -> bool:
-        """
-        Delete forecast line.
-
-        Args:
-            line_id: Forecast line ID
-
-        Returns:
-            True if deleted, False if not found
-        """
-        db_line = self.db.query(ForecastLine).filter(ForecastLine.id == line_id).first()
-
-        if not db_line:
-            return False
-
-        self.db.delete(db_line)
-        self.db.commit()
-
-        return True
-
-    # ===== Bulk Operations =====
-
-    def bulk_import_headers(
-        self, headers: list[ForecastHeaderCreate]
-    ) -> list[ForecastHeaderDetailResponse]:
-        """
-        Bulk import forecast headers with lines.
-
-        Args:
-            headers: List of forecast header creation data
-
-        Returns:
-            List of created forecast headers with lines
-
-        Note:
-            All operations are performed in a single transaction.
-            If any error occurs, all changes are rolled back.
-        """
-        created_headers = []
-
-        try:
-            for header_data in headers:
-                created_header = self.create_header(header_data)
-                created_headers.append(created_header)
-
-            return created_headers
-
-        except Exception as e:
-            self.db.rollback()
-            raise e
-
-
-def assign_auto_forecast_identifier(*args, **kwargs):
-    """Backward compatible stub for old assign_auto_forecast_identifier.
-
-    Todo:
-        forecast_router 側を ForecastService ベースの新実装に
-        リファクタしたら、この関数は削除する。
-    """
-    raise NotImplementedError(
-        "assign_auto_forecast_identifier is deprecated. "
-        "Use ForecastService-based implementation instead."
-    )

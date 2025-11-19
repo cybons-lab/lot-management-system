@@ -31,7 +31,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .forecast_models import ForecastLine
+    from .forecast_models import ForecastCurrent
     from .inbound_models import ExpectedLot
     from .masters_models import Product, Supplier, Warehouse
     from .orders_models import Allocation
@@ -244,7 +244,7 @@ class AllocationSuggestion(Base):
 
     DDL: allocation_suggestions
     Primary key: id (BIGSERIAL)
-    Foreign keys: forecast_line_id, lot_id
+    Foreign keys: forecast_line_id -> forecast_current.id, lot_id
     """
 
     __tablename__ = "allocation_suggestions"
@@ -252,7 +252,7 @@ class AllocationSuggestion(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     forecast_line_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("forecast_lines.id", ondelete="CASCADE"),
+        ForeignKey("forecast_current.id", ondelete="CASCADE"),
         nullable=False,
     )
     lot_id: Mapped[int] = mapped_column(
@@ -273,7 +273,7 @@ class AllocationSuggestion(Base):
     )
 
     # Relationships
-    forecast_line: Mapped[ForecastLine] = relationship("ForecastLine")
+    forecast: Mapped[ForecastCurrent] = relationship("ForecastCurrent")
     lot: Mapped[Lot] = relationship("Lot")
 
 

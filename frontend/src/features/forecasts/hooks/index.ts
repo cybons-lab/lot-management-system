@@ -1,28 +1,23 @@
 /**
- * Forecast Hooks (v2.2 - Phase B-2)
- * TanStack Query hooks for forecast headers and lines
+ * Forecast Hooks (v2.4)
+ * TanStack Query hooks for forecast_current / forecast_history
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import type {
-  ForecastHeadersListParams,
-  CreateForecastHeaderRequest,
-  UpdateForecastHeaderRequest,
-  CreateForecastLineRequest,
-  UpdateForecastLineRequest,
+  ForecastListParams,
+  CreateForecastRequest,
+  UpdateForecastRequest,
   BulkImportForecastRequest,
 } from "../api";
 import {
-  getForecastHeaders,
-  getForecastHeader,
-  getForecastLines,
-  createForecastHeader,
-  updateForecastHeader,
-  deleteForecastHeader,
-  createForecastLine,
-  updateForecastLine,
-  deleteForecastLine,
+  getForecasts,
+  getForecast,
+  getForecastHistory,
+  createForecast,
+  updateForecast,
+  deleteForecast,
   bulkImportForecasts,
 } from "../api";
 
@@ -30,44 +25,43 @@ import {
 
 export const forecastKeys = {
   all: ["forecasts"] as const,
-  headers: () => [...forecastKeys.all, "headers"] as const,
-  header: (id: number) => [...forecastKeys.all, "headers", id] as const,
-  lines: (headerId: number) => [...forecastKeys.all, "lines", headerId] as const,
+  list: () => [...forecastKeys.all, "list"] as const,
+  detail: (id: number) => [...forecastKeys.all, "detail", id] as const,
+  history: () => [...forecastKeys.all, "history"] as const,
 };
 
 // ===== Query Hooks =====
 
 /**
- * Get forecast headers list
+ * Get forecasts list (grouped by customer × delivery_place × product)
  */
-export const useForecastHeaders = (params?: ForecastHeadersListParams) => {
+export const useForecasts = (params?: ForecastListParams) => {
   return useQuery({
-    queryKey: [...forecastKeys.headers(), params],
-    queryFn: () => getForecastHeaders(params),
+    queryKey: [...forecastKeys.list(), params],
+    queryFn: () => getForecasts(params),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
 /**
- * Get forecast header detail (with lines)
+ * Get single forecast by ID
  */
-export const useForecastHeader = (id: number) => {
+export const useForecast = (id: number) => {
   return useQuery({
-    queryKey: forecastKeys.header(id),
-    queryFn: () => getForecastHeader(id),
+    queryKey: forecastKeys.detail(id),
+    queryFn: () => getForecast(id),
     enabled: id > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
 /**
- * Get forecast lines for a header
+ * Get forecast history
  */
-export const useForecastLines = (headerId: number) => {
+export const useForecastHistory = (params?: ForecastListParams) => {
   return useQuery({
-    queryKey: forecastKeys.lines(headerId),
-    queryFn: () => getForecastLines(headerId),
-    enabled: headerId > 0,
+    queryKey: [...forecastKeys.history(), params],
+    queryFn: () => getForecastHistory(params),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
@@ -75,95 +69,44 @@ export const useForecastLines = (headerId: number) => {
 // ===== Mutation Hooks =====
 
 /**
- * Create forecast header
+ * Create forecast entry
  */
-export const useCreateForecastHeader = () => {
+export const useCreateForecast = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateForecastHeaderRequest) => createForecastHeader(data),
+    mutationFn: (data: CreateForecastRequest) => createForecast(data),
     onSuccess: () => {
-      // Invalidate headers list to refetch
-      queryClient.invalidateQueries({ queryKey: forecastKeys.headers() });
+      queryClient.invalidateQueries({ queryKey: forecastKeys.list() });
     },
   });
 };
 
 /**
- * Update forecast header
+ * Update forecast entry
  */
-export const useUpdateForecastHeader = (id: number) => {
+export const useUpdateForecast = (id: number) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: UpdateForecastHeaderRequest) => updateForecastHeader(id, data),
+    mutationFn: (data: UpdateForecastRequest) => updateForecast(id, data),
     onSuccess: () => {
-      // Invalidate both the specific header and the headers list
-      queryClient.invalidateQueries({ queryKey: forecastKeys.header(id) });
-      queryClient.invalidateQueries({ queryKey: forecastKeys.headers() });
+      queryClient.invalidateQueries({ queryKey: forecastKeys.detail(id) });
+      queryClient.invalidateQueries({ queryKey: forecastKeys.list() });
     },
   });
 };
 
 /**
- * Delete forecast header
+ * Delete forecast entry
  */
-export const useDeleteForecastHeader = () => {
+export const useDeleteForecast = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => deleteForecastHeader(id),
+    mutationFn: (id: number) => deleteForecast(id),
     onSuccess: () => {
-      // Invalidate headers list to refetch
-      queryClient.invalidateQueries({ queryKey: forecastKeys.headers() });
-    },
-  });
-};
-
-/**
- * Create forecast line
- */
-export const useCreateForecastLine = (headerId: number) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: CreateForecastLineRequest) => createForecastLine(headerId, data),
-    onSuccess: () => {
-      // Invalidate both the header detail (includes lines) and the lines list
-      queryClient.invalidateQueries({ queryKey: forecastKeys.header(headerId) });
-      queryClient.invalidateQueries({ queryKey: forecastKeys.lines(headerId) });
-    },
-  });
-};
-
-/**
- * Update forecast line
- */
-export const useUpdateForecastLine = (lineId: number, headerId: number) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: UpdateForecastLineRequest) => updateForecastLine(lineId, data),
-    onSuccess: () => {
-      // Invalidate both the header detail (includes lines) and the lines list
-      queryClient.invalidateQueries({ queryKey: forecastKeys.header(headerId) });
-      queryClient.invalidateQueries({ queryKey: forecastKeys.lines(headerId) });
-    },
-  });
-};
-
-/**
- * Delete forecast line
- */
-export const useDeleteForecastLine = (headerId: number) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (lineId: number) => deleteForecastLine(lineId),
-    onSuccess: () => {
-      // Invalidate both the header detail (includes lines) and the lines list
-      queryClient.invalidateQueries({ queryKey: forecastKeys.header(headerId) });
-      queryClient.invalidateQueries({ queryKey: forecastKeys.lines(headerId) });
+      queryClient.invalidateQueries({ queryKey: forecastKeys.list() });
     },
   });
 };
@@ -177,8 +120,13 @@ export const useBulkImportForecasts = () => {
   return useMutation({
     mutationFn: (data: BulkImportForecastRequest) => bulkImportForecasts(data),
     onSuccess: () => {
-      // Invalidate all forecast queries to refetch
       queryClient.invalidateQueries({ queryKey: forecastKeys.all });
     },
   });
 };
+
+// ===== Legacy compatibility =====
+// These exports maintain backward compatibility with existing code
+
+export const useForecastHeaders = useForecasts;
+export const useForecastHeader = useForecast;

@@ -1,6 +1,6 @@
 /**
- * Forecast API Client (v2.2 - Phase B)
- * ヘッダ・明細分離構造に対応
+ * Forecast API Client (v2.4)
+ * forecast_current / forecast_history構造に対応
  */
 
 import { fetchApi } from "@/shared/libs/http";
@@ -8,193 +8,218 @@ import { fetchApi } from "@/shared/libs/http";
 // ===== Types =====
 
 /**
- * Forecast Header
- * Note: Backend uses serialization_alias, so id becomes forecast_id
+ * Single forecast entry (1 row = customer × delivery_place × product × date)
  */
-export interface ForecastHeader {
-  forecast_id: number;
-  forecast_number: string;
+export interface Forecast {
+  id: number;
   customer_id: number;
   delivery_place_id: number;
-  forecast_start_date: string;
-  forecast_end_date: string;
-  status: "active" | "completed" | "cancelled";
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  // Joined data (optional)
-  customer_name?: string;
-  delivery_place_name?: string;
-}
-
-/**
- * Forecast Line
- * Note: Backend uses serialization_alias:
- * - id -> forecast_line_id
- * - forecast_quantity -> quantity
- */
-export interface ForecastLine {
-  forecast_line_id: number;
-  forecast_id: number;
   product_id: number;
-  delivery_date: string;
-  quantity: number;
-  unit: string;
+  forecast_date: string;
+  forecast_quantity: number;
+  unit: string | null;
+  snapshot_at: string;
   created_at: string;
   updated_at: string;
-  // Joined data (optional)
+  // Joined master data
+  customer_code?: string;
+  customer_name?: string;
+  delivery_place_code?: string;
+  delivery_place_name?: string;
   product_code?: string;
   product_name?: string;
 }
 
 /**
- * Forecast Header with Lines
+ * Group key for customer × delivery_place × product
  */
-export interface ForecastHeaderWithLines extends ForecastHeader {
-  lines: ForecastLine[];
+export interface ForecastGroupKey {
+  customer_id: number;
+  delivery_place_id: number;
+  product_id: number;
+  customer_code?: string;
+  customer_name?: string;
+  delivery_place_code?: string;
+  delivery_place_name?: string;
+  product_code?: string;
+  product_name?: string;
+}
+
+/**
+ * Grouped forecasts response
+ */
+export interface ForecastGroup {
+  group_key: ForecastGroupKey;
+  forecasts: Forecast[];
+  snapshot_at: string | null;
+}
+
+/**
+ * List response with grouped forecasts
+ */
+export interface ForecastListResponse {
+  items: ForecastGroup[];
+  total: number;
+}
+
+/**
+ * Forecast history entry
+ */
+export interface ForecastHistory {
+  id: number;
+  customer_id: number;
+  delivery_place_id: number;
+  product_id: number;
+  forecast_date: string;
+  forecast_quantity: number;
+  unit: string | null;
+  snapshot_at: string;
+  archived_at: string;
+  created_at: string;
+  updated_at: string;
+  // Joined master data
+  customer_code?: string;
+  customer_name?: string;
+  delivery_place_code?: string;
+  delivery_place_name?: string;
+  product_code?: string;
+  product_name?: string;
 }
 
 /**
  * Request types
  */
-export interface CreateForecastHeaderRequest {
-  forecast_number: string;
+export interface CreateForecastRequest {
   customer_id: number;
   delivery_place_id: number;
-  forecast_start_date: string;
-  forecast_end_date: string;
-  status?: "active" | "completed" | "cancelled";
-  notes?: string;
-  lines?: CreateForecastLineRequest[];
-}
-
-export interface UpdateForecastHeaderRequest {
-  forecast_number?: string;
-  customer_id?: number;
-  delivery_place_id?: number;
-  status?: "active" | "completed" | "cancelled";
-  notes?: string;
-}
-
-export interface CreateForecastLineRequest {
   product_id: number;
-  delivery_date: string;
+  forecast_date: string;
   forecast_quantity: number;
-  unit: string;
+  unit?: string;
 }
 
-export interface UpdateForecastLineRequest {
-  delivery_date?: string;
+export interface UpdateForecastRequest {
   forecast_quantity?: number;
   unit?: string;
 }
 
-export interface BulkImportForecastRequest {
-  forecasts: Array<{
-    forecast_number: string;
-    customer_id: number;
-    delivery_place_id: number;
-    lines: CreateForecastLineRequest[];
-  }>;
+export interface BulkImportItem {
+  customer_code: string;
+  delivery_place_code: string;
+  product_code: string;
+  forecast_date: string;
+  forecast_quantity: number;
+  unit?: string;
 }
 
-export interface ForecastHeadersListParams {
+export interface BulkImportForecastRequest {
+  items: BulkImportItem[];
+  replace_existing?: boolean;
+}
+
+export interface BulkImportForecastSummary {
+  imported_count: number;
+  archived_count: number;
+  skipped_count: number;
+  errors: string[];
+}
+
+export interface ForecastListParams {
   skip?: number;
   limit?: number;
   customer_id?: number;
   delivery_place_id?: number;
-  status?: "active" | "completed" | "cancelled";
+  product_id?: number;
 }
 
 // ===== API Functions =====
 
 /**
- * Get forecast headers list
- * @endpoint GET /forecasts/headers
+ * Get forecasts list (grouped by customer × delivery_place × product)
+ * @endpoint GET /forecasts
  */
-export const getForecastHeaders = (params?: ForecastHeadersListParams) => {
+export const getForecasts = (params?: ForecastListParams) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params?.customer_id) searchParams.append("customer_id", params.customer_id.toString());
   if (params?.delivery_place_id)
     searchParams.append("delivery_place_id", params.delivery_place_id.toString());
-  if (params?.status) searchParams.append("status", params.status);
+  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<ForecastHeader[]>(
-    `/forecasts/headers${queryString ? "?" + queryString : ""}`,
+  return fetchApi.get<ForecastListResponse>(`/forecasts${queryString ? "?" + queryString : ""}`);
+};
+
+/**
+ * Get forecast by ID
+ * @endpoint GET /forecasts/{id}
+ */
+export const getForecast = (id: number) => {
+  return fetchApi.get<Forecast>(`/forecasts/${id}`);
+};
+
+/**
+ * Create forecast entry
+ * @endpoint POST /forecasts
+ */
+export const createForecast = (data: CreateForecastRequest) => {
+  return fetchApi.post<Forecast>("/forecasts", data);
+};
+
+/**
+ * Update forecast entry
+ * @endpoint PUT /forecasts/{id}
+ */
+export const updateForecast = (id: number, data: UpdateForecastRequest) => {
+  return fetchApi.put<Forecast>(`/forecasts/${id}`, data);
+};
+
+/**
+ * Delete forecast entry
+ * @endpoint DELETE /forecasts/{id}
+ */
+export const deleteForecast = (id: number) => {
+  return fetchApi.delete<void>(`/forecasts/${id}`);
+};
+
+/**
+ * Get forecast history
+ * @endpoint GET /forecasts/history
+ */
+export const getForecastHistory = (params?: ForecastListParams) => {
+  const searchParams = new URLSearchParams();
+  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
+  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
+  if (params?.customer_id) searchParams.append("customer_id", params.customer_id.toString());
+  if (params?.delivery_place_id)
+    searchParams.append("delivery_place_id", params.delivery_place_id.toString());
+  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+
+  const queryString = searchParams.toString();
+  return fetchApi.get<ForecastHistory[]>(
+    `/forecasts/history${queryString ? "?" + queryString : ""}`,
   );
 };
 
 /**
- * Get forecast header detail (with lines)
- * @endpoint GET /forecasts/headers/{id}
- */
-export const getForecastHeader = (id: number) => {
-  return fetchApi.get<ForecastHeaderWithLines>(`/forecasts/headers/${id}`);
-};
-
-/**
- * Create forecast header (with optional lines)
- * @endpoint POST /forecasts/headers
- */
-export const createForecastHeader = (data: CreateForecastHeaderRequest) => {
-  return fetchApi.post<ForecastHeader>("/forecasts/headers", data);
-};
-
-/**
- * Update forecast header
- * @endpoint PUT /forecasts/headers/{id}
- */
-export const updateForecastHeader = (id: number, data: UpdateForecastHeaderRequest) => {
-  return fetchApi.put<ForecastHeader>(`/forecasts/headers/${id}`, data);
-};
-
-/**
- * Delete forecast header
- * @endpoint DELETE /forecasts/headers/{id}
- */
-export const deleteForecastHeader = (id: number) => {
-  return fetchApi.delete<void>(`/forecasts/headers/${id}`);
-};
-
-/**
- * Get forecast lines for a header
- * @endpoint GET /forecasts/headers/{id}/lines
- */
-export const getForecastLines = (headerId: number) => {
-  return fetchApi.get<ForecastLine[]>(`/forecasts/headers/${headerId}/lines`);
-};
-
-/**
- * Add forecast line to a header
- * @endpoint POST /forecasts/headers/{id}/lines
- */
-export const createForecastLine = (headerId: number, data: CreateForecastLineRequest) => {
-  return fetchApi.post<ForecastLine>(`/forecasts/headers/${headerId}/lines`, data);
-};
-
-/**
- * Update forecast line
- * @endpoint PUT /forecasts/lines/{id}
- */
-export const updateForecastLine = (id: number, data: UpdateForecastLineRequest) => {
-  return fetchApi.put<ForecastLine>(`/forecasts/lines/${id}`, data);
-};
-
-/**
- * Delete forecast line
- * @endpoint DELETE /forecasts/lines/{id}
- */
-export const deleteForecastLine = (id: number) => {
-  return fetchApi.delete<void>(`/forecasts/lines/${id}`);
-};
-
-/**
  * Bulk import forecasts
- * @endpoint POST /forecasts/headers/bulk-import
+ * @endpoint POST /forecasts/bulk-import
  */
 export const bulkImportForecasts = (data: BulkImportForecastRequest) => {
-  return fetchApi.post<{ imported_count: number }>("/forecasts/headers/bulk-import", data);
+  return fetchApi.post<BulkImportForecastSummary>("/forecasts/bulk-import", data);
 };
+
+// ===== Legacy compatibility =====
+// These exports maintain backward compatibility with existing code
+
+export type ForecastHeader = ForecastGroupKey & {
+  forecast_id: number;
+  forecasts: Forecast[];
+  snapshot_at: string | null;
+};
+
+export type ForecastLine = Forecast;
+
+export const getForecastHeaders = getForecasts;
+export const getForecastHeader = getForecast;
