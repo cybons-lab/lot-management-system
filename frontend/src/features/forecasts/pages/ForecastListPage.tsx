@@ -3,7 +3,7 @@
  * Forecast headers list page with header/lines separation
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { ForecastListCard } from "../components";
@@ -22,34 +22,102 @@ export function ForecastListPage() {
     status: "" as "" | "active" | "completed" | "cancelled",
   });
 
-  // Build query params
   const queryParams = {
     customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
     delivery_place_id: filters.delivery_place_id ? Number(filters.delivery_place_id) : undefined,
     status: filters.status || undefined,
   };
 
-  // Fetch forecast headers
   const { data: headers, isLoading, isError, refetch } = useForecastHeaders(queryParams);
 
-  const [selectedForecastId, setSelectedForecastId] = useState<number | null>(null);
+  const [openForecastIds, setOpenForecastIds] = useState<Set<number>>(new Set());
+
+  // スクロール監視用
+  const [focusedForecastId, setFocusedForecastId] = useState<number | null>(null);
+  const itemsRef = useRef<Map<number, HTMLDivElement | null>>(new Map());
 
   useEffect(() => {
     if (headers && headers.length > 0) {
-      setSelectedForecastId((prev) => {
-        if (prev && headers.some((header) => header.forecast_id === prev)) {
+      setOpenForecastIds((prev) => {
+        const next = new Set(prev);
+        const currentIds = new Set(headers.map((h) => h.forecast_id));
+        for (const id of next) {
+          if (!currentIds.has(id)) {
+            next.delete(id);
+          }
+        }
+        if (next.size === 0 && headers[0]) {
+          next.add(headers[0].forecast_id);
+        }
+        if (prev.size === next.size && [...prev].every((x) => next.has(x))) {
           return prev;
         }
-        return headers[0]?.forecast_id ?? null;
+        return next;
       });
-    } else {
-      setSelectedForecastId(null);
     }
   }, [headers]);
 
-  const displayedHeaders = useMemo(() => headers ?? [], [headers]);
+  const handleToggle = (id: number) => {
+    setOpenForecastIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
 
-  // Delete mutation
+  // スクロール監視
+  useEffect(() => {
+    if (isLoading || !headers || headers.length === 0) return;
+
+    const options = {
+      root: null,
+      rootMargin: "-45% 0px -45% 0px",
+      threshold: 0,
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const id = Number(entry.target.getAttribute("data-forecast-id"));
+          if (!isNaN(id)) {
+            setFocusedForecastId(id);
+          }
+        }
+      });
+    }, options);
+
+    itemsRef.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [headers, isLoading]);
+
+  // ★ 修正: 表示データの計算とユニークカウント
+  // APIから返ってきたheadersを、顧客ID+納入先ID(あれば製品も)でユニークにする
+  const { displayedHeaders, uniqueCount } = useMemo(() => {
+    if (!headers) return { displayedHeaders: [], uniqueCount: 0 };
+
+    // 単純なリスト表示用
+    const list = headers;
+
+    // ユニーク件数の計算
+    // 複合キー: customer_id - delivery_place_id (- product_id ※もしヘッダーにあれば)
+    const uniqueSet = new Set<string>();
+    list.forEach((h) => {
+      // product_idがヘッダーにない場合はヘッダー単位のユニーク数になります
+      // もしAPIレスポンスに product_id が含まれているなら `-${h.product_id}` を追加してください
+      const key = `${h.customer_id}-${h.delivery_place_id}`;
+      uniqueSet.add(key);
+    });
+
+    return { displayedHeaders: list, uniqueCount: uniqueSet.size };
+  }, [headers]);
+
   const deleteMutation = useDeleteForecastHeader();
 
   const handleDelete = async (id: number) => {
@@ -64,12 +132,10 @@ export function ForecastListPage() {
     }
   };
 
-  // Keep for potential future use
   void navigate;
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">フォーキャスト一覧</h2>
@@ -78,7 +144,6 @@ export function ForecastListPage() {
         <Button onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>一括インポート</Button>
       </div>
 
-      {/* Filters */}
       <div className="rounded-lg border bg-white p-4">
         <div className="grid gap-4 md:grid-cols-3">
           <div>
@@ -120,7 +185,6 @@ export function ForecastListPage() {
         </div>
       </div>
 
-      {/* Data display area */}
       {isLoading ? (
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           読み込み中...
@@ -135,23 +199,41 @@ export function ForecastListPage() {
         </div>
       ) : (
         <div className="space-y-4">
+          {/* ★ 修正: カウント表示をユニーク数に変更 */}
           <div className="text-sm text-gray-600">
-            {displayedHeaders.length}件のフォーキャストが見つかりました
+            {uniqueCount}件のフォーキャストが見つかりました
+            {/* もし表示数とユニーク数が違う場合に内訳を出すなら以下のように書けます */}
+            {uniqueCount !== displayedHeaders.length && (
+              <span className="ml-2 text-xs text-gray-400">
+                (リスト表示数: {displayedHeaders.length})
+              </span>
+            )}
           </div>
 
-          {/* Collapsible Cards */}
-          <div className="space-y-3">
-            {displayedHeaders.map((header) => (
-              <ForecastListCard
-                key={header.forecast_id}
-                header={header}
-                onDelete={handleDelete}
-                isDeleting={deleteMutation.isPending}
-                isOpen={header.forecast_id === selectedForecastId}
-                isActive={header.forecast_id === selectedForecastId}
-                onToggle={(id) => setSelectedForecastId(id)}
-              />
-            ))}
+          <div className="space-y-3 pb-64">
+            {displayedHeaders.map((header) => {
+              const isOpen = openForecastIds.has(header.forecast_id);
+              return (
+                <ForecastListCard
+                  key={header.forecast_id}
+                  ref={(el) => {
+                    if (el) {
+                      itemsRef.current.set(header.forecast_id, el);
+                      el.setAttribute("data-forecast-id", String(header.forecast_id));
+                    } else {
+                      itemsRef.current.delete(header.forecast_id);
+                    }
+                  }}
+                  header={header}
+                  onDelete={handleDelete}
+                  isDeleting={deleteMutation.isPending}
+                  isOpen={isOpen}
+                  isActive={isOpen}
+                  isFocused={header.forecast_id === focusedForecastId}
+                  onToggle={handleToggle}
+                />
+              );
+            })}
           </div>
         </div>
       )}

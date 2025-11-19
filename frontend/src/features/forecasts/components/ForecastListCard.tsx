@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import type { ForecastHeader } from "../api";
 import { useForecastHeader } from "../hooks";
 
@@ -11,42 +12,57 @@ interface ForecastListCardProps {
   isDeleting: boolean;
   isOpen: boolean;
   isActive: boolean;
+  isFocused?: boolean; // ★ 追加
   onToggle: (id: number) => void;
 }
 
-export function ForecastListCard({
-  header,
-  onDelete,
-  isDeleting,
-  isOpen,
-  isActive,
-  onToggle,
-}: ForecastListCardProps) {
-  const { data: fullForecast, isLoading: isLoadingDetail } = useForecastHeader(header.forecast_id);
-  if (isLoadingDetail) {
-    return (
-      <Card data-forecast-number={header.forecast_number}>
-        <CardHeader className="p-4 text-sm text-gray-500">明細を読み込み中...</CardHeader>
-      </Card>
+// ★ forwardRefを使って親からのrefをDOMに渡せるように変更
+export const ForecastListCard = forwardRef<HTMLDivElement, ForecastListCardProps>(
+  ({ header, onDelete, isDeleting, isOpen, isActive, isFocused, onToggle }, ref) => {
+    const { data: fullForecast, isLoading: isLoadingDetail } = useForecastHeader(
+      header.forecast_id,
     );
-  }
 
-  if (!fullForecast) {
+    // データロード中
+    if (isLoadingDetail) {
+      return (
+        <div ref={ref} data-forecast-id={header.forecast_id} className="scroll-mt-24">
+          <Card data-forecast-number={header.forecast_number}>
+            <CardHeader className="p-4 text-sm text-gray-500">明細を読み込み中...</CardHeader>
+          </Card>
+        </div>
+      );
+    }
+
+    // エラー時
+    if (!fullForecast) {
+      return (
+        <div ref={ref} data-forecast-id={header.forecast_id} className="scroll-mt-24">
+          <Card data-forecast-number={header.forecast_number}>
+            <CardContent className="p-4 text-sm text-gray-500">
+              明細の取得に失敗しました
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    // 正常表示
+    // Wrapper divにrefをつけてIntersectionObserverで検知させる
     return (
-      <Card data-forecast-number={header.forecast_number}>
-        <CardContent className="p-4 text-sm text-gray-500">明細の取得に失敗しました</CardContent>
-      </Card>
+      <div ref={ref} data-forecast-id={header.forecast_id} className="scroll-mt-24">
+        <ForecastDetailCard
+          forecast={fullForecast}
+          onDelete={onDelete}
+          isDeleting={isDeleting}
+          isOpen={isOpen}
+          isActive={isActive}
+          isFocused={isFocused} // ★ Propsを伝播
+          onToggle={onToggle}
+        />
+      </div>
     );
-  }
+  },
+);
 
-  return (
-    <ForecastDetailCard
-      forecast={fullForecast}
-      onDelete={onDelete}
-      isDeleting={isDeleting}
-      isOpen={isOpen}
-      isActive={isActive}
-      onToggle={onToggle}
-    />
-  );
-}
+ForecastListCard.displayName = "ForecastListCard";

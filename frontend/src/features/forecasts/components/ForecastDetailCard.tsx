@@ -5,11 +5,6 @@
  * - Section 1: Compact header (customer, product, delivery place)
  * - Section 2: Daily grid that always starts on the first day of the target month
  * - Section 3: Dekad (left) and Monthly (right) aggregations beneath the grid
- *
- * Timeline Logic:
- * - Tier 1 (Daily): Entire target month displayed as a 10-column CSS grid
- * - Tier 2 (Dekad): Next month after daily period (上旬/中旬/下旬)
- * - Tier 3 (Monthly): Month after dekad period (1 month only)
  */
 
 import { useMemo } from "react";
@@ -28,6 +23,7 @@ interface ForecastDetailCardProps {
   isDeleting?: boolean;
   isOpen?: boolean;
   isActive?: boolean;
+  isFocused?: boolean;
   onToggle?: (id: number) => void;
 }
 
@@ -93,7 +89,7 @@ function DayCell({
         <span className="text-[10px] text-gray-500">{date.getDate()}</span>
         <span
           className={cn(
-            "tabular-nums text-xs",
+            "text-xs tabular-nums",
             !hasValue || isZero
               ? "text-gray-400"
               : isPast
@@ -170,6 +166,7 @@ export function ForecastDetailCard({
   isDeleting,
   isOpen = true,
   isActive = false,
+  isFocused = false,
   onToggle,
 }: ForecastDetailCardProps) {
   const productData = useMemo(() => {
@@ -212,25 +209,17 @@ export function ForecastDetailCard({
 
   const dates = useMemo(() => getDatesForMonth(targetMonthStartDate), [targetMonthStartDate]);
 
-  // Calculate the target months for dekad and monthly
+  // 日付計算ロジック（1日始まりで計算して月スキップを防止）
   const { dekadMonth, monthlyMonth } = useMemo(() => {
-    const lastDailyDate = dates[dates.length - 1];
-    if (!lastDailyDate) {
-      return { dekadMonth: null, monthlyMonth: null };
-    }
-
-    const dekadDate = new Date(lastDailyDate);
-    dekadDate.setMonth(dekadDate.getMonth() + 1);
-    dekadDate.setDate(1);
-
-    const monthlyDate = new Date(dekadDate);
-    monthlyDate.setMonth(monthlyDate.getMonth() + 1);
+    const baseDate = new Date(targetMonthStartDate);
+    const dekadDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1);
+    const monthlyDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 2, 1);
 
     return {
       dekadMonth: { year: dekadDate.getFullYear(), month: dekadDate.getMonth() },
       monthlyMonth: { year: monthlyDate.getFullYear(), month: monthlyDate.getMonth() },
     };
-  }, [dates]);
+  }, [targetMonthStartDate]);
 
   if (productData.length === 0) {
     return (
@@ -278,8 +267,12 @@ export function ForecastDetailCard({
           <Card
             key={`${forecast.forecast_id}-${product.productId}`}
             className={cn(
-              "overflow-hidden border shadow-sm transition",
-              isActive ? "border-primary/60 bg-slate-50 shadow-md" : "border-slate-200 bg-white",
+              "overflow-hidden border shadow-sm transition-all duration-300 ease-out",
+              isActive
+                ? "border-primary/60 bg-slate-50 shadow-md"
+                : isFocused
+                  ? "border-primary/40 ring-primary/20 scale-[1.005] bg-white shadow-md ring-1"
+                  : "border-slate-200 bg-white",
             )}
             data-forecast-number={forecast.forecast_number}
           >
@@ -289,10 +282,11 @@ export function ForecastDetailCard({
                 isActive ? "border-primary/20 bg-slate-100" : "border-slate-200 bg-slate-50",
               )}
             >
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              {/* ★ レイアウト修正: ステータスと日付を左上に配置 */}
+              <div className="flex flex-row items-start justify-between gap-4">
                 <button
                   type="button"
-                  className="flex w-full items-start justify-between gap-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="focus-visible:ring-primary/40 flex flex-1 flex-col items-start gap-1.5 text-left focus-visible:ring-2 focus-visible:outline-none"
                   onClick={() => onToggle?.(forecast.forecast_id)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
@@ -301,53 +295,60 @@ export function ForecastDetailCard({
                     }
                   }}
                 >
-                  <div className="flex-1 space-y-1">
-                    <p className="line-clamp-2 text-xs text-gray-500">
-                      <span className="text-sm text-gray-500">{customerDisplay}</span>
-                      <span className="mx-1 text-gray-400">/</span>
-                      <span className="text-base font-semibold text-gray-900">
-                        {product.productName}
-                        {product.productCode ? (
-                          <span className="text-sm font-semibold text-gray-700"> ({product.productCode})</span>
-                        ) : null}
-                      </span>
-                      <span className="mx-1 text-gray-400">/</span>
-                      <span className="text-sm text-gray-500">{deliveryPlaceDisplay}</span>
-                    </p>
+                  {/* 上段: ステータスと日付 */}
+                  <div className="flex items-center gap-2 text-xs font-semibold">
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 ${statusClass}`}
+                    >
+                      {status}
+                    </span>
+                    <span className="text-gray-500">{targetMonthLabel}</span>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2 text-xs font-semibold">
-                    <div className="flex items-center gap-2">
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 ${statusClass}`}>
-                        {status}
-                      </span>
-                      <span className="text-gray-500">{targetMonthLabel}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-gray-400">
-                      <ChevronDown
-                        className={cn(
-                          "h-4 w-4 transition-transform",
-                          isOpen ? "rotate-180" : "rotate-0",
-                        )}
-                      />
-                    </div>
+                  {/* 下段: 得意先 / 製品 / 納入先 */}
+                  <div className="line-clamp-2 text-xs text-gray-500">
+                    <span className="text-sm font-semibold text-gray-500">{customerDisplay}</span>
+                    <span className="mx-1 text-gray-300">/</span>
+                    <span className="text-base font-bold text-gray-900">
+                      {product.productName}
+                      {product.productCode ? (
+                        <span className="text-sm font-semibold text-gray-700">
+                          {" "}
+                          ({product.productCode})
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="mx-1 text-gray-300">/</span>
+                    <span className="text-sm text-gray-500">{deliveryPlaceDisplay}</span>
                   </div>
                 </button>
 
-                {onDelete ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-2 text-xs"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onDelete(forecast.forecast_id);
-                    }}
-                    disabled={isDeleting}
-                  >
-                    削除
-                  </Button>
-                ) : null}
+                {/* 右側: 削除ボタンとシェブロン */}
+                <div className="flex flex-shrink-0 items-center gap-2 pt-1">
+                  {onDelete ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 px-2 text-xs"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onDelete(forecast.forecast_id);
+                      }}
+                      disabled={isDeleting}
+                    >
+                      削除
+                    </Button>
+                  ) : null}
+
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-gray-100">
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 text-gray-400 transition-transform",
+                        isOpen ? "rotate-180" : "rotate-0",
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -389,8 +390,12 @@ export function ForecastDetailCard({
                                 key={dekad.label}
                                 className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-center"
                               >
-                                <div className="text-xs font-medium text-green-700">{dekad.label}</div>
-                                <div className="text-lg font-bold text-green-900">{dekad.total}</div>
+                                <div className="text-xs font-medium text-green-700">
+                                  {dekad.label}
+                                </div>
+                                <div className="text-lg font-bold text-green-900">
+                                  {dekad.total}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -405,11 +410,15 @@ export function ForecastDetailCard({
                         <h4 className="text-sm font-semibold text-gray-700">月別予測</h4>
                         {monthlyData ? (
                           <div className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-center">
-                            <div className="text-xs font-medium text-purple-700">{monthlyData.label}</div>
-                            <div className="text-2xl font-bold text-purple-900">{monthlyData.total}</div>
+                            <div className="text-xs font-medium text-purple-700">
+                              {monthlyData.label}
+                            </div>
+                            <div className="text-2xl font-bold text-purple-900">
+                              {monthlyData.total}
+                            </div>
                           </div>
                         ) : (
-                          <div className="rounded-lg border border-dashed border-gray-200 px-4 py-6 text-center text-sm text-gray-400">
+                          <div className="rounded-lg border border-dashed border-gray-200 px-4 py-3 text-center text-sm text-gray-400">
                             データなし
                           </div>
                         )}
