@@ -3,7 +3,7 @@
  *
  * 5-section layout:
  * - Section 1: Header info (product, delivery place, customer)
- * - Section 2-4: 31-day grid (3 rows of ~10-11 tiles)
+ * - Section 2-4: 31-day grid (3 rows using CSS Grid)
  * - Section 5: Dekad (left) and Monthly (right) aggregations
  *
  * Timeline Logic:
@@ -69,7 +69,7 @@ function formatDateKey(date: Date): string {
 }
 
 /**
- * Render a single day cell for the grid
+ * Render a single day cell for the grid (CSS Grid version)
  */
 function DayCell({
   date,
@@ -80,12 +80,14 @@ function DayCell({
   quantity: number | undefined;
   isToday: boolean;
 }) {
+  const displayQty = quantity !== undefined ? Math.round(quantity) : null;
+
   return (
     <div
-      className={`w-[calc(100%/11)] min-w-0 rounded border text-center text-xs ${
+      className={`rounded border text-center text-xs ${
         isToday
           ? "border-blue-500 bg-blue-50"
-          : quantity !== undefined
+          : displayQty !== null
             ? "border-gray-300 bg-gray-50"
             : "border-gray-200 bg-white"
       }`}
@@ -94,16 +96,16 @@ function DayCell({
         {formatDateShort(date)}
       </div>
       <div
-        className={`px-1 py-1 font-medium ${quantity !== undefined ? "text-gray-900" : "text-gray-300"}`}
+        className={`px-1 py-1 font-medium ${displayQty !== null ? "text-gray-900" : "text-gray-300"}`}
       >
-        {quantity !== undefined ? Math.round(quantity) : "-"}
+        {displayQty !== null ? displayQty : "-"}
       </div>
     </div>
   );
 }
 
 export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
-  // Group lines by product
+  // Group lines by product with proper number conversion
   const productData = useMemo(() => {
     const productMap = new Map<number, ProductForecastData>();
 
@@ -112,14 +114,16 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
         productMap.set(line.product_id, {
           productId: line.product_id,
           productCode: line.product_code ?? `P${line.product_id}`,
-          productName: line.product_name ?? `Product ${line.product_id}`,
+          productName: line.product_name ?? "名称未定",
           unit: line.unit,
           dailyData: new Map(),
         });
       }
 
       const data = productMap.get(line.product_id)!;
-      data.dailyData.set(line.delivery_date, line.quantity);
+      // Ensure quantity is converted to number (fix NaN issue)
+      const qty = Number(line.quantity) || 0;
+      data.dailyData.set(line.delivery_date, qty);
     }
 
     return Array.from(productMap.values());
@@ -135,10 +139,10 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
   // Get 31-day dates
   const dates = useMemo(() => get31DayDates(), []);
 
-  // Split into 3 rows of 11 tiles each (last row has 9)
-  const row1 = dates.slice(0, 11);
-  const row2 = dates.slice(11, 22);
-  const row3 = dates.slice(22, 31);
+  // Split into 3 rows for CSS Grid (10 columns each, last row has remainder)
+  const row1 = dates.slice(0, 10);
+  const row2 = dates.slice(10, 20);
+  const row3 = dates.slice(20, 31);
 
   // Calculate the target months for dekad and monthly
   const { dekadMonth, monthlyMonth } = useMemo(() => {
@@ -176,12 +180,14 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
       const date = new Date(dateStr);
       if (date.getFullYear() === dekadMonth.year && date.getMonth() === dekadMonth.month) {
         const day = date.getDate();
+        // Ensure qty is a valid number
+        const numQty = Number(qty) || 0;
         if (day <= 10) {
-          jouTotal += qty;
+          jouTotal += numQty;
         } else if (day <= 20) {
-          chuTotal += qty;
+          chuTotal += numQty;
         } else {
-          geTotal += qty;
+          geTotal += numQty;
         }
       }
     }
@@ -204,7 +210,9 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
     for (const [dateStr, qty] of selectedProduct.dailyData) {
       const date = new Date(dateStr);
       if (date.getFullYear() === monthlyMonth.year && date.getMonth() === monthlyMonth.month) {
-        total += qty;
+        // Ensure qty is a valid number
+        const numQty = Number(qty) || 0;
+        total += numQty;
       }
     }
 
@@ -226,6 +234,15 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
 
   const todayKey = formatDateKey(new Date());
 
+  // Format display strings for customer and delivery place
+  const customerDisplay = forecast.customer_name
+    ? `${forecast.customer_id} : ${forecast.customer_name}`
+    : `ID: ${forecast.customer_id} : 名称未定`;
+
+  const deliveryPlaceDisplay = forecast.delivery_place_name
+    ? `${forecast.delivery_place_id} : ${forecast.delivery_place_name}`
+    : `ID: ${forecast.delivery_place_id} : 名称未定`;
+
   return (
     <Card>
       {/* Section 1: Header Info */}
@@ -237,18 +254,14 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
           </div>
           <div className="text-right text-sm">
             <div className="text-gray-500">得意先</div>
-            <div className="font-medium">
-              {forecast.customer_name ?? `ID: ${forecast.customer_id}`}
-            </div>
+            <div className="font-medium">{customerDisplay}</div>
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
           <div>
             <div className="text-sm text-gray-500">納入場所</div>
-            <div className="font-medium">
-              {forecast.delivery_place_name ?? `ID: ${forecast.delivery_place_id}`}
-            </div>
+            <div className="font-medium">{deliveryPlaceDisplay}</div>
           </div>
           <div>
             <div className="text-sm text-gray-500">製品選択</div>
@@ -262,7 +275,7 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
               <SelectContent>
                 {productData.map((product) => (
                   <SelectItem key={product.productId} value={product.productId.toString()}>
-                    {product.productCode} - {product.productName}
+                    {product.productCode} : {product.productName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -271,17 +284,20 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
         </div>
 
         {selectedProduct && (
-          <div className="mt-2 text-sm text-gray-600">単位: {selectedProduct.unit}</div>
+          <div className="mt-2 text-sm text-gray-600">
+            選択中: {selectedProduct.productCode} : {selectedProduct.productName} （単位:{" "}
+            {selectedProduct.unit}）
+          </div>
         )}
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Section 2-4: 31-day Grid */}
+        {/* Section 2-4: 31-day Grid using CSS Grid */}
         <div>
           <h4 className="mb-2 text-sm font-semibold text-gray-700">日次予測 (31日間)</h4>
           <div className="space-y-1">
-            {/* Row 1 */}
-            <div className="flex gap-0.5">
+            {/* Row 1: 10 cells */}
+            <div className="grid grid-cols-10 gap-0.5">
               {row1.map((date) => {
                 const dateKey = formatDateKey(date);
                 return (
@@ -295,8 +311,8 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
               })}
             </div>
 
-            {/* Row 2 */}
-            <div className="flex gap-0.5">
+            {/* Row 2: 10 cells */}
+            <div className="grid grid-cols-10 gap-0.5">
               {row2.map((date) => {
                 const dateKey = formatDateKey(date);
                 return (
@@ -310,8 +326,8 @@ export function ForecastDetailCard({ forecast }: ForecastDetailCardProps) {
               })}
             </div>
 
-            {/* Row 3 */}
-            <div className="flex gap-0.5">
+            {/* Row 3: 11 cells (remainder) */}
+            <div className="grid grid-cols-10 gap-0.5">
               {row3.map((date) => {
                 const dateKey = formatDateKey(date);
                 return (
