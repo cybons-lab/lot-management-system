@@ -10,7 +10,6 @@
 /* eslint-disable complexity */
 /* eslint-disable max-lines */
 
-import { format } from "date-fns";
 import { useAtom } from "jotai";
 import { Plus, RefreshCw } from "lucide-react";
 import { useMemo } from "react";
@@ -18,17 +17,18 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
-import { Label } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { LotCreateForm } from "@/features/inventory/components/LotCreateForm";
+import { useLotStats } from "@/features/inventory/hooks/useLotStats";
+import { columns } from "@/features/inventory/pages/LotsPage/columns";
 import { lotFiltersAtom, lotTableSettingsAtom } from "@/features/inventory/state";
 import { useLotsQuery } from "@/hooks/api";
 import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
-import { DataTable, type Column } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
 import { FilterField } from "@/shared/components/data/FilterField";
 import { FilterPanel } from "@/shared/components/data/FilterPanel";
 import { SearchBar } from "@/shared/components/data/SearchBar";
-import { LotStatusBadge } from "@/shared/components/data/StatusBadge";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import { Section } from "@/shared/components/layout";
@@ -68,80 +68,6 @@ export function LotsPage() {
       toast.error(`作成に失敗しました: ${error.message}`);
     },
   });
-
-  // テーブルカラム定義
-  const columns: Column<LotUI>[] = useMemo(
-    () => [
-      {
-        id: "lot_number",
-        header: "ロット番号",
-        cell: (lot: LotUI) => <span className="font-medium">{lot.lot_number}</span>,
-        sortable: true,
-      },
-      {
-        id: "product_code",
-        header: "製品コード",
-        cell: (lot: LotUI) => lot.product_code,
-        sortable: true,
-      },
-      {
-        id: "product_name",
-        header: "製品名",
-        cell: (lot: LotUI) => lot.product_name,
-      },
-      {
-        id: "delivery_place_id",
-        header: "納品場所",
-        cell: (lot: LotUI): string | number => lot.delivery_place_id ?? "–",
-        sortable: true,
-      },
-      {
-        id: "current_quantity",
-        header: "現在在庫",
-        cell: (lot: LotUI) => {
-          const qty = Number(lot.current_quantity);
-          return <span className={qty > 0 ? "font-semibold" : "text-gray-400"}>{fmt(qty)}</span>;
-        },
-        sortable: true,
-        align: "right",
-      },
-      {
-        id: "unit",
-        header: "単位",
-        cell: (lot: LotUI): string => lot.unit,
-        align: "center",
-      },
-      {
-        id: "receipt_date",
-        header: "入荷日",
-        cell: (lot: LotUI) =>
-          lot.receipt_date && lot.receipt_date !== "-"
-            ? format(new Date(lot.receipt_date), "yyyy/MM/dd")
-            : "-",
-        sortable: true,
-      },
-      {
-        id: "expiry_date",
-        header: "有効期限",
-        cell: (lot: LotUI) =>
-          lot.expiry_date && lot.expiry_date !== "-"
-            ? format(new Date(lot.expiry_date), "yyyy/MM/dd")
-            : "-",
-        sortable: true,
-      },
-      {
-        id: "status",
-        header: "ステータス",
-        cell: (lot: LotUI) => {
-          const status = Number(lot.current_quantity) > 0 ? "available" : "depleted";
-          return <LotStatusBadge status={status} />;
-        },
-        sortable: true,
-        align: "center",
-      },
-    ],
-    [],
-  );
 
   // フィルタリング（検索テキスト）
   const filteredLots = useMemo(() => {
@@ -191,16 +117,7 @@ export function LotsPage() {
   }, [sortedLots, tableSettings.page, tableSettings.pageSize]);
 
   // 統計情報
-  const stats = useMemo(() => {
-    const totalLots = allLots.length;
-    const activeLots = allLots.filter((lot) => Number(lot.current_quantity) > 0).length;
-    const totalQuantity = allLots.reduce<number>(
-      (sum, lot) => sum + Number(lot.current_quantity),
-      0,
-    );
-
-    return { totalLots, activeLots, totalQuantity };
-  }, [allLots]);
+  const stats = useLotStats(allLots);
 
   // ハンドラー
   const handleFilterChange = (key: string, value: unknown) => {
@@ -379,100 +296,3 @@ export function LotsPage() {
   );
 }
 
-// ============================================
-// サブコンポーネント
-// ============================================
-
-interface LotCreateFormProps {
-  onSubmit: (data: Record<string, unknown>) => Promise<void>;
-  onCancel: () => void;
-  isSubmitting: boolean;
-}
-
-function LotCreateForm({ onSubmit, onCancel, isSubmitting }: LotCreateFormProps) {
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-
-    const data = {
-      lot_number: formData.get("lot_number") as string,
-      product_code: formData.get("product_code") as string,
-      supplier_code: formData.get("supplier_code") as string,
-      delivery_place_code: formData.get("delivery_place_code") as string,
-      quantity: Number(formData.get("quantity")),
-      lot_unit: formData.get("lot_unit") as string,
-      receipt_date: formData.get("receipt_date") as string,
-      expiry_date: (formData.get("expiry_date") as string) || undefined,
-    };
-
-    await onSubmit(data);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="lot_number">ロット番号 *</Label>
-          <Input id="lot_number" name="lot_number" required placeholder="例: LOT-2024-001" />
-        </div>
-
-        <div>
-          <Label htmlFor="product_code">製品コード *</Label>
-          <Input id="product_code" name="product_code" required placeholder="例: P001" />
-        </div>
-
-        <div>
-          <Label htmlFor="supplier_code">仕入先コード *</Label>
-          <Input id="supplier_code" name="supplier_code" required placeholder="例: S001" />
-        </div>
-
-        <div>
-          <Label htmlFor="delivery_place_code">納品場所コード *</Label>
-          <Input
-            id="delivery_place_code"
-            name="delivery_place_code"
-            required
-            placeholder="例: DP01"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="quantity">数量 *</Label>
-          <Input
-            id="quantity"
-            name="quantity"
-            type="number"
-            required
-            min="0"
-            step="0.01"
-            placeholder="例: 1000"
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="lot_unit">単位 *</Label>
-          <Input id="lot_unit" name="lot_unit" required placeholder="例: EA" defaultValue="EA" />
-        </div>
-
-        <div>
-          <Label htmlFor="receipt_date">入荷日 *</Label>
-          <Input id="receipt_date" name="receipt_date" type="date" required />
-        </div>
-
-        <div>
-          <Label htmlFor="expiry_date">有効期限</Label>
-          <Input id="expiry_date" name="expiry_date" type="date" />
-        </div>
-      </div>
-
-      <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
-          キャンセル
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "作成中..." : "作成"}
-        </Button>
-      </div>
-    </form>
-  );
-}

@@ -8,16 +8,19 @@
 /* eslint-disable max-lines-per-function */
 
 import { RefreshCw } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
-import { useInventoryItems } from "../hooks";
+import { ROUTES } from "@/constants/routes";
+import { StatCard } from "@/features/inventory/components/StatCard";
+import { useInventoryStats } from "@/features/inventory/hooks/useInventoryStats";
 import { Section } from "@/shared/components/layout";
 import { fmt } from "@/shared/utils/number";
-import { ROUTES } from "@/constants/routes";
+
+import { useInventoryItems } from "../hooks";
 
 // ============================================
 // メインコンポーネント
@@ -40,23 +43,7 @@ export function SummaryPage() {
   const { data: inventoryItems = [], isLoading, error, refetch } = useInventoryItems(queryParams);
 
   // 統計情報の計算
-  const stats = useMemo(() => {
-    const totalItems = inventoryItems.length;
-    const totalQuantity = inventoryItems.reduce((sum, item) => sum + item.total_quantity, 0);
-    const totalAllocated = inventoryItems.reduce((sum, item) => sum + item.allocated_quantity, 0);
-    const totalAvailable = inventoryItems.reduce((sum, item) => sum + item.available_quantity, 0);
-    const uniqueProducts = new Set(inventoryItems.map((item) => item.product_id)).size;
-    const uniqueWarehouses = new Set(inventoryItems.map((item) => item.warehouse_id)).size;
-
-    return {
-      totalItems,
-      totalQuantity,
-      totalAllocated,
-      totalAvailable,
-      uniqueProducts,
-      uniqueWarehouses,
-    };
-  }, [inventoryItems]);
+  const stats = useInventoryStats(inventoryItems);
 
   if (isLoading) {
     return (
@@ -236,35 +223,6 @@ export function SummaryPage() {
           データを更新
         </Button>
       </div>
-    </div>
-  );
-}
-
-// ============================================
-// サブコンポーネント
-// ============================================
-
-interface StatCardProps {
-  title: string;
-  value: string;
-  description?: string;
-  highlight?: boolean;
-}
-
-function StatCard({ title, value, description, highlight }: StatCardProps) {
-  return (
-    <div
-      className={`group rounded-xl border bg-white p-6 shadow-sm transition-all duration-200 hover:shadow-md ${
-        highlight
-          ? "border-t border-r border-b border-l-4 border-gray-200 border-l-blue-500"
-          : "border-gray-200 hover:border-gray-300"
-      }`}
-    >
-      <div className="text-sm font-medium text-gray-600">{title}</div>
-      <div className={`mt-3 text-3xl font-bold ${highlight ? "text-blue-600" : "text-gray-900"}`}>
-        {value}
-      </div>
-      {description && <div className="mt-2 text-xs text-gray-500">{description}</div>}
     </div>
   );
 }
