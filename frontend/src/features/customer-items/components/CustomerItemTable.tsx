@@ -3,7 +3,7 @@
  * Table component for displaying customer item mappings
  */
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import type { CustomerItem } from "../api";
 
 interface CustomerItemTableProps {

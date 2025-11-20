@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { useRoles, useCreateRole, useDeleteRole } from "../hooks";
 import { RoleForm } from "../components/RoleForm";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import type { CreateRoleRequest } from "../api";
 
 export function RolesListPage() {

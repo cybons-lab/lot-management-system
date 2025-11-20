@@ -3,7 +3,7 @@
  * Skeleton implementation
  */
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 
 export function MastersBulkLoadPage() {
   return (

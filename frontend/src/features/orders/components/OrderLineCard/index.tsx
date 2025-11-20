@@ -3,12 +3,11 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { InfoRow } from "@/components/common/InfoRow";
-import { Button } from "@/components/ui/button";
-import { AllocationProgress } from "@/features/allocations/components/AllocationProgress";
-import { useAllocationActions } from "@/features/allocations/hooks/useAllocationActions";
-import { ForecastSection } from "@/features/orders/components/ForecastSection";
-import { LotListWithAllocation } from "@/features/orders/components/LotListWithAllocation";
-import * as OrderLineHeader from "@/features/orders/components/OrderLineHeader";
+import { Button } from "@/components/ui";
+import { AllocationProgress } from "@/features/allocations/components";
+import { useAllocationActions } from "@/features/allocations/hooks";
+import { ForecastSection, LotListWithAllocation } from "@/features/orders/components";
+import * as OrderLineHeader from "@/features/orders/components/display/OrderLineHeader";
 import {
   useOrderLineComputed,
   type OrderLineSource,

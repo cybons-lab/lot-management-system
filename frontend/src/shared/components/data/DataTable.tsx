@@ -13,7 +13,7 @@ import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import * as React from "react";
 import { useMemo } from "react";
 
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================

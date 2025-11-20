@@ -9,14 +9,8 @@
 
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================

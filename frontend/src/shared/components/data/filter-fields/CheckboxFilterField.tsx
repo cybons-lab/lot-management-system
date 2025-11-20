@@ -2,8 +2,8 @@
  * CheckboxFilterField - チェックボックスフィルター
  */
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui";
+import { Label } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 export interface CheckboxFilterFieldProps {

@@ -6,9 +6,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useInboundPlans, useDeleteInboundPlan } from "../hooks";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
+import { Label } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 
 export function InboundPlansListPage() {

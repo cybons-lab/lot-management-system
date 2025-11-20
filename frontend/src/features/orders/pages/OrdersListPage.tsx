@@ -16,16 +16,10 @@ import { useMemo } from "react";
 // バッチ3で作成した共通コンポーネント
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
+import { Label } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useOrdersQuery } from "@/hooks/api";
 import { useCreateOrder } from "@/hooks/mutations";
 import { useDialog, useTable, useFilters } from "@/hooks/ui";

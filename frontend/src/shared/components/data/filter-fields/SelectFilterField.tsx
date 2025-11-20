@@ -2,14 +2,8 @@
  * SelectFilterField - セレクトボックスフィルター
  */
 
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Label } from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 export interface SelectOption {

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useUser, useAssignUserRoles } from "../hooks";
 import { useRoles } from "@/features/roles/hooks";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 
 export function UserDetailPage() {

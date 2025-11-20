@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useBatchJobs, useExecuteBatchJob, useDeleteBatchJob } from "../hooks";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 
 export function BatchJobsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");

@@ -7,8 +7,8 @@ import { useParams, useNavigate } from "react-router-dom";
 
 import { useForecast } from "../hooks";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui";
+import { Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 
 export function ForecastDetailPage() {

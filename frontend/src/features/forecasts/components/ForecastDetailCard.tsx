@@ -12,8 +12,8 @@ import { useMemo } from "react";
 
 import type { ForecastGroup } from "../api";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui";
+import { Card, CardContent } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 interface ForecastDetailCardProps {

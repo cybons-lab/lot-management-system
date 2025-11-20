@@ -2,18 +2,23 @@
  * Export all allocation hooks (v2.2 - Phase E updated)
  */
 
-// Legacy hooks
-export { useOrderSelection } from "./useOrderSelection";
-export { useAutoSelection } from "./useAutoSelection";
-export { useAllocationMutation } from "./useAllocationMutation";
-export { useSnackbar } from "./useSnackbar";
-export { useOrderCards } from "./useOrderCards";
+// Main orchestrator hook
+export { useLotAllocation } from "./useLotAllocation";
+export type {
+  LineStatus,
+  LineStockStatus,
+  AllocationToastState,
+  CandidateLotFetcher,
+} from "./useLotAllocation";
 
-// New hooks (v2.2.1)
-export { useAllocationCandidates, allocationCandidatesKeys } from "./useAllocationCandidates";
-export {
-  useCreateManualAllocationSuggestion,
-  useCreateFefoAllocationSuggestion,
-  useCommitAllocation,
-  useCancelAllocation,
-} from "./useAllocationSuggestions";
+// API/Data fetching hooks
+export * from "./api";
+
+// Mutation hooks
+export * from "./mutations";
+
+// State management hooks
+export * from "./state";
+
+// UI state hooks
+export * from "./ui";

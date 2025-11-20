@@ -6,8 +6,8 @@
 import { useState } from "react";
 import { useReceiveInbound } from "../hooks";
 import type { InboundPlanLine } from "../api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
 
 interface ReceiveModalProps {
   planId: number;
