@@ -1,93 +1,188 @@
+/**
+ * Lot allocation action hooks
+ * Provides actions for managing lot allocations including auto-allocation, manual changes, and saving
+ */
+
 import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
 import { saveManualAllocations, type ManualAllocationSaveResponse } from "../../api";
+import { allocationCandidatesKeys } from "../api/useAllocationCandidates";
+
+import type {
+  AllocationsByLine,
+  AllocationToastState,
+  LineAllocations,
+  LineStatusMap,
+} from "./allocationActionTypes";
+import {
+  calculateAutoAllocation,
+  calculateTotalUiAllocated,
+  checkOverAllocation,
+  clampAllocationQuantity,
+  convertAllocationsToPayload,
+} from "./allocationCalculations";
+import { ALLOCATION_CONSTANTS } from "./allocationConstants";
+import {
+  getAllocatedQuantity,
+  getFreeQuantity,
+  getOrderId,
+  getOrderQuantity,
+} from "./allocationFieldHelpers";
+import type { CandidateLotFetcher } from "./lotAllocationTypes";
+
 import type { OrderLine } from "@/shared/types/aliases";
 
-import { allocationCandidatesKeys } from "../api/useAllocationCandidates";
-import type { AllocationToastState, CandidateLotFetcher, LineStatus } from "./lotAllocationTypes";
-
+/**
+ * Variables for saveAllocations mutation
+ */
 interface SaveAllocationsVariables {
   orderLineId: number;
   orderId: number | null;
   allocations: Array<{ lot_id: number; quantity: number }>;
 }
 
+/**
+ * Options for useLotAllocationActions hook
+ */
 interface UseLotAllocationActionsOptions {
   queryClient: QueryClient;
   allLines: OrderLine[];
-  allocationsByLine: Record<number, Record<number, number>>;
-  setAllocationsByLine: React.Dispatch<
-    React.SetStateAction<Record<number, Record<number, number>>>
-  >;
-  setLineStatuses: React.Dispatch<React.SetStateAction<Record<number, LineStatus>>>;
+  allocationsByLine: AllocationsByLine;
+  setAllocationsByLine: React.Dispatch<React.SetStateAction<AllocationsByLine>>;
+  setLineStatuses: React.Dispatch<React.SetStateAction<LineStatusMap>>;
   setToast: React.Dispatch<React.SetStateAction<AllocationToastState>>;
 }
 
-function useCandidateLotFetcher(queryClient: QueryClient) {
+/**
+ * Helper function to update line status to draft
+ */
+function setLineStatusToDraft(
+  lineId: number,
+  setter: React.Dispatch<React.SetStateAction<LineStatusMap>>,
+) {
+  setter((prev) => ({ ...prev, [lineId]: ALLOCATION_CONSTANTS.LINE_STATUS.DRAFT }));
+}
+
+/**
+ * Helper function to update line status to committed
+ */
+function setLineStatusToCommitted(
+  lineId: number,
+  setter: React.Dispatch<React.SetStateAction<LineStatusMap>>,
+) {
+  setter((prev) => ({ ...prev, [lineId]: ALLOCATION_CONSTANTS.LINE_STATUS.COMMITTED }));
+}
+
+/**
+ * Helper function to remove line allocations
+ */
+function removeLineAllocations(
+  lineId: number,
+  setter: React.Dispatch<React.SetStateAction<AllocationsByLine>>,
+) {
+  setter((prev) => {
+    const next = { ...prev };
+    delete next[lineId];
+    return next;
+  });
+}
+
+/**
+ * Hook to fetch candidate lots from cache
+ * @param queryClient - TanStack Query client
+ * @returns Function to fetch candidate lots by line ID
+ */
+function useCandidateLotFetcher(queryClient: QueryClient): CandidateLotFetcher {
   return useCallback<CandidateLotFetcher>(
     (lineId) => {
       const cache = queryClient.getQueryData<{ items?: unknown[] }>(
         allocationCandidatesKeys.list({
           order_line_id: lineId,
-          strategy: "fefo",
-          limit: 200,
+          strategy: ALLOCATION_CONSTANTS.QUERY_STRATEGY.FEFO,
+          limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         }),
       );
-      return (cache?.items as ReturnType<CandidateLotFetcher>) ?? [];
+
+      // Type guard: Ensure items is an array
+      if (!cache?.items || !Array.isArray(cache.items)) {
+        return [];
+      }
+
+      // Return as CandidateLotItem array (assuming items conform to type)
+      return cache.items as ReturnType<CandidateLotFetcher>;
     },
     [queryClient],
   );
 }
 
-function useGetAllocationsForLine(allocationsByLine: Record<number, Record<number, number>>) {
-  return useCallback((lineId: number) => allocationsByLine[lineId] || {}, [allocationsByLine]);
+/**
+ * Hook to get allocations for a specific line
+ * @param allocationsByLine - All allocations by line
+ * @returns Function to get allocations for a line ID
+ */
+function useGetAllocationsForLine(allocationsByLine: AllocationsByLine) {
+  return useCallback(
+    (lineId: number): LineAllocations => allocationsByLine[lineId] ?? {},
+    [allocationsByLine],
+  );
 }
 
+/**
+ * Hook to handle allocation quantity changes
+ * @param params - Handler parameters
+ * @returns Change allocation handler function
+ */
 function useChangeAllocationHandler({
   candidateFetcher,
   setAllocationsByLine,
   setLineStatuses,
 }: {
   candidateFetcher: CandidateLotFetcher;
-  setAllocationsByLine: React.Dispatch<
-    React.SetStateAction<Record<number, Record<number, number>>>
-  >;
-  setLineStatuses: React.Dispatch<React.SetStateAction<Record<number, LineStatus>>>;
+  setAllocationsByLine: React.Dispatch<React.SetStateAction<AllocationsByLine>>;
+  setLineStatuses: React.Dispatch<React.SetStateAction<LineStatusMap>>;
 }) {
   return useCallback(
     (lineId: number, lotId: number, value: number) => {
+      // Fetch candidate lots to determine max allowed quantity
       const candidates = candidateFetcher(lineId);
       const targetLot = candidates.find((lot) => lot.lot_id === lotId);
-      const maxAllowed = targetLot
-        ? Number(targetLot.free_qty ?? targetLot.current_quantity ?? 0)
-        : Infinity;
 
-      const clampedValue = Math.max(0, Math.min(maxAllowed, Number.isFinite(value) ? value : 0));
+      // Determine max allowed quantity (default to Infinity if lot not found)
+      const maxAllowed = targetLot ? getFreeQuantity(targetLot) : Infinity;
 
+      // Clamp value to valid range
+      const clampedValue = clampAllocationQuantity({ value, maxAllowed });
+
+      // Update allocations state
       setAllocationsByLine((prev) => {
-        const lineAllocations = prev[lineId] || {};
+        const lineAllocations = prev[lineId] ?? {};
 
+        // If clamped value is 0, remove the lot from allocations
         if (clampedValue === 0) {
           const { [lotId]: _, ...rest } = lineAllocations;
           return { ...prev, [lineId]: rest };
         }
 
+        // Otherwise, update the allocation
         return {
           ...prev,
           [lineId]: { ...lineAllocations, [lotId]: clampedValue },
         };
       });
 
-      setLineStatuses((prev) => ({
-        ...prev,
-        [lineId]: "draft",
-      }));
+      // Mark line as draft (has unsaved changes)
+      setLineStatusToDraft(lineId, setLineStatuses);
     },
     [candidateFetcher, setAllocationsByLine, setLineStatuses],
   );
 }
 
+/**
+ * Hook to handle auto allocation (FEFO)
+ * @param params - Handler parameters
+ * @returns Auto allocate handler function
+ */
 function useAutoAllocateHandler({
   allLines,
   candidateFetcher,
@@ -96,100 +191,90 @@ function useAutoAllocateHandler({
 }: {
   allLines: OrderLine[];
   candidateFetcher: CandidateLotFetcher;
-  setAllocationsByLine: React.Dispatch<
-    React.SetStateAction<Record<number, Record<number, number>>>
-  >;
-  setLineStatuses: React.Dispatch<React.SetStateAction<Record<number, LineStatus>>>;
+  setAllocationsByLine: React.Dispatch<React.SetStateAction<AllocationsByLine>>;
+  setLineStatuses: React.Dispatch<React.SetStateAction<LineStatusMap>>;
 }) {
   return useCallback(
     (lineId: number) => {
       const line = allLines.find((l) => l.id === lineId);
       const candidates = candidateFetcher(lineId);
 
+      // Early return if line or candidates not found
       if (!line || !candidates.length) return;
 
-      const requiredQty = Number(line.order_quantity ?? line.quantity ?? 0);
-      const dbAllocatedQty = Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
-      let remaining = requiredQty - dbAllocatedQty;
+      // Calculate auto allocation using FEFO strategy
+      const newLineAllocations = calculateAutoAllocation({
+        requiredQty: getOrderQuantity(line),
+        dbAllocatedQty: getAllocatedQuantity(line),
+        candidateLots: candidates,
+      });
 
-      const newLineAllocations: Record<number, number> = {};
-
-      for (const lot of candidates) {
-        if (remaining <= 0) break;
-        const lotId = lot.lot_id;
-        const freeQty = Number(lot.free_qty ?? lot.current_quantity ?? 0);
-
-        const allocateQty = Math.min(remaining, freeQty);
-        if (allocateQty > 0) {
-          newLineAllocations[lotId] = allocateQty;
-          remaining -= allocateQty;
-        }
-      }
-
+      // Update allocations state
       setAllocationsByLine((prev) => ({
         ...prev,
         [lineId]: newLineAllocations,
       }));
 
-      setLineStatuses((prev) => ({
-        ...prev,
-        [lineId]: "draft",
-      }));
+      // Mark line as draft
+      setLineStatusToDraft(lineId, setLineStatuses);
     },
     [allLines, candidateFetcher, setAllocationsByLine, setLineStatuses],
   );
 }
 
+/**
+ * Hook to handle clearing allocations for a line
+ * @param params - Handler parameters
+ * @returns Clear allocations handler function
+ */
 function useClearAllocationsHandler({
   setAllocationsByLine,
   setLineStatuses,
 }: {
-  setAllocationsByLine: React.Dispatch<
-    React.SetStateAction<Record<number, Record<number, number>>>
-  >;
-  setLineStatuses: React.Dispatch<React.SetStateAction<Record<number, LineStatus>>>;
+  setAllocationsByLine: React.Dispatch<React.SetStateAction<AllocationsByLine>>;
+  setLineStatuses: React.Dispatch<React.SetStateAction<LineStatusMap>>;
 }) {
   return useCallback(
     (lineId: number) => {
-      setAllocationsByLine((prev) => {
-        const next = { ...prev };
-        delete next[lineId];
-        return next;
-      });
-      setLineStatuses((prev) => ({
-        ...prev,
-        [lineId]: "draft",
-      }));
+      removeLineAllocations(lineId, setAllocationsByLine);
+      setLineStatusToDraft(lineId, setLineStatuses);
     },
     [setAllocationsByLine, setLineStatuses],
   );
 }
 
+/**
+ * Hook to check if a line is over-allocated
+ * @param params - Check parameters
+ * @returns Function to check over-allocation status
+ */
 function useIsOverAllocated({
   allLines,
   allocationsByLine,
 }: {
   allLines: OrderLine[];
-  allocationsByLine: Record<number, Record<number, number>>;
+  allocationsByLine: AllocationsByLine;
 }) {
   return useCallback(
-    (lineId: number) => {
+    (lineId: number): boolean => {
       const line = allLines.find((l) => l.id === lineId);
       if (!line) return false;
 
-      const requiredQty = Number(line.order_quantity ?? line.quantity ?? 0);
-      const dbAllocated = Number(line.allocated_qty ?? 0);
-      const uiAllocated = Object.values(allocationsByLine[lineId] || {}).reduce(
-        (sum, v) => sum + v,
-        0,
-      );
+      const requiredQty = getOrderQuantity(line);
+      const dbAllocated = getAllocatedQuantity(line);
+      const uiAllocated = calculateTotalUiAllocated(allocationsByLine[lineId] ?? {});
 
-      return dbAllocated + uiAllocated > requiredQty;
+      return checkOverAllocation({ requiredQty, dbAllocated, uiAllocated });
     },
     [allLines, allocationsByLine],
   );
 }
 
+/**
+ * Hook to save allocations to the backend
+ * @param options - Save options including all required dependencies
+ * @returns Save handler and mutation object
+ */
 function useAllocationSaver({
   queryClient,
   allLines,
@@ -199,6 +284,7 @@ function useAllocationSaver({
   setToast,
   isOverAllocated,
 }: UseLotAllocationActionsOptions & { isOverAllocated: (lineId: number) => boolean }) {
+  // Mutation for saving allocations
   const saveAllocationsMutation = useMutation<
     ManualAllocationSaveResponse,
     unknown,
@@ -207,50 +293,58 @@ function useAllocationSaver({
     mutationFn: ({ orderLineId, allocations }) =>
       saveManualAllocations({ order_line_id: orderLineId, allocations }),
     onSuccess: (response, variables) => {
-      setToast({ message: response?.message ?? "引当を登録しました", variant: "success" });
-
-      setLineStatuses((prev) => ({
-        ...prev,
-        [variables.orderLineId]: "committed",
-      }));
-
-      setAllocationsByLine((prev) => {
-        const next = { ...prev };
-        delete next[variables.orderLineId];
-        return next;
+      // Show success toast
+      setToast({
+        message: response?.message ?? ALLOCATION_CONSTANTS.MESSAGES.SAVE_SUCCESS,
+        variant: "success",
       });
 
+      // Mark line as committed
+      setLineStatusToCommitted(variables.orderLineId, setLineStatuses);
+
+      // Remove line from pending allocations
+      removeLineAllocations(variables.orderLineId, setAllocationsByLine);
+
+      // Invalidate related queries to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ["orders", "for-allocation"] });
       queryClient.invalidateQueries({
         queryKey: allocationCandidatesKeys.list({ order_line_id: variables.orderLineId }),
       });
     },
     onError: (error: unknown) => {
+      // Show error toast
       setToast({
-        message: error instanceof Error ? error.message : "引当の登録に失敗しました",
+        message: error instanceof Error ? error.message : ALLOCATION_CONSTANTS.MESSAGES.SAVE_ERROR,
         variant: "error",
       });
     },
   });
 
+  // Save allocations handler
   const saveAllocations = useCallback(
     (lineId: number) => {
-      const allocationsMap = allocationsByLine[lineId] || {};
+      const allocationsMap = allocationsByLine[lineId] ?? {};
       const line = allLines.find((l) => l.id === lineId);
+
+      // Early return if line not found
       if (!line) return;
 
+      // Check for over-allocation
       if (isOverAllocated(lineId)) {
-        setToast({ message: "必要数量を超えて引当されています", variant: "error" });
+        setToast({
+          message: ALLOCATION_CONSTANTS.MESSAGES.OVER_ALLOCATED,
+          variant: "error",
+        });
         return;
       }
 
-      const allocations = Object.entries(allocationsMap)
-        .map(([lotIdStr, qty]) => ({ lot_id: Number(lotIdStr), quantity: Number(qty) }))
-        .filter((item) => item.quantity > 0);
+      // Convert allocations to API payload format
+      const allocations = convertAllocationsToPayload(allocationsMap);
 
+      // Execute mutation
       saveAllocationsMutation.mutate({
         orderLineId: lineId,
-        orderId: line.order_id ?? null,
+        orderId: getOrderId(line),
         allocations,
       });
     },
@@ -260,24 +354,36 @@ function useAllocationSaver({
   return { saveAllocations, saveAllocationsMutation };
 }
 
+/**
+ * Main hook for lot allocation actions
+ * Provides all actions needed for managing lot allocations
+ *
+ * @param options - Hook options
+ * @returns Allocation action functions and state
+ */
 export function useLotAllocationActions(options: UseLotAllocationActionsOptions) {
   const candidateFetcher = useCandidateLotFetcher(options.queryClient);
+
   const getAllocationsForLine = useGetAllocationsForLine(options.allocationsByLine);
+
   const changeAllocation = useChangeAllocationHandler({
     candidateFetcher,
     setAllocationsByLine: options.setAllocationsByLine,
     setLineStatuses: options.setLineStatuses,
   });
+
   const autoAllocate = useAutoAllocateHandler({
     allLines: options.allLines,
     candidateFetcher,
     setAllocationsByLine: options.setAllocationsByLine,
     setLineStatuses: options.setLineStatuses,
   });
+
   const clearAllocations = useClearAllocationsHandler({
     setAllocationsByLine: options.setAllocationsByLine,
     setLineStatuses: options.setLineStatuses,
   });
+
   const isOverAllocated = useIsOverAllocated({
     allLines: options.allLines,
     allocationsByLine: options.allocationsByLine,
@@ -289,13 +395,44 @@ export function useLotAllocationActions(options: UseLotAllocationActionsOptions)
   });
 
   return {
+    /**
+     * Get candidate lots for a line from cache
+     */
     getCandidateLots: candidateFetcher,
+
+    /**
+     * Get allocations for a specific line
+     */
     getAllocationsForLine,
+
+    /**
+     * Change allocation quantity for a lot
+     */
     changeAllocation,
+
+    /**
+     * Auto-allocate using FEFO strategy
+     */
     autoAllocate,
+
+    /**
+     * Clear all allocations for a line
+     */
     clearAllocations,
+
+    /**
+     * Save allocations to backend
+     */
     saveAllocations,
+
+    /**
+     * Check if a line is over-allocated
+     */
     isOverAllocated,
+
+    /**
+     * Mutation object for save allocations (for accessing loading state, etc.)
+     */
     saveAllocationsMutation,
   };
 }
