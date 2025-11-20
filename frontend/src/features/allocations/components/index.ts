@@ -16,7 +16,6 @@ export {
 export {
   LotListCard,
   LotInfo,
-  LotAllocationPane,
   LotAllocationPanel,
   LotAllocationHeader,
   LotAllocationHeaderView,

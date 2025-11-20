@@ -4,7 +4,6 @@
 
 export { LotListCard } from "./LotListCard";
 export { LotInfo } from "./LotInfo";
-export { LotAllocationPane } from "./LotAllocationPane";
 export { LotAllocationPanel } from "./LotAllocationPanel";
 export { LotAllocationHeader } from "./LotAllocationHeader";
 export { LotAllocationHeaderView } from "./LotAllocationHeaderView";
