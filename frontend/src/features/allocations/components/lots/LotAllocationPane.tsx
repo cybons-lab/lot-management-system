@@ -6,8 +6,8 @@
 
 import { Fragment } from "react";
 
-import type { OrderLine } from "../types";
-import { toQty } from "../utils/qty";
+import type { OrderLine } from "../../types";
+import { toQty } from "../../utils/qty";
 
 import type { CandidateLotItem } from "@/features/allocations/api";
 import { formatDate } from "@/shared/utils/date";

@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import { useAllocationCandidates } from "../hooks/useAllocationCandidates";
-import type { LineStatus } from "../hooks/useLotAllocation";
+import { useAllocationCandidates } from "../../hooks/useAllocationCandidates";
+import type { LineStatus } from "../../hooks/useLotAllocation";
 
-import { LotAllocationPanel } from "./LotAllocationPanel";
+import { LotAllocationPanel } from "../lots/LotAllocationPanel";
 
 // フックのパスは環境に合わせて調整してください
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";

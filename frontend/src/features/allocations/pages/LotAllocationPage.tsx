@@ -6,7 +6,7 @@
  * - 新コンポーネント FlatAllocationList を配置するだけのシンプルな構成に変更
  * - トースト通知機能は維持
  */
-import { FlatAllocationList } from "../components/FlatAllocationList";
+import { FlatAllocationList } from "../components/shared/FlatAllocationList";
 import { useLotAllocation } from "../hooks/useLotAllocation";
 
 export function LotAllocationPage() {

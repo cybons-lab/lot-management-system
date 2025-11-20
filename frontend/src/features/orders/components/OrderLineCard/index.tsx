@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 import { InfoRow } from "@/components/common/InfoRow";
 import { Button } from "@/components/ui/button";
-import { AllocationProgress } from "@/features/allocations/components/AllocationProgress";
+import { AllocationProgress } from "@/features/allocations/components";
 import { useAllocationActions } from "@/features/allocations/hooks/useAllocationActions";
 import { ForecastSection } from "@/features/orders/components/ForecastSection";
 import { LotListWithAllocation } from "@/features/orders/components/LotListWithAllocation";

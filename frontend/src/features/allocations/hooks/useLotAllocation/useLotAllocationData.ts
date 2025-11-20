@@ -1,10 +1,10 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import type { CandidateLotItem } from "../api";
+import type { CandidateLotItem } from "../../api";
 
-import { allocationCandidatesKeys } from "./useAllocationCandidates";
-import { useOrdersForAllocation } from "./useOrdersForAllocation";
+import { allocationCandidatesKeys } from "../useAllocationCandidates";
+import { useOrdersForAllocation } from "../useOrdersForAllocation";
 import { listCustomers, listProducts } from "@/services/api/master-service";
 
 export function useLotAllocationData() {

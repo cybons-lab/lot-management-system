@@ -1,5 +1,5 @@
 // LotAllocationPanel.tsx
-import type { CandidateLotItem } from "../api";
+import type { CandidateLotItem } from "../../api";
 
 import { LotAllocationHeader } from "./LotAllocationHeader";
 import { LotListCard } from "./LotListCard";

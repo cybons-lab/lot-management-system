@@ -2,7 +2,7 @@
  * OrderLineCard component - displays an order line in the detail pane
  */
 
-import type { OrderLine } from "../types";
+import type { OrderLine } from "../../types";
 
 import { formatDate } from "@/shared/utils/date";
 

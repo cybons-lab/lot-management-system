@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"; // 追加
 import { toast } from "sonner"; // 追加
 
-import type { CandidateLotItem } from "../api";
+import type { CandidateLotItem } from "../../api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/shared/libs/utils";

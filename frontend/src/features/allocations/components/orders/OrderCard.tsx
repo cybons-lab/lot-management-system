@@ -2,8 +2,8 @@
  * OrderCard component - displays an order in the order list
  */
 
-import type { OrderCardData } from "../types";
-import { getPriorityColor, getBadgeColor } from "../utils/priority";
+import type { OrderCardData } from "../../types";
+import { getPriorityColor, getBadgeColor } from "../../utils/priority";
 
 import { formatDate } from "@/shared/utils/date";
 

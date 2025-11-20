@@ -1,10 +1,10 @@
 import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { saveManualAllocations, type ManualAllocationSaveResponse } from "../api";
+import { saveManualAllocations, type ManualAllocationSaveResponse } from "../../api";
 import type { OrderLine } from "@/shared/types/aliases";
 
-import { allocationCandidatesKeys } from "./useAllocationCandidates";
+import { allocationCandidatesKeys } from "../useAllocationCandidates";
 import type { AllocationToastState, CandidateLotFetcher, LineStatus } from "./lotAllocationTypes";
 
 interface SaveAllocationsVariables {

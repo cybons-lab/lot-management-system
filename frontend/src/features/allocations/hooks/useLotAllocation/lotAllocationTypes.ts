@@ -1,4 +1,4 @@
-import type { CandidateLotItem } from "../api";
+import type { CandidateLotItem } from "../../api";
 
 export interface LineStockStatus {
   hasShortage: boolean;

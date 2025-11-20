@@ -2,6 +2,10 @@
  * Export all allocation hooks (v2.2 - Phase E updated)
  */
 
+// Main orchestrator hook
+export { useLotAllocation } from "./useLotAllocation";
+export type { LineStatus, LineStockStatus, AllocationToastState, CandidateLotFetcher } from "./useLotAllocation";
+
 // Legacy hooks
 export { useOrderSelection } from "./useOrderSelection";
 export { useAutoSelection } from "./useAutoSelection";
