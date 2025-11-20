@@ -56,10 +56,7 @@ export function calculateAutoAllocation(params: {
  * @returns Clamped value (0 <= result <= maxAllowed)
  * @pure No side effects
  */
-export function clampAllocationQuantity(params: {
-  value: number;
-  maxAllowed: number;
-}): number {
+export function clampAllocationQuantity(params: { value: number; maxAllowed: number }): number {
   const { value, maxAllowed } = params;
 
   // Ensure value is finite
