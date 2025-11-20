@@ -11,9 +11,9 @@ import { RefreshCw } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
+import { Label } from "@/components/ui";
 import { useInventoryItems } from "../hooks";
 import { Section } from "@/shared/components/layout";
 import { fmt } from "@/shared/utils/number";

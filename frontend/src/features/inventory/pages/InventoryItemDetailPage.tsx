@@ -5,7 +5,7 @@
 
 import { useParams, useNavigate } from "react-router-dom";
 import { useInventoryItem } from "../hooks";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { fmt } from "@/shared/utils/number";
 

@@ -1,7 +1,7 @@
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import { SeedSimulateDialog } from "@/features/admin/components/SeedSimulateDialog";
 import { SeedDataPage } from "@/features/admin/pages/SeedDataPage";
 

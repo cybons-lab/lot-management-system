@@ -2,8 +2,8 @@ import { useState, useEffect } from "react"; // 追加
 import { toast } from "sonner"; // 追加
 
 import type { CandidateLotItem } from "../../api";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 import { formatDate } from "@/shared/utils/date";
 

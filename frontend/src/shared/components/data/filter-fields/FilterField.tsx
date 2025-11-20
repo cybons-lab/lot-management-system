@@ -4,7 +4,7 @@
 
 import type { ReactNode } from "react";
 
-import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 export interface FilterFieldProps {

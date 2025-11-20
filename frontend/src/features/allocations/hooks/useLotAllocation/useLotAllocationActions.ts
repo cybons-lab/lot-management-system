@@ -4,7 +4,7 @@ import { useCallback } from "react";
 import { saveManualAllocations, type ManualAllocationSaveResponse } from "../../api";
 import type { OrderLine } from "@/shared/types/aliases";
 
-import { allocationCandidatesKeys } from "../useAllocationCandidates";
+import { allocationCandidatesKeys } from "../api/useAllocationCandidates";
 import type { AllocationToastState, CandidateLotFetcher, LineStatus } from "./lotAllocationTypes";
 
 interface SaveAllocationsVariables {

@@ -1,5 +1,5 @@
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui";
+import { Progress } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 import type { OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";

@@ -8,7 +8,7 @@
  * - ローディング＆エラー表示
  */
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui";
 import { formatDate } from "@/shared/utils/date";
 import { cn } from "@/shared/libs/utils";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";

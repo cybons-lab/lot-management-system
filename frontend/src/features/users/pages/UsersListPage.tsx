@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUsers, useCreateUser, useDeleteUser } from "../hooks";
 import { UserForm } from "../components/UserForm";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import type { CreateUserRequest } from "../api";
 

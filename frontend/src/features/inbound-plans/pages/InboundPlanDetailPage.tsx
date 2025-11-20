@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useInboundPlan } from "../hooks";
 import { ReceiveModal } from "../components/ReceiveModal";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 
 export function InboundPlanDetailPage() {

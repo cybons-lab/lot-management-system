@@ -5,7 +5,7 @@
 
 import { useParams } from "react-router-dom";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 
 export function ForecastEditPage() {
   const { forecastId } = useParams<{ forecastId: string }>();

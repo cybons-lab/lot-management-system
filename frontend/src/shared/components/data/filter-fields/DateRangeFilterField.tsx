@@ -2,8 +2,8 @@
  * DateRangeFilterField - 日付範囲フィルター
  */
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui";
+import { Label } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
 export interface DateRangeFilterFieldProps {

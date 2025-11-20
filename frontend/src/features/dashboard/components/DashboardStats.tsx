@@ -2,7 +2,7 @@ type DashboardStats = { total_stock: number; total_orders: number; unallocated_o
 import { useQuery } from "@tanstack/react-query";
 import { Archive, Library, AlertCircle } from "lucide-react";
 
-import { StatCard } from "@/components/ui/StatCard";
+import { StatCard } from "@/components/ui";
 import { getStats } from "@/services/api";
 
 export function DashboardStats() {

@@ -4,7 +4,7 @@ import {
   useCreateAllocations,
   useCancelAllocations,
   useSaveWarehouseAllocations,
-} from "@/features/allocations/hooks/useAllocations";
+} from "../state/useAllocations";
 
 /**
  * 引当操作をまとめたカスタムフック

@@ -16,16 +16,16 @@ import { Plus, RefreshCw } from "lucide-react";
 import { useMemo } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui";
+import { Input } from "@/components/ui";
+import { Label } from "@/components/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui";
 import { lotFiltersAtom, lotTableSettingsAtom } from "@/features/inventory/state";
 import { useLotsQuery } from "@/hooks/api";
 import { useCreateLot } from "@/hooks/mutations";

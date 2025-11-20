@@ -4,7 +4,7 @@
  */
 
 import { useParams } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 
 export function InboundPlanEditPage() {
   const { planId } = useParams<{ planId: string }>();

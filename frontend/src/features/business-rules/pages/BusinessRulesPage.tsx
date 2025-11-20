@@ -5,7 +5,7 @@
 
 import { useState } from "react";
 import { useBusinessRules, useToggleBusinessRuleActive, useDeleteBusinessRule } from "../hooks";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 
 export function BusinessRulesPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);

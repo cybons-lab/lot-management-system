@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui";
 // Toastを使う場合
 import { cn } from "@/shared/libs/utils";
 interface AllocationInputProps {
