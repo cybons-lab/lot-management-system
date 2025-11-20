@@ -28,9 +28,7 @@ export function useAllocationCalculations({
   remainingQtyOverride,
 }: UseAllocationCalculationsParams): AllocationCalculations {
   // レガシーフィールド対応: order_quantity または quantity
-  const requiredQty = orderLine
-    ? Number(orderLine.order_quantity ?? orderLine.quantity ?? 0)
-    : 0;
+  const requiredQty = orderLine ? Number(orderLine.order_quantity ?? orderLine.quantity ?? 0) : 0;
 
   // レガシーフィールド対応: allocated_qty または allocated_quantity
   const dbAllocated = orderLine

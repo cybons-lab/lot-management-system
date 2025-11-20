@@ -31,10 +31,7 @@ export function LotAllocationList({
         const maxAllocatable = allocatedQty + remainingNeeded;
 
         return (
-          <div
-            key={lotId}
-            className="group/item relative transition-all duration-200 hover:z-10"
-          >
+          <div key={lotId} className="group/item relative transition-all duration-200 hover:z-10">
             {/* リスト内の非アクティブ行を暗くする処理は、Panelがアクティブな時だけ有効にする */}
             {isActive && (
               <div

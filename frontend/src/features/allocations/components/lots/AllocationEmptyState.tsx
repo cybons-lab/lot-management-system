@@ -22,9 +22,7 @@ export function AllocationEmptyState({ type, error }: AllocationEmptyStateProps)
   }
 
   if (type === "loading") {
-    return (
-      <div className="p-8 text-center text-sm text-gray-500">候補ロットを読み込み中...</div>
-    );
+    return <div className="p-8 text-center text-sm text-gray-500">候補ロットを読み込み中...</div>;
   }
 
   if (type === "error") {
