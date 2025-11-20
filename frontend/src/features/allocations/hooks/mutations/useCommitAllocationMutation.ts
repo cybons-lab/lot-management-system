@@ -3,8 +3,9 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { commitAllocation } from "../api";
-import type { AllocationCommitRequest, AllocationCommitResponse } from "../api";
+
+import { commitAllocation } from "../../api";
+import type { AllocationCommitRequest, AllocationCommitResponse } from "../../api";
 
 export const useCommitAllocationMutation = () => {
   const queryClient = useQueryClient();

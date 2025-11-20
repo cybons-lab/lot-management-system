@@ -1,8 +1,7 @@
 import { useState } from "react";
 
-import { useAllocationCandidates } from "../../hooks/useAllocationCandidates";
+import { useAllocationCandidates } from "../../hooks/api";
 import type { LineStatus } from "../../hooks/useLotAllocation";
-
 import { LotAllocationPanel } from "../lots/LotAllocationPanel";
 
 // フックのパスは環境に合わせて調整してください

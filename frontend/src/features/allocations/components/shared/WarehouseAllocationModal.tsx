@@ -11,13 +11,7 @@ import {
   DialogFooter,
 } from "@/components/ui";
 import { Input } from "@/components/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 
 interface WarehouseAllocation {
   delivery_place_code: string;

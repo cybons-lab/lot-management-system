@@ -5,7 +5,7 @@
 import { useEffect, useRef } from "react";
 import type { SetURLSearchParams } from "react-router-dom";
 
-import type { Order, OrderCardData } from "../types";
+import type { Order, OrderCardData } from "../../types";
 
 export function useAutoSelection(
   orderCards: OrderCardData[],

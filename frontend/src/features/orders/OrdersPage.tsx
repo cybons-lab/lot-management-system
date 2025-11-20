@@ -3,8 +3,8 @@ import * as React from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
-import { OrderCard } from "@/features/orders/components/OrderCard";
-import { OrderFilters } from "@/features/orders/components/OrderFilters";
+import { OrderCard } from "@/features/orders/components/display/OrderCard";
+import { OrderFilters } from "@/features/orders/components/filters/OrderFilters";
 import { useOrdersList } from "@/features/orders/hooks/useOrders";
 import type { OrderWithLinesResponse, OrdersListParams } from "@/shared/types/aliases";
 

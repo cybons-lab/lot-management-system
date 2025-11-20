@@ -4,7 +4,8 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { getAllocationCandidates } from "../api";
+
+import { getAllocationCandidates } from "../../api";
 
 export const allocationCandidatesKeys = {
   all: ["allocationCandidates"] as const,

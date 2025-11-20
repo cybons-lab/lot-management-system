@@ -5,7 +5,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import type { OrderLine } from "../types";
+import type { OrderLine } from "../../types";
 
 import {
   createAllocations,
