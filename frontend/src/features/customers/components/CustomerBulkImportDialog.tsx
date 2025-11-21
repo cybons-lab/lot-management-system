@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/display/dialog";
+} from "@/components/ui/layout/dialog";
 
 import { useBulkUpsertCustomers } from "../hooks/useCustomerMutations";
 import { bulkImport as styles } from "../pages/styles";

@@ -13,7 +13,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/display/dialog";
+} from "@/components/ui/layout/dialog";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 

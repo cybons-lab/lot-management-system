@@ -1,7 +1,7 @@
 # バックエンドAPI vs フロントエンド対応状況分析
 
 作成日: 2025-11-21
-更新日: 2025-11-21
+更新日: 2025-11-21 14:53 (Warehouses/Products/Suppliers実装完了、ナビゲーション追加)
 
 ## 概要
 
@@ -14,23 +14,23 @@ FastAPIバックエンドのAPIエンドポイントと、React/TypeScriptフロ
 | Domain | Endpoint | Purpose | Frontend | Notes |
 |--------|----------|---------|----------|-------|
 | **Masters - Warehouses** |||||
-| Warehouses | `GET /warehouses` | 一覧 | Implemented | `features/warehouses` |
-| Warehouses | `GET /warehouses/{code}` | 詳細 | Missing | 詳細画面なし |
-| Warehouses | `POST /warehouses` | 登録 | Missing | |
-| Warehouses | `PUT /warehouses/{code}` | 更新 | Missing | |
-| Warehouses | `DELETE /warehouses/{code}` | 削除 | Missing | |
+| Warehouses | `GET /warehouses` | 一覧 | ✅ Implemented | `features/warehouses` |
+| Warehouses | `GET /warehouses/{code}` | 詳細 | ✅ Implemented | |
+| Warehouses | `POST /warehouses` | 登録 | ✅ Implemented | |
+| Warehouses | `PUT /warehouses/{code}` | 更新 | ✅ Implemented | |
+| Warehouses | `DELETE /warehouses/{code}` | 削除 | ✅ Implemented | |
 | **Masters - Products** |||||
-| Products | `GET /products` | 一覧 | Implemented | `features/products` |
-| Products | `GET /products/{code}` | 詳細 | Missing | |
-| Products | `POST /products` | 登録 | Missing | |
-| Products | `PUT /products/{code}` | 更新 | Missing | |
-| Products | `DELETE /products/{code}` | 削除 | Missing | |
+| Products | `GET /products` | 一覧 | ✅ Implemented | `features/products` |
+| Products | `GET /products/{code}` | 詳細 | ✅ Implemented | |
+| Products | `POST /products` | 登録 | ✅ Implemented | |
+| Products | `PUT /products/{code}` | 更新 | ✅ Implemented | |
+| Products | `DELETE /products/{code}` | 削除 | ✅ Implemented | |
 | **Masters - Suppliers** |||||
-| Suppliers | `GET /suppliers` | 一覧 | Implemented | `features/suppliers` |
-| Suppliers | `GET /suppliers/{code}` | 詳細 | Missing | |
-| Suppliers | `POST /suppliers` | 登録 | Missing | |
-| Suppliers | `PUT /suppliers/{code}` | 更新 | Missing | |
-| Suppliers | `DELETE /suppliers/{code}` | 削除 | Missing | |
+| Suppliers | `GET /suppliers` | 一覧 | ✅ Implemented | `features/suppliers` |
+| Suppliers | `GET /suppliers/{code}` | 詳細 | ✅ Implemented | |
+| Suppliers | `POST /suppliers` | 登録 | ✅ Implemented | |
+| Suppliers | `PUT /suppliers/{code}` | 更新 | ✅ Implemented | |
+| Suppliers | `DELETE /suppliers/{code}` | 削除 | ✅ Implemented | |
 | **Masters - Customers** |||||
 | Customers | `GET /customers` | 一覧 | ✅ Implemented | `features/customers` |
 | Customers | `GET /customers/{code}` | 詳細 | ✅ Implemented | |
@@ -147,14 +147,16 @@ FastAPIバックエンドのAPIエンドポイントと、React/TypeScriptフロ
 
 ## Missing サマリ表
 
-### マスタ系 (CRUD未実装)
+### マスタ系 (CRUD実装)
 
-| Domain | Missing Endpoints | 優先度 | 備考 |
-|--------|------------------|--------|------|
-| ~~**Customers**~~ | ~~全5エンドポイント~~ | ~~高~~ | ✅ 実装完了 |
-| **Warehouses** | 4 (詳細/登録/更新/削除) | 中 | 一覧のみ実装済 |
-| **Products** | 4 (詳細/登録/更新/削除) | 中 | 一覧のみ実装済 |
-| **Suppliers** | 4 (詳細/登録/更新/削除) | 中 | 一覧のみ実装済 |
+| Domain | Status | 優先度 | 備考 |
+|--------|--------|--------|------|
+| ~~**Customers**~~ | ~~全5エンドポイント~~ | ~~高~~ | ✅ 実装完了 (一覧/詳細/CRUD/Bulk) |
+| ~~**Warehouses**~~ | ~~全5エンドポイント~~ | ~~中~~ | ✅ 実装完了 (一覧/詳細/CRUD) |
+| ~~**Products**~~ | ~~全5エンドポイント~~ | ~~中~~ | ✅ 実装完了 (一覧/詳細/CRUD) |
+| ~~**Suppliers**~~ | ~~全5エンドポイント~~ | ~~中~~ | ✅ 実装完了 (一覧/詳細/CRUD) |
+
+**2025-11-21更新: 全マスタのCRUD実装完了。ナビゲーションバーにドロップダウンメニュー追加済み。**
 
 ### 業務処理系
 
@@ -173,22 +175,26 @@ FastAPIバックエンドのAPIエンドポイントと、React/TypeScriptフロ
 
 | カテゴリ | 総エンドポイント数 | Implemented | Partial | Missing |
 |---------|-------------------|-------------|---------|---------|
-| Masters | 25 | 13 (+5) | 0 | 12 (-5) |
+| Masters | 25 | 25 | 0 | 0 |
 | Orders | 6 | 4 | 1 | 1 |
 | Allocations | 13 | 9 | 0 | 4 |
 | Inventory | 18 | 18 | 0 | 0 |
 | Forecasts | 7 | 7 | 0 | 0 |
 | Admin | 46 | 27 | 0 | 19 |
-| **合計** | **115** | **78 (68%)** | **1 (1%)** | **36 (31%)** |
+| **合計** | **115** | **90 (78%)** | **1 (1%)** | **24 (21%)** |
 
 ---
 
 ## 実装推奨順序
 
-### Phase 1: マスタCRUD完成 (高優先度)
+### Phase 1: マスタCRUD完成 ✅ 完了
 
-1. ~~**Customers**~~ ✅ 完了
-2. **Warehouses/Products/Suppliers** - 詳細・登録・更新・削除画面の追加
+1. ~~**Customers**~~ ✅ 完了 (2025-11-21)
+2. ~~**Warehouses/Products/Suppliers**~~ ✅ 完了 (2025-11-21)
+   - 一覧/詳細ページ実装
+   - CRUD機能実装 (新規登録/更新/削除)
+   - フォームコンポーネント実装
+   - TopNav.tsx にドロップダウンメニュー追加
 
 ### Phase 2: 業務機能強化 (中優先度)
 
