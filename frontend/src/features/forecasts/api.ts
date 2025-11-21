@@ -18,6 +18,7 @@ export interface Forecast {
   forecast_date: string;
   forecast_quantity: number;
   unit: string | null;
+  forecast_period: string;
   snapshot_at: string;
   created_at: string;
   updated_at: string;
@@ -73,6 +74,7 @@ export interface ForecastHistory {
   forecast_date: string;
   forecast_quantity: number;
   unit: string | null;
+  forecast_period: string;
   snapshot_at: string;
   archived_at: string;
   created_at: string;
@@ -96,6 +98,7 @@ export interface CreateForecastRequest {
   forecast_date: string;
   forecast_quantity: number;
   unit?: string;
+  forecast_period: string;
 }
 
 export interface UpdateForecastRequest {
@@ -110,6 +113,7 @@ export interface BulkImportItem {
   forecast_date: string;
   forecast_quantity: number;
   unit?: string;
+  forecast_period: string;
 }
 
 export interface BulkImportForecastRequest {

@@ -26,14 +26,15 @@ def setup_database():
     """テスト用データベースのセットアップ"""
     if TEST_DB_PATH.exists():
         TEST_DB_PATH.unlink()
-    
+
     # テスト環境では全テーブルを作成
     from app.models import Base
+
     Base.metadata.create_all(bind=engine)
     logger.info("✅ テスト用データベーステーブルを作成しました")
-    
+
     yield
-    
+
     # クリーンアップ
     engine.dispose()
     if TEST_DB_PATH.exists():

@@ -216,6 +216,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/orders/{order_line_id}/allocations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Save Manual Allocations
+     * @description 手動引当保存スタブ (Frontend V1用).
+     */
+    post: operations["save_manual_allocations_api_orders__order_line_id__allocations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/allocations/{allocation_id}": {
     parameters: {
       query?: never;
@@ -3234,6 +3254,8 @@ export interface components {
       forecast_quantity: number | string;
       /** Unit */
       unit?: string | null;
+      /** Forecast Period */
+      forecast_period: string;
     };
     /**
      * ForecastBulkImportRequest
@@ -3286,6 +3308,8 @@ export interface components {
       forecast_quantity: number | string;
       /** Unit */
       unit?: string | null;
+      /** Forecast Period */
+      forecast_period: string;
     };
     /**
      * ForecastGroupKey
@@ -3342,6 +3366,8 @@ export interface components {
       forecast_quantity: string;
       /** Unit */
       unit?: string | null;
+      /** Forecast Period */
+      forecast_period: string;
       /** Id */
       id: number;
       /**
@@ -3414,6 +3440,8 @@ export interface components {
       forecast_quantity: string;
       /** Unit */
       unit?: string | null;
+      /** Forecast Period */
+      forecast_period: string;
       /** Id */
       id: number;
       /**
@@ -3768,6 +3796,18 @@ export interface components {
       /** Unit */
       unit?: string | null;
       status?: components["schemas"]["LotStatus"] | null;
+    };
+    /** ManualAllocationItem */
+    ManualAllocationItem: {
+      /** Lot Id */
+      lot_id: number;
+      /** Quantity */
+      quantity: number;
+    };
+    /** ManualAllocationSavePayload */
+    ManualAllocationSavePayload: {
+      /** Allocations */
+      allocations: components["schemas"]["ManualAllocationItem"][];
     };
     /**
      * MasterChangeLogListResponse
@@ -5178,6 +5218,41 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  save_manual_allocations_api_orders__order_line_id__allocations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_line_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ManualAllocationSavePayload"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
       };
       /** @description Validation Error */
       422: {

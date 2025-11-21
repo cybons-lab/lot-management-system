@@ -4,6 +4,7 @@ Dump SQLAlchemy models' DDL as PostgreSQL SQL.
 - Outputs CREATE TABLE / CREATE INDEX statements for all models.
 - Respects DATABASE_URL env for dialect and naming.
 """
+
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.schema import CreateTable, CreateIndex

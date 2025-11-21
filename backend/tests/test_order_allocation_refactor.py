@@ -56,9 +56,7 @@ class TestOrderStateMachine:
             is True
         )
         # allocated -> shipped
-        assert (
-            OrderStateMachine.can_transition(OrderStatus.ALLOCATED, OrderStatus.SHIPPED) is True
-        )
+        assert OrderStateMachine.can_transition(OrderStatus.ALLOCATED, OrderStatus.SHIPPED) is True
         # shipped -> closed
         assert OrderStateMachine.can_transition(OrderStatus.SHIPPED, OrderStatus.CLOSED) is True
 
@@ -121,9 +119,7 @@ class TestLoadOrder:
         db_session.add(product)
         db_session.flush()
 
-        order_line = OrderLine(
-            order_id=order.id, line_no=1, product_id=product.id, quantity=10.0
-        )
+        order_line = OrderLine(order_id=order.id, line_no=1, product_id=product.id, quantity=10.0)
         db_session.add(order_line)
         db_session.commit()
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate OpenAPI schema from FastAPI app."""
+
 import json
 import sys
 from pathlib import Path

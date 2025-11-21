@@ -2,6 +2,7 @@
 """
 ヘルスチェックエンドポイントのテスト
 """
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -12,12 +13,13 @@ from app.main import app
 @pytest.fixture
 def client(db_session):
     """テスト用クライアント"""
+
     def override_get_db():
         try:
             yield db_session
         finally:
             pass  # conftest.pyが管理するのでcloseしない
-    
+
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)
     app.dependency_overrides.clear()

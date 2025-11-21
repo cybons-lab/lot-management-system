@@ -37,9 +37,7 @@ from app.schemas.masters.products_schema import ProductCreate, ProductUpdate
 def test_master_crud_bulk_and_presets(db_session):
     # Warehouse CRUD
     create_warehouse(
-        WarehouseCreate(
-            warehouse_code="WH-CRUD", warehouse_name="倉庫CRUD", is_active=1
-        ),
+        WarehouseCreate(warehouse_code="WH-CRUD", warehouse_name="倉庫CRUD", is_active=1),
         db=db_session,
     )
     assert get_warehouse("WH-CRUD", db=db_session).warehouse_name == "倉庫CRUD"
@@ -109,16 +107,12 @@ def test_master_crud_bulk_and_presets(db_session):
 
     bulk_result = bulk_load_masters(
         MasterBulkLoadRequest(
-            warehouses=[
-                WarehouseCreate(warehouse_code="WH-BULK", warehouse_name="倉庫バルク")
-            ],
+            warehouses=[WarehouseCreate(warehouse_code="WH-BULK", warehouse_name="倉庫バルク")],
             suppliers=[
                 SupplierCreate(supplier_code="SUP-DUP", supplier_name="既存仕入先"),
                 SupplierCreate(supplier_code="SUP-BULK", supplier_name="仕入先バルク"),
             ],
-            customers=[
-                CustomerCreate(customer_code="CUS-BULK", customer_name="得意先バルク")
-            ],
+            customers=[CustomerCreate(customer_code="CUS-BULK", customer_name="得意先バルク")],
             products=[
                 ProductCreate(
                     product_code="PROD-BULK",
@@ -145,4 +139,3 @@ def test_master_crud_bulk_and_presets(db_session):
 
     preset_product = get_product("PRST-PROD1", db=db_session)
     assert preset_product.product_name == "プリセット製品"
-

@@ -49,7 +49,9 @@ def collect_table_info(inspector: Inspector, schema: str = "public"):
     return pk_info, column_types, bigint_columns
 
 
-def collect_fk_mismatches(inspector: Inspector, column_types: Dict[Tuple[str, str], str], schema: str = "public"):
+def collect_fk_mismatches(
+    inspector: Inspector, column_types: Dict[Tuple[str, str], str], schema: str = "public"
+):
     tables = inspector.get_table_names(schema=schema)
     mismatches: List[Dict[str, str]] = []
 

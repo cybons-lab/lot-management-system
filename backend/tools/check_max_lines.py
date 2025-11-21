@@ -107,20 +107,20 @@ def main():
             violations.append((relative_path, line_count))
 
     # 結果表示
-    print(f"\n{'='*60}")
+    print(f"\n{'=' * 60}")
     print(f"📊 Maximum Lines Check (threshold: {MAX_LINES} lines)")
-    print(f"{'='*60}")
+    print(f"{'=' * 60}")
     print(f"Total files checked: {total_files}")
 
     if violations:
         print(f"\n❌ {len(violations)} file(s) exceed {MAX_LINES} lines:\n")
         for path, lines in sorted(violations, key=lambda x: x[1], reverse=True):
             print(f"  {path}: {lines} lines (exceeds by {lines - MAX_LINES})")
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         sys.exit(1)
     else:
         print(f"✅ All files are within {MAX_LINES} lines limit")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
         sys.exit(0)
 
 

@@ -72,7 +72,9 @@ def deep_diff(obj1: Any, obj2: Any, path: str = "") -> list[str]:
     differences = []
 
     if type(obj1) != type(obj2):
-        differences.append(f"{path}: Type mismatch ({type(obj1).__name__} vs {type(obj2).__name__})")
+        differences.append(
+            f"{path}: Type mismatch ({type(obj1).__name__} vs {type(obj2).__name__})"
+        )
         return differences
 
     if isinstance(obj1, dict):
@@ -128,6 +130,7 @@ def generate_openapi_json(output_path: Path) -> None:
     except Exception as e:
         print(f"❌ OpenAPIスキーマの生成に失敗しました: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -161,7 +164,9 @@ def compare_openapi_specs(baseline_path: Path, current_path: Path) -> bool:
         if not differences:
             print("✅ OpenAPIスキーマに差分はありません")
             print(f"   パス数: {len(baseline_normalized.get('paths', {}))}")
-            print(f"   スキーマ数: {len(baseline_normalized.get('components', {}).get('schemas', {}))}")
+            print(
+                f"   スキーマ数: {len(baseline_normalized.get('components', {}).get('schemas', {}))}"
+            )
             return True
         else:
             print("❌ OpenAPIスキーマに差分が見つかりました:", file=sys.stderr)
@@ -179,6 +184,7 @@ def compare_openapi_specs(baseline_path: Path, current_path: Path) -> bool:
     except Exception as e:
         print(f"❌ 比較中にエラーが発生しました: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
@@ -188,7 +194,9 @@ def main() -> None:
     if len(sys.argv) < 2:
         print("Usage:", file=sys.stderr)
         print("  python openapi_diff_check.py generate <output_file>", file=sys.stderr)
-        print("  python openapi_diff_check.py compare <baseline_file> <current_file>", file=sys.stderr)
+        print(
+            "  python openapi_diff_check.py compare <baseline_file> <current_file>", file=sys.stderr
+        )
         sys.exit(1)
 
     command = sys.argv[1]
@@ -203,7 +211,10 @@ def main() -> None:
 
     elif command == "compare":
         if len(sys.argv) != 4:
-            print("Usage: python openapi_diff_check.py compare <baseline_file> <current_file>", file=sys.stderr)
+            print(
+                "Usage: python openapi_diff_check.py compare <baseline_file> <current_file>",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         baseline_path = Path(sys.argv[2])

@@ -2,6 +2,7 @@
 """
 LotServiceのテスト
 """
+
 from datetime import date, timedelta
 
 import pytest
@@ -22,7 +23,7 @@ def setup_lot_test_data(db_session: Session):
     db_session.query(Supplier).delete()
     db_session.query(Warehouse).delete()
     db_session.commit()
-    
+
     # テストデータを作成
     wh1 = Warehouse(warehouse_code="W1", warehouse_name="Main")
     wh2 = Warehouse(warehouse_code="W2", warehouse_name="Sub")
@@ -37,7 +38,7 @@ def setup_lot_test_data(db_session: Session):
     )
     db_session.add_all([wh1, wh2, sup, prod])
     db_session.flush()
-    
+
     return {
         "wh1": wh1,
         "wh2": wh2,
@@ -51,7 +52,7 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
     data = setup_lot_test_data
     wh1 = data["wh1"]
     wh2 = data["wh2"]
-    
+
     # 期限が違うロットを2つ（W1に2つ置く）
     lot_a = Lot(
         supplier_code="S1",
