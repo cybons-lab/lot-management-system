@@ -365,6 +365,19 @@ class ForecastService:
 
         self.db.commit()
 
+        # Trigger allocation suggestion regeneration
+        if imported_count > 0:
+            # Import here to avoid circular dependency
+            from app.services.allocation.allocation_suggestions_service import (
+                AllocationSuggestionService,
+            )
+
+            # Collect unique periods
+            periods = list({item.forecast_period for item in items})
+            if periods:
+                service = AllocationSuggestionService(self.db)
+                service.regenerate_for_periods(periods)
+
         return ForecastBulkImportSummary(
             imported_count=imported_count,
             archived_count=archived_count,

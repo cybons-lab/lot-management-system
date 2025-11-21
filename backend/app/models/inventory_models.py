@@ -33,7 +33,7 @@ from .base_model import Base
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
     from .inbound_models import ExpectedLot
-    from .masters_models import Product, Supplier, Warehouse
+    from .masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
     from .orders_models import Allocation
 
 
@@ -244,22 +244,43 @@ class AllocationSuggestion(Base):
 
     DDL: allocation_suggestions
     Primary key: id (BIGSERIAL)
-    Foreign keys: forecast_line_id -> forecast_current.id, lot_id
+    Foreign keys: customer_id, delivery_place_id, product_id, lot_id
     """
 
     __tablename__ = "allocation_suggestions"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    forecast_line_id: Mapped[int] = mapped_column(
+
+    # 需要側キー
+    order_line_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    forecast_period: Mapped[str] = mapped_column(String(7), nullable=False)  # "YYYY-MM"
+
+    customer_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("forecast_current.id", ondelete="CASCADE"),
+        ForeignKey("customers.id", ondelete="CASCADE"),
         nullable=False,
     )
+    delivery_place_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("delivery_places.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    product_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    # ロット側キー
     lot_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("lots.id", ondelete="CASCADE"), nullable=False
     )
-    suggested_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
-    allocation_logic: Mapped[str] = mapped_column(String(50), nullable=False)
+    quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
+
+    # 種別 / 由来
+    allocation_type: Mapped[str] = mapped_column(String(10), nullable=False)  # 'soft' or 'hard'
+    source: Mapped[str] = mapped_column(String(32), nullable=False)  # 'forecast_import' etc
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -268,12 +289,16 @@ class AllocationSuggestion(Base):
     )
 
     __table_args__ = (
-        Index("idx_allocation_suggestions_forecast", "forecast_line_id"),
+        Index("idx_allocation_suggestions_period", "forecast_period"),
+        Index("idx_allocation_suggestions_customer", "customer_id"),
+        Index("idx_allocation_suggestions_product", "product_id"),
         Index("idx_allocation_suggestions_lot", "lot_id"),
     )
 
     # Relationships
-    forecast: Mapped[ForecastCurrent] = relationship("ForecastCurrent")
+    customer: Mapped[Customer] = relationship("Customer")
+    delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
+    product: Mapped[Product] = relationship("Product")
     lot: Mapped[Lot] = relationship("Lot")
 
 
