@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict JJn5BMiO3tb3UY8rZx2kdflzAq9hJkXF1wShYyaJ6xzv8Ku1lhb7EFNw9OPXcfq
+\restrict n726FULLf8B1vKmY6KT8f7AfqzjtMdzeqSRDiBJXPcaNmlTo4W0d6KqCvJ6Nsmx
 
 -- Dumped from database version 15.15
 -- Dumped by pg_dump version 15.15
@@ -497,6 +497,20 @@ CREATE TABLE public.lots (
 
 
 --
+-- Name: lot_current_stock; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.lot_current_stock AS
+ SELECT l.id AS lot_id,
+    l.product_id,
+    l.warehouse_id,
+    l.current_quantity,
+    l.updated_at AS last_updated
+   FROM public.lots l
+  WHERE (l.current_quantity > (0)::numeric);
+
+
+--
 -- Name: lots_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
@@ -871,6 +885,114 @@ CREATE SEQUENCE public.users_id_seq
 --
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- Name: v_customer_daily_products; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_customer_daily_products AS
+ SELECT DISTINCT f.customer_id,
+    f.product_id
+   FROM public.forecast_current f
+  WHERE (f.forecast_period IS NOT NULL);
+
+
+--
+-- Name: v_lot_available_qty; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_lot_available_qty AS
+ SELECT l.id AS lot_id,
+    l.product_id,
+    l.warehouse_id,
+    (l.current_quantity - l.allocated_quantity) AS available_qty,
+    l.received_date AS receipt_date,
+    l.expiry_date,
+    l.status AS lot_status
+   FROM public.lots l
+  WHERE (((l.status)::text = 'active'::text) AND ((l.expiry_date IS NULL) OR (l.expiry_date >= CURRENT_DATE)) AND ((l.current_quantity - l.allocated_quantity) > (0)::numeric));
+
+
+--
+-- Name: v_order_line_context; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_order_line_context AS
+ SELECT ol.id AS order_line_id,
+    o.id AS order_id,
+    o.customer_id,
+    ol.product_id,
+    ol.delivery_place_id,
+    ol.order_quantity AS quantity
+   FROM (public.order_lines ol
+     JOIN public.orders o ON ((o.id = ol.order_id)));
+
+
+--
+-- Name: v_candidate_lots_by_order_line; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_candidate_lots_by_order_line AS
+ SELECT c.order_line_id,
+    l.lot_id,
+    l.product_id,
+    l.warehouse_id,
+    l.available_qty,
+    l.receipt_date,
+    l.expiry_date
+   FROM ((public.v_order_line_context c
+     JOIN public.v_customer_daily_products f ON (((f.customer_id = c.customer_id) AND (f.product_id = c.product_id))))
+     JOIN public.v_lot_available_qty l ON (((l.product_id = c.product_id) AND (l.available_qty > (0)::numeric))))
+  ORDER BY c.order_line_id, l.expiry_date, l.receipt_date, l.lot_id;
+
+
+--
+-- Name: v_customer_code_to_id; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_customer_code_to_id AS
+ SELECT c.customer_code,
+    c.id AS customer_id,
+    c.customer_name
+   FROM public.customers c;
+
+
+--
+-- Name: v_delivery_place_code_to_id; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_delivery_place_code_to_id AS
+ SELECT d.delivery_place_code,
+    d.id AS delivery_place_id,
+    d.delivery_place_name
+   FROM public.delivery_places d;
+
+
+--
+-- Name: v_forecast_order_pairs; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_forecast_order_pairs AS
+ SELECT DISTINCT f.id AS forecast_id,
+    f.customer_id,
+    f.product_id,
+    o.id AS order_id,
+    ol.delivery_place_id
+   FROM ((public.forecast_current f
+     JOIN public.orders o ON ((o.customer_id = f.customer_id)))
+     JOIN public.order_lines ol ON (((ol.order_id = o.id) AND (ol.product_id = f.product_id))));
+
+
+--
+-- Name: v_product_code_to_id; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_product_code_to_id AS
+ SELECT p.maker_part_code AS product_code,
+    p.id AS product_id,
+    p.product_name
+   FROM public.products p;
 
 
 --
@@ -2133,5 +2255,5 @@ ALTER TABLE ONLY public.user_roles
 -- PostgreSQL database dump complete
 --
 
-\unrestrict JJn5BMiO3tb3UY8rZx2kdflzAq9hJkXF1wShYyaJ6xzv8Ku1lhb7EFNw9OPXcfq
+\unrestrict n726FULLf8B1vKmY6KT8f7AfqzjtMdzeqSRDiBJXPcaNmlTo4W0d6KqCvJ6Nsmx
 

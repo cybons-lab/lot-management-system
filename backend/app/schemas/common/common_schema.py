@@ -23,7 +23,7 @@ class PageQuery(BaseModel):
 T = TypeVar("T")
 
 
-class Page[T](GenericModel):
+class Page(BaseModel, Generic[T]):
     """Generic paginated response."""
 
     items: list[T]

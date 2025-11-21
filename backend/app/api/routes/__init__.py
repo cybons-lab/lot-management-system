@@ -22,6 +22,7 @@ from app.api.routes.admin import (
     operation_logs_router,
     roles_router,
     users_router,
+    test_data_router,
 )
 from app.api.routes.allocations import (
     allocation_candidates_router,
@@ -82,4 +83,5 @@ __all__ = [
     "operation_logs_router",
     "roles_router",
     "users_router",
+    "test_data_router",
 ]
