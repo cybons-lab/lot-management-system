@@ -1,3 +1,9 @@
-// Public API for suppliers feature
-export * from "./api/suppliers";
-export * from "./validators/supplier-schema";
+/**
+ * Suppliers Feature - Public API
+ */
+export { SuppliersListPage } from "./pages/SuppliersListPage";
+export { SupplierDetailPage } from "./pages/SupplierDetailPage";
+export { SupplierForm } from "./components/SupplierForm";
+export { SupplierBulkImportDialog } from "./components/SupplierBulkImportDialog";
+export { SupplierExportButton } from "./components/SupplierExportButton";
+export type { Supplier, SupplierCreate, SupplierUpdate } from "./api/suppliers-api";

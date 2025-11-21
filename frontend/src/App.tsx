@@ -16,7 +16,7 @@ import { LotAllocationPage } from "@/features/allocations/pages/LotAllocationPag
 import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
 import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
 import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
-import { CustomersPage } from "@/features/customers/pages/CustomersPage";
+import { CustomersListPage, CustomerDetailPage } from "@/features/customers";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
 import { ForecastCreatePage } from "@/features/forecasts/pages/ForecastCreatePage";
 import { ForecastDetailPage } from "@/features/forecasts/pages/ForecastDetailPage";
@@ -37,12 +37,12 @@ import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPag
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
-import { ProductsPage } from "@/features/products/pages/ProductsPage";
+import { ProductsListPage, ProductDetailPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
-import { SuppliersPage } from "@/features/suppliers/pages/SuppliersPage";
+import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
 import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
-import { WarehousesPage } from "@/features/warehouses/pages/WarehousesPage";
+import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
 
 function App() {
@@ -102,10 +102,14 @@ function App() {
         <Route path="/inventory/lots/:lotId" element={<LotDetailPage />} />
 
         {/* Masters - Phase G-1 */}
-        <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesPage />} />
-        <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersPage />} />
-        <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersPage />} />
-        <Route path={ROUTES.MASTERS.PRODUCTS} element={<ProductsPage />} />
+        <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
+        <Route path="/warehouses/:warehouseCode" element={<WarehouseDetailPage />} />
+        <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />
+        <Route path="/suppliers/:supplierCode" element={<SupplierDetailPage />} />
+        <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersListPage />} />
+        <Route path="/customers/:customerCode" element={<CustomerDetailPage />} />
+        <Route path={ROUTES.MASTERS.PRODUCTS} element={<ProductsListPage />} />
+        <Route path="/products/:makerPartCode" element={<ProductDetailPage />} />
         <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
         <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
 

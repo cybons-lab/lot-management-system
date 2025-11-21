@@ -1,3 +1,9 @@
-// Public API for warehouses feature
-export * from "./api/warehouses";
-export * from "./validators/warehouse-schema";
+/**
+ * Warehouses Feature - Public API
+ */
+export { WarehousesListPage } from "./pages/WarehousesListPage";
+export { WarehouseDetailPage } from "./pages/WarehouseDetailPage";
+export { WarehouseForm } from "./components/WarehouseForm";
+export { WarehouseBulkImportDialog } from "./components/WarehouseBulkImportDialog";
+export { WarehouseExportButton } from "./components/WarehouseExportButton";
+export type { Warehouse, WarehouseCreate, WarehouseUpdate } from "./api/warehouses-api";
