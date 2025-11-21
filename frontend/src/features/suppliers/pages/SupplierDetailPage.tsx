@@ -5,7 +5,16 @@ import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/display/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import type { SupplierUpdate } from "../api/suppliers-api";
 import { SupplierForm } from "../components/SupplierForm";
@@ -25,26 +34,38 @@ export function SupplierDetailPage() {
 
   const handleBack = useCallback(() => navigate("/suppliers"), [navigate]);
 
-  const handleUpdate = useCallback((data: { supplier_code: string; supplier_name: string }) => {
-    if (!supplierCode) return;
-    const updateData: SupplierUpdate = { supplier_name: data.supplier_name };
-    updateSupplier({ supplierCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
-  }, [supplierCode, updateSupplier]);
+  const handleUpdate = useCallback(
+    (data: { supplier_code: string; supplier_name: string }) => {
+      if (!supplierCode) return;
+      const updateData: SupplierUpdate = { supplier_name: data.supplier_name };
+      updateSupplier({ supplierCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
+    },
+    [supplierCode, updateSupplier],
+  );
 
   const handleDelete = useCallback(() => {
     if (!supplierCode) return;
     deleteSupplier(supplierCode, { onSuccess: () => navigate("/suppliers") });
   }, [supplierCode, deleteSupplier, navigate]);
 
-  if (isLoading) return <div className="flex items-center justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" /></div>;
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+      </div>
+    );
 
   if (error || !supplier) {
     return (
       <div className={styles.root}>
         <div className={styles.emptyState.container}>
           <p className={styles.emptyState.title}>仕入先が見つかりません</p>
-          <p className={styles.emptyState.description}>指定された仕入先コード「{supplierCode}」は存在しないか、削除されています。</p>
-          <Button className={styles.emptyState.action} onClick={handleBack}>一覧に戻る</Button>
+          <p className={styles.emptyState.description}>
+            指定された仕入先コード「{supplierCode}」は存在しないか、削除されています。
+          </p>
+          <Button className={styles.emptyState.action} onClick={handleBack}>
+            一覧に戻る
+          </Button>
         </div>
       </div>
     );
@@ -57,11 +78,20 @@ export function SupplierDetailPage() {
         subtitle={supplier.supplier_code}
         actions={
           <div className={styles.actionBar}>
-            <Button variant="outline" size="sm" onClick={handleBack}><ArrowLeft className="mr-2 h-4 w-4" />一覧に戻る</Button>
+            <Button variant="outline" size="sm" onClick={handleBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              一覧に戻る
+            </Button>
             {!isEditing && (
               <>
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}><Edit className="mr-2 h-4 w-4" />編集</Button>
-                <Button variant="destructive" size="sm" onClick={() => setIsDeleteDialogOpen(true)}><Trash2 className="mr-2 h-4 w-4" />削除</Button>
+                <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  編集
+                </Button>
+                <Button variant="destructive" size="sm" onClick={() => setIsDeleteDialogOpen(true)}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  削除
+                </Button>
               </>
             )}
           </div>
@@ -70,13 +100,34 @@ export function SupplierDetailPage() {
 
       <div className="rounded-lg border bg-white p-6 shadow-sm">
         {isEditing ? (
-          <SupplierForm supplier={supplier} onSubmit={handleUpdate} onCancel={() => setIsEditing(false)} isSubmitting={isUpdating} />
+          <SupplierForm
+            supplier={supplier}
+            onSubmit={handleUpdate}
+            onCancel={() => setIsEditing(false)}
+            isSubmitting={isUpdating}
+          />
         ) : (
           <div className="space-y-4">
-            <div className={styles.form.field}><label className={styles.form.label}>仕入先コード</label><p className="font-mono text-lg font-medium">{supplier.supplier_code}</p></div>
-            <div className={styles.form.field}><label className={styles.form.label}>仕入先名</label><p className="text-lg">{supplier.supplier_name}</p></div>
-            <div className={styles.form.field}><label className={styles.form.label}>作成日時</label><p className="text-gray-600">{new Date(supplier.created_at).toLocaleString("ja-JP")}</p></div>
-            <div className={styles.form.field}><label className={styles.form.label}>更新日時</label><p className="text-gray-600">{new Date(supplier.updated_at).toLocaleString("ja-JP")}</p></div>
+            <div className={styles.form.field}>
+              <label className={styles.form.label}>仕入先コード</label>
+              <p className="font-mono text-lg font-medium">{supplier.supplier_code}</p>
+            </div>
+            <div className={styles.form.field}>
+              <label className={styles.form.label}>仕入先名</label>
+              <p className="text-lg">{supplier.supplier_name}</p>
+            </div>
+            <div className={styles.form.field}>
+              <label className={styles.form.label}>作成日時</label>
+              <p className="text-gray-600">
+                {new Date(supplier.created_at).toLocaleString("ja-JP")}
+              </p>
+            </div>
+            <div className={styles.form.field}>
+              <label className={styles.form.label}>更新日時</label>
+              <p className="text-gray-600">
+                {new Date(supplier.updated_at).toLocaleString("ja-JP")}
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -85,11 +136,20 @@ export function SupplierDetailPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>仕入先を削除しますか？</AlertDialogTitle>
-            <AlertDialogDescription>仕入先「{supplier.supplier_name}」（{supplier.supplier_code}）を削除します。この操作は取り消せません。</AlertDialogDescription>
+            <AlertDialogDescription>
+              仕入先「{supplier.supplier_name}」（{supplier.supplier_code}
+              ）を削除します。この操作は取り消せません。
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-red-600 hover:bg-red-700">{isDeleting ? "削除中..." : "削除"}</AlertDialogAction>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "削除中..." : "削除"}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

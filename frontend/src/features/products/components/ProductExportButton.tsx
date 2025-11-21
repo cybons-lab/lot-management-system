@@ -26,7 +26,8 @@ export function ProductExportButton({ products, size = "default" }: Props) {
 
   return (
     <Button variant="outline" size={size} onClick={handleExport} disabled={products.length === 0}>
-      <Download className="mr-2 h-4 w-4" />エクスポート
+      <Download className="mr-2 h-4 w-4" />
+      エクスポート
     </Button>
   );
 }

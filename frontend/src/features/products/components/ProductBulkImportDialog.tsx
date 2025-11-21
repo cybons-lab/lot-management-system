@@ -4,7 +4,13 @@
 import { useState, useCallback } from "react";
 import { Upload, Download, AlertCircle, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/layout/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/layout/dialog";
 import { useBulkUpsertProducts } from "../hooks/useProductMutations";
 import { parseProductCsv, generateProductTemplateCsv } from "../utils/product-csv";
 import type { ProductBulkRow, BulkUpsertResponse } from "../types/bulk-operation";
@@ -79,11 +85,18 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
 
         <div className="space-y-4">
           <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
-            <Download className="mr-2 h-4 w-4" />テンプレートをダウンロード
+            <Download className="mr-2 h-4 w-4" />
+            テンプレートをダウンロード
           </Button>
 
           <div className="rounded-lg border-2 border-dashed p-4 text-center">
-            <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" id="product-csv-input" />
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+              id="product-csv-input"
+            />
             <label htmlFor="product-csv-input" className="cursor-pointer">
               <Upload className="mx-auto h-8 w-8 text-gray-400" />
               <p className="mt-2 text-sm text-gray-600">{file ? file.name : "CSVファイルを選択"}</p>
@@ -92,9 +105,14 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
 
           {parseErrors.length > 0 && (
             <div className="rounded-lg bg-red-50 p-3">
-              <div className="flex items-center gap-2 text-red-600"><AlertCircle className="h-4 w-4" /><span className="font-medium">エラー</span></div>
+              <div className="flex items-center gap-2 text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                <span className="font-medium">エラー</span>
+              </div>
               <ul className="mt-2 list-inside list-disc text-sm text-red-600">
-                {parseErrors.map((err, i) => <li key={i}>{err}</li>)}
+                {parseErrors.map((err, i) => (
+                  <li key={i}>{err}</li>
+                ))}
               </ul>
             </div>
           )}
@@ -110,18 +128,34 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
           )}
 
           {result && (
-            <div className={`rounded-lg p-3 ${result.status === "success" ? "bg-green-50" : result.status === "partial" ? "bg-yellow-50" : "bg-red-50"}`}>
+            <div
+              className={`rounded-lg p-3 ${result.status === "success" ? "bg-green-50" : result.status === "partial" ? "bg-yellow-50" : "bg-red-50"}`}
+            >
               <div className="flex items-center gap-2">
-                {result.status === "success" ? <CheckCircle className="h-4 w-4 text-green-600" /> : <AlertCircle className="h-4 w-4 text-yellow-600" />}
-                <span className="font-medium">{result.status === "success" ? "完了" : "一部失敗"}</span>
+                {result.status === "success" ? (
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-yellow-600" />
+                )}
+                <span className="font-medium">
+                  {result.status === "success" ? "完了" : "一部失敗"}
+                </span>
               </div>
-              <p className="mt-1 text-sm">追加: {result.summary.added}, 更新: {result.summary.updated}, 削除: {result.summary.deleted}, 失敗: {result.summary.failed}</p>
+              <p className="mt-1 text-sm">
+                追加: {result.summary.added}, 更新: {result.summary.updated}, 削除:{" "}
+                {result.summary.deleted}, 失敗: {result.summary.failed}
+              </p>
             </div>
           )}
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={handleClose}>キャンセル</Button>
-            <Button onClick={handleImport} disabled={isPending || parsedRows.length === 0 || parseErrors.length > 0}>
+            <Button variant="outline" onClick={handleClose}>
+              キャンセル
+            </Button>
+            <Button
+              onClick={handleImport}
+              disabled={isPending || parsedRows.length === 0 || parseErrors.length > 0}
+            >
               {isPending ? "処理中..." : "インポート実行"}
             </Button>
           </div>

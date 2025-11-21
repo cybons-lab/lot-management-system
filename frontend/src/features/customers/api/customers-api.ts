@@ -121,9 +121,7 @@ export async function upsertCustomerRow(
  * // const response = await http.post<BulkUpsertResponse>(`${BASE_PATH}/bulk-upsert`, { rows });
  * // return response.data;
  */
-export async function bulkUpsertCustomers(
-  rows: CustomerBulkRow[],
-): Promise<BulkUpsertResponse> {
+export async function bulkUpsertCustomers(rows: CustomerBulkRow[]): Promise<BulkUpsertResponse> {
   // TODO: backend: バックエンドbulk-upsert API実装後は以下に置き換え
   // const response = await http.post<BulkUpsertResponse>(`${BASE_PATH}/bulk-upsert`, { rows });
   // return response.data;
@@ -141,15 +139,9 @@ export async function bulkUpsertCustomers(
     }),
   );
 
-  const added = results.filter(
-    (r, i) => r.success && rows[i]?.OPERATION === "ADD",
-  ).length;
-  const updated = results.filter(
-    (r, i) => r.success && rows[i]?.OPERATION === "UPD",
-  ).length;
-  const deleted = results.filter(
-    (r, i) => r.success && rows[i]?.OPERATION === "DEL",
-  ).length;
+  const added = results.filter((r, i) => r.success && rows[i]?.OPERATION === "ADD").length;
+  const updated = results.filter((r, i) => r.success && rows[i]?.OPERATION === "UPD").length;
+  const deleted = results.filter((r, i) => r.success && rows[i]?.OPERATION === "DEL").length;
   const failed = results.filter((r) => !r.success).length;
 
   return {

@@ -8,12 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, Upload, Users } from "lucide-react";
 
 import { Button, Input } from "@/components/ui";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/layout/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -174,10 +169,7 @@ export function CustomersListPage() {
       </Dialog>
 
       {/* 一括インポートダイアログ */}
-      <CustomerBulkImportDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-      />
+      <CustomerBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
     </div>
   );
 }

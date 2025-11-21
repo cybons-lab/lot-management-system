@@ -31,7 +31,9 @@ export function SuppliersListPage() {
     if (!searchQuery.trim()) return suppliers;
     const query = searchQuery.toLowerCase();
     return suppliers.filter(
-      (s) => s.supplier_code.toLowerCase().includes(query) || s.supplier_name.toLowerCase().includes(query),
+      (s) =>
+        s.supplier_code.toLowerCase().includes(query) ||
+        s.supplier_name.toLowerCase().includes(query),
     );
   }, [suppliers, searchQuery]);
 
@@ -47,13 +49,19 @@ export function SuppliersListPage() {
     return sorted;
   }, [filteredSuppliers, sort]);
 
-  const handleRowClick = useCallback((supplier: Supplier) => {
-    navigate(`/suppliers/${supplier.supplier_code}`);
-  }, [navigate]);
+  const handleRowClick = useCallback(
+    (supplier: Supplier) => {
+      navigate(`/suppliers/${supplier.supplier_code}`);
+    },
+    [navigate],
+  );
 
-  const handleCreate = useCallback((data: SupplierCreate) => {
-    createSupplier(data, { onSuccess: () => setIsCreateDialogOpen(false) });
-  }, [createSupplier]);
+  const handleCreate = useCallback(
+    (data: SupplierCreate) => {
+      createSupplier(data, { onSuccess: () => setIsCreateDialogOpen(false) });
+    },
+    [createSupplier],
+  );
 
   return (
     <div className={styles.root}>
@@ -64,10 +72,12 @@ export function SuppliersListPage() {
           <div className={styles.actionBar}>
             <SupplierExportButton suppliers={sortedSuppliers} size="sm" />
             <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />インポート
+              <Upload className="mr-2 h-4 w-4" />
+              インポート
             </Button>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />新規登録
+              <Plus className="mr-2 h-4 w-4" />
+              新規登録
             </Button>
           </div>
         }
@@ -89,16 +99,37 @@ export function SuppliersListPage() {
         <div className={styles.tableHeader}>
           <h3 className={styles.tableTitle}>仕入先一覧</h3>
           <div className={styles.tableActions}>
-            <Input type="search" placeholder="コード・名称で検索..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={styles.searchInput} />
+            <Input
+              type="search"
+              placeholder="コード・名称で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
           </div>
         </div>
-        <DataTable data={sortedSuppliers} columns={supplierColumns} sort={sort} onSortChange={setSort} getRowId={(row) => row.id} onRowClick={handleRowClick} isLoading={isLoading} emptyMessage="仕入先が登録されていません" />
+        <DataTable
+          data={sortedSuppliers}
+          columns={supplierColumns}
+          sort={sort}
+          onSortChange={setSort}
+          getRowId={(row) => row.id}
+          onRowClick={handleRowClick}
+          isLoading={isLoading}
+          emptyMessage="仕入先が登録されていません"
+        />
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>仕入先新規登録</DialogTitle></DialogHeader>
-          <SupplierForm onSubmit={handleCreate} onCancel={() => setIsCreateDialogOpen(false)} isSubmitting={isCreating} />
+          <DialogHeader>
+            <DialogTitle>仕入先新規登録</DialogTitle>
+          </DialogHeader>
+          <SupplierForm
+            onSubmit={handleCreate}
+            onCancel={() => setIsCreateDialogOpen(false)}
+            isSubmitting={isCreating}
+          />
         </DialogContent>
       </Dialog>
 

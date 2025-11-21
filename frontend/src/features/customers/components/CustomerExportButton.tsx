@@ -26,10 +26,7 @@ export interface CustomerExportButtonProps {
 // Component
 // ============================================
 
-export function CustomerExportButton({
-  customers,
-  size = "default",
-}: CustomerExportButtonProps) {
+export function CustomerExportButton({ customers, size = "default" }: CustomerExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = useCallback(() => {

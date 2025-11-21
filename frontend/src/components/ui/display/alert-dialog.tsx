@@ -39,9 +39,7 @@ const AlertDialogDescription = DialogDescription;
 const AlertDialogAction = React.forwardRef<
   HTMLButtonElement,
   React.ComponentPropsWithoutRef<typeof Button>
->(({ className, ...props }, ref) => (
-  <Button ref={ref} className={cn(className)} {...props} />
-));
+>(({ className, ...props }, ref) => <Button ref={ref} className={cn(className)} {...props} />);
 AlertDialogAction.displayName = "AlertDialogAction";
 
 const AlertDialogCancel = React.forwardRef<

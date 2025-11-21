@@ -7,10 +7,7 @@ import type { components } from "@/types/api";
 
 import { http } from "@/services/http";
 
-import type {
-  BulkUpsertResponse,
-  ProductBulkRow,
-} from "../types/bulk-operation";
+import type { BulkUpsertResponse, ProductBulkRow } from "../types/bulk-operation";
 
 // OpenAPI生成型
 export type Product = components["schemas"]["ProductResponse"];
@@ -38,10 +35,7 @@ export async function createProduct(data: ProductCreate): Promise<Product> {
   return response.data;
 }
 
-export async function updateProduct(
-  makerPartCode: string,
-  data: ProductUpdate,
-): Promise<Product> {
+export async function updateProduct(makerPartCode: string, data: ProductUpdate): Promise<Product> {
   const response = await http.put<Product>(`${BASE_PATH}/${makerPartCode}`, data);
   return response.data;
 }
@@ -90,9 +84,7 @@ async function upsertProductRow(
 }
 
 // TODO: backend: bulk-upsert not yet implemented
-export async function bulkUpsertProducts(
-  rows: ProductBulkRow[],
-): Promise<BulkUpsertResponse> {
+export async function bulkUpsertProducts(rows: ProductBulkRow[]): Promise<BulkUpsertResponse> {
   const results = await Promise.all(
     rows.map(async (row, index) => {
       const result = await upsertProductRow(row);

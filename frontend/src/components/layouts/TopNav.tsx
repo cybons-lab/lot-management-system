@@ -219,9 +219,7 @@ export function TopNav({ currentPath }: TopNavProps) {
                 <Database
                   className={cn(
                     "h-4 w-4 transition-colors",
-                    isMasterActive
-                      ? "text-gray-900"
-                      : "text-gray-500 group-hover:text-gray-900",
+                    isMasterActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
                   )}
                 />
                 <span className="hidden lg:inline">マスタ</span>
@@ -249,7 +247,7 @@ export function TopNav({ currentPath }: TopNavProps) {
                           className={cn(
                             "flex items-center gap-3 px-4 py-2 text-sm transition-colors",
                             isSubActive
-                              ? "bg-teal-50 text-teal-900 font-medium"
+                              ? "bg-teal-50 font-medium text-teal-900"
                               : "text-gray-700 hover:bg-gray-50",
                           )}
                         >

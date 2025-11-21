@@ -31,7 +31,9 @@ export function ProductsListPage() {
     if (!searchQuery.trim()) return products;
     const query = searchQuery.toLowerCase();
     return products.filter(
-      (p) => p.maker_part_code.toLowerCase().includes(query) || p.product_name.toLowerCase().includes(query),
+      (p) =>
+        p.maker_part_code.toLowerCase().includes(query) ||
+        p.product_name.toLowerCase().includes(query),
     );
   }, [products, searchQuery]);
 
@@ -47,13 +49,19 @@ export function ProductsListPage() {
     return sorted;
   }, [filteredProducts, sort]);
 
-  const handleRowClick = useCallback((product: Product) => {
-    navigate(`/products/${product.maker_part_code}`);
-  }, [navigate]);
+  const handleRowClick = useCallback(
+    (product: Product) => {
+      navigate(`/products/${product.maker_part_code}`);
+    },
+    [navigate],
+  );
 
-  const handleCreate = useCallback((data: ProductCreate) => {
-    createProduct(data, { onSuccess: () => setIsCreateDialogOpen(false) });
-  }, [createProduct]);
+  const handleCreate = useCallback(
+    (data: ProductCreate) => {
+      createProduct(data, { onSuccess: () => setIsCreateDialogOpen(false) });
+    },
+    [createProduct],
+  );
 
   return (
     <div className={styles.root}>
@@ -64,10 +72,12 @@ export function ProductsListPage() {
           <div className={styles.actionBar}>
             <ProductExportButton products={sortedProducts} size="sm" />
             <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />インポート
+              <Upload className="mr-2 h-4 w-4" />
+              インポート
             </Button>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />新規登録
+              <Plus className="mr-2 h-4 w-4" />
+              新規登録
             </Button>
           </div>
         }
@@ -89,16 +99,37 @@ export function ProductsListPage() {
         <div className={styles.tableHeader}>
           <h3 className={styles.tableTitle}>商品一覧</h3>
           <div className={styles.tableActions}>
-            <Input type="search" placeholder="品番・名称で検索..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={styles.searchInput} />
+            <Input
+              type="search"
+              placeholder="品番・名称で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
           </div>
         </div>
-        <DataTable data={sortedProducts} columns={productColumns} sort={sort} onSortChange={setSort} getRowId={(row) => row.id} onRowClick={handleRowClick} isLoading={isLoading} emptyMessage="商品が登録されていません" />
+        <DataTable
+          data={sortedProducts}
+          columns={productColumns}
+          sort={sort}
+          onSortChange={setSort}
+          getRowId={(row) => row.id}
+          onRowClick={handleRowClick}
+          isLoading={isLoading}
+          emptyMessage="商品が登録されていません"
+        />
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>商品新規登録</DialogTitle></DialogHeader>
-          <ProductForm onSubmit={handleCreate} onCancel={() => setIsCreateDialogOpen(false)} isSubmitting={isCreating} />
+          <DialogHeader>
+            <DialogTitle>商品新規登録</DialogTitle>
+          </DialogHeader>
+          <ProductForm
+            onSubmit={handleCreate}
+            onCancel={() => setIsCreateDialogOpen(false)}
+            isSubmitting={isCreating}
+          />
         </DialogContent>
       </Dialog>
 

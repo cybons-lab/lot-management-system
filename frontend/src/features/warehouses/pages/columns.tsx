@@ -14,7 +14,9 @@ export const warehouseColumns: Column<Warehouse>[] = [
   {
     id: "warehouse_code",
     header: "倉庫コード",
-    cell: (row) => <span className="font-mono text-sm font-medium text-gray-900">{row.warehouse_code}</span>,
+    cell: (row) => (
+      <span className="font-mono text-sm font-medium text-gray-900">{row.warehouse_code}</span>
+    ),
     sortable: true,
     width: "150px",
   },
@@ -38,7 +40,11 @@ export const warehouseColumns: Column<Warehouse>[] = [
   {
     id: "updated_at",
     header: "更新日時",
-    cell: (row) => <span className="text-sm text-gray-500">{new Date(row.updated_at).toLocaleDateString("ja-JP")}</span>,
+    cell: (row) => (
+      <span className="text-sm text-gray-500">
+        {new Date(row.updated_at).toLocaleDateString("ja-JP")}
+      </span>
+    ),
     sortable: true,
     width: "120px",
   },

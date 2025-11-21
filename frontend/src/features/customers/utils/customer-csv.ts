@@ -58,7 +58,9 @@ export async function parseCustomerCsv(
 
     // 列数チェック
     if (values.length !== headers.length) {
-      errors.push(`行${rowNumber}: 列数が一致しません（期待: ${headers.length}, 実際: ${values.length}）`);
+      errors.push(
+        `行${rowNumber}: 列数が一致しません（期待: ${headers.length}, 実際: ${values.length}）`,
+      );
       continue;
     }
 
@@ -75,7 +77,9 @@ export async function parseCustomerCsv(
       if (!rowData["OPERATION"] || rowData["OPERATION"].trim() === "") {
         rowData["OPERATION"] = "ADD";
       } else {
-        errors.push(`行${rowNumber}: 不正なOPERATION値「${rowData["OPERATION"]}」（ADD/UPD/DELのみ有効）`);
+        errors.push(
+          `行${rowNumber}: 不正なOPERATION値「${rowData["OPERATION"]}」（ADD/UPD/DELのみ有効）`,
+        );
         continue;
       }
     }

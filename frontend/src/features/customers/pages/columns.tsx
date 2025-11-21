@@ -15,9 +15,7 @@ export const customerColumns: Column<Customer>[] = [
     id: "customer_code",
     header: "得意先コード",
     cell: (row) => (
-      <span className="font-mono text-sm font-medium text-gray-900">
-        {row.customer_code}
-      </span>
+      <span className="font-mono text-sm font-medium text-gray-900">{row.customer_code}</span>
     ),
     sortable: true,
     width: "200px",

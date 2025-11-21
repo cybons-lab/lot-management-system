@@ -51,7 +51,8 @@ export const form = {
 };
 
 export const bulkImport = {
-  dropzone: "rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-gray-400",
+  dropzone:
+    "rounded-lg border-2 border-dashed border-gray-300 p-8 text-center transition-colors hover:border-gray-400",
   icon: "mx-auto h-12 w-12 text-gray-400",
   results: "mt-4 rounded-lg border bg-gray-50 p-4",
   resultItem: cva("flex items-center gap-2 text-sm", {

@@ -83,12 +83,8 @@ export function CustomerForm({
           disabled={isEditMode}
           className={formStyles.input}
         />
-        {errors.customer_code && (
-          <p className={formStyles.error}>{errors.customer_code.message}</p>
-        )}
-        {isEditMode && (
-          <p className="text-xs text-gray-500">得意先コードは変更できません</p>
-        )}
+        {errors.customer_code && <p className={formStyles.error}>{errors.customer_code.message}</p>}
+        {isEditMode && <p className="text-xs text-gray-500">得意先コードは変更できません</p>}
       </div>
 
       {/* 得意先名 */}
@@ -102,9 +98,7 @@ export function CustomerForm({
           placeholder="例: 株式会社サンプル"
           className={formStyles.input}
         />
-        {errors.customer_name && (
-          <p className={formStyles.error}>{errors.customer_name.message}</p>
-        )}
+        {errors.customer_name && <p className={formStyles.error}>{errors.customer_name.message}</p>}
       </div>
 
       {/* TODO: backend: 追加フィールド（contact_name, phone, email等）は

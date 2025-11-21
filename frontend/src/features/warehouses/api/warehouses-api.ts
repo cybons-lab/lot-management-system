@@ -7,10 +7,7 @@ import type { components } from "@/types/api";
 
 import { http } from "@/services/http";
 
-import type {
-  BulkUpsertResponse,
-  WarehouseBulkRow,
-} from "../types/bulk-operation";
+import type { BulkUpsertResponse, WarehouseBulkRow } from "../types/bulk-operation";
 
 // OpenAPI生成型
 export type Warehouse = components["schemas"]["WarehouseResponse"];
@@ -88,9 +85,7 @@ async function upsertWarehouseRow(
 }
 
 // TODO: backend: bulk-upsert not yet implemented
-export async function bulkUpsertWarehouses(
-  rows: WarehouseBulkRow[],
-): Promise<BulkUpsertResponse> {
+export async function bulkUpsertWarehouses(rows: WarehouseBulkRow[]): Promise<BulkUpsertResponse> {
   const results = await Promise.all(
     rows.map(async (row, index) => {
       const result = await upsertWarehouseRow(row);

@@ -123,11 +123,7 @@ export function CustomerDetailPage() {
                   <Edit className="mr-2 h-4 w-4" />
                   編集
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                >
+                <Button variant="destructive" size="sm" onClick={() => setIsDeleteDialogOpen(true)}>
                   <Trash2 className="mr-2 h-4 w-4" />
                   削除
                 </Button>

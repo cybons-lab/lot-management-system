@@ -7,10 +7,7 @@ import type { components } from "@/types/api";
 
 import { http } from "@/services/http";
 
-import type {
-  BulkUpsertResponse,
-  SupplierBulkRow,
-} from "../types/bulk-operation";
+import type { BulkUpsertResponse, SupplierBulkRow } from "../types/bulk-operation";
 
 // OpenAPI生成型
 export type Supplier = components["schemas"]["SupplierResponse"];
@@ -86,9 +83,7 @@ async function upsertSupplierRow(
 }
 
 // TODO: backend: bulk-upsert not yet implemented
-export async function bulkUpsertSuppliers(
-  rows: SupplierBulkRow[],
-): Promise<BulkUpsertResponse> {
+export async function bulkUpsertSuppliers(rows: SupplierBulkRow[]): Promise<BulkUpsertResponse> {
   const results = await Promise.all(
     rows.map(async (row, index) => {
       const result = await upsertSupplierRow(row);

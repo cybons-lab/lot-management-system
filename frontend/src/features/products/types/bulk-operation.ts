@@ -2,7 +2,12 @@
  * Bulk Operation Types for Products
  */
 
-import type { BulkOperationType, BulkRowBase, BulkResultRow, BulkUpsertResponse } from "@/features/customers/types/bulk-operation";
+import type {
+  BulkOperationType,
+  BulkRowBase,
+  BulkResultRow,
+  BulkUpsertResponse,
+} from "@/features/customers/types/bulk-operation";
 
 export type { BulkOperationType, BulkRowBase, BulkResultRow, BulkUpsertResponse };
 

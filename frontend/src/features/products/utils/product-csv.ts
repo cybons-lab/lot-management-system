@@ -5,7 +5,13 @@
 import type { Product } from "../api/products-api";
 import type { ProductBulkRow, BulkOperationType } from "../types/bulk-operation";
 
-const CSV_HEADERS = ["OPERATION", "maker_part_code", "product_name", "base_unit", "consumption_limit_days"] as const;
+const CSV_HEADERS = [
+  "OPERATION",
+  "maker_part_code",
+  "product_name",
+  "base_unit",
+  "consumption_limit_days",
+] as const;
 
 /**
  * Parse CSV text to ProductBulkRow[]
@@ -93,8 +99,19 @@ export function generateProductCsv(products: Product[], includeOperation = true)
 
   for (const p of products) {
     const values = includeOperation
-      ? ["UPD", p.maker_part_code, p.product_name, p.base_unit, p.consumption_limit_days?.toString() ?? ""]
-      : [p.maker_part_code, p.product_name, p.base_unit, p.consumption_limit_days?.toString() ?? ""];
+      ? [
+          "UPD",
+          p.maker_part_code,
+          p.product_name,
+          p.base_unit,
+          p.consumption_limit_days?.toString() ?? "",
+        ]
+      : [
+          p.maker_part_code,
+          p.product_name,
+          p.base_unit,
+          p.consumption_limit_days?.toString() ?? "",
+        ];
     lines.push(values.map((v) => `"${v.replace(/"/g, '""')}"`).join(","));
   }
 

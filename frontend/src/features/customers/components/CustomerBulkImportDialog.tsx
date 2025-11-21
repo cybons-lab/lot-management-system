@@ -35,10 +35,7 @@ export interface CustomerBulkImportDialogProps {
 // Component
 // ============================================
 
-export function CustomerBulkImportDialog({
-  open,
-  onOpenChange,
-}: CustomerBulkImportDialogProps) {
+export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImportDialogProps) {
   const inputId = useId();
   const [file, setFile] = useState<File | null>(null);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
@@ -48,20 +45,17 @@ export function CustomerBulkImportDialog({
   const { mutate: bulkUpsert, isPending } = useBulkUpsertCustomers();
 
   // ファイル選択ハンドラ
-  const handleFileChange = useCallback(
-    async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedFile = e.target.files?.[0];
-      if (!selectedFile) return;
+  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
 
-      setFile(selectedFile);
-      setImportResult(null);
+    setFile(selectedFile);
+    setImportResult(null);
 
-      const { rows, errors } = await parseCustomerCsv(selectedFile);
-      setParsedRows(rows);
-      setParseErrors(errors);
-    },
-    [],
-  );
+    const { rows, errors } = await parseCustomerCsv(selectedFile);
+    setParsedRows(rows);
+    setParseErrors(errors);
+  }, []);
 
   // ファイルクリア
   const handleClearFile = useCallback(() => {
@@ -127,9 +121,7 @@ export function CustomerBulkImportDialog({
         <div className="space-y-4">
           {/* テンプレートダウンロード */}
           <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
-            <span className="text-sm text-gray-600">
-              インポート用テンプレートをダウンロード
-            </span>
+            <span className="text-sm text-gray-600">インポート用テンプレートをダウンロード</span>
             <Button variant="outline" size="sm" onClick={handleDownloadTemplate}>
               テンプレート取得
             </Button>
@@ -178,9 +170,7 @@ export function CustomerBulkImportDialog({
                       <li key={i}>• {error}</li>
                     ))}
                     {parseErrors.length > 5 && (
-                      <li className="text-red-600">
-                        ...他 {parseErrors.length - 5} 件のエラー
-                      </li>
+                      <li className="text-red-600">...他 {parseErrors.length - 5} 件のエラー</li>
                     )}
                   </ul>
                 </div>
@@ -194,15 +184,9 @@ export function CustomerBulkImportDialog({
                     {parsedRows.length} 件のデータを読み込みました
                   </div>
                   <div className="mt-2 flex gap-4 text-sm">
-                    <span>
-                      追加: {parsedRows.filter((r) => r.OPERATION === "ADD").length}件
-                    </span>
-                    <span>
-                      更新: {parsedRows.filter((r) => r.OPERATION === "UPD").length}件
-                    </span>
-                    <span>
-                      削除: {parsedRows.filter((r) => r.OPERATION === "DEL").length}件
-                    </span>
+                    <span>追加: {parsedRows.filter((r) => r.OPERATION === "ADD").length}件</span>
+                    <span>更新: {parsedRows.filter((r) => r.OPERATION === "UPD").length}件</span>
+                    <span>削除: {parsedRows.filter((r) => r.OPERATION === "DEL").length}件</span>
                   </div>
                 </div>
               )}
@@ -256,8 +240,7 @@ export function CustomerBulkImportDialog({
                       .slice(0, 10)
                       .map((r, i) => (
                         <li key={i} className={styles.resultItem({ status: "error" })}>
-                          <XCircle className="h-4 w-4" />
-                          行{r.rowNumber}: {r.errorMessage}
+                          <XCircle className="h-4 w-4" />行{r.rowNumber}: {r.errorMessage}
                         </li>
                       ))}
                   </ul>

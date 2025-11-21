@@ -24,9 +24,18 @@ export interface ProductFormProps {
   isSubmitting?: boolean;
 }
 
-export function ProductForm({ product, onSubmit, onCancel, isSubmitting = false }: ProductFormProps) {
+export function ProductForm({
+  product,
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+}: ProductFormProps) {
   const isEditMode = !!product;
-  const { register, handleSubmit, formState: { errors } } = useForm<ProductFormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       maker_part_code: product?.maker_part_code ?? "",
@@ -39,32 +48,70 @@ export function ProductForm({ product, onSubmit, onCancel, isSubmitting = false 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={formStyles.grid}>
       <div className={formStyles.field}>
-        <Label htmlFor="maker_part_code" className={formStyles.label}>メーカー品番 <span className="text-red-500">*</span></Label>
-        <Input id="maker_part_code" {...register("maker_part_code")} placeholder="例: MAKER-001" disabled={isEditMode} className={formStyles.input} />
-        {errors.maker_part_code && <p className={formStyles.error}>{errors.maker_part_code.message}</p>}
+        <Label htmlFor="maker_part_code" className={formStyles.label}>
+          メーカー品番 <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="maker_part_code"
+          {...register("maker_part_code")}
+          placeholder="例: MAKER-001"
+          disabled={isEditMode}
+          className={formStyles.input}
+        />
+        {errors.maker_part_code && (
+          <p className={formStyles.error}>{errors.maker_part_code.message}</p>
+        )}
       </div>
 
       <div className={formStyles.field}>
-        <Label htmlFor="product_name" className={formStyles.label}>商品名 <span className="text-red-500">*</span></Label>
-        <Input id="product_name" {...register("product_name")} placeholder="例: サンプル商品" className={formStyles.input} />
+        <Label htmlFor="product_name" className={formStyles.label}>
+          商品名 <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="product_name"
+          {...register("product_name")}
+          placeholder="例: サンプル商品"
+          className={formStyles.input}
+        />
         {errors.product_name && <p className={formStyles.error}>{errors.product_name.message}</p>}
       </div>
 
       <div className={formStyles.field}>
-        <Label htmlFor="base_unit" className={formStyles.label}>単位 <span className="text-red-500">*</span></Label>
-        <Input id="base_unit" {...register("base_unit")} placeholder="例: EA, KG, CS" className={formStyles.input} />
+        <Label htmlFor="base_unit" className={formStyles.label}>
+          単位 <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id="base_unit"
+          {...register("base_unit")}
+          placeholder="例: EA, KG, CS"
+          className={formStyles.input}
+        />
         {errors.base_unit && <p className={formStyles.error}>{errors.base_unit.message}</p>}
       </div>
 
       <div className={formStyles.field}>
-        <Label htmlFor="consumption_limit_days" className={formStyles.label}>消費期限日数</Label>
-        <Input id="consumption_limit_days" type="number" {...register("consumption_limit_days")} placeholder="例: 30" className={formStyles.input} />
-        {errors.consumption_limit_days && <p className={formStyles.error}>{errors.consumption_limit_days.message}</p>}
+        <Label htmlFor="consumption_limit_days" className={formStyles.label}>
+          消費期限日数
+        </Label>
+        <Input
+          id="consumption_limit_days"
+          type="number"
+          {...register("consumption_limit_days")}
+          placeholder="例: 30"
+          className={formStyles.input}
+        />
+        {errors.consumption_limit_days && (
+          <p className={formStyles.error}>{errors.consumption_limit_days.message}</p>
+        )}
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>キャンセル</Button>
-        <Button type="submit" disabled={isSubmitting}>{isSubmitting ? "保存中..." : isEditMode ? "更新" : "登録"}</Button>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+          キャンセル
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "保存中..." : isEditMode ? "更新" : "登録"}
+        </Button>
       </div>
     </form>
   );

@@ -5,7 +5,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { ProductCreate, ProductUpdate } from "../api/products-api";
-import { createProduct, updateProduct, deleteProduct, bulkUpsertProducts } from "../api/products-api";
+import {
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  bulkUpsertProducts,
+} from "../api/products-api";
 import type { ProductBulkRow } from "../types/bulk-operation";
 import { productsQueryKey } from "./useProductsQuery";
 

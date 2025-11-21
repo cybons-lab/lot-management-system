@@ -12,7 +12,10 @@ export interface WarehouseExportButtonProps {
   size?: "default" | "sm" | "lg";
 }
 
-export function WarehouseExportButton({ warehouses, size = "default" }: WarehouseExportButtonProps) {
+export function WarehouseExportButton({
+  warehouses,
+  size = "default",
+}: WarehouseExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = useCallback(() => {
@@ -28,7 +31,12 @@ export function WarehouseExportButton({ warehouses, size = "default" }: Warehous
   }, [warehouses]);
 
   return (
-    <Button variant="outline" size={size} onClick={handleExport} disabled={isExporting || warehouses.length === 0}>
+    <Button
+      variant="outline"
+      size={size}
+      onClick={handleExport}
+      disabled={isExporting || warehouses.length === 0}
+    >
       <Download className="mr-2 h-4 w-4" />
       {isExporting ? "エクスポート中..." : "エクスポート"}
     </Button>

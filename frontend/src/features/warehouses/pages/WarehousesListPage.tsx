@@ -31,7 +31,9 @@ export function WarehousesListPage() {
     if (!searchQuery.trim()) return warehouses;
     const query = searchQuery.toLowerCase();
     return warehouses.filter(
-      (w) => w.warehouse_code.toLowerCase().includes(query) || w.warehouse_name.toLowerCase().includes(query),
+      (w) =>
+        w.warehouse_code.toLowerCase().includes(query) ||
+        w.warehouse_name.toLowerCase().includes(query),
     );
   }, [warehouses, searchQuery]);
 
@@ -47,13 +49,19 @@ export function WarehousesListPage() {
     return sorted;
   }, [filteredWarehouses, sort]);
 
-  const handleRowClick = useCallback((warehouse: Warehouse) => {
-    navigate(`/warehouses/${warehouse.warehouse_code}`);
-  }, [navigate]);
+  const handleRowClick = useCallback(
+    (warehouse: Warehouse) => {
+      navigate(`/warehouses/${warehouse.warehouse_code}`);
+    },
+    [navigate],
+  );
 
-  const handleCreate = useCallback((data: WarehouseCreate) => {
-    createWarehouse(data, { onSuccess: () => setIsCreateDialogOpen(false) });
-  }, [createWarehouse]);
+  const handleCreate = useCallback(
+    (data: WarehouseCreate) => {
+      createWarehouse(data, { onSuccess: () => setIsCreateDialogOpen(false) });
+    },
+    [createWarehouse],
+  );
 
   return (
     <div className={styles.root}>
@@ -64,10 +72,12 @@ export function WarehousesListPage() {
           <div className={styles.actionBar}>
             <WarehouseExportButton warehouses={sortedWarehouses} size="sm" />
             <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />インポート
+              <Upload className="mr-2 h-4 w-4" />
+              インポート
             </Button>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />新規登録
+              <Plus className="mr-2 h-4 w-4" />
+              新規登録
             </Button>
           </div>
         }
@@ -89,16 +99,37 @@ export function WarehousesListPage() {
         <div className={styles.tableHeader}>
           <h3 className={styles.tableTitle}>倉庫一覧</h3>
           <div className={styles.tableActions}>
-            <Input type="search" placeholder="コード・名称で検索..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className={styles.searchInput} />
+            <Input
+              type="search"
+              placeholder="コード・名称で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
           </div>
         </div>
-        <DataTable data={sortedWarehouses} columns={warehouseColumns} sort={sort} onSortChange={setSort} getRowId={(row) => row.id} onRowClick={handleRowClick} isLoading={isLoading} emptyMessage="倉庫が登録されていません" />
+        <DataTable
+          data={sortedWarehouses}
+          columns={warehouseColumns}
+          sort={sort}
+          onSortChange={setSort}
+          getRowId={(row) => row.id}
+          onRowClick={handleRowClick}
+          isLoading={isLoading}
+          emptyMessage="倉庫が登録されていません"
+        />
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>倉庫新規登録</DialogTitle></DialogHeader>
-          <WarehouseForm onSubmit={handleCreate} onCancel={() => setIsCreateDialogOpen(false)} isSubmitting={isCreating} />
+          <DialogHeader>
+            <DialogTitle>倉庫新規登録</DialogTitle>
+          </DialogHeader>
+          <WarehouseForm
+            onSubmit={handleCreate}
+            onCancel={() => setIsCreateDialogOpen(false)}
+            isSubmitting={isCreating}
+          />
         </DialogContent>
       </Dialog>
 

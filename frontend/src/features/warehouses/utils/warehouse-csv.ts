@@ -4,7 +4,12 @@
 import type { Warehouse } from "../api/warehouses-api";
 import type { BulkOperationType, WarehouseBulkRow } from "../types/bulk-operation";
 
-export const CSV_HEADERS = ["OPERATION", "warehouse_code", "warehouse_name", "warehouse_type"] as const;
+export const CSV_HEADERS = [
+  "OPERATION",
+  "warehouse_code",
+  "warehouse_name",
+  "warehouse_type",
+] as const;
 
 export async function parseWarehouseCsv(
   file: File,
@@ -41,7 +46,9 @@ export async function parseWarehouseCsv(
     }
 
     const rowData: Record<string, string> = {};
-    headers.forEach((header, idx) => { rowData[header] = values[idx] ?? ""; });
+    headers.forEach((header, idx) => {
+      rowData[header] = values[idx] ?? "";
+    });
 
     const operation = (rowData["OPERATION"]?.toUpperCase() || "ADD") as BulkOperationType;
     if (!["ADD", "UPD", "DEL"].includes(operation)) {
