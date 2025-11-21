@@ -76,9 +76,7 @@ def run_test(title: str, method: str, endpoint: str, payload: dict | None = None
 # -------------------------------------------------------
 def main():
     # 1. データベースのリセット
-    run_test(
-        "1. データベースのリセット (基本マスタ投入)", "POST", "/admin/reset-database"
-    )
+    run_test("1. データベースのリセット (基本マスタ投入)", "POST", "/admin/reset-database")
 
     # 2. サンプルデータの投入
     sample_data = load_json("sample_data.json")
@@ -114,9 +112,7 @@ def main():
         oid = created["id"]
         print_success(f"作成された受注 ID: {oid} を取得しました。")
         run_test(f"5. [テスト2] 受注詳細確認 (ID: {oid})", "GET", f"/orders/{oid}")
-        run_test(
-            f"6. [テスト3] 再マッチング (ID: {oid})", "POST", f"/orders/{oid}/re-match"
-        )
+        run_test(f"6. [テスト3] 再マッチング (ID: {oid})", "POST", f"/orders/{oid}/re-match")
     else:
         print_error("テスト1失敗のため、テスト2・3はスキップ。")
 

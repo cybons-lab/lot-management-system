@@ -19,6 +19,7 @@ class ForecastBase(BaseSchema):
     forecast_date: date
     forecast_quantity: Decimal
     unit: str | None = None
+    forecast_period: str
 
 
 class ForecastCreate(ForecastBase):
@@ -39,6 +40,7 @@ class ForecastResponse(ForecastBase, TimestampMixin):
 
     id: int
     snapshot_at: datetime
+    forecast_period: str
     # Joined master data
     customer_code: str | None = None
     customer_name: str | None = None
@@ -56,6 +58,7 @@ class ForecastHistoryResponse(ForecastBase):
     archived_at: datetime
     created_at: datetime
     updated_at: datetime
+    forecast_period: str
     # Joined master data
     customer_code: str | None = None
     customer_name: str | None = None
@@ -103,6 +106,7 @@ class ForecastBulkImportItem(BaseSchema):
     forecast_date: date
     forecast_quantity: Decimal
     unit: str | None = None
+    forecast_period: str
 
 
 class ForecastBulkImportRequest(BaseSchema):

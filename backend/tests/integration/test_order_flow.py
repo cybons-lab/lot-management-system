@@ -52,9 +52,7 @@ def test_order_to_fefo_allocation_flow(db_session):
         db=db_session,
     )
     create_warehouse(
-        WarehouseCreate(
-            warehouse_code="WH-A", warehouse_name="倉庫A", is_active=1
-        ),
+        WarehouseCreate(warehouse_code="WH-A", warehouse_name="倉庫A", is_active=1),
         db=db_session,
     )
 
@@ -88,11 +86,7 @@ def test_order_to_fefo_allocation_flow(db_session):
     order = db_session.get(Order, order_id)
     assert order.customer_order_no_last6 == "001234"
 
-    warehouse = (
-        db_session.query(Warehouse)
-        .filter(Warehouse.warehouse_code == "WH-A")
-        .first()
-    )
+    warehouse = db_session.query(Warehouse).filter(Warehouse.warehouse_code == "WH-A").first()
 
     def _create_lot(code_suffix, product_code, quantity, expiry_offset, locked=False):
         lot = Lot(
@@ -122,9 +116,7 @@ def test_order_to_fefo_allocation_flow(db_session):
     lot_b1 = _create_lot("B-1", "PROD-B", 2, 3)
     lot_b2 = _create_lot("B-2", "PROD-B", 5, 8)
 
-    preview_result = preview_allocations(
-        FefoPreviewRequest(order_id=order_id), db=db_session
-    )
+    preview_result = preview_allocations(FefoPreviewRequest(order_id=order_id), db=db_session)
     preview_data = preview_result.model_dump()
     assert preview_data["order_id"] == order_id
 
@@ -159,13 +151,10 @@ def test_order_to_fefo_allocation_flow(db_session):
     assert lot_b2_ref.current_stock.current_quantity == 4
 
     refreshed_order = db_session.get(Order, order_id)
-    db_status = (
-        db_session.query(Order.status).filter(Order.id == order_id).scalar()
-    )
+    db_status = db_session.query(Order.status).filter(Order.id == order_id).scalar()
     assert db_status in {"allocated", "part_allocated"}
     commit_preview_lines = {
         line["product_code"]: line["next_div"] for line in commit_data["preview"]["lines"]
     }
     assert commit_preview_lines["PROD-A"] == "ND-A"
     assert commit_preview_lines["PROD-B"] is None
-

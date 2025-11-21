@@ -52,4 +52,3 @@ def test_to_internal_qty_zero_packaging_error():
     product = DummyProduct(packaging_unit="EA", packaging_qty=Decimal("0"))
     with pytest.raises(QuantityConversionError):
         to_internal_qty(product, qty_external=1, external_unit="EA")
-

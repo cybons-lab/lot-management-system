@@ -93,6 +93,7 @@ class ForecastService:
                     forecast_date=f.forecast_date,
                     forecast_quantity=f.forecast_quantity,
                     unit=f.unit,
+                    forecast_period=f.forecast_period,
                     snapshot_at=f.snapshot_at,
                     created_at=f.created_at,
                     updated_at=f.updated_at,
@@ -144,6 +145,7 @@ class ForecastService:
             forecast_date=forecast.forecast_date,
             forecast_quantity=forecast.forecast_quantity,
             unit=forecast.unit,
+            forecast_period=forecast.forecast_period,
             snapshot_at=forecast.snapshot_at,
             created_at=forecast.created_at,
             updated_at=forecast.updated_at,
@@ -164,6 +166,7 @@ class ForecastService:
             forecast_date=data.forecast_date,
             forecast_quantity=data.forecast_quantity,
             unit=data.unit,
+            forecast_period=data.forecast_period,
         )
 
         self.db.add(db_forecast)
@@ -236,6 +239,7 @@ class ForecastService:
                 forecast_date=h.forecast_date,
                 forecast_quantity=h.forecast_quantity,
                 unit=h.unit,
+                forecast_period=h.forecast_period,
                 snapshot_at=h.snapshot_at,
                 archived_at=h.archived_at,
                 created_at=h.created_at,
@@ -335,6 +339,7 @@ class ForecastService:
                         forecast_date=existing_fc.forecast_date,
                         forecast_quantity=existing_fc.forecast_quantity,
                         unit=existing_fc.unit,
+                        forecast_period=existing_fc.forecast_period,
                         snapshot_at=existing_fc.snapshot_at,
                         created_at=existing_fc.created_at,
                         updated_at=existing_fc.updated_at,
@@ -352,6 +357,7 @@ class ForecastService:
                     forecast_date=item.forecast_date,
                     forecast_quantity=item.forecast_quantity,
                     unit=item.unit,
+                    forecast_period=item.forecast_period,
                     snapshot_at=snapshot_at,
                 )
                 self.db.add(db_forecast)

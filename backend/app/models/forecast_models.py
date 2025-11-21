@@ -44,6 +44,7 @@ class ForecastCurrent(Base):
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
+    forecast_period: Mapped[str] = mapped_column(String(7), nullable=False)
     snapshot_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now()
     )
@@ -70,6 +71,7 @@ class ForecastCurrent(Base):
             "delivery_place_id",
             "product_id",
             "forecast_date",
+            "forecast_period",
             unique=True,
         ),
     )
@@ -96,6 +98,7 @@ class ForecastHistory(Base):
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
     forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
+    forecast_period: Mapped[str] = mapped_column(String(7), nullable=False)
     snapshot_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     archived_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now()
