@@ -12,14 +12,19 @@ const productFormSchema = z.object({
   maker_part_code: z.string().min(1, "メーカー品番は必須です").max(50),
   product_name: z.string().min(1, "商品名は必須です").max(200),
   base_unit: z.string().min(1, "単位は必須です").max(20),
-  consumption_limit_days: z.coerce.number().int().min(0).nullable().optional(),
+  consumption_limit_days: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productFormSchema>;
 
+// output型: APIへ送るデータ型
+type ProductFormOutput = Omit<ProductFormData, 'consumption_limit_days'> & {
+  consumption_limit_days?: number | null;
+};
+
 export interface ProductFormProps {
   product?: Product;
-  onSubmit: (data: ProductFormData) => void;
+  onSubmit: (data: ProductFormOutput) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
@@ -41,12 +46,23 @@ export function ProductForm({
       maker_part_code: product?.maker_part_code ?? "",
       product_name: product?.product_name ?? "",
       base_unit: product?.base_unit ?? "EA",
-      consumption_limit_days: product?.consumption_limit_days ?? null,
+      consumption_limit_days: product?.consumption_limit_days?.toString() ?? "",
     },
   });
 
+  const handleFormSubmit = (data: ProductFormData) => {
+    const output: ProductFormOutput = {
+      ...data,
+      consumption_limit_days: data.consumption_limit_days && data.consumption_limit_days !== ""
+        ? Number(data.consumption_limit_days)
+        : null,
+    };
+    onSubmit(output);
+  };
+
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={formStyles.grid}>
+    <form onSubmit={handleSubmit(handleFormSubmit)} className={formStyles.grid}>
       <div className={formStyles.field}>
         <Label htmlFor="maker_part_code" className={formStyles.label}>
           メーカー品番 <span className="text-red-500">*</span>
