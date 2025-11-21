@@ -1827,7 +1827,7 @@ CREATE INDEX ix_forecast_history_key ON public.forecast_history USING btree (cus
 -- Name: ux_forecast_current_unique; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE UNIQUE INDEX ux_forecast_current_unique ON public.forecast_current USING btree (customer_id, delivery_place_id, product_id, forecast_date);
+CREATE UNIQUE INDEX ux_forecast_current_unique ON public.forecast_current USING btree (customer_id, delivery_place_id, product_id, forecast_date, forecast_period);
 
 
 --
