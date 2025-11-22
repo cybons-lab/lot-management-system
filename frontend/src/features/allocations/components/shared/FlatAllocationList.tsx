@@ -131,7 +131,8 @@ export function FlatAllocationList({
 
       const allocations = getLineAllocations(line.id);
       const totalAllocated = Object.values(allocations).reduce((sum, qty) => sum + qty, 0);
-      const required = Number(line.quantity) || 0;
+      // Use converted_quantity (internal units) for accurate filtering
+      const required = Number(line.converted_quantity ?? line.quantity) || 0;
       const remaining = required - totalAllocated;
       const candidates = getCandidateLots(line.id);
       const hasCandidates = candidates.length > 0;
