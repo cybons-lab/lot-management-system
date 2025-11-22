@@ -9,6 +9,7 @@ interface LotAllocationHeaderViewProps {
   deliveryDate: string;
   productCode: string;
   productName: string;
+  unit: string;
   requiredQty: number;
   totalAllocated: number;
   remainingQty: number;
@@ -33,6 +34,7 @@ export function LotAllocationHeaderView({
   deliveryDate,
   productCode,
   productName,
+  unit,
   requiredQty,
   totalAllocated,
   remainingQty,
@@ -173,7 +175,7 @@ export function LotAllocationHeaderView({
             <div className="flex items-baseline justify-between">
               <span className="text-xs font-bold text-gray-500">必要数</span>
               <span className="text-2xl font-bold text-gray-900">
-                {requiredQty.toLocaleString()}
+                {requiredQty.toLocaleString()} <span className="text-sm font-normal text-gray-500">{unit}</span>
               </span>
             </div>
 

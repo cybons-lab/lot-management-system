@@ -81,6 +81,7 @@ export function LotAllocationHeader({
       deliveryDate={deliveryDate}
       productCode={productCode}
       productName={productName}
+      unit={orderLine.unit || ""}
       requiredQty={requiredQty}
       totalAllocated={totalAllocated}
       remainingQty={remainingQty}
