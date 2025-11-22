@@ -1,6 +1,6 @@
 """Shared schema components."""
 
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,7 +22,7 @@ class PageQuery(BaseModel):
 T = TypeVar("T")
 
 
-class Page(BaseModel, Generic[T]):
+class Page[T](BaseModel):
     """Generic paginated response."""
 
     items: list[T]

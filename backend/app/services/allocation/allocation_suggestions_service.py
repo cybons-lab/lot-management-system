@@ -181,9 +181,7 @@ class AllocationSuggestionService:
         )
 
     def preview_for_order(self, order_line_id: int) -> AllocationSuggestionPreviewResponse:
-        """
-        Generate allocation suggestions for a specific order line (Preview only, no save).
-        """
+        """Generate allocation suggestions for a specific order line (preview only, no save)."""
         order_line = self.db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
         if not order_line:
             return AllocationSuggestionPreviewResponse(

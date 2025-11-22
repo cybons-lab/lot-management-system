@@ -10,9 +10,7 @@ from .base_model import Base
 
 
 class VLotCurrentStock(Base):
-    """
-    lot_current_stock ビュー.
-    """
+    """lot_current_stock ビュー."""
 
     __tablename__ = "lot_current_stock"
     __table_args__ = {"info": {"is_view": True}}
@@ -29,9 +27,7 @@ LotCurrentStock = VLotCurrentStock
 
 
 class VCustomerDailyProduct(Base):
-    """
-    v_customer_daily_products ビュー.
-    """
+    """v_customer_daily_products ビュー."""
 
     __tablename__ = "v_customer_daily_products"
     __table_args__ = {"info": {"is_view": True}}
@@ -81,9 +77,7 @@ class VOrderLineContext(Base):
 
 
 class VCustomerCodeToId(Base):
-    """
-    v_customer_code_to_id ビュー.
-    """
+    """v_customer_code_to_id ビュー."""
 
     __tablename__ = "v_customer_code_to_id"
     __table_args__ = {"info": {"is_view": True}}
@@ -94,9 +88,7 @@ class VCustomerCodeToId(Base):
 
 
 class VDeliveryPlaceCodeToId(Base):
-    """
-    v_delivery_place_code_to_id ビュー.
-    """
+    """v_delivery_place_code_to_id ビュー."""
 
     __tablename__ = "v_delivery_place_code_to_id"
     __table_args__ = {"info": {"is_view": True}}
@@ -107,9 +99,7 @@ class VDeliveryPlaceCodeToId(Base):
 
 
 class VForecastOrderPair(Base):
-    """
-    v_forecast_order_pairs ビュー.
-    """
+    """v_forecast_order_pairs ビュー."""
 
     __tablename__ = "v_forecast_order_pairs"
     __table_args__ = {"info": {"is_view": True}}
@@ -122,9 +112,7 @@ class VForecastOrderPair(Base):
 
 
 class VProductCodeToId(Base):
-    """
-    v_product_code_to_id ビュー.
-    """
+    """v_product_code_to_id ビュー."""
 
     __tablename__ = "v_product_code_to_id"
     __table_args__ = {"info": {"is_view": True}}

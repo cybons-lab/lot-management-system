@@ -60,9 +60,7 @@ def list_allocation_suggestions(
     customer_id: int | None = Query(None, description="得意先ID"),
     db: Session = Depends(get_db),
 ):
-    """
-    引当推奨一覧取得.
-    """
+    """引当推奨一覧取得."""
     # Note: Service.get_all needs to be updated to support these filters.
     # For now, we'll implement a basic query here or update service later.
     # Given the task scope, I'll update the service method signature in the service file if needed,

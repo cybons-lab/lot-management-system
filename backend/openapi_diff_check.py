@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-OpenAPI Specification Difference Checker
+OpenAPI Specification Difference Checker.
 
 このスクリプトは、リネーム前後のOpenAPIスキーマを比較して、
 公開APIに変更がないことを確認します。
@@ -23,7 +23,7 @@ from typing import Any
 
 def normalize_openapi_spec(spec: dict[str, Any]) -> dict[str, Any]:
     """
-    OpenAPIスキーマを正規化して比較可能にします。
+    OpenAPIスキーマを正規化して比較可能にします.
 
     - サーバーURLは環境依存なので除外
     - 生成日時などのメタデータは除外
@@ -59,7 +59,7 @@ def normalize_openapi_spec(spec: dict[str, Any]) -> dict[str, Any]:
 
 def deep_diff(obj1: Any, obj2: Any, path: str = "") -> list[str]:
     """
-    2つのオブジェクトを再帰的に比較して差分を検出します。
+    2つのオブジェクトを再帰的に比較して差分を検出します.
 
     Args:
         obj1: 比較元オブジェクト
@@ -71,7 +71,7 @@ def deep_diff(obj1: Any, obj2: Any, path: str = "") -> list[str]:
     """
     differences = []
 
-    if type(obj1) != type(obj2):
+    if type(obj1) is not type(obj2):
         differences.append(
             f"{path}: Type mismatch ({type(obj1).__name__} vs {type(obj2).__name__})"
         )
@@ -93,7 +93,7 @@ def deep_diff(obj1: Any, obj2: Any, path: str = "") -> list[str]:
         if len(obj1) != len(obj2):
             differences.append(f"{path}: List length mismatch ({len(obj1)} vs {len(obj2)})")
         else:
-            for i, (item1, item2) in enumerate(zip(obj1, obj2)):
+            for i, (item1, item2) in enumerate(zip(obj1, obj2, strict=False)):
                 differences.extend(deep_diff(item1, item2, f"{path}[{i}]"))
 
     else:
@@ -105,7 +105,7 @@ def deep_diff(obj1: Any, obj2: Any, path: str = "") -> list[str]:
 
 def generate_openapi_json(output_path: Path) -> None:
     """
-    現在のアプリケーションからOpenAPIスキーマを生成します。
+    現在のアプリケーションからOpenAPIスキーマを生成します.
 
     Args:
         output_path: 出力先ファイルパス
@@ -137,7 +137,7 @@ def generate_openapi_json(output_path: Path) -> None:
 
 def compare_openapi_specs(baseline_path: Path, current_path: Path) -> bool:
     """
-    2つのOpenAPIスキーマを比較します。
+    2つのOpenAPIスキーマを比較します.
 
     Args:
         baseline_path: ベースラインのOpenAPIスキーマファイルパス
@@ -190,7 +190,7 @@ def compare_openapi_specs(baseline_path: Path, current_path: Path) -> bool:
 
 
 def main() -> None:
-    """メイン関数"""
+    """メイン関数."""
     if len(sys.argv) < 2:
         print("Usage:", file=sys.stderr)
         print("  python openapi_diff_check.py generate <output_file>", file=sys.stderr)

@@ -30,7 +30,7 @@ def fifo_inventory(db_session):
     quantities = [40, 15, 30]
     expiries = [date(2025, 12, 31), date(2024, 12, 31), None]
 
-    for idx, (qty, expiry) in enumerate(zip(quantities, expiries), start=1):
+    for idx, (qty, expiry) in enumerate(zip(quantities, expiries, strict=False), start=1):
         lot = Lot(
             supplier_code=supplier.supplier_code,
             product_code=product.product_code,

@@ -96,7 +96,7 @@ def generate_customers_and_delivery_places(
     # 5-10 customers
     count = random.randint(5, 10)
 
-    for i in range(count):
+    for _ in range(count):
         c = Customer(
             customer_code=fake.unique.bothify(text="CUST-####"),
             customer_name=fake.company(),
@@ -190,11 +190,15 @@ def generate_lots(
     CRITICAL: Maximum 3 lots per product to avoid overwhelming allocation UI.
 
     Args:
-        forecast_totals: Dict mapping product_id to total forecasted quantity for that product
+        db: データベースセッション.
+        products: ロットを生成する製品一覧.
+        warehouses: 在庫を割り当てる倉庫一覧.
+        suppliers: 仕入先一覧.
+        forecast_totals: 製品ごとの予測数量のマッピング.
     """
     today = date.today()
 
-    for i, p in enumerate(products):
+    for p in products:
         # Get forecast total for this product (default to 0 if no forecast)
         forecast_total = forecast_totals.get(p.id, 0)
 
@@ -296,7 +300,6 @@ def generate_forecasts(
 
     today = date.today()
     next_month = (today.replace(day=1) + timedelta(days=32)).replace(day=1)
-    next_next_month = (next_month + timedelta(days=32)).replace(day=1)
 
     # Helper to get delivery places for a customer
     dp_map = {c.id: [dp for dp in delivery_places if dp.customer_id == c.id] for c in customers}
@@ -389,7 +392,6 @@ def generate_orders(
 ):
     # 1 Customer is "Perfect Scenario"
     perfect_customer = customers[0]
-    other_customers = customers[1:]
 
     dp_map = {c.id: [dp for dp in delivery_places if dp.customer_id == c.id] for c in customers}
 

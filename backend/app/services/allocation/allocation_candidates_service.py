@@ -166,7 +166,7 @@ def execute_candidate_lot_query(
                     expiry_date=lot_view.expiry_date,
                     current_quantity=0.0,  # Will be populated later
                     allocated_quantity=0.0,  # Will be populated later
-                    available_quantity=float(lot_view.available_qty or 0),
+                    available_quantity=available_qty,
                     delivery_place_id=context.delivery_place_id,
                     delivery_place_name=delivery_place_name,
                 )
