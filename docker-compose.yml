@@ -18,11 +18,7 @@ services:
       - "5432:5432"
     healthcheck:
       # ← 起動直後の誤検知を避けつつ、127.0.0.1 を明示して安定化
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-lot_management} -h 127.0.0.1 || exit 1",
-        ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-lot_management} -h 127.0.0.1 || exit 1" ]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -57,16 +53,14 @@ services:
         condition: service_healthy
     volumes:
       # アプリ本体だけをコンテナへ同期（依存はイメージに保持）
-      - ./backend/app:/app/app:cached
+      - ./backend:/app:cached
       - backend-cache:/root/.cache/pip
     command: >
-      uvicorn app.main:app
-      --host 0.0.0.0 --port 8000
-      --reload --reload-dir /app/app --reload-include "*.py"
+      uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app --reload-include "*.py"
     develop:
       watch:
-        - path: ./backend/app
-          target: /app/app
+        - path: ./backend
+          target: /app
           action: sync
         - path: ./backend/requirements.txt
           action: rebuild
@@ -122,7 +116,7 @@ services:
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: lot-pgadmin
-    profiles: ["ops"] # ← 明示プロファイル化（デフォでは起動しない）
+    profiles: [ "ops" ] # ← 明示プロファイル化（デフォでは起動しない）
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
