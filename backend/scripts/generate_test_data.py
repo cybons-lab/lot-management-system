@@ -63,7 +63,22 @@ def clear_database(db: Session):
     db.execute(text("DELETE FROM customers"))
     
     db.commit()
-    print("✓ Database cleared")
+    print("✅ Database cleared successfully")
+
+
+# Unit type detection
+COUNTABLE_UNITS = {"PCS", "BOX", "CAN", "EA", "CARTON", "PACK"}
+MEASURABLE_UNITS = {"L", "ML", "KG", "G", "TON"}
+
+
+def is_countable_unit(unit: str) -> bool:
+    """Check if a unit is countable (must be integer)."""
+    return unit.upper() in COUNTABLE_UNITS
+
+
+def is_measurable_unit(unit: str) -> bool:
+    """Check if a unit is measurable (decimal allowed)."""
+    return unit.upper() in MEASURABLE_UNITS
 
 
 # Hypothesis strategies for master data
@@ -398,18 +413,60 @@ def generate_test_data():
                         # Fallback if no specific DP for customer (shouldn't happen with current logic)
                         delivery_place = random.choice(delivery_places)
                     
-                    # Determine unit (70% external, 30% internal)
-                    use_external = random.random() < 0.7
-                    if use_external and product.external_unit:
-                        unit = product.external_unit
-                        # quantity in external unit
-                        qty = random.randint(qty_min, qty_max)
-                        converted_qty = Decimal(str(qty)) / Decimal(str(product.qty_per_internal_unit))
-                    else:
+                    # Retry logic to ensure clean quantities (no fractional values for countable units)
+                    max_retries = 100
+                    qty = None
+                    converted_qty = None
+                    unit = None
+                    
+                    for attempt in range(max_retries):
+                        # Determine unit (70% external, 30% internal)
+                        use_external = random.random() < 0.7
+                        if use_external and product.external_unit:
+                            unit = product.external_unit
+                            # Generate quantity in external unit
+                            qty_candidate = random.randint(qty_min, qty_max)
+                            
+                            # Calculate converted quantity
+                            factor = Decimal(str(product.qty_per_internal_unit))
+                            converted_candidate = Decimal(str(qty_candidate)) * factor
+                            
+                            # For countable internal units, ensure integer result
+                            if is_countable_unit(product.internal_unit):
+                                if converted_candidate == int(converted_candidate):
+                                    # Clean integer result
+                                    qty = qty_candidate
+                                    converted_qty = Decimal(str(int(converted_candidate)))
+                                    break
+                                # else: retry with different quantity
+                            else:
+                                # Measurable unit: round to 2 decimal places
+                                qty = qty_candidate
+                                converted_qty = round(converted_candidate, 2)
+                                break
+                        else:
+                            # Use internal unit directly
+                            unit = product.internal_unit
+                            
+                            if is_countable_unit(product.internal_unit):
+                                # For countable units, generate integer directly
+                                qty_candidate = random.randint(1, max(1, qty_max // int(product.qty_per_internal_unit or 1)))
+                                qty = qty_candidate
+                                converted_qty = Decimal(str(qty_candidate))
+                                break
+                            else:
+                                # For measurable units, allow decimals but round
+                                qty_candidate = round(random.uniform(1, qty_max / float(product.qty_per_internal_unit or 1)), 2)
+                                qty = qty_candidate
+                                converted_qty = Decimal(str(qty_candidate))
+                                break
+                    
+                    # Fallback if retry fails (shouldn't happen)
+                    if qty is None:
+                        print(f"⚠️  Warning: Could not generate clean quantity for product {product.id}, using fallback")
                         unit = product.internal_unit
-                        # quantity in internal unit (scaled down)
-                        qty = max(1, int(random.randint(qty_min, qty_max) / float(product.qty_per_internal_unit)))
-                        converted_qty = Decimal(str(qty))
+                        qty = 1
+                        converted_qty = Decimal("1")
 
                     line = OrderLine(
                         id=line_id,
