@@ -8,16 +8,7 @@ import { Button } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
-import {
-  ArrowUp,
-  ArrowDown,
-  CheckCircle,
-  List,
-  Calendar,
-  Building2,
-  Filter,
-  X,
-} from "lucide-react";
+import { ArrowUp, ArrowDown, CheckCircle, Calendar, Building2, Filter, X } from "lucide-react";
 import type { CandidateLotItem } from "../../api";
 
 // --- Main Component ---
@@ -123,18 +114,6 @@ export function FlatAllocationList({
   if (isLoading) return <div className={styles.loadingMessage}>データを読み込み中...</div>;
   if (orders.length === 0)
     return <div className={styles.emptyMessage}>表示対象の受注がありません</div>;
-
-  // 各受注の引当完了数を計算
-  const calculateAllocatedLines = (order: OrderWithLinesResponse) => {
-    if (!order.lines) return 0;
-    return order.lines.filter((line) => {
-      if (!line.id) return false;
-      const allocations = getLineAllocations(line.id);
-      const totalAllocated = Object.values(allocations).reduce((sum, qty) => sum + qty, 0);
-      const required = Number(line.quantity) || 0;
-      return totalAllocated >= required && totalAllocated > 0;
-    }).length;
-  };
 
   // 受注が完全にチェックされているか判定
   const isOrderFullyChecked = (order: OrderWithLinesResponse) => {

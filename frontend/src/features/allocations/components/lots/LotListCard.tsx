@@ -15,7 +15,6 @@ interface LotListCardProps {
   lot: CandidateLotItem;
   allocatedQty: number;
   maxAllocatable: number;
-  remainingNeeded: number;
   requiredQty: number; // 新規: 明細の総要求数
   customerId?: number | null;
   deliveryPlaceId?: number | null;
@@ -29,7 +28,6 @@ export function LotListCard({
   lot,
   allocatedQty,
   maxAllocatable,
-  remainingNeeded,
   requiredQty,
   customerId,
   deliveryPlaceId,

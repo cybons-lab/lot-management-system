@@ -86,7 +86,6 @@ export function LotAllocationList({
                   lot={lot}
                   allocatedQty={allocatedQty}
                   maxAllocatable={maxAllocatable}
-                  remainingNeeded={remainingNeeded}
                   requiredQty={requiredQty}
                   customerId={customerId}
                   deliveryPlaceId={deliveryPlaceId}
