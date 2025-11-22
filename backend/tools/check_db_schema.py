@@ -57,12 +57,11 @@ def collect_fk_mismatches(
     for table in tables:
         fks = inspector.get_foreign_keys(table, schema=schema)
         for fk in fks:
-            referred_schema = fk.get("referred_schema") or schema
             referred_table = fk["referred_table"]
             local_cols = fk["constrained_columns"]
             remote_cols = fk["referred_columns"]
 
-            for local_col, remote_col in zip(local_cols, remote_cols):
+            for local_col, remote_col in zip(local_cols, remote_cols, strict=False):
                 local_key = (table, local_col)
                 remote_key = (referred_table, remote_col)
 

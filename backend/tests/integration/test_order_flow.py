@@ -150,7 +150,6 @@ def test_order_to_fefo_allocation_flow(db_session):
     assert lot_b1_ref.current_stock.current_quantity == 0
     assert lot_b2_ref.current_stock.current_quantity == 4
 
-    refreshed_order = db_session.get(Order, order_id)
     db_status = db_session.query(Order.status).filter(Order.id == order_id).scalar()
     assert db_status in {"allocated", "part_allocated"}
     commit_preview_lines = {

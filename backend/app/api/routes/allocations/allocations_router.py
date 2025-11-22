@@ -32,9 +32,7 @@ router = APIRouter(prefix="/allocations", tags=["allocations"])
 # --- 既存機能 ---
 @router.post("/drag-assign", response_model=DragAssignResponse)
 def drag_assign(request: DragAssignRequest, db: Session = Depends(get_db)):
-    """
-    手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility.
-    """
+    """手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility."""
     try:
         # Handle deprecated allocate_qty vs allocated_quantity
         qty = request.allocated_quantity
