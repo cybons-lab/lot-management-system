@@ -389,7 +389,14 @@ def generate_test_data():
                 num_lines = random.randint(1, 3)
                 for _ in range(num_lines):
                     product = random.choice(products)
-                    delivery_place = random.choice(delivery_places)
+                    
+                    # Choose delivery place belonging to the customer
+                    customer_dps = [dp for dp in delivery_places if dp.customer_id == customer.id]
+                    if customer_dps:
+                        delivery_place = random.choice(customer_dps)
+                    else:
+                        # Fallback if no specific DP for customer (shouldn't happen with current logic)
+                        delivery_place = random.choice(delivery_places)
                     
                     # Determine unit (70% external, 30% internal)
                     use_external = random.random() < 0.7

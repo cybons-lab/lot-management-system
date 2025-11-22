@@ -43,7 +43,10 @@ export function AllocationEmptyState({ type, error }: AllocationEmptyStateProps)
           <AlertTriangle className="h-5 w-5" />
           警告: 候補ロットが見つかりません
         </div>
-        <div className="text-sm text-red-800">この注文に割り当て可能なロットがありません</div>
+        <div className="text-sm text-red-800">
+          この注文に割り当て可能なロットがありません。<br />
+          <span className="font-bold">要発注:</span> 商品の手配を行ってください。
+        </div>
       </div>
     );
   }
