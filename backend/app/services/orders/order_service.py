@@ -14,7 +14,7 @@ from app.domain.order import (
     OrderValidationError,
     ProductNotFoundError,
 )
-from app.models import Customer, Order, OrderLine, Product
+from app.models import Customer, CustomerItem, Order, OrderLine, Product, Supplier
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderResponse,
@@ -51,7 +51,14 @@ class OrderService:
 
         stmt = stmt.order_by(Order.order_date.desc()).offset(skip).limit(limit)
         orders = self.db.execute(stmt).scalars().all()
-        return [OrderWithLinesResponse.model_validate(order) for order in orders]
+
+        # Convert to Pydantic models
+        response_orders = [OrderWithLinesResponse.model_validate(order) for order in orders]
+
+        # Populate supplier_name
+        self._populate_supplier_names(response_orders)
+
+        return response_orders
 
     def get_order_detail(self, order_id: int) -> OrderWithLinesResponse:
         # Load order with related data (DDL v2.2 compliant)
@@ -67,7 +74,9 @@ class OrderService:
         if not order:
             raise OrderNotFoundError(order_id)
 
-        return OrderWithLinesResponse.model_validate(order)
+        response_order = OrderWithLinesResponse.model_validate(order)
+        self._populate_supplier_names([response_order])
+        return response_order
 
     def create_order(self, order_data: OrderCreate) -> OrderWithLinesResponse:
         # Validate order_number uniqueness
@@ -130,3 +139,37 @@ class OrderService:
             line.status = "cancelled"
 
         self.db.flush()
+        self.db.flush()
+
+    def _populate_supplier_names(self, orders: list[OrderWithLinesResponse]) -> None:
+        """Populate supplier_name for order lines based on CustomerItem mapping."""
+        if not orders:
+            return
+
+        # Collect (customer_id, product_id) pairs
+        pairs = set()
+        for order in orders:
+            for line in order.lines:
+                pairs.add((order.customer_id, line.product_id))
+
+        if not pairs:
+            return
+
+        customer_ids = {p[0] for p in pairs}
+        product_ids = {p[1] for p in pairs}
+
+        # Query CustomerItem joined with Supplier
+        stmt = (
+            select(CustomerItem.customer_id, CustomerItem.product_id, Supplier.supplier_name)
+            .join(Supplier, CustomerItem.supplier_id == Supplier.id)
+            .where(CustomerItem.customer_id.in_(customer_ids))
+            .where(CustomerItem.product_id.in_(product_ids))
+        )
+
+        rows = self.db.execute(stmt).all()
+        supplier_map = {(row.customer_id, row.product_id): row.supplier_name for row in rows}
+
+        # Update lines
+        for order in orders:
+            for line in order.lines:
+                line.supplier_name = supplier_map.get((order.customer_id, line.product_id))

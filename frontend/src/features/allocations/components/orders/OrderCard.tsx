@@ -11,9 +11,11 @@ interface OrderCardProps {
   order: OrderCardData;
   isSelected: boolean;
   onClick: () => void;
+  lockedBy?: string;
+  lockedAt?: string;
 }
 
-export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
+export function OrderCard({ order, isSelected, onClick, lockedBy, lockedAt }: OrderCardProps) {
   const priorityColor = getPriorityColor(order.priority);
   const badgeColor = getBadgeColor(order.priority);
   const primaryLine = order.lines?.[0];
@@ -34,14 +36,26 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
   const dueDateSource = order.due_date ?? primaryLine?.due_date ?? null;
   const dueDateText = formatDate(dueDateSource, { formatString: "MM/dd", fallback: "―" });
 
+  const isFullyAllocated = order.unallocatedQty === 0;
+  const isPartiallyAllocated =
+    order.unallocatedQty > 0 && order.unallocatedQty < order.totalQuantity;
+  // const isUnallocated = order.unallocatedQty === order.totalQuantity;
+
+  let cardStyle = "border-transparent hover:bg-gray-50";
+  if (isSelected) {
+    cardStyle = "border-blue-400 bg-blue-50 shadow-sm ring-2 ring-blue-200";
+  } else if (isFullyAllocated) {
+    cardStyle = "bg-green-50 border-green-300 hover:bg-green-100";
+  } else if (isPartiallyAllocated) {
+    cardStyle = "bg-yellow-50 border-yellow-300 hover:bg-yellow-100";
+  } else {
+    cardStyle = "bg-gray-50 border-gray-300 hover:bg-gray-100";
+  }
+
   return (
     <button
       type="button"
-      className={`relative w-full cursor-pointer rounded-md border p-3 text-left transition-all ${
-        isSelected
-          ? "border-blue-400 bg-blue-50 shadow-sm ring-2 ring-blue-200"
-          : "border-transparent hover:bg-gray-50"
-      }`}
+      className={`relative w-full cursor-pointer rounded-md border p-3 text-left transition-all ${cardStyle}`}
       onClick={onClick}
       aria-pressed={isSelected}
     >
@@ -50,6 +64,13 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
         <div className={`h-16 w-1 rounded-full ${priorityColor} flex-shrink-0`} />
 
         <div className="min-w-0 flex-1">
+          {/* Lock Indicator */}
+          {lockedBy && (
+            <div className="mb-2 rounded border border-yellow-300 bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
+              🔒 {lockedBy}さんが編集中 {lockedAt && `(${lockedAt})`}
+            </div>
+          )}
+
           {/* 1行目: 受注番号、得意先名 */}
           <div className="mb-1 flex items-center gap-2">
             <span className="truncate text-sm font-semibold">{order.order_no}</span>
@@ -60,10 +81,20 @@ export function OrderCard({ order, isSelected, onClick }: OrderCardProps) {
 
           {/* 2行目: KPIバッジ */}
           <div className="mb-1 flex flex-wrap gap-1">
-            {/* 未引当バッジ */}
-            {order.unallocatedQty > 0 && (
-              <span className={`rounded border px-2 py-0.5 text-xs font-medium ${badgeColor}`}>
-                未引当: {order.unallocatedQty}
+            {/* ステータスバッジ */}
+            {isFullyAllocated && (
+              <span className="rounded border border-green-300 bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
+                引当完了
+              </span>
+            )}
+            {isPartiallyAllocated && (
+              <span className="rounded border border-yellow-300 bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
+                一部不足
+              </span>
+            )}
+            {!isFullyAllocated && !isPartiallyAllocated && (
+              <span className="rounded border border-gray-300 bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                未引当
               </span>
             )}
 

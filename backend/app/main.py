@@ -32,8 +32,8 @@ from app.api.routes import (
     products_router,
     roles_router,
     suppliers_router,
-    users_router,
     test_data_router,
+    users_router,
     warehouse_alloc_router,
     warehouses_router,
 )

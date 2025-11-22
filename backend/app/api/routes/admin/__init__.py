@@ -10,8 +10,8 @@ from app.api.routes.admin.business_rules_router import router as business_rules_
 from app.api.routes.admin.health_router import router as health_router
 from app.api.routes.admin.operation_logs_router import router as operation_logs_router
 from app.api.routes.admin.roles_router import router as roles_router
-from app.api.routes.admin.users_router import router as users_router
 from app.api.routes.admin.test_data import router as test_data_router
+from app.api.routes.admin.users_router import router as users_router
 
 
 __all__ = [

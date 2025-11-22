@@ -21,8 +21,8 @@ from app.api.routes.admin import (
     health_router,
     operation_logs_router,
     roles_router,
-    users_router,
     test_data_router,
+    users_router,
 )
 from app.api.routes.allocations import (
     allocation_candidates_router,

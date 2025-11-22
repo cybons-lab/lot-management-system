@@ -6,9 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.models import Lot
 from app.schemas.allocations.allocations_schema import (
     AllocationCommitRequest,
     AllocationCommitResponse,
+    DragAssignRequest,
+    DragAssignResponse,
     FefoLineAllocation,
     FefoLotAllocation,
     FefoPreviewResponse,
@@ -16,6 +19,7 @@ from app.schemas.allocations.allocations_schema import (
 from app.services.allocation.allocations_service import (
     AllocationCommitError,
     AllocationNotFoundError,
+    allocate_manually,
     cancel_allocation,
     commit_fefo_allocation,
 )
@@ -26,6 +30,39 @@ router = APIRouter(prefix="/allocations", tags=["allocations"])
 
 
 # --- 既存機能 ---
+@router.post("/drag-assign", response_model=DragAssignResponse)
+def drag_assign(request: DragAssignRequest, db: Session = Depends(get_db)):
+    """
+    手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility.
+    """
+    try:
+        # Handle deprecated allocate_qty vs allocated_quantity
+        qty = request.allocated_quantity
+        if qty is None and request.allocate_qty is not None:
+            qty = request.allocate_qty
+
+        if qty is None:
+            raise HTTPException(status_code=400, detail="allocated_quantity is required")
+
+        allocation = allocate_manually(
+            db, order_line_id=request.order_line_id, lot_id=request.lot_id, quantity=qty
+        )
+
+        lot = db.query(Lot).filter(Lot.id == request.lot_id).first()
+        remaining = lot.current_quantity - lot.allocated_quantity
+
+        return DragAssignResponse(
+            success=True,
+            message="Allocation successful",
+            allocation_id=allocation.id,
+            remaining_lot_qty=remaining,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except AllocationCommitError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+
+
 @router.delete("/{allocation_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_allocation(allocation_id: int, db: Session = Depends(get_db)):
     """引当取消（DELETE API, ソフトキャンセル対応）."""

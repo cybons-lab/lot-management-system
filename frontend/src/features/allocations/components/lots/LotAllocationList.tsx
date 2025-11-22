@@ -23,15 +23,32 @@ export function LotAllocationList({
   isActive,
   onLotAllocationChange,
 }: LotAllocationListProps) {
+  // [全量]ボタン用: 指定ロット以外を全てクリア
+  const handleClearOtherLots = (targetLotId: number) => {
+    Object.keys(lotAllocations).forEach((lotId) => {
+      const id = Number(lotId);
+      if (id !== targetLotId && lotAllocations[id] > 0) {
+        onLotAllocationChange(id, 0);
+      }
+    });
+  };
+
   return (
     <div className="flex flex-col gap-1">
-      {candidateLots.map((lot) => {
+      {candidateLots.map((lot, index) => {
         const lotId = lot.lot_id;
         const allocatedQty = lotAllocations[lotId] ?? 0;
         const maxAllocatable = allocatedQty + remainingNeeded;
 
         return (
-          <div key={lotId} className="group/item relative transition-all duration-200 hover:z-10">
+          <div
+            key={lotId}
+            className={cn(
+              "group/item relative transition-all duration-200 hover:z-10",
+              // Zebra striping: even rows get a light gray background
+              index % 2 === 1 ? "bg-gray-50/50" : "bg-white",
+            )}
+          >
             {/* リスト内の非アクティブ行を暗くする処理は、Panelがアクティブな時だけ有効にする */}
             {isActive && (
               <div
@@ -58,7 +75,10 @@ export function LotAllocationList({
                   lot={lot}
                   allocatedQty={allocatedQty}
                   maxAllocatable={maxAllocatable}
+                  remainingNeeded={remainingNeeded}
+                  rank={index + 1}
                   onAllocationChange={(qty) => onLotAllocationChange(lotId, qty)}
+                  onClearOtherLots={() => handleClearOtherLots(lotId)}
                 />
               </div>
             </div>

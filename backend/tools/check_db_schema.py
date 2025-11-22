@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import os
-from typing import Dict, List, Tuple
 
 from sqlalchemy import create_engine, inspect
-from sqlalchemy.dialects.postgresql import INTEGER, BIGINT
+from sqlalchemy.dialects.postgresql import BIGINT
 from sqlalchemy.engine.reflection import Inspector
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -21,9 +20,9 @@ def get_engine():
 def collect_table_info(inspector: Inspector, schema: str = "public"):
     tables = inspector.get_table_names(schema=schema)
 
-    pk_info: Dict[Tuple[str, str], str] = {}
-    column_types: Dict[Tuple[str, str], str] = {}
-    bigint_columns: List[Tuple[str, str]] = []
+    pk_info: dict[tuple[str, str], str] = {}
+    column_types: dict[tuple[str, str], str] = {}
+    bigint_columns: list[tuple[str, str]] = []
 
     for table in tables:
         cols = inspector.get_columns(table, schema=schema)
@@ -50,10 +49,10 @@ def collect_table_info(inspector: Inspector, schema: str = "public"):
 
 
 def collect_fk_mismatches(
-    inspector: Inspector, column_types: Dict[Tuple[str, str], str], schema: str = "public"
+    inspector: Inspector, column_types: dict[tuple[str, str], str], schema: str = "public"
 ):
     tables = inspector.get_table_names(schema=schema)
-    mismatches: List[Dict[str, str]] = []
+    mismatches: list[dict[str, str]] = []
 
     for table in tables:
         fks = inspector.get_foreign_keys(table, schema=schema)

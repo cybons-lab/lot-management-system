@@ -1,16 +1,15 @@
 import { cva } from "class-variance-authority";
 
 export const panelRoot = cva(
-  "flex flex-col rounded-lg border transition-all duration-300 ease-out",
+  "flex flex-col rounded-lg transition-all duration-300 ease-out border bg-white",
   {
     variants: {
       state: {
-        inactive: "bg-gray-100/80 border-gray-200 opacity-60 grayscale-[0.3] scale-[0.99]",
+        inactive: "border-gray-200 bg-gray-50 opacity-60 grayscale-[0.3] hover:opacity-80",
         active:
-          "bg-white border-blue-300 shadow-xl opacity-100 grayscale-0 scale-[1.005] z-10 ring-1 ring-blue-100",
-        complete:
-          "bg-white border-green-500 ring-1 ring-green-500 shadow-green-100 opacity-80 hover:opacity-100",
-        error: "bg-red-50 border-red-300 ring-1 ring-red-300 opacity-100",
+          "border-blue-200 bg-white shadow-xl opacity-100 grayscale-0 scale-[1.01] z-10 ring-1 ring-blue-100",
+        complete: "border-green-200 bg-white shadow-md opacity-90 hover:opacity-100",
+        error: "border-red-200 bg-white shadow-md bg-red-50/10",
       },
     },
     defaultVariants: {

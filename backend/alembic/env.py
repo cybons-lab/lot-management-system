@@ -10,6 +10,7 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
+
 # 'backend' フォルダ (app/ と alembic/ がある場所) へのパスを追加
 # これにより、'app' パッケージをインポートできる
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -18,6 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 # app/models/__init__.py が他の全モデルをインポートするため、
 # 'Base.metadata' に全テーブル定義がアタッチされる
 from app.models import Base
+
 
 # --- ▲▲▲ ここまで追加 ▲▲▲ ---
 

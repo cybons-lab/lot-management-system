@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.services.test_data_generator import generate_all_test_data
 
+
 router = APIRouter()
 
 

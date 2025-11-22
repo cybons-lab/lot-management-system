@@ -166,6 +166,7 @@ export type OrderLine = ApiOrderLine & {
   status?: string | null;
   customer_code?: string | null;
   customer_name?: string | null;
+  supplier_name?: string | null;
 };
 
 type ApiOrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];

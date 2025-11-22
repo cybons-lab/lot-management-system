@@ -139,6 +139,9 @@ export function LotAllocationPanel({
           />
         </div>
 
+        {/* Header and Body Separator */}
+        <div className="my-4 border-t-2 border-gray-100" />
+
         {/* ロット一覧エリア */}
         <div className={styles.panelBody}>
           {isLoading ? (

@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, Date, DateTime, Integer, Numeric, String, Float
+from sqlalchemy import BigInteger, Date, DateTime, Float, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
@@ -13,6 +13,7 @@ class VLotCurrentStock(Base):
     """
     lot_current_stock ビュー.
     """
+
     __tablename__ = "lot_current_stock"
     __table_args__ = {"info": {"is_view": True}}
 
@@ -21,13 +22,17 @@ class VLotCurrentStock(Base):
     warehouse_id: Mapped[int] = mapped_column(Integer)
     current_quantity: Mapped[float] = mapped_column(Float)
     last_updated: Mapped[date | None] = mapped_column(Date)
+
+
 # Alias for backward compatibility
 LotCurrentStock = VLotCurrentStock
+
 
 class VCustomerDailyProduct(Base):
     """
     v_customer_daily_products ビュー.
     """
+
     __tablename__ = "v_customer_daily_products"
     __table_args__ = {"info": {"is_view": True}}
 
@@ -79,6 +84,7 @@ class VCustomerCodeToId(Base):
     """
     v_customer_code_to_id ビュー.
     """
+
     __tablename__ = "v_customer_code_to_id"
     __table_args__ = {"info": {"is_view": True}}
 
@@ -91,6 +97,7 @@ class VDeliveryPlaceCodeToId(Base):
     """
     v_delivery_place_code_to_id ビュー.
     """
+
     __tablename__ = "v_delivery_place_code_to_id"
     __table_args__ = {"info": {"is_view": True}}
 
@@ -103,6 +110,7 @@ class VForecastOrderPair(Base):
     """
     v_forecast_order_pairs ビュー.
     """
+
     __tablename__ = "v_forecast_order_pairs"
     __table_args__ = {"info": {"is_view": True}}
 
@@ -117,6 +125,7 @@ class VProductCodeToId(Base):
     """
     v_product_code_to_id ビュー.
     """
+
     __tablename__ = "v_product_code_to_id"
     __table_args__ = {"info": {"is_view": True}}
 

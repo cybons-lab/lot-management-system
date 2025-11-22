@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from decimal import Decimal
 
 from sqlalchemy import Select, func, nulls_last, select
 from sqlalchemy.orm import Session, joinedload, selectinload
@@ -114,7 +115,7 @@ def _load_order(db: Session, order_id: int | None = None, order_no: str | None =
 def _existing_allocated_qty(line: OrderLine) -> float:
     """Calculate already allocated quantity for an order line."""
     return sum(
-        alloc.allocated_qty
+        alloc.allocated_quantity
         for alloc in line.allocations
         if getattr(alloc, "status", "reserved") != "cancelled"
     )
@@ -225,7 +226,7 @@ def calculate_line_allocations(
     Returns:
         FefoLinePlan: Allocation plan for this line
     """
-    required_qty = float(line.quantity or 0.0)
+    required_qty = float(line.order_quantity or 0.0)
     already_allocated = _existing_allocated_qty(line)
     remaining = required_qty - already_allocated
 
@@ -352,7 +353,7 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
 
     sorted_lines = sorted(order.order_lines, key=lambda l: (l.line_no, l.id))
     for line in sorted_lines:
-        required_qty = float(line.quantity or 0.0)
+        required_qty = float(line.order_quantity or 0.0)
         already_allocated = _existing_allocated_qty(line)
         remaining = required_qty - already_allocated
 
@@ -446,7 +447,7 @@ def persist_allocation_entities(
         allocation = Allocation(
             order_line_id=line.id,
             lot_id=lot.id,
-            allocated_qty=alloc_plan.allocate_qty,
+            allocated_quantity=alloc_plan.allocate_qty,
             status="reserved",
             created_at=datetime.utcnow(),
         )
@@ -468,21 +469,23 @@ def update_order_allocation_status(db: Session, order_id: int) -> None:
     totals_stmt = (
         select(
             OrderLine.id,
-            func.coalesce(func.sum(Allocation.allocated_qty), 0.0),
-            OrderLine.quantity,
+            func.coalesce(func.sum(Allocation.allocated_quantity), 0.0),
+            OrderLine.order_quantity,
         )
         .outerjoin(Allocation, Allocation.order_line_id == OrderLine.id)
         .where(OrderLine.order_id == order_id)
-        .group_by(OrderLine.id, OrderLine.quantity)
+        .group_by(OrderLine.id, OrderLine.order_quantity)
     )
     totals = db.execute(totals_stmt).all()
     fully_allocated = True
     any_allocated = False
 
     for _, allocated_total, required_qty in totals:
+        allocated_total = float(allocated_total)
+        required_qty = float(required_qty or 0.0)
         if allocated_total > EPSILON:
             any_allocated = True
-        if allocated_total + EPSILON < float(required_qty or 0.0):
+        if allocated_total + EPSILON < required_qty:
             fully_allocated = False
 
     target_order = db.execute(select(Order).where(Order.id == order_id)).scalar_one()
@@ -567,8 +570,82 @@ def cancel_allocation(db: Session, allocation_id: int) -> None:
         raise AllocationCommitError(f"Lot {allocation.lot_id} not found")
 
     # 引当数量を解放
-    lot.allocated_quantity -= allocation.allocated_qty
+    lot.allocated_quantity -= allocation.allocated_quantity
     lot.updated_at = datetime.utcnow()
 
     db.delete(allocation)
     db.commit()
+
+
+def allocate_manually(
+    db: Session, order_line_id: int, lot_id: int, quantity: float | Decimal
+) -> Allocation:
+    """
+    手動引当実行 (Drag & Assign).
+
+    Args:
+        db: データベースセッション
+        order_line_id: 受注明細ID
+        lot_id: ロットID
+        quantity: 引当数量
+
+    Returns:
+        Allocation: 作成された引当オブジェクト
+
+    Raises:
+        AllocationCommitError: 引当に失敗した場合
+        ValueError: パラメータが不正な場合
+    """
+    EPSILON = Decimal("1e-6")
+
+    # Ensure quantity is Decimal
+    if isinstance(quantity, float):
+        quantity = Decimal(str(quantity))
+    elif isinstance(quantity, int):
+        quantity = Decimal(quantity)
+
+    if quantity <= 0:
+        raise ValueError("Allocation quantity must be positive")
+
+    # 受注明細取得
+    line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
+    if not line:
+        raise ValueError(f"OrderLine {order_line_id} not found")
+
+    # ロット取得 (ロック付き)
+    lot = db.query(Lot).filter(Lot.id == lot_id).with_for_update().first()
+    if not lot:
+        raise ValueError(f"Lot {lot_id} not found")
+
+    if lot.status != "active":
+        raise AllocationCommitError(f"Lot {lot_id} is not active")
+
+    # 在庫チェック
+    available = lot.current_quantity - lot.allocated_quantity
+    if available + EPSILON < quantity:
+        raise AllocationCommitError(
+            f"Insufficient stock: required {quantity}, available {available}"
+        )
+
+    # 引当実行
+    lot.allocated_quantity += quantity
+    lot.updated_at = datetime.utcnow()
+
+    allocation = Allocation(
+        order_line_id=line.id,
+        lot_id=lot.id,
+        allocated_quantity=quantity,
+        status="allocated",
+        created_at=datetime.utcnow(),
+    )
+    db.add(allocation)
+
+    # 注文ステータス更新のためにフラッシュ
+    db.flush()
+
+    # 親注文のステータス更新
+    update_order_allocation_status(db, line.order_id)
+
+    db.commit()
+    db.refresh(allocation)
+    return allocation

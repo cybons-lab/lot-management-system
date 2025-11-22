@@ -148,10 +148,10 @@ def compare_openapi_specs(baseline_path: Path, current_path: Path) -> bool:
     """
     try:
         # ファイルを読み込み
-        with open(baseline_path, "r", encoding="utf-8") as f:
+        with open(baseline_path, encoding="utf-8") as f:
             baseline = json.load(f)
 
-        with open(current_path, "r", encoding="utf-8") as f:
+        with open(current_path, encoding="utf-8") as f:
             current = json.load(f)
 
         # 正規化

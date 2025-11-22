@@ -236,6 +236,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/allocations/drag-assign": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Drag Assign
+     * @description 手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility.
+     */
+    post: operations["drag_assign_api_allocations_drag_assign_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/allocations/{allocation_id}": {
     parameters: {
       query?: never;
@@ -299,9 +319,13 @@ export interface paths {
     };
     /**
      * Get Allocation Candidates
-     * @description 候補ロット一覧取得（v2.2.1準拠）.
+     * @description 候補ロット一覧取得（v2.5準拠）.
      *
      *     指定された受注明細に対して、利用可能なロット候補を返却する（プレビューのみ、DB保存なし）。
+     *
+     *     v2.5 Refactor:
+     *     - forecast に含まれない商品でも、有効在庫があれば候補ロットを返す
+     *     - v_lot_available_qty + v_order_line_context を使用
      *
      *     Args:
      *         order_line_id: 対象の受注明細 ID（必須）
@@ -315,11 +339,35 @@ export interface paths {
      *     Note:
      *         - available_quantity > 0 のみ返却
      *         - ロック済み・期限切れは除外
-     *         - 並び順: expiry_date NULLS FIRST, lot_id（FEFO戦略の場合）
+     *         - 並び順: expiry_date NULLS LAST, received_date, lot_id（FEFO戦略の場合）
      */
     get: operations["get_allocation_candidates_api_allocation_candidates_get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocation-suggestions/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview Allocation Suggestions
+     * @description 引当推奨の生成・プレビュー.
+     *
+     *     Mode:
+     *     - forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）
+     *     - order: 指定オーダー行に対して引当プレビュー（DB保存なし）
+     */
+    post: operations["preview_allocation_suggestions_api_allocation_suggestions_preview_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -335,216 +383,11 @@ export interface paths {
     };
     /**
      * List Allocation Suggestions
-     * @description 引当推奨一覧取得（Phase 4）.
-     *
-     *     Args:
-     *         skip: スキップ件数
-     *         limit: 取得件数上限
-     *         forecast_line_id: フォーキャスト明細IDでフィルタ（オプション）
-     *         lot_id: ロットIDでフィルタ（オプション）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         引当推奨のリスト
+     * @description 引当推奨一覧取得.
      */
     get: operations["list_allocation_suggestions_api_allocation_suggestions_get"];
     put?: never;
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/{suggestion_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Allocation Suggestion
-     * @description 引当推奨詳細取得（Phase 4）.
-     *
-     *     Args:
-     *         suggestion_id: 推奨ID
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         引当推奨詳細
-     *
-     *     Raises:
-     *         HTTPException: 推奨が存在しない場合
-     */
-    get: operations["get_allocation_suggestion_api_allocation_suggestions__suggestion_id__get"];
-    put?: never;
-    post?: never;
-    /**
-     * Delete Allocation Suggestion
-     * @description 引当推奨削除（Phase 4）.
-     *
-     *     Args:
-     *         suggestion_id: 推奨ID
-     *         db: データベースセッション
-     *
-     *     Raises:
-     *         HTTPException: 推奨が存在しない場合
-     */
-    delete: operations["delete_allocation_suggestion_api_allocation_suggestions__suggestion_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/forecast-line/{forecast_line_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Suggestions By Forecast Line
-     * @description フォーキャスト明細別の引当推奨取得（Phase 4）.
-     *
-     *     Args:
-     *         forecast_line_id: フォーキャスト明細ID
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         引当推奨のリスト（降順）
-     */
-    get: operations["get_suggestions_by_forecast_line_api_allocation_suggestions_forecast_line__forecast_line_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/generate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Generate Allocation Suggestions
-     * @description 引当推奨生成（Phase 4）.
-     *
-     *     指定されたフォーキャスト明細に対して、引当推奨を自動生成します。
-     *     既存の推奨は削除され、新しい推奨が作成されます。
-     *
-     *     注意: これはスタブ実装です。本番環境では、より高度な引当アルゴリズムを使用してください。
-     *
-     *     Args:
-     *         request: 引当推奨生成リクエスト
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         生成された引当推奨のリスト
-     */
-    post: operations["generate_allocation_suggestions_api_allocation_suggestions_generate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/forecast-line/{forecast_line_id}/clear": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete Suggestions By Forecast Line
-     * @description フォーキャスト明細別の引当推奨一括削除（Phase 4）.
-     *
-     *     Args:
-     *         forecast_line_id: フォーキャスト明細ID
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         None
-     */
-    delete: operations["delete_suggestions_by_forecast_line_api_allocation_suggestions_forecast_line__forecast_line_id__clear_delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/manual": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Manual Suggestion
-     * @description 手動仮引当（v2.2.1準拠）.
-     *
-     *     ユーザーが手動でロットを割り当てるケース（ドラッグ＆ドロップ操作など）。
-     *     レスポンスのみで返し、DBには保存しない（プレビュー方式）。
-     *
-     *     Args:
-     *         request: 手動引当リクエスト（order_line_id, lot_id, quantity）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         AllocationSuggestionManualResponse: 仮引当プレビュー結果
-     *
-     *     Note:
-     *         - DB に `allocation_suggestions` レコードは作成しない
-     *         - 在庫チェックのみ実施し、実際の引当は `/allocations/commit` で確定
-     */
-    post: operations["create_manual_suggestion_api_allocation_suggestions_manual_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/fefo": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Fefo Suggestion
-     * @description FEFO仮引当（v2.2.1準拠）.
-     *
-     *     FEFOロジックに基づいて、指定された注文に対する「推奨引当案」を一括生成。
-     *     レスポンスのみで返し、DBには保存しない（プレビュー方式）。
-     *
-     *     Args:
-     *         request: FEFO引当リクエスト（order_id）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         FefoPreviewResponse: FEFO引当プレビュー結果
-     *
-     *     Note:
-     *         - DB に `allocation_suggestions` レコードは作成しない
-     *         - 実際の引当は `/allocations/commit` で確定
-     */
-    post: operations["create_fefo_suggestion_api_allocation_suggestions_fefo_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1882,6 +1725,27 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/admin/test-data/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate Test Data Endpoint
+     * @description Generate test data for development.
+     *     WARNING: This will DELETE all existing data in related tables.
+     */
+    post: operations["generate_test_data_endpoint_api_admin_test_data_generate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/healthz": {
     parameters: {
       query?: never;
@@ -2528,39 +2392,96 @@ export interface components {
       message?: string | null;
     };
     /**
-     * AllocationSuggestionGenerateRequest
-     * @description 引当推奨生成リクエスト.
+     * AllocationGap
+     * @description 不足情報.
      */
-    AllocationSuggestionGenerateRequest: {
+    AllocationGap: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Forecast Period */
+      forecast_period: string;
+      /** Shortage Quantity */
+      shortage_quantity: string;
+      /** Related Order Line Ids */
+      related_order_line_ids?: number[] | null;
+    };
+    /** AllocationOptions */
+    AllocationOptions: {
       /**
-       * Forecast Line Id
-       * @description フォーキャスト明細ID
+       * Allocation Type
+       * @default soft
+       * @enum {string}
        */
-      forecast_line_id: number;
+      allocation_type: "soft" | "hard";
       /**
-       * Logic
-       * @description 引当ロジック（FEFO/FIFO/MANUAL）
-       * @default FEFO
+       * Fefo
+       * @default true
        */
-      logic: string;
+      fefo: boolean;
       /**
-       * Max Suggestions
-       * @description 最大推奨件数
-       * @default 5
+       * Allow Cross Warehouse
+       * @default false
        */
-      max_suggestions: number;
+      allow_cross_warehouse: boolean;
+      /**
+       * Ignore Existing Suggestions
+       * @default false
+       */
+      ignore_existing_suggestions: boolean;
+    };
+    /** AllocationScopeForecast */
+    AllocationScopeForecast: {
+      /** Forecast Periods */
+      forecast_periods: string[];
+      /** Customer Ids */
+      customer_ids?: number[] | null;
+      /** Delivery Place Ids */
+      delivery_place_ids?: number[] | null;
+      /** Product Ids */
+      product_ids?: number[] | null;
+    };
+    /** AllocationScopeOrder */
+    AllocationScopeOrder: {
+      /** Order Line Id */
+      order_line_id: number;
     };
     /**
-     * AllocationSuggestionGenerateResponse
-     * @description 引当推奨生成レスポンス.
+     * AllocationStatsPerKey
+     * @description キーごとの集計結果.
      */
-    AllocationSuggestionGenerateResponse: {
-      /** Forecast Line Id */
-      forecast_line_id: number;
-      /** Suggestions Created */
-      suggestions_created: number;
-      /** Suggestions */
-      suggestions: components["schemas"]["AllocationSuggestionResponse"][];
+    AllocationStatsPerKey: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Forecast Period */
+      forecast_period: string;
+      /** Forecast Quantity */
+      forecast_quantity: string;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Shortage Quantity */
+      shortage_quantity: string;
+    };
+    /**
+     * AllocationStatsSummary
+     * @description 全体集計.
+     */
+    AllocationStatsSummary: {
+      /** Total Forecast Quantity */
+      total_forecast_quantity: string;
+      /** Total Allocated Quantity */
+      total_allocated_quantity: string;
+      /** Total Shortage Quantity */
+      total_shortage_quantity: string;
+      /** Per Key */
+      per_key: components["schemas"]["AllocationStatsPerKey"][];
     };
     /**
      * AllocationSuggestionListResponse
@@ -2573,53 +2494,29 @@ export interface components {
       total: number;
     };
     /**
-     * AllocationSuggestionManualRequest
-     * @description Deprecated: Use ManualAllocationRequest instead.
+     * AllocationSuggestionPreviewResponse
+     * @description プレビュー/生成結果レスポンス.
      */
-    AllocationSuggestionManualRequest: {
-      /** Order Line Id */
-      order_line_id: number;
-      /** Lot Id */
-      lot_id: number;
-      /** Allocated Quantity */
-      allocated_quantity: number | string;
-      /**
-       * Quantity
-       * @description Deprecated: use allocated_quantity
-       */
-      quantity?: number | string | null;
+    AllocationSuggestionPreviewResponse: {
+      /** Suggestions */
+      suggestions: components["schemas"]["AllocationSuggestionResponse"][];
+      stats: components["schemas"]["AllocationStatsSummary"];
+      /** Gaps */
+      gaps: components["schemas"]["AllocationGap"][];
     };
     /**
-     * AllocationSuggestionManualResponse
-     * @description Deprecated: Use ManualAllocationResponse instead.
+     * AllocationSuggestionRequest
+     * @description 引当推奨生成/プレビューリクエスト.
      */
-    AllocationSuggestionManualResponse: {
-      /** Order Line Id */
-      order_line_id: number;
-      /** Lot Id */
-      lot_id: number;
-      /** Lot Number */
-      lot_number: string;
-      /** Allocated Quantity */
-      allocated_quantity: string;
-      /** Available Quantity */
-      available_quantity: string;
-      /** Product Id */
-      product_id: number;
-      /** Expiry Date */
-      expiry_date?: string | null;
+    AllocationSuggestionRequest: {
       /**
-       * Status
-       * @default preview
+       * Mode
+       * @enum {string}
        */
-      status: string;
-      /** Message */
-      message?: string | null;
-      /**
-       * Suggested Quantity
-       * @description Deprecated: use allocated_quantity
-       */
-      suggested_quantity?: string | null;
+      mode: "forecast" | "order";
+      forecast_scope?: components["schemas"]["AllocationScopeForecast"] | null;
+      order_scope?: components["schemas"]["AllocationScopeOrder"] | null;
+      options?: components["schemas"]["AllocationOptions"];
     };
     /**
      * AllocationSuggestionResponse
@@ -2627,27 +2524,53 @@ export interface components {
      */
     AllocationSuggestionResponse: {
       /**
-       * Forecast Line Id
-       * @description フォーキャスト明細ID
+       * Forecast Period
+       * @description 対象期間 (YYYY-MM)
        */
-      forecast_line_id: number;
+      forecast_period: string;
+      /**
+       * Customer Id
+       * @description 得意先ID
+       */
+      customer_id: number;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID
+       */
+      delivery_place_id: number;
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id: number;
       /**
        * Lot Id
        * @description ロットID
        */
       lot_id: number;
       /**
-       * Suggested Quantity
-       * @description 推奨数量
+       * Quantity
+       * @description 引当数量
        */
-      suggested_quantity: string;
+      quantity: string;
       /**
-       * Allocation Logic
-       * @description 引当ロジック（FEFO/FIFO/MANUAL等）
+       * Allocation Type
+       * @description 引当タイプ
+       * @enum {string}
        */
-      allocation_logic: string;
-      /** Suggestion Id */
-      suggestion_id: number;
+      allocation_type: "soft" | "hard";
+      /**
+       * Source
+       * @description 発生源 (forecast_import / order_preview)
+       */
+      source: string;
+      /**
+       * Order Line Id
+       * @description オーダー明細ID (Preview時など)
+       */
+      order_line_id?: number | null;
+      /** Id */
+      id: number;
       /**
        * Created At
        * Format: date-time
@@ -2658,6 +2581,21 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Lot Number
+       * @description ロット番号
+       */
+      lot_number?: string | null;
+      /**
+       * Lot Expiry Date
+       * @description ロット有効期限
+       */
+      lot_expiry_date?: string | null;
+      /**
+       * Warehouse Name
+       * @description 倉庫名
+       */
+      warehouse_name?: string | null;
     };
     /**
      * BatchJobCreate
@@ -2908,6 +2846,10 @@ export interface components {
       expiry_date?: string | null;
       /** Received Date */
       received_date?: string | null;
+      /** Delivery Place Id */
+      delivery_place_id?: number | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
     };
     /**
      * CandidateLotsResponse
@@ -3134,6 +3076,37 @@ export interface components {
       unallocated_orders: number;
     };
     /**
+     * DragAssignRequest
+     * @description Deprecated: Use ManualAllocationRequest instead.
+     */
+    DragAssignRequest: {
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Allocated Quantity */
+      allocated_quantity?: number | string | null;
+      /**
+       * Allocate Qty
+       * @description Deprecated: use allocated_quantity
+       */
+      allocate_qty?: number | string | null;
+    };
+    /**
+     * DragAssignResponse
+     * @description Deprecated: Use ManualAllocationResponse instead.
+     */
+    DragAssignResponse: {
+      /** Success */
+      success: boolean;
+      /** Message */
+      message: string;
+      /** Allocation Id */
+      allocation_id: number;
+      /** Remaining Lot Qty */
+      remaining_lot_qty?: string | null;
+    };
+    /**
      * ExpectedLotCreate
      * @description Payload for creating expected lots.
      */
@@ -3213,14 +3186,6 @@ export interface components {
       expiry_date?: string | null;
       /** Received Date */
       received_date?: string | null;
-    };
-    /**
-     * FefoPreviewRequest
-     * @description FEFO preview request.
-     */
-    FefoPreviewRequest: {
-      /** Order Id */
-      order_id: number;
     };
     /**
      * FefoPreviewResponse
@@ -5265,6 +5230,39 @@ export interface operations {
       };
     };
   };
+  drag_assign_api_allocations_drag_assign_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DragAssignRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DragAssignResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   delete_allocation_api_allocations__allocation_id__delete: {
     parameters: {
       query?: never;
@@ -5360,6 +5358,39 @@ export interface operations {
       };
     };
   };
+  preview_allocation_suggestions_api_allocation_suggestions_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AllocationSuggestionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_allocation_suggestions_api_allocation_suggestions_get: {
     parameters: {
       query?: {
@@ -5367,10 +5398,12 @@ export interface operations {
         skip?: number;
         /** @description 取得件数上限 */
         limit?: number;
-        /** @description フォーキャスト明細IDでフィルタ */
-        forecast_line_id?: number | null;
-        /** @description ロットIDでフィルタ */
-        lot_id?: number | null;
+        /** @description 期間 (YYYY-MM) */
+        forecast_period?: string | null;
+        /** @description 製品ID */
+        product_id?: number | null;
+        /** @description 得意先ID */
+        customer_id?: number | null;
       };
       header?: never;
       path?: never;
@@ -5385,225 +5418,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AllocationSuggestionListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_allocation_suggestion_api_allocation_suggestions__suggestion_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        suggestion_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationSuggestionResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_allocation_suggestion_api_allocation_suggestions__suggestion_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        suggestion_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_suggestions_by_forecast_line_api_allocation_suggestions_forecast_line__forecast_line_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        forecast_line_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationSuggestionResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  generate_allocation_suggestions_api_allocation_suggestions_generate_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AllocationSuggestionGenerateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationSuggestionGenerateResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_suggestions_by_forecast_line_api_allocation_suggestions_forecast_line__forecast_line_id__clear_delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        forecast_line_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_manual_suggestion_api_allocation_suggestions_manual_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AllocationSuggestionManualRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationSuggestionManualResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_fefo_suggestion_api_allocation_suggestions_fefo_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["FefoPreviewRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["FefoPreviewResponse"];
         };
       };
       /** @description Validation Error */
@@ -7815,6 +7629,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  generate_test_data_endpoint_api_admin_test_data_generate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
     };

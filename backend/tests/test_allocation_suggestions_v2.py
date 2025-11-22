@@ -1,10 +1,11 @@
-import pytest
 from datetime import date, datetime
 from decimal import Decimal
-from app.models.masters_models import Product, Customer, DeliveryPlace, Warehouse, Supplier
-from app.models.inventory_models import Lot
+
 from app.models.forecast_models import ForecastCurrent
+from app.models.inventory_models import Lot
+from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
 from app.services.allocation.allocation_suggestions_service import AllocationSuggestionService
+
 
 def test_regenerate_for_periods(db_session):
     # Setup Master Data

@@ -6,14 +6,15 @@ Dump SQLAlchemy models' DDL as PostgreSQL SQL.
 """
 
 import os
+
 from sqlalchemy import create_engine
-from sqlalchemy.schema import CreateTable, CreateIndex
 from sqlalchemy.dialects import postgresql
+from sqlalchemy.schema import CreateIndex, CreateTable
 
 # プロジェクトに合わせて Base をまとめて import
 # app/models/__init__.py で Base を再エクスポートしている前提
 from app.models.base_model import Base  # ここが異なる場合は適宜修正
-import app.models  # モデルのメタデータを読み込ませるためにimport
+
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:

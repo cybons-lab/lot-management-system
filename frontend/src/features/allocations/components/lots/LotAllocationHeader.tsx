@@ -95,6 +95,7 @@ export function LotAllocationHeader({
       onClearAllocations={onClearAllocations}
       onSaveAllocations={onSaveAllocations}
       canSave={canSave}
+      supplierName={orderLine.supplier_name || undefined}
     />
   );
 }

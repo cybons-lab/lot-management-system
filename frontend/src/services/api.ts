@@ -20,9 +20,9 @@ import type {
 import type { ForecastListResponse } from "@/features/forecasts/api";
 
 // 引当関連の型
-// Note: DragAssignRequest is deprecated, use AllocationSuggestionManualRequest for new code
-type DragAssignRequest = components["schemas"]["AllocationSuggestionManualRequest"];
-type DragAssignResponse = components["schemas"]["AllocationSuggestionManualResponse"];
+// Note: Using components schema directly
+type DragAssignRequest = components["schemas"]["ManualAllocationRequest"];
+type DragAssignResponse = components["schemas"]["ManualAllocationResponse"];
 
 // ロット関連の型
 type Lot = components["schemas"]["LotResponse"];
@@ -92,8 +92,6 @@ export const api = {
 export type {
   Order,
   OrderDetail,
-  DragAssignRequest,
-  DragAssignResponse,
   Lot,
   ForecastListResponse,
 };

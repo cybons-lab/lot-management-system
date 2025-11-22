@@ -15,6 +15,7 @@ export type OrderLine = components["schemas"]["OrderLineResponse"] & {
   allocated_lots?: unknown[];
   delivery_place_name?: string | null;
   delivery_place_code?: string | null;
+  supplier_name?: string | null;
 };
 
 export type PriorityLevel = "urgent" | "warning" | "attention" | "allocated" | "inactive";
