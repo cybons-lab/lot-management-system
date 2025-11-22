@@ -31,7 +31,6 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .forecast_models import ForecastCurrent
     from .inbound_models import ExpectedLot
     from .masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
     from .orders_models import Allocation

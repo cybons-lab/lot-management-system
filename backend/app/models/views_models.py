@@ -3,10 +3,36 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, Date, DateTime, Integer, Numeric, String
+from sqlalchemy import BigInteger, Date, DateTime, Integer, Numeric, String, Float
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
+
+
+class VLotCurrentStock(Base):
+    """
+    lot_current_stock ビュー.
+    """
+    __tablename__ = "lot_current_stock"
+    __table_args__ = {"info": {"is_view": True}}
+
+    lot_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int] = mapped_column(Integer)
+    warehouse_id: Mapped[int] = mapped_column(Integer)
+    current_quantity: Mapped[float] = mapped_column(Float)
+    last_updated: Mapped[date | None] = mapped_column(Date)
+# Alias for backward compatibility
+LotCurrentStock = VLotCurrentStock
+
+class VCustomerDailyProduct(Base):
+    """
+    v_customer_daily_products ビュー.
+    """
+    __tablename__ = "v_customer_daily_products"
+    __table_args__ = {"info": {"is_view": True}}
+
+    customer_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
 
 class VLotAvailableQty(Base):
@@ -25,11 +51,10 @@ class VLotAvailableQty(Base):
     lot_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(Integer)
     warehouse_id: Mapped[int] = mapped_column(Integer)
-    available_qty: Mapped[Decimal] = mapped_column(Numeric(15, 4))
+    available_qty: Mapped[float] = mapped_column(Float)
     receipt_date: Mapped[date | None] = mapped_column(Date)
     expiry_date: Mapped[date | None] = mapped_column(Date)
     lot_status: Mapped[str] = mapped_column(String)
-    is_locked: Mapped[bool]
 
 
 class VOrderLineContext(Base):
@@ -46,8 +71,58 @@ class VOrderLineContext(Base):
     order_id: Mapped[int] = mapped_column(Integer)
     customer_id: Mapped[int | None] = mapped_column(Integer)
     product_id: Mapped[int | None] = mapped_column(Integer)
-    warehouse_id: Mapped[int | None] = mapped_column(Integer)
-    quantity: Mapped[Decimal] = mapped_column(Numeric(15, 4))
+    delivery_place_id: Mapped[int | None] = mapped_column(Integer)
+    quantity: Mapped[float] = mapped_column(Float)
+
+
+class VCustomerCodeToId(Base):
+    """
+    v_customer_code_to_id ビュー.
+    """
+    __tablename__ = "v_customer_code_to_id"
+    __table_args__ = {"info": {"is_view": True}}
+
+    customer_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    customer_code: Mapped[str] = mapped_column(String)
+    customer_name: Mapped[str] = mapped_column(String)
+
+
+class VDeliveryPlaceCodeToId(Base):
+    """
+    v_delivery_place_code_to_id ビュー.
+    """
+    __tablename__ = "v_delivery_place_code_to_id"
+    __table_args__ = {"info": {"is_view": True}}
+
+    delivery_place_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    delivery_place_code: Mapped[str] = mapped_column(String)
+    delivery_place_name: Mapped[str] = mapped_column(String)
+
+
+class VForecastOrderPair(Base):
+    """
+    v_forecast_order_pairs ビュー.
+    """
+    __tablename__ = "v_forecast_order_pairs"
+    __table_args__ = {"info": {"is_view": True}}
+
+    forecast_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    customer_id: Mapped[int] = mapped_column(Integer)
+    product_id: Mapped[int] = mapped_column(Integer)
+    order_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    delivery_place_id: Mapped[int | None] = mapped_column(Integer)
+
+
+class VProductCodeToId(Base):
+    """
+    v_product_code_to_id ビュー.
+    """
+    __tablename__ = "v_product_code_to_id"
+    __table_args__ = {"info": {"is_view": True}}
+
+    product_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_code: Mapped[str] = mapped_column(String)
+    product_name: Mapped[str] = mapped_column(String)
 
 
 class VCandidateLotsByOrderLine(Base):
@@ -66,7 +141,7 @@ class VCandidateLotsByOrderLine(Base):
     lot_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     product_id: Mapped[int] = mapped_column(Integer)
     warehouse_id: Mapped[int | None] = mapped_column(Integer)
-    available_qty: Mapped[Decimal] = mapped_column(Numeric(15, 4))
+    available_qty: Mapped[float] = mapped_column(Float)
     receipt_date: Mapped[date | None] = mapped_column(Date)
     expiry_date: Mapped[date | None] = mapped_column(Date)
 

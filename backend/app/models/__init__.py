@@ -31,11 +31,18 @@ from .orders_models import Allocation, Order, OrderLine
 from .seed_snapshot_model import SeedSnapshot
 from .system_config_model import SystemConfig
 from .views_models import (
+    LotCurrentStock,
     LotDetails,
     VCandidateLotsByOrderLine,
+    VCustomerCodeToId,
+    VCustomerDailyProduct,
+    VDeliveryPlaceCodeToId,
+    VForecastOrderPair,
     VLotAvailableQty,
+    VLotCurrentStock,
     VLotDetails,
     VOrderLineContext,
+    VProductCodeToId,
 )
 
 
@@ -87,6 +94,13 @@ __all__ = [
     "VCandidateLotsByOrderLine",
     "VLotDetails",
     "LotDetails",  # Deprecated alias
+    "VLotCurrentStock",
+    "LotCurrentStock",  # Deprecated alias
+    "VCustomerDailyProduct",
+    "VCustomerCodeToId",
+    "VDeliveryPlaceCodeToId",
+    "VForecastOrderPair",
+    "VProductCodeToId",
     # Backward compatibility aliases
     "StockMovement",
     "StockMovementReason",

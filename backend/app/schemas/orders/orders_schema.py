@@ -95,6 +95,7 @@ class OrderLineResponse(OrderLineBase):
     order_id: int
     created_at: datetime
     updated_at: datetime
+    supplier_name: str | None = None
 
 
 class OrderLineWithAllocationsResponse(OrderLineResponse):

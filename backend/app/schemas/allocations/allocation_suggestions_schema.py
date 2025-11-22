@@ -14,18 +14,19 @@ class AllocationSuggestionBase(BaseModel):
     customer_id: int = Field(..., description="得意先ID")
     delivery_place_id: int = Field(..., description="納入先ID")
     product_id: int = Field(..., description="製品ID")
-    
+
     lot_id: int = Field(..., description="ロットID")
     quantity: Decimal = Field(..., description="引当数量")
-    
+
     allocation_type: Literal["soft", "hard"] = Field(..., description="引当タイプ")
     source: str = Field(..., description="発生源 (forecast_import / order_preview)")
-    
+
     order_line_id: int | None = Field(None, description="オーダー明細ID (Preview時など)")
 
 
 class AllocationSuggestionCreate(AllocationSuggestionBase):
     """引当推奨作成スキーマ."""
+
     pass
 
 
@@ -46,11 +47,12 @@ class AllocationSuggestionResponse(AllocationSuggestionBase):
 
 class AllocationStatsPerKey(BaseModel):
     """キーごとの集計結果."""
+
     customer_id: int
     delivery_place_id: int
     product_id: int
     forecast_period: str
-    
+
     forecast_quantity: Decimal
     allocated_quantity: Decimal
     shortage_quantity: Decimal
@@ -58,17 +60,19 @@ class AllocationStatsPerKey(BaseModel):
 
 class AllocationGap(BaseModel):
     """不足情報."""
+
     customer_id: int
     delivery_place_id: int
     product_id: int
     forecast_period: str
-    
+
     shortage_quantity: Decimal
     related_order_line_ids: list[int] | None = None
 
 
 class AllocationStatsSummary(BaseModel):
     """全体集計."""
+
     total_forecast_quantity: Decimal
     total_allocated_quantity: Decimal
     total_shortage_quantity: Decimal
@@ -77,12 +81,14 @@ class AllocationStatsSummary(BaseModel):
 
 class AllocationSuggestionPreviewResponse(BaseModel):
     """プレビュー/生成結果レスポンス."""
+
     suggestions: list[AllocationSuggestionResponse]
     stats: AllocationStatsSummary
     gaps: list[AllocationGap]
 
 
 # Request Models
+
 
 class AllocationScopeForecast(BaseModel):
     forecast_periods: list[str]
@@ -104,6 +110,7 @@ class AllocationOptions(BaseModel):
 
 class AllocationSuggestionRequest(BaseModel):
     """引当推奨生成/プレビューリクエスト."""
+
     mode: Literal["forecast", "order"]
     forecast_scope: AllocationScopeForecast | None = None
     order_scope: AllocationScopeOrder | None = None
@@ -112,6 +119,6 @@ class AllocationSuggestionRequest(BaseModel):
 
 class AllocationSuggestionListResponse(BaseModel):
     """引当推奨一覧レスポンス."""
+
     suggestions: list[AllocationSuggestionResponse]
     total: int
-

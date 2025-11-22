@@ -1,9 +1,8 @@
 """Shared schema components."""
 
-from typing import TypeVar
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
-from pydantic.generics import GenericModel
 
 
 class ORMModel(BaseModel):

@@ -131,6 +131,8 @@ class CandidateLotItem(BaseSchema):
     warehouse_name: str | None = None
     expiry_date: date | None = None
     received_date: date | None = None
+    delivery_place_id: int | None = None
+    delivery_place_name: str | None = None
 
 
 class CandidateLotsResponse(BaseSchema):
@@ -167,9 +169,12 @@ class AllocationListResponse(BaseSchema):
 # ============================================================
 
 
-class DragAssignRequest(ManualAllocationRequest):
+class DragAssignRequest(BaseSchema):
     """Deprecated: Use ManualAllocationRequest instead."""
 
+    order_line_id: int
+    lot_id: int
+    allocated_quantity: Decimal | None = Field(None, decimal_places=3)
     allocate_qty: Decimal | None = Field(None, description="Deprecated: use allocated_quantity")
 
 
@@ -178,7 +183,7 @@ class DragAssignResponse(BaseSchema):
 
     success: bool
     message: str
-    allocated_id: int
+    allocation_id: int
     remaining_lot_qty: Decimal | None = None
 
 
