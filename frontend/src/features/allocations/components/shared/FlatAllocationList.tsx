@@ -443,6 +443,24 @@ export function FlatAllocationList({
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-gray-400" />
                       <span className="font-bold text-gray-800">{customerName}</span>
+                      {/* 要発注バッジ: 候補ロットがない明細が含まれる場合 */}
+                      {order.lines?.some((line) => {
+                        if (!line.id) return false;
+                        const allocations = getLineAllocations(line.id);
+                        const totalAllocated = Object.values(allocations).reduce(
+                          (sum, qty) => sum + qty,
+                          0,
+                        );
+                        const required = Number(line.quantity) || 0;
+                        const remaining = required - totalAllocated;
+                        const candidates = getCandidateLots(line.id);
+                        // 残りがあり、かつ候補がない場合
+                        return remaining > 0 && candidates.length === 0;
+                      }) && (
+                          <span className="ml-2 animate-pulse rounded border border-red-200 bg-red-100 px-2 py-0.5 text-xs font-bold text-red-600">
+                            要発注
+                          </span>
+                        )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
