@@ -25,6 +25,7 @@ from .masters_models import (
     CustomerItem,
     DeliveryPlace,
     Product,
+    ProductUomConversion,
     Supplier,
     Warehouse,
 )
@@ -56,6 +57,7 @@ __all__ = [
     "Customer",
     "DeliveryPlace",
     "Product",
+    "ProductUomConversion",
     "CustomerItem",
     # Inventory
     "Lot",
