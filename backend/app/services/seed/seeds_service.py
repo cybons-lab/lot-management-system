@@ -241,6 +241,7 @@ def seed_products(
     )
 
     product_rows = []
+    for _ in range(req.products):
         # Random unit configuration
         unit_config = rng.choice([
             {"internal": "CAN", "external": "KG", "factor": 20.0},
