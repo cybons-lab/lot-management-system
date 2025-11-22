@@ -130,7 +130,7 @@ export function LotListCard({
       {/* 左側: ロット情報 */}
       <div className="flex min-w-0 flex-grow items-center gap-x-4">
         {/* Rank Badge */}
-        {rank && rank <= 3 && (
+        {rank && (
           <div className="shrink-0">
             <Badge
               className={cn(
@@ -138,6 +138,7 @@ export function LotListCard({
                 rank === 1 && "bg-blue-600 text-white hover:bg-blue-700",
                 rank === 2 && "bg-blue-400 text-white hover:bg-blue-500",
                 rank === 3 && "bg-blue-300 text-white hover:bg-blue-400",
+                rank > 3 && "bg-gray-100 text-gray-500 hover:bg-gray-200",
               )}
             >
               #{rank}
