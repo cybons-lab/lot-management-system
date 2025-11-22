@@ -60,16 +60,7 @@ export function LotAllocationHeaderView({
   let headerBorderColor = "border-gray-200";
   let accentColor = "bg-gray-500"; // Default accent
 
-  if (!hasCandidates) {
-    headerBorderColor = "border-red-500";
-    accentColor = "bg-red-500";
-    statusBadge = (
-      <span className="flex items-center gap-1 rounded-full border border-red-200 bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
-        <AlertTriangle className="h-3 w-3" />
-        候補なし
-      </span>
-    );
-  } else if (isOverAllocated) {
+  if (isOverAllocated) {
     headerBorderColor = "border-orange-300";
     accentColor = "bg-orange-500";
     statusBadge = (
@@ -245,6 +236,17 @@ export function LotAllocationHeaderView({
               クリア
             </Button>
           </div>
+
+          {/* 候補なし時の要発注アラート */}
+          {!hasCandidates && (
+            <div className="mt-2 w-full rounded-md border border-red-200 bg-red-50 p-2 text-center">
+              <div className="flex items-center justify-center gap-1 text-xs font-bold text-red-700">
+                <AlertTriangle className="h-3 w-3" />
+                <span>要発注</span>
+              </div>
+              <div className="text-[10px] text-red-600">候補ロットがありません</div>
+            </div>
+          )}
         </div>
       </div>
     </div>
