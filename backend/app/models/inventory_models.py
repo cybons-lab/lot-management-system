@@ -18,6 +18,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Index,
+    Integer,
     Numeric,
     String,
     Text,
@@ -88,6 +89,7 @@ class Lot(Base):
     )
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
+    version_id: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -126,6 +128,8 @@ class Lot(Base):
             postgresql_where=text("expiry_date IS NOT NULL"),
         ),
     )
+
+    __mapper_args__ = {"version_id_col": version_id}
 
     # Relationships
     product: Mapped[Product] = relationship("Product", back_populates="lots")
@@ -293,12 +297,59 @@ class AllocationSuggestion(Base):
         Index("idx_allocation_suggestions_product", "product_id"),
         Index("idx_allocation_suggestions_lot", "lot_id"),
     )
-
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
     product: Mapped[Product] = relationship("Product")
     lot: Mapped[Lot] = relationship("Lot")
+
+
+class AllocationTrace(Base):
+    """引当処理のトレースログ（推論過程の記録）.
+
+    DDL: allocation_traces
+    Primary key: id (BIGSERIAL)
+    Foreign keys: order_line_id -> order_lines(id), lot_id -> lots(id)
+    """
+
+    __tablename__ = "allocation_traces"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    order_line_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("order_lines.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    lot_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("lots.id", ondelete="CASCADE"),
+        nullable=True,  # ロットが特定されない場合もある（例: 全ロット期限切れ）
+    )
+    score: Mapped[Decimal | None] = mapped_column(
+        Numeric(15, 6), nullable=True
+    )  # 優先度スコア（FEFOベースなど）
+    decision: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # 'adopted', 'rejected', 'partial'
+    reason: Mapped[str] = mapped_column(
+        String(255), nullable=False
+    )  # '期限切れ', 'ロック中', 'FEFO採用', '在庫不足' 等
+    allocated_qty: Mapped[Decimal | None] = mapped_column(
+        Numeric(15, 3), nullable=True
+    )  # 実際に引き当てた数量（adoptedまたはpartialの場合）
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "decision IN ('adopted', 'rejected', 'partial')",
+            name="chk_allocation_traces_decision",
+        ),
+        Index("idx_allocation_traces_order_line", "order_line_id"),
+        Index("idx_allocation_traces_lot", "lot_id"),
+        Index("idx_allocation_traces_created_at", "created_at"),
+    )
 
 
 # Backward compatibility aliases (to be removed in later refactors)
