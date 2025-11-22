@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/core/database.py
+# hypothesis_version: 6.148.2
+
+[':///', 'check_same_thread', 'connect', 'development', 'production', 'public', 'sqlite', '本番環境ではデータの削除はできません']

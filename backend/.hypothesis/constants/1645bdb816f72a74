@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/inbound_models.py
+# hypothesis_version: 6.148.2
+
+[100, "'planned'", 'CASCADE', 'ExpectedLot', 'InboundPlan', 'InboundPlanLine', 'Lot', 'Product', 'RESTRICT', 'Supplier', 'all, delete-orphan', 'cancelled', 'expected_lot', 'expected_lot_number', 'expected_lots', 'inbound_plan', 'inbound_plan_id', 'inbound_plan_line', 'inbound_plan_line_id', 'inbound_plan_lines', 'inbound_plans', 'inbound_plans.id', 'lines', 'partially_received', 'plan_number', 'planned', 'planned_arrival_date', 'product_id', 'products.id', 'received', 'status', 'supplier_id', 'suppliers.id']

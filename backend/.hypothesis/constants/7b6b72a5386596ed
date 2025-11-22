@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/seed_snapshot_model.py
+# hypothesis_version: 6.148.2
+
+[255, 'seed_snapshots', 'スナップショット名', '作成日時', '使用したプロファイル設定', '生成結果のサマリ（件数、検証結果など）']

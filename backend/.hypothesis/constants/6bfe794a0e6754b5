@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/system_config_model.py
+# hypothesis_version: 6.148.2
+
+[100, 'config_key', 'system_configs']

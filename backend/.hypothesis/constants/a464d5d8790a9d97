@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/core/config.py
+# hypothesis_version: 6.148.2
+
+[100, 1000, 1024, ',', '.env', '/api', '2.0.0', 'ALGORITHM', 'CORS_ORIGINS', 'DATABASE_URL', 'ENVIRONMENT', 'HS256', 'SECRET_KEY', 'algorithm', 'before', 'development', 'ignore', 'secret_key', 'uploads', 'ロット管理システム']

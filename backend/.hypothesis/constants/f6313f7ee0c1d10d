@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/__init__.py
+# hypothesis_version: 6.148.2
+
+['Adjustment', 'AdjustmentType', 'Allocation', 'AllocationSuggestion', 'AllocationTrace', 'Base', 'BatchJob', 'BusinessRule', 'Customer', 'CustomerItem', 'DeliveryPlace', 'ExpectedLot', 'Forecast', 'ForecastCurrent', 'ForecastHistory', 'InboundPlan', 'InboundPlanLine', 'InboundPlanStatus', 'Lot', 'LotCurrentStock', 'LotDetails', 'MasterChangeLog', 'OperationLog', 'Order', 'OrderLine', 'Product', 'Role', 'SeedSnapshot', 'StockHistory', 'StockMovement', 'StockMovementReason', 'StockTransactionType', 'Supplier', 'SystemConfig', 'User', 'UserRole', 'VCustomerCodeToId', 'VForecastOrderPair', 'VLotAvailableQty', 'VLotCurrentStock', 'VLotDetails', 'VOrderLineContext', 'VProductCodeToId', 'Warehouse']

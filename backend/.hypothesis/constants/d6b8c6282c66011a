@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/domain/allocation/__init__.py
+# hypothesis_version: 6.148.2
+
+['AllocationDecision', 'AllocationRequest', 'AllocationResult', 'AllocationStatus', 'ConflictError', 'LotCandidate', 'NotFoundError', 'RoundingMode', 'RoundingPolicy', 'ValidationError', 'calculate_allocation']

@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/logs_models.py
+# hypothesis_version: 6.148.2
+
+[100, "'pending'", 'RESTRICT', 'SET NULL', 'batch_jobs', 'business_rules', 'changed_at', 'changed_by', 'chk_batch_jobs_type', 'created_at', 'idx_batch_jobs_type', 'is_active', 'is_active = TRUE', 'job_type', 'master_change_logs', 'operation_logs', 'operation_type', 'record_id', 'rule_code', 'rule_type', 'status', 'table_name', 'target_table', 'true', 'user_id', 'users.id']

@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/domain/allocation/state_machine.py
+# hypothesis_version: 6.148.2
+
+['active', 'cancelled', 'shipped']

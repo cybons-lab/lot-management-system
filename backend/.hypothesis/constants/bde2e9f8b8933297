@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/domain/allocation/calculator.py
+# hypothesis_version: 6.148.2
+
+['0', '999999', 'FEFO採用（完全充足）', 'FEFO採用（部分充足）', 'active', 'adopted', 'partial', 'rejected', '在庫不足（分納不可）', '在庫不足（利用可能数量0）', '引当可能ロットなし', '期限切れ']

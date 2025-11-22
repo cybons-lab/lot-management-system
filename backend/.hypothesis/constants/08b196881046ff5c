@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/orders_models.py
+# hypothesis_version: 6.148.2
+
+["'allocated'", "'pending'", '1', 'Allocation', 'CASCADE', 'Customer', 'Lot', 'Order', 'OrderLine', 'Product', 'RESTRICT', 'all, delete-orphan', 'allocations', 'customer_id', 'customers.id', 'delivery_date', 'delivery_place_id', 'delivery_places.id', 'idx_allocations_lot', 'idx_order_lines_date', 'idx_orders_customer', 'idx_orders_date', 'lot_id', 'lots.id', 'order', 'order_date', 'order_id', 'order_line', 'order_line_id', 'order_lines', 'order_lines.id', 'order_number', 'orders', 'orders.id', 'product_id', 'products.id', 'status', 'version_id_col']

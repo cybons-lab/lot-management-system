@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/auth_models.py
+# hypothesis_version: 6.148.2
+
+[100, 255, 'CASCADE', 'Role', 'User', 'UserRole', 'all, delete-orphan', 'email', 'idx_roles_code', 'idx_user_roles_role', 'idx_user_roles_user', 'idx_users_active', 'idx_users_email', 'idx_users_username', 'is_active', 'is_active = TRUE', 'role', 'role_code', 'role_id', 'roles', 'roles.id', 'true', 'uq_roles_role_code', 'uq_users_email', 'uq_users_username', 'user', 'user_id', 'user_roles', 'username', 'users', 'users.id']

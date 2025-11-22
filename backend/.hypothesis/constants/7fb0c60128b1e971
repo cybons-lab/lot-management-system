@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/views_models.py
+# hypothesis_version: 6.148.2
+
+[100, 'info', 'is_view', 'lot_current_stock', 'lot_id', 'v_lot_available_qty', 'v_lot_details', 'v_order_line_context', 'v_product_code_to_id']

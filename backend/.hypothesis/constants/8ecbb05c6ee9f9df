@@ -1,0 +1,4 @@
+# file: /Users/kazuya/dev/projects/lot-management-system/backend/app/models/masters_models.py
+# hypothesis_version: 6.148.2
+
+[100, 200, 'CASCADE', 'Customer', 'CustomerItem', 'DeliveryPlace', 'ForecastCurrent', 'InboundPlan', 'InboundPlanLine', 'Lot', 'Order', 'OrderLine', 'Product', 'RESTRICT', 'SET NULL', 'Supplier', 'chk_warehouse_type', 'customer', 'customer_code', 'customer_id', 'customer_items', 'customers', 'customers.id', 'delivery_place', 'delivery_place_code', 'delivery_places', 'idx_customers_code', 'idx_products_code', 'idx_products_name', 'idx_suppliers_code', 'idx_warehouses_code', 'idx_warehouses_type', 'maker_part_code', 'product', 'product_id', 'product_name', 'products', 'products.id', 'supplier', 'supplier_code', 'supplier_id', 'suppliers', 'suppliers.id', 'warehouse', 'warehouse_code', 'warehouse_type', 'warehouses']
