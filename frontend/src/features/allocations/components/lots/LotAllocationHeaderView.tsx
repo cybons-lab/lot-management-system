@@ -1,7 +1,8 @@
+import { AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
+
 import { Button } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
-import { AlertTriangle, CheckCircle, AlertCircle } from "lucide-react";
 
 interface LotAllocationHeaderViewProps {
   orderNumber: string;

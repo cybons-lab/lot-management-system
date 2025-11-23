@@ -1,6 +1,7 @@
-import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
+import { motion } from "framer-motion";
+
 import type { Forecast } from "@/features/forecasts/api";
 
 interface ForecastTooltipProps {

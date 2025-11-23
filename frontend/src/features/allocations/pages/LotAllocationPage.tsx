@@ -1,5 +1,6 @@
 import { LineBasedAllocationList } from "../components/shared/LineBasedAllocationList";
 import { useLotAllocation } from "../hooks/useLotAllocation";
+
 import * as styles from "./LotAllocationPage.styles";
 
 export function LotAllocationPage() {

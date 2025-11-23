@@ -4,10 +4,12 @@
  */
 
 import { useState } from "react";
+
+import type { CreateUserRequest } from "../api";
+
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
-import type { CreateUserRequest } from "../api";
 
 interface UserFormProps {
   onSubmit: (data: CreateUserRequest) => void;

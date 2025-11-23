@@ -1,5 +1,6 @@
-import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import type { CandidateLotItem } from "../api";
+
+import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
 /**
  * レガシーフィールド対応ユーティリティ

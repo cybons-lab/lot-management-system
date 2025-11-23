@@ -1,5 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
 import {
@@ -13,7 +14,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui";
 import { http } from "@/shared/libs/http";
-import { toast } from "sonner";
 
 export function AdminPage() {
   const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);

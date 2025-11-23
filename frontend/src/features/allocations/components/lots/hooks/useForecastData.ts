@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+
 import { getForecasts } from "@/features/forecasts/api";
 import type { Forecast } from "@/features/forecasts/api";
 

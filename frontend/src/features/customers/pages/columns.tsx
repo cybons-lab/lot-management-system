@@ -3,9 +3,10 @@
  * DataTable用のカラム定義
  */
 
+import type { Customer } from "../api/customers-api";
+
 import type { Column } from "@/shared/components/data/DataTable";
 
-import type { Customer } from "../api/customers-api";
 
 /**
  * 得意先一覧テーブルのカラム定義

@@ -3,11 +3,12 @@
  * 商品マスタのAPI通信関数
  */
 
-import type { components } from "@/types/api";
+import type { BulkUpsertResponse, ProductBulkRow } from "../types/bulk-operation";
 
 import { http } from "@/services/http";
+import type { components } from "@/types/api";
 
-import type { BulkUpsertResponse, ProductBulkRow } from "../types/bulk-operation";
+
 
 // OpenAPI生成型
 export type Product = components["schemas"]["ProductResponse"];

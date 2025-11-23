@@ -4,10 +4,12 @@
  */
 
 import { useState } from "react";
+
+import type { CreateRoleRequest } from "../api";
+
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
-import type { CreateRoleRequest } from "../api";
 
 interface RoleFormProps {
   onSubmit: (data: CreateRoleRequest) => void;

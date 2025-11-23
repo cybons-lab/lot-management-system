@@ -6,6 +6,11 @@
 
 import { http } from "./http";
 
+import type { ForecastListResponse } from "@/features/forecasts/api";
+import type {
+  OrderResponse as Order,
+  OrderWithLinesResponse as OrderDetail,
+} from "@/shared/types/aliases";
 import type { components } from "@/types/api";
 
 // ========================================
@@ -13,11 +18,6 @@ import type { components } from "@/types/api";
 // ========================================
 
 // 受注関連の型
-import type {
-  OrderResponse as Order,
-  OrderWithLinesResponse as OrderDetail,
-} from "@/shared/types/aliases";
-import type { ForecastListResponse } from "@/features/forecasts/api";
 
 // ロット関連の型
 type Lot = components["schemas"]["LotResponse"];

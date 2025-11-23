@@ -3,11 +3,12 @@
  * 仕入先マスタのAPI通信関数
  */
 
-import type { components } from "@/types/api";
+import type { BulkUpsertResponse, SupplierBulkRow } from "../types/bulk-operation";
 
 import { http } from "@/services/http";
+import type { components } from "@/types/api";
 
-import type { BulkUpsertResponse, SupplierBulkRow } from "../types/bulk-operation";
+
 
 // OpenAPI生成型
 export type Supplier = components["schemas"]["SupplierResponse"];

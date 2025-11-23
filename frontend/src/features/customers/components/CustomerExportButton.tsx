@@ -6,10 +6,11 @@
 import { Download } from "lucide-react";
 import { useCallback, useState } from "react";
 
-import { Button } from "@/components/ui";
 
 import type { Customer } from "../api/customers-api";
 import { customersToCSV, downloadCSV } from "../utils/customer-csv";
+
+import { Button } from "@/components/ui";
 
 // ============================================
 // Props

@@ -3,9 +3,16 @@
  * 得意先詳細/編集ページ
  */
 
+import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Trash2, Edit } from "lucide-react";
+
+import type { CustomerUpdate } from "../api/customers-api";
+import { CustomerForm } from "../components/CustomerForm";
+import { useUpdateCustomer, useDeleteCustomer } from "../hooks/useCustomerMutations";
+import { useCustomerQuery } from "../hooks/useCustomerQuery";
+
+import * as styles from "./styles";
 
 import { Button } from "@/components/ui";
 import {
@@ -20,11 +27,7 @@ import {
 } from "@/components/ui/display/alert-dialog";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-import type { CustomerUpdate } from "../api/customers-api";
-import { CustomerForm } from "../components/CustomerForm";
-import { useCustomerQuery } from "../hooks/useCustomerQuery";
-import { useUpdateCustomer, useDeleteCustomer } from "../hooks/useCustomerMutations";
-import * as styles from "./styles";
+
 
 // ============================================
 // Component

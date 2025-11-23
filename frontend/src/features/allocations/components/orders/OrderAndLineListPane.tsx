@@ -7,7 +7,9 @@
  */
 
 import { useAtom } from "jotai";
+
 import { selectedOrderIdAtom, selectedLineIdAtom } from "../../store/atoms";
+
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 // type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
 // type OrderLineResponse = components["schemas"]["OrderLineResponse"];

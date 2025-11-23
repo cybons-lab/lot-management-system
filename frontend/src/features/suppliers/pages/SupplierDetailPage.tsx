@@ -1,9 +1,18 @@
 /**
  * SupplierDetailPage - 仕入先詳細/編集
  */
+import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Trash2, Edit } from "lucide-react";
+
+
+import type { SupplierUpdate } from "../api/suppliers-api";
+import { SupplierForm } from "../components/SupplierForm";
+import { useUpdateSupplier, useDeleteSupplier } from "../hooks/useSupplierMutations";
+import { useSupplierQuery } from "../hooks/useSupplierQuery";
+
+import * as styles from "./styles";
+
 import { Button } from "@/components/ui";
 import {
   AlertDialog,
@@ -16,11 +25,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import type { SupplierUpdate } from "../api/suppliers-api";
-import { SupplierForm } from "../components/SupplierForm";
-import { useSupplierQuery } from "../hooks/useSupplierQuery";
-import { useUpdateSupplier, useDeleteSupplier } from "../hooks/useSupplierMutations";
-import * as styles from "./styles";
 
 export function SupplierDetailPage() {
   const navigate = useNavigate();

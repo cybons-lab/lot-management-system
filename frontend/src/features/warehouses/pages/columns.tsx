@@ -1,8 +1,9 @@
 /**
  * Warehouses Table Columns
  */
-import type { Column } from "@/shared/components/data/DataTable";
 import type { Warehouse } from "../api/warehouses-api";
+
+import type { Column } from "@/shared/components/data/DataTable";
 
 const warehouseTypeLabels: Record<string, string> = {
   internal: "社内",
