@@ -146,7 +146,7 @@ export function LotAllocationHeaderView({
 
       <div className="grid grid-cols-10 gap-4 p-6">
         {/* Left Column: Product Info (40%) */}
-        <div className="col-span-4 flex flex-col justify-center gap-4 border-r border-gray-100 pr-4">
+        <div className="col-span-4 flex flex-col justify-center gap-3 border-r border-gray-100 pr-4">
           {/* Supplier */}
           {supplierName && (
             <div className="flex flex-col">
@@ -172,21 +172,23 @@ export function LotAllocationHeaderView({
             <span className="text-[10px] font-bold text-gray-400 uppercase">商品名</span>
             <div className="text-lg leading-tight font-bold text-gray-900">{productName}</div>
           </div>
-
-          {/* Delivery Place */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-gray-400 uppercase">納入先</span>
-            <div className="flex items-center gap-2">
-              <span className="i-lucide-map-pin h-3 w-3 text-gray-400" />
-              <span className="font-medium text-gray-800">{deliveryPlaceName}</span>
-            </div>
-          </div>
         </div>
 
         {/* Center Column: Quantity & Action Toolbar (30%) */}
         <div className="col-span-3 flex flex-col justify-between border-r border-gray-100 px-4">
           <div className="flex flex-col gap-4">
-            <div className="flex items-end justify-between">
+            {/* Delivery Info */}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                  納入先
+                </span>
+                <div className="flex items-center gap-1.5 font-medium text-gray-800">
+                  <span className="i-lucide-map-pin h-4 w-4 text-gray-400" />
+                  {deliveryPlaceName}
+                </div>
+              </div>
+
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                   納期
@@ -254,9 +256,8 @@ export function LotAllocationHeaderView({
               size="sm"
               onClick={onAutoAllocate}
               disabled={isLoading || !hasCandidates || remainingQty <= 0}
-              className="h-9 flex-1 text-xs"
+              className="h-9 min-w-[4rem] px-2 text-xs"
             >
-              <span className="i-lucide-wand-2 mr-1.5 h-3.5 w-3.5" />
               自動引当
             </Button>
 
@@ -266,9 +267,8 @@ export function LotAllocationHeaderView({
               size="sm"
               onClick={onClearAllocations}
               disabled={totalAllocated === 0}
-              className="h-9 flex-1 text-xs hover:bg-red-50 hover:text-red-600"
+              className="h-9 min-w-[4rem] px-2 text-xs hover:bg-red-50 hover:text-red-600"
             >
-              <span className="i-lucide-eraser mr-1.5 h-3.5 w-3.5" />
               クリア
             </Button>
 
@@ -277,7 +277,7 @@ export function LotAllocationHeaderView({
               onClick={onSaveAllocations}
               disabled={!canSave || isSaving}
               className={cn(
-                "h-9 flex-1 font-bold shadow-sm transition-all duration-300",
+                "h-9 min-w-[4rem] px-2 font-bold shadow-sm transition-all duration-300",
                 isOverAllocated && !justSaved && "cursor-not-allowed bg-gray-400",
                 !isOverAllocated && !justSaved && "bg-blue-600 hover:bg-blue-700",
                 justSaved && "bg-green-600 text-white hover:bg-green-700",
