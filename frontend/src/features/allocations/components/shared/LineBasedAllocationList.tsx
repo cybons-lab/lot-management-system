@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef } from "react";
 import { useWindowVirtualizer, type VirtualItem } from "@tanstack/react-virtual";
-import { Filter, ArrowUp, ArrowDown, CheckCircle, Calendar, Building2, Layers } from "lucide-react";
+import { Filter, ArrowUp, ArrowDown, CheckCircle, Calendar, Building2, Layers, X } from "lucide-react";
 
 import type { OrderWithLinesResponse, OrderLine } from "@/shared/types/aliases";
 import { cn } from "../../../../shared/libs/utils";
@@ -300,6 +300,19 @@ export function LineBasedAllocationList({
             {f.label}
           </Button>
         ))}
+
+        {/* フィルタクリアボタン */}
+        {filterStatus !== "all" && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFilterStatus("all")}
+            className="h-7 px-2 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+          >
+            <X className="mr-1 h-3 w-3" />
+            クリア
+          </Button>
+        )}
 
         {/* グルーピングトグル */}
         <div className={styles.groupingToggleContainer}>
