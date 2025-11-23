@@ -153,7 +153,8 @@ export function FlatAllocationList({
       switch (filterStatus) {
         case "complete":
           // Include if: DB status is allocated/completed OR UI shows complete allocation
-          return isAllocatedInDB || (remaining === 0 && !isOver);
+          // Exclude lines with 0 required quantity (prevents false positives)
+          return required > 0 && (isAllocatedInDB || (remaining === 0 && !isOver));
         case "shortage":
           return remaining > 0 && hasCandidates;
         case "over":
