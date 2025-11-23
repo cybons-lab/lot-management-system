@@ -121,6 +121,11 @@ class OrderLineResponse(OrderLineBase):
     product_external_unit: str | None = None
     product_qty_per_internal_unit: float | None = None
 
+    # Display Info (Populated by Service)
+    product_code: str | None = None
+    product_name: str | None = None
+    delivery_place_name: str | None = None
+
     # Allocation Info
     allocations: list[AllocationResponse] = Field(default_factory=list)
     allocated_quantity: Decimal = Field(default=Decimal("0"), description="引当済数量")
