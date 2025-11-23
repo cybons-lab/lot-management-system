@@ -190,8 +190,9 @@ class OrderService:
             FROM v_order_line_details
             WHERE order_id IN :order_ids
         """
-        
+
         from sqlalchemy import text
+
         rows = self.db.execute(text(query), {"order_ids": tuple(order_ids)}).fetchall()
 
         # Map details by line_id
@@ -207,5 +208,7 @@ class OrderService:
                     line.product_name = detail.product_name
                     line.product_internal_unit = detail.product_internal_unit
                     line.product_external_unit = detail.product_external_unit
-                    line.product_qty_per_internal_unit = float(detail.product_qty_per_internal_unit or 1.0)
+                    line.product_qty_per_internal_unit = float(
+                        detail.product_qty_per_internal_unit or 1.0
+                    )
                     line.delivery_place_name = detail.delivery_place_name

@@ -43,7 +43,7 @@ class InventoryService:
         # Use raw SQL or map a model to the view.
         # Here we use raw SQL for simplicity as we haven't defined a SQLAlchemy model for the view yet.
         # Alternatively, we could define a read-only model.
-        
+
         # Construct query
         query = "SELECT product_id, warehouse_id, total_quantity, allocated_quantity, available_quantity, last_updated FROM v_inventory_summary WHERE 1=1"
         params = {}
@@ -61,6 +61,7 @@ class InventoryService:
         params["skip"] = skip
 
         from sqlalchemy import text
+
         result = self.db.execute(text(query), params).fetchall()
 
         return [
@@ -95,7 +96,10 @@ class InventoryService:
             WHERE product_id = :product_id AND warehouse_id = :warehouse_id
         """
         from sqlalchemy import text
-        row = self.db.execute(text(query), {"product_id": product_id, "warehouse_id": warehouse_id}).fetchone()
+
+        row = self.db.execute(
+            text(query), {"product_id": product_id, "warehouse_id": warehouse_id}
+        ).fetchone()
 
         if not row:
             return None
