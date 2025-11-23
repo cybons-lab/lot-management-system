@@ -51,6 +51,7 @@ def setup_database():
     with engine.connect() as conn:
         for view_name in view_names:
             conn.execute(text(f"DROP VIEW IF EXISTS {view_name} CASCADE"))
+        conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
         conn.commit()
     
     # Drop all tables
@@ -126,15 +127,25 @@ def setup_database():
         alembic_cfg = Config("/app/alembic.ini")
         alembic_cfg.set_main_option("script_location", "/app/alembic")
         
-        # Stamp baseline
-        command.stamp(alembic_cfg, "121128300ac0")
-        logger.info("✅ Alembic baseline をスタンプしました")
+        # Stamp head (since create_all created the latest schema)
+        command.stamp(alembic_cfg, "head")
+        logger.info("✅ Alembic head をスタンプしました")
         
-        # Upgrade to head (this will apply the view migrations)
-        command.upgrade(alembic_cfg, "head")
-        logger.info("✅ Alembic マイグレーション（ビュー定義含む）を適用しました")
+        # Apply views manually (since they are not in alembic migrations)
+        from pathlib import Path
+        view_sql_path = Path("/app/apply_views_v2_5.sql")
+        if view_sql_path.exists():
+            sql_content = view_sql_path.read_text(encoding="utf-8")
+            with engine.connect() as conn:
+                # Execute the whole script at once
+                conn.execute(text(sql_content))
+                conn.commit()
+            logger.info("✅ ビュー定義(apply_views_v2_5.sql)を適用しました")
+        else:
+            logger.warning(f"⚠️ ビュー定義ファイルが見つかりません: {view_sql_path}")
+
     except Exception as e:
-        logger.error(f"Failed to apply Alembic migrations: {e}")
+        logger.error(f"Failed to setup database: {e}")
         raise
 
     yield

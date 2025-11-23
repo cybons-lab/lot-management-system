@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.domain.order import InvalidOrderStatusError, OrderStateMachine, OrderStatus
-from app.models import Customer, Order, OrderLine, Product
+from app.models import Customer, Order, OrderLine, Product, DeliveryPlace
 from app.services.allocation.allocations_service import _load_order
 
 
@@ -106,30 +106,33 @@ class TestLoadOrder:
         db_session.flush()
 
         order = Order(
-            order_no="ORD001",
+            order_number="ORD001",
             order_date="2025-01-01",
             status="open",
             customer_id=customer.id,
-            customer_code=customer.customer_code,
         )
         db_session.add(order)
         db_session.flush()
 
-        product = Product(product_code="PROD001", product_name="Test Product")
+        product = Product(maker_part_code="PROD001", product_name="Test Product", base_unit="EA")
         db_session.add(product)
         db_session.flush()
+        
+        delivery_place = DeliveryPlace(customer_id=customer.id, delivery_place_code="DP001", delivery_place_name="Test DP")
+        db_session.add(delivery_place)
+        db_session.flush()
 
-        order_line = OrderLine(order_id=order.id, line_no=1, product_id=product.id, quantity=10.0)
+        order_line = OrderLine(order_id=order.id, product_id=product.id, order_quantity=10.0, unit="EA", delivery_date="2025-01-02", delivery_place_id=delivery_place.id)
         db_session.add(order_line)
         db_session.commit()
 
         # ID で取得
         loaded_order = _load_order(db_session, order_id=order.id)
         assert loaded_order.id == order.id
-        assert loaded_order.order_no == "ORD001"
+        assert loaded_order.order_number == "ORD001"
         assert len(loaded_order.order_lines) == 1
 
-    def test_load_order_by_order_no(self, db_session: Session):
+    def test_load_order_by_order_number(self, db_session: Session):
         """注文番号で注文を取得."""
         # テストデータ作成
         customer = Customer(customer_code="CUST002", customer_name="Test Customer 2")
@@ -137,18 +140,17 @@ class TestLoadOrder:
         db_session.flush()
 
         order = Order(
-            order_no="ORD002",
+            order_number="ORD002",
             order_date="2025-01-02",
             status="open",
             customer_id=customer.id,
-            customer_code=customer.customer_code,
         )
         db_session.add(order)
         db_session.commit()
 
         # 注文番号で取得
-        loaded_order = _load_order(db_session, order_no="ORD002")
-        assert loaded_order.order_no == "ORD002"
+        loaded_order = _load_order(db_session, order_number="ORD002")
+        assert loaded_order.order_number == "ORD002"
         assert loaded_order.status == "open"
 
     def test_load_order_not_found_by_id(self, db_session: Session):
@@ -156,14 +158,14 @@ class TestLoadOrder:
         with pytest.raises(ValueError, match="Order not found: ID=9999"):
             _load_order(db_session, order_id=9999)
 
-    def test_load_order_not_found_by_order_no(self, db_session: Session):
+    def test_load_order_not_found_by_order_number(self, db_session: Session):
         """存在しない注文番号で取得すると ValueError."""
-        with pytest.raises(ValueError, match="Order not found: order_no=NONEXISTENT"):
-            _load_order(db_session, order_no="NONEXISTENT")
+        with pytest.raises(ValueError, match="Order not found: order_number=NONEXISTENT"):
+            _load_order(db_session, order_number="NONEXISTENT")
 
     def test_load_order_no_params(self, db_session: Session):
         """パラメータなしで呼び出すと ValueError."""
-        with pytest.raises(ValueError, match="Either order_id or order_no must be provided"):
+        with pytest.raises(ValueError, match="Either order_id or order_number must be provided"):
             _load_order(db_session)
 
 
@@ -182,11 +184,10 @@ class TestAllocationPreviewStatus:
         # draft, open, part_allocated, allocated でテスト
         for status in ["draft", "open", "part_allocated", "allocated"]:
             order = Order(
-                order_no=f"ORD_PREVIEW_{status}",
+                order_number=f"ORD_PREVIEW_{status}",
                 order_date="2025-01-03",
                 status=status,
                 customer_id=customer.id,
-                customer_code=customer.customer_code,
             )
             db_session.add(order)
             db_session.flush()
@@ -211,11 +212,10 @@ class TestAllocationPreviewStatus:
         # shipped, closed, cancelled でテスト
         for status in ["shipped", "closed", "cancelled"]:
             order = Order(
-                order_no=f"ORD_PREVIEW_DISALLOW_{status}",
+                order_number=f"ORD_PREVIEW_DISALLOW_{status}",
                 order_date="2025-01-04",
                 status=status,
                 customer_id=customer.id,
-                customer_code=customer.customer_code,
             )
             db_session.add(order)
             db_session.flush()
@@ -236,25 +236,28 @@ class TestAllocationCommitStatus:
         customer = Customer(customer_code="CUST005", customer_name="Test Customer 5")
         db_session.add(customer)
         db_session.flush()
+        
+        delivery_place = DeliveryPlace(customer_id=customer.id, delivery_place_code="DP005", delivery_place_name="Test DP 5")
+        db_session.add(delivery_place)
+        db_session.flush()
 
-        product = Product(product_code="PROD002", product_name="Test Product 2")
+        product = Product(maker_part_code="PROD002", product_name="Test Product 2", base_unit="EA")
         db_session.add(product)
         db_session.flush()
 
         # open, part_allocated でテスト
         for status in ["open", "part_allocated"]:
             order = Order(
-                order_no=f"ORD_COMMIT_{status}",
+                order_number=f"ORD_COMMIT_{status}",
                 order_date="2025-01-05",
                 status=status,
                 customer_id=customer.id,
-                customer_code=customer.customer_code,
             )
             db_session.add(order)
             db_session.flush()
 
             order_line = OrderLine(
-                order_id=order.id, line_no=1, product_id=product.id, quantity=10.0
+                order_id=order.id, product_id=product.id, order_quantity=10.0, unit="EA", delivery_date="2025-01-06", delivery_place_id=delivery_place.id
             )
             db_session.add(order_line)
             db_session.commit()
@@ -278,11 +281,10 @@ class TestAllocationCommitStatus:
         # draft, allocated, shipped, closed, cancelled でテスト
         for status in ["draft", "allocated", "shipped", "closed", "cancelled"]:
             order = Order(
-                order_no=f"ORD_COMMIT_DISALLOW_{status}",
+                order_number=f"ORD_COMMIT_DISALLOW_{status}",
                 order_date="2025-01-06",
                 status=status,
                 customer_id=customer.id,
-                customer_code=customer.customer_code,
             )
             db_session.add(order)
             db_session.flush()
