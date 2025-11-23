@@ -145,60 +145,66 @@ export function LotAllocationHeaderView({
       )}
 
       <div className="grid grid-cols-10 gap-4 p-6">
-        {/* Left Column: Product Info (40%) */}
+        {/* Left Column: Product & Delivery Info (40%) */}
+        {/* TODO: 将来的に ProductInfoComponent と DeliveryInfoComponent に分離 */}
         <div className="col-span-4 flex flex-col justify-center gap-3 border-r border-gray-100 pr-4">
-          {/* Supplier */}
-          {supplierName && (
+          {/* Product Info Section */}
+          <div className="flex flex-col gap-3 pb-3 border-b border-gray-100">
+            {/* Supplier */}
+            {supplierName && (
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-gray-400 uppercase">仕入元</span>
+                <div className="flex items-center gap-2">
+                  <span className="i-lucide-truck h-3.5 w-3.5 text-gray-400" />
+                  <span className="font-medium text-gray-800">{supplierName}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Product Code */}
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 uppercase">仕入元</span>
+              <span className="text-[10px] font-bold text-gray-400 uppercase">商品コード</span>
               <div className="flex items-center gap-2">
-                <span className="i-lucide-truck h-3 w-3 text-gray-400" />
-                <span className="font-medium text-gray-800">{supplierName}</span>
+                <span className="i-lucide-barcode h-3.5 w-3.5 text-gray-400" />
+                <span className="font-mono font-medium text-gray-800">{productCode}</span>
               </div>
             </div>
-          )}
 
-          {/* Product Code */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-gray-400 uppercase">商品コード</span>
-            <div className="flex items-center gap-2">
-              <span className="i-lucide-box h-3 w-3 text-gray-400" />
-              <span className="font-mono font-medium text-gray-800">{productCode}</span>
+            {/* Product Name */}
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">商品名</span>
+              <div className="flex items-center gap-2">
+                <span className="i-lucide-package h-3.5 w-3.5 text-gray-400" />
+                <div className="text-lg leading-tight font-bold text-gray-900">{productName}</div>
+              </div>
             </div>
           </div>
 
-          {/* Product Name */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-gray-400 uppercase">商品名</span>
-            <div className="text-lg leading-tight font-bold text-gray-900">{productName}</div>
+          {/* Delivery Info Section */}
+          <div className="flex flex-col gap-3">
+            {/* Delivery Place */}
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">納入先</span>
+              <div className="flex items-center gap-2">
+                <span className="i-lucide-map-pin h-3.5 w-3.5 text-gray-400" />
+                <span className="font-medium text-gray-800">{deliveryPlaceName}</span>
+              </div>
+            </div>
+
+            {/* Delivery Date */}
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">納期</span>
+              <div className="flex items-center gap-2">
+                <span className="i-lucide-calendar h-3.5 w-3.5 text-gray-400" />
+                <span className="font-bold text-gray-800">{deliveryDate}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Center Column: Quantity & Action Toolbar (30%) */}
+        {/* Center Column: Quantity & Actions (30%) */}
         <div className="col-span-3 flex flex-col justify-between border-r border-gray-100 px-4">
           <div className="flex flex-col gap-4">
-            {/* Delivery Info */}
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                  納入先
-                </span>
-                <div className="flex items-center gap-1.5 font-medium text-gray-800">
-                  <span className="i-lucide-map-pin h-4 w-4 text-gray-400" />
-                  {deliveryPlaceName}
-                </div>
-              </div>
-
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                  納期
-                </span>
-                <div className="flex items-center gap-1.5 font-bold text-gray-800">
-                  <span className="i-lucide-calendar h-4 w-4 text-gray-400" />
-                  {deliveryDate}
-                </div>
-              </div>
-            </div>
 
             <div className="flex flex-col gap-2">
               <div className="flex items-baseline justify-between">
@@ -294,7 +300,8 @@ export function LotAllocationHeaderView({
           </div>
         </div>
 
-        {/* Right Column: Status Display Only (30%) */}
+        {/* Right Column: Status Display (30%) */}
+        {/* TODO: 将来的に StatusDisplayComponent に分離 */}
         <div className="col-span-3 flex flex-col gap-4 pl-4">
           {/* Status Header */}
           <div className="flex items-center justify-between">
