@@ -1,0 +1,394 @@
+erDiagram
+    %% マスタデータ
+    customers ||--o{ delivery_places : "has many"
+    customers ||--o{ orders : "places"
+    customers ||--o{ customer_items : "has"
+    customers ||--o{ forecast_current : "has"
+    customers ||--o{ allocation_suggestions : "has"
+    
+    suppliers ||--o{ lots : "supplies"
+    suppliers ||--o{ inbound_plans : "supplies to"
+    suppliers ||--o{ customer_items : "supplies"
+    
+    warehouses ||--o{ lots : "stores"
+    
+    products ||--o{ lots : "belongs to"
+    products ||--o{ order_lines : "ordered as"
+    products ||--o{ customer_items : "defined for"
+    products ||--o{ forecast_current : "forecasted"
+    products ||--o{ product_uom_conversions : "has conversions"
+    products ||--o{ allocation_suggestions : "suggested for"
+    products ||--o{ inbound_plan_lines : "planned for"
+    
+    %% 受注管理
+    orders ||--o{ order_lines : "contains"
+    order_lines ||--o{ allocations : "has allocations"
+    order_lines ||--o{ allocation_traces : "has traces"
+    
+    delivery_places ||--o{ order_lines : "delivers to"
+    delivery_places ||--o{ forecast_current : "forecasted at"
+    delivery_places ||--o{ allocation_suggestions : "suggested for"
+    
+    %% 在庫管理
+    lots ||--o{ allocations : "allocated from"
+    lots ||--o{ stock_history : "has history"
+    lots ||--o{ adjustments : "has adjustments"
+    lots ||--o{ allocation_suggestions : "suggested from"
+    lots ||--o{ allocation_traces : "traced"
+    
+    %% 入荷計画
+    inbound_plans ||--o{ inbound_plan_lines : "contains"
+    inbound_plan_lines ||--o{ expected_lots : "expects"
+    expected_lots ||--o{ lots : "realized as"
+    
+    %% ユーザー管理
+    users ||--o{ user_roles : "has"
+    roles ||--o{ user_roles : "assigned to"
+    users ||--o{ adjustments : "performs"
+    users ||--o{ operation_logs : "creates"
+    users ||--o{ master_change_logs : "changes"
+    
+    %% テーブル定義
+    customers {
+        uuid id PK
+        string customer_code UK
+        string name
+        string contact_person
+        string phone
+        string email
+        text notes
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    delivery_places {
+        uuid id PK
+        uuid customer_id FK
+        string place_code UK
+        string name
+        string address
+        string phone
+        text notes
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    suppliers {
+        uuid id PK
+        string supplier_code UK
+        string name
+        string contact_person
+        string phone
+        string email
+        text notes
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    warehouses {
+        uuid id PK
+        string warehouse_code UK
+        string name
+        string address
+        string phone
+        text notes
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    products {
+        uuid id PK
+        string product_code UK
+        string name
+        string unit
+        string product_rank
+        boolean is_countable
+        text notes
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    customer_items {
+        uuid id PK
+        uuid customer_id FK
+        uuid product_id FK
+        uuid supplier_id FK "nullable"
+        string customer_item_code UK
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    product_uom_conversions {
+        uuid id PK
+        uuid product_id FK
+        string from_unit
+        string to_unit
+        decimal conversion_rate
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    orders {
+        uuid id PK
+        uuid customer_id FK
+        string order_number UK
+        date order_date
+        string status
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    order_lines {
+        uuid id PK
+        uuid order_id FK
+        uuid product_id FK
+        uuid delivery_place_id FK
+        integer line_number
+        date delivery_date
+        decimal quantity
+        string unit
+        string status
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    lots {
+        uuid id PK
+        uuid product_id FK
+        uuid supplier_id FK "nullable"
+        uuid warehouse_id FK
+        uuid expected_lot_id FK "nullable"
+        string lot_number UK
+        date receive_date
+        date manufacturing_date
+        date expiry_date
+        decimal initial_quantity
+        decimal available_quantity
+        string unit
+        string lot_rank
+        string status
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    allocations {
+        uuid id PK
+        uuid order_line_id FK
+        uuid lot_id FK
+        decimal allocated_quantity
+        string allocation_type
+        timestamp allocated_at
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    allocation_traces {
+        uuid id PK
+        uuid order_line_id FK
+        uuid lot_id FK
+        decimal quantity
+        string operation_type
+        timestamp operation_at
+        text notes
+    }
+    
+    allocation_suggestions {
+        uuid id PK
+        uuid customer_id FK
+        uuid product_id FK
+        uuid delivery_place_id FK
+        uuid lot_id FK
+        date forecast_period
+        decimal suggested_quantity
+        integer priority_rank
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    forecast_current {
+        uuid id PK
+        uuid customer_id FK
+        uuid product_id FK
+        uuid delivery_place_id FK
+        date forecast_date
+        date forecast_period
+        decimal forecasted_quantity
+        string forecast_type
+        timestamp imported_at
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    forecast_history {
+        uuid id PK
+        uuid customer_id
+        uuid product_id
+        uuid delivery_place_id
+        date forecast_date
+        date forecast_period
+        decimal forecasted_quantity
+        string forecast_type
+        timestamp imported_at
+        timestamp archived_at
+    }
+    
+    inbound_plans {
+        uuid id PK
+        uuid supplier_id FK
+        string plan_number UK
+        date planned_date
+        string status
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    inbound_plan_lines {
+        uuid id PK
+        uuid inbound_plan_id FK
+        uuid product_id FK
+        integer line_number
+        decimal planned_quantity
+        string unit
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    expected_lots {
+        uuid id PK
+        uuid inbound_plan_line_id FK
+        string expected_lot_number UK
+        date expected_receive_date
+        date expected_manufacturing_date
+        date expected_expiry_date
+        decimal expected_quantity
+        string unit
+        string expected_lot_rank
+        text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    stock_history {
+        uuid id PK
+        uuid lot_id FK
+        decimal quantity_change
+        decimal quantity_after
+        string operation_type
+        string reference_type
+        uuid reference_id
+        timestamp operation_at
+        text notes
+    }
+    
+    adjustments {
+        uuid id PK
+        uuid lot_id FK
+        uuid adjusted_by FK
+        decimal quantity_before
+        decimal quantity_after
+        string adjustment_type
+        text reason
+        timestamp adjusted_at
+        timestamp created_at
+    }
+    
+    users {
+        uuid id PK
+        string username UK
+        string email UK
+        string hashed_password
+        string display_name
+        boolean is_active
+        timestamp last_login_at
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    roles {
+        uuid id PK
+        string role_name UK
+        text description
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    user_roles {
+        uuid id PK
+        uuid user_id FK
+        uuid role_id FK
+        timestamp assigned_at
+    }
+    
+    operation_logs {
+        uuid id PK
+        uuid user_id FK "nullable"
+        string operation_type
+        string target_table
+        uuid target_id
+        jsonb changes
+        timestamp operation_at
+    }
+    
+    master_change_logs {
+        uuid id PK
+        uuid changed_by FK
+        string table_name
+        uuid record_id
+        string operation_type
+        jsonb old_values
+        jsonb new_values
+        timestamp changed_at
+    }
+    
+    business_rules {
+        uuid id PK
+        string rule_key UK
+        jsonb rule_value
+        text description
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    system_configs {
+        uuid id PK
+        string config_key UK
+        string config_value
+        text description
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    batch_jobs {
+        uuid id PK
+        string job_name
+        string job_type
+        string status
+        jsonb parameters
+        text result_message
+        timestamp started_at
+        timestamp completed_at
+        timestamp created_at
+    }
+    
+    seed_snapshots {
+        uuid id PK
+        string snapshot_name UK
+        text description
+        jsonb snapshot_data
+        timestamp created_at
+    }
+    
+    alembic_version {
+        string version_num PK
+    }
