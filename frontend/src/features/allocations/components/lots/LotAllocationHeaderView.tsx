@@ -33,6 +33,8 @@ interface LotAllocationHeaderViewProps {
   // New props
   allocationCount?: number;
   hasExpiryWarning?: boolean;
+  hasExpiredError?: boolean;
+  lineStatus?: string | null;
 }
 
 export function LotAllocationHeaderView({
@@ -62,6 +64,8 @@ export function LotAllocationHeaderView({
   lockedAt,
   allocationCount = 0,
   hasExpiryWarning = false,
+  hasExpiredError = false,
+  lineStatus,
 }: LotAllocationHeaderViewProps) {
   // Determine status and styles
   const isPartial = totalAllocated > 0 && remainingQty > 0;
@@ -79,22 +83,26 @@ export function LotAllocationHeaderView({
       </div>
     );
   } else if (isComplete) {
-    if (canSave) {
-      // Complete but Unsaved (Draft)
-      statusColorClass = "bg-indigo-100 text-indigo-800 border-indigo-200";
-      mainStatusBadge = (
-        <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}>
-          <span className="i-lucide-pencil h-4 w-4" />
-          <span className="text-sm font-bold">仮引当完了</span>
-        </div>
-      );
-    } else {
+    // Check for confirmed status based on backend data OR immediate save success
+    const isConfirmed =
+      lineStatus === "allocated" || lineStatus === "completed" || (justSaved && canSave === false);
+
+    if (isConfirmed) {
       // Complete and Saved (Confirmed)
       statusColorClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
       mainStatusBadge = (
         <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}>
           <CheckCircle className="h-4 w-4" />
           <span className="text-sm font-bold">引当確定</span>
+        </div>
+      );
+    } else {
+      // Complete but Unsaved (Draft)
+      statusColorClass = "bg-indigo-100 text-indigo-800 border-indigo-200";
+      mainStatusBadge = (
+        <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}>
+          <span className="i-lucide-pencil h-4 w-4" />
+          <span className="text-sm font-bold">仮引当完了</span>
         </div>
       );
     }
@@ -300,8 +308,14 @@ export function LotAllocationHeaderView({
                   複数ロット ({allocationCount})
                 </span>
               )}
-              {hasExpiryWarning && (
+              {hasExpiredError && (
                 <span className="inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800">
+                  <span className="i-lucide-alert-octagon mr-1 h-3 w-3" />
+                  期限切れ
+                </span>
+              )}
+              {hasExpiryWarning && (
+                <span className="inline-flex items-center rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
                   <span className="i-lucide-alert-triangle mr-1 h-3 w-3" />
                   期限切迫
                 </span>
