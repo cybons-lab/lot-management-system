@@ -14,7 +14,16 @@ from app.domain.order import (
     OrderValidationError,
     ProductNotFoundError,
 )
-from app.models import Allocation, Customer, CustomerItem, DeliveryPlace, Order, OrderLine, Product, Supplier
+from app.models import (
+    Allocation,
+    Customer,
+    CustomerItem,
+    DeliveryPlace,
+    Order,
+    OrderLine,
+    Product,
+    Supplier,
+)
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderResponse,
@@ -174,7 +183,7 @@ class OrderService:
         pairs = set()
         product_ids = set()
         delivery_place_ids = set()
-        
+
         for order in orders:
             for line in order.lines:
                 pairs.add((order.customer_id, line.product_id))

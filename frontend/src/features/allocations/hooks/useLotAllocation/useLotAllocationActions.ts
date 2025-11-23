@@ -282,7 +282,9 @@ function useAllocationSaver({
   setLineStatuses,
   setToast,
   isOverAllocated,
-}: Omit<UseLotAllocationActionsOptions, 'setAllocationsByLine'> & { isOverAllocated: (lineId: number) => boolean }) {
+}: Omit<UseLotAllocationActionsOptions, "setAllocationsByLine"> & {
+  isOverAllocated: (lineId: number) => boolean;
+}) {
   // Mutation for saving allocations
   const saveAllocationsMutation = useMutation<
     ManualAllocationSaveResponse,

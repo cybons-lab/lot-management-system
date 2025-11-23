@@ -70,8 +70,9 @@ export const columns: Column<OrderUI>[] = [
         <div className="flex items-center space-x-2">
           <div className="h-2 w-24 rounded-full bg-gray-200">
             <div
-              className={`h-full rounded-full ${rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-gray-300"
-                }`}
+              className={`h-full rounded-full ${
+                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-gray-300"
+              }`}
               style={{ width: `${rate}%` }}
             />
           </div>

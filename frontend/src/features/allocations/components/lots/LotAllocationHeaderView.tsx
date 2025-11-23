@@ -77,7 +77,9 @@ export function LotAllocationHeaderView({
   if (isOverAllocated) {
     statusColorClass = "bg-orange-100 text-orange-800 border-orange-200";
     mainStatusBadge = (
-      <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}>
+      <div
+        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+      >
         <AlertTriangle className="h-4 w-4" />
         <span className="text-sm font-bold">在庫過剰</span>
       </div>
@@ -91,7 +93,9 @@ export function LotAllocationHeaderView({
       // Complete and Saved (Confirmed)
       statusColorClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
       mainStatusBadge = (
-        <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}>
+        <div
+          className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+        >
           <CheckCircle className="h-4 w-4" />
           <span className="text-sm font-bold">引当確定</span>
         </div>
@@ -100,7 +104,9 @@ export function LotAllocationHeaderView({
       // Complete but Unsaved (Draft)
       statusColorClass = "bg-indigo-100 text-indigo-800 border-indigo-200";
       mainStatusBadge = (
-        <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}>
+        <div
+          className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+        >
           <span className="i-lucide-pencil h-4 w-4" />
           <span className="text-sm font-bold">仮引当完了</span>
         </div>
@@ -109,7 +115,9 @@ export function LotAllocationHeaderView({
   } else if (isPartial) {
     statusColorClass = "bg-amber-100 text-amber-800 border-amber-200";
     mainStatusBadge = (
-      <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}>
+      <div
+        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+      >
         <AlertCircle className="h-4 w-4" />
         <span className="text-sm font-bold">一部引当</span>
       </div>
@@ -117,7 +125,9 @@ export function LotAllocationHeaderView({
   } else {
     // Unallocated
     mainStatusBadge = (
-      <div className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}>
+      <div
+        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+      >
         <span className="i-lucide-circle-dashed h-4 w-4" />
         <span className="text-sm font-bold">未引当</span>
       </div>

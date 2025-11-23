@@ -1,8 +1,6 @@
-
-
 // --- Helper Functions ---
 
-type AllocationStatus = 'over' | 'completed' | 'shortage' | 'unallocated';
+type AllocationStatus = "over" | "completed" | "shortage" | "unallocated";
 
 /**
  * 明細行の引当状態を判定する単一関数
@@ -16,7 +14,7 @@ export function getLineAllocationStatus(
   line: { id?: number; allocated_quantity?: string | number | null; status?: string | null },
   allocations: Record<number, number>,
   required: number,
-  isOver: boolean
+  isOver: boolean,
 ): AllocationStatus {
   const uiAllocated = Object.values(allocations).reduce((sum, qty) => sum + qty, 0);
   const dbAllocated = Number(line.allocated_quantity || 0);
@@ -24,7 +22,7 @@ export function getLineAllocationStatus(
 
   // 判定優先度:
   // 1. Over: allocated > required
-  if (isOver) return 'over';
+  if (isOver) return "over";
 
   // 2. Complete: allocated >= required かつ required > 0
   //    またはDBステータスがallocated/completed（tentativeは含めない）
@@ -34,19 +32,19 @@ export function getLineAllocationStatus(
   // required=0の明細は引当完了とみなさない
   // また、tentativeは仮引当なので完了とはみなさない
   if (required > 0 && totalAllocated >= required && !isOver) {
-    return 'completed';
+    return "completed";
   }
 
   // DBステータスがallocated/completedの場合も完了とみなす
   if (isAllocatedInDB && required > 0) {
-    return 'completed';
+    return "completed";
   }
 
   // 3. Shortage: allocated > 0 && allocated < required
-  if (totalAllocated > 0 && totalAllocated < required) return 'shortage';
+  if (totalAllocated > 0 && totalAllocated < required) return "shortage";
 
   // 4. Unallocated: allocated === 0
-  return 'unallocated';
+  return "unallocated";
 }
 
 // --- Main Component (Deprecated) ---

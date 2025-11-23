@@ -169,7 +169,9 @@ def execute_candidate_lot_query(
                     available_quantity=available_qty,
                     delivery_place_id=context.delivery_place_id,
                     delivery_place_name=delivery_place_name,
-                    status=getattr(lot_view, "lot_status", "active") if hasattr(lot_view, "lot_status") else getattr(lot_view, "status", "active"),
+                    status=getattr(lot_view, "lot_status", "active")
+                    if hasattr(lot_view, "lot_status")
+                    else getattr(lot_view, "status", "active"),
                 )
             )
 

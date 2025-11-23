@@ -488,9 +488,7 @@ def update_order_line_status(db: Session, order_line_id: int) -> None:
         str(line.converted_quantity if line.converted_quantity else line.order_quantity or 0)
     )
     allocated_qty = sum(
-        Decimal(str(a.allocated_quantity))
-        for a in line.allocations
-        if a.status != "cancelled"
+        Decimal(str(a.allocated_quantity)) for a in line.allocations if a.status != "cancelled"
     )
 
     # Update line status based on allocation
@@ -695,7 +693,7 @@ def allocate_manually(
 
     # 親注文のステータス更新
     update_order_allocation_status(db, line.order_id)
-    
+
     # 受注明細のステータス更新
     update_order_line_status(db, line.id)
 
