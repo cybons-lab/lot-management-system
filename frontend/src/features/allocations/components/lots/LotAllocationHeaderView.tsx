@@ -136,42 +136,39 @@ export function LotAllocationHeaderView({
 
       <div className="grid grid-cols-10 gap-4 p-6">
         {/* Left Column: Product Info (40%) */}
-        <div className="col-span-4 flex flex-col justify-center gap-3 border-r border-gray-100 pr-4">
-          {/* Product Name */}
-          <div className="flex flex-col gap-1">
-            <div className="text-lg leading-tight font-bold text-gray-900">{productName}</div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="i-lucide-box h-3 w-3" />
-              <span className="font-mono">{productCode}</span>
+        <div className="col-span-4 flex flex-col justify-center gap-4 border-r border-gray-100 pr-4">
+          {/* Supplier */}
+          {supplierName && (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">仕入元</span>
+              <div className="flex items-center gap-2">
+                <span className="i-lucide-truck h-3 w-3 text-gray-400" />
+                <span className="font-medium text-gray-800">{supplierName}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Product Code */}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-gray-400 uppercase">商品コード</span>
+            <div className="flex items-center gap-2">
+              <span className="i-lucide-box h-3 w-3 text-gray-400" />
+              <span className="font-mono font-medium text-gray-800">{productCode}</span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 text-sm">
-            {/* Supplier */}
-            {supplierName && (
-              <div className="flex items-start gap-2">
-                <span className="i-lucide-truck mt-0.5 h-4 w-4 text-gray-400" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">仕入元</span>
-                  <span className="font-medium text-gray-800">{supplierName}</span>
-                </div>
-              </div>
-            )}
+          {/* Product Name */}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-gray-400 uppercase">商品名</span>
+            <div className="text-lg leading-tight font-bold text-gray-900">{productName}</div>
+          </div>
 
-            {/* Arrow */}
-            {supplierName && (
-              <div className="flex justify-center py-0.5">
-                <span className="i-lucide-arrow-down h-4 w-4 text-blue-500" />
-              </div>
-            )}
-
-            {/* Delivery Place */}
-            <div className="flex items-start gap-2">
-              <span className="i-lucide-map-pin mt-0.5 h-4 w-4 text-gray-400" />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase">納入先</span>
-                <span className="font-medium text-gray-800">{deliveryPlaceName}</span>
-              </div>
+          {/* Delivery Place */}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-gray-400 uppercase">納入先</span>
+            <div className="flex items-center gap-2">
+              <span className="i-lucide-map-pin h-3 w-3 text-gray-400" />
+              <span className="font-medium text-gray-800">{deliveryPlaceName}</span>
             </div>
           </div>
         </div>
