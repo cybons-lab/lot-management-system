@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Product, ProductUomConversion
 
+
 getcontext().prec = 28
 
 if TYPE_CHECKING:  # pragma: no cover - 型チェック専用

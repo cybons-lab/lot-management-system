@@ -481,7 +481,7 @@ def seed_orders_with_lines(
 
         # 1-3 lines per order
         num_lines = rng.randint(1, 3)
-        for line_idx in range(num_lines):
+        for _line_idx in range(num_lines):
             prod = _choose(rng, all_products) if all_products else None
             
             # Determine unit (70% external, 30% internal)

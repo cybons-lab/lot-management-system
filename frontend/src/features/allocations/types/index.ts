@@ -2,25 +2,9 @@
  * Type definitions for lot allocation feature
  */
 
-import type { components } from "@/types/api";
+import type { OrderLine as SharedOrderLine } from "@/shared/types/aliases";
 
-export type OrderLine = components["schemas"]["OrderLineResponse"] & {
-  // Legacy fields for backward compatibility
-  line_no?: number | null;
-  product_code?: string | null;
-  product_name?: string | null;
-  quantity?: number | string | null;
-  due_date?: string | null;
-  allocated_qty?: number | string | null;
-  allocated_lots?: unknown[];
-  delivery_place_name?: string | null;
-  delivery_place_code?: string | null;
-  supplier_name?: string | null;
-  converted_quantity?: number | string | null; // Added for internal unit
-  product_internal_unit?: string | null;
-  product_external_unit?: string | null;
-  product_qty_per_internal_unit?: number | null;
-};
+export type OrderLine = SharedOrderLine;
 
 export type PriorityLevel = "urgent" | "warning" | "attention" | "allocated" | "inactive";
 

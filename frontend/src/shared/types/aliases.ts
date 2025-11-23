@@ -168,6 +168,9 @@ export type OrderLine = ApiOrderLine & {
   customer_code?: string | null;
   customer_name?: string | null;
   supplier_name?: string | null;
+  product_internal_unit?: string | null;
+  product_external_unit?: string | null;
+  product_qty_per_internal_unit?: number | null;
 };
 
 type ApiOrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
