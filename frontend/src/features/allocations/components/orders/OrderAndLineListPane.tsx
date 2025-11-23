@@ -146,7 +146,7 @@ interface OrderLineCardProps {
 }
 
 function OrderLineCard({ line, isSelected, onSelect }: OrderLineCardProps) {
-  const orderQty = parseFloat(String(line.order_quantity ?? 0));
+  const orderQty = parseFloat(String(line.quantity ?? line.order_quantity ?? 0));
 
   return (
     <div

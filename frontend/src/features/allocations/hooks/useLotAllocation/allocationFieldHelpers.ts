@@ -13,8 +13,32 @@ import type { OrderLine } from "@/shared/types/aliases";
  * @returns Order quantity as number
  */
 export function getOrderQuantity(line: OrderLine): number {
-  // Use converted_quantity (internal units) if available, otherwise fallback to external units
-  return Number(line.converted_quantity ?? line.order_quantity ?? line.quantity ?? 0);
+  const converted = Number(line.converted_quantity);
+  if (Number.isFinite(converted)) {
+    return converted;
+  }
+
+  const baseQuantity = Number(line.order_quantity ?? line.quantity ?? 0);
+  const internalUnit = line.product_internal_unit ?? line.unit ?? null;
+  const externalUnit = line.product_external_unit ?? null;
+  const orderUnit = line.unit ?? externalUnit ?? internalUnit ?? null;
+  const qtyPerInternalUnit = Number(line.product_qty_per_internal_unit ?? 0);
+
+  if (!internalUnit || !Number.isFinite(qtyPerInternalUnit) || qtyPerInternalUnit <= 0) {
+    return baseQuantity;
+  }
+
+  // Already in the internal (inventory) unit
+  if (orderUnit === internalUnit) {
+    return baseQuantity;
+  }
+
+  // Convert external order units to internal units when possible
+  if (externalUnit && orderUnit === externalUnit) {
+    return baseQuantity / qtyPerInternalUnit;
+  }
+
+  return baseQuantity;
 }
 
 /**

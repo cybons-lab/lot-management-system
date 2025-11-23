@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRef, useState } from "react";
 import { ArrowUp, ArrowDown, CheckCircle, Calendar, Building2, Filter, X } from "lucide-react";
 import type { CandidateLotItem } from "../../api";
+import { getOrderQuantity } from "../../hooks/useLotAllocation/allocationFieldHelpers";
 
 // --- Main Component ---
 
@@ -131,8 +132,7 @@ export function FlatAllocationList({
 
       const allocations = getLineAllocations(line.id);
       const totalAllocated = Object.values(allocations).reduce((sum, qty) => sum + qty, 0);
-      // Use converted_quantity (internal units) for accurate filtering
-      const required = Number(line.converted_quantity ?? line.quantity) || 0;
+      const required = getOrderQuantity(line);
       const remaining = required - totalAllocated;
       const candidates = getCandidateLots(line.id);
       const hasCandidates = candidates.length > 0;

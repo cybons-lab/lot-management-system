@@ -56,6 +56,9 @@ export function LotAllocationHeader({
   const deliveryDate = formatDate(orderLine.delivery_date || orderLine.due_date, {
     fallback: "未設定",
   });
+  const orderQuantity = Number(orderLine.order_quantity ?? orderLine.quantity ?? 0);
+  const orderUnit = orderLine.unit || orderLine.product_external_unit || "";
+  const inventoryUnit = orderLine.product_internal_unit || orderUnit;
 
   const [justSaved, setJustSaved] = useState(false);
   const prevSavingRef = useRef(isSaving);
@@ -81,7 +84,9 @@ export function LotAllocationHeader({
       deliveryDate={deliveryDate}
       productCode={productCode}
       productName={productName}
-      unit={orderLine.unit || ""}
+      orderUnit={orderUnit}
+      inventoryUnit={inventoryUnit}
+      orderQuantity={orderQuantity}
       requiredQty={requiredQty}
       totalAllocated={totalAllocated}
       remainingQty={remainingQty}

@@ -10,7 +10,9 @@ interface LotAllocationHeaderViewProps {
   deliveryDate: string;
   productCode: string;
   productName: string;
-  unit: string;
+  orderUnit: string;
+  inventoryUnit: string;
+  orderQuantity: number;
   requiredQty: number;
   totalAllocated: number;
   remainingQty: number;
@@ -35,7 +37,9 @@ export function LotAllocationHeaderView({
   deliveryDate,
   productCode,
   productName,
-  unit,
+  orderUnit,
+  inventoryUnit,
+  orderQuantity,
   requiredQty,
   totalAllocated,
   remainingQty,
@@ -167,9 +171,20 @@ export function LotAllocationHeaderView({
             <div className="flex items-baseline justify-between">
               <span className="text-xs font-bold text-gray-500">必要数</span>
               <span className="text-2xl font-bold text-gray-900">
-                {formatQuantity(requiredQty, unit)} <span className="text-sm font-normal text-gray-500">{unit}</span>
+                {formatQuantity(orderQuantity, orderUnit)}{" "}
+                <span className="text-sm font-normal text-gray-500">{orderUnit}</span>
               </span>
             </div>
+
+            {inventoryUnit && inventoryUnit !== orderUnit && (
+              <div className="flex items-baseline justify-between text-xs text-gray-500">
+                <span>在庫単位換算</span>
+                <span className="font-semibold text-gray-700">
+                  {formatQuantity(requiredQty, inventoryUnit)}{" "}
+                  <span className="text-[11px] font-normal text-gray-500">{inventoryUnit}</span>
+                </span>
+              </div>
+            )}
 
             {/* Compact Progress Bar */}
             <div className="flex flex-col gap-1">
@@ -180,9 +195,11 @@ export function LotAllocationHeaderView({
                 />
               </div>
               <div className="flex justify-between text-[10px] font-medium">
-                <span className="text-blue-600">引当: {formatQuantity(totalAllocated, unit)}</span>
+                <span className="text-blue-600">
+                  引当: {formatQuantity(totalAllocated, inventoryUnit)} {inventoryUnit}
+                </span>
                 <span className={cn(remainingQty > 0 ? "text-red-500" : "text-green-600")}>
-                  残: {formatQuantity(remainingQty, unit)}
+                  残: {formatQuantity(remainingQty, inventoryUnit)} {inventoryUnit}
                 </span>
               </div>
             </div>
