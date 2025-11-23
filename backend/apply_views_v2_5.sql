@@ -16,6 +16,7 @@ DROP VIEW IF EXISTS public.v_customer_daily_products CASCADE;
 DROP VIEW IF EXISTS public.v_lot_current_stock CASCADE;
 DROP VIEW IF EXISTS public.v_product_code_to_id CASCADE;
 DROP VIEW IF EXISTS public.v_order_line_details CASCADE;
+DROP VIEW IF EXISTS public.v_inventory_summary CASCADE;
 
 
 -- ============================================================
@@ -257,6 +258,28 @@ COMMENT ON VIEW public.v_order_line_details IS
 '受注明細の詳細情報ビュー - 顧客、商品、納入先、仕入元、引当情報を含む';
 
 
+-- ------------------------------------------------------------
+-- 11. v_inventory_summary（在庫集計ビュー）
+-- 目的: InventoryServiceの集計処理をDB側に委譲
+-- ------------------------------------------------------------
+CREATE VIEW public.v_inventory_summary AS
+SELECT
+    l.product_id,
+    l.warehouse_id,
+    SUM(l.current_quantity) AS total_quantity,
+    SUM(l.allocated_quantity) AS allocated_quantity,
+    (SUM(l.current_quantity) - SUM(l.allocated_quantity)) AS available_quantity,
+    MAX(l.updated_at) AS last_updated
+FROM public.lots l
+WHERE l.status = 'active'
+GROUP BY l.product_id, l.warehouse_id;
+
+ALTER TABLE public.v_inventory_summary OWNER TO admin;
+
+COMMENT ON VIEW public.v_inventory_summary IS 
+'在庫集計ビュー - 商品・倉庫ごとの在庫総数、引当済数、有効在庫数を集計';
+
+
 -- ============================================================
 -- 完了メッセージ
 -- ============================================================
@@ -275,5 +298,6 @@ BEGIN
     RAISE NOTICE '  8. v_product_code_to_id';
     RAISE NOTICE '  9. v_candidate_lots_by_order_line';
     RAISE NOTICE ' 10. v_order_line_details';
+    RAISE NOTICE ' 11. v_inventory_summary';
     RAISE NOTICE '==============================================';
 END $$;
