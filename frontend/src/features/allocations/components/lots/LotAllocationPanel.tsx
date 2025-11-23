@@ -2,13 +2,13 @@ import type { CandidateLotItem } from "../../api";
 import { getCustomerName, getDeliveryPlaceName, getProductName } from "../../utils/orderLineUtils";
 
 import { AllocationEmptyState } from "./AllocationEmptyState";
+import { useAllocationCalculations } from "./hooks/useAllocationCalculations";
 import { LotAllocationHeader } from "./LotAllocationHeader";
 import { LotAllocationList } from "./LotAllocationList";
-import { useAllocationCalculations } from "./hooks/useAllocationCalculations";
 import * as styles from "./styles";
 
-import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { cn } from "@/shared/libs/utils";
+import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface LotAllocationPanelProps {
   order?: OrderWithLinesResponse;

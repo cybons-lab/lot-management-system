@@ -4,7 +4,9 @@
  */
 
 import { useState } from "react";
+
 import { useBusinessRules, useToggleBusinessRuleActive, useDeleteBusinessRule } from "../hooks";
+
 import { Button } from "@/components/ui";
 
 export function BusinessRulesPage() {

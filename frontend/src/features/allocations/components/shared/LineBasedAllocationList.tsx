@@ -1,17 +1,17 @@
-import { useMemo, useState, useRef } from "react";
 import { useWindowVirtualizer, type VirtualItem } from "@tanstack/react-virtual";
 import { Filter, ArrowUp, ArrowDown, CheckCircle, Calendar, Building2, Layers, X } from "lucide-react";
+import { useMemo, useState, useRef } from "react";
 
-import type { OrderWithLinesResponse, OrderLine } from "@/shared/types/aliases";
-import { cn } from "../../../../shared/libs/utils";
 import { Button } from "../../../../components/ui";
-
+import { cn } from "../../../../shared/libs/utils";
 import type { CandidateLotItem } from "../../api";
 import { getOrderQuantity } from "../../hooks/useLotAllocation/allocationFieldHelpers";
-import { getLineAllocationStatus } from "./FlatAllocationList"; // reuse helper
 import { AllocationRowContainer } from "../lots/AllocationRowContainer";
 
+import { getLineAllocationStatus } from "./FlatAllocationList"; // reuse helper
 import * as styles from "./LineBasedAllocationList.styles";
+
+import type { OrderWithLinesResponse, OrderLine } from "@/shared/types/aliases";
 
 /**
  * LineBasedAllocationList - 明細単位でフラットに表示するコンポーネント

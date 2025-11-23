@@ -1,9 +1,18 @@
 /**
  * ProductDetailPage - 商品詳細/編集
  */
+import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Trash2, Edit } from "lucide-react";
+
+
+import type { ProductUpdate } from "../api/products-api";
+import { ProductForm } from "../components/ProductForm";
+import { useUpdateProduct, useDeleteProduct } from "../hooks/useProductMutations";
+import { useProductQuery } from "../hooks/useProductQuery";
+
+import * as styles from "./styles";
+
 import { Button } from "@/components/ui";
 import {
   AlertDialog,
@@ -16,11 +25,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import type { ProductUpdate } from "../api/products-api";
-import { ProductForm } from "../components/ProductForm";
-import { useProductQuery } from "../hooks/useProductQuery";
-import { useUpdateProduct, useDeleteProduct } from "../hooks/useProductMutations";
-import * as styles from "./styles";
 
 export function ProductDetailPage() {
   const navigate = useNavigate();

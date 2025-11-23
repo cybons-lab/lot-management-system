@@ -1,8 +1,9 @@
 /**
  * Products Table Columns
  */
-import type { Column } from "@/shared/components/data/DataTable";
 import type { Product } from "../api/products-api";
+
+import type { Column } from "@/shared/components/data/DataTable";
 
 export const productColumns: Column<Product>[] = [
   {

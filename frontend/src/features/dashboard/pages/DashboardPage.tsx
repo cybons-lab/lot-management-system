@@ -5,8 +5,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { api } from "@/services/api";
 import { Dashboard } from "../components/Dashboard";
+
+import { api } from "@/services/api";
 
 export function DashboardPage() {
   const {

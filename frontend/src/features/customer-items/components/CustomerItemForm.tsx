@@ -4,10 +4,12 @@
  */
 
 import { useState } from "react";
+
+import type { CreateCustomerItemRequest } from "../api";
+
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
-import type { CreateCustomerItemRequest } from "../api";
 
 interface CustomerItemFormProps {
   onSubmit: (data: CreateCustomerItemRequest) => void;

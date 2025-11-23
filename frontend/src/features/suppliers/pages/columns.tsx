@@ -1,8 +1,9 @@
 /**
  * Suppliers Table Columns
  */
-import type { Column } from "@/shared/components/data/DataTable";
 import type { Supplier } from "../api/suppliers-api";
+
+import type { Column } from "@/shared/components/data/DataTable";
 
 export const supplierColumns: Column<Supplier>[] = [
   {

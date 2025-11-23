@@ -1,12 +1,14 @@
 /**
  * ProductForm - 商品新規登録/編集フォーム
  */
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button, Input, Label } from "@/components/ui";
+
 import type { Product } from "../api/products-api";
 import { form as formStyles } from "../pages/styles";
+
+import { Button, Input, Label } from "@/components/ui";
 
 const productFormSchema = z.object({
   maker_part_code: z.string().min(1, "メーカー品番は必須です").max(50),

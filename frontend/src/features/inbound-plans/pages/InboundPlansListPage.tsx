@@ -5,9 +5,11 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import { InboundPlansList, type InboundPlansFilters } from "../components/InboundPlansList";
 import { useInboundPlans, useDeleteInboundPlan } from "../hooks";
+
 import { ROUTES } from "@/constants/routes";
-import { InboundPlansList, InboundPlansFilters } from "../components/InboundPlansList";
 
 export function InboundPlansListPage() {
   const navigate = useNavigate();

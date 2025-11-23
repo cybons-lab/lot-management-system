@@ -4,10 +4,12 @@
  */
 
 import { useState } from "react";
+
+import type { CreateAdjustmentRequest, AdjustmentType } from "../api";
+
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
-import type { CreateAdjustmentRequest, AdjustmentType } from "../api";
 
 interface AdjustmentFormProps {
   onSubmit: (data: CreateAdjustmentRequest) => void;

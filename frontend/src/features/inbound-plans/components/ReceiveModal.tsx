@@ -4,8 +4,10 @@
  */
 
 import { useState } from "react";
-import { useReceiveInbound } from "../hooks";
+
 import type { InboundPlanLine } from "../api";
+import { useReceiveInbound } from "../hooks";
+
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 

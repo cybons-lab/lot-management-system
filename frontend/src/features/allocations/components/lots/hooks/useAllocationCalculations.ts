@@ -1,4 +1,5 @@
 import { getOrderQuantity } from "../../../hooks/useLotAllocation/allocationFieldHelpers";
+
 import type { OrderLine } from "@/shared/types/aliases";
 
 interface UseAllocationCalculationsParams {

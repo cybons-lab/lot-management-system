@@ -1,5 +1,6 @@
-import { formatDate } from "@/shared/utils/date";
 import type { CandidateLotItem } from "../../api";
+
+import { formatDate } from "@/shared/utils/date";
 
 interface LotInfoProps {
   lot: CandidateLotItem;

@@ -1,9 +1,18 @@
 /**
  * WarehouseDetailPage - 倉庫詳細/編集
  */
+import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Trash2, Edit } from "lucide-react";
+
+
+import type { WarehouseUpdate } from "../api/warehouses-api";
+import { WarehouseForm } from "../components/WarehouseForm";
+import { useUpdateWarehouse, useDeleteWarehouse } from "../hooks/useWarehouseMutations";
+import { useWarehouseQuery } from "../hooks/useWarehouseQuery";
+
+import * as styles from "./styles";
+
 import { Button } from "@/components/ui";
 import {
   AlertDialog,
@@ -16,11 +25,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import type { WarehouseUpdate } from "../api/warehouses-api";
-import { WarehouseForm } from "../components/WarehouseForm";
-import { useWarehouseQuery } from "../hooks/useWarehouseQuery";
-import { useUpdateWarehouse, useDeleteWarehouse } from "../hooks/useWarehouseMutations";
-import * as styles from "./styles";
 
 const warehouseTypeLabels: Record<string, string> = {
   internal: "社内",
