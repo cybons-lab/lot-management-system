@@ -148,14 +148,14 @@ export function LotAllocationHeaderView({
         {/* 1行目: 商品ヘッダー (全幅) */}
         <div className="flex items-center gap-4 border-b border-gray-100 pb-3">
           {/* 商品コードバッジ */}
-          <div className="flex items-center gap-2 rounded bg-gray-100 px-2 py-1 text-xs font-mono font-medium text-gray-600">
+          <div className="flex items-center gap-2 rounded bg-gray-100 px-2 py-1 font-mono text-xs font-medium text-gray-600">
             <span className="i-lucide-barcode h-3.5 w-3.5" />
             {productCode}
           </div>
           {/* 商品名 */}
           <div className="flex items-center gap-2">
             <span className="i-lucide-package h-5 w-5 text-gray-400" />
-            <h2 className="text-xl font-bold text-gray-900 leading-tight">{productName}</h2>
+            <h2 className="text-xl leading-tight font-bold text-gray-900">{productName}</h2>
           </div>
         </div>
 
@@ -166,7 +166,7 @@ export function LotAllocationHeaderView({
             {/* Supplier */}
             {supplierName && (
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                   仕入元
                 </span>
                 <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export function LotAllocationHeaderView({
 
             {/* Delivery Place */}
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                 納入先
               </span>
               <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export function LotAllocationHeaderView({
 
             {/* Delivery Date */}
             <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                 納期
               </span>
               <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export function LotAllocationHeaderView({
                 </div>
 
                 {inventoryUnit && inventoryUnit !== orderUnit && (
-                  <div className="flex items-baseline justify-between text-xs text-gray-500 border-t border-gray-200/50 pt-2">
+                  <div className="flex items-baseline justify-between border-t border-gray-200/50 pt-2 text-xs text-gray-500">
                     <span>在庫単位換算</span>
                     <span className="font-semibold text-gray-700">
                       {formatQuantity(requiredQty, inventoryUnit)}{" "}
@@ -252,14 +252,14 @@ export function LotAllocationHeaderView({
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-5 flex items-center gap-2 pt-4 border-t border-gray-200/50">
+            <div className="mt-5 flex items-center gap-2 border-t border-gray-200/50 pt-4">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={onAutoAllocate}
                 disabled={isLoading || !hasCandidates || remainingQty <= 0}
-                className="h-9 min-w-[4rem] flex-1 px-2 text-xs bg-white hover:bg-gray-50"
+                className="h-9 min-w-[4rem] flex-1 bg-white px-2 text-xs hover:bg-gray-50"
               >
                 自動引当
               </Button>
@@ -270,7 +270,7 @@ export function LotAllocationHeaderView({
                 size="sm"
                 onClick={onClearAllocations}
                 disabled={totalAllocated === 0}
-                className="h-9 min-w-[4rem] flex-1 px-2 text-xs bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                className="h-9 min-w-[4rem] flex-1 bg-white px-2 text-xs hover:border-red-200 hover:bg-red-50 hover:text-red-600"
               >
                 クリア
               </Button>
@@ -312,21 +312,21 @@ export function LotAllocationHeaderView({
               )}
 
               {hasExpiredError && (
-                <div className="flex items-center gap-2 text-xs text-red-600 font-medium">
+                <div className="flex items-center gap-2 text-xs font-medium text-red-600">
                   <span className="i-lucide-alert-octagon h-3.5 w-3.5" />
                   <span>期限切れロットあり</span>
                 </div>
               )}
 
               {hasExpiryWarning && (
-                <div className="flex items-center gap-2 text-xs text-amber-600 font-medium">
+                <div className="flex items-center gap-2 text-xs font-medium text-amber-600">
                   <span className="i-lucide-alert-triangle h-3.5 w-3.5" />
                   <span>期限切迫ロットあり</span>
                 </div>
               )}
 
               {!hasCandidates && (
-                <div className="flex items-center gap-2 text-xs text-red-600 font-medium">
+                <div className="flex items-center gap-2 text-xs font-medium text-red-600">
                   <span className="i-lucide-alert-circle h-3.5 w-3.5" />
                   <span>引当候補なし</span>
                 </div>

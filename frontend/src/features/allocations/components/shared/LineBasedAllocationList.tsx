@@ -280,7 +280,7 @@ export function LineBasedAllocationList({
                 ? f.id === "all"
                   ? "bg-gray-800"
                   : `bg - ${f.color.split("-")[0]} -${f.color.split("-")[1]} `
-                : `border - ${f.color.split("-")[0]} -200 text - ${f.color.split("-")[0]} -600 hover: bg - ${f.color.split("-")[0]} -50`,
+                : `- border ${f.color.split("-")[0]} -200 text - ${f.color.split("-")[0]} -600 hover: bg - ${f.color.split("-")[0]} -50`,
             )}
           >
             {f.label}
