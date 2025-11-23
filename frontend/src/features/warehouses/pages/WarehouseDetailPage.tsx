@@ -124,25 +124,25 @@ export function WarehouseDetailPage() {
         ) : (
           <div className="space-y-4">
             <div className={styles.form.field}>
-              <label className={styles.form.label}>倉庫コード</label>
+              <div className={styles.form.label}>倉庫コード</div>
               <p className="font-mono text-lg font-medium">{warehouse.warehouse_code}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>倉庫名</label>
+              <div className={styles.form.label}>倉庫名</div>
               <p className="text-lg">{warehouse.warehouse_name}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>タイプ</label>
+              <div className={styles.form.label}>タイプ</div>
               <p>{warehouseTypeLabels[warehouse.warehouse_type] ?? warehouse.warehouse_type}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>作成日時</label>
+              <div className={styles.form.label}>作成日時</div>
               <p className="text-gray-600">
                 {new Date(warehouse.created_at).toLocaleString("ja-JP")}
               </p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>更新日時</label>
+              <div className={styles.form.label}>更新日時</div>
               <p className="text-gray-600">
                 {new Date(warehouse.updated_at).toLocaleString("ja-JP")}
               </p>

@@ -121,29 +121,29 @@ export function ProductDetailPage() {
         ) : (
           <div className="space-y-4">
             <div className={styles.form.field}>
-              <label className={styles.form.label}>メーカー品番</label>
+              <div className={styles.form.label}>メーカー品番</div>
               <p className="font-mono text-lg font-medium">{product.maker_part_code}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>商品名</label>
+              <div className={styles.form.label}>商品名</div>
               <p className="text-lg">{product.product_name}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>単位</label>
+              <div className={styles.form.label}>単位</div>
               <p>{product.base_unit}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>消費期限日数</label>
+              <div className={styles.form.label}>消費期限日数</div>
               <p>{product.consumption_limit_days ?? "-"}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>作成日時</label>
+              <div className={styles.form.label}>作成日時</div>
               <p className="text-gray-600">
                 {new Date(product.created_at).toLocaleString("ja-JP")}
               </p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>更新日時</label>
+              <div className={styles.form.label}>更新日時</div>
               <p className="text-gray-600">
                 {new Date(product.updated_at).toLocaleString("ja-JP")}
               </p>

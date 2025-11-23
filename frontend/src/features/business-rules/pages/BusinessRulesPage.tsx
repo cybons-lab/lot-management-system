@@ -56,8 +56,11 @@ export function BusinessRulesPage() {
       {/* Filter */}
       <div className="rounded-lg border bg-white p-4">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">状態フィルタ:</label>
+          <label htmlFor="statusFilter" className="text-sm font-medium">
+            状態フィルタ:
+          </label>
           <select
+            id="statusFilter"
             value={isActiveFilter === undefined ? "all" : isActiveFilter ? "active" : "inactive"}
             onChange={(e) => {
               if (e.target.value === "all") setIsActiveFilter(undefined);
