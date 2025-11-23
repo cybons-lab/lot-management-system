@@ -17,12 +17,9 @@ from app.domain.order import (
 from app.models import (
     Allocation,
     Customer,
-    CustomerItem,
-    DeliveryPlace,
     Order,
     OrderLine,
     Product,
-    Supplier,
 )
 from app.schemas.orders.orders_schema import (
     OrderCreate,

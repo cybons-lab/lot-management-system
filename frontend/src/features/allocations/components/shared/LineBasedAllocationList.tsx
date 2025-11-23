@@ -1,6 +1,15 @@
 import { useMemo, useState, useRef } from "react";
 import { useWindowVirtualizer, type VirtualItem } from "@tanstack/react-virtual";
-import { Filter, ArrowUp, ArrowDown, CheckCircle, Calendar, Building2, Layers, X } from "lucide-react";
+import {
+  Filter,
+  ArrowUp,
+  ArrowDown,
+  CheckCircle,
+  Calendar,
+  Building2,
+  Layers,
+  X,
+} from "lucide-react";
 
 import type { OrderWithLinesResponse, OrderLine } from "@/shared/types/aliases";
 import { cn } from "../../../../shared/libs/utils";
@@ -380,227 +389,225 @@ export function LineBasedAllocationList({
                 transform: `translateY(${virtualItem.start}px)`,
               }}
             >
-              {isLineMode ? (
-                // 明細モード
-                (() => {
-                  const lineItem = item as LineWithOrderInfo;
-                  const isChecked = selectedLineIds.has(lineItem.id);
-                  const isFirstChecked =
-                    virtualItem.index === firstCheckedIndex && firstCheckedIndex > 0;
+              {isLineMode
+                ? // 明細モード
+                  (() => {
+                    const lineItem = item as LineWithOrderInfo;
+                    const isChecked = selectedLineIds.has(lineItem.id);
+                    const isFirstChecked =
+                      virtualItem.index === firstCheckedIndex && firstCheckedIndex > 0;
 
-                  return (
-                    <div className="pb-4">
-                      {/* マーカー */}
-                      {isFirstChecked && (
-                        <div
-                          ref={checkedSectionRef}
-                          className="mb-8 flex items-center gap-4 pt-4"
-                        >
-                          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
-                          <div className="flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 py-1 text-xs font-medium text-green-700 shadow-sm">
-                            <CheckCircle className="h-3 w-3" />
-                            <span>
-                              ここからチェック済み ({sortedLines.length - firstCheckedIndex}件)
-                            </span>
+                    return (
+                      <div className="pb-4">
+                        {/* マーカー */}
+                        {isFirstChecked && (
+                          <div
+                            ref={checkedSectionRef}
+                            className="mb-8 flex items-center gap-4 pt-4"
+                          >
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+                            <div className="flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-4 py-1 text-xs font-medium text-green-700 shadow-sm">
+                              <CheckCircle className="h-3 w-3" />
+                              <span>
+                                ここからチェック済み ({sortedLines.length - firstCheckedIndex}件)
+                              </span>
+                            </div>
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
                           </div>
-                          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
-                        </div>
-                      )}
+                        )}
 
-                      {/* Order Card UI (Denormalized) */}
-                      <div className={styles.orderCard(isChecked)}>
-                        {/* Header */}
-                        <div className={styles.orderCardHeader(isChecked)}>
-                          <div className={styles.orderCardHeaderLeft}>
-                            {/* Checkbox for single line */}
-                            <div className="flex shrink-0 items-center">
+                        {/* Order Card UI (Denormalized) */}
+                        <div className={styles.orderCard(isChecked)}>
+                          {/* Header */}
+                          <div className={styles.orderCardHeader(isChecked)}>
+                            <div className={styles.orderCardHeaderLeft}>
+                              {/* Checkbox for single line */}
+                              <div className="flex shrink-0 items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => {
+                                    setSelectedLineIds((prev) => {
+                                      const newSet = new Set(prev);
+                                      if (isChecked) newSet.delete(lineItem.id);
+                                      else newSet.add(lineItem.id);
+                                      return newSet;
+                                    });
+                                  }}
+                                  className={styles.checkbox}
+                                />
+                              </div>
+                              <div className="flex items-baseline gap-2">
+                                <span className={styles.orderLabel}>ORDER</span>
+                                <span className={styles.orderNumber}>{lineItem.order_number}</span>
+                              </div>
+                              <div className="h-4 w-px bg-gray-300" />
+                              <div className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4 text-gray-400" />
+                                <span className={styles.customerName}>
+                                  {lineItem.customer_name}
+                                </span>
+                              </div>
+                            </div>
+                            <div className={styles.orderCardHeaderRight}>
+                              <div className={styles.orderDate}>
+                                <Calendar className="h-4 w-4 text-gray-400" />
+                                <span className="ml-1">受注日: {lineItem.order_date}</span>
+                              </div>
+                              {isChecked && (
+                                <div className={styles.completedBadge}>
+                                  <CheckCircle className="h-4 w-4 text-green-700" />
+                                  <span className={styles.completedBadgeText}>完了</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Line Detail */}
+                          {!isChecked && (
+                            <div className={styles.orderCardBody}>
+                              <AllocationRowContainer
+                                order={lineItem.order}
+                                line={lineItem.line}
+                                customerName={lineItem.customer_name}
+                                productName={getProductName(lineItem.line)}
+                                deliveryPlaceName={getDeliveryPlaceName(
+                                  lineItem.order,
+                                  lineItem.line,
+                                )}
+                                getLineAllocations={getLineAllocations}
+                                onLotAllocationChange={onLotAllocationChange}
+                                onAutoAllocate={onAutoAllocate}
+                                onClearAllocations={onClearAllocations}
+                                onSaveAllocations={onSaveAllocations}
+                                lineStatus={lineStatuses[lineItem.id] || "clean"}
+                                isOverAllocated={isOverAllocated(lineItem.id)}
+                                isActive={activeLineId === lineItem.id}
+                                onActivate={() => setActiveLineId(lineItem.id)}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()
+                : // グルーピングモード
+                  (() => {
+                    const group = item as GroupedOrder;
+                    const allLinesChecked = group.lines.every((line) =>
+                      selectedLineIds.has(line.id),
+                    );
+                    const someLinesChecked = group.lines.some((line) =>
+                      selectedLineIds.has(line.id),
+                    );
+
+                    return (
+                      <div className="pb-6">
+                        <div className={styles.groupHeaderContainer}>
+                          {/* グループヘッダー */}
+                          <div className={styles.groupHeaderTitle}>
+                            <div className={styles.groupHeaderLeft}>
                               <input
                                 type="checkbox"
-                                checked={isChecked}
+                                checked={allLinesChecked}
+                                ref={(el) => {
+                                  if (el) el.indeterminate = someLinesChecked && !allLinesChecked;
+                                }}
                                 onChange={() => {
                                   setSelectedLineIds((prev) => {
                                     const newSet = new Set(prev);
-                                    if (isChecked) newSet.delete(lineItem.id);
-                                    else newSet.add(lineItem.id);
+                                    if (allLinesChecked) {
+                                      group.lines.forEach((line) => newSet.delete(line.id));
+                                    } else {
+                                      group.lines.forEach((line) => newSet.add(line.id));
+                                    }
                                     return newSet;
                                   });
                                 }}
                                 className={styles.checkbox}
                               />
-                            </div>
-                            <div className="flex items-baseline gap-2">
                               <span className={styles.orderLabel}>ORDER</span>
-                              <span className={styles.orderNumber}>{lineItem.order_number}</span>
+                              <span className={styles.orderNumber}>{group.order_number}</span>
+                              <div className="h-4 w-px bg-blue-300" />
+                              <Building2 className="h-4 w-4 text-blue-600" />
+                              <span className="font-bold text-gray-800">{group.customer_name}</span>
+                              <Calendar className="ml-4 h-4 w-4 text-gray-400" />
+                              <span className="text-sm text-gray-600">
+                                受注日: {group.order_date}
+                              </span>
                             </div>
-                            <div className="h-4 w-px bg-gray-300" />
-                            <div className="flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-gray-400" />
-                              <span className={styles.customerName}>{lineItem.customer_name}</span>
+                            <div className={styles.groupHeaderBadge}>
+                              {group.lines.length} 件の明細
                             </div>
                           </div>
-                          <div className={styles.orderCardHeaderRight}>
-                            <div className={styles.orderDate}>
-                              <Calendar className="h-4 w-4 text-gray-400" />
-                              <span className="ml-1">受注日: {lineItem.order_date}</span>
-                            </div>
-                            {isChecked && (
-                              <div className={styles.completedBadge}>
-                                <CheckCircle className="h-4 w-4 text-green-700" />
-                                <span className={styles.completedBadgeText}>完了</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
 
-                        {/* Line Detail */}
-                        {!isChecked && (
-                          <div className={styles.orderCardBody}>
-                            <AllocationRowContainer
-                              order={lineItem.order}
-                              line={lineItem.line}
-                              customerName={lineItem.customer_name}
-                              productName={getProductName(lineItem.line)}
-                              deliveryPlaceName={getDeliveryPlaceName(lineItem.order, lineItem.line)}
-                              getLineAllocations={getLineAllocations}
-                              onLotAllocationChange={onLotAllocationChange}
-                              onAutoAllocate={onAutoAllocate}
-                              onClearAllocations={onClearAllocations}
-                              onSaveAllocations={onSaveAllocations}
-                              lineStatus={lineStatuses[lineItem.id] || "clean"}
-                              isOverAllocated={isOverAllocated(lineItem.id)}
-                              isActive={activeLineId === lineItem.id}
-                              onActivate={() => setActiveLineId(lineItem.id)}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()
-              ) : (
-                // グルーピングモード
-                (() => {
-                  const group = item as GroupedOrder;
-                  const allLinesChecked = group.lines.every((line) =>
-                    selectedLineIds.has(line.id),
-                  );
-                  const someLinesChecked = group.lines.some((line) =>
-                    selectedLineIds.has(line.id),
-                  );
+                          {/* 明細リスト */}
+                          <div className={styles.groupLinesContainer}>
+                            {group.lines.map((lineItem) => {
+                              const isChecked = selectedLineIds.has(lineItem.id);
 
-                  return (
-                    <div className="pb-6">
-                      <div className={styles.groupHeaderContainer}>
-                        {/* グループヘッダー */}
-                        <div className={styles.groupHeaderTitle}>
-                          <div className={styles.groupHeaderLeft}>
-                            <input
-                              type="checkbox"
-                              checked={allLinesChecked}
-                              ref={(el) => {
-                                if (el) el.indeterminate = someLinesChecked && !allLinesChecked;
-                              }}
-                              onChange={() => {
-                                setSelectedLineIds((prev) => {
-                                  const newSet = new Set(prev);
-                                  if (allLinesChecked) {
-                                    group.lines.forEach((line) => newSet.delete(line.id));
-                                  } else {
-                                    group.lines.forEach((line) => newSet.add(line.id));
-                                  }
-                                  return newSet;
-                                });
-                              }}
-                              className={styles.checkbox}
-                            />
-                            <span className={styles.orderLabel}>ORDER</span>
-                            <span className={styles.orderNumber}>{group.order_number}</span>
-                            <div className="h-4 w-px bg-blue-300" />
-                            <Building2 className="h-4 w-4 text-blue-600" />
-                            <span className="font-bold text-gray-800">
-                              {group.customer_name}
-                            </span>
-                            <Calendar className="ml-4 h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">
-                              受注日: {group.order_date}
-                            </span>
-                          </div>
-                          <div className={styles.groupHeaderBadge}>
-                            {group.lines.length} 件の明細
-                          </div>
-                        </div>
-
-                        {/* 明細リスト */}
-                        <div className={styles.groupLinesContainer}>
-                          {group.lines.map((lineItem) => {
-                            const isChecked = selectedLineIds.has(lineItem.id);
-
-                            return (
-                              <div
-                                key={lineItem.id}
-                                className={styles.orderCard(isChecked)}
-                              >
-                                <div className={styles.orderCardHeader(isChecked)}>
-                                  <div className={styles.orderCardHeaderLeft}>
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={() => {
-                                        setSelectedLineIds((prev) => {
-                                          const newSet = new Set(prev);
-                                          if (isChecked) newSet.delete(lineItem.id);
-                                          else newSet.add(lineItem.id);
-                                          return newSet;
-                                        });
-                                      }}
-                                      className={styles.checkbox}
-                                    />
-                                    <span className="text-sm font-medium text-gray-700">
-                                      明細 #{lineItem.line.id}
-                                    </span>
-                                    <span className="text-sm text-gray-600">
-                                      {getProductName(lineItem.line)}
-                                    </span>
+                              return (
+                                <div key={lineItem.id} className={styles.orderCard(isChecked)}>
+                                  <div className={styles.orderCardHeader(isChecked)}>
+                                    <div className={styles.orderCardHeaderLeft}>
+                                      <input
+                                        type="checkbox"
+                                        checked={isChecked}
+                                        onChange={() => {
+                                          setSelectedLineIds((prev) => {
+                                            const newSet = new Set(prev);
+                                            if (isChecked) newSet.delete(lineItem.id);
+                                            else newSet.add(lineItem.id);
+                                            return newSet;
+                                          });
+                                        }}
+                                        className={styles.checkbox}
+                                      />
+                                      <span className="text-sm font-medium text-gray-700">
+                                        明細 #{lineItem.line.id}
+                                      </span>
+                                      <span className="text-sm text-gray-600">
+                                        {getProductName(lineItem.line)}
+                                      </span>
+                                    </div>
+                                    {isChecked && (
+                                      <div className={styles.completedBadge}>
+                                        <CheckCircle className="h-4 w-4 text-green-700" />
+                                        <span className={styles.completedBadgeText}>完了</span>
+                                      </div>
+                                    )}
                                   </div>
-                                  {isChecked && (
-                                    <div className={styles.completedBadge}>
-                                      <CheckCircle className="h-4 w-4 text-green-700" />
-                                      <span className={styles.completedBadgeText}>完了</span>
+                                  {!isChecked && (
+                                    <div className={styles.orderCardBody}>
+                                      <AllocationRowContainer
+                                        order={lineItem.order}
+                                        line={lineItem.line}
+                                        customerName={lineItem.customer_name}
+                                        productName={getProductName(lineItem.line)}
+                                        deliveryPlaceName={getDeliveryPlaceName(
+                                          lineItem.order,
+                                          lineItem.line,
+                                        )}
+                                        getLineAllocations={getLineAllocations}
+                                        onLotAllocationChange={onLotAllocationChange}
+                                        onAutoAllocate={onAutoAllocate}
+                                        onClearAllocations={onClearAllocations}
+                                        onSaveAllocations={onSaveAllocations}
+                                        lineStatus={lineStatuses[lineItem.id] || "clean"}
+                                        isOverAllocated={isOverAllocated(lineItem.id)}
+                                        isActive={activeLineId === lineItem.id}
+                                        onActivate={() => setActiveLineId(lineItem.id)}
+                                      />
                                     </div>
                                   )}
                                 </div>
-                                {!isChecked && (
-                                  <div className={styles.orderCardBody}>
-                                    <AllocationRowContainer
-                                      order={lineItem.order}
-                                      line={lineItem.line}
-                                      customerName={lineItem.customer_name}
-                                      productName={getProductName(lineItem.line)}
-                                      deliveryPlaceName={getDeliveryPlaceName(
-                                        lineItem.order,
-                                        lineItem.line,
-                                      )}
-                                      getLineAllocations={getLineAllocations}
-                                      onLotAllocationChange={onLotAllocationChange}
-                                      onAutoAllocate={onAutoAllocate}
-                                      onClearAllocations={onClearAllocations}
-                                      onSaveAllocations={onSaveAllocations}
-                                      lineStatus={lineStatuses[lineItem.id] || "clean"}
-                                      isOverAllocated={isOverAllocated(lineItem.id)}
-                                      isActive={activeLineId === lineItem.id}
-                                      onActivate={() => setActiveLineId(lineItem.id)}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })()
-              )}
+                    );
+                  })()}
             </div>
           );
         })}
