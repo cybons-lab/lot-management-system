@@ -25,7 +25,7 @@ from sqlalchemy.orm import Session
 from app.core.database import truncate_all_tables
 from app.models.forecast_models import ForecastCurrent
 from app.models.inventory_models import Lot, StockMovement, StockTransactionType
-from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
+from app.models.masters_models import Customer, CustomerItem, DeliveryPlace, Product, Supplier, Warehouse
 from app.models.orders_models import Allocation, Order, OrderLine
 from app.repositories.seed_snapshot_repo import SeedSnapshotRepository
 from app.schemas.admin.admin_simulate_schema import (
@@ -311,6 +311,55 @@ def create_master_data(
         db.execute(stmt)
         db.flush()
     tracker.add_log(task_id, f"✓ Created {num_warehouses} warehouses")
+
+    # CustomerItems (得意先品番マッピング)
+    tracker.add_log(task_id, "→ Creating CustomerItems...")
+    
+    # Fetch current state to generate CustomerItems
+    temp_customers: list[Customer] = db.execute(select(Customer)).scalars().all()
+    temp_suppliers: list[Supplier] = db.execute(select(Supplier)).scalars().all()
+    temp_products: list[Product] = db.execute(select(Product)).scalars().all()
+    
+    customer_item_rows = []
+    if temp_customers and temp_suppliers and temp_products:
+        existing_external_codes: set[tuple[int, str]] = set()
+        
+        # For each customer, create mappings for a subset of products (to avoid too many combinations)
+        for customer in temp_customers:
+            # Each customer has mappings for 30-50% of all products
+            num_mapped_products = max(1, int(len(temp_products) * rng.uniform(0.3, 0.5)))
+            mapped_products = rng.sample(temp_products, min(num_mapped_products, len(temp_products)))
+            
+            for product in mapped_products:
+                # Generate unique external_product_code for this customer
+                external_code = f"{customer.customer_code}-{product.maker_part_code}"
+                if (customer.id, external_code) in existing_external_codes:
+                    continue
+                existing_external_codes.add((customer.id, external_code))
+                
+                # Randomly assign a supplier (essential for displaying supplier name)
+                supplier = _choose(rng, temp_suppliers)
+                
+                customer_item_rows.append({
+                    "customer_id": customer.id,
+                    "external_product_code": external_code,
+                    "product_id": product.id,
+                    "supplier_id": supplier.id,
+                    "base_unit": product.base_unit,
+                    "pack_unit": None,
+                    "pack_quantity": None,
+                    "special_instructions": None,
+                    "created_at": datetime.utcnow(),
+                })
+    
+    if customer_item_rows:
+        stmt = pg_insert(CustomerItem).values(customer_item_rows)
+        stmt = stmt.on_conflict_do_nothing(index_elements=["customer_id", "external_product_code"])
+        db.execute(stmt)
+        db.flush()
+        tracker.add_log(task_id, f"✓ Created {len(customer_item_rows)} customer items")
+    else:
+        tracker.add_log(task_id, "⚠ Skipped customer items (insufficient master data)")
 
     db.commit()
     tracker.add_log(task_id, "✓ Master data committed to DB")
