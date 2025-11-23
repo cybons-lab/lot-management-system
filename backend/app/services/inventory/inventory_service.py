@@ -31,7 +31,7 @@ class InventoryService:
         warehouse_id: int | None = None,
     ) -> list[InventoryItemResponse]:
         """
-        Get inventory items from inventory_items table.
+        Get inventory items from v_inventory_summary view.
 
         Args:
             skip: Number of records to skip (pagination)
@@ -42,48 +42,47 @@ class InventoryService:
         Returns:
             List of inventory items
         """
-        query = (
-            self.db.query(
-                Lot.product_id,
-                Lot.warehouse_id,
-                func.sum(Lot.current_quantity).label("total_quantity"),
-                func.sum(Lot.allocated_quantity).label("allocated_quantity"),
-                func.max(Lot.updated_at).label("last_updated"),
-            )
-            .filter(Lot.status == "active")
-            .group_by(Lot.product_id, Lot.warehouse_id)
-        )
+        # Use raw SQL or map a model to the view.
+        # Here we use raw SQL for simplicity as we haven't defined a SQLAlchemy model for the view yet.
+        # Alternatively, we could define a read-only model.
+        
+        # Construct query
+        query = "SELECT product_id, warehouse_id, total_quantity, allocated_quantity, available_quantity, last_updated FROM v_inventory_summary WHERE 1=1"
+        params = {}
 
         if product_id is not None:
-            query = query.filter(Lot.product_id == product_id)
+            query += " AND product_id = :product_id"
+            params["product_id"] = product_id
 
         if warehouse_id is not None:
-            query = query.filter(Lot.warehouse_id == warehouse_id)
+            query += " AND warehouse_id = :warehouse_id"
+            params["warehouse_id"] = warehouse_id
 
-        # Pagination on aggregated results is tricky in pure SQL without subqueries or window functions if we want total count.
-        # For simplicity in this refactor, we'll apply limit/offset to the grouped result.
-        query = query.order_by(Lot.product_id, Lot.warehouse_id).offset(skip).limit(limit)
+        query += " ORDER BY product_id, warehouse_id LIMIT :limit OFFSET :skip"
+        params["limit"] = limit
+        params["skip"] = skip
 
-        results = query.all()
+        from sqlalchemy import text
+        result = self.db.execute(text(query), params).fetchall()
 
         return [
             InventoryItemResponse(
-                id=idx + 1,  # Dummy ID since it's an aggregation
+                id=idx + 1,  # Dummy ID
                 product_id=row.product_id,
                 warehouse_id=row.warehouse_id,
                 total_quantity=row.total_quantity,
                 allocated_quantity=row.allocated_quantity,
-                available_quantity=row.total_quantity - row.allocated_quantity,
+                available_quantity=row.available_quantity,
                 last_updated=row.last_updated,
             )
-            for idx, row in enumerate(results)
+            for idx, row in enumerate(result)
         ]
 
     def get_inventory_item_by_product_warehouse(
         self, product_id: int, warehouse_id: int
     ) -> InventoryItemResponse | None:
         """
-        Get inventory item by product ID and warehouse ID.
+        Get inventory item by product ID and warehouse ID using view.
 
         Args:
             product_id: Product ID
@@ -92,32 +91,23 @@ class InventoryService:
         Returns:
             Inventory item, or None if not found
         """
-        result = (
-            self.db.query(
-                Lot.product_id,
-                Lot.warehouse_id,
-                func.sum(Lot.current_quantity).label("total_quantity"),
-                func.sum(Lot.allocated_quantity).label("allocated_quantity"),
-                func.max(Lot.updated_at).label("last_updated"),
-            )
-            .filter(
-                Lot.product_id == product_id,
-                Lot.warehouse_id == warehouse_id,
-                Lot.status == "active",
-            )
-            .group_by(Lot.product_id, Lot.warehouse_id)
-            .first()
-        )
+        query = """
+            SELECT product_id, warehouse_id, total_quantity, allocated_quantity, available_quantity, last_updated
+            FROM v_inventory_summary
+            WHERE product_id = :product_id AND warehouse_id = :warehouse_id
+        """
+        from sqlalchemy import text
+        row = self.db.execute(text(query), {"product_id": product_id, "warehouse_id": warehouse_id}).fetchone()
 
-        if not result:
+        if not row:
             return None
 
         return InventoryItemResponse(
             id=1,  # Dummy ID
-            product_id=result.product_id,
-            warehouse_id=result.warehouse_id,
-            total_quantity=result.total_quantity,
-            allocated_quantity=result.allocated_quantity,
-            available_quantity=result.total_quantity - result.allocated_quantity,
-            last_updated=result.last_updated,
+            product_id=row.product_id,
+            warehouse_id=row.warehouse_id,
+            total_quantity=row.total_quantity,
+            allocated_quantity=row.allocated_quantity,
+            available_quantity=row.available_quantity,
+            last_updated=row.last_updated,
         )
