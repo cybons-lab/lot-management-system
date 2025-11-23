@@ -29,6 +29,9 @@ interface LotAllocationHeaderProps {
   isSaving: boolean;
   isLoading: boolean;
   hasCandidates: boolean;
+  // New props
+  allocationCount?: number;
+  hasExpiryWarning?: boolean;
 }
 
 export function LotAllocationHeader({
@@ -49,6 +52,8 @@ export function LotAllocationHeader({
   isSaving,
   isLoading,
   hasCandidates,
+  allocationCount = 0,
+  hasExpiryWarning = false,
 }: LotAllocationHeaderProps) {
   const orderNumber = order?.order_number || "不明な受注";
   const productCode = orderLine.product_code || "CODE";
@@ -102,6 +107,8 @@ export function LotAllocationHeader({
       onSaveAllocations={onSaveAllocations}
       canSave={canSave}
       supplierName={orderLine.supplier_name || undefined}
+      allocationCount={allocationCount}
+      hasExpiryWarning={hasExpiryWarning}
     />
   );
 }

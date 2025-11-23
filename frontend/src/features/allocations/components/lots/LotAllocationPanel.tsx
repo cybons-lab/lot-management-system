@@ -108,6 +108,25 @@ export function LotAllocationPanel({
     panelState = "active";
   }
 
+  // Calculate allocation count and expiry warning
+  const allocationCount = Object.values(lotAllocations).filter((qty) => qty > 0).length;
+
+  // Simple expiry check: warn if any allocated lot expires within 30 days
+  // Note: This is a simplified check. Ideally, we should compare with today's date properly.
+  // Assuming candidateLots has expiry_date string "YYYY-MM-DD"
+  const hasExpiryWarning = candidateLots.some((lot) => {
+    const allocatedQty = lotAllocations[lot.lot_id] || 0;
+    if (allocatedQty <= 0) return false;
+    if (!lot.expiry_date) return false;
+
+    const expiry = new Date(lot.expiry_date);
+    const today = new Date();
+    const warningThreshold = new Date();
+    warningThreshold.setDate(today.getDate() + 30); // 30 days from now
+
+    return expiry < warningThreshold;
+  });
+
   return (
     <div
       className={cn(styles.panelWrapper, isLoading ? "pointer-events-none" : "")}
@@ -136,6 +155,8 @@ export function LotAllocationPanel({
             isSaving={isSaving}
             isLoading={isLoading}
             hasCandidates={candidateLots.length > 0}
+            allocationCount={allocationCount}
+            hasExpiryWarning={hasExpiryWarning}
           />
         </div>
 
