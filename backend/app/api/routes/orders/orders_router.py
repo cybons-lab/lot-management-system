@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_uow
-from app.models import Allocation, OrderLine  # 追加
+from app.models import Allocation, Order, OrderLine  # 追加
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderWithLinesResponse,
@@ -127,16 +127,19 @@ def save_manual_allocations(
 @router.post("/refresh-all-statuses", status_code=200)
 def refresh_all_order_line_statuses(db: Session = Depends(get_db)):
     """
-    全受注明細のステータスを再計算・更新.
+    全受注明細および受注のステータスを再計算・更新.
     
-    既存の allocations データに基づいて status を正しい値に更新します。
+    既存の allocations データに基づいて OrderLine.status と Order.status を正しい値に更新します。
     """
     try:
-        from app.services.allocation.allocations_service import update_order_line_status
+        from app.services.allocation.allocations_service import (
+            update_order_line_status,
+            update_order_allocation_status,
+        )
         
-        # 全ての OrderLine を取得
+        # 1. 全ての OrderLine のステータスを更新
         lines = db.query(OrderLine).all()
-        updated_count = 0
+        updated_line_count = 0
         
         for line in lines:
             old_status = line.status
@@ -144,16 +147,36 @@ def refresh_all_order_line_statuses(db: Session = Depends(get_db)):
             db.flush()
             
             if line.status != old_status:
-                updated_count += 1
+                updated_line_count += 1
+        
+        # 2. 全ての Order のステータスを更新
+        from app.models import Order
+        orders = db.query(Order).all()
+        updated_order_count = 0
+        
+        for order in orders:
+            old_status = order.status
+            update_order_allocation_status(db, order.id)
+            db.flush()
+            
+            if order.status != old_status:
+                updated_order_count += 1
         
         db.commit()
-        logger.info(f"Refreshed {updated_count} order line statuses out of {len(lines)} total lines")
+        logger.info(
+            f"Refreshed {updated_line_count} order line statuses and "
+            f"{updated_order_count} order statuses"
+        )
         
         return {
             "success": True,
-            "message": f"Successfully refreshed statuses for {len(lines)} order lines",
-            "updated_count": updated_count,
-            "total_count": len(lines)
+            "message": (
+                f"Successfully refreshed {len(lines)} order lines and {len(orders)} orders"
+            ),
+            "updated_line_count": updated_line_count,
+            "updated_order_count": updated_order_count,
+            "total_line_count": len(lines),
+            "total_order_count": len(orders),
         }
     
     except Exception as e:
