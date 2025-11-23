@@ -137,15 +137,6 @@ export default [
         },
       ],
 
-      // Prevent warehouse_* usage (migrated to delivery_place_*)
-      "no-restricted-syntax": [
-        "error",
-        {
-          selector: "Identifier[name=/^warehouse_(code|id)$/]",
-          message: "Use delivery_place_id or delivery_place_code instead of warehouse_*",
-        },
-      ],
-
       // Feature boundary enforcement
       "import/no-restricted-paths": [
         "error",
