@@ -5,7 +5,6 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-
 import type { ProductUpdate } from "../api/products-api";
 import { ProductForm } from "../components/ProductForm";
 import { useUpdateProduct, useDeleteProduct } from "../hooks/useProductMutations";

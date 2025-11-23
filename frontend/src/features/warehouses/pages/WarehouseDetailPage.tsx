@@ -5,7 +5,6 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-
 import type { WarehouseUpdate } from "../api/warehouses-api";
 import { WarehouseForm } from "../components/WarehouseForm";
 import { useUpdateWarehouse, useDeleteWarehouse } from "../hooks/useWarehouseMutations";

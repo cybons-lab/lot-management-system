@@ -14,8 +14,6 @@ import { cn } from "@/shared/libs/utils";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
-
-
 interface LotListCardProps {
   lot: CandidateLotItem;
   allocatedQty: number;

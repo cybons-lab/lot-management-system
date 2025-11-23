@@ -6,7 +6,6 @@
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useState, useId, useCallback } from "react";
 
-
 import { useBulkUpsertCustomers } from "../hooks/useCustomerMutations";
 import { bulkImport as styles } from "../pages/styles";
 import type { BulkUpsertResponse, CustomerBulkRow } from "../types/bulk-operation";

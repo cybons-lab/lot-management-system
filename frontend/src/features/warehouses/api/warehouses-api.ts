@@ -8,8 +8,6 @@ import type { BulkUpsertResponse, WarehouseBulkRow } from "../types/bulk-operati
 import { http } from "@/services/http";
 import type { components } from "@/types/api";
 
-
-
 // OpenAPI生成型
 export type Warehouse = components["schemas"]["WarehouseResponse"];
 export type WarehouseCreate = components["schemas"]["WarehouseCreate"];

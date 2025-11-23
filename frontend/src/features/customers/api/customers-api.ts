@@ -12,8 +12,6 @@ import type {
 import { http } from "@/services/http";
 import type { components } from "@/types/api";
 
-
-
 // OpenAPI生成型
 export type Customer = components["schemas"]["CustomerResponse"];
 export type CustomerCreate = components["schemas"]["CustomerCreate"];

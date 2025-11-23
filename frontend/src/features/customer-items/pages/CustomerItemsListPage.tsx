@@ -14,7 +14,6 @@ import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 
-
 export function CustomerItemsListPage() {
   const [filters, setFilters] = useState({
     customer_id: "",
