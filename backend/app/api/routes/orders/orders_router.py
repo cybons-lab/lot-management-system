@@ -83,7 +83,7 @@ class ManualAllocationSavePayload(BaseModel):
 def save_manual_allocations(
     order_line_id: int,
     payload: ManualAllocationSavePayload,
-    db: Session = Depends(get_db)  # DBセッションを追加
+    db: Session = Depends(get_db)
 ):
     """
     手動引当保存 (確定).
@@ -93,7 +93,6 @@ def save_manual_allocations(
     """
     try:
         # 1. 既存の引当を全てキャンセル（在庫を解放）
-        #    ※ リスト画面からの保存は「その時点のUI状態」を正とするため、全置換を行う
         existing_allocations = db.query(Allocation).filter(Allocation.order_line_id == order_line_id).all()
         for alloc in existing_allocations:
             cancel_allocation(db, alloc.id)
@@ -104,8 +103,8 @@ def save_manual_allocations(
             if item.quantity <= 0:
                 continue
             
-            # 引当実行（内部でDBコミットされるため注意）
-            # ※ 本来は1つのトランザクションにまとめるべきだが、既存serviceの仕様上ループで処理
+            # allocate_manuallyはcommitを含むため、一時的に使用
+            # TODO: トランザクション全体を1つにまとめるためにリファクタリングが必要
             allocation = allocate_manually(db, order_line_id, item.lot_id, item.quantity)
             created_ids.append(allocation.id)
 
@@ -122,5 +121,4 @@ def save_manual_allocations(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"System error during allocation save: {e}")
-        # クライアント側でリトライできるよう500を返す
         raise HTTPException(status_code=500, detail=f"Failed to save allocations: {str(e)}")

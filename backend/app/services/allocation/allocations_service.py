@@ -463,6 +463,45 @@ def persist_allocation_entities(
         created.append(allocation)
 
 
+def update_order_line_status(db: Session, order_line_id: int) -> None:
+    """
+    Update OrderLine status based on allocation completion.
+
+    Args:
+        db: Database session
+        order_line_id: Order line ID
+    """
+    EPSILON = Decimal("1e-6")
+
+    # Load order line with allocations
+    line_stmt = (
+        select(OrderLine)
+        .options(selectinload(OrderLine.allocations))
+        .where(OrderLine.id == order_line_id)
+    )
+    line = db.execute(line_stmt).scalar_one_or_none()
+    if not line:
+        return
+
+    # Calculate required and allocated quantities
+    required_qty = Decimal(
+        str(line.converted_quantity if line.converted_quantity else line.order_quantity or 0)
+    )
+    allocated_qty = sum(
+        Decimal(str(a.allocated_quantity))
+        for a in line.allocations
+        if a.status != "cancelled"
+    )
+
+    # Update line status based on allocation
+    if allocated_qty + EPSILON >= required_qty:
+        line.status = "allocated"
+    elif allocated_qty > EPSILON:
+        line.status = "pending"
+    else:
+        line.status = "pending"
+
+
 def update_order_allocation_status(db: Session, order_id: int) -> None:
     """
     Update order status based on allocation completion.
@@ -586,7 +625,6 @@ def cancel_allocation(db: Session, allocation_id: int) -> None:
     lot.updated_at = datetime.utcnow()
 
     db.delete(allocation)
-    db.commit()
 
 
 def allocate_manually(
@@ -657,6 +695,9 @@ def allocate_manually(
 
     # 親注文のステータス更新
     update_order_allocation_status(db, line.order_id)
+    
+    # 受注明細のステータス更新
+    update_order_line_status(db, line.id)
 
     db.commit()
     db.refresh(allocation)
