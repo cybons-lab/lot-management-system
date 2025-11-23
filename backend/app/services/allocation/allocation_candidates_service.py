@@ -169,12 +169,15 @@ def execute_candidate_lot_query(
                     available_quantity=available_qty,
                     delivery_place_id=context.delivery_place_id,
                     delivery_place_name=delivery_place_name,
+                    status=getattr(lot_view, "lot_status", "active") if hasattr(lot_view, "lot_status") else getattr(lot_view, "status", "active"),
                 )
             )
 
     else:
         # Use general available quantity view
-        query = db.query(VLotAvailableQty).filter(VLotAvailableQty.available_qty > 0)
+        query = db.query(VLotAvailableQty).filter(
+            VLotAvailableQty.available_qty > 0,
+        )
 
         if product_id is not None:
             query = query.filter(VLotAvailableQty.product_id == product_id)
@@ -205,6 +208,7 @@ def execute_candidate_lot_query(
                     # Delivery place info not available when not filtering by order line
                     delivery_place_id=None,
                     delivery_place_name=None,
+                    status=row.lot_status,
                 )
             )
 
@@ -223,6 +227,8 @@ def execute_candidate_lot_query(
                 c.lot_number = lot.lot_number
                 c.current_quantity = float(lot.current_quantity)
                 c.allocated_quantity = float(lot.allocated_quantity)
+                c.status = lot.status
+                c.lock_reason = lot.lock_reason
                 # available is already from view, which is correct
 
         # Populate warehouse_name

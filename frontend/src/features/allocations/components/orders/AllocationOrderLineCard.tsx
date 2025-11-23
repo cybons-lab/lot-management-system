@@ -13,6 +13,8 @@ interface AllocationOrderLineCardProps {
   isSelected: boolean;
   onClick: () => void;
   pendingAllocatedQty?: number;
+  totalStock?: number;
+  validStock?: number;
 }
 
 export function AllocationOrderLineCard({
@@ -20,31 +22,33 @@ export function AllocationOrderLineCard({
   isSelected,
   onClick,
   pendingAllocatedQty = 0,
+  totalStock,
+  validStock,
 }: AllocationOrderLineCardProps) {
   // 引当済み数量を計算(allocated_lotsまたはallocationsから)
   const allocatedQty: number = line.allocated_lots
     ? line.allocated_lots.reduce((sum: number, alloc) => {
-        // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
-        const qty =
-          typeof alloc === "object" && alloc !== null
-            ? Number(
-                (
-                  alloc as {
-                    allocated_quantity?: number | string | null;
-                    allocated_qty?: number | null;
-                  }
-                ).allocated_quantity ??
-                  (
-                    alloc as {
-                      allocated_quantity?: number | string | null;
-                      allocated_qty?: number | null;
-                    }
-                  ).allocated_qty ??
-                  0,
-              )
-            : 0;
-        return sum + qty;
-      }, 0)
+      // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
+      const qty =
+        typeof alloc === "object" && alloc !== null
+          ? Number(
+            (
+              alloc as {
+                allocated_quantity?: number | string | null;
+                allocated_qty?: number | null;
+              }
+            ).allocated_quantity ??
+            (
+              alloc as {
+                allocated_quantity?: number | string | null;
+                allocated_qty?: number | null;
+              }
+            ).allocated_qty ??
+            0,
+          )
+          : 0;
+      return sum + qty;
+    }, 0)
     : 0;
 
   // Prefer the original order quantity/unit for display; calculations fall back as needed
@@ -63,11 +67,10 @@ export function AllocationOrderLineCard({
   return (
     <button
       type="button"
-      className={`w-full cursor-pointer rounded-lg border p-3 text-left transition-all ${
-        isSelected
+      className={`w-full cursor-pointer rounded-lg border p-3 text-left transition-all ${isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-      }`}
+        }`}
       onClick={onClick}
     >
       <div className="mb-2 flex items-start justify-between">
@@ -95,9 +98,8 @@ export function AllocationOrderLineCard({
       {/* 進捗バー */}
       <div className="mb-1 h-2 w-full rounded-full bg-gray-200">
         <div
-          className={`h-2 rounded-full transition-all ${
-            progress === 100 ? "bg-green-500" : "bg-blue-500"
-          }`}
+          className={`h-2 rounded-full transition-all ${progress === 100 ? "bg-green-500" : "bg-blue-500"
+            }`}
           style={{ width: `${Math.min(progress, 100)}%` }}
         />
       </div>
@@ -143,6 +145,18 @@ export function AllocationOrderLineCard({
           納期: {formatDate(line.due_date, { fallback: "—", formatString: "MM/dd" })}
         </span>
       </div>
+
+      {/* 不足理由の表示 */}
+      {remainingQty > 0 && totalStock !== undefined && validStock !== undefined && (
+        <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-red-600">
+          <span className="i-lucide-alert-triangle h-3 w-3" />
+          {totalStock < totalQuantity
+            ? "在庫不足"
+            : validStock < totalQuantity
+              ? "有効在庫なし（ロック/期限）"
+              : "未引当"}
+        </div>
+      )}
 
       {/* 引当詳細(あれば表示) */}
       {line.allocated_lots && line.allocated_lots.length > 0 && (
