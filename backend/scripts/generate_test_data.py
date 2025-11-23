@@ -419,6 +419,9 @@ def generate_test_data():
                     converted_qty = None
                     unit = None
                     
+                    # Debug: Track which path is taken
+                    debug_product_info = f"Product {product.id}: internal={product.internal_unit}, external={product.external_unit}, factor={product.qty_per_internal_unit}"
+                    
                     for attempt in range(max_retries):
                         # Determine unit (70% external, 30% internal)
                         # Order in EXTERNAL unit (customer-facing)
@@ -431,6 +434,10 @@ def generate_test_data():
                             # Convert external → internal for allocation
                             factor = Decimal(str(product.qty_per_internal_unit))
                             converted_candidate = Decimal(str(qty_candidate)) / factor
+                            
+                            # Debug
+                            if attempt == 0 and line_id <= 3:  # Only first few lines
+                                print(f"  [EXTERNAL] {qty_candidate} {unit} → {converted_candidate} {product.internal_unit} (factor={factor})")
                             
                             # For countable internal units, ensure integer result
                             if is_countable_unit(product.internal_unit):
@@ -448,6 +455,10 @@ def generate_test_data():
                         else:
                             # Order in INTERNAL unit (same as inventory)
                             unit = product.internal_unit
+                            
+                            # Debug
+                            if attempt == 0 and line_id <= 3:
+                                print(f"  [INTERNAL] Using internal unit directly: {product.internal_unit}")
                             
                             if is_countable_unit(product.internal_unit):
                                 # For countable units, generate integer directly
