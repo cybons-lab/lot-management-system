@@ -1,4 +1,4 @@
-import { FlatAllocationList } from "../components/shared/FlatAllocationList";
+import { LineBasedAllocationList } from "../components/shared/LineBasedAllocationList";
 import { useLotAllocation } from "../hooks/useLotAllocation";
 import * as styles from "./LotAllocationPage.styles";
 
@@ -13,17 +13,15 @@ export function LotAllocationPage() {
       {/* 新しいフラットリストコンポーネント 
          画面幅いっぱいに広がり、スクロールで操作します
       */}
-      <FlatAllocationList
+      <LineBasedAllocationList
         orders={logic.orders}
         customerMap={logic.customerMap}
-        productMap={logic.productMap}
-        // データの取得・操作関数を渡す
+        onSaveAllocations={logic.saveAllocations}
+        isLoading={logic.isLoadingOrders}
         getLineAllocations={(lineId) => logic.getAllocationsForLine(lineId)}
         onLotAllocationChange={logic.changeAllocation}
         onAutoAllocate={logic.autoAllocate}
         onClearAllocations={logic.clearAllocations}
-        onSaveAllocations={logic.saveAllocations}
-        isLoading={logic.isLoadingOrders}
         // 新規追加: ステータスとバリデーション
         lineStatuses={logic.lineStatuses}
         isOverAllocated={logic.isOverAllocated}
