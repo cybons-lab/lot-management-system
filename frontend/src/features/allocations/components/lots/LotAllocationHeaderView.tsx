@@ -168,114 +168,78 @@ export function LotAllocationHeaderView({
           </div>
         </div>
 
-        {/* Center Column: Quantity (30%) */}
-        <div className="col-span-3 flex flex-col justify-center gap-4 border-r border-gray-100 px-4">
-          <div className="flex items-end justify-between">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                納期
-              </span>
-              <div className="flex items-center gap-1.5 font-bold text-gray-800">
-                <span className="i-lucide-calendar h-4 w-4 text-gray-400" />
-                {deliveryDate}
+        {/* Center Column: Quantity & Action Toolbar (30%) */}
+        <div className="col-span-3 flex flex-col justify-between border-r border-gray-100 px-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-end justify-between">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                  納期
+                </span>
+                <div className="flex items-center gap-1.5 font-bold text-gray-800">
+                  <span className="i-lucide-calendar h-4 w-4 text-gray-400" />
+                  {deliveryDate}
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs font-bold text-gray-500">必要数</span>
-              <span className="text-2xl font-bold text-gray-900">
-                {formatQuantity(orderQuantity, orderUnit)}{" "}
-                <span className="text-sm font-normal text-gray-500">{orderUnit}</span>
-              </span>
-            </div>
-
-            {inventoryUnit && inventoryUnit !== orderUnit && (
-              <div className="flex items-baseline justify-between text-xs text-gray-500">
-                <span>在庫単位換算</span>
-                <span className="font-semibold text-gray-700">
-                  {formatQuantity(requiredQty, inventoryUnit)}{" "}
-                  <span className="text-[11px] font-normal text-gray-500">{inventoryUnit}</span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs font-bold text-gray-500">必要数</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {formatQuantity(orderQuantity, orderUnit)}{" "}
+                  <span className="text-sm font-normal text-gray-500">{orderUnit}</span>
                 </span>
               </div>
-            )}
 
-            {/* Progress Bar */}
-            <div className="flex flex-col gap-1">
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className={cn(
-                    "h-full transition-all duration-500 ease-out",
-                    isOverAllocated
-                      ? "bg-orange-500"
-                      : isComplete
-                        ? "bg-emerald-500"
-                        : isPartial
-                          ? "bg-amber-500"
-                          : "bg-gray-500",
-                  )}
-                  style={{ width: `${Math.min(100, progressPercent)}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-[10px] font-medium">
-                <span className="text-blue-600">
-                  引当: {formatQuantity(totalAllocated, inventoryUnit)} {inventoryUnit}
-                </span>
-                <span className={cn(remainingQty > 0 ? "text-red-500" : "text-emerald-600")}>
-                  残: {formatQuantity(remainingQty, inventoryUnit)} {inventoryUnit}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+              {inventoryUnit && inventoryUnit !== orderUnit && (
+                <div className="flex items-baseline justify-between text-xs text-gray-500">
+                  <span>在庫単位換算</span>
+                  <span className="font-semibold text-gray-700">
+                    {formatQuantity(requiredQty, inventoryUnit)}{" "}
+                    <span className="text-[11px] font-normal text-gray-500">{inventoryUnit}</span>
+                  </span>
+                </div>
+              )}
 
-        {/* Right Column: Status & Actions (30%) */}
-        <div className="col-span-3 flex flex-col justify-between pl-4">
-          {/* Top: Status Area */}
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                ステータス
-              </span>
-            </div>
-
-            <div className="flex items-start gap-2">
-              {mainStatusBadge}
-
-              {/* Info Tags */}
+              {/* Progress Bar */}
               <div className="flex flex-col gap-1">
-                {allocationCount > 1 && (
-                  <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
-                    <span className="i-lucide-layers mr-1 h-3 w-3" />
-                    複数ロット ({allocationCount})
+                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className={cn(
+                      "h-full transition-all duration-500 ease-out",
+                      isOverAllocated
+                        ? "bg-orange-500"
+                        : isComplete
+                          ? "bg-emerald-500"
+                          : isPartial
+                            ? "bg-amber-500"
+                            : "bg-gray-500",
+                    )}
+                    style={{ width: `${Math.min(100, progressPercent)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] font-medium">
+                  <span className="text-blue-600">
+                    引当: {formatQuantity(totalAllocated, inventoryUnit)} {inventoryUnit}
                   </span>
-                )}
-                {hasExpiryWarning && (
-                  <span className="inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800">
-                    <span className="i-lucide-alert-triangle mr-1 h-3 w-3" />
-                    期限切迫
+                  <span className={cn(remainingQty > 0 ? "text-red-500" : "text-emerald-600")}>
+                    残: {formatQuantity(remainingQty, inventoryUnit)} {inventoryUnit}
                   </span>
-                )}
-                {!hasCandidates && (
-                  <span className="inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-800">
-                    <span className="i-lucide-alert-circle mr-1 h-3 w-3" />
-                    候補なし
-                  </span>
-                )}
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Bottom: Action Toolbar */}
-          <div className="mt-auto flex items-center gap-2">
+          {/* Action Toolbar (Bottom of Center Column) */}
+          <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-3">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={onAutoAllocate}
               disabled={isLoading || !hasCandidates || remainingQty <= 0}
-              className="h-9 flex-1 text-xs font-medium"
+              className="h-9 flex-1 text-xs"
             >
               <span className="i-lucide-wand-2 mr-1.5 h-3.5 w-3.5" />
               自動引当
@@ -287,7 +251,7 @@ export function LotAllocationHeaderView({
               size="sm"
               onClick={onClearAllocations}
               disabled={totalAllocated === 0}
-              className="h-9 flex-1 text-xs text-gray-500 hover:bg-red-50 hover:text-red-600"
+              className="h-9 flex-1 text-xs hover:bg-red-50 hover:text-red-600"
             >
               <span className="i-lucide-eraser mr-1.5 h-3.5 w-3.5" />
               クリア
@@ -298,10 +262,10 @@ export function LotAllocationHeaderView({
               onClick={onSaveAllocations}
               disabled={!canSave || isSaving}
               className={cn(
-                "h-9 min-w-[80px] flex-1 font-bold shadow-sm transition-all duration-300",
+                "h-9 flex-1 font-bold shadow-sm transition-all duration-300",
                 isOverAllocated && !justSaved && "cursor-not-allowed bg-gray-400",
                 !isOverAllocated && !justSaved && "bg-blue-600 hover:bg-blue-700",
-                justSaved && "border-green-600 bg-green-600 text-white hover:bg-green-700",
+                justSaved && "bg-green-600 text-white hover:bg-green-700",
               )}
             >
               {isSaving ? (
@@ -312,6 +276,43 @@ export function LotAllocationHeaderView({
                 "確定"
               )}
             </Button>
+          </div>
+        </div>
+
+        {/* Right Column: Status Display Only (30%) */}
+        <div className="col-span-3 flex flex-col gap-4 pl-4">
+          {/* Status Header */}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+              ステータス
+            </span>
+          </div>
+
+          {/* Main Status Badge */}
+          <div className="flex flex-col gap-2">
+            {mainStatusBadge}
+
+            {/* Info Tags */}
+            <div className="flex flex-wrap gap-2">
+              {allocationCount > 1 && (
+                <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                  <span className="i-lucide-layers mr-1 h-3 w-3" />
+                  複数ロット ({allocationCount})
+                </span>
+              )}
+              {hasExpiryWarning && (
+                <span className="inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800">
+                  <span className="i-lucide-alert-triangle mr-1 h-3 w-3" />
+                  期限切迫
+                </span>
+              )}
+              {!hasCandidates && (
+                <span className="inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-800">
+                  <span className="i-lucide-alert-circle mr-1 h-3 w-3" />
+                  候補なし
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
