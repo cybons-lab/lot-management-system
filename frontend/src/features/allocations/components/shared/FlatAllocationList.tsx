@@ -130,17 +130,30 @@ export function FlatAllocationList({
     return order.lines.some((line) => {
       if (!line.id) return false;
 
+      // Get UI allocations (for unsaved changes)
       const allocations = getLineAllocations(line.id);
-      const totalAllocated = Object.values(allocations).reduce((sum, qty) => sum + qty, 0);
+      const uiAllocated = Object.values(allocations).reduce((sum, qty) => sum + qty, 0);
+
+      // Get DB allocations (for saved data)
+      const dbAllocated = Number(line.allocated_quantity || 0);
+
+      // Use whichever is greater (UI changes override DB until saved)
+      const totalAllocated = Math.max(uiAllocated, dbAllocated);
+
       const required = getOrderQuantity(line);
       const remaining = required - totalAllocated;
       const candidates = getCandidateLots(line.id);
       const hasCandidates = candidates.length > 0;
       const isOver = isOverAllocated(line.id);
 
+      // Check DB status for persistent allocations
+      const dbStatus = line.status;
+      const isAllocatedInDB = dbStatus === "allocated" || dbStatus === "completed";
+
       switch (filterStatus) {
         case "complete":
-          return remaining === 0 && !isOver;
+          // Include if: DB status is allocated/completed OR UI shows complete allocation
+          return isAllocatedInDB || (remaining === 0 && !isOver);
         case "shortage":
           return remaining > 0 && hasCandidates;
         case "over":
