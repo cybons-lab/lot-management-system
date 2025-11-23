@@ -14,7 +14,7 @@ from app.domain.order import (
     OrderValidationError,
     ProductNotFoundError,
 )
-from app.models import Customer, CustomerItem, Order, OrderLine, Product, Supplier
+from app.models import Allocation, Customer, CustomerItem, Order, OrderLine, Product, Supplier
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderResponse,
@@ -37,7 +37,11 @@ class OrderService:
         date_from: date | None = None,
         date_to: date | None = None,
     ) -> list[OrderResponse]:
-        stmt: Select[Order] = select(Order).options(selectinload(Order.order_lines))
+        stmt: Select[Order] = select(Order).options(
+            selectinload(Order.order_lines)
+            .selectinload(OrderLine.allocations)
+            .joinedload(Allocation.lot)
+        )
 
         if customer_code:
             # JOIN Customer table to filter by customer_code
@@ -66,6 +70,9 @@ class OrderService:
             select(Order)
             .options(
                 selectinload(Order.order_lines).selectinload(OrderLine.product),
+                selectinload(Order.order_lines)
+                .selectinload(OrderLine.allocations)
+                .joinedload(Allocation.lot),
                 selectinload(Order.customer),
             )
             .where(Order.id == order_id)

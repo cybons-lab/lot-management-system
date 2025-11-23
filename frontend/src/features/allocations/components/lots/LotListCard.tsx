@@ -134,6 +134,7 @@ export function LotListCard({
       className={cn(
         "flex items-center justify-between gap-x-4 px-4 py-2 text-sm",
         isLocked ? "bg-gray-100" : "bg-white",
+        freeQty <= 0 && "opacity-50",
       )}
     >
       {/* 左側: ロット情報 */}
@@ -182,7 +183,7 @@ export function LotListCard({
           <div className="truncate text-sm text-gray-600" title={lot.warehouse_name}>
             {lot.warehouse_name || "未登録"}
           </div>
-          {isExpired && (
+          {isExpired && freeQty > 0 && (
             <div className="mt-0.5 flex items-center text-xs font-medium text-red-500">
               <span className="i-lucide-alert-circle mr-1 h-3 w-3" />
               期限切れ
