@@ -1,6 +1,4 @@
 import { Route, Routes, Navigate } from "react-router-dom";
-
-// Route constants
 import { Toaster } from "sonner";
 
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";

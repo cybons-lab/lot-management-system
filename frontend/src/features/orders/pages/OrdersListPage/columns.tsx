@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
 import type { Column } from "@/shared/components/data/DataTable";
@@ -70,9 +71,8 @@ export const columns: Column<OrderUI>[] = [
         <div className="flex items-center space-x-2">
           <div className="h-2 w-24 rounded-full bg-gray-200">
             <div
-              className={`h-full rounded-full ${
-                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-gray-300"
-              }`}
+              className={`h-full rounded-full ${rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-gray-300"
+                }`}
               style={{ width: `${rate}%` }}
             />
           </div>
@@ -109,7 +109,6 @@ export const columns: Column<OrderUI>[] = [
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              const { toast } = require("sonner");
               toast.success("SAP連携データを送信しました(Mock)");
             }}
             className="text-xs"
