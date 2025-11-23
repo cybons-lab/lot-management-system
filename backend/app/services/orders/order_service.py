@@ -17,12 +17,9 @@ from app.domain.order import (
 from app.models import (
     Allocation,
     Customer,
-    CustomerItem,
-    DeliveryPlace,
     Order,
     OrderLine,
     Product,
-    Supplier,
 )
 from app.schemas.orders.orders_schema import (
     OrderCreate,
@@ -175,70 +172,43 @@ class OrderService:
         self.db.flush()
 
     def _populate_additional_info(self, orders: list[OrderWithLinesResponse]) -> None:
-        """Populate additional display info (supplier, product, delivery place) for order lines."""
+        """Populate additional display info using v_order_line_details view."""
         if not orders:
             return
 
-        # Collect IDs
-        pairs = set()
-        product_ids = set()
-        delivery_place_ids = set()
-
-        for order in orders:
-            for line in order.lines:
-                pairs.add((order.customer_id, line.product_id))
-                product_ids.add(line.product_id)
-                if line.delivery_place_id:
-                    delivery_place_ids.add(line.delivery_place_id)
-
-        if not pairs and not product_ids and not delivery_place_ids:
+        order_ids = [order.id for order in orders]
+        if not order_ids:
             return
 
-        # 1. Populate Supplier Names
-        supplier_map = {}
-        if pairs:
-            customer_ids = {p[0] for p in pairs}
-            cust_prod_ids = {p[1] for p in pairs}
+        # Fetch details from view
+        query = """
+            SELECT 
+                order_id, line_id, 
+                supplier_name, 
+                product_code, product_name, product_internal_unit, product_external_unit, product_qty_per_internal_unit,
+                delivery_place_name
+            FROM v_order_line_details
+            WHERE order_id IN :order_ids
+        """
 
-            stmt = (
-                select(CustomerItem.customer_id, CustomerItem.product_id, Supplier.supplier_name)
-                .join(Supplier, CustomerItem.supplier_id == Supplier.id)
-                .where(CustomerItem.customer_id.in_(customer_ids))
-                .where(CustomerItem.product_id.in_(cust_prod_ids))
-            )
+        from sqlalchemy import text
 
-            rows = self.db.execute(stmt).all()
-            supplier_map = {(row.customer_id, row.product_id): row.supplier_name for row in rows}
+        rows = self.db.execute(text(query), {"order_ids": tuple(order_ids)}).fetchall()
 
-        # 2. Populate Product Info
-        product_map = {}
-        if product_ids:
-            product_stmt = select(Product).where(Product.id.in_(product_ids))
-            products = self.db.execute(product_stmt).scalars().all()
-            product_map = {p.id: p for p in products}
-
-        # 3. Populate Delivery Place Info
-        delivery_place_map = {}
-        if delivery_place_ids:
-            dp_stmt = select(DeliveryPlace).where(DeliveryPlace.id.in_(delivery_place_ids))
-            dps = self.db.execute(dp_stmt).scalars().all()
-            delivery_place_map = {dp.id: dp.delivery_place_name for dp in dps}
+        # Map details by line_id
+        details_map = {row.line_id: row for row in rows}
 
         # Update lines
         for order in orders:
             for line in order.lines:
-                # Supplier Name
-                line.supplier_name = supplier_map.get((order.customer_id, line.product_id))
-
-                # Product Info
-                product = product_map.get(line.product_id)
-                if product:
-                    line.product_code = product.maker_part_code
-                    line.product_name = product.product_name
-                    line.product_internal_unit = product.internal_unit
-                    line.product_external_unit = product.external_unit
-                    line.product_qty_per_internal_unit = float(product.qty_per_internal_unit or 1.0)
-
-                # Delivery Place Name
-                if line.delivery_place_id:
-                    line.delivery_place_name = delivery_place_map.get(line.delivery_place_id)
+                detail = details_map.get(line.id)
+                if detail:
+                    line.supplier_name = detail.supplier_name
+                    line.product_code = detail.product_code
+                    line.product_name = detail.product_name
+                    line.product_internal_unit = detail.product_internal_unit
+                    line.product_external_unit = detail.product_external_unit
+                    line.product_qty_per_internal_unit = float(
+                        detail.product_qty_per_internal_unit or 1.0
+                    )
+                    line.delivery_place_name = detail.delivery_place_name

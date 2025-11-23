@@ -75,14 +75,14 @@ class AllocationNotFoundError(Exception):
 # ============================
 
 
-def _load_order(db: Session, order_id: int | None = None, order_no: str | None = None) -> Order:
+def _load_order(db: Session, order_id: int | None = None, order_number: str | None = None) -> Order:
     """
     注文を取得（ID/コード両対応）.
 
     Args:
         db: データベースセッション
         order_id: 注文ID（優先）
-        order_no: 注文番号（IDがない場合）
+        order_number: 注文番号（IDがない場合）
 
     Returns:
         Order: 注文エンティティ（子テーブル含む）
@@ -90,8 +90,8 @@ def _load_order(db: Session, order_id: int | None = None, order_no: str | None =
     Raises:
         ValueError: 注文が見つからない場合、またはパラメータ不足の場合
     """
-    if not order_id and not order_no:
-        raise ValueError("Either order_id or order_no must be provided")
+    if not order_id and not order_number:
+        raise ValueError("Either order_id or order_number must be provided")
 
     stmt: Select[Order] = select(Order).options(
         selectinload(Order.order_lines)
@@ -103,11 +103,11 @@ def _load_order(db: Session, order_id: int | None = None, order_no: str | None =
     if order_id:
         stmt = stmt.where(Order.id == order_id)
     else:
-        stmt = stmt.where(Order.order_no == order_no)
+        stmt = stmt.where(Order.order_number == order_number)
 
     order = db.execute(stmt).scalar_one_or_none()
     if not order:
-        identifier = f"ID={order_id}" if order_id else f"order_no={order_no}"
+        identifier = f"ID={order_id}" if order_id else f"order_number={order_number}"
         raise ValueError(f"Order not found: {identifier}")
     return order
 
