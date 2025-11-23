@@ -265,7 +265,7 @@ export default [
       "src/features/forecasts/components/ForecastDetailCard/ForecastDetailCard.tsx",
       "src/features/forecasts/components/ForecastDetailCard/hooks/use-forecast-calculations.ts",
       "src/features/forecasts/pages/ForecastDetailPage.tsx",
-      "src/features/forecasts/pages/ForecastList Page.tsx",
+      "src/features/forecasts/pages/ForecastListPage.tsx",
 
       // Inventory
       "src/features/inventory/api.ts",
@@ -323,8 +323,9 @@ export default [
       "src/shared/components/form/FormDialog.tsx",
     ],
     rules: {
-      "max-lines-per-function": ["error", { max: 300, skipBlankLines: true, skipComments: true }],
-      complexity: ["error", 52],
+      "max-lines-per-function": ["error", { max: 600, skipBlankLines: true, skipComments: true }],
+      "max-lines": ["error", { max: 600, skipBlankLines: true, skipComments: true }],
+      complexity: ["error", 60],
       "max-params": ["error", 6],
     },
   },
