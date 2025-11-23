@@ -126,8 +126,17 @@ export function LotListCard({
     setIsConfirmed(false);
   };
 
+  const isLocked = lot.status === "locked" || lot.status === "quarantine";
+  const lockReason = lot.lock_reason || (lot.status === "quarantine" ? "検疫中" : "ロック中");
+
   return (
-    <div className="flex items-center justify-between gap-x-4 bg-white px-4 py-2 text-sm">
+    <div
+      className={cn(
+        "flex items-center justify-between gap-x-4 px-4 py-2 text-sm",
+        isLocked ? "bg-gray-100" : "bg-white",
+        freeQty <= 0 && "opacity-50",
+      )}
+    >
       {/* 左側: ロット情報 */}
       <div className="flex min-w-0 flex-grow items-center gap-x-4">
         {/* Rank Badge */}
@@ -155,6 +164,12 @@ export function LotListCard({
                 仮払出
               </Badge>
             )}
+            {isLocked && (
+              <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
+                <span className="i-lucide-lock h-3 w-3" />
+                {lockReason}
+              </div>
+            )}
           </div>
           <div className="truncate text-base font-bold text-gray-900" title={lot.lot_number}>
             {lot.lot_number}
@@ -168,7 +183,7 @@ export function LotListCard({
           <div className="truncate text-sm text-gray-600" title={lot.warehouse_name}>
             {lot.warehouse_name || "未登録"}
           </div>
-          {isExpired && (
+          {isExpired && freeQty > 0 && (
             <div className="mt-0.5 flex items-center text-xs font-medium text-red-500">
               <span className="i-lucide-alert-circle mr-1 h-3 w-3" />
               期限切れ
@@ -263,7 +278,7 @@ export function LotListCard({
             variant="outline"
             size="sm"
             onClick={handleFullAllocation}
-            disabled={freeQty <= 0}
+            disabled={freeQty <= 0 || isLocked}
             className="h-8 px-2 text-xs"
             title="このロットから全量割当（他のロットはクリア）"
           >

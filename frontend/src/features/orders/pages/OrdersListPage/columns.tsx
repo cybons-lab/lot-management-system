@@ -92,17 +92,33 @@ export const columns: Column<OrderUI>[] = [
     id: "actions",
     header: "",
     cell: (order: OrderUI) => (
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          // 引当画面へ遷移するロジック
-          window.location.href = `/allocation?selected=${order.id}`;
-        }}
-      >
-        <ExternalLink className="h-4 w-4" />
-      </Button>
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            // 引当画面へ遷移するロジック
+            window.location.href = `/allocation?selected=${order.id}`;
+          }}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
+        {order.status === "allocated" && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              const { toast } = require("sonner");
+              toast.success("SAP連携データを送信しました(Mock)");
+            }}
+            className="text-xs"
+          >
+            SAPへ送信
+          </Button>
+        )}
+      </div>
     ),
-    width: "60px",
+    width: "120px",
   },
 ];

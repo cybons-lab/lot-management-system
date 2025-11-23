@@ -29,6 +29,7 @@ interface LotAllocationPanelProps {
   // Props for internal calculations (can be overridden)
   customerName?: string;
   productName?: string;
+  deliveryPlaceName?: string;
 
   // Active state management
   isActive?: boolean;
@@ -55,9 +56,10 @@ export function LotAllocationPanel({
   isOverAllocated = false,
   customerName: propCustomerName,
   productName: propProductName,
+  deliveryPlaceName: propDeliveryPlaceName,
   isActive = false,
   onActivate,
-}: LotAllocationPanelProps) {
+}: LotAllocationPanelProps & { deliveryPlaceName?: string }) {
   // 数量計算（カスタムフックで集約）
   const calculations = useAllocationCalculations({
     orderLine,
@@ -95,7 +97,8 @@ export function LotAllocationPanel({
 
   // データ取得（ユーティリティ関数で集約）
   const customerName = getCustomerName(order, orderLine, propCustomerName);
-  const deliveryPlaceName = getDeliveryPlaceName(orderLine, candidateLots);
+  // 優先順位: prop > line > candidate
+  const deliveryPlaceName = propDeliveryPlaceName || getDeliveryPlaceName(orderLine, candidateLots);
   const productName = getProductName(orderLine, propProductName);
 
   // スタイル状態の決定
@@ -106,6 +109,35 @@ export function LotAllocationPanel({
     panelState = "complete";
   } else if (isActive) {
     panelState = "active";
+  }
+
+  // Calculate allocation count and expiry warning/error
+  const allocationCount = Object.values(lotAllocations).filter((qty) => qty > 0).length;
+
+  // Expiry check logic
+  let hasExpiryWarning = false;
+  let hasExpiredError = false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const warningThreshold = new Date(today);
+  warningThreshold.setDate(today.getDate() + 30); // 30 days from now
+
+  for (const lot of candidateLots) {
+    const allocatedQty = lotAllocations[lot.lot_id] || 0;
+    if (allocatedQty <= 0) continue;
+    if (!lot.expiry_date) continue;
+
+    const expiry = new Date(lot.expiry_date);
+
+    // Check for expired (Error)
+    if (expiry < today) {
+      hasExpiredError = true;
+    }
+    // Check for near expiry (Warning)
+    else if (expiry <= warningThreshold) {
+      hasExpiryWarning = true;
+    }
   }
 
   return (
@@ -136,6 +168,10 @@ export function LotAllocationPanel({
             isSaving={isSaving}
             isLoading={isLoading}
             hasCandidates={candidateLots.length > 0}
+            allocationCount={allocationCount}
+            hasExpiryWarning={hasExpiryWarning}
+            hasExpiredError={hasExpiredError}
+            lineStatus={orderLine.status}
           />
         </div>
 

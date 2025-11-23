@@ -33,6 +33,7 @@ from sqlalchemy import text
 from app.core.database import SessionLocal
 from app.models import (
     Customer,
+    CustomerItem,
     DeliveryPlace,
     ForecastCurrent,
     Lot,
@@ -294,6 +295,33 @@ def generate_test_data():
         
         print(f"✓ Created {len(customers)} customers, {len(suppliers)} suppliers, "
               f"{len(products)} products, {len(warehouses)} warehouses")
+        
+        # CustomerItems (customer×product×supplier mapping)
+        print("\n🔗 Creating customer items...")
+        customer_items = []
+        for customer in customers:
+            # Each customer gets mappings for all products (simple approach for test data)
+            for product in products:
+                # Assign a random supplier for this customer×product combination
+                import random
+                supplier = random.choice(suppliers)
+                
+                customer_item = CustomerItem(
+                    customer_id=customer.id,
+                    external_product_code=f"{customer.customer_code}-{product.maker_part_code}",
+                    product_id=product.id,
+                    supplier_id=supplier.id,
+                    base_unit=product.base_unit,
+                    pack_unit=None,
+                    pack_quantity=None,
+                    special_instructions=None,
+                    created_at=datetime.utcnow(),
+                )
+                db.add(customer_item)
+                customer_items.append(customer_item)
+        
+        db.flush()
+        print(f"✓ Created {len(customer_items)} customer items")
         
         # Generate Forecasts
         print("\n📈 Generating forecasts...")

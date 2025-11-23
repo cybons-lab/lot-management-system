@@ -279,11 +279,12 @@ function useAllocationSaver({
   queryClient,
   allLines,
   allocationsByLine,
-  setAllocationsByLine,
   setLineStatuses,
   setToast,
   isOverAllocated,
-}: UseLotAllocationActionsOptions & { isOverAllocated: (lineId: number) => boolean }) {
+}: Omit<UseLotAllocationActionsOptions, "setAllocationsByLine"> & {
+  isOverAllocated: (lineId: number) => boolean;
+}) {
   // Mutation for saving allocations
   const saveAllocationsMutation = useMutation<
     ManualAllocationSaveResponse,
@@ -302,8 +303,11 @@ function useAllocationSaver({
       // Mark line as committed
       setLineStatusToCommitted(variables.orderLineId, setLineStatuses);
 
-      // Remove line from pending allocations
-      removeLineAllocations(variables.orderLineId, setAllocationsByLine);
+      // NOTE: We intentionally do NOT remove the line allocations from UI state here.
+      // Previously, this caused the display to reset to 0 before the refetch completed.
+      // The refetch (triggered by invalidateQueries below) will update the UI with fresh DB data.
+      // Keeping the UI state allows users to see their allocations while the refetch completes.
+      // removeLineAllocations(variables.orderLineId, setAllocationsByLine);
 
       // Invalidate related queries to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ["orders", "for-allocation"] });

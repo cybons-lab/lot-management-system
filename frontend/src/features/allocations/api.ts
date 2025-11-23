@@ -51,6 +51,8 @@ export interface CandidateLotItem {
   internal_unit?: string;
   external_unit?: string;
   qty_per_internal_unit?: number;
+  status?: string;
+  lock_reason?: string;
 }
 
 export interface CandidateLotsResponse {

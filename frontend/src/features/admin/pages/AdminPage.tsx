@@ -12,15 +12,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui";
-import { SeedSimulateDialog } from "@/features/admin/components/SeedSimulateDialog";
-import { SeedDataPage } from "@/features/admin/pages/SeedDataPage";
 import { http } from "@/shared/libs/http";
 import { toast } from "sonner";
 
 export function AdminPage() {
-  const [showSeedData, setShowSeedData] = useState(false);
-  const [showSimulateDialog, setShowSimulateDialog] = useState(false);
-
   const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -37,17 +32,6 @@ export function AdminPage() {
       setShowGenerateConfirm(false);
     }
   };
-
-  if (showSeedData) {
-    return (
-      <div className="space-y-6">
-        <Button variant="outline" onClick={() => setShowSeedData(false)} className="mb-4">
-          ← 管理画面に戻る
-        </Button>
-        <SeedDataPage />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -85,20 +69,6 @@ export function AdminPage() {
             >
               テストデータ生成（開発用）
             </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => setShowSimulateDialog(true)}
-            >
-              旧：シミュレーション（非推奨）
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => setShowSeedData(true)}
-            >
-              旧：テストデータ投入（非推奨）
-            </Button>
             <Button variant="destructive" className="w-full justify-start">
               データベースリセット（開発用）
             </Button>
@@ -120,9 +90,6 @@ export function AdminPage() {
           </div>
         </div>
       </div>
-
-      {/* Simulate Dialog */}
-      <SeedSimulateDialog open={showSimulateDialog} onOpenChange={setShowSimulateDialog} />
 
       {/* Generate Confirm Dialog */}
       <AlertDialog open={showGenerateConfirm} onOpenChange={setShowGenerateConfirm}>

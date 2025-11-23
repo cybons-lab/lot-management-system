@@ -136,6 +136,8 @@ class CandidateLotItem(BaseSchema):
     internal_unit: str | None = None
     external_unit: str | None = None
     qty_per_internal_unit: float | None = None
+    status: str = "active"
+    lock_reason: str | None = None
 
 
 class CandidateLotsResponse(BaseSchema):

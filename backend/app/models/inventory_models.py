@@ -89,6 +89,7 @@ class Lot(Base):
     )
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
+    lock_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     version_id: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
@@ -108,7 +109,7 @@ class Lot(Base):
             name="chk_lots_allocation_limit",
         ),
         CheckConstraint(
-            "status IN ('active','depleted','expired','quarantine')",
+            "status IN ('active','depleted','expired','quarantine','locked')",
             name="chk_lots_status",
         ),
         UniqueConstraint(

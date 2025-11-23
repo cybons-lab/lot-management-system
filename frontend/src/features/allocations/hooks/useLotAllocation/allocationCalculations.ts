@@ -30,8 +30,17 @@ export function calculateAutoAllocation(params: {
   const newLineAllocations: LineAllocations = {};
 
   // Iterate through candidate lots (assumed to be sorted by FEFO)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   for (const lot of candidateLots) {
     if (remaining <= 0) break;
+
+    // Skip expired lots
+    if (lot.expiry_date) {
+      const expiry = new Date(lot.expiry_date);
+      if (expiry < today) continue;
+    }
 
     const lotId = lot.lot_id;
     const freeQty = getFreeQuantity(lot);

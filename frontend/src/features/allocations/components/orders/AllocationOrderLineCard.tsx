@@ -13,6 +13,8 @@ interface AllocationOrderLineCardProps {
   isSelected: boolean;
   onClick: () => void;
   pendingAllocatedQty?: number;
+  totalStock?: number;
+  validStock?: number;
 }
 
 export function AllocationOrderLineCard({
@@ -20,6 +22,8 @@ export function AllocationOrderLineCard({
   isSelected,
   onClick,
   pendingAllocatedQty = 0,
+  totalStock,
+  validStock,
 }: AllocationOrderLineCardProps) {
   // 引当済み数量を計算(allocated_lotsまたはallocationsから)
   const allocatedQty: number = line.allocated_lots
@@ -143,6 +147,18 @@ export function AllocationOrderLineCard({
           納期: {formatDate(line.due_date, { fallback: "—", formatString: "MM/dd" })}
         </span>
       </div>
+
+      {/* 不足理由の表示 */}
+      {remainingQty > 0 && totalStock !== undefined && validStock !== undefined && (
+        <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-red-600">
+          <span className="i-lucide-alert-triangle h-3 w-3" />
+          {totalStock < totalQuantity
+            ? "在庫不足"
+            : validStock < totalQuantity
+              ? "有効在庫なし（ロック/期限）"
+              : "未引当"}
+        </div>
+      )}
 
       {/* 引当詳細(あれば表示) */}
       {line.allocated_lots && line.allocated_lots.length > 0 && (

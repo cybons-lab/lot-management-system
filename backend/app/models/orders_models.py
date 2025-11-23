@@ -140,6 +140,11 @@ class OrderLine(Base):
         "Allocation", back_populates="order_line", cascade="all, delete-orphan"
     )
 
+    @property
+    def allocated_quantity(self) -> Decimal:
+        """Calculate total allocated quantity from allocations."""
+        return sum((a.allocated_quantity for a in self.allocations), Decimal("0"))
+
 
 class Allocation(Base):
     """Lot allocations for order lines (引当実績).

@@ -73,6 +73,8 @@ export function useLotAllocation() {
     // but the user asked for "values buried".
 
     // Let's try to run it.
+    // ★以下の自動引当ループをコメントアウトして無効化★
+    /*
     allLines.forEach((line) => {
       // Check if already allocated (in DB or UI)
       // If DB has allocations, we might not want to overwrite?
@@ -88,6 +90,7 @@ export function useLotAllocation() {
         autoAllocate(line.id);
       }
     });
+    */
 
     hasAutoAllocatedRef.current = true;
   }, [ordersQuery.isLoading, isCandidatesLoading, allLines, autoAllocate, allocationsByLine]);

@@ -30,6 +30,11 @@ interface LotAllocationHeaderViewProps {
   canSave: boolean;
   lockedBy?: string;
   lockedAt?: string;
+  // New props
+  allocationCount?: number;
+  hasExpiryWarning?: boolean;
+  hasExpiredError?: boolean;
+  lineStatus?: string | null;
 }
 
 export function LotAllocationHeaderView({
@@ -57,51 +62,80 @@ export function LotAllocationHeaderView({
   canSave,
   lockedBy,
   lockedAt,
+  allocationCount = 0,
+  hasExpiryWarning = false,
+  hasExpiredError = false,
+  lineStatus,
 }: LotAllocationHeaderViewProps) {
   // Determine status and styles
   const isPartial = totalAllocated > 0 && remainingQty > 0;
 
-  let statusBadge = null;
-  let headerBorderColor = "border-gray-200";
-  let accentColor = "bg-gray-500"; // Default accent
+  // Main Status Badge Logic
+  let mainStatusBadge = null;
+  let statusColorClass = "bg-gray-100 text-gray-600 border-gray-200"; // Default: Unallocated
 
   if (isOverAllocated) {
-    headerBorderColor = "border-orange-300";
-    accentColor = "bg-orange-500";
-    statusBadge = (
-      <span className="flex items-center gap-1 rounded-full border border-orange-200 bg-orange-100 px-3 py-1 text-xs font-bold text-orange-800">
-        <AlertTriangle className="h-3 w-3" />
-        在庫過剰
-      </span>
+    statusColorClass = "bg-orange-100 text-orange-800 border-orange-200";
+    mainStatusBadge = (
+      <div
+        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+      >
+        <AlertTriangle className="h-4 w-4" />
+        <span className="text-sm font-bold">在庫過剰</span>
+      </div>
     );
   } else if (isComplete) {
-    headerBorderColor = "border-green-300";
-    accentColor = "bg-green-500";
-    statusBadge = (
-      <span className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
-        <CheckCircle className="h-3 w-3" />
-        仮引当完了
-      </span>
-    );
+    // Check for confirmed status based on backend data OR immediate save success
+    const isConfirmed =
+      lineStatus === "allocated" || lineStatus === "completed" || (justSaved && canSave === false);
+
+    if (isConfirmed) {
+      // Complete and Saved (Confirmed)
+      statusColorClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
+      mainStatusBadge = (
+        <div
+          className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+        >
+          <CheckCircle className="h-4 w-4" />
+          <span className="text-sm font-bold">引当確定</span>
+        </div>
+      );
+    } else {
+      // Complete but Unsaved (Draft)
+      statusColorClass = "bg-indigo-100 text-indigo-800 border-indigo-200";
+      mainStatusBadge = (
+        <div
+          className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+        >
+          <span className="i-lucide-pencil h-4 w-4" />
+          <span className="text-sm font-bold">仮引当完了</span>
+        </div>
+      );
+    }
   } else if (isPartial) {
-    headerBorderColor = "border-yellow-300";
-    accentColor = "bg-yellow-500";
-    statusBadge = (
-      <span className="flex items-center gap-1 rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1 text-xs font-bold text-yellow-700">
-        <AlertCircle className="h-3 w-3" />
-        在庫不足
-      </span>
+    statusColorClass = "bg-amber-100 text-amber-800 border-amber-200";
+    mainStatusBadge = (
+      <div
+        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+      >
+        <AlertCircle className="h-4 w-4" />
+        <span className="text-sm font-bold">一部引当</span>
+      </div>
     );
   } else {
-    statusBadge = (
-      <span className="rounded-full border border-gray-200 bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">
-        未引当
-      </span>
+    // Unallocated
+    mainStatusBadge = (
+      <div
+        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
+      >
+        <span className="i-lucide-circle-dashed h-4 w-4" />
+        <span className="text-sm font-bold">未引当</span>
+      </div>
     );
   }
 
   return (
-    <div className={cn("flex flex-col bg-white transition-colors duration-300", headerBorderColor)}>
+    <div className="flex flex-col bg-white transition-colors duration-300">
       {/* Lock Indicator */}
       {lockedBy && (
         <div className="flex items-center justify-center border-b border-yellow-100 bg-yellow-50 px-4 py-1 text-xs font-medium text-yellow-800">
@@ -111,160 +145,196 @@ export function LotAllocationHeaderView({
       )}
 
       <div className="grid grid-cols-10 gap-4 p-6">
-        {/* Left Column: Product Info (40%) -> col-span-4 */}
-        <div className="col-span-4 flex flex-col justify-center gap-3 border-r border-gray-100 pr-4">
-          {/* 1. Product Name (最上部・大きく) */}
-          <div className="flex flex-col gap-1">
-            <div className="text-lg leading-tight font-bold text-gray-900">{productName}</div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              <span className="i-lucide-box h-3 w-3" />
-              <span className="font-mono">{productCode}</span>
+        {/* Left Column: Product Info (40%) */}
+        <div className="col-span-4 flex flex-col justify-center gap-4 border-r border-gray-100 pr-4">
+          {/* Supplier */}
+          {supplierName && (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">仕入元</span>
+              <div className="flex items-center gap-2">
+                <span className="i-lucide-truck h-3 w-3 text-gray-400" />
+                <span className="font-medium text-gray-800">{supplierName}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Product Code */}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-gray-400 uppercase">商品コード</span>
+            <div className="flex items-center gap-2">
+              <span className="i-lucide-box h-3 w-3 text-gray-400" />
+              <span className="font-mono font-medium text-gray-800">{productCode}</span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 text-sm">
-            {/* 2. Supplier (仕入元) */}
-            {supplierName && (
-              <div className="flex items-start gap-2">
-                <span className="i-lucide-truck mt-0.5 h-4 w-4 text-gray-400" />
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">仕入元</span>
-                  <span className="font-medium text-gray-800">{supplierName}</span>
+          {/* Product Name */}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-gray-400 uppercase">商品名</span>
+            <div className="text-lg leading-tight font-bold text-gray-900">{productName}</div>
+          </div>
+
+          {/* Delivery Place */}
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-gray-400 uppercase">納入先</span>
+            <div className="flex items-center gap-2">
+              <span className="i-lucide-map-pin h-3 w-3 text-gray-400" />
+              <span className="font-medium text-gray-800">{deliveryPlaceName}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Center Column: Quantity & Action Toolbar (30%) */}
+        <div className="col-span-3 flex flex-col justify-between border-r border-gray-100 px-4">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-end justify-between">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                  納期
+                </span>
+                <div className="flex items-center gap-1.5 font-bold text-gray-800">
+                  <span className="i-lucide-calendar h-4 w-4 text-gray-400" />
+                  {deliveryDate}
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* 矢印アイコン: 仕入元→納入先のフローを示す */}
-            {supplierName && (
-              <div className="flex justify-center py-0.5">
-                <span className="i-lucide-arrow-down h-4 w-4 text-blue-500" />
+            <div className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs font-bold text-gray-500">必要数</span>
+                <span className="text-2xl font-bold text-gray-900">
+                  {formatQuantity(orderQuantity, orderUnit)}{" "}
+                  <span className="text-sm font-normal text-gray-500">{orderUnit}</span>
+                </span>
               </div>
-            )}
 
-            {/* 3. Delivery Place (納入先) */}
-            <div className="flex items-start gap-2">
-              <span className="i-lucide-map-pin mt-0.5 h-4 w-4 text-gray-400" />
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase">納入先</span>
-                <span className="font-medium text-gray-800">{deliveryPlaceName}</span>
+              {inventoryUnit && inventoryUnit !== orderUnit && (
+                <div className="flex items-baseline justify-between text-xs text-gray-500">
+                  <span>在庫単位換算</span>
+                  <span className="font-semibold text-gray-700">
+                    {formatQuantity(requiredQty, inventoryUnit)}{" "}
+                    <span className="text-[11px] font-normal text-gray-500">{inventoryUnit}</span>
+                  </span>
+                </div>
+              )}
+
+              {/* Progress Bar */}
+              <div className="flex flex-col gap-1">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                  <div
+                    className={cn(
+                      "h-full transition-all duration-500 ease-out",
+                      isOverAllocated
+                        ? "bg-orange-500"
+                        : isComplete
+                          ? "bg-emerald-500"
+                          : isPartial
+                            ? "bg-amber-500"
+                            : "bg-gray-500",
+                    )}
+                    style={{ width: `${Math.min(100, progressPercent)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] font-medium">
+                  <span className="text-blue-600">
+                    引当: {formatQuantity(totalAllocated, inventoryUnit)} {inventoryUnit}
+                  </span>
+                  <span className={cn(remainingQty > 0 ? "text-red-500" : "text-emerald-600")}>
+                    残: {formatQuantity(remainingQty, inventoryUnit)} {inventoryUnit}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Center Column: Quantity & Status (30%) -> col-span-3 */}
-        <div className="col-span-3 flex flex-col justify-center gap-4 border-r border-gray-100 px-4">
-          <div className="flex items-end justify-between">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                納期
-              </span>
-              <div className="flex items-center gap-1.5 font-bold text-gray-800">
-                <span className="i-lucide-calendar h-4 w-4 text-gray-400" />
-                {deliveryDate}
-              </div>
-            </div>
-            <div className="flex flex-col items-end">{statusBadge}</div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs font-bold text-gray-500">必要数</span>
-              <span className="text-2xl font-bold text-gray-900">
-                {formatQuantity(orderQuantity, orderUnit)}{" "}
-                <span className="text-sm font-normal text-gray-500">{orderUnit}</span>
-              </span>
-            </div>
-
-            {inventoryUnit && inventoryUnit !== orderUnit && (
-              <div className="flex items-baseline justify-between text-xs text-gray-500">
-                <span>在庫単位換算</span>
-                <span className="font-semibold text-gray-700">
-                  {formatQuantity(requiredQty, inventoryUnit)}{" "}
-                  <span className="text-[11px] font-normal text-gray-500">{inventoryUnit}</span>
-                </span>
-              </div>
-            )}
-
-            {/* Compact Progress Bar */}
-            <div className="flex flex-col gap-1">
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className={cn("h-full transition-all duration-500 ease-out", accentColor)}
-                  style={{ width: `${Math.min(100, progressPercent)}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-[10px] font-medium">
-                <span className="text-blue-600">
-                  引当: {formatQuantity(totalAllocated, inventoryUnit)} {inventoryUnit}
-                </span>
-                <span className={cn(remainingQty > 0 ? "text-red-500" : "text-green-600")}>
-                  残: {formatQuantity(remainingQty, inventoryUnit)} {inventoryUnit}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Actions (30%) -> col-span-3 */}
-        <div className="col-span-3 flex flex-col items-end justify-center gap-3 pl-4">
-          <Button
-            type="button"
-            onClick={onSaveAllocations}
-            disabled={!canSave || isSaving}
-            className={cn(
-              "h-10 w-full font-bold shadow-sm transition-all duration-300",
-              isOverAllocated && !justSaved && "cursor-not-allowed bg-gray-400",
-              !isOverAllocated && !justSaved && "bg-blue-600 hover:bg-blue-700",
-              justSaved && "border-green-600 bg-green-600 text-white hover:bg-green-700",
-            )}
-          >
-            {isSaving ? (
-              <>
-                <span className="i-lucide-loader-2 mr-2 h-4 w-4 animate-spin" />
-                保存中...
-              </>
-            ) : justSaved ? (
-              <>
-                <span className="i-lucide-check mr-2 h-4 w-4" />
-                保存完了
-              </>
-            ) : (
-              "保存"
-            )}
-          </Button>
-
-          <div className="flex w-full gap-2">
+          {/* Action Toolbar (Bottom of Center Column) */}
+          <div className="mt-4 flex items-center gap-2 border-t border-gray-100 pt-3">
             <Button
               type="button"
               variant="outline"
+              size="sm"
               onClick={onAutoAllocate}
               disabled={isLoading || !hasCandidates || remainingQty <= 0}
-              className="h-8 flex-1 text-xs"
+              className="h-9 flex-1 text-xs"
             >
+              <span className="i-lucide-wand-2 mr-1.5 h-3.5 w-3.5" />
               自動引当
             </Button>
+
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
+              size="sm"
               onClick={onClearAllocations}
               disabled={totalAllocated === 0}
-              className="h-8 flex-1 text-xs text-gray-500 hover:bg-red-50 hover:text-red-600"
+              className="h-9 flex-1 text-xs hover:bg-red-50 hover:text-red-600"
             >
+              <span className="i-lucide-eraser mr-1.5 h-3.5 w-3.5" />
               クリア
             </Button>
+
+            <Button
+              type="button"
+              onClick={onSaveAllocations}
+              disabled={!canSave || isSaving}
+              className={cn(
+                "h-9 flex-1 font-bold shadow-sm transition-all duration-300",
+                isOverAllocated && !justSaved && "cursor-not-allowed bg-gray-400",
+                !isOverAllocated && !justSaved && "bg-blue-600 hover:bg-blue-700",
+                justSaved && "bg-green-600 text-white hover:bg-green-700",
+              )}
+            >
+              {isSaving ? (
+                <span className="i-lucide-loader-2 h-4 w-4 animate-spin" />
+              ) : justSaved ? (
+                <span className="i-lucide-check h-4 w-4" />
+              ) : (
+                "確定"
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Right Column: Status Display Only (30%) */}
+        <div className="col-span-3 flex flex-col gap-4 pl-4">
+          {/* Status Header */}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+              ステータス
+            </span>
           </div>
 
-          {/* 候補なし時の要発注アラート */}
-          {!hasCandidates && (
-            <div className="mt-2 w-full rounded-md border border-red-200 bg-red-50 p-2 text-center">
-              <div className="flex items-center justify-center gap-1 text-xs font-bold text-red-700">
-                <AlertTriangle className="h-3 w-3" />
-                <span>要発注</span>
-              </div>
-              <div className="text-[10px] text-red-600">候補ロットがありません</div>
+          {/* Main Status Badge */}
+          <div className="flex flex-col gap-2">
+            {mainStatusBadge}
+
+            {/* Info Tags */}
+            <div className="flex flex-wrap gap-2">
+              {allocationCount > 1 && (
+                <span className="inline-flex items-center rounded bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-600">
+                  <span className="i-lucide-layers mr-1 h-3 w-3" />
+                  複数ロット ({allocationCount})
+                </span>
+              )}
+              {hasExpiredError && (
+                <span className="inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-800">
+                  <span className="i-lucide-alert-octagon mr-1 h-3 w-3" />
+                  期限切れ
+                </span>
+              )}
+              {hasExpiryWarning && (
+                <span className="inline-flex items-center rounded bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                  <span className="i-lucide-alert-triangle mr-1 h-3 w-3" />
+                  期限切迫
+                </span>
+              )}
+              {!hasCandidates && (
+                <span className="inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-800">
+                  <span className="i-lucide-alert-circle mr-1 h-3 w-3" />
+                  候補なし
+                </span>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

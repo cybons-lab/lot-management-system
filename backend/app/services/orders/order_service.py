@@ -14,7 +14,16 @@ from app.domain.order import (
     OrderValidationError,
     ProductNotFoundError,
 )
-from app.models import Customer, CustomerItem, Order, OrderLine, Product, Supplier
+from app.models import (
+    Allocation,
+    Customer,
+    CustomerItem,
+    DeliveryPlace,
+    Order,
+    OrderLine,
+    Product,
+    Supplier,
+)
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderResponse,
@@ -37,7 +46,11 @@ class OrderService:
         date_from: date | None = None,
         date_to: date | None = None,
     ) -> list[OrderResponse]:
-        stmt: Select[Order] = select(Order).options(selectinload(Order.order_lines))
+        stmt: Select[Order] = select(Order).options(
+            selectinload(Order.order_lines)
+            .selectinload(OrderLine.allocations)
+            .joinedload(Allocation.lot)
+        )
 
         if customer_code:
             # JOIN Customer table to filter by customer_code
@@ -55,8 +68,8 @@ class OrderService:
         # Convert to Pydantic models
         response_orders = [OrderWithLinesResponse.model_validate(order) for order in orders]
 
-        # Populate supplier_name
-        self._populate_supplier_names(response_orders)
+        # Populate additional info
+        self._populate_additional_info(response_orders)
 
         return response_orders
 
@@ -66,6 +79,9 @@ class OrderService:
             select(Order)
             .options(
                 selectinload(Order.order_lines).selectinload(OrderLine.product),
+                selectinload(Order.order_lines)
+                .selectinload(OrderLine.allocations)
+                .joinedload(Allocation.lot),
                 selectinload(Order.customer),
             )
             .where(Order.id == order_id)
@@ -75,7 +91,7 @@ class OrderService:
             raise OrderNotFoundError(order_id)
 
         response_order = OrderWithLinesResponse.model_validate(order)
-        self._populate_supplier_names([response_order])
+        self._populate_additional_info([response_order])
         return response_order
 
     def create_order(self, order_data: OrderCreate) -> OrderWithLinesResponse:
@@ -158,40 +174,55 @@ class OrderService:
         self.db.flush()
         self.db.flush()
 
-    def _populate_supplier_names(self, orders: list[OrderWithLinesResponse]) -> None:
-        """Populate supplier_name and product unit info for order lines."""
+    def _populate_additional_info(self, orders: list[OrderWithLinesResponse]) -> None:
+        """Populate additional display info (supplier, product, delivery place) for order lines."""
         if not orders:
             return
 
-        # Collect (customer_id, product_id) pairs and product_ids
+        # Collect IDs
         pairs = set()
         product_ids = set()
+        delivery_place_ids = set()
+
         for order in orders:
             for line in order.lines:
                 pairs.add((order.customer_id, line.product_id))
                 product_ids.add(line.product_id)
+                if line.delivery_place_id:
+                    delivery_place_ids.add(line.delivery_place_id)
 
-        if not pairs and not product_ids:
+        if not pairs and not product_ids and not delivery_place_ids:
             return
 
         # 1. Populate Supplier Names
-        customer_ids = {p[0] for p in pairs}
-        cust_prod_ids = {p[1] for p in pairs}
+        supplier_map = {}
+        if pairs:
+            customer_ids = {p[0] for p in pairs}
+            cust_prod_ids = {p[1] for p in pairs}
 
-        stmt = (
-            select(CustomerItem.customer_id, CustomerItem.product_id, Supplier.supplier_name)
-            .join(Supplier, CustomerItem.supplier_id == Supplier.id)
-            .where(CustomerItem.customer_id.in_(customer_ids))
-            .where(CustomerItem.product_id.in_(cust_prod_ids))
-        )
+            stmt = (
+                select(CustomerItem.customer_id, CustomerItem.product_id, Supplier.supplier_name)
+                .join(Supplier, CustomerItem.supplier_id == Supplier.id)
+                .where(CustomerItem.customer_id.in_(customer_ids))
+                .where(CustomerItem.product_id.in_(cust_prod_ids))
+            )
 
-        rows = self.db.execute(stmt).all()
-        supplier_map = {(row.customer_id, row.product_id): row.supplier_name for row in rows}
+            rows = self.db.execute(stmt).all()
+            supplier_map = {(row.customer_id, row.product_id): row.supplier_name for row in rows}
 
-        # 2. Populate Product Unit Info
-        product_stmt = select(Product).where(Product.id.in_(product_ids))
-        products = self.db.execute(product_stmt).scalars().all()
-        product_map = {p.id: p for p in products}
+        # 2. Populate Product Info
+        product_map = {}
+        if product_ids:
+            product_stmt = select(Product).where(Product.id.in_(product_ids))
+            products = self.db.execute(product_stmt).scalars().all()
+            product_map = {p.id: p for p in products}
+
+        # 3. Populate Delivery Place Info
+        delivery_place_map = {}
+        if delivery_place_ids:
+            dp_stmt = select(DeliveryPlace).where(DeliveryPlace.id.in_(delivery_place_ids))
+            dps = self.db.execute(dp_stmt).scalars().all()
+            delivery_place_map = {dp.id: dp.delivery_place_name for dp in dps}
 
         # Update lines
         for order in orders:
@@ -199,9 +230,15 @@ class OrderService:
                 # Supplier Name
                 line.supplier_name = supplier_map.get((order.customer_id, line.product_id))
 
-                # Product Unit Info
+                # Product Info
                 product = product_map.get(line.product_id)
                 if product:
+                    line.product_code = product.maker_part_code
+                    line.product_name = product.product_name
                     line.product_internal_unit = product.internal_unit
                     line.product_external_unit = product.external_unit
                     line.product_qty_per_internal_unit = float(product.qty_per_internal_unit or 1.0)
+
+                # Delivery Place Name
+                if line.delivery_place_id:
+                    line.delivery_place_name = delivery_place_map.get(line.delivery_place_id)

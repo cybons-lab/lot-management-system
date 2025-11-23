@@ -54,6 +54,23 @@ class OrderWithLinesResponse(OrderResponse):
 
 
 # ============================================================
+# Allocation (引当実績) - Simplified for orders_schema
+# ============================================================
+
+
+class AllocationResponse(BaseSchema):
+    """Allocation response for order line (DDL: allocations)."""
+
+    id: int
+    order_line_id: int
+    lot_id: int
+    allocated_quantity: Decimal = Field(..., decimal_places=3)
+    status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
 # OrderLine (受注明細)
 # ============================================================
 
@@ -104,31 +121,16 @@ class OrderLineResponse(OrderLineBase):
     product_external_unit: str | None = None
     product_qty_per_internal_unit: float | None = None
 
-    model_config = {"from_attributes": True}
+    # Display Info (Populated by Service)
+    product_code: str | None = None
+    product_name: str | None = None
+    delivery_place_name: str | None = None
 
-
-class OrderLineWithAllocationsResponse(OrderLineResponse):
-    """Order line with allocations response."""
-
+    # Allocation Info
     allocations: list[AllocationResponse] = Field(default_factory=list)
     allocated_quantity: Decimal = Field(default=Decimal("0"), description="引当済数量")
 
-
-# ============================================================
-# Allocation (引当実績) - Simplified for orders_schema
-# ============================================================
-
-
-class AllocationResponse(BaseSchema):
-    """Allocation response for order line (DDL: allocations)."""
-
-    id: int
-    order_line_id: int
-    lot_id: int
-    allocated_quantity: Decimal = Field(..., decimal_places=3)
-    status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
-    created_at: datetime
-    updated_at: datetime
+    model_config = {"from_attributes": True}
 
 
 # ============================================================
@@ -147,4 +149,3 @@ class OrderLineOut(OrderLineResponse):
 # Pydantic v2のforward reference解決
 OrderCreate.model_rebuild()
 OrderWithLinesResponse.model_rebuild()
-OrderLineWithAllocationsResponse.model_rebuild()

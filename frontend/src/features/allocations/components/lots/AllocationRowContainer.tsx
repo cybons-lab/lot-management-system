@@ -15,6 +15,7 @@ interface AllocationRowContainerProps {
   isOverAllocated: boolean;
   customerName?: string;
   productName?: string;
+  deliveryPlaceName?: string;
   isActive: boolean;
   onActivate: () => void;
 }
@@ -31,6 +32,7 @@ export function AllocationRowContainer({
   isOverAllocated,
   customerName,
   productName,
+  deliveryPlaceName,
   isActive,
   onActivate,
 }: AllocationRowContainerProps) {
@@ -40,7 +42,19 @@ export function AllocationRowContainer({
     limit: 200,
   });
 
-  const candidateLots = data?.items ?? [];
+  // ユーザー要望: 期限切れロットは候補として表示しない
+  const candidateLots = (data?.items ?? []).filter((lot) => {
+    // is_expiredフラグがあればそれを使用、なければ日付比較
+    if ("is_expired" in lot) return !lot.is_expired;
+    // expiry_dateが文字列で来る場合を想定
+    if (lot.expiry_date) {
+      const expiry = new Date(lot.expiry_date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return expiry >= today;
+    }
+    return true;
+  });
   const currentAllocations = getLineAllocations(line.id);
   const canSave = lineStatus === "draft" && !isOverAllocated;
 
@@ -50,6 +64,7 @@ export function AllocationRowContainer({
       orderLine={line}
       customerName={customerName}
       productName={productName}
+      deliveryPlaceName={deliveryPlaceName}
       candidateLots={candidateLots}
       lotAllocations={currentAllocations}
       onLotAllocationChange={(lotId, qty) => onLotAllocationChange(line.id, lotId, qty)}
