@@ -13,7 +13,6 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 def _to_product_out(product: Product) -> ProductOut:
     """Map a Product ORM model to the canonical ProductOut schema."""
-
     return ProductOut(
         id=product.id,
         product_code=product.maker_part_code,

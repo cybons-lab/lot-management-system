@@ -11,8 +11,7 @@ from datetime import datetime
 from pydantic import Field
 
 from app.schemas.common.base import BaseSchema
-from app.schemas.masters.products_schema import ProductCreate, ProductOut, ProductUpdate
-from app.schemas.masters.warehouses_schema import WarehouseListResponse, WarehouseOut
+from app.schemas.masters.products_schema import ProductCreate, ProductOut
 
 
 # ============================================================
