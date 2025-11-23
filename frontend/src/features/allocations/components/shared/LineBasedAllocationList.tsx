@@ -43,7 +43,7 @@ export function LineBasedAllocationList({
     // 選択状態管理
     const [selectedLineIds, setSelectedLineIds] = useState<Set<number>>(new Set());
     // フィルタステータス
-    type FilterStatus = "all" | "complete" | "shortage" | "over" | "unallocated" | "no-candidates";
+    type FilterStatus = "all" | "complete" | "shortage" | "over" | "unallocated";
     const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
     // アクティブな行ID
     const [activeLineId, setActiveLineId] = useState<number | null>(null);
@@ -121,13 +121,13 @@ export function LineBasedAllocationList({
                 case "complete":
                     return status === 'completed';
                 case "shortage":
-                    return status === 'shortage' && hasCandidates;
+                    // ユーザー要望: 候補なしも在庫不足として扱う
+                    return (status === 'shortage' || (status as string) === 'no-candidates') && required > 0;
                 case "over":
                     return status === 'over';
                 case "unallocated":
+                    // 未引当かつ候補あり（純粋な未着手）
                     return status === 'unallocated' && hasCandidates;
-                case "no-candidates":
-                    return !hasCandidates;
                 default:
                     return true;
             }
@@ -207,8 +207,8 @@ export function LineBasedAllocationList({
                 </div>
             )}
 
-            {/* フィルタリングバー */}
-            <div className="mb-6 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
+            {/* フィルタリングバー (Sticky) */}
+            <div className="sticky top-0 z-10 mb-6 flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white/95 p-3 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/60">
                 <div className="flex items-center gap-2 pr-4 text-sm font-bold text-gray-600">
                     <Filter className="h-4 w-4" />
                     <span>フィルタ:</span>
@@ -217,10 +217,9 @@ export function LineBasedAllocationList({
                 {[
                     { id: "all", label: "すべて", color: "gray-800" },
                     { id: "complete", label: "引当完了", color: "blue-600" },
-                    { id: "shortage", label: "在庫不足", color: "yellow-500" },
+                    { id: "shortage", label: "在庫不足", color: "red-600" }, // 黄色から赤に変更（候補なしを含むため）
                     { id: "over", label: "在庫過剰", color: "orange-500" },
                     { id: "unallocated", label: "未引当", color: "gray-500" },
-                    { id: "no-candidates", label: "候補なし", color: "red-600" },
                 ].map((f) => (
                     <Button
                         key={f.id}
