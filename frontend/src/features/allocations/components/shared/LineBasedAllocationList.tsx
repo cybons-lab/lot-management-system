@@ -20,6 +20,7 @@ export function LineBasedAllocationList({
     isLoading,
     onSaveAllocations,
     customerMap,
+    productMap,
     getLineAllocations,
     getCandidateLots,
     isOverAllocated,
@@ -32,6 +33,7 @@ export function LineBasedAllocationList({
     isLoading: boolean;
     onSaveAllocations: (lineId: number) => void;
     customerMap: Record<number, string>;
+    productMap: Record<number, string>;
     getLineAllocations: (lineId: number) => Record<number, number>;
     getCandidateLots: (lineId: number) => CandidateLotItem[];
     isOverAllocated: (lineId: number) => boolean;
@@ -70,9 +72,19 @@ export function LineBasedAllocationList({
 
     // ヘルパー: 商品名取得
     const getProductName = (line: any) => {
-        // productMapはpropsとして渡されていないため、line内の情報を使用
-        // 必要であればpropsに追加するが、現状はline.product_nameで代用
-        return line.product_name || "商品名不明";
+        if (line.product_name) return line.product_name;
+        if (line.product_id && productMap[line.product_id]) return productMap[line.product_id];
+        return "商品名不明";
+    };
+
+    // ヘルパー: 納入先名取得
+    const getDeliveryPlaceName = (order: OrderWithLinesResponse, line: any) => {
+        // 明細の納入先 > オーダーの納入先 > 未設定
+        if (line.delivery_place_name) return line.delivery_place_name;
+        if (order.delivery_place_name) return order.delivery_place_name;
+        return undefined; // AllocationRowContainer側でデフォルト処理させるか、ここで"未設定"を返すか。
+        // ここではundefinedを返し、AllocationRowContainer -> LotAllocationPanel -> orderLineUtilsで解決させる
+        // ただし、order.delivery_place_nameがある場合はそれを優先させたいので、ここで解決して渡すのが良い
     };
 
     // 1. 全明細をフラット化し、Order情報を付与
@@ -376,6 +388,7 @@ export function LineBasedAllocationList({
                                             line={item.line}
                                             customerName={item.customer_name}
                                             productName={getProductName(item.line)}
+                                            deliveryPlaceName={getDeliveryPlaceName(item.order, item.line)}
                                             getLineAllocations={getLineAllocations}
                                             onLotAllocationChange={onLotAllocationChange}
                                             onAutoAllocate={onAutoAllocate}

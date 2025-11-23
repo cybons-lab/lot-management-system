@@ -15,6 +15,7 @@ interface AllocationRowContainerProps {
   isOverAllocated: boolean;
   customerName?: string;
   productName?: string;
+  deliveryPlaceName?: string;
   isActive: boolean;
   onActivate: () => void;
 }
@@ -31,6 +32,7 @@ export function AllocationRowContainer({
   isOverAllocated,
   customerName,
   productName,
+  deliveryPlaceName,
   isActive,
   onActivate,
 }: AllocationRowContainerProps) {
@@ -62,6 +64,7 @@ export function AllocationRowContainer({
       orderLine={line}
       customerName={customerName}
       productName={productName}
+      deliveryPlaceName={deliveryPlaceName}
       candidateLots={candidateLots}
       lotAllocations={currentAllocations}
       onLotAllocationChange={(lotId, qty) => onLotAllocationChange(line.id, lotId, qty)}

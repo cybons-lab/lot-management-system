@@ -29,6 +29,7 @@ interface LotAllocationPanelProps {
   // Props for internal calculations (can be overridden)
   customerName?: string;
   productName?: string;
+  deliveryPlaceName?: string;
 
   // Active state management
   isActive?: boolean;
@@ -55,9 +56,10 @@ export function LotAllocationPanel({
   isOverAllocated = false,
   customerName: propCustomerName,
   productName: propProductName,
+  deliveryPlaceName: propDeliveryPlaceName,
   isActive = false,
   onActivate,
-}: LotAllocationPanelProps) {
+}: LotAllocationPanelProps & { deliveryPlaceName?: string }) {
   // 数量計算（カスタムフックで集約）
   const calculations = useAllocationCalculations({
     orderLine,
@@ -95,7 +97,8 @@ export function LotAllocationPanel({
 
   // データ取得（ユーティリティ関数で集約）
   const customerName = getCustomerName(order, orderLine, propCustomerName);
-  const deliveryPlaceName = getDeliveryPlaceName(orderLine, candidateLots);
+  // 優先順位: prop > line > candidate
+  const deliveryPlaceName = propDeliveryPlaceName || getDeliveryPlaceName(orderLine, candidateLots);
   const productName = getProductName(orderLine, propProductName);
 
   // スタイル状態の決定

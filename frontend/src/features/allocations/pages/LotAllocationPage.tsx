@@ -16,6 +16,7 @@ export function LotAllocationPage() {
       <LineBasedAllocationList
         orders={logic.orders}
         customerMap={logic.customerMap}
+        productMap={logic.productMap}
         onSaveAllocations={logic.saveAllocations}
         isLoading={logic.isLoadingOrders}
         getLineAllocations={(lineId) => logic.getAllocationsForLine(lineId)}
