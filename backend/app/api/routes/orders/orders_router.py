@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_uow
-from app.models import Allocation  # 追加
+from app.models import Allocation, OrderLine  # 追加
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderWithLinesResponse,
@@ -122,3 +122,41 @@ def save_manual_allocations(
     except Exception as e:
         logger.error(f"System error during allocation save: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to save allocations: {str(e)}")
+
+
+@router.post("/refresh-all-statuses", status_code=200)
+def refresh_all_order_line_statuses(db: Session = Depends(get_db)):
+    """
+    全受注明細のステータスを再計算・更新.
+    
+    既存の allocations データに基づいて status を正しい値に更新します。
+    """
+    try:
+        from app.services.allocation.allocations_service import update_order_line_status
+        
+        # 全ての OrderLine を取得
+        lines = db.query(OrderLine).all()
+        updated_count = 0
+        
+        for line in lines:
+            old_status = line.status
+            update_order_line_status(db, line.id)
+            db.flush()
+            
+            if line.status != old_status:
+                updated_count += 1
+        
+        db.commit()
+        logger.info(f"Refreshed {updated_count} order line statuses out of {len(lines)} total lines")
+        
+        return {
+            "success": True,
+            "message": f"Successfully refreshed statuses for {len(lines)} order lines",
+            "updated_count": updated_count,
+            "total_count": len(lines)
+        }
+    
+    except Exception as e:
+        logger.error(f"Failed to refresh statuses: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to refresh statuses: {str(e)}")
