@@ -421,15 +421,16 @@ def generate_test_data():
                     
                     for attempt in range(max_retries):
                         # Determine unit (70% external, 30% internal)
+                        # Order in EXTERNAL unit (customer-facing)
                         use_external = random.random() < 0.7
                         if use_external and product.external_unit:
                             unit = product.external_unit
                             # Generate quantity in external unit
                             qty_candidate = random.randint(qty_min, qty_max)
                             
-                            # Calculate converted quantity
+                            # Convert external → internal for allocation
                             factor = Decimal(str(product.qty_per_internal_unit))
-                            converted_candidate = Decimal(str(qty_candidate)) * factor
+                            converted_candidate = Decimal(str(qty_candidate)) / factor
                             
                             # For countable internal units, ensure integer result
                             if is_countable_unit(product.internal_unit):
@@ -445,7 +446,7 @@ def generate_test_data():
                                 converted_qty = round(converted_candidate, 2)
                                 break
                         else:
-                            # Use internal unit directly
+                            # Order in INTERNAL unit (same as inventory)
                             unit = product.internal_unit
                             
                             if is_countable_unit(product.internal_unit):
