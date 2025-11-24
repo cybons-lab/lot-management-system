@@ -24,6 +24,7 @@ from app.api.routes.admin import (
     test_data_router,
     users_router,
 )
+from app.api.routes.alerts import alerts_router
 from app.api.routes.allocations import (
     allocation_candidates_router,
     allocation_suggestions_router,
@@ -73,6 +74,8 @@ __all__ = [
     "lots_router",
     # Forecasts (1)
     "forecasts_router",
+    # Alerts (1)
+    "alerts_router",
     # Admin (9)
     "admin_healthcheck_router",
     "admin_router",

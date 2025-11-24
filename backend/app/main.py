@@ -14,6 +14,7 @@ from app.api.routes import (
     admin_healthcheck_router,
     admin_router,
     admin_simulate_router,
+    alerts_router,
     allocation_candidates_router,
     allocation_suggestions_router,
     allocations_router,
@@ -99,6 +100,9 @@ app.include_router(warehouse_alloc_router, prefix=settings.API_PREFIX)
 
 # Forecast endpoints
 app.include_router(forecasts_router, prefix=settings.API_PREFIX)
+
+# Alert endpoints
+app.include_router(alerts_router, prefix=settings.API_PREFIX)
 
 # Inventory endpoints
 app.include_router(inbound_plans_router, prefix=settings.API_PREFIX)
