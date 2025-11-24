@@ -10,14 +10,15 @@
 /* eslint-disable complexity */
 
 import { useAtom } from "jotai";
-import { Plus, RefreshCw, MoreHorizontal, Pencil, Lock, Unlock } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Plus, RefreshCw, MoreHorizontal, Pencil, Lock, Unlock, ChevronDown, ChevronRight, Search, Package } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
 import * as styles from "./styles";
 
 import { Button } from "@/components/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import {
@@ -29,16 +30,16 @@ import {
 import { LotCreateForm } from "@/features/inventory/components/LotCreateForm";
 import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
+import { ProductGroupHeader } from "@/features/inventory/components/ProductGroupHeader";
 import { useLotStats } from "@/features/inventory/hooks/useLotStats";
 import { lotFiltersAtom, lotTableSettingsAtom } from "@/features/inventory/state";
+import { groupLotsByProduct } from "@/features/inventory/utils/groupLots";
 import { useLotsQuery } from "@/hooks/api";
 import { useCreateLot, useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
+import { useDebounce } from "@/hooks/ui/useDebounce";
 import { getLotStatuses } from "@/shared/utils/status";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
-import { FilterField } from "@/shared/components/data/FilterField";
-import { FilterPanel } from "@/shared/components/data/FilterPanel";
-import { SearchBar } from "@/shared/components/data/SearchBar";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
@@ -61,6 +62,25 @@ export function LotsPage() {
   const editDialog = useDialog();
   const lockDialog = useDialog();
   const [selectedLot, setSelectedLot] = useState<LotResponse | null>(null);
+
+  // 表示モード（製品別グループ / フラット）
+  const [viewMode] = useState<"grouped" | "flat">("grouped");
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  // 検索・フィルター状態
+  const [searchTerm, setSearchTerm] = useState(filters.search ?? "");
+  const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
+
+  // 検索語のデバウンス
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // デバウンスされた検索語をフィルタに適用
+  useEffect(() => {
+    if (debouncedSearchTerm !== filters.search) {
+      setFilters((prev) => ({ ...prev, search: debouncedSearchTerm }));
+      setTableSettings((prev) => ({ ...prev, page: 0 }));
+    }
+  }, [debouncedSearchTerm, filters.search, setFilters, setTableSettings]);
 
   // データ取得（null → undefined 変換）
   const {
@@ -132,8 +152,8 @@ export function LotsPage() {
     }
   };
 
-  // カラム定義
-  const columns = useMemo<Column<LotUI>[]>(
+  // カラム定義（共通部分）
+  const baseColumns: Column<LotUI>[] = useMemo(
     () => [
       {
         id: "lot_number",
@@ -142,29 +162,12 @@ export function LotsPage() {
           <div className="flex flex-col">
             <span className="font-medium">{lot.lot_number}</span>
             {lot.status === "locked" && (
-              <span className="text-xs text-gray-500 flex items-center gap-1">
+              <span className="text-xs text-amber-500 flex items-center gap-1">
                 <Lock className="h-3 w-3" /> ロック中
               </span>
             )}
           </div>
         ),
-        sortable: true,
-      },
-      {
-        id: "product_code",
-        header: "製品コード",
-        cell: (lot) => lot.product_code ?? "–",
-        sortable: true,
-      },
-      {
-        id: "product_name",
-        header: "製品名",
-        cell: (lot) => lot.product_name ?? "–",
-      },
-      {
-        id: "supplier_name",
-        header: "仕入先",
-        cell: (lot) => lot.supplier_name ?? "–",
         sortable: true,
       },
       {
@@ -252,6 +255,38 @@ export function LotsPage() {
     [allLots],
   );
 
+  // グループ表示用カラム（仕入先なし）
+  const groupedColumns = baseColumns;
+
+  // フラット表示用カラム（製品コード・製品名・仕入先を追加）
+  const flatColumns: Column<LotUI>[] = useMemo(
+    () => [
+      baseColumns[0], // lot_number
+      {
+        id: "product_code",
+        header: "製品コード",
+        cell: (lot) => lot.product_code ?? "–",
+        sortable: true,
+      },
+      {
+        id: "product_name",
+        header: "製品名",
+        cell: (lot) => lot.product_name ?? "–",
+      },
+      {
+        id: "supplier_name",
+        header: "仕入先",
+        cell: (lot) => lot.supplier_name ?? "–",
+        sortable: true,
+      },
+      ...baseColumns.slice(1), // current_quantity以降
+    ],
+    [baseColumns],
+  );
+
+  // 表示モードに応じてカラムを切り替え
+  const columns = viewMode === "grouped" ? groupedColumns : flatColumns;
+
   // フィルタリング
   const filteredLots = useMemo(() => {
     if (!filters.search) return allLots;
@@ -309,6 +344,7 @@ export function LotsPage() {
   };
 
   const handleResetFilters = () => {
+    setSearchTerm("");
     setFilters({
       search: "",
       productCode: null,
@@ -318,6 +354,19 @@ export function LotsPage() {
     });
     setTableSettings({ ...tableSettings, page: 0 });
   };
+
+  // 行のスタイル判定
+  const getRowClassName = (lot: LotUI) => {
+    const statuses = getLotStatuses(lot);
+    if (statuses.includes("locked")) {
+      // ロック中は左端にアクセントカラーのみ (背景白)
+      return "bg-white border-l-4 border-amber-400";
+    }
+    return "bg-white border-l-4 border-transparent"; // デフォルトも透明なボーダーを入れて位置ずれ防止
+  };
+
+  // グループ化されたロット
+  const groupedLots = useMemo(() => groupLotsByProduct(paginatedLots), [paginatedLots]);
 
   return (
     <div className={styles.root}>
@@ -334,80 +383,117 @@ export function LotsPage() {
       </div>
 
       {/* 統計情報 */}
-      <div className={styles.statsGrid}>
-        <div className={styles.statsCard({ variant: "default" })}>
-          <div className={styles.statsLabel}>総ロット数</div>
-          <div className={styles.statsValue({ color: "default" })}>{fmt(stats.totalLots)}</div>
-        </div>
-        <div className={styles.statsCard({ variant: "active" })}>
-          <div className={styles.statsLabel}>有効ロット数</div>
-          <div className={styles.statsValue({ color: "blue" })}>{fmt(stats.activeLots)}</div>
-        </div>
-        <div className={styles.statsCard({ variant: "default" })}>
-          <div className={styles.statsLabel}>総在庫数</div>
-          <div className={styles.statsValue({ color: "default" })}>{fmt(stats.totalQuantity)}</div>
-        </div>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">総ロット数</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalLots}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">有効ロット数</CardTitle>
+            <div className="h-4 w-4 rounded-full bg-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{stats.activeLots}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">総在庫数</CardTitle>
+            <div className="h-4 w-4 rounded-full bg-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{fmt(stats.totalQuantity)}</div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* フィルター */}
-      <Section>
-        <FilterPanel title="検索・フィルター" onReset={handleResetFilters}>
-          <SearchBar
-            value={filters.search ?? ""}
-            onChange={(value: string) => handleFilterChange("search", value)}
-            placeholder="ロット番号、製品コード、製品名で検索..."
-          />
+      <Section className="space-y-4">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="ロット番号、製品コード、製品名で検索..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setIsAdvancedFilterOpen(!isAdvancedFilterOpen)}
+            className="whitespace-nowrap"
+          >
+            詳細フィルター
+            {isAdvancedFilterOpen ? (
+              <ChevronDown className="ml-2 h-4 w-4" />
+            ) : (
+              <ChevronRight className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        </div>
 
-          <div className={styles.filterGrid}>
-            <FilterField label="製品コード">
+        {isAdvancedFilterOpen && (
+          <div className="grid grid-cols-1 gap-4 rounded-lg border bg-gray-50 p-4 md:grid-cols-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">製品コード</label>
               <Input
+                placeholder="PROD-..."
                 value={filters.productCode ?? ""}
-                onChange={(e) => handleFilterChange("productCode", e.target.value || null)}
-                placeholder="例: P001"
+                onChange={(e) => handleFilterChange("productCode", e.target.value)}
               />
-            </FilterField>
-
-            <FilterField label="納品場所コード">
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">倉庫コード</label>
               <Input
+                placeholder="WH-..."
                 value={filters.warehouseCode ?? ""}
-                onChange={(e) => handleFilterChange("warehouseCode", e.target.value || null)}
-                placeholder="例: DP01"
+                onChange={(e) => handleFilterChange("warehouseCode", e.target.value)}
               />
-            </FilterField>
-
-            <FilterField label="ステータス">
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">ステータス</label>
               <Select
                 value={filters.status ?? "all"}
                 onValueChange={(value) => handleFilterChange("status", value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="全て" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">すべて</SelectItem>
+                  <SelectItem value="all">全て</SelectItem>
                   <SelectItem value="active">有効</SelectItem>
-                  <SelectItem value="allocated">引当済</SelectItem>
-                  <SelectItem value="shipped">出荷済</SelectItem>
-                  <SelectItem value="inactive">無効</SelectItem>
                   <SelectItem value="locked">ロック中</SelectItem>
+                  <SelectItem value="depleted">在庫切れ</SelectItem>
                 </SelectContent>
               </Select>
-            </FilterField>
-          </div>
+            </div>
 
-          <div className={styles.checkboxGroup}>
-            <input
-              type="checkbox"
-              id="inStockOnly"
-              checked={filters.inStockOnly ?? false}
-              onChange={(e) => handleFilterChange("inStockOnly", e.target.checked)}
-              className={styles.checkbox}
-            />
-            <label htmlFor="inStockOnly" className={styles.checkboxLabel}>
-              在庫ありのみ表示
-            </label>
+            <div className="flex items-center justify-between space-x-2 pb-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="inStockOnly"
+                  checked={filters.inStockOnly ?? false}
+                  onChange={(e) => handleFilterChange("inStockOnly", e.target.checked)}
+                  className={styles.checkbox}
+                />
+                <label htmlFor="inStockOnly" className={styles.checkboxLabel}>
+                  在庫ありのみ表示
+                </label>
+              </div>
+              <Button variant="ghost" size="sm" onClick={handleResetFilters} className="text-xs text-gray-500">
+                リセット
+              </Button>
+            </div>
           </div>
-        </FilterPanel>
+        )}
       </Section>
 
       {/* エラー表示 */}
@@ -432,31 +518,76 @@ export function LotsPage() {
       )}
 
       {/* テーブル */}
-      <Section>
-        <DataTable
-          data={paginatedLots}
-          columns={columns}
-          sort={
-            tableSettings.sortColumn && tableSettings.sortDirection
-              ? { column: tableSettings.sortColumn, direction: tableSettings.sortDirection }
-              : undefined
-          }
-          isLoading={isLoading}
-          emptyMessage="ロットがありません。新規登録ボタンから最初のロットを作成してください。"
-        />
-
-        {!isLoading && !error && sortedLots.length > 0 && (
-          <TablePagination
-            currentPage={(tableSettings.page ?? 0) + 1}
-            pageSize={tableSettings.pageSize ?? 25}
-            totalCount={sortedLots.length}
-            onPageChange={(page) => setTableSettings({ ...tableSettings, page: page - 1 })}
-            onPageSizeChange={(pageSize) =>
-              setTableSettings({ ...tableSettings, pageSize, page: 0 })
+      {/* 表示モード別コンテンツ */}
+      {viewMode === "grouped" ? (
+        // グループ化表示
+        <div className="space-y-6">
+          {groupedLots.map((group) => (
+            <div key={group.key} className="overflow-hidden rounded-lg border bg-white shadow-sm">
+              <ProductGroupHeader
+                productCode={group.productCode}
+                productName={group.productName}
+                supplierName={group.supplierName}
+                totalCurrentQuantity={group.totalCurrentQuantity}
+                lotCount={group.lotCount}
+                minExpiryDate={group.minExpiryDate}
+                isExpanded={expandedGroups.has(group.key)}
+                onToggle={() => {
+                  const newExpanded = new Set(expandedGroups);
+                  if (newExpanded.has(group.key)) {
+                    newExpanded.delete(group.key);
+                  } else {
+                    newExpanded.add(group.key);
+                  }
+                  setExpandedGroups(newExpanded);
+                }}
+              />
+              {expandedGroups.has(group.key) && (
+                <DataTable
+                  data={group.lots}
+                  columns={columns}
+                  sort={
+                    tableSettings.sortColumn && tableSettings.sortDirection
+                      ? { column: tableSettings.sortColumn, direction: tableSettings.sortDirection }
+                      : undefined
+                  }
+                  isLoading={isLoading}
+                  emptyMessage="ロットがありません。"
+                  getRowClassName={getRowClassName}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        // フラット表示（従来通り）
+        <Section>
+          <DataTable
+            data={paginatedLots}
+            columns={columns}
+            sort={
+              tableSettings.sortColumn && tableSettings.sortDirection
+                ? { column: tableSettings.sortColumn, direction: tableSettings.sortDirection }
+                : undefined
             }
+            isLoading={isLoading}
+            emptyMessage="ロットがありません。新規登録ボタンから最初のロットを作成してください。"
+            getRowClassName={getRowClassName}
           />
-        )}
-      </Section>
+          {/* ページネーション */}
+          {!isLoading && !error && sortedLots.length > 0 && (
+            <TablePagination
+              currentPage={(tableSettings.page ?? 0) + 1}
+              pageSize={tableSettings.pageSize ?? 25}
+              totalCount={sortedLots.length}
+              onPageChange={(page) => setTableSettings({ ...tableSettings, page: page - 1 })}
+              onPageSizeChange={(pageSize) =>
+                setTableSettings({ ...tableSettings, pageSize, page: 0 })
+              }
+            />
+          )}
+        </Section>
+      )}
 
       {/* 新規登録ダイアログ */}
       <FormDialog
@@ -478,46 +609,50 @@ export function LotsPage() {
       </FormDialog>
 
       {/* 編集ダイアログ */}
-      {selectedLot && (
-        <FormDialog
-          open={editDialog.isOpen}
-          onClose={() => {
-            editDialog.close();
-            setSelectedLot(null);
-          }}
-          title="ロット編集"
-          description={`ロット ${selectedLot.lot_number} を編集します`}
-          size="lg"
-        >
-          <LotEditForm
-            initialData={selectedLot}
-            onSubmit={async (data: LotUpdateData) => {
-              await updateLotMutation.mutateAsync(data);
-            }}
-            onCancel={() => {
+      {
+        selectedLot && (
+          <FormDialog
+            open={editDialog.isOpen}
+            onClose={() => {
               editDialog.close();
               setSelectedLot(null);
             }}
-            isSubmitting={updateLotMutation.isPending}
-          />
-        </FormDialog>
-      )}
+            title="ロット編集"
+            description={`ロット ${selectedLot.lot_number} を編集します`}
+            size="lg"
+          >
+            <LotEditForm
+              initialData={selectedLot}
+              onSubmit={async (data: LotUpdateData) => {
+                await updateLotMutation.mutateAsync(data);
+              }}
+              onCancel={() => {
+                editDialog.close();
+                setSelectedLot(null);
+              }}
+              isSubmitting={updateLotMutation.isPending}
+            />
+          </FormDialog>
+        )
+      }
 
       {/* ロック確認ダイアログ */}
-      {selectedLot && (
-        <LotLockDialog
-          open={lockDialog.isOpen}
-          onClose={() => {
-            lockDialog.close();
-            setSelectedLot(null);
-          }}
-          onConfirm={async (reason) => {
-            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason });
-          }}
-          isSubmitting={lockLotMutation.isPending}
-          lotNumber={selectedLot.lot_number}
-        />
-      )}
-    </div>
+      {
+        selectedLot && (
+          <LotLockDialog
+            open={lockDialog.isOpen}
+            onClose={() => {
+              lockDialog.close();
+              setSelectedLot(null);
+            }}
+            onConfirm={async (reason) => {
+              await lockLotMutation.mutateAsync({ id: selectedLot.id, reason });
+            }}
+            isSubmitting={lockLotMutation.isPending}
+            lotNumber={selectedLot.lot_number}
+          />
+        )
+      }
+    </div >
   );
 }
