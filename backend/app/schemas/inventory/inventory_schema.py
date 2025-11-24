@@ -18,6 +18,13 @@ class LotStatus(str, Enum):
     DEPLETED = "depleted"
     EXPIRED = "expired"
     QUARANTINE = "quarantine"
+    LOCKED = "locked"
+
+
+class LotLock(BaseSchema):
+    """Payload for locking a lot."""
+
+    reason: str
 
 
 class LotBase(BaseSchema):

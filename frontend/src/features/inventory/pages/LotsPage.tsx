@@ -10,30 +10,40 @@
 /* eslint-disable complexity */
 
 import { useAtom } from "jotai";
-import { Plus, RefreshCw } from "lucide-react";
-import { useMemo } from "react";
+import { Plus, RefreshCw, MoreHorizontal, Pencil, Lock, Unlock } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 import * as styles from "./styles";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui";
 import { LotCreateForm } from "@/features/inventory/components/LotCreateForm";
+import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
+import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
 import { useLotStats } from "@/features/inventory/hooks/useLotStats";
-import { columns } from "@/features/inventory/pages/LotsPage/columns";
 import { lotFiltersAtom, lotTableSettingsAtom } from "@/features/inventory/state";
 import { useLotsQuery } from "@/hooks/api";
-import { useCreateLot } from "@/hooks/mutations";
+import { useCreateLot, useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
-import { DataTable } from "@/shared/components/data/DataTable";
+import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { FilterField } from "@/shared/components/data/FilterField";
 import { FilterPanel } from "@/shared/components/data/FilterPanel";
 import { SearchBar } from "@/shared/components/data/SearchBar";
+import { LotStatusBadge } from "@/shared/components/data/StatusBadge";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import { Section } from "@/shared/components/layout";
 import type { LotUI } from "@/shared/libs/normalize";
+import type { LotResponse } from "@/shared/types/aliases";
 import { fmt } from "@/shared/utils/number";
 
 // ============================================
@@ -47,6 +57,9 @@ export function LotsPage() {
 
   // UI状態管理
   const createDialog = useDialog();
+  const editDialog = useDialog();
+  const lockDialog = useDialog();
+  const [selectedLot, setSelectedLot] = useState<LotResponse | null>(null);
 
   // データ取得（null → undefined 変換）
   const {
@@ -60,18 +73,184 @@ export function LotsPage() {
     delivery_place_code: filters.warehouseCode ?? undefined,
   });
 
-  // ロット作成Mutation
+  // Mutation Hooks
   const createLotMutation = useCreateLot({
     onSuccess: () => {
       toast.success("ロットを作成しました");
       createDialog.close();
     },
-    onError: (error) => {
-      toast.error(`作成に失敗しました: ${error.message}`);
-    },
+    onError: (error) => toast.error(`作成に失敗しました: ${error.message}`),
   });
 
-  // フィルタリング（検索テキスト）
+  const updateLotMutation = useUpdateLot(selectedLot?.id ?? 0, {
+    onSuccess: () => {
+      toast.success("ロットを更新しました");
+      editDialog.close();
+      setSelectedLot(null);
+    },
+    onError: (error) => toast.error(`更新に失敗しました: ${error.message}`),
+  });
+
+  const lockLotMutation = useLockLot({
+    onSuccess: () => {
+      toast.success("ロットをロックしました");
+      lockDialog.close();
+      setSelectedLot(null);
+    },
+    onError: (error) => toast.error(`ロックに失敗しました: ${error.message}`),
+  });
+
+  const unlockLotMutation = useUnlockLot({
+    onSuccess: () => {
+      toast.success("ロットのロックを解除しました");
+    },
+    onError: (error) => toast.error(`ロック解除に失敗しました: ${error.message}`),
+  });
+
+  // ハンドラー
+  const handleEdit = (lot: LotUI) => {
+    // LotUI -> LotResponse 変換（簡易的）
+    const lotData = allLots.find((l) => l.id === lot.id);
+    if (lotData) {
+      setSelectedLot(lotData);
+      editDialog.open();
+    }
+  };
+
+  const handleLock = (lot: LotUI) => {
+    const lotData = allLots.find((l) => l.id === lot.id);
+    if (lotData) {
+      setSelectedLot(lotData);
+      lockDialog.open();
+    }
+  };
+
+  const handleUnlock = async (lot: LotUI) => {
+    if (confirm(`ロット ${lot.lot_number} のロックを解除しますか？`)) {
+      await unlockLotMutation.mutateAsync(lot.id);
+    }
+  };
+
+  // カラム定義
+  const columns = useMemo<Column<LotUI>[]>(
+    () => [
+      {
+        id: "lot_number",
+        header: "ロット番号",
+        cell: (lot) => (
+          <div className="flex flex-col">
+            <span className="font-medium">{lot.lot_number}</span>
+            {lot.status === "locked" && (
+              <span className="text-xs text-red-600 flex items-center gap-1">
+                <Lock className="h-3 w-3" /> ロック中
+              </span>
+            )}
+          </div>
+        ),
+        sortable: true,
+      },
+      {
+        id: "product_code",
+        header: "製品コード",
+        cell: (lot) => lot.product_code,
+        sortable: true,
+      },
+      {
+        id: "product_name",
+        header: "製品名",
+        cell: (lot) => lot.product_name,
+      },
+      {
+        id: "delivery_place_id",
+        header: "納品場所",
+        cell: (lot) => lot.delivery_place_id ?? "–",
+        sortable: true,
+      },
+      {
+        id: "current_quantity",
+        header: "現在在庫",
+        cell: (lot) => {
+          const qty = Number(lot.current_quantity);
+          return <span className={qty > 0 ? "font-semibold" : "text-gray-400"}>{fmt(qty)}</span>;
+        },
+        sortable: true,
+        align: "right",
+      },
+      {
+        id: "unit",
+        header: "単位",
+        cell: (lot) => lot.unit,
+        align: "center",
+      },
+      {
+        id: "receipt_date",
+        header: "入荷日",
+        cell: (lot) =>
+          lot.receipt_date && lot.receipt_date !== "-"
+            ? format(new Date(lot.receipt_date), "yyyy/MM/dd")
+            : "-",
+        sortable: true,
+      },
+      {
+        id: "expiry_date",
+        header: "有効期限",
+        cell: (lot) =>
+          lot.expiry_date && lot.expiry_date !== "-"
+            ? format(new Date(lot.expiry_date), "yyyy/MM/dd")
+            : "-",
+        sortable: true,
+      },
+      {
+        id: "status",
+        header: "ステータス",
+        cell: (lot) => {
+          const status =
+            lot.status === "locked"
+              ? "locked"
+              : Number(lot.current_quantity) > 0
+                ? "available"
+                : "depleted";
+          return <LotStatusBadge status={status} />;
+        },
+        sortable: true,
+        align: "center",
+      },
+      {
+        id: "actions",
+        header: "",
+        cell: (lot) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">メニューを開く</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleEdit(lot)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                編集
+              </DropdownMenuItem>
+              {lot.status === "locked" ? (
+                <DropdownMenuItem onClick={() => handleUnlock(lot)}>
+                  <Unlock className="mr-2 h-4 w-4" />
+                  ロック解除
+                </DropdownMenuItem>
+              ) : (
+                <DropdownMenuItem onClick={() => handleLock(lot)} className="text-red-600">
+                  <Lock className="mr-2 h-4 w-4" />
+                  ロック
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
+    ],
+    [allLots],
+  );
+
+  // フィルタリング
   const filteredLots = useMemo(() => {
     if (!filters.search) return allLots;
 
@@ -124,7 +303,7 @@ export function LotsPage() {
   // ハンドラー
   const handleFilterChange = (key: string, value: unknown) => {
     setFilters({ ...filters, [key]: value });
-    setTableSettings({ ...tableSettings, page: 0 }); // フィルタ変更時はページをリセット
+    setTableSettings({ ...tableSettings, page: 0 });
   };
 
   const handleResetFilters = () => {
@@ -208,6 +387,7 @@ export function LotsPage() {
                   <SelectItem value="allocated">引当済</SelectItem>
                   <SelectItem value="shipped">出荷済</SelectItem>
                   <SelectItem value="inactive">無効</SelectItem>
+                  <SelectItem value="locked">ロック中</SelectItem>
                 </SelectContent>
               </Select>
             </FilterField>
@@ -294,6 +474,48 @@ export function LotsPage() {
           isSubmitting={createLotMutation.isPending}
         />
       </FormDialog>
+
+      {/* 編集ダイアログ */}
+      {selectedLot && (
+        <FormDialog
+          open={editDialog.isOpen}
+          onClose={() => {
+            editDialog.close();
+            setSelectedLot(null);
+          }}
+          title="ロット編集"
+          description={`ロット ${selectedLot.lot_number} を編集します`}
+          size="lg"
+        >
+          <LotEditForm
+            initialData={selectedLot}
+            onSubmit={async (data: LotUpdateData) => {
+              await updateLotMutation.mutateAsync(data);
+            }}
+            onCancel={() => {
+              editDialog.close();
+              setSelectedLot(null);
+            }}
+            isSubmitting={updateLotMutation.isPending}
+          />
+        </FormDialog>
+      )}
+
+      {/* ロック確認ダイアログ */}
+      {selectedLot && (
+        <LotLockDialog
+          open={lockDialog.isOpen}
+          onClose={() => {
+            lockDialog.close();
+            setSelectedLot(null);
+          }}
+          onConfirm={async (reason) => {
+            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason });
+          }}
+          isSubmitting={lockLotMutation.isPending}
+          lotNumber={selectedLot.lot_number}
+        />
+      )}
     </div>
   );
 }

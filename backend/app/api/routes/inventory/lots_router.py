@@ -18,6 +18,8 @@ from app.models import (
 )
 from app.schemas.inventory.inventory_schema import (
     LotCreate,
+    LotCreate,
+    LotLock,
     LotResponse,
     LotUpdate,
     StockMovementCreate,
@@ -93,7 +95,7 @@ def list_lots(
         # Populate joined fields from relationships
         if lot.product:
             response.product_name = lot.product.product_name
-            response.product_code = lot.product.product_code
+            response.product_code = lot.product.maker_part_code
 
         if lot.warehouse:
             response.warehouse_name = lot.warehouse.warehouse_name
@@ -331,6 +333,38 @@ def delete_lot(lot_id: int, db: Session = Depends(get_db)):
     db.delete(db_lot)
     db.commit()
     return None
+
+
+@router.post("/{lot_id}/lock", response_model=LotResponse)
+def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
+    """ロットをロックする."""
+    db_lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    if not db_lot:
+        raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+    db_lot.status = "locked"
+    db_lot.lock_reason = lock_data.reason
+    db_lot.updated_at = datetime.now()
+
+    db.commit()
+    db.refresh(db_lot)
+    return LotResponse.model_validate(db_lot)
+
+
+@router.post("/{lot_id}/unlock", response_model=LotResponse)
+def unlock_lot(lot_id: int, db: Session = Depends(get_db)):
+    """ロットのロックを解除する."""
+    db_lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    if not db_lot:
+        raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+    db_lot.status = "active"
+    db_lot.lock_reason = None
+    db_lot.updated_at = datetime.now()
+
+    db.commit()
+    db.refresh(db_lot)
+    return LotResponse.model_validate(db_lot)
 
 
 # ===== Stock Movements =====

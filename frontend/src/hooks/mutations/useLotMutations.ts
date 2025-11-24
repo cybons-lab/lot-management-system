@@ -6,7 +6,7 @@
 
 import { useMutation, useQueryClient, type UseMutationResult } from "@tanstack/react-query";
 
-import { createLot, updateLot, deleteLot } from "@/services/api/lot-service";
+import { createLot, updateLot, deleteLot, lockLot, unlockLot } from "@/services/api/lot-service";
 import { QUERY_KEYS } from "@/services/api/query-keys";
 import type { LotResponse } from "@/shared/types/aliases";
 import type { LotCreateInput, LotUpdateInput } from "@/utils/validators";
@@ -203,6 +203,46 @@ export function useUpdateLotStatus(
         queryKey: QUERY_KEYS.lots.all,
       });
 
+      options?.onSuccess?.(data);
+    },
+    onError: options?.onError,
+  });
+}
+
+/**
+ * ロットロックフック
+ */
+export function useLockLot(options?: {
+  onSuccess?: (data: LotResponse) => void;
+  onError?: (error: Error) => void;
+}): UseMutationResult<LotResponse, Error, { id: number; reason: string }> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, reason }: { id: number; reason: string }) => lockLot(id, reason),
+    onSuccess: (data: LotResponse) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.all });
+      options?.onSuccess?.(data);
+    },
+    onError: options?.onError,
+  });
+}
+
+/**
+ * ロットロック解除フック
+ */
+export function useUnlockLot(options?: {
+  onSuccess?: (data: LotResponse) => void;
+  onError?: (error: Error) => void;
+}): UseMutationResult<LotResponse, Error, number> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => unlockLot(id),
+    onSuccess: (data: LotResponse) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.detail(data.id) });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.all });
       options?.onSuccess?.(data);
     },
     onError: options?.onError,

@@ -12,6 +12,7 @@ import {
   Warehouse,
   Building2,
   ChevronDown,
+  Barcode,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -95,6 +96,13 @@ const navItems: NavItem[] = [
     activeColor: "text-purple-600 bg-purple-50",
   },
   {
+    title: "ロット管理",
+    href: "/inventory/lots",
+    icon: Barcode,
+    color: "text-gray-600",
+    activeColor: "text-pink-600 bg-pink-50",
+  },
+  {
     title: "受注管理",
     href: "/orders",
     icon: ShoppingCart,
@@ -176,7 +184,7 @@ export function TopNav({ currentPath }: TopNavProps) {
           </div>
 
           {/* ナビゲーション */}
-          <nav className="flex items-center gap-1">
+          <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive =
@@ -188,7 +196,7 @@ export function TopNav({ currentPath }: TopNavProps) {
                   key={item.href}
                   to={item.href}
                   className={cn(
-                    "group flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200",
+                    "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200",
                     isActive
                       ? "bg-gray-100 text-gray-900"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
