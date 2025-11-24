@@ -4,7 +4,7 @@
  * Provides functions to fetch alerts and alert summaries from the backend.
  */
 
-import type { AlertCategory, AlertItem, AlertSeverity, AlertSummaryResponse } from "../types/alerts";
+import type { AlertCategory, AlertItem, AlertSeverity, AlertSummaryResponse } from "../../shared/types/alerts";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 

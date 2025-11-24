@@ -81,6 +81,7 @@ export type DashboardStats = {
   total_stock: number;
   total_orders: number;
   unallocated_orders: number;
+  allocation_rate: number;
 };
 export async function getStats(): Promise<DashboardStats> {
   // TODO: replace with backend endpoint when available
