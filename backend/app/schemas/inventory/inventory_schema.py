@@ -77,12 +77,14 @@ class LotResponse(LotBase, TimestampMixin):
 
     id: int = Field(serialization_alias="lot_id")
 
-    # Joined fields from related tables (populated by router)
-    product_name: str | None = None
-    product_code: str | None = None
+    # Joined fields from v_lots_with_master view (non-nullable due to INNER JOIN)
+    product_name: str
+    product_code: str
+    supplier_name: str
+    
+    # Optional joined fields
     warehouse_name: str | None = None
     warehouse_code: str | None = None
-    supplier_name: str | None = None
     supplier_code: str | None = None
     last_updated: datetime | None = None
 

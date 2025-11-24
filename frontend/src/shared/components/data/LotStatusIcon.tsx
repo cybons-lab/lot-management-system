@@ -5,11 +5,17 @@
  * ホバーで詳細をツールチップ表示
  */
 
-import { Lock, Package, PackageX } from "lucide-react";
+import { Lock, Package, PackageX, AlertCircle, Clock, Calendar } from "lucide-react";
 
 import { cn } from "@/shared/libs/utils";
 
-export type LotStatusIconType = 'locked' | 'available' | 'depleted';
+export type LotStatusIconType =
+    | 'locked'
+    | 'inspection_failed'
+    | 'inspection_pending'
+    | 'expired'
+    | 'depleted'
+    | 'available';
 
 interface LotStatusIconProps {
     status: LotStatusIconType;
@@ -27,7 +33,22 @@ const STATUS_CONFIG: Record<
     locked: {
         Icon: Lock,
         label: "ロック中",
+        color: "text-gray-500",
+    },
+    inspection_failed: {
+        Icon: AlertCircle,
+        label: "検査不合格",
         color: "text-red-600",
+    },
+    inspection_pending: {
+        Icon: Clock,
+        label: "検査待ち",
+        color: "text-yellow-600",
+    },
+    expired: {
+        Icon: Calendar,
+        label: "期限切れ",
+        color: "text-orange-600",
     },
     available: {
         Icon: Package,
