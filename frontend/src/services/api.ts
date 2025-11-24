@@ -85,7 +85,7 @@ export type DashboardStats = {
 };
 export async function getStats(): Promise<DashboardStats> {
   // TODO: replace with backend endpoint when available
-  return { total_stock: 0, total_orders: 0, unallocated_orders: 0 };
+  return { total_stock: 0, total_orders: 0, unallocated_orders: 0, allocation_rate: 0 };
 }
 interface OrdersResponse {
   items?: unknown[];
