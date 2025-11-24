@@ -35,12 +35,12 @@ type ApiLotResponse = components["schemas"]["LotResponse"];
 
 // ---- Inventory/Lot ----
 export type LotResponse = ApiLotResponse & {
+  id: number; // lot_id alias (required for UI compatibility)
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
   lot_no?: string | null;
   unit?: string | null;
-  status?: string | null;
 };
 export type LotCreate = Partial<LotResponse>;
 export type LotWithStock = LotResponse;

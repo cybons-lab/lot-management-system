@@ -34,6 +34,7 @@ import { lotFiltersAtom, lotTableSettingsAtom } from "@/features/inventory/state
 import { useLotsQuery } from "@/hooks/api";
 import { useCreateLot, useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
+import { getLotStatuses } from "@/shared/utils/status";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { FilterField } from "@/shared/components/data/FilterField";
 import { FilterPanel } from "@/shared/components/data/FilterPanel";
@@ -204,13 +205,14 @@ export function LotsPage() {
         id: "status",
         header: "ステータス",
         cell: (lot) => {
-          const status =
-            lot.status === "locked"
-              ? "locked"
-              : Number(lot.current_quantity) > 0
-                ? "available"
-                : "depleted";
-          return <LotStatusBadge status={status} />;
+          const statuses = getLotStatuses(lot);
+          return (
+            <>
+              {statuses.map((s) => (
+                <LotStatusBadge key={s} status={s} className="mr-1" />
+              ))}
+            </>
+          );
         },
         sortable: true,
         align: "center",

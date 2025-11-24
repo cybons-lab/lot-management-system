@@ -37,7 +37,7 @@ const statusBadgeVariants = cva(
 
 export interface StatusBadgeProps
   extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof statusBadgeVariants> {
+  VariantProps<typeof statusBadgeVariants> {
   children: React.ReactNode;
 }
 
@@ -63,7 +63,7 @@ export function StatusBadge({ children, variant, className, ...props }: StatusBa
 // ロット専用ステータスバッジ
 // ============================================
 
-export type LotStatus = "available" | "allocated" | "shipped" | "expired" | "quarantine";
+export type LotStatus = "available" | "allocated" | "shipped" | "expired" | "quarantine" | "locked" | "depleted";
 
 interface LotStatusConfig {
   label: string;
@@ -90,6 +90,14 @@ const lotStatusConfig: Record<LotStatus, LotStatusConfig> = {
   quarantine: {
     label: "検査中",
     variant: "warning",
+  },
+  locked: {
+    label: "ロック中",
+    variant: "error",
+  },
+  depleted: {
+    label: "在庫なし",
+    variant: "gray",
   },
 };
 

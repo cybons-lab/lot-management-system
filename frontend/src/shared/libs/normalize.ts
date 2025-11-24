@@ -41,6 +41,7 @@ export interface OrderUI extends Record<string, unknown> {
 }
 
 export interface LotUI extends Record<string, unknown> {
+  id: number; // Required for UI operations
   lot_id: number; // DDL v2.2
   lot_number: string;
   product_id: number; // DDL v2.2
@@ -51,12 +52,11 @@ export interface LotUI extends Record<string, unknown> {
   current_quantity: string; // DDL v2.2: DECIMAL as string
   allocated_quantity: string; // DDL v2.2: DECIMAL as string
   unit: string;
-  status: string; // DDL v2.2: active/depleted/expired/quarantine
+  status: 'active' | 'depleted' | 'expired' | 'quarantine' | 'locked'; // Match API type
   expected_lot_id: number | null; // DDL v2.2
   created_at: string;
   updated_at: string;
   // Legacy fields (deprecated, for backward compatibility)
-  id?: number;
   product_code?: string;
   supplier_code?: string;
   warehouse_code?: string;
