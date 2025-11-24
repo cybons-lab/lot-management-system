@@ -308,7 +308,123 @@ jyun_quantity = base_quantity * (Decimal(1) + variance_pct)
 
 ## 次のステップ
 
-1. **Phase 1実装**: CustomerItemベースのロジックに変更
-2. **コード共通化**: `seed_simulate_service.py`と`generate_test_data.py`の予測生成ロジックを統一
-3. **テスト**: 修正後のデータ生成をテストして、意図通りのデータが生成されることを確認
-4. **ドキュメント更新**: CLAUDE.mdやCOMMON_TYPE_CANDIDATES等の関連ドキュメントを更新
+### 🔴 高優先度
+
+#### 1. **ロジック統合の実装**
+
+**現状の問題:**
+- `seed_simulate_service.py`と`generate_test_data.py`で予測生成ロジックが重複
+- 片方を修正すると、もう片方も修正が必要（保守性が低い）
+- ロジックの違いが発生するリスク
+
+**解決策:**
+```python
+# 案1: 共通モジュールの作成
+# backend/app/services/forecasts/forecast_generator.py
+def create_forecast_set(customer_id, delivery_place_id, product, ...):
+    """共通の予測生成ロジック"""
+    pass
+
+# seed_simulate_service.py と generate_test_data.py の両方からimport
+from app.services.forecasts.forecast_generator import create_forecast_set
+```
+
+**実装ステップ:**
+1. `backend/app/services/forecasts/forecast_generator.py`を作成
+2. 3つのヘルパー関数（`_create_daily_forecasts`, `_create_jyun_forecasts_from_daily`, `_create_monthly_forecasts_from_daily`）を移動
+3. `seed_simulate_service.py`を更新してimportに変更
+4. `generate_test_data.py`を更新してimportに変更
+5. 両方のファイルで同じロジックが使われることを確認
+
+**メリット:**
+- ✅ ロジックの一元管理
+- ✅ 修正が1箇所で済む
+- ✅ バグのリスク削減
+- ✅ テストの共通化
+
+---
+
+#### 2. **SQLiteの古いデータ削除**
+
+**現状の問題:**
+- モデルが古いSQLiteデータを参照している可能性がある
+- 開発環境とテスト環境でデータの不整合が発生
+- 古いスキーマのデータが残っている
+
+**確認が必要な項目:**
+- [ ] `backend/lot_management.db` の存在確認
+- [ ] 古いテーブル構造が残っていないか確認
+- [ ] 移行前のデータが残っていないか確認
+- [ ] `.gitignore`で除外されているか確認
+
+**削除対象:**
+```bash
+# SQLiteデータベースファイル
+backend/lot_management.db
+backend/lot_management.db-journal
+backend/lot_management.db-shm
+backend/lot_management.db-wal
+
+# 古いマイグレーションの一時ファイル
+backend/alembic/versions/*.pyc
+backend/__pycache__/
+```
+
+**実装ステップ:**
+1. 現在のSQLiteファイルをバックアップ（念のため）
+2. `find backend/ -name "*.db*" -type f`で全てのSQLiteファイルを抽出
+3. 不要なファイルを削除
+4. `.gitignore`を確認・更新
+5. 開発環境をクリーンアップして再度テスト
+
+**注意点:**
+- ⚠️ 本番環境はPostgreSQLなので影響なし
+- ⚠️ 削除前に必ずバックアップを取る
+- ⚠️ チーム全体に周知してから実行
+
+---
+
+### 🟡 中優先度
+
+#### 3. **Phase 1実装**: CustomerItemベースのロジックに変更
+
+**現在のTODO:**
+- `seed_simulate_service.py:592-598`のTODOコメント参照
+- 商流（CustomerItem）を基点とした予測生成に変更
+
+#### 4. **テスト**: 修正後のデータ生成の検証
+
+**確認項目:**
+- [ ] 日次予測に隙間があるか（60-80%カバレッジ）
+- [ ] 旬次予測に揺らぎがあるか（±15-25%）
+- [ ] 月次予測が日次合計と一致するか
+- [ ] DemandKeyごとに日次・旬次・月次がセットになっているか
+
+#### 5. **ドキュメント更新**: 関連ドキュメントの同期
+
+**更新対象:**
+- `CLAUDE.md` - プロジェクト全体のドキュメント
+- `docs/architecture/codebase_structure.md` - アーキテクチャドキュメント
+- `docs/architecture/common_type_candidates_backend.md` - 共通型候補
+
+---
+
+## メモ（2025-11-24）
+
+### 🎯 今後の方針
+
+**ユーザーからのフィードバック:**
+> seed_simulate_serviceとgenerate_test_dataでロジックの違いがあれば両方直さないといけない状況ですよね。
+> 次のステップとしてこのツールの統合を考えないといけないですね。
+> あと何かあるとすぐにSQLiteを使おうとするモデルもあるんですが、恐らく古いデータが残っているんでしょうね。
+> そういうのも抽出して削除する旨も覚えておいてください
+
+**対応方針:**
+1. **ロジック統合を最優先**で実装する
+2. **SQLiteの古いデータ削除**を確実に実行する
+3. 両方の課題を次回セッションで対応する
+
+**確認済み:**
+- ✅ `.gitignore`に`*.db`が含まれている（L73）
+- ✅ 現在の環境には古いSQLiteファイルは存在しない
+- 📝 次回、各開発環境でクリーンアップを実施する必要あり
