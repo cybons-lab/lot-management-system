@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.database import get_db
-from app.models.inventory_models import Lot
+from app.models.inventory_models import Lot, StockMovement, StockMovementReason
 from app.models.masters_models import Product, Supplier, Warehouse
 from app.models.view_models import LotWithMaster
 from app.schemas.inventory.inventory_schema import (
@@ -42,6 +42,16 @@ def list_lots(
 
     Args:
         skip: スキップ件数
+        limit: 取得件数
+        product_id: 製品ID
+        product_code: 製品コード
+        supplier_code: 仕入先コード
+        warehouse_code: 倉庫コード
+        expiry_from: 有効期限開始日
+        expiry_to: 有効期限終了日
+        with_stock: 在庫ありのみ取得するかどうか
+        db: データベースセッション
+
     ロット一覧取得（v_lots_with_master ビュー使用）.
 
     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.
@@ -329,8 +339,14 @@ def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
     db_lot.updated_at = datetime.now()
 
     db.commit()
-    db.refresh(db_lot)
-    return LotResponse.model_validate(db_lot)
+    
+    # v2.2: Fetch from view to ensure all required fields (product_name, etc.) are present
+    lot_view = db.query(LotWithMaster).filter(LotWithMaster.id == lot_id).first()
+    if not lot_view:
+         # Should not happen if db_lot exists, but for safety
+        raise HTTPException(status_code=404, detail="ロットが見つかりません")
+        
+    return LotResponse.model_validate(lot_view)
 
 
 @router.post("/{lot_id}/unlock", response_model=LotResponse)
@@ -345,8 +361,13 @@ def unlock_lot(lot_id: int, db: Session = Depends(get_db)):
     db_lot.updated_at = datetime.now()
 
     db.commit()
-    db.refresh(db_lot)
-    return LotResponse.model_validate(db_lot)
+    
+    # v2.2: Fetch from view to ensure all required fields are present
+    lot_view = db.query(LotWithMaster).filter(LotWithMaster.id == lot_id).first()
+    if not lot_view:
+        raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+    return LotResponse.model_validate(lot_view)
 
 
 # ===== Stock Movements =====

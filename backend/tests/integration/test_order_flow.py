@@ -1,13 +1,13 @@
 from datetime import date, timedelta
 
-from app.api.routes.allocations import allocate_order, preview_allocations
+from app.api.routes.allocations.allocations_router import commit_allocation, preview_allocations
 from app.api.routes.masters_customers import create_customer
 from app.api.routes.masters_products import create_product
 from app.api.routes.masters_suppliers import create_supplier
 from app.api.routes.masters_warehouses import create_warehouse
 from app.api.routes.orders import create_order
 from app.models import Lot, LotCurrentStock, Order, Warehouse
-from app.schemas.allocations.allocations_schema import FefoPreviewRequest
+from app.schemas.allocations.allocations_schema import AllocationCommitRequest, FefoPreviewRequest
 from app.schemas.masters.masters_schema import (
     CustomerCreate,
     SupplierCreate,
@@ -134,7 +134,7 @@ def test_order_to_fefo_allocation_flow(db_session):
     assert any("次区が未設定" in warning for warning in prod_b_line["warnings"])
     assert any("次区が未設定" in warning for warning in preview_data["warnings"])
 
-    commit_response = allocate_order(order_id=order_id, db=db_session)
+    commit_response = commit_allocation(AllocationCommitRequest(order_id=order_id), db=db_session)
     commit_data = commit_response.model_dump()
     assert len(commit_data["created_allocation_ids"]) == 4
 

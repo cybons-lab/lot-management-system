@@ -14,6 +14,7 @@ from app.schemas.allocations.allocations_schema import (
     DragAssignResponse,
     FefoLineAllocation,
     FefoLotAllocation,
+    FefoPreviewRequest,
     FefoPreviewResponse,
 )
 from app.services.allocation.allocations_service import (
@@ -22,6 +23,7 @@ from app.services.allocation.allocations_service import (
     allocate_manually,
     cancel_allocation,
     commit_fefo_allocation,
+    preview_fefo_allocation,
 )
 
 
@@ -102,6 +104,26 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
 
 
 # --- Phase 3-4: v2.2.1 新エンドポイント ---
+
+
+@router.post("/preview", response_model=FefoPreviewResponse)
+def preview_allocations(request: FefoPreviewRequest, db: Session = Depends(get_db)):
+    """
+    FEFO引当シミュレーション実行.
+
+    Args:
+        request: プレビューリクエスト（order_id）
+        db: データベースセッション
+
+    Returns:
+        FefoPreviewResponse: 引当プレビュー結果
+    """
+    try:
+        result = preview_fefo_allocation(db, request.order_id)
+        return _to_preview_response(result)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
 
 
 @router.post("/commit", response_model=AllocationCommitResponse)

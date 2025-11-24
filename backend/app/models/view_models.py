@@ -12,8 +12,7 @@ from .base_model import Base
 
 
 class LotWithMaster(Base):
-    """
-    Read-only view: v_lots_with_master
+    """Read-only view: v_lots_with_master.
     
     Combines lots with products and suppliers via INNER JOIN.
     This view is used for efficient lot listing queries.

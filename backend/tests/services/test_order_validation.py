@@ -9,7 +9,7 @@ import pytest
 
 from app.domain.errors import InsufficientStockError
 from app.models import Lot, LotCurrentStock, Product, Supplier, Warehouse
-from app.services.orders.validation import OrderLineDemand, OrderValidationService
+from app.services.orders.validation_service import OrderLineDemand, OrderValidationService
 
 
 @pytest.fixture()
