@@ -177,11 +177,11 @@ export function DataTable<T = never>({
   return (
     <div className={cn("relative overflow-x-auto", className)}>
       <table className="w-full border-collapse">
-        <thead className="border-b border-gray-200 bg-gray-50">
+        <thead className="border-b border-slate-200 bg-slate-50/30">
           <tr>
             {/* 選択チェックボックス列 */}
             {selectable && (
-              <th className="w-12 px-4 py-3">
+              <th className="w-12 px-6 py-4">
                 <Checkbox
                   checked={allSelected}
                   indeterminate={someSelected}
@@ -196,7 +196,7 @@ export function DataTable<T = never>({
               <th
                 key={column.id}
                 className={cn(
-                  "px-4 py-3 text-sm font-medium text-gray-700",
+                  "px-6 py-4 text-left text-sm font-semibold text-slate-700",
                   column.align === "center" && "text-center",
                   column.align === "right" && "text-right",
                   column.className,
@@ -206,7 +206,7 @@ export function DataTable<T = never>({
                 {column.sortable && onSortChange ? (
                   <button
                     onClick={() => handleSort(column.id)}
-                    className="inline-flex items-center transition-colors hover:text-gray-900"
+                    className="inline-flex items-center transition-colors hover:text-slate-900"
                   >
                     {column.header}
                     <SortIcon columnId={column.id} />
@@ -219,14 +219,14 @@ export function DataTable<T = never>({
 
             {/* アクション列 */}
             {rowActions && (
-              <th className="w-24 px-4 py-3 text-right text-sm font-medium text-gray-700">
+              <th className="w-24 px-6 py-4 text-right text-sm font-semibold text-slate-700">
                 アクション
               </th>
             )}
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-gray-200">
+        <tbody className="divide-y divide-slate-200">
           {data.map((row) => {
             const rowId = getRowId(row);
             const isSelected = selectedIds.includes(rowId);
@@ -236,8 +236,8 @@ export function DataTable<T = never>({
               <tr
                 key={String(rowId)}
                 className={cn(
-                  "transition-colors",
-                  onRowClick && "cursor-pointer hover:bg-gray-50",
+                  "bg-white transition-colors",
+                  onRowClick && "cursor-pointer hover:bg-slate-50",
                   isSelected && "bg-blue-50",
                   customClassName,
                 )}
@@ -245,7 +245,7 @@ export function DataTable<T = never>({
               >
                 {/* 選択チェックボックス */}
                 {selectable && (
-                  <td className="px-4 py-3" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                  <td className="px-6 py-4" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => handleSelectRow(rowId)}
@@ -263,7 +263,7 @@ export function DataTable<T = never>({
                     <td
                       key={column.id}
                       className={cn(
-                        "px-4 py-3 text-sm text-gray-900",
+                        "px-6 py-4 text-sm text-slate-900",
                         column.align === "center" && "text-center",
                         column.align === "right" && "text-right",
                         column.className,
@@ -277,7 +277,7 @@ export function DataTable<T = never>({
                 {/* アクションボタン */}
                 {rowActions && (
                   <td
-                    className="px-4 py-3 text-right text-sm"
+                    className="px-6 py-4 text-right text-sm opacity-100"
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
                     {rowActions(row)}

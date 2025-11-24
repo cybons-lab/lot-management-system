@@ -33,7 +33,7 @@ const STATUS_CONFIG: Record<
   locked: {
     Icon: Lock,
     label: "ロック中",
-    color: "text-gray-500",
+    color: "text-slate-400",
   },
   inspection_failed: {
     Icon: AlertCircle,
@@ -58,7 +58,7 @@ const STATUS_CONFIG: Record<
   depleted: {
     Icon: PackageX,
     label: "在庫なし",
-    color: "text-gray-400",
+    color: "text-slate-400",
   },
 };
 
