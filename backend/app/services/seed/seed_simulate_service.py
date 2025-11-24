@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import traceback
 from collections.abc import Sequence
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from random import Random
 from typing import Any
@@ -42,6 +42,11 @@ from app.schemas.admin.admin_simulate_schema import (
 )
 from app.services.common.job_tracker import JobPhase, get_job_tracker
 from app.services.common.profile_loader import get_profile
+from app.services.forecasts.forecast_generator import (
+    create_daily_forecasts,
+    create_jyun_forecasts_from_daily,
+    create_monthly_forecasts_from_daily,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -391,132 +396,6 @@ def create_master_data(
     }
 
 
-def _create_daily_forecasts(
-    customer_id: int,
-    delivery_place_id: int,
-    products: list,
-    start_date: date,
-    end_date: date,
-    rng: Random,
-    now: datetime,
-) -> list[ForecastCurrent]:
-    """Create daily forecast entries for all products."""
-    entries = []
-    current_date = start_date
-    while current_date <= end_date:
-        # Calculate forecast_period as YYYY-MM from forecast_date
-        forecast_period = current_date.strftime("%Y-%m")
-        for prod in products:
-            entries.append(
-                ForecastCurrent(
-                    customer_id=customer_id,
-                    delivery_place_id=delivery_place_id,
-                    product_id=prod.id,
-                    forecast_date=current_date,
-                    forecast_quantity=Decimal(rng.randint(10, 1000)),
-                    unit=prod.base_unit or "PCS",
-                    forecast_period=forecast_period,
-                    snapshot_at=now,
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
-        current_date += timedelta(days=1)
-    return entries
-
-
-def _create_jyun_forecasts_from_daily(
-    customer_id: int,
-    delivery_place_id: int,
-    products: list,
-    target_month: date,
-    product_daily_totals: dict[int, Decimal],
-    now: datetime,
-) -> list[ForecastCurrent]:
-    """Create jyun (10-day period) forecast entries based on daily totals.
-
-    Creates 3 entries per product for the target month:
-    - 上旬 (1st-10th): forecast_date = 1st of month
-    - 中旬 (11th-20th): forecast_date = 11th of month
-    - 下旬 (21st-end): forecast_date = 21st of month
-
-    Quantity for each jyun = daily_total / 3 (approximately)
-    forecast_period is set to next month (target_month + 1 month).
-    """
-    entries = []
-    # Jyun forecast_period is next month
-    next_month = target_month + relativedelta(months=1)
-    forecast_period = next_month.strftime("%Y-%m")
-
-    # 上旬 (early 10-day), 中旬 (middle 10-day), 下旬 (late 10-day)
-    jyun_days = [1, 11, 21]
-
-    for day in jyun_days:
-        forecast_date = target_month.replace(day=day)
-        for prod in products:
-            # Calculate jyun quantity as daily total / 3
-            daily_total = product_daily_totals.get(prod.id, Decimal(0))
-            jyun_quantity = daily_total / Decimal(3)
-
-            entries.append(
-                ForecastCurrent(
-                    customer_id=customer_id,
-                    delivery_place_id=delivery_place_id,
-                    product_id=prod.id,
-                    forecast_date=forecast_date,
-                    forecast_quantity=jyun_quantity.quantize(Decimal("1")),  # Round to integer
-                    unit=prod.base_unit or "PCS",
-                    forecast_period=forecast_period,
-                    snapshot_at=now,
-                    created_at=now,
-                    updated_at=now,
-                )
-            )
-    return entries
-
-
-def _create_monthly_forecasts_from_daily(
-    customer_id: int,
-    delivery_place_id: int,
-    products: list,
-    target_month: date,
-    product_daily_totals: dict[int, Decimal],
-    now: datetime,
-) -> list[ForecastCurrent]:
-    """Create monthly forecast entries based on daily totals.
-
-    Creates 1 entry per product for the target month.
-    forecast_date is set to the 1st of the month.
-    Quantity = daily_total (same as sum of all daily forecasts)
-    forecast_period is set to 2 months after target_month.
-    """
-    entries = []
-    # Monthly forecast_period is 2 months after target_month
-    two_months_later = target_month + relativedelta(months=2)
-    forecast_period = two_months_later.strftime("%Y-%m")
-
-    forecast_date = target_month.replace(day=1)
-    for prod in products:
-        # Monthly quantity = daily total
-        monthly_quantity = product_daily_totals.get(prod.id, Decimal(0))
-
-        entries.append(
-            ForecastCurrent(
-                customer_id=customer_id,
-                delivery_place_id=delivery_place_id,
-                product_id=prod.id,
-                forecast_date=forecast_date,
-                forecast_quantity=monthly_quantity.quantize(Decimal("1")),  # Round to integer
-                unit=prod.base_unit or "PCS",
-                forecast_period=forecast_period,
-                snapshot_at=now,
-                created_at=now,
-                updated_at=now,
-            )
-        )
-    return entries
-
-
 def create_forecast_data(
     db: Session,
     params: dict,
@@ -598,49 +477,44 @@ def create_forecast_data(
         # 予測が生成されてしまう。Phase 1でCustomerItemベースのロジックに修正予定。
 
         # Generate forecast entries for each delivery_place × product × date
+        # Using common forecast_generator module for consistency
         forecast_entries: list[ForecastCurrent] = []
         for delivery_place in all_delivery_places:
-            # Step 1: Generate daily forecasts first
-            daily_entries = _create_daily_forecasts(
-                customer_id=delivery_place.customer_id,
-                delivery_place_id=delivery_place.id,
-                products=all_products,
-                start_date=daily_start,
-                end_date=daily_end,
-                rng=rng,
-                now=now,
-            )
-            forecast_entries.extend(daily_entries)
+            for product in all_products:
+                # Step 1: Generate daily forecasts with realistic gaps (60-80% coverage)
+                daily_entries, period_totals = create_daily_forecasts(
+                    customer_id=delivery_place.customer_id,
+                    delivery_place_id=delivery_place.id,
+                    product=product,
+                    start_date=daily_start,
+                    end_date=daily_end,
+                    now=now,
+                    rng=rng,
+                )
+                forecast_entries.extend(daily_entries)
 
-            # Step 2: Calculate monthly totals per product from daily data
-            # to generate realistic jyun and monthly forecasts
-            product_daily_totals: dict[int, Decimal] = {}
-            for entry in daily_entries:
-                if entry.product_id not in product_daily_totals:
-                    product_daily_totals[entry.product_id] = Decimal(0)
-                product_daily_totals[entry.product_id] += entry.forecast_quantity
+                # Step 2: Generate jyun forecasts with ±15-25% variance
+                jyun_entries = create_jyun_forecasts_from_daily(
+                    customer_id=delivery_place.customer_id,
+                    delivery_place_id=delivery_place.id,
+                    product=product,
+                    target_month=target_month,
+                    period_totals=period_totals,
+                    now=now,
+                    rng=rng,
+                )
+                forecast_entries.extend(jyun_entries)
 
-            # Step 3: Generate jyun forecasts (qty = daily_total / 3 for each jyun)
-            jyun_entries = _create_jyun_forecasts_from_daily(
-                customer_id=delivery_place.customer_id,
-                delivery_place_id=delivery_place.id,
-                products=all_products,
-                target_month=target_month,
-                product_daily_totals=product_daily_totals,
-                now=now,
-            )
-            forecast_entries.extend(jyun_entries)
-
-            # Step 4: Generate monthly forecasts (qty = daily_total)
-            monthly_entries = _create_monthly_forecasts_from_daily(
-                customer_id=delivery_place.customer_id,
-                delivery_place_id=delivery_place.id,
-                products=all_products,
-                target_month=target_month,
-                product_daily_totals=product_daily_totals,
-                now=now,
-            )
-            forecast_entries.extend(monthly_entries)
+                # Step 3: Generate monthly forecasts based on daily total
+                monthly_entries = create_monthly_forecasts_from_daily(
+                    customer_id=delivery_place.customer_id,
+                    delivery_place_id=delivery_place.id,
+                    product=product,
+                    target_month=target_month,
+                    period_totals=period_totals,
+                    now=now,
+                )
+                forecast_entries.extend(monthly_entries)
 
         if forecast_entries:
             tracker.add_log(task_id, f"→ Inserting {len(forecast_entries)} forecast entries...")
