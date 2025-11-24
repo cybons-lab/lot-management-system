@@ -3,11 +3,10 @@
  * 倉庫マスタのAPI通信関数
  */
 
-import type { components } from "@/types/api";
+import type { BulkUpsertResponse, WarehouseBulkRow } from "../types/bulk-operation";
 
 import { http } from "@/services/http";
-
-import type { BulkUpsertResponse, WarehouseBulkRow } from "../types/bulk-operation";
+import type { components } from "@/types/api";
 
 // OpenAPI生成型
 export type Warehouse = components["schemas"]["WarehouseResponse"];

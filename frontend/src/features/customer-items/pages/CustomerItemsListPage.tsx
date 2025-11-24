@@ -4,13 +4,15 @@
  */
 
 import { useState } from "react";
-import { useCustomerItems, useCreateCustomerItem, useDeleteCustomerItem } from "../hooks";
-import { CustomerItemTable } from "../components/CustomerItemTable";
+
+import type { CreateCustomerItemRequest } from "../api";
 import { CustomerItemForm } from "../components/CustomerItemForm";
+import { CustomerItemTable } from "../components/CustomerItemTable";
+import { useCustomerItems, useCreateCustomerItem, useDeleteCustomerItem } from "../hooks";
+
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
-import type { CreateCustomerItemRequest } from "../api";
 
 export function CustomerItemsListPage() {
   const [filters, setFilters] = useState({

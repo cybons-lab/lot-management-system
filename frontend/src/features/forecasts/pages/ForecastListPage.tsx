@@ -3,19 +3,18 @@
  * Forecast list page with grouped structure (customer × delivery_place × product)
  */
 
+import { useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
+import type { ForecastGroup } from "../api";
 import { ForecastListCard } from "../components";
 import { useForecasts, useDeleteForecast } from "../hooks";
-import type { ForecastGroup } from "../api";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-
-import { useMutation } from "@tanstack/react-query";
 import { generateAllocationSuggestions } from "@/features/allocations/api";
 
 export function ForecastListPage() {

@@ -1,12 +1,14 @@
 /**
  * SupplierForm - 仕入先新規登録/編集フォーム
  */
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Button, Input, Label } from "@/components/ui";
+
 import type { Supplier } from "../api/suppliers-api";
 import { form as formStyles } from "../pages/styles";
+
+import { Button, Input, Label } from "@/components/ui";
 
 const supplierFormSchema = z.object({
   supplier_code: z.string().min(1, "仕入先コードは必須です").max(50),

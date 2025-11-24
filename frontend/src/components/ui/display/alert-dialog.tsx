@@ -4,6 +4,8 @@
  * 通常のDialogをベースに実装
  */
 import * as React from "react";
+
+import { Button } from "@/components/ui/base/button";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +14,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/layout/dialog";
-import { Button } from "@/components/ui/base/button";
 import { cn } from "@/shared/libs/utils";
 
 const AlertDialog = Dialog;

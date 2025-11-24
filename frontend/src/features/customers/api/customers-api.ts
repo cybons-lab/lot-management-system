@@ -3,15 +3,14 @@
  * 得意先マスタのAPI通信関数
  */
 
-import type { components } from "@/types/api";
-
-import { http } from "@/services/http";
-
 import type {
   BulkUpsertResponse,
   CustomerBulkRow,
   CustomerBulkUpsertRequest,
 } from "../types/bulk-operation";
+
+import { http } from "@/services/http";
+import type { components } from "@/types/api";
 
 // OpenAPI生成型
 export type Customer = components["schemas"]["CustomerResponse"];

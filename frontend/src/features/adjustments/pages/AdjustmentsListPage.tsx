@@ -5,12 +5,14 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import type { AdjustmentType } from "../api";
 import { useAdjustments } from "../hooks";
+
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-import type { AdjustmentType } from "../api";
 
 export function AdjustmentsListPage() {
   const navigate = useNavigate();

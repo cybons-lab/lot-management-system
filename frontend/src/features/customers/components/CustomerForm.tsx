@@ -3,14 +3,14 @@
  * 得意先の新規登録/編集フォーム
  */
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-import { Button, Input, Label } from "@/components/ui";
 
 import type { Customer } from "../api/customers-api";
 import { form as formStyles } from "../pages/styles";
+
+import { Button, Input, Label } from "@/components/ui";
 
 // ============================================
 // バリデーションスキーマ

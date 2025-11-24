@@ -1,6 +1,8 @@
 import { useAllocationCandidates } from "../../hooks/api";
 import type { LineStatus } from "../../hooks/useLotAllocation";
+
 import { LotAllocationPanel } from "./LotAllocationPanel";
+
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface AllocationRowContainerProps {

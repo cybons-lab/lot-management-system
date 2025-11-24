@@ -1,16 +1,18 @@
+import { AnimatePresence } from "framer-motion";
+import { Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import type { CandidateLotItem } from "../../api";
+
+import { ForecastTooltip } from "./ForecastTooltip";
+import { useForecastData } from "./hooks/useForecastData";
+
 import { Badge, Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
-import { Trash2 } from "lucide-react";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
-import { AnimatePresence } from "framer-motion";
-import { useForecastData } from "./hooks/useForecastData";
-import { ForecastTooltip } from "./ForecastTooltip";
 
 interface LotListCardProps {
   lot: CandidateLotItem;

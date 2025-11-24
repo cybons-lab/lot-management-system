@@ -2,9 +2,9 @@
  * ForecastDayCell - Individual day cell in the forecast grid
  */
 
-import { cn } from "@/shared/libs/utils";
-
 import type { DayCellProps } from "./types";
+
+import { cn } from "@/shared/libs/utils";
 
 /**
  * Render a single day cell for the grid

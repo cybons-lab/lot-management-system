@@ -10,10 +10,10 @@
 
 import { useMemo, useState } from "react";
 
-import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
-
 import type { OrderLineDisplay } from "./OrderLinesPaneView";
 import { OrderLinesPaneView } from "./OrderLinesPaneView";
+
+import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
 export interface OrderLineStockStatus {
   hasShortage: boolean;
