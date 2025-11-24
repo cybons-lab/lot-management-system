@@ -39,7 +39,7 @@ import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { FilterField } from "@/shared/components/data/FilterField";
 import { FilterPanel } from "@/shared/components/data/FilterPanel";
 import { SearchBar } from "@/shared/components/data/SearchBar";
-import { LotStatusBadge } from "@/shared/components/data/StatusBadge";
+import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import { Section } from "@/shared/components/layout";
@@ -153,18 +153,18 @@ export function LotsPage() {
       {
         id: "product_code",
         header: "製品コード",
-        cell: (lot) => lot.product_code,
+        cell: (lot) => lot.product_code ?? "–",
         sortable: true,
       },
       {
         id: "product_name",
         header: "製品名",
-        cell: (lot) => lot.product_name,
+        cell: (lot) => lot.product_name ?? "–",
       },
       {
-        id: "delivery_place_id",
-        header: "納品場所",
-        cell: (lot) => lot.delivery_place_id ?? "–",
+        id: "supplier_name",
+        header: "仕入先",
+        cell: (lot) => lot.supplier_name ?? "–",
         sortable: true,
       },
       {
@@ -207,11 +207,11 @@ export function LotsPage() {
         cell: (lot) => {
           const statuses = getLotStatuses(lot);
           return (
-            <>
+            <div className="flex items-center justify-center gap-1">
               {statuses.map((s) => (
-                <LotStatusBadge key={s} status={s} className="mr-1" />
+                <LotStatusIcon key={s} status={s as 'locked' | 'available' | 'depleted'} />
               ))}
-            </>
+            </div>
           );
         },
         sortable: true,

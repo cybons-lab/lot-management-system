@@ -57,13 +57,14 @@ export interface LotUI extends Record<string, unknown> {
   created_at: string;
   updated_at: string;
   // Legacy fields (deprecated, for backward compatibility)
-  product_code?: string;
-  supplier_code?: string;
+  product_code?: string | null;
+  product_name?: string | null;
+  supplier_code?: string | null;
+  supplier_name?: string | null;
   warehouse_code?: string;
   receipt_date?: string;
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
-  product_name?: string;
 }
 
 export interface ProductUI extends Record<string, unknown> {
@@ -157,7 +158,7 @@ export function normalizeLot(lot: LotResponse): LotUI {
     current_quantity: S(lot.current_quantity, "0"),
     allocated_quantity: S(lot.allocated_quantity, "0"),
     unit: S(lot.unit, "EA"),
-    status: S(lot.status, "active"),
+    status: lot.status as 'active' | 'depleted' | 'expired' | 'quarantine' | 'locked',
     expected_lot_id: lot.expected_lot_id ?? null,
     created_at: S(lot.created_at),
     updated_at: S(lot.updated_at),
@@ -168,7 +169,10 @@ export function normalizeLot(lot: LotResponse): LotUI {
       ((lot as Record<string, unknown>).delivery_place_id as number | null) ?? null,
     delivery_place_code:
       ((lot as Record<string, unknown>).delivery_place_code as string | null) ?? null,
-    product_name: (lot as Record<string, unknown>).product_name as string | undefined,
+    product_name: lot.product_name,
+    product_code: lot.product_code,
+    supplier_name: lot.supplier_name,
+    supplier_code: lot.supplier_code,
   };
 }
 

@@ -41,6 +41,8 @@ export type LotResponse = ApiLotResponse & {
   delivery_place_name?: string | null;
   lot_no?: string | null;
   unit?: string | null;
+  supplier_name?: string | null;
+  supplier_code?: string | null;
 };
 export type LotCreate = Partial<LotResponse>;
 export type LotWithStock = LotResponse;
