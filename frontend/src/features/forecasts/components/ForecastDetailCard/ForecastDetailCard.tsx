@@ -15,7 +15,9 @@ import { useForecastCalculations } from "./hooks/use-forecast-calculations";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
 
-import { Card, CardContent } from "@/components/ui";
+import { useNavigate } from "react-router-dom";
+import { Button, Card, CardContent } from "@/components/ui";
+import { ROUTES } from "@/constants/routes";
 import { cn } from "@/shared/libs/utils";
 
 export function ForecastDetailCard({
@@ -27,6 +29,7 @@ export function ForecastDetailCard({
   isFocused = false,
   onToggle,
 }: ForecastDetailCardProps) {
+  const navigate = useNavigate();
   const { group_key, forecasts } = group;
 
   // Calculate all forecast data using custom hook
@@ -48,9 +51,8 @@ export function ForecastDetailCard({
   const now = new Date();
   const todayKey = formatDateKey(now);
   const todayStart = getTodayStart();
-  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
-    targetMonthStartDate.getMonth() + 1
-  }月`;
+  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${targetMonthStartDate.getMonth() + 1
+    }月`;
 
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =
@@ -104,8 +106,47 @@ export function ForecastDetailCard({
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />
             </div>
 
-            <div className="rounded-lg border border-dashed border-gray-200 bg-gray-50/60 p-4 text-sm text-gray-400 md:col-span-5">
-              TODO: graphs or indicators
+            <div className="rounded-lg border border-slate-200 bg-white p-4 md:col-span-5">
+              <h4 className="mb-3 text-sm font-semibold text-gray-700">関連情報</h4>
+              <div className="space-y-3">
+                <div className="rounded-md bg-blue-50 p-3">
+                  <div className="mb-2 text-xs font-medium text-blue-700">在庫状況</div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-blue-600">
+                      この製品の在庫状況を確認します
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 bg-white text-xs hover:bg-blue-100"
+                      onClick={() =>
+                        navigate(`${ROUTES.INVENTORY.SUMMARY}?product_id=${group_key.product_id}`)
+                      }
+                    >
+                      在庫を確認
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="rounded-md bg-green-50 p-3">
+                  <div className="mb-2 text-xs font-medium text-green-700">入荷予定</div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-green-600">
+                      この製品の入荷予定を確認します
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 bg-white text-xs hover:bg-green-100"
+                      onClick={() =>
+                        navigate(`${ROUTES.INBOUND_PLANS.LIST}?product_id=${group_key.product_id}`)
+                      }
+                    >
+                      入荷予定を確認
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

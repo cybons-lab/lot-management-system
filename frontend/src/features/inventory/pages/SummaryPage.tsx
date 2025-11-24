@@ -10,7 +10,7 @@
 
 import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { Fragment, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 
 import { useInventoryItems } from "../hooks";
@@ -35,9 +35,11 @@ import { fmt } from "@/shared/utils/number";
 
 export function SummaryPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   const [filters, setFilters] = useState({
-    product_id: "",
-    warehouse_id: "",
+    product_id: searchParams.get("product_id") || "",
+    warehouse_id: searchParams.get("warehouse_id") || "",
   });
 
   // 展開状態管理（製品ID-倉庫IDのキー）

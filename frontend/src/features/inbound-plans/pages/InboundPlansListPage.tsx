@@ -4,7 +4,7 @@
  */
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { InboundPlansList, type InboundPlansFilters } from "../components/InboundPlansList";
 import { useInboundPlans, useDeleteInboundPlan } from "../hooks";
@@ -13,16 +13,20 @@ import { ROUTES } from "@/constants/routes";
 
 export function InboundPlansListPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   const [filters, setFilters] = useState<InboundPlansFilters>({
-    supplier_id: "",
-    status: "",
-    date_from: "",
-    date_to: "",
+    supplier_id: searchParams.get("supplier_id") || "",
+    product_id: searchParams.get("product_id") || "",
+    status: (searchParams.get("status") as InboundPlansFilters["status"]) || "",
+    date_from: searchParams.get("date_from") || "",
+    date_to: searchParams.get("date_to") || "",
   });
 
   // Build query params
   const queryParams = {
     supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
+    product_id: filters.product_id ? Number(filters.product_id) : undefined,
     status: filters.status || undefined,
     date_from: filters.date_from || undefined,
     date_to: filters.date_to || undefined,

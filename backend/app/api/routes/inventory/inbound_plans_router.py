@@ -29,6 +29,7 @@ def list_inbound_plans(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=1000),
     supplier_id: int | None = None,
+    product_id: int | None = None,
     status: str | None = None,
     db: Session = Depends(get_db),
 ):
@@ -39,6 +40,7 @@ def list_inbound_plans(
         skip: スキップ件数（ページネーション用）
         limit: 取得件数上限
         supplier_id: 仕入先IDでフィルタ
+        product_id: 商品IDでフィルタ
         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
         db: データベースセッション
 
@@ -50,6 +52,7 @@ def list_inbound_plans(
         skip=skip,
         limit=limit,
         supplier_id=supplier_id,
+        product_id=product_id,
         status=status,
     )
 
