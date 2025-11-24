@@ -106,7 +106,11 @@ export function InventoryPage() {
 
         {/* フィルター */}
         <Section className="mb-6 shadow-sm">
-          <LotFilters filters={filters.values} onFilterChange={filters.set} onReset={filters.reset} />
+          <LotFilters
+            filters={filters.values}
+            onFilterChange={filters.set}
+            onReset={filters.reset}
+          />
         </Section>
 
         {/* エラー表示 */}

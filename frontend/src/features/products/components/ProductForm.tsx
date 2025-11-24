@@ -175,8 +175,12 @@ export function ProductForm({
       </div>
 
       <div className="flex items-center gap-2 pt-2">
-        <input id="is_active" type="checkbox" {...register("is_active")}
-          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500" />
+        <input
+          id="is_active"
+          type="checkbox"
+          {...register("is_active")}
+          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+        />
         <Label htmlFor="is_active" className={formStyles.label}>
           有効
         </Label>

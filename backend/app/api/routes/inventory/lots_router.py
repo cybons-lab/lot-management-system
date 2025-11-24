@@ -84,13 +84,15 @@ def list_lots(
 
     # 在庫ありのみ
     if with_stock:
-        query = query.filter((LotWithMaster.current_quantity - LotWithMaster.allocated_quantity) > 0)
+        query = query.filter(
+            (LotWithMaster.current_quantity - LotWithMaster.allocated_quantity) > 0
+        )
 
     # Default sort: product_code -> supplier_name -> expiry_date (FEFO)
     query = query.order_by(
         LotWithMaster.product_code.asc(),
         LotWithMaster.supplier_name.asc(),
-        LotWithMaster.expiry_date.asc().nullslast()
+        LotWithMaster.expiry_date.asc().nullslast(),
     )
 
     lot_views = query.offset(skip).limit(limit).all()
@@ -339,13 +341,13 @@ def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
     db_lot.updated_at = datetime.now()
 
     db.commit()
-    
+
     # v2.2: Fetch from view to ensure all required fields (product_name, etc.) are present
     lot_view = db.query(LotWithMaster).filter(LotWithMaster.id == lot_id).first()
     if not lot_view:
-         # Should not happen if db_lot exists, but for safety
+        # Should not happen if db_lot exists, but for safety
         raise HTTPException(status_code=404, detail="ロットが見つかりません")
-        
+
     return LotResponse.model_validate(lot_view)
 
 
@@ -361,7 +363,7 @@ def unlock_lot(lot_id: int, db: Session = Depends(get_db)):
     db_lot.updated_at = datetime.now()
 
     db.commit()
-    
+
     # v2.2: Fetch from view to ensure all required fields are present
     lot_view = db.query(LotWithMaster).filter(LotWithMaster.id == lot_id).first()
     if not lot_view:

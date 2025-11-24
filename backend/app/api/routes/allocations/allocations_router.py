@@ -125,7 +125,6 @@ def preview_allocations(request: FefoPreviewRequest, db: Session = Depends(get_d
         raise HTTPException(status_code=404, detail=str(e))
 
 
-
 @router.post("/commit", response_model=AllocationCommitResponse)
 def commit_allocation(request: AllocationCommitRequest, db: Session = Depends(get_db)):
     """

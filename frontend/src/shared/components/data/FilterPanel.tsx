@@ -69,7 +69,12 @@ export function FilterPanel({
         </div>
 
         {onReset && (
-          <Button variant="ghost" size="sm" onClick={onReset} className="h-8 text-xs text-slate-700">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onReset}
+            className="h-8 text-xs text-slate-700"
+          >
             <X className="mr-1 h-4 w-4" />
             リセット
           </Button>

@@ -13,10 +13,10 @@ from .base_model import Base
 
 class LotWithMaster(Base):
     """Read-only view: v_lots_with_master.
-    
+
     Combines lots with products and suppliers via INNER JOIN.
     This view is used for efficient lot listing queries.
-    
+
     DO NOT use this model for INSERT/UPDATE/DELETE operations.
     Use the Lot model instead.
     """
@@ -39,12 +39,12 @@ class LotWithMaster(Base):
     expiry_date: Mapped[date | None] = mapped_column(Date)
     status: Mapped[str] = mapped_column(String(20))
     lock_reason: Mapped[str | None] = mapped_column(Text)
-    
+
     # Inspection certificate fields
     inspection_status: Mapped[str] = mapped_column(String(20))
     inspection_date: Mapped[date | None] = mapped_column(Date)
     inspection_cert_number: Mapped[str | None] = mapped_column(String(100))
-    
+
     # Metadata
     expected_lot_id: Mapped[int | None] = mapped_column(BigInteger)
     version_id: Mapped[int] = mapped_column(Integer)

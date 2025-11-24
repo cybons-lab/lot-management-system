@@ -52,7 +52,7 @@ export interface LotUI extends Record<string, unknown> {
   current_quantity: string; // DDL v2.2: DECIMAL as string
   allocated_quantity: string; // DDL v2.2: DECIMAL as string
   unit: string;
-  status: 'active' | 'depleted' | 'expired' | 'quarantine' | 'locked'; // Match API type
+  status: "active" | "depleted" | "expired" | "quarantine" | "locked"; // Match API type
   expected_lot_id: number | null; // DDL v2.2
   created_at: string;
   updated_at: string;
@@ -167,13 +167,13 @@ export function normalizeLot(lot: LotResponse): LotUI {
     current_quantity: S(lot.current_quantity, "0"),
     allocated_quantity: S(lot.allocated_quantity, "0"),
     unit: S(lot.unit, "EA"),
-    status: lot.status as 'active' | 'depleted' | 'expired' | 'quarantine' | 'locked',
+    status: lot.status as "active" | "depleted" | "expired" | "quarantine" | "locked",
     expected_lot_id: lot.expected_lot_id ?? null,
     created_at: S(lot.created_at),
     updated_at: S(lot.updated_at),
 
     // Inspection certificate fields
-    inspection_status: lot.inspection_status ?? 'not_required',
+    inspection_status: lot.inspection_status ?? "not_required",
     inspection_date: lot.inspection_date ?? null,
     inspection_cert_number: lot.inspection_cert_number ?? null,
 

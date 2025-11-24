@@ -10,7 +10,18 @@
 /* eslint-disable complexity */
 
 import { useAtom } from "jotai";
-import { Plus, RefreshCw, MoreHorizontal, Pencil, Lock, Unlock, ChevronDown, ChevronRight, Search, Package } from "lucide-react";
+import {
+  Plus,
+  RefreshCw,
+  MoreHorizontal,
+  Pencil,
+  Lock,
+  Unlock,
+  ChevronDown,
+  ChevronRight,
+  Search,
+  Package,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -162,7 +173,7 @@ export function LotsPage() {
           <div className="flex flex-col">
             <span className="font-medium">{lot.lot_number}</span>
             {lot.status === "locked" && (
-              <span className="text-xs text-amber-500 flex items-center gap-1">
+              <span className="flex items-center gap-1 text-xs text-amber-500">
                 <Lock className="h-3 w-3" /> ロック中
               </span>
             )}
@@ -212,7 +223,7 @@ export function LotsPage() {
           return (
             <div className="flex items-center justify-start gap-1">
               {statuses.map((s) => (
-                <LotStatusIcon key={s} status={s as 'locked' | 'available' | 'depleted'} />
+                <LotStatusIcon key={s} status={s as "locked" | "available" | "depleted"} />
               ))}
             </div>
           );
@@ -387,7 +398,7 @@ export function LotsPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">総ロット数</CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="text-muted-foreground h-4 w-4" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalLots}</div>
@@ -417,7 +428,7 @@ export function LotsPage() {
       <Section className="space-y-4">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
             <Input
               placeholder="ロット番号、製品コード、製品名で検索..."
               value={searchTerm}
@@ -488,7 +499,12 @@ export function LotsPage() {
                   在庫ありのみ表示
                 </label>
               </div>
-              <Button variant="ghost" size="sm" onClick={handleResetFilters} className="text-xs text-gray-500">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetFilters}
+                className="text-xs text-gray-500"
+              >
                 リセット
               </Button>
             </div>
@@ -609,50 +625,46 @@ export function LotsPage() {
       </FormDialog>
 
       {/* 編集ダイアログ */}
-      {
-        selectedLot && (
-          <FormDialog
-            open={editDialog.isOpen}
-            onClose={() => {
+      {selectedLot && (
+        <FormDialog
+          open={editDialog.isOpen}
+          onClose={() => {
+            editDialog.close();
+            setSelectedLot(null);
+          }}
+          title="ロット編集"
+          description={`ロット ${selectedLot.lot_number} を編集します`}
+          size="lg"
+        >
+          <LotEditForm
+            initialData={selectedLot}
+            onSubmit={async (data: LotUpdateData) => {
+              await updateLotMutation.mutateAsync(data);
+            }}
+            onCancel={() => {
               editDialog.close();
               setSelectedLot(null);
             }}
-            title="ロット編集"
-            description={`ロット ${selectedLot.lot_number} を編集します`}
-            size="lg"
-          >
-            <LotEditForm
-              initialData={selectedLot}
-              onSubmit={async (data: LotUpdateData) => {
-                await updateLotMutation.mutateAsync(data);
-              }}
-              onCancel={() => {
-                editDialog.close();
-                setSelectedLot(null);
-              }}
-              isSubmitting={updateLotMutation.isPending}
-            />
-          </FormDialog>
-        )
-      }
+            isSubmitting={updateLotMutation.isPending}
+          />
+        </FormDialog>
+      )}
 
       {/* ロック確認ダイアログ */}
-      {
-        selectedLot && (
-          <LotLockDialog
-            open={lockDialog.isOpen}
-            onClose={() => {
-              lockDialog.close();
-              setSelectedLot(null);
-            }}
-            onConfirm={async (reason) => {
-              await lockLotMutation.mutateAsync({ id: selectedLot.id, reason });
-            }}
-            isSubmitting={lockLotMutation.isPending}
-            lotNumber={selectedLot.lot_number}
-          />
-        )
-      }
-    </div >
+      {selectedLot && (
+        <LotLockDialog
+          open={lockDialog.isOpen}
+          onClose={() => {
+            lockDialog.close();
+            setSelectedLot(null);
+          }}
+          onConfirm={async (reason) => {
+            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason });
+          }}
+          isSubmitting={lockLotMutation.isPending}
+          lotNumber={selectedLot.lot_number}
+        />
+      )}
+    </div>
   );
 }
