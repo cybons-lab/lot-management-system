@@ -18,6 +18,7 @@ export interface InboundPlan {
 
 export interface InboundPlansFilters {
   supplier_id: string;
+  product_id?: string;
   status: "" | "pending" | "received" | "cancelled";
   date_from: string;
   date_to: string;

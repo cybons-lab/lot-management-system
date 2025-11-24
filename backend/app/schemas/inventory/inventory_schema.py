@@ -171,6 +171,12 @@ class InventoryItemResponse(BaseSchema):
     available_quantity: Decimal
     last_updated: datetime
 
+    # Joined fields from master tables
+    product_name: str | None = None
+    product_code: str | None = None
+    warehouse_name: str | None = None
+    warehouse_code: str | None = None
+
 
 # Backwards compatibility aliases so existing imports continue to work during
 # the migration to the new schema naming.

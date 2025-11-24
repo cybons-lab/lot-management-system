@@ -22,6 +22,7 @@ export const statCard = {
         blue: "border-blue-500",
         green: "border-green-500",
         amber: "border-amber-500",
+        purple: "border-purple-500",
         gray: "border-gray-300",
       },
     },

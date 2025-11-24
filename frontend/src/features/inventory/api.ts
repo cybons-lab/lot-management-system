@@ -30,6 +30,7 @@ export interface InventoryItem {
   product_code?: string;
   product_name?: string;
   warehouse_name?: string;
+  warehouse_code?: string;
 }
 
 export interface InventoryItemsListParams {

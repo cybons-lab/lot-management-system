@@ -40,6 +40,7 @@ class InboundService:
         skip: int = 0,
         limit: int = 100,
         supplier_id: int | None = None,
+        product_id: int | None = None,
         status: str | None = None,
     ) -> tuple[list[InboundPlan], int]:
         """
@@ -49,6 +50,7 @@ class InboundService:
             skip: Number of records to skip (pagination)
             limit: Maximum number of records to return
             supplier_id: Filter by supplier ID
+            product_id: Filter by product ID
             status: Filter by status (planned/partially_received/received/cancelled)
 
         Returns:
@@ -59,8 +61,15 @@ class InboundService:
         if supplier_id is not None:
             query = query.filter(InboundPlan.supplier_id == supplier_id)
 
+        if product_id is not None:
+            query = query.join(InboundPlan.lines).filter(InboundPlanLine.product_id == product_id)
+
         if status is not None:
             query = query.filter(InboundPlan.status == status)
+
+        # Distinct is needed if joining with lines to avoid duplicates
+        if product_id is not None:
+            query = query.distinct()
 
         total = query.count()
 

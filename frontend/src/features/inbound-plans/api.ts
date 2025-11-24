@@ -112,6 +112,7 @@ export interface InboundPlansListParams {
   skip?: number;
   limit?: number;
   supplier_id?: number;
+  product_id?: number;
   status?: "pending" | "received" | "cancelled";
   date_from?: string;
   date_to?: string;
@@ -128,6 +129,7 @@ export const getInboundPlans = (params?: InboundPlansListParams) => {
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
+  if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
   if (params?.status) searchParams.append("status", params.status);
   if (params?.date_from) searchParams.append("date_from", params.date_from);
   if (params?.date_to) searchParams.append("date_to", params.date_to);
