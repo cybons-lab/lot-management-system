@@ -9,7 +9,7 @@
 /* eslint-disable max-lines-per-function */
 
 import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 
@@ -212,8 +212,8 @@ export function SummaryPage() {
                     const lots = expanded ? getLotsForItem(item.product_id, item.warehouse_id) : [];
 
                     return (
-                      <>
-                        <tr key={`${item.product_id}-${item.warehouse_id}`} className={styles.table.tr}>
+                      <Fragment key={`${item.product_id}-${item.warehouse_id}`}>
+                        <tr className={styles.table.tr}>
                           <td className={styles.table.td}>
                             <button
                               onClick={() => toggleRow(item.product_id, item.warehouse_id)}
@@ -302,7 +302,7 @@ export function SummaryPage() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     );
                   })}
                 </tbody>
