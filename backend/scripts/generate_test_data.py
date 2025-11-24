@@ -140,11 +140,50 @@ def warehouse_strategy(draw, warehouse_id: int):
 
 @st.composite
 def forecast_strategy(draw, product_id: int, customer_id: int, delivery_place_id: int):
-    """Generate a forecast."""
-    forecast_date = date.today() + timedelta(days=draw(st.integers(min_value=0, max_value=60)))
-    # Simple period generation (using monthly for simplicity or daily)
-    forecast_period = forecast_date.strftime("%Y-%m")
-    
+    """Generate a forecast with proper daily/jyun/monthly period logic.
+
+    Forecast types:
+    - Daily: forecast_period matches forecast_date's month
+    - Jyun (10-day): forecast_period is next month, forecast_date on 1st/11th/21st
+    - Monthly: forecast_period is 2 months later, forecast_date on 1st
+    """
+    from dateutil.relativedelta import relativedelta
+
+    # Choose forecast type: 60% daily, 30% jyun, 10% monthly
+    forecast_type = draw(st.sampled_from([
+        'daily', 'daily', 'daily', 'daily', 'daily', 'daily',  # 60%
+        'jyun', 'jyun', 'jyun',  # 30%
+        'monthly',  # 10%
+    ]))
+
+    base_date = date.today()
+
+    if forecast_type == 'daily':
+        # Daily forecast: forecast_date within next 60 days, period matches date's month
+        forecast_date = base_date + timedelta(days=draw(st.integers(min_value=0, max_value=60)))
+        forecast_period = forecast_date.strftime("%Y-%m")
+
+    elif forecast_type == 'jyun':
+        # Jyun forecast: forecast_date on 1st/11th/21st, period is next month
+        month_offset = draw(st.integers(min_value=0, max_value=2))
+        target_month = base_date.replace(day=1) + relativedelta(months=month_offset)
+        jyun_day = draw(st.sampled_from([1, 11, 21]))
+        forecast_date = target_month.replace(day=jyun_day)
+
+        # Period is next month from forecast_date
+        period_month = forecast_date.replace(day=1) + relativedelta(months=1)
+        forecast_period = period_month.strftime("%Y-%m")
+
+    else:  # monthly
+        # Monthly forecast: forecast_date on 1st, period is 2 months later
+        month_offset = draw(st.integers(min_value=0, max_value=2))
+        target_month = base_date.replace(day=1) + relativedelta(months=month_offset)
+        forecast_date = target_month.replace(day=1)
+
+        # Period is 2 months later from forecast_date
+        period_month = forecast_date.replace(day=1) + relativedelta(months=2)
+        forecast_period = period_month.strftime("%Y-%m")
+
     return ForecastCurrent(
         product_id=product_id,
         customer_id=customer_id,
