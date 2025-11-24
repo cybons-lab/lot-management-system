@@ -163,12 +163,13 @@ export function InboundPlansList({
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === "pending"
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                          plan.status === "pending"
                             ? "bg-yellow-100 text-yellow-800"
                             : plan.status === "received"
                               ? "bg-green-100 text-green-800"
                               : "bg-gray-100 text-gray-800"
-                          }`}
+                        }`}
                       >
                         {plan.status}
                       </span>

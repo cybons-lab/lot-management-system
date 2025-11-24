@@ -51,8 +51,9 @@ export function ForecastDetailCard({
   const now = new Date();
   const todayKey = formatDateKey(now);
   const todayStart = getTodayStart();
-  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${targetMonthStartDate.getMonth() + 1
-    }月`;
+  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
+    targetMonthStartDate.getMonth() + 1
+  }月`;
 
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =
@@ -112,9 +113,7 @@ export function ForecastDetailCard({
                 <div className="rounded-md bg-blue-50 p-3">
                   <div className="mb-2 text-xs font-medium text-blue-700">在庫状況</div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-blue-600">
-                      この製品の在庫状況を確認します
-                    </p>
+                    <p className="text-xs text-blue-600">この製品の在庫状況を確認します</p>
                     <Button
                       variant="outline"
                       size="sm"
@@ -131,9 +130,7 @@ export function ForecastDetailCard({
                 <div className="rounded-md bg-green-50 p-3">
                   <div className="mb-2 text-xs font-medium text-green-700">入荷予定</div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-green-600">
-                      この製品の入荷予定を確認します
-                    </p>
+                    <p className="text-xs text-green-600">この製品の入荷予定を確認します</p>
                     <Button
                       variant="outline"
                       size="sm"

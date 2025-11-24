@@ -7,7 +7,7 @@ from the database, including order, inventory, lot, and forecast alerts.
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from sqlalchemy import and_, func, or_
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
 from app.models import Lot, Order, OrderLine
@@ -19,6 +19,7 @@ from app.schemas.alerts.alert_schema import (
     AlertTargetLot,
     AlertTargetOrder,
 )
+
 
 if TYPE_CHECKING:
     pass

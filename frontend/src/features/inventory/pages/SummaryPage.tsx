@@ -77,7 +77,7 @@ export function SummaryPage() {
 
   const getLotsForItem = (productId: number, warehouseId: number) => {
     return allLots.filter(
-      (lot) => lot.product_id === productId && lot.warehouse_id === warehouseId
+      (lot) => lot.product_id === productId && lot.warehouse_id === warehouseId,
     );
   };
 
@@ -219,7 +219,7 @@ export function SummaryPage() {
                           <td className={styles.table.td}>
                             <button
                               onClick={() => toggleRow(item.product_id, item.warehouse_id)}
-                              className="p-1 hover:bg-gray-100 rounded"
+                              className="rounded p-1 hover:bg-gray-100"
                             >
                               {expanded ? (
                                 <ChevronDown className="h-4 w-4 text-gray-600" />
@@ -232,11 +232,17 @@ export function SummaryPage() {
                             {item.product_name || item.product_code || `ID: ${item.product_id}`}
                           </td>
                           <td className={styles.table.td}>
-                            {item.warehouse_name || item.warehouse_code || `ID: ${item.warehouse_id}`}
+                            {item.warehouse_name ||
+                              item.warehouse_code ||
+                              `ID: ${item.warehouse_id}`}
                           </td>
                           <td className={styles.table.tdRight}>{fmt(item.total_quantity)}</td>
-                          <td className={styles.table.tdRightYellow}>{fmt(item.allocated_quantity)}</td>
-                          <td className={styles.table.tdRightGreen}>{fmt(item.available_quantity)}</td>
+                          <td className={styles.table.tdRightYellow}>
+                            {fmt(item.allocated_quantity)}
+                          </td>
+                          <td className={styles.table.tdRightGreen}>
+                            {fmt(item.available_quantity)}
+                          </td>
                           <td className={styles.table.tdGray}>
                             {new Date(item.last_updated).toLocaleString("ja-JP")}
                           </td>
@@ -261,34 +267,60 @@ export function SummaryPage() {
                                   <table className="w-full text-sm">
                                     <thead>
                                       <tr className="border-b border-gray-200">
-                                        <th className="pb-2 text-left font-medium text-gray-600">ロット番号</th>
-                                        <th className="pb-2 text-right font-medium text-gray-600">現在在庫</th>
-                                        <th className="pb-2 text-left font-medium text-gray-600">単位</th>
-                                        <th className="pb-2 text-left font-medium text-gray-600">入荷日</th>
-                                        <th className="pb-2 text-left font-medium text-gray-600">有効期限</th>
-                                        <th className="pb-2 text-left font-medium text-gray-600">ステータス</th>
+                                        <th className="pb-2 text-left font-medium text-gray-600">
+                                          ロット番号
+                                        </th>
+                                        <th className="pb-2 text-right font-medium text-gray-600">
+                                          現在在庫
+                                        </th>
+                                        <th className="pb-2 text-left font-medium text-gray-600">
+                                          単位
+                                        </th>
+                                        <th className="pb-2 text-left font-medium text-gray-600">
+                                          入荷日
+                                        </th>
+                                        <th className="pb-2 text-left font-medium text-gray-600">
+                                          有効期限
+                                        </th>
+                                        <th className="pb-2 text-left font-medium text-gray-600">
+                                          ステータス
+                                        </th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {lots.map((lot) => {
                                         const statuses = getLotStatuses(lot);
                                         return (
-                                          <tr key={lot.id} className="border-b border-gray-100 hover:bg-gray-100">
-                                            <td className="py-2 font-medium text-gray-900">{lot.lot_number}</td>
+                                          <tr
+                                            key={lot.id}
+                                            className="border-b border-gray-100 hover:bg-gray-100"
+                                          >
+                                            <td className="py-2 font-medium text-gray-900">
+                                              {lot.lot_number}
+                                            </td>
                                             <td className="py-2 text-right font-semibold">
                                               {fmt(Number(lot.current_quantity))}
                                             </td>
                                             <td className="py-2 text-gray-600">{lot.unit}</td>
                                             <td className="py-2 text-gray-600">
-                                              {lot.received_date ? format(new Date(lot.received_date), "yyyy/MM/dd") : "-"}
+                                              {lot.received_date
+                                                ? format(new Date(lot.received_date), "yyyy/MM/dd")
+                                                : "-"}
                                             </td>
                                             <td className="py-2 text-gray-600">
-                                              {lot.expiry_date ? format(new Date(lot.expiry_date), "yyyy/MM/dd") : "-"}
+                                              {lot.expiry_date
+                                                ? format(new Date(lot.expiry_date), "yyyy/MM/dd")
+                                                : "-"}
                                             </td>
                                             <td className="py-2">
                                               <div className="flex items-center gap-1">
                                                 {statuses.map((s) => (
-                                                  <LotStatusIcon key={s} status={s as "locked" | "available" | "depleted"} />
+                                                  <LotStatusIcon
+                                                    key={s}
+                                                    status={
+                                                      s as "locked" | "available" | "depleted"
+                                                    }
+                                                  />
                                                 ))}
                                               </div>
                                             </td>

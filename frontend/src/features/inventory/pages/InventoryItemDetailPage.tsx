@@ -36,7 +36,7 @@ export function InventoryItemDetailPage() {
   // 全ロット取得してフィルタリング
   const { data: allLots = [], isLoading: lotsLoading } = useLotsQuery({});
   const itemLots = allLots.filter(
-    (lot) => lot.product_id === productIdNum && lot.warehouse_id === warehouseIdNum
+    (lot) => lot.product_id === productIdNum && lot.warehouse_id === warehouseIdNum,
   );
 
   const handleBack = () => {
@@ -178,7 +178,9 @@ export function InventoryItemDetailPage() {
             {/* Total Quantity */}
             <div className={styles.statsCard({ variant: "default" })}>
               <div className={styles.statsLabel}>総在庫数</div>
-              <div className={styles.statsValue({ color: "default" })}>{fmt(item.total_quantity)}</div>
+              <div className={styles.statsValue({ color: "default" })}>
+                {fmt(item.total_quantity)}
+              </div>
               <div className="mt-2 text-xs text-gray-500">すべての在庫数</div>
             </div>
 
@@ -194,7 +196,9 @@ export function InventoryItemDetailPage() {
             {/* Available Quantity */}
             <div className={styles.statsCard({ variant: "active" })}>
               <div className={styles.statsLabel}>利用可能在庫数</div>
-              <div className={styles.statsValue({ color: "blue" })}>{fmt(item.available_quantity)}</div>
+              <div className={styles.statsValue({ color: "blue" })}>
+                {fmt(item.available_quantity)}
+              </div>
               <div className="mt-2 text-xs text-gray-500">引当可能な在庫数</div>
             </div>
           </div>
@@ -243,7 +247,7 @@ interface InboundPlansTabProps {
   warehouseId: number;
 }
 
-function InboundPlansTab({ }: InboundPlansTabProps) {
+function InboundPlansTab({}: InboundPlansTabProps) {
   const { data: allPlans, isLoading } = useQuery({
     queryKey: ["inbound-plans"],
     queryFn: async () => {
@@ -253,11 +257,12 @@ function InboundPlansTab({ }: InboundPlansTabProps) {
   });
 
   // Filter plans that have lines for this product
-  const relevantPlans = allPlans?.filter(() => {
-    // Note: We would need to fetch plan details to filter by product_id
-    // For now, show all plans (to be improved with backend filtering)
-    return true;
-  }) || [];
+  const relevantPlans =
+    allPlans?.filter(() => {
+      // Note: We would need to fetch plan details to filter by product_id
+      // For now, show all plans (to be improved with backend filtering)
+      return true;
+    }) || [];
 
   const navigate = useNavigate();
 
@@ -273,11 +278,7 @@ function InboundPlansTab({ }: InboundPlansTabProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">入荷予定</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(ROUTES.INBOUND_PLANS.LIST)}
-        >
+        <Button variant="outline" size="sm" onClick={() => navigate(ROUTES.INBOUND_PLANS.LIST)}>
           入荷予定一覧へ
         </Button>
       </div>
@@ -298,17 +299,24 @@ function InboundPlansTab({ }: InboundPlansTabProps) {
                 <tr key={plan.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="p-3">{plan.plan_number}</td>
                   <td className="p-3">{plan.supplier_name || `ID:${plan.supplier_id}`}</td>
-                  <td className="p-3">{format(new Date(plan.planned_arrival_date), "yyyy/MM/dd")}</td>
+                  <td className="p-3">
+                    {format(new Date(plan.planned_arrival_date), "yyyy/MM/dd")}
+                  </td>
                   <td className="p-3">
                     <span
-                      className={`rounded px-2 py-1 text-xs font-medium ${plan.status === "received"
-                        ? "bg-green-100 text-green-700"
-                        : plan.status === "pending"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-gray-100 text-gray-700"
-                        }`}
+                      className={`rounded px-2 py-1 text-xs font-medium ${
+                        plan.status === "received"
+                          ? "bg-green-100 text-green-700"
+                          : plan.status === "pending"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-700"
+                      }`}
                     >
-                      {plan.status === "received" ? "入荷済" : plan.status === "pending" ? "予定" : "キャンセル"}
+                      {plan.status === "received"
+                        ? "入荷済"
+                        : plan.status === "pending"
+                          ? "予定"
+                          : "キャンセル"}
                     </span>
                   </td>
                 </tr>
@@ -354,19 +362,16 @@ function ForecastsTab({ productId }: ForecastsTabProps) {
     );
   }
 
-  const totalQuantity = forecastData?.items.reduce((sum, group) => {
-    return sum + group.forecasts.reduce((s, f) => s + f.forecast_quantity, 0);
-  }, 0) || 0;
+  const totalQuantity =
+    forecastData?.items.reduce((sum, group) => {
+      return sum + group.forecasts.reduce((s, f) => s + f.forecast_quantity, 0);
+    }, 0) || 0;
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">需要予測</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate(ROUTES.FORECASTS.LIST)}
-        >
+        <Button variant="outline" size="sm" onClick={() => navigate(ROUTES.FORECASTS.LIST)}>
           需要予測一覧へ
         </Button>
       </div>
@@ -376,7 +381,9 @@ function ForecastsTab({ productId }: ForecastsTabProps) {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div className="text-sm font-medium text-gray-600">予測グループ数</div>
-              <div className="mt-2 text-2xl font-bold text-gray-900">{forecastData.items.length}</div>
+              <div className="mt-2 text-2xl font-bold text-gray-900">
+                {forecastData.items.length}
+              </div>
             </div>
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div className="text-sm font-medium text-gray-600">総予測数量</div>
@@ -394,11 +401,19 @@ function ForecastsTab({ productId }: ForecastsTabProps) {
             <h4 className="mb-3 font-semibold">予測グループ一覧</h4>
             <div className="space-y-2">
               {forecastData.items.slice(0, 5).map((group, idx) => (
-                <div key={idx} className="flex items-center justify-between border-b border-gray-100 pb-2">
+                <div
+                  key={idx}
+                  className="flex items-center justify-between border-b border-gray-100 pb-2"
+                >
                   <div className="text-sm">
-                    <span className="font-medium">{group.group_key.customer_name || `顧客${group.group_key.customer_id}`}</span>
+                    <span className="font-medium">
+                      {group.group_key.customer_name || `顧客${group.group_key.customer_id}`}
+                    </span>
                     {" → "}
-                    <span>{group.group_key.delivery_place_name || `納入先${group.group_key.delivery_place_id}`}</span>
+                    <span>
+                      {group.group_key.delivery_place_name ||
+                        `納入先${group.group_key.delivery_place_id}`}
+                    </span>
                   </div>
                   <div className="text-sm font-semibold text-blue-600">
                     {fmt(group.forecasts.reduce((s, f) => s + f.forecast_quantity, 0))}
@@ -421,4 +436,3 @@ function ForecastsTab({ productId }: ForecastsTabProps) {
     </div>
   );
 }
-

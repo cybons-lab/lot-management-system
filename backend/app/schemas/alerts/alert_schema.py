@@ -9,6 +9,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+
 # Alert severity levels
 AlertSeverity = Literal["info", "warning", "critical"]
 
@@ -73,16 +74,20 @@ class AlertItem(BaseModel):
     occurred_at: datetime = Field(..., description="Alert occurrence timestamp")
     target: AlertTarget = Field(..., description="Target resource for navigation")
 
-    model_config = {"json_schema_extra": {"example": {
-        "id": "alert_order_12345_20231124",
-        "category": "order",
-        "type": "UNFORECASTED_ORDER_STALE",
-        "severity": "critical",
-        "title": "無予測受注が30分以上未処理",
-        "message": "受注番号 ORD-12345 はフォーキャストに紐づいておらず、30分以上未処理です。",
-        "occurred_at": "2023-11-24T10:30:00Z",
-        "target": {"resource_type": "order", "id": 12345},
-    }}}
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "id": "alert_order_12345_20231124",
+                "category": "order",
+                "type": "UNFORECASTED_ORDER_STALE",
+                "severity": "critical",
+                "title": "無予測受注が30分以上未処理",
+                "message": "受注番号 ORD-12345 はフォーキャストに紐づいておらず、30分以上未処理です。",
+                "occurred_at": "2023-11-24T10:30:00Z",
+                "target": {"resource_type": "order", "id": 12345},
+            }
+        }
+    }
 
 
 class AlertSummaryResponse(BaseModel):
@@ -102,8 +107,12 @@ class AlertSummaryResponse(BaseModel):
         default_factory=dict, description="Alert counts by category"
     )
 
-    model_config = {"json_schema_extra": {"example": {
-        "total": 23,
-        "by_severity": {"critical": 3, "warning": 12, "info": 8},
-        "by_category": {"order": 5, "inventory": 7, "lot": 6, "forecast": 5},
-    }}}
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "total": 23,
+                "by_severity": {"critical": 3, "warning": 12, "info": 8},
+                "by_category": {"order": 5, "inventory": 7, "lot": 6, "forecast": 5},
+            }
+        }
+    }

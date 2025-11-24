@@ -17,6 +17,7 @@ from app.schemas.alerts.alert_schema import (
 )
 from app.services.alerts.alert_service import AlertService
 
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/alerts", tags=["alerts"])
 
@@ -85,7 +86,6 @@ def get_alert_summary(db: Session = Depends(get_db)) -> AlertSummaryResponse:
     summary = service.get_alert_summary()
 
     logger.info(
-        f"Alert summary: {summary.total} total, "
-        f"{summary.by_severity.get('critical', 0)} critical"
+        f"Alert summary: {summary.total} total, {summary.by_severity.get('critical', 0)} critical"
     )
     return summary

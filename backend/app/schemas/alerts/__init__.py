@@ -8,6 +8,7 @@ from .alert_schema import (
     AlertTarget,
 )
 
+
 __all__ = [
     "AlertCategory",
     "AlertItem",

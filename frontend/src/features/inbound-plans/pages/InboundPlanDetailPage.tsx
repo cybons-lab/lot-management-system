@@ -90,12 +90,13 @@ export function InboundPlanDetailPage() {
             <div className="text-sm font-medium text-gray-500">ステータス</div>
             <div className="mt-1">
               <span
-                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === "pending"
-                  ? "bg-yellow-100 text-yellow-800"
-                  : plan.status === "received"
-                    ? "bg-green-100 text-green-800"
-                    : "bg-gray-100 text-gray-800"
-                  }`}
+                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                  plan.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : plan.status === "received"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                }`}
               >
                 {plan.status}
               </span>
@@ -179,9 +180,7 @@ export function InboundPlanDetailPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
                             onClick={() =>
-                              navigate(
-                                `${ROUTES.FORECASTS.LIST}?product_id=${line.product_id}`
-                              )
+                              navigate(`${ROUTES.FORECASTS.LIST}?product_id=${line.product_id}`)
                             }
                           >
                             <FileBarChart className="mr-2 h-4 w-4" />
@@ -190,7 +189,7 @@ export function InboundPlanDetailPage() {
                           <DropdownMenuItem
                             onClick={() =>
                               navigate(
-                                ROUTES.INVENTORY.ITEMS.DETAIL(line.product_id, line.warehouse_id)
+                                ROUTES.INVENTORY.ITEMS.DETAIL(line.product_id, line.warehouse_id),
                               )
                             }
                           >

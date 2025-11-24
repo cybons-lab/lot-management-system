@@ -170,7 +170,7 @@ class InventoryItemResponse(BaseSchema):
     allocated_quantity: Decimal
     available_quantity: Decimal
     last_updated: datetime
-    
+
     # Joined fields from master tables
     product_name: str | None = None
     product_code: str | None = None

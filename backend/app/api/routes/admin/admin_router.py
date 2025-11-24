@@ -68,7 +68,7 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
 
     # Calculate allocation rate
     allocated_orders = total_orders - unallocated_orders
-    allocation_rate =  (allocated_orders / total_orders * 100.0) if total_orders > 0 else 0.0
+    allocation_rate = (allocated_orders / total_orders * 100.0) if total_orders > 0 else 0.0
 
     return DashboardStatsResponse(
         total_stock=float(total_stock),
