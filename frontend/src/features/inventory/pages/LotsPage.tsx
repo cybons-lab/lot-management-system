@@ -142,7 +142,7 @@ export function LotsPage() {
           <div className="flex flex-col">
             <span className="font-medium">{lot.lot_number}</span>
             {lot.status === "locked" && (
-              <span className="text-xs text-red-600 flex items-center gap-1">
+              <span className="text-xs text-gray-500 flex items-center gap-1">
                 <Lock className="h-3 w-3" /> ロック中
               </span>
             )}
@@ -207,7 +207,7 @@ export function LotsPage() {
         cell: (lot) => {
           const statuses = getLotStatuses(lot);
           return (
-            <div className="flex items-center justify-center gap-1">
+            <div className="flex items-center justify-start gap-1">
               {statuses.map((s) => (
                 <LotStatusIcon key={s} status={s as 'locked' | 'available' | 'depleted'} />
               ))}

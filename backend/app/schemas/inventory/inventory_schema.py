@@ -41,6 +41,11 @@ class LotBase(BaseSchema):
     allocated_quantity: Decimal = Decimal("0")
     unit: str
     status: LotStatus = LotStatus.ACTIVE
+    
+    # Inspection certificate fields
+    inspection_status: str = "not_required"
+    inspection_date: date | None = None
+    inspection_cert_number: str | None = None
 
 
 class LotCreate(LotBase):
@@ -60,6 +65,11 @@ class LotUpdate(BaseSchema):
     allocated_quantity: Decimal | None = None
     unit: str | None = None
     status: LotStatus | None = None
+    
+    # Inspection certificate fields (optional for updates)
+    inspection_status: str | None = None
+    inspection_date: date | None = None
+    inspection_cert_number: str | None = None
 
 
 class LotResponse(LotBase, TimestampMixin):

@@ -90,6 +90,14 @@ class Lot(Base):
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
     lock_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    
+    # Inspection certificate fields
+    inspection_status: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default=text("'not_required'")
+    )
+    inspection_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    inspection_cert_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    
     version_id: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
@@ -111,6 +119,10 @@ class Lot(Base):
         CheckConstraint(
             "status IN ('active','depleted','expired','quarantine','locked')",
             name="chk_lots_status",
+        ),
+        CheckConstraint(
+            "inspection_status IN ('not_required','pending','passed','failed')",
+            name="chk_lots_inspection_status",
         ),
         UniqueConstraint(
             "lot_number",
