@@ -3740,6 +3740,15 @@ export interface components {
             unit: string;
             /** @default active */
             status: components["schemas"]["LotStatus"];
+            /**
+             * Inspection Status
+             * @default not_required
+             */
+            inspection_status: string;
+            /** Inspection Date */
+            inspection_date?: string | null;
+            /** Inspection Cert Number */
+            inspection_cert_number?: string | null;
         };
         /**
          * LotLock
@@ -3792,6 +3801,15 @@ export interface components {
             unit: string;
             /** @default active */
             status: components["schemas"]["LotStatus"];
+            /**
+             * Inspection Status
+             * @default not_required
+             */
+            inspection_status: string;
+            /** Inspection Date */
+            inspection_date?: string | null;
+            /** Inspection Cert Number */
+            inspection_cert_number?: string | null;
             /** Lot Id */
             lot_id: number;
             /** Product Name */
@@ -3835,6 +3853,12 @@ export interface components {
             /** Unit */
             unit?: string | null;
             status?: components["schemas"]["LotStatus"] | null;
+            /** Inspection Status */
+            inspection_status?: string | null;
+            /** Inspection Date */
+            inspection_date?: string | null;
+            /** Inspection Cert Number */
+            inspection_cert_number?: string | null;
         };
         /** ManualAllocationItem */
         ManualAllocationItem: {

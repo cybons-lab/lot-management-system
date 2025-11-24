@@ -56,6 +56,12 @@ export interface LotUI extends Record<string, unknown> {
   expected_lot_id: number | null; // DDL v2.2
   created_at: string;
   updated_at: string;
+
+  // Inspection certificate fields
+  inspection_status: string;
+  inspection_date: string | null;
+  inspection_cert_number: string | null;
+
   // Legacy fields (deprecated, for backward compatibility)
   product_code?: string | null;
   product_name?: string | null;
@@ -162,6 +168,12 @@ export function normalizeLot(lot: LotResponse): LotUI {
     expected_lot_id: lot.expected_lot_id ?? null,
     created_at: S(lot.created_at),
     updated_at: S(lot.updated_at),
+
+    // Inspection certificate fields
+    inspection_status: lot.inspection_status ?? 'not_required',
+    inspection_date: lot.inspection_date ?? null,
+    inspection_cert_number: lot.inspection_cert_number ?? null,
+
     // Legacy fields (for backward compatibility)
     id: lot.lot_id,
     receipt_date: S(lot.received_date),
