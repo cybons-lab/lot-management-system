@@ -73,6 +73,10 @@ export function LotTable({ lots, table, isLoading, error }: LotTableProps) {
         columns={columns}
         sort={sortConfig}
         isLoading={isLoading}
+        className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+        getRowClassName={(lot) =>
+          lot.status === "locked" ? "bg-amber-50/70 hover:bg-amber-100" : ""
+        }
         emptyMessage="ロットがありません。新規登録ボタンから最初のロットを作成してください。"
       />
 

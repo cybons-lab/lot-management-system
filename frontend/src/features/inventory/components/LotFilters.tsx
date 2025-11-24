@@ -33,7 +33,7 @@ export function LotFilters({ filters, onFilterChange, onReset }: LotFiltersProps
         placeholder="ロット番号、製品コード、製品名で検索..."
       />
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <FilterField label="製品コード">
           <Input
             value={filters.product_code}
@@ -66,15 +66,15 @@ export function LotFilters({ filters, onFilterChange, onReset }: LotFiltersProps
         </FilterField>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="mt-1 flex items-center space-x-2 rounded-md bg-slate-50 px-3 py-2">
         <input
           type="checkbox"
           id="hasStock"
           checked={filters.hasStock}
           onChange={(e) => onFilterChange("hasStock", e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300"
+          className="h-4 w-4 rounded border-slate-300 text-blue-600"
         />
-        <label htmlFor="hasStock" className="text-sm text-gray-700">
+        <label htmlFor="hasStock" className="text-sm font-medium text-slate-700">
           在庫ありのみ表示
         </label>
       </div>
