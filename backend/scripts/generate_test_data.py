@@ -142,10 +142,14 @@ def warehouse_strategy(draw, warehouse_id: int):
 def forecast_strategy(draw, product_id: int, customer_id: int, delivery_place_id: int):
     """Generate a forecast with proper daily/jyun/monthly period logic.
 
+    Logic matches seed_simulate_service.py:
+    - If today < 25th: target_month = current month
+    - If today >= 25th: target_month = next month
+
     Forecast types:
-    - Daily: forecast_period matches forecast_date's month
-    - Jyun (10-day): forecast_period is next month, forecast_date on 1st/11th/21st
-    - Monthly: forecast_period is 2 months later, forecast_date on 1st
+    - Daily: forecast_date within target_month (1st to last day), period = target_month
+    - Jyun: forecast_date on target_month's 1st/11th/21st, period = target_month + 1 month
+    - Monthly: forecast_date on target_month's 1st, period = target_month + 2 months
     """
     from dateutil.relativedelta import relativedelta
 
@@ -158,30 +162,33 @@ def forecast_strategy(draw, product_id: int, customer_id: int, delivery_place_id
 
     base_date = date.today()
 
+    # Determine target month based on current day (same as seed_simulate_service.py)
+    if base_date.day < 25:
+        target_month = base_date.replace(day=1)
+    else:
+        target_month = base_date.replace(day=1) + relativedelta(months=1)
+
+    # Calculate last day of target month
+    last_day_of_month = (target_month + relativedelta(months=1)) - timedelta(days=1)
+    days_in_month = last_day_of_month.day
+
     if forecast_type == 'daily':
-        # Daily forecast: forecast_date within next 60 days, period matches date's month
-        forecast_date = base_date + timedelta(days=draw(st.integers(min_value=0, max_value=60)))
-        forecast_period = forecast_date.strftime("%Y-%m")
+        # Daily forecast: random date within target_month (1st to last day)
+        day_offset = draw(st.integers(min_value=0, max_value=days_in_month - 1))
+        forecast_date = target_month + timedelta(days=day_offset)
+        forecast_period = target_month.strftime("%Y-%m")
 
     elif forecast_type == 'jyun':
-        # Jyun forecast: forecast_date on 1st/11th/21st, period is next month
-        month_offset = draw(st.integers(min_value=0, max_value=2))
-        target_month = base_date.replace(day=1) + relativedelta(months=month_offset)
+        # Jyun forecast: target_month's 1st/11th/21st, period = target_month + 1 month
         jyun_day = draw(st.sampled_from([1, 11, 21]))
         forecast_date = target_month.replace(day=jyun_day)
-
-        # Period is next month from forecast_date
-        period_month = forecast_date.replace(day=1) + relativedelta(months=1)
+        period_month = target_month + relativedelta(months=1)
         forecast_period = period_month.strftime("%Y-%m")
 
     else:  # monthly
-        # Monthly forecast: forecast_date on 1st, period is 2 months later
-        month_offset = draw(st.integers(min_value=0, max_value=2))
-        target_month = base_date.replace(day=1) + relativedelta(months=month_offset)
+        # Monthly forecast: target_month's 1st, period = target_month + 2 months
         forecast_date = target_month.replace(day=1)
-
-        # Period is 2 months later from forecast_date
-        period_month = forecast_date.replace(day=1) + relativedelta(months=2)
+        period_month = target_month + relativedelta(months=2)
         forecast_period = period_month.strftime("%Y-%m")
 
     return ForecastCurrent(
