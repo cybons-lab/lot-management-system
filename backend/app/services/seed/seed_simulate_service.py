@@ -551,6 +551,10 @@ def create_forecast_data(
     all_products = masters["products"]
     all_delivery_places = masters["delivery_places"]
 
+    # PHASE 0: Fetch CustomerItems for use in Phase 1
+    # CustomerItems represent the valid product-customer combinations (商流)
+    all_customer_items: list[CustomerItem] = db.execute(select(CustomerItem)).scalars().all()
+
     generate_forecasts = params.get("forecasts", 0) > 0
     forecast_count = 0
 
@@ -558,7 +562,7 @@ def create_forecast_data(
         task_id,
         f"→ Forecast check: params.forecasts={params.get('forecasts', 0)}, "
         f"generate={generate_forecasts}, delivery_places={len(all_delivery_places)}, "
-        f"products={len(all_products)}",
+        f"products={len(all_products)}, customer_items={len(all_customer_items)}",
     )
 
     if generate_forecasts and all_products and all_delivery_places:
@@ -584,6 +588,14 @@ def create_forecast_data(
             f"→ Target month: {target_month.strftime('%Y-%m')} "
             f"(today={base_date}, day={base_date.day})",
         )
+
+        # TODO: PHASE 1 - 現在のロジックは誤り（製品からスタートして顧客・納入先をぶら下げている）
+        # 正しいアプローチ：
+        #   1. 商流（CustomerItem）を基点として、顧客×製品の組み合わせを特定
+        #   2. その商流に納入先を組み合わせて、(customer_id, delivery_place_id, product_id) のキーを作成
+        #   3. そのキー単位で日次・旬次・月次を一貫して生成
+        # 現在の実装では全製品に対して予測を生成しているため、商流が存在しない組み合わせでも
+        # 予測が生成されてしまう。Phase 1でCustomerItemベースのロジックに修正予定。
 
         # Generate forecast entries for each delivery_place × product × date
         forecast_entries: list[ForecastCurrent] = []
