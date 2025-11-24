@@ -9,6 +9,7 @@
  */
 
 import { Plus, RefreshCw, Search, TrendingUp, Package, CheckCircle } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
@@ -16,8 +17,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
+import { OrderGroupHeader } from "@/features/orders/components/OrderGroupHeader";
+import { orderLineColumns } from "@/features/orders/components/OrderLineColumns";
 import { useOrderStats } from "@/features/orders/hooks/useOrderStats";
-import { columns } from "@/features/orders/pages/OrdersListPage/columns";
 import { useOrdersQuery } from "@/hooks/api";
 import { useCreateOrder } from "@/hooks/mutations";
 import { useDialog, useTable, useFilters } from "@/hooks/ui";
@@ -31,6 +33,7 @@ import { FormDialog } from "@/shared/components/form";
 export function OrdersListPage() {
   // UI状態管理
   const createDialog = useDialog();
+  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
 
   const table = useTable({
     initialPageSize: 25,
@@ -224,31 +227,65 @@ export function OrdersListPage() {
         </div>
       )}
 
-      {/* テーブル */}
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <DataTable
-          data={paginatedOrders}
-          columns={columns}
-          sort={
-            table.sort && table.sort.column && table.sort.direction
-              ? { column: table.sort.column, direction: table.sort.direction }
-              : undefined
-          }
-          isLoading={isLoading}
-          emptyMessage="受注がありません。新規登録ボタンから最初の受注を作成してください。"
-        />
-        {!isLoading && !error && sortedOrders.length > 0 && (
-          <div className="border-t border-slate-200 px-6 py-4">
-            <TablePagination
-              currentPage={pagination.page ?? 1}
-              pageSize={pagination.pageSize ?? 25}
-              totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
-              onPageChange={table.setPage}
-              onPageSizeChange={table.setPageSize}
-            />
+      {/* テーブル（グループ化表示） */}
+      {isLoading ? (
+        <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white p-12 shadow-sm">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+            <p className="text-sm text-gray-500">読み込み中...</p>
           </div>
-        )}
-      </div>
+        </div>
+      ) : paginatedOrders.length === 0 ? (
+        <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white p-12 shadow-sm">
+          <p className="text-sm text-gray-500">
+            受注がありません。新規登録ボタンから最初の受注を作成してください。
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {paginatedOrders.map((order) => (
+            <div
+              key={order.id}
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            >
+              <OrderGroupHeader
+                order={order}
+                isExpanded={expandedOrders.has(order.id)}
+                onToggle={() => {
+                  const newExpanded = new Set(expandedOrders);
+                  if (newExpanded.has(order.id)) {
+                    newExpanded.delete(order.id);
+                  } else {
+                    newExpanded.add(order.id);
+                  }
+                  setExpandedOrders(newExpanded);
+                }}
+              />
+              {expandedOrders.has(order.id) && order.lines && order.lines.length > 0 && (
+                <DataTable
+                  data={order.lines}
+                  columns={orderLineColumns}
+                  isLoading={false}
+                  emptyMessage="明細がありません"
+                />
+              )}
+            </div>
+          ))}
+
+          {/* ページネーション */}
+          {!error && sortedOrders.length > 0 && (
+            <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
+              <TablePagination
+                currentPage={pagination.page ?? 1}
+                pageSize={pagination.pageSize ?? 25}
+                totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
+                onPageChange={table.setPage}
+                onPageSizeChange={table.setPageSize}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 新規登録ダイアログ */}
       <FormDialog
