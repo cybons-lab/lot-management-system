@@ -64,43 +64,45 @@ export function Dashboard({ stats, isLoading, isError }: DashboardProps) {
   const allocationRate = stats?.allocation_rate ?? 0;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header.root}>
-        <h2 className={styles.header.title}>ダッシュボード</h2>
-        <p className={styles.header.description}>システムの概要と重要な指標を確認できます</p>
-      </div>
+    <div className="mx-auto max-w-[1400px] px-6 py-6">
+      <div className={styles.container}>
+        <div className={styles.header.root}>
+          <h2 className={styles.header.title}>ダッシュボード</h2>
+          <p className={styles.header.description}>システムの概要と重要な指標を確認できます</p>
+        </div>
 
-      {/* KPIカード */}
-      <div className={styles.grid}>
-        <StatCard
-          title="総在庫数"
-          value={Number(totalStock) || 0}
-          colorClass="border-blue-500"
-          description="現在の総在庫量"
-        />
-        <StatCard
-          title="総受注数"
-          value={Number(totalOrders) || 0}
-          colorClass="border-green-500"
-          description="登録された受注の総数"
-        />
-        <StatCard
-          title="未引当受注"
-          value={Number(unallocatedOrders) || 0}
-          colorClass="border-amber-500"
-          description="引当が必要な受注件数"
-        />
-        <StatCard
-          title="引当率"
-          value={`${allocationRate.toFixed(1)}%`}
-          colorClass="border-purple-500"
-          description="引当済受注の割合"
-        />
-      </div>
+        {/* KPIカード */}
+        <div className={styles.grid}>
+          <StatCard
+            title="総在庫数"
+            value={Number(totalStock) || 0}
+            colorClass="border-blue-500"
+            description="現在の総在庫量"
+          />
+          <StatCard
+            title="総受注数"
+            value={Number(totalOrders) || 0}
+            colorClass="border-green-500"
+            description="登録された受注の総数"
+          />
+          <StatCard
+            title="未引当受注"
+            value={Number(unallocatedOrders) || 0}
+            colorClass="border-amber-500"
+            description="引当が必要な受注件数"
+          />
+          <StatCard
+            title="引当率"
+            value={`${allocationRate.toFixed(1)}%`}
+            colorClass="border-purple-500"
+            description="引当済受注の割合"
+          />
+        </div>
 
-      <div className={styles.activity.root}>
-        <h3 className={styles.activity.title}>最近の活動</h3>
-        <p className={styles.activity.text}>アクティビティログは準備中です...</p>
+        <div className={styles.activity.root}>
+          <h3 className={styles.activity.title}>最近の活動</h3>
+          <p className={styles.activity.text}>アクティビティログは準備中です...</p>
+        </div>
       </div>
     </div>
   );
