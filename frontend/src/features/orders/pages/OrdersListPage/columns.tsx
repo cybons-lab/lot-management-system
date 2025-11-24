@@ -12,37 +12,42 @@ export const columns: Column<OrderUI>[] = [
   {
     id: "order_no",
     header: "受注番号",
-    cell: (order: OrderUI) => <span className="font-medium">{order.order_no}</span>,
+    cell: (order: OrderUI) => <span className="font-medium text-slate-900">{order.order_no}</span>,
     sortable: true,
+    width: "150px",
   },
   {
     id: "customer_code",
     header: "得意先",
     cell: (order: OrderUI) => (
       <div>
-        <div className="font-medium">{order.customer_code}</div>
-        {order.customer_name && <div className="text-xs text-gray-600">{order.customer_name}</div>}
+        <div className="font-medium text-slate-900">{order.customer_code}</div>
+        {order.customer_name && <div className="text-xs text-slate-600">{order.customer_name}</div>}
       </div>
     ),
     sortable: true,
+    width: "180px",
   },
   {
     id: "order_date",
     header: "受注日",
-    cell: (order: OrderUI) => formatDate(order.order_date),
+    cell: (order: OrderUI) => <span className="text-slate-900">{formatDate(order.order_date)}</span>,
     sortable: true,
+    width: "120px",
   },
   {
     id: "due_date",
     header: "納期",
-    cell: (order: OrderUI) => formatDate(order.due_date || null),
+    cell: (order: OrderUI) => <span className="text-slate-900">{formatDate(order.due_date || null)}</span>,
     sortable: true,
+    width: "120px",
   },
   {
     id: "lines_count",
     header: "明細数",
-    cell: (order: OrderUI) => <span className="text-center">{order.lines?.length || 0}</span>,
-    align: "center",
+    cell: (order: OrderUI) => <span className="text-slate-900">{order.lines?.length || 0}</span>,
+    align: "right",
+    width: "80px",
   },
   {
     id: "allocation_status",
@@ -67,32 +72,34 @@ export const columns: Column<OrderUI>[] = [
       const rate = totalQty > 0 ? (allocatedQty / totalQty) * 100 : 0;
 
       return (
-        <div className="flex items-center space-x-2">
-          <div className="h-2 w-24 rounded-full bg-gray-200">
+        <div className="flex items-center gap-3">
+          <div className="h-2.5 w-32 overflow-hidden rounded-full bg-slate-200">
             <div
-              className={`h-full rounded-full ${
-                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-gray-300"
+              className={`h-full rounded-full transition-all ${
+                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
               }`}
               style={{ width: `${rate}%` }}
             />
           </div>
-          <span className="text-xs text-gray-600">{rate.toFixed(0)}%</span>
+          <span className="text-sm font-medium text-slate-700">{rate.toFixed(0)}%</span>
         </div>
       );
     },
+    width: "180px",
   },
   {
     id: "status",
     header: "ステータス",
     cell: (order: OrderUI) => <OrderStatusBadge status={order.status} />,
     sortable: true,
-    align: "center",
+    align: "left",
+    width: "100px",
   },
   {
     id: "actions",
     header: "",
     cell: (order: OrderUI) => (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center justify-end gap-1">
         <Button
           variant="ghost"
           size="sm"
@@ -100,6 +107,8 @@ export const columns: Column<OrderUI>[] = [
             // 引当画面へ遷移するロジック
             window.location.href = `/allocation?selected=${order.id}`;
           }}
+          className="h-8 w-8 p-0"
+          title="引当画面へ"
         >
           <ExternalLink className="h-4 w-4" />
         </Button>
@@ -114,11 +123,11 @@ export const columns: Column<OrderUI>[] = [
             }}
             className="text-xs"
           >
-            SAPへ送信
+            SAP送信
           </Button>
         )}
       </div>
     ),
-    width: "120px",
+    width: "140px",
   },
 ];

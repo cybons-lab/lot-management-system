@@ -5,15 +5,14 @@
  * - 新しいフック・コンポーネントを使用
  * - データ取得: useOrdersQuery
  * - UI状態管理: useDialog, useToast, useTable, useFilters
- * - 共通コンポーネント: PageHeader, Section, DataTable, etc.
+ * - 共通コンポーネント: DataTable, etc.
  */
 
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Search, TrendingUp, Package, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
-import * as styles from "./styles";
-
 import { Button } from "@/components/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
@@ -23,12 +22,8 @@ import { useOrdersQuery } from "@/hooks/api";
 import { useCreateOrder } from "@/hooks/mutations";
 import { useDialog, useTable, useFilters } from "@/hooks/ui";
 import { DataTable } from "@/shared/components/data/DataTable";
-import { FilterField } from "@/shared/components/data/FilterField";
-import { FilterPanel } from "@/shared/components/data/FilterPanel";
-import { SearchBar } from "@/shared/components/data/SearchBar";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
-import { PageHeader, PageContainer, Section } from "@/shared/components/layout";
 
 /**
  * メインコンポーネント
@@ -84,100 +79,153 @@ export function OrdersListPage() {
   const stats = useOrderStats(allOrders);
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="受注管理"
-        subtitle="受注一覧と引当状況"
-        actions={
-          <>
-            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              更新
-            </Button>
-            <Button size="sm" onClick={createDialog.open}>
-              <Plus className="mr-2 h-4 w-4" />
-              新規登録
-            </Button>
-          </>
-        }
-      />
+    <div className="space-y-6 px-6 py-6 md:px-8">
+      {/* ヘッダー */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">受注管理</h1>
+          <p className="mt-1 text-sm text-slate-600">受注一覧と引当状況を管理します</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            更新
+          </Button>
+          <Button size="sm" onClick={createDialog.open}>
+            <Plus className="mr-2 h-4 w-4" />
+            新規登録
+          </Button>
+        </div>
+      </div>
 
       {/* 統計情報 */}
-      <div className={styles.statsGrid}>
-        <div className={styles.statsCard({ variant: "default" })}>
-          <div className={styles.statsLabel}>総受注数</div>
-          <div className={styles.statsValue({ color: "default" })}>{stats.totalOrders}</div>
+      <div className="grid gap-6 md:grid-cols-4">
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">総受注数</CardTitle>
+            <Package className="h-5 w-5 text-slate-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-slate-900">{stats.totalOrders}</div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">未処理</CardTitle>
+            <div className="h-5 w-5 rounded-full bg-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-yellow-600">{stats.openOrders}</div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">引当済</CardTitle>
+            <CheckCircle className="h-5 w-5 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-blue-600">{stats.allocatedOrders}</div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 bg-white shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-600">引当率</CardTitle>
+            <TrendingUp className="h-5 w-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-green-600">
+              {stats.allocationRate.toFixed(1)}%
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* フィルター */}
+      <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Input
+              value={filters.values.search}
+              onChange={(e) => filters.set("search", e.target.value)}
+              placeholder="受注番号、得意先コード、得意先名で検索..."
+              className="pl-9"
+            />
+          </div>
         </div>
-        <div className={styles.statsCard({ variant: "yellow" })}>
-          <div className={styles.statsLabel}>未処理</div>
-          <div className={styles.statsValue({ color: "yellow" })}>{stats.openOrders}</div>
-        </div>
-        <div className={styles.statsCard({ variant: "blue" })}>
-          <div className={styles.statsLabel}>引当済</div>
-          <div className={styles.statsValue({ color: "blue" })}>{stats.allocatedOrders}</div>
-        </div>
-        <div className={styles.statsCard({ variant: "green" })}>
-          <div className={styles.statsLabel}>引当率</div>
-          <div className={styles.statsValue({ color: "green" })}>
-            {stats.allocationRate.toFixed(1)}%
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">得意先コード</label>
+            <Input
+              value={filters.values.customer_code}
+              onChange={(e) => filters.set("customer_code", e.target.value)}
+              placeholder="例: C001"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700">ステータス</label>
+            <Select
+              value={filters.values.status}
+              onValueChange={(value) => filters.set("status", value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">すべて</SelectItem>
+                <SelectItem value="draft">未処理</SelectItem>
+                <SelectItem value="allocated">引当済</SelectItem>
+                <SelectItem value="shipped">出荷済</SelectItem>
+                <SelectItem value="closed">完了</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-end space-x-2 pb-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="unallocatedOnly"
+                checked={filters.values.unallocatedOnly}
+                onChange={(e) => filters.set("unallocatedOnly", e.target.checked as false)}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="unallocatedOnly" className="text-sm font-medium text-slate-700">
+                未引当のみ表示
+              </label>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={filters.reset}
+              className="text-xs text-slate-500"
+            >
+              リセット
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* フィルター */}
-      <Section className="mb-6">
-        <FilterPanel title="検索・フィルター" onReset={filters.reset}>
-          <SearchBar
-            value={filters.values.search}
-            onChange={(value: string) => filters.set("search", value)}
-            placeholder="受注番号、得意先コード、得意先名で検索..."
-          />
-
-          <div className={styles.filterGrid}>
-            <FilterField label="得意先コード">
-              <Input
-                value={filters.values.customer_code}
-                onChange={(e) => filters.set("customer_code", e.target.value)}
-                placeholder="例: C001"
-              />
-            </FilterField>
-
-            <FilterField label="ステータス">
-              <Select
-                value={filters.values.status}
-                onValueChange={(value) => filters.set("status", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">すべて</SelectItem>
-                  <SelectItem value="draft">未処理</SelectItem>
-                  <SelectItem value="allocated">引当済</SelectItem>
-                  <SelectItem value="shipped">出荷済</SelectItem>
-                  <SelectItem value="closed">完了</SelectItem>
-                </SelectContent>
-              </Select>
-            </FilterField>
+      {/* エラー表示 */}
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 shadow-sm">
+          <div className="space-y-2 text-center">
+            <p className="text-lg font-semibold text-red-900">データの取得に失敗しました</p>
+            <p className="text-sm text-red-700">
+              {error instanceof Error ? error.message : "サーバーエラーが発生しました"}
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-4">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              再試行
+            </Button>
           </div>
-
-          <div className={styles.checkboxGroup}>
-            <input
-              type="checkbox"
-              id="unallocatedOnly"
-              checked={filters.values.unallocatedOnly}
-              onChange={(e) => filters.set("unallocatedOnly", e.target.checked as false)}
-              className={styles.checkbox}
-            />
-            <label htmlFor="unallocatedOnly" className={styles.checkboxLabel}>
-              未引当のみ表示
-            </label>
-          </div>
-        </FilterPanel>
-      </Section>
+        </div>
+      )}
 
       {/* テーブル */}
-      <Section>
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <DataTable
           data={paginatedOrders}
           columns={columns}
@@ -187,18 +235,20 @@ export function OrdersListPage() {
               : undefined
           }
           isLoading={isLoading}
-          emptyMessage="受注がありません"
+          emptyMessage="受注がありません。新規登録ボタンから最初の受注を作成してください。"
         />
         {!isLoading && !error && sortedOrders.length > 0 && (
-          <TablePagination
-            currentPage={pagination.page ?? 1}
-            pageSize={pagination.pageSize ?? 25}
-            totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
-            onPageChange={table.setPage}
-            onPageSizeChange={table.setPageSize}
-          />
+          <div className="border-t border-slate-200 px-6 py-4">
+            <TablePagination
+              currentPage={pagination.page ?? 1}
+              pageSize={pagination.pageSize ?? 25}
+              totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+            />
+          </div>
         )}
-      </Section>
+      </div>
 
       {/* 新規登録ダイアログ */}
       <FormDialog
@@ -216,6 +266,6 @@ export function OrdersListPage() {
           isSubmitting={createOrderMutation.isPending}
         />
       </FormDialog>
-    </PageContainer>
+    </div>
   );
 }
