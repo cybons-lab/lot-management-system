@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import type { ProductUpdate } from "../api/products-api";
-import { ProductForm } from "../components/ProductForm";
+import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
 import { useUpdateProduct, useDeleteProduct } from "../hooks/useProductMutations";
 import { useProductQuery } from "../hooks/useProductQuery";
 
@@ -27,38 +27,38 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function ProductDetailPage() {
   const navigate = useNavigate();
-  const { makerPartCode } = useParams<{ makerPartCode: string }>();
+  const { makerPartCode: productCode } = useParams<{ makerPartCode: string }>();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data: product, isLoading, error } = useProductQuery(makerPartCode);
+  const { data: product, isLoading, error } = useProductQuery(productCode);
   const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
   const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
 
   const handleBack = useCallback(() => navigate("/products"), [navigate]);
 
   const handleUpdate = useCallback(
-    (data: {
-      maker_part_code: string;
-      product_name: string;
-      base_unit: string;
-      consumption_limit_days?: number | null;
-    }) => {
-      if (!makerPartCode) return;
+    (data: ProductFormOutput) => {
+      if (!productCode) return;
       const updateData: ProductUpdate = {
+        product_code: data.product_code,
         product_name: data.product_name,
-        base_unit: data.base_unit,
-        consumption_limit_days: data.consumption_limit_days,
+        internal_unit: data.internal_unit,
+        external_unit: data.external_unit,
+        qty_per_internal_unit: data.qty_per_internal_unit,
+        customer_part_no: data.customer_part_no,
+        maker_item_code: data.maker_item_code,
+        is_active: data.is_active,
       };
-      updateProduct({ makerPartCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
+      updateProduct({ productCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
     },
-    [makerPartCode, updateProduct],
+    [productCode, updateProduct],
   );
 
   const handleDelete = useCallback(() => {
-    if (!makerPartCode) return;
-    deleteProduct(makerPartCode, { onSuccess: () => navigate("/products") });
-  }, [makerPartCode, deleteProduct, navigate]);
+    if (!productCode) return;
+    deleteProduct(productCode, { onSuccess: () => navigate("/products") });
+  }, [productCode, deleteProduct, navigate]);
 
   if (isLoading)
     return (
@@ -73,7 +73,7 @@ export function ProductDetailPage() {
         <div className={styles.emptyState.container}>
           <p className={styles.emptyState.title}>商品が見つかりません</p>
           <p className={styles.emptyState.description}>
-            指定されたメーカー品番「{makerPartCode}」は存在しないか、削除されています。
+            指定された製品コード「{productCode}」は存在しないか、削除されています。
           </p>
           <Button className={styles.emptyState.action} onClick={handleBack}>
             一覧に戻る
@@ -87,7 +87,7 @@ export function ProductDetailPage() {
     <div className={styles.root}>
       <PageHeader
         title={isEditing ? "商品編集" : "商品詳細"}
-        subtitle={product.maker_part_code}
+        subtitle={product.product_code}
         actions={
           <div className={styles.actionBar}>
             <Button variant="outline" size="sm" onClick={handleBack}>
@@ -121,20 +121,36 @@ export function ProductDetailPage() {
         ) : (
           <div className="space-y-4">
             <div className={styles.form.field}>
-              <label className={styles.form.label}>メーカー品番</label>
-              <p className="font-mono text-lg font-medium">{product.maker_part_code}</p>
+              <label className={styles.form.label}>製品コード</label>
+              <p className="font-mono text-lg font-medium">{product.product_code}</p>
             </div>
             <div className={styles.form.field}>
               <label className={styles.form.label}>商品名</label>
               <p className="text-lg">{product.product_name}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>単位</label>
-              <p>{product.base_unit}</p>
+              <label className={styles.form.label}>社内単位</label>
+              <p>{product.internal_unit}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>消費期限日数</label>
-              <p>{product.consumption_limit_days ?? "-"}</p>
+              <label className={styles.form.label}>外部単位</label>
+              <p>{product.external_unit}</p>
+            </div>
+            <div className={styles.form.field}>
+              <label className={styles.form.label}>内部単位あたりの数量</label>
+              <p>{product.qty_per_internal_unit}</p>
+            </div>
+            <div className={styles.form.field}>
+              <label className={styles.form.label}>得意先品番</label>
+              <p>{product.customer_part_no ?? "-"}</p>
+            </div>
+            <div className={styles.form.field}>
+              <label className={styles.form.label}>メーカー品番</label>
+              <p>{product.maker_item_code ?? "-"}</p>
+            </div>
+            <div className={styles.form.field}>
+              <label className={styles.form.label}>ステータス</label>
+              <p className="text-sm font-medium">{product.is_active ? "有効" : "無効"}</p>
             </div>
             <div className={styles.form.field}>
               <label className={styles.form.label}>作成日時</label>
@@ -157,7 +173,7 @@ export function ProductDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>商品を削除しますか？</AlertDialogTitle>
             <AlertDialogDescription>
-              商品「{product.product_name}」（{product.maker_part_code}
+              商品「{product.product_name}」（{product.product_code}
               ）を削除します。この操作は取り消せません。
             </AlertDialogDescription>
           </AlertDialogHeader>

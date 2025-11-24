@@ -5,10 +5,10 @@ import { Plus, Upload, Package } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Product, ProductCreate } from "../api/products-api";
+import type { Product } from "../api/products-api";
 import { ProductBulkImportDialog } from "../components/ProductBulkImportDialog";
 import { ProductExportButton } from "../components/ProductExportButton";
-import { ProductForm } from "../components/ProductForm";
+import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
 import { useCreateProduct } from "../hooks/useProductMutations";
 import { useProductsQuery } from "../hooks/useProductsQuery";
 
@@ -23,7 +23,7 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 export function ProductsListPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sort, setSort] = useState<SortConfig>({ column: "maker_part_code", direction: "asc" });
+  const [sort, setSort] = useState<SortConfig>({ column: "product_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
@@ -35,8 +35,9 @@ export function ProductsListPage() {
     const query = searchQuery.toLowerCase();
     return products.filter(
       (p) =>
-        p.maker_part_code.toLowerCase().includes(query) ||
-        p.product_name.toLowerCase().includes(query),
+        p.product_code.toLowerCase().includes(query) ||
+        p.product_name.toLowerCase().includes(query) ||
+        (p.maker_item_code?.toLowerCase() ?? "").includes(query),
     );
   }, [products, searchQuery]);
 
@@ -54,13 +55,13 @@ export function ProductsListPage() {
 
   const handleRowClick = useCallback(
     (product: Product) => {
-      navigate(`/products/${product.maker_part_code}`);
+      navigate(`/products/${product.product_code}`);
     },
     [navigate],
   );
 
   const handleCreate = useCallback(
-    (data: ProductCreate) => {
+    (data: ProductFormOutput) => {
       createProduct(data, { onSuccess: () => setIsCreateDialogOpen(false) });
     },
     [createProduct],

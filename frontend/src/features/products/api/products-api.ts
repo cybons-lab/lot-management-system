@@ -9,7 +9,7 @@ import { http } from "@/services/http";
 import type { components } from "@/types/api";
 
 // OpenAPI生成型
-export type Product = components["schemas"]["ProductResponse"];
+export type Product = components["schemas"]["ProductOut"];
 export type ProductCreate = components["schemas"]["ProductCreate"];
 export type ProductUpdate = components["schemas"]["ProductUpdate"];
 
@@ -24,8 +24,8 @@ export async function listProducts(): Promise<Product[]> {
   return response.data;
 }
 
-export async function getProduct(makerPartCode: string): Promise<Product> {
-  const response = await http.get<Product>(`${BASE_PATH}/${makerPartCode}`);
+export async function getProduct(productCode: string): Promise<Product> {
+  const response = await http.get<Product>(`${BASE_PATH}/${productCode}`);
   return response.data;
 }
 
@@ -34,13 +34,13 @@ export async function createProduct(data: ProductCreate): Promise<Product> {
   return response.data;
 }
 
-export async function updateProduct(makerPartCode: string, data: ProductUpdate): Promise<Product> {
-  const response = await http.put<Product>(`${BASE_PATH}/${makerPartCode}`, data);
+export async function updateProduct(productCode: string, data: ProductUpdate): Promise<Product> {
+  const response = await http.put<Product>(`${BASE_PATH}/${productCode}`, data);
   return response.data;
 }
 
-export async function deleteProduct(makerPartCode: string): Promise<void> {
-  await http.delete(`${BASE_PATH}/${makerPartCode}`);
+export async function deleteProduct(productCode: string): Promise<void> {
+  await http.delete(`${BASE_PATH}/${productCode}`);
 }
 
 // ============================================
@@ -54,23 +54,31 @@ async function upsertProductRow(
     switch (row.OPERATION) {
       case "ADD":
         await createProduct({
-          maker_part_code: row.maker_part_code,
+          product_code: row.product_code,
           product_name: row.product_name,
-          base_unit: row.base_unit,
-          consumption_limit_days: row.consumption_limit_days,
+          internal_unit: row.internal_unit,
+          external_unit: row.external_unit,
+          qty_per_internal_unit: row.qty_per_internal_unit,
+          customer_part_no: row.customer_part_no,
+          maker_item_code: row.maker_item_code,
+          is_active: row.is_active,
         });
         return { success: true };
 
       case "UPD":
-        await updateProduct(row.maker_part_code, {
+        await updateProduct(row.product_code, {
           product_name: row.product_name,
-          base_unit: row.base_unit,
-          consumption_limit_days: row.consumption_limit_days,
+          internal_unit: row.internal_unit,
+          external_unit: row.external_unit,
+          qty_per_internal_unit: row.qty_per_internal_unit,
+          customer_part_no: row.customer_part_no,
+          maker_item_code: row.maker_item_code,
+          is_active: row.is_active,
         });
         return { success: true };
 
       case "DEL":
-        await deleteProduct(row.maker_part_code);
+        await deleteProduct(row.product_code);
         return { success: true };
 
       default:
@@ -90,7 +98,7 @@ export async function bulkUpsertProducts(rows: ProductBulkRow[]): Promise<BulkUp
       return {
         rowNumber: row._rowNumber ?? index + 1,
         success: result.success,
-        code: row.maker_part_code,
+        code: row.product_code,
         errorMessage: result.errorMessage,
       };
     }),
