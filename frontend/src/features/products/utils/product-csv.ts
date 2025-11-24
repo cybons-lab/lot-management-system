@@ -7,10 +7,14 @@ import type { ProductBulkRow, BulkOperationType } from "../types/bulk-operation"
 
 const CSV_HEADERS = [
   "OPERATION",
-  "maker_part_code",
+  "product_code",
   "product_name",
-  "base_unit",
-  "consumption_limit_days",
+  "internal_unit",
+  "external_unit",
+  "qty_per_internal_unit",
+  "customer_part_no",
+  "maker_item_code",
+  "is_active",
 ] as const;
 
 /**
@@ -48,22 +52,33 @@ export function parseProductCsv(csvText: string): { rows: ProductBulkRow[]; erro
       continue;
     }
 
-    const makerPartCode = values[headerIndices[1]!] ?? "";
-    if (!makerPartCode) {
-      errors.push(`行${i + 1}: maker_part_codeは必須です`);
+    const productCode = values[headerIndices[1]!] ?? "";
+    if (!productCode) {
+      errors.push(`行${i + 1}: product_codeは必須です`);
       continue;
     }
 
-    const consumptionDaysStr = values[headerIndices[4]!];
-    const consumptionDays = consumptionDaysStr ? parseInt(consumptionDaysStr, 10) : null;
+    const qtyPerInternalUnitStr = values[headerIndices[5]!];
+    const qtyPerInternalUnit = qtyPerInternalUnitStr ? Number(qtyPerInternalUnitStr) : NaN;
+    if (Number.isNaN(qtyPerInternalUnit)) {
+      errors.push(`行${i + 1}: qty_per_internal_unitは数値で入力してください`);
+      continue;
+    }
+
+    const isActiveRaw = values[headerIndices[8]!] ?? "true";
+    const isActive = isActiveRaw.toLowerCase() !== "false";
 
     rows.push({
       _rowNumber: i + 1,
       OPERATION: operation,
-      maker_part_code: makerPartCode,
+      product_code: productCode,
       product_name: values[headerIndices[2]!] ?? "",
-      base_unit: values[headerIndices[3]!] ?? "",
-      consumption_limit_days: consumptionDays,
+      internal_unit: values[headerIndices[3]!] ?? "",
+      external_unit: values[headerIndices[4]!] ?? "",
+      qty_per_internal_unit: qtyPerInternalUnit,
+      customer_part_no: values[headerIndices[6]!] || null,
+      maker_item_code: values[headerIndices[7]!] || null,
+      is_active: isActive,
     });
   }
 
@@ -101,16 +116,24 @@ export function generateProductCsv(products: Product[], includeOperation = true)
     const values = includeOperation
       ? [
           "UPD",
-          p.maker_part_code,
+          p.product_code,
           p.product_name,
-          p.base_unit,
-          p.consumption_limit_days?.toString() ?? "",
+          p.internal_unit,
+          p.external_unit,
+          p.qty_per_internal_unit?.toString() ?? "",
+          p.customer_part_no ?? "",
+          p.maker_item_code ?? "",
+          p.is_active ? "true" : "false",
         ]
       : [
-          p.maker_part_code,
+          p.product_code,
           p.product_name,
-          p.base_unit,
-          p.consumption_limit_days?.toString() ?? "",
+          p.internal_unit,
+          p.external_unit,
+          p.qty_per_internal_unit?.toString() ?? "",
+          p.customer_part_no ?? "",
+          p.maker_item_code ?? "",
+          p.is_active ? "true" : "false",
         ];
     lines.push(values.map((v) => `"${v.replace(/"/g, '""')}"`).join(","));
   }
@@ -124,8 +147,8 @@ export function generateProductCsv(products: Product[], includeOperation = true)
 export function generateProductTemplateCsv(): string {
   return [
     CSV_HEADERS.join(","),
-    '"ADD","MAKER-001","サンプル商品","EA",""',
-    '"UPD","MAKER-002","更新商品","KG","30"',
-    '"DEL","MAKER-003","","",""',
+    '"ADD","PROD-001","サンプル商品","CAN","KG","1","CUST-001","MAKER-001","true"',
+    '"UPD","PROD-002","更新商品","CAN","KG","1","","","false"',
+    '"DEL","PROD-003","","","","","","",""',
   ].join("\n");
 }
