@@ -66,10 +66,15 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
         db.query(func.count(func.distinct(unallocated_subquery.c.order_id))).scalar() or 0
     )
 
+    # Calculate allocation rate
+    allocated_orders = total_orders - unallocated_orders
+    allocation_rate =  (allocated_orders / total_orders * 100.0) if total_orders > 0 else 0.0
+
     return DashboardStatsResponse(
         total_stock=float(total_stock),
         total_orders=int(total_orders),
         unallocated_orders=int(unallocated_orders),
+        allocation_rate=round(allocation_rate, 1),
     )
 
 

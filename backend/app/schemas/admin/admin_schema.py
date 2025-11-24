@@ -24,6 +24,7 @@ class DashboardStatsResponse(BaseModel):
     total_stock: float
     total_orders: int
     unallocated_orders: int
+    allocation_rate: float  # 引当率 (0-100)
 
 
 class AdminPresetListResponse(BaseModel):
