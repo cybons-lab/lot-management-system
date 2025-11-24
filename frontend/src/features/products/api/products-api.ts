@@ -8,8 +8,6 @@ import type { BulkUpsertResponse, ProductBulkRow } from "../types/bulk-operation
 import { http } from "@/services/http";
 import type { components } from "@/types/api";
 
-
-
 // OpenAPI生成型
 export type Product = components["schemas"]["ProductResponse"];
 export type ProductCreate = components["schemas"]["ProductCreate"];

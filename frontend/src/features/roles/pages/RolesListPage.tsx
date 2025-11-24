@@ -11,7 +11,6 @@ import { useRoles, useCreateRole, useDeleteRole } from "../hooks";
 
 import { Button } from "@/components/ui";
 
-
 export function RolesListPage() {
   const [showForm, setShowForm] = useState(false);
 

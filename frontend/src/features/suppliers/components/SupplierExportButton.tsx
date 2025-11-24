@@ -4,7 +4,6 @@
 import { Download } from "lucide-react";
 import { useCallback } from "react";
 
-
 import type { Supplier } from "../api/suppliers-api";
 import { generateSupplierCsv } from "../utils/supplier-csv";
 

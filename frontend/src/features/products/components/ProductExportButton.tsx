@@ -4,7 +4,6 @@
 import { Download } from "lucide-react";
 import { useCallback } from "react";
 
-
 import type { Product } from "../api/products-api";
 import { generateProductCsv } from "../utils/product-csv";
 
