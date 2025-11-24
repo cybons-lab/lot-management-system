@@ -428,3 +428,38 @@ backend/__pycache__/
 - ✅ `.gitignore`に`*.db`が含まれている（L73）
 - ✅ 現在の環境には古いSQLiteファイルは存在しない
 - 📝 次回、各開発環境でクリーンアップを実施する必要あり
+
+---
+
+## 実装完了（2025-11-24）
+
+### ✅ ロジック統合の完了
+
+**実装内容:**
+- ✅ 共通モジュール `backend/app/services/forecasts/forecast_generator.py` を作成
+- ✅ 3つのヘルパー関数を共通モジュールに統合:
+  - `create_daily_forecasts`: 60-80%カバレッジ、ランダムな隙間
+  - `create_jyun_forecasts_from_daily`: ±15-25%の揺らぎ
+  - `create_monthly_forecasts_from_daily`: 日次合計ベース
+- ✅ `seed_simulate_service.py` を更新（124行削減）
+- ✅ `generate_test_data.py` を更新（175行削減）
+- ✅ コード品質チェック完了（Ruff lint + format）
+- ✅ コミット＆プッシュ完了 (commit: 2856ce8)
+
+**削減されたコード:**
+- 合計 299行の重複コードを削減
+- メンテナンス性の大幅な向上
+
+**メリット:**
+- ✅ 単一のソースコード（Single Source of Truth）
+- ✅ バグ修正が1箇所で済む
+- ✅ テストデータと本番データの一貫性が保証される
+- ✅ 新しい機能追加が容易になる
+
+**確認済み:**
+- ✅ SQLiteファイルが存在しないことを確認（`find`コマンドで検証）
+- ✅ `.gitignore`に`*.db`が含まれていることを確認
+
+**次のステップ (Phase 1):**
+- 📝 CustomerItemベースのロジック実装（商流を基点とした予測生成）
+- 📝 `seed_simulate_service.py:592-598` のTODOコメント対応
