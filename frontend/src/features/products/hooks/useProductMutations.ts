@@ -30,8 +30,8 @@ export function useCreateProduct() {
 export function useUpdateProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ makerPartCode, data }: { makerPartCode: string; data: ProductUpdate }) =>
-      updateProduct(makerPartCode, data),
+    mutationFn: ({ productCode, data }: { productCode: string; data: ProductUpdate }) =>
+      updateProduct(productCode, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productsQueryKey });
       toast.success("商品を更新しました");
@@ -43,7 +43,7 @@ export function useUpdateProduct() {
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (makerPartCode: string) => deleteProduct(makerPartCode),
+    mutationFn: (productCode: string) => deleteProduct(productCode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productsQueryKey });
       toast.success("商品を削除しました");

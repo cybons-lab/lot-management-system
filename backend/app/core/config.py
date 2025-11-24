@@ -40,9 +40,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
     # データベース設定
-    DATABASE_URL: str = os.getenv(
-        "DATABASE_URL", f"sqlite:///{Path(__file__).parent.parent.parent / 'lot_management.db'}"
-    )
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "")
 
     # CORS設定 - 修正版
     # 環境変数が設定されていない場合はデフォルト値を使用

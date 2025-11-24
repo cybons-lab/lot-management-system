@@ -18,8 +18,11 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
   const currentQty = faker.number.int({ min: 0, max: 1000 });
   const allocatedQty = faker.number.int({ min: 0, max: currentQty });
 
+  const lotId = faker.number.int({ min: 1, max: 10000 });
+
   return {
-    lot_id: faker.number.int({ min: 1, max: 10000 }), // DDL v2.2
+    id: lotId, // Required for UI compatibility
+    lot_id: lotId, // DDL v2.2
     lot_number: `LOT-${faker.string.alphanumeric(8).toUpperCase()}`,
     product_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2
     warehouse_id: faker.number.int({ min: 1, max: 10 }), // DDL v2.2
@@ -31,6 +34,12 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     unit: faker.helpers.arrayElement(["EA", "CASE", "BOX"]),
     status: faker.helpers.arrayElement(["active", "depleted", "expired", "quarantine"]), // DDL v2.2
     expected_lot_id: null, // DDL v2.2
+
+    // Inspection certificate fields
+    inspection_status: "not_required",
+    inspection_date: null,
+    inspection_cert_number: null,
+
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
     ...overrides,

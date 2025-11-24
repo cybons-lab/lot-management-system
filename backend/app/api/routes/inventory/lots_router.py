@@ -7,17 +7,13 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import get_db
-from app.models import (
-    Lot,
-    Product,
-    StockMovement,
-    StockMovementReason,
-    Supplier,
-    Warehouse,
-)
+from app.core.database import get_db
+from app.models.inventory_models import Lot, StockMovement, StockMovementReason
+from app.models.masters_models import Product, Supplier, Warehouse
+from app.models.view_models import LotWithMaster
 from app.schemas.inventory.inventory_schema import (
     LotCreate,
+    LotLock,
     LotResponse,
     LotUpdate,
     StockMovementCreate,
@@ -47,66 +43,66 @@ def list_lots(
     Args:
         skip: スキップ件数
         limit: 取得件数
-        product_id: 製品IDでフィルタ（優先）
-        product_code: 製品コードでフィルタ
-        supplier_code: 仕入先コードでフィルタ
-        warehouse_code: 倉庫コードでフィルタ
+        product_id: 製品ID
+        product_code: 製品コード
+        supplier_code: 仕入先コード
+        warehouse_code: 倉庫コード
         expiry_from: 有効期限開始日
         expiry_to: 有効期限終了日
-        with_stock: 在庫あり(>0)のみ取得
+        with_stock: 在庫ありのみ取得するかどうか
         db: データベースセッション
+
+    ロット一覧取得（v_lots_with_master ビュー使用）.
+
+    製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.
+    FEFO (先入先出) 順に並べて返す.
     """
-    query = db.query(Lot).options(
-        joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier)
-    )
+    # Use the view instead of Lot model with JOINs
+    query = db.query(LotWithMaster)
 
     # フィルタ適用
     if product_id is not None:
-        query = query.filter(Lot.product_id == product_id)
+        query = query.filter(LotWithMaster.product_id == product_id)
     elif product_code:
-        # product_code から product_id を取得してフィルタ
-        product = db.query(Product).filter(Product.product_code == product_code).first()
-        if product:
-            query = query.filter(Lot.product_id == product.id)
+        query = query.filter(LotWithMaster.product_code == product_code)
+
     if supplier_code:
-        query = query.join(Supplier).filter(Supplier.supplier_code == supplier_code)
+        # View already has supplier_name, just filter by joining suppliers table
+        supplier = db.query(Supplier).filter(Supplier.supplier_code == supplier_code).first()
+        if supplier:
+            query = query.filter(LotWithMaster.supplier_id == supplier.id)
+
     if warehouse_code:
-        query = query.join(Warehouse).filter(Warehouse.warehouse_code == warehouse_code)
+        warehouse = db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
+        if warehouse:
+            query = query.filter(LotWithMaster.warehouse_id == warehouse.id)
+
     if expiry_from:
-        query = query.filter(Lot.expiry_date >= expiry_from)
+        query = query.filter(LotWithMaster.expiry_date >= expiry_from)
     if expiry_to:
-        query = query.filter(Lot.expiry_date <= expiry_to)
+        query = query.filter(LotWithMaster.expiry_date <= expiry_to)
 
-    # 在庫ありのみ（v2.2: Lot モデルから直接計算）
+    # 在庫ありのみ
     if with_stock:
-        query = query.filter((Lot.current_quantity - Lot.allocated_quantity) > 0)
+        query = query.filter(
+            (LotWithMaster.current_quantity - LotWithMaster.allocated_quantity) > 0
+        )
 
-    # FEFO(先入先出): 有効期限昇順
-    query = query.order_by(Lot.expiry_date.asc().nullslast())
+    # Default sort: product_code -> supplier_name -> expiry_date (FEFO)
+    query = query.order_by(
+        LotWithMaster.product_code.asc(),
+        LotWithMaster.supplier_name.asc(),
+        LotWithMaster.expiry_date.asc().nullslast(),
+    )
 
-    lots = query.offset(skip).limit(limit).all()
+    lot_views = query.offset(skip).limit(limit).all()
 
+    # Map view results to LotResponse
     responses: list[LotResponse] = []
-    for lot in lots:
-        response = LotResponse.model_validate(lot)
-
-        # Populate joined fields from relationships
-        if lot.product:
-            response.product_name = lot.product.product_name
-            response.product_code = lot.product.product_code
-
-        if lot.warehouse:
-            response.warehouse_name = lot.warehouse.warehouse_name
-            response.warehouse_code = lot.warehouse.warehouse_code
-
-        if lot.supplier:
-            response.supplier_name = lot.supplier.supplier_name
-            response.supplier_code = lot.supplier.supplier_code
-
-        # v2.2: Use Lot model directly for stock quantities
-        response.current_quantity = float(lot.current_quantity or 0.0)
-        response.last_updated = lot.updated_at
-
+    for lot_view in lot_views:
+        response = LotResponse.model_validate(lot_view)
+        # All fields are already populated from the view
+        # No need for manual JOIN population
         responses.append(response)
 
     return responses
@@ -331,6 +327,49 @@ def delete_lot(lot_id: int, db: Session = Depends(get_db)):
     db.delete(db_lot)
     db.commit()
     return None
+
+
+@router.post("/{lot_id}/lock", response_model=LotResponse)
+def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
+    """ロットをロックする."""
+    db_lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    if not db_lot:
+        raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+    db_lot.status = "locked"
+    db_lot.lock_reason = lock_data.reason
+    db_lot.updated_at = datetime.now()
+
+    db.commit()
+
+    # v2.2: Fetch from view to ensure all required fields (product_name, etc.) are present
+    lot_view = db.query(LotWithMaster).filter(LotWithMaster.id == lot_id).first()
+    if not lot_view:
+        # Should not happen if db_lot exists, but for safety
+        raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+    return LotResponse.model_validate(lot_view)
+
+
+@router.post("/{lot_id}/unlock", response_model=LotResponse)
+def unlock_lot(lot_id: int, db: Session = Depends(get_db)):
+    """ロットのロックを解除する."""
+    db_lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    if not db_lot:
+        raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+    db_lot.status = "active"
+    db_lot.lock_reason = None
+    db_lot.updated_at = datetime.now()
+
+    db.commit()
+
+    # v2.2: Fetch from view to ensure all required fields are present
+    lot_view = db.query(LotWithMaster).filter(LotWithMaster.id == lot_id).first()
+    if not lot_view:
+        raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+    return LotResponse.model_validate(lot_view)
 
 
 # ===== Stock Movements =====

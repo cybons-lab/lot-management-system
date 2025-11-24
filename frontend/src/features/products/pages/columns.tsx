@@ -7,10 +7,10 @@ import type { Column } from "@/shared/components/data/DataTable";
 
 export const productColumns: Column<Product>[] = [
   {
-    id: "maker_part_code",
-    header: "メーカー品番",
+    id: "product_code",
+    header: "製品コード",
     cell: (row) => (
-      <span className="font-mono text-sm font-medium text-gray-900">{row.maker_part_code}</span>
+      <span className="font-mono text-sm font-medium text-gray-900">{row.product_code}</span>
     ),
     sortable: true,
     width: "200px",
@@ -22,18 +22,23 @@ export const productColumns: Column<Product>[] = [
     sortable: true,
   },
   {
-    id: "base_unit",
-    header: "単位",
-    cell: (row) => <span className="text-sm text-gray-700">{row.base_unit}</span>,
+    id: "internal_unit",
+    header: "社内単位",
+    cell: (row) => <span className="text-sm text-gray-700">{row.internal_unit}</span>,
     sortable: true,
     width: "100px",
   },
   {
-    id: "consumption_limit_days",
-    header: "消費期限日数",
-    cell: (row) => (
-      <span className="text-sm text-gray-700">{row.consumption_limit_days?.toString() ?? "-"}</span>
-    ),
+    id: "external_unit",
+    header: "外部単位",
+    cell: (row) => <span className="text-sm text-gray-700">{row.external_unit}</span>,
+    sortable: true,
+    width: "120px",
+  },
+  {
+    id: "qty_per_internal_unit",
+    header: "数量/内部単位",
+    cell: (row) => <span className="text-sm text-gray-700">{row.qty_per_internal_unit}</span>,
     sortable: true,
     width: "150px",
   },

@@ -95,6 +95,7 @@ export function createOrderLine(
     delivery_place_id:
       (overrides as any)?.delivery_place_id ?? faker.number.int({ min: 1, max: 10 }), // DDL v2.2
     order_quantity: String(orderQuantity), // DDL v2.2: DECIMAL as string
+    allocated_quantity: String(allocatedQuantity ?? 0),
     unit,
     delivery_date: deliveryDate ?? faker.date.soon({ days: 30 }).toISOString().split("T")[0], // DDL v2.2
     created_at: faker.date.past().toISOString(), // DDL v2.2

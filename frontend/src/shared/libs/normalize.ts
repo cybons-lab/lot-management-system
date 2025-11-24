@@ -20,7 +20,7 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
 };
-type ProductResponse = components["schemas"]["ProductResponse"];
+type ProductResponse = components["schemas"]["ProductOut"];
 
 // UI用の型定義（すべてnon-nullable）
 export interface OrderUI extends Record<string, unknown> {
@@ -41,6 +41,7 @@ export interface OrderUI extends Record<string, unknown> {
 }
 
 export interface LotUI extends Record<string, unknown> {
+  id: number; // Required for UI operations
   lot_id: number; // DDL v2.2
   lot_number: string;
   product_id: number; // DDL v2.2
@@ -51,37 +52,46 @@ export interface LotUI extends Record<string, unknown> {
   current_quantity: string; // DDL v2.2: DECIMAL as string
   allocated_quantity: string; // DDL v2.2: DECIMAL as string
   unit: string;
-  status: string; // DDL v2.2: active/depleted/expired/quarantine
+  status: "active" | "depleted" | "expired" | "quarantine" | "locked"; // Match API type
   expected_lot_id: number | null; // DDL v2.2
   created_at: string;
   updated_at: string;
+
+  // Inspection certificate fields
+  inspection_status: string;
+  inspection_date: string | null;
+  inspection_cert_number: string | null;
+
   // Legacy fields (deprecated, for backward compatibility)
-  id?: number;
-  product_code?: string;
-  supplier_code?: string;
+  product_code?: string | null;
+  product_name?: string | null;
+  supplier_code?: string | null;
+  supplier_name?: string | null;
   warehouse_code?: string;
   receipt_date?: string;
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
-  product_name?: string;
 }
 
 export interface ProductUI extends Record<string, unknown> {
   id: number;
-  maker_part_code: string; // DDL v2.2
+  product_code: string;
   product_name: string;
-  base_unit: string; // DDL v2.2
-  consumption_limit_days: number; // DDL v2.2
+  internal_unit: string;
+  external_unit: string;
+  qty_per_internal_unit: number;
+  customer_part_no: string | null;
+  maker_item_code: string | null;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
   // Legacy fields (deprecated, for backward compatibility)
-  product_code?: string;
-  customer_part_no?: string;
-  maker_item_code?: string;
+  maker_part_code?: string;
+  base_unit?: string;
+  consumption_limit_days?: number;
   supplier_item_code?: string;
   packaging_qty?: string;
   packaging_unit?: string;
-  internal_unit?: string;
   assemble_div?: string;
   next_div?: string;
   ji_ku_text?: string;
@@ -157,10 +167,16 @@ export function normalizeLot(lot: LotResponse): LotUI {
     current_quantity: S(lot.current_quantity, "0"),
     allocated_quantity: S(lot.allocated_quantity, "0"),
     unit: S(lot.unit, "EA"),
-    status: S(lot.status, "active"),
+    status: lot.status as "active" | "depleted" | "expired" | "quarantine" | "locked",
     expected_lot_id: lot.expected_lot_id ?? null,
     created_at: S(lot.created_at),
     updated_at: S(lot.updated_at),
+
+    // Inspection certificate fields
+    inspection_status: lot.inspection_status ?? "not_required",
+    inspection_date: lot.inspection_date ?? null,
+    inspection_cert_number: lot.inspection_cert_number ?? null,
+
     // Legacy fields (for backward compatibility)
     id: lot.lot_id,
     receipt_date: S(lot.received_date),
@@ -168,7 +184,10 @@ export function normalizeLot(lot: LotResponse): LotUI {
       ((lot as Record<string, unknown>).delivery_place_id as number | null) ?? null,
     delivery_place_code:
       ((lot as Record<string, unknown>).delivery_place_code as string | null) ?? null,
-    product_name: (lot as Record<string, unknown>).product_name as string | undefined,
+    product_name: lot.product_name,
+    product_code: lot.product_code,
+    supplier_name: lot.supplier_name,
+    supplier_code: lot.supplier_code,
   };
 }
 
@@ -178,14 +197,20 @@ export function normalizeLot(lot: LotResponse): LotUI {
 export function normalizeProduct(product: ProductResponse): ProductUI {
   return {
     id: product.id,
-    maker_part_code: S(product.maker_part_code),
+    product_code: S(product.product_code),
     product_name: S(product.product_name),
-    base_unit: S(product.base_unit, "EA"),
-    consumption_limit_days: N(product.consumption_limit_days),
+    internal_unit: S(product.internal_unit, "CAN"),
+    external_unit: S(product.external_unit, "KG"),
+    qty_per_internal_unit: N(product.qty_per_internal_unit, 1),
+    customer_part_no: product.customer_part_no ?? null,
+    maker_item_code: product.maker_item_code ?? null,
+    is_active: product.is_active,
     created_at: S(product.created_at),
     updated_at: S(product.updated_at),
     // Legacy fields (for backward compatibility)
-    product_code: S(product.maker_part_code), // Use maker_part_code as product_code
+    maker_part_code: product.maker_item_code ?? undefined,
+    base_unit: product.internal_unit,
+    consumption_limit_days: undefined,
   };
 }
 

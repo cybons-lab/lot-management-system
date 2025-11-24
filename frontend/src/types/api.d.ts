@@ -71,6 +71,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/lots/{lot_id}/lock": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Lock Lot
+     * @description ロットをロックする.
+     */
+    post: operations["lock_lot_api_lots__lot_id__lock_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/lots/{lot_id}/unlock": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Unlock Lot
+     * @description ロットのロックを解除する.
+     */
+    post: operations["unlock_lot_api_lots__lot_id__unlock_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/lots/{lot_id}/movements": {
     parameters: {
       query?: never;
@@ -124,31 +164,12 @@ export interface paths {
     /**
      * List Orders
      * @description 受注一覧取得（読み取り専用）.
-     *
-     *     トランザクション不要のため、通常のSessionを使用
-     *
-     *     Note:
-     *         例外はグローバルハンドラで処理されるため、
-     *         ここではHTTPExceptionを投げない
      */
     get: operations["list_orders_api_orders_get"];
     put?: never;
     /**
      * Create Order
      * @description 受注作成.
-     *
-     *     【修正#5】UnitOfWorkを依存注入で取得（SessionLocal直参照を回避）
-     *
-     *     トランザクション管理:
-     *         - 成功時: UnitOfWorkが自動commit
-     *         - 例外発生時: UnitOfWorkが自動rollback
-     *
-     *     例外処理:
-     *         - DuplicateOrderError → 409 Conflict
-     *         - OrderValidationError → 422 Unprocessable Entity
-     *         - ProductNotFoundError → 404 Not Found
-     *         - OrderDomainError → 400 Bad Request
-     *         上記はすべてグローバルハンドラで変換される
      */
     post: operations["create_order_api_orders_post"];
     delete?: never;
@@ -167,11 +188,6 @@ export interface paths {
     /**
      * Get Order
      * @description 受注詳細取得（読み取り専用、明細含む）.
-     *
-     *     トランザクション不要のため、通常のSessionを使用
-     *
-     *     Note:
-     *         - OrderNotFoundError → 404はグローバルハンドラが処理
      */
     get: operations["get_order_api_orders__order_id__get"];
     put?: never;
@@ -195,20 +211,6 @@ export interface paths {
     /**
      * Cancel Order
      * @description 受注キャンセル.
-     *
-     *     【修正#5】UnitOfWorkを依存注入で取得
-     *
-     *     トランザクション管理:
-     *         - 成功時: UnitOfWorkが自動commit
-     *         - 例外発生時: UnitOfWorkが自動rollback
-     *
-     *     例外処理:
-     *         - OrderNotFoundError → 404 Not Found
-     *         - InvalidOrderStatusError → 400 Bad Request
-     *         上記はグローバルハンドラで変換される
-     *
-     *     Returns:
-     *         None (204 No Content)
      */
     delete: operations["cancel_order_api_orders__order_id__cancel_delete"];
     options?: never;
@@ -227,9 +229,34 @@ export interface paths {
     put?: never;
     /**
      * Save Manual Allocations
-     * @description 手動引当保存スタブ (Frontend V1用).
+     * @description 手動引当保存 (確定).
+     *
+     *     既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。
+     *     これにより、DB上の在庫数(allocated_quantity)とステータスが更新される。
      */
     post: operations["save_manual_allocations_api_orders__order_line_id__allocations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/orders/refresh-all-statuses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Refresh All Order Line Statuses
+     * @description 全受注明細および受注のステータスを再計算・更新.
+     *
+     *     既存の allocations データに基づいて OrderLine.status と Order.status を正しい値に更新します。
+     */
+    post: operations["refresh_all_order_line_statuses_api_orders_refresh_all_statuses_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2433,6 +2460,32 @@ export interface components {
        */
       ignore_existing_suggestions: boolean;
     };
+    /**
+     * AllocationResponse
+     * @description Allocation response for order line (DDL: allocations).
+     */
+    AllocationResponse: {
+      /** Id */
+      id: number;
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Status */
+      status: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
     /** AllocationScopeForecast */
     AllocationScopeForecast: {
       /** Forecast Periods */
@@ -2850,6 +2903,19 @@ export interface components {
       delivery_place_id?: number | null;
       /** Delivery Place Name */
       delivery_place_name?: string | null;
+      /** Internal Unit */
+      internal_unit?: string | null;
+      /** External Unit */
+      external_unit?: string | null;
+      /** Qty Per Internal Unit */
+      qty_per_internal_unit?: number | null;
+      /**
+       * Status
+       * @default active
+       */
+      status: string;
+      /** Lock Reason */
+      lock_reason?: string | null;
     };
     /**
      * CandidateLotsResponse
@@ -3674,6 +3740,23 @@ export interface components {
       unit: string;
       /** @default active */
       status: components["schemas"]["LotStatus"];
+      /**
+       * Inspection Status
+       * @default not_required
+       */
+      inspection_status: string;
+      /** Inspection Date */
+      inspection_date?: string | null;
+      /** Inspection Cert Number */
+      inspection_cert_number?: string | null;
+    };
+    /**
+     * LotLock
+     * @description Payload for locking a lot.
+     */
+    LotLock: {
+      /** Reason */
+      reason: string;
     };
     /**
      * LotResponse
@@ -3718,6 +3801,15 @@ export interface components {
       unit: string;
       /** @default active */
       status: components["schemas"]["LotStatus"];
+      /**
+       * Inspection Status
+       * @default not_required
+       */
+      inspection_status: string;
+      /** Inspection Date */
+      inspection_date?: string | null;
+      /** Inspection Cert Number */
+      inspection_cert_number?: string | null;
       /** Lot Id */
       lot_id: number;
       /** Product Name */
@@ -3740,7 +3832,7 @@ export interface components {
      * @description Valid lot lifecycle statuses.
      * @enum {string}
      */
-    LotStatus: "active" | "depleted" | "expired" | "quarantine";
+    LotStatus: "active" | "depleted" | "expired" | "quarantine" | "locked";
     /**
      * LotUpdate
      * @description Mutable fields for lot updates.
@@ -3761,6 +3853,12 @@ export interface components {
       /** Unit */
       unit?: string | null;
       status?: components["schemas"]["LotStatus"] | null;
+      /** Inspection Status */
+      inspection_status?: string | null;
+      /** Inspection Date */
+      inspection_date?: string | null;
+      /** Inspection Cert Number */
+      inspection_cert_number?: string | null;
     };
     /** ManualAllocationItem */
     ManualAllocationItem: {
@@ -3923,6 +4021,11 @@ export interface components {
       order_quantity: number | string;
       /** Unit */
       unit: string;
+      /**
+       * Converted Quantity
+       * @description 社内基準単位換算数量
+       */
+      converted_quantity?: number | string | null;
       /** Delivery Place Id */
       delivery_place_id: number;
       /**
@@ -3950,6 +4053,11 @@ export interface components {
       order_quantity: string;
       /** Unit */
       unit: string;
+      /**
+       * Converted Quantity
+       * @description 社内基準単位換算数量
+       */
+      converted_quantity?: string | null;
       /** Delivery Place Id */
       delivery_place_id: number;
       /**
@@ -3973,6 +4081,26 @@ export interface components {
       updated_at: string;
       /** Supplier Name */
       supplier_name?: string | null;
+      /** Product Internal Unit */
+      product_internal_unit?: string | null;
+      /** Product External Unit */
+      product_external_unit?: string | null;
+      /** Product Qty Per Internal Unit */
+      product_qty_per_internal_unit?: number | null;
+      /** Product Code */
+      product_code?: string | null;
+      /** Product Name */
+      product_name?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Allocations */
+      allocations?: components["schemas"]["AllocationResponse"][];
+      /**
+       * Allocated Quantity
+       * @description 引当済数量
+       * @default 0
+       */
+      allocated_quantity: string;
     };
     /**
      * OrderWithLinesResponse
@@ -4005,51 +4133,61 @@ export interface components {
     };
     /**
      * ProductCreate
-     * @description Create product request.
+     * @description Payload to create a product.
      */
     ProductCreate: {
-      /**
-       * Maker Part Code
-       * @description メーカー品番
-       */
-      maker_part_code: string;
+      /** Product Code */
+      product_code: string;
       /** Product Name */
       product_name: string;
       /**
-       * Base Unit
-       * @description 社内在庫単位
+       * Internal Unit
+       * @default CAN
        */
-      base_unit: string;
+      internal_unit: string;
       /**
-       * Consumption Limit Days
-       * @description 消費期限日数
+       * External Unit
+       * @default KG
        */
-      consumption_limit_days?: number | null;
+      external_unit: string;
+      /**
+       * Qty Per Internal Unit
+       * @default 1
+       */
+      qty_per_internal_unit: number;
+      /** Customer Part No */
+      customer_part_no?: string | null;
+      /** Maker Item Code */
+      maker_item_code?: string | null;
+      /**
+       * Is Active
+       * @default true
+       */
+      is_active: boolean;
     };
     /**
-     * ProductResponse
-     * @description Product response (DDL: products).
+     * ProductOut
+     * @description Product response model.
      */
-    ProductResponse: {
-      /**
-       * Maker Part Code
-       * @description メーカー品番
-       */
-      maker_part_code: string;
-      /** Product Name */
-      product_name: string;
-      /**
-       * Base Unit
-       * @description 社内在庫単位
-       */
-      base_unit: string;
-      /**
-       * Consumption Limit Days
-       * @description 消費期限日数
-       */
-      consumption_limit_days?: number | null;
+    ProductOut: {
       /** Id */
       id: number;
+      /** Product Code */
+      product_code: string;
+      /** Product Name */
+      product_name: string;
+      /** Internal Unit */
+      internal_unit: string;
+      /** External Unit */
+      external_unit: string;
+      /** Qty Per Internal Unit */
+      qty_per_internal_unit: number;
+      /** Customer Part No */
+      customer_part_no: string | null;
+      /** Maker Item Code */
+      maker_item_code: string | null;
+      /** Is Active */
+      is_active: boolean;
       /**
        * Created At
        * Format: date-time
@@ -4063,15 +4201,25 @@ export interface components {
     };
     /**
      * ProductUpdate
-     * @description Update product request.
+     * @description Payload to partially update a product.
      */
     ProductUpdate: {
+      /** Product Code */
+      product_code?: string | null;
       /** Product Name */
       product_name?: string | null;
-      /** Base Unit */
-      base_unit?: string | null;
-      /** Consumption Limit Days */
-      consumption_limit_days?: number | null;
+      /** Internal Unit */
+      internal_unit?: string | null;
+      /** External Unit */
+      external_unit?: string | null;
+      /** Qty Per Internal Unit */
+      qty_per_internal_unit?: number | null;
+      /** Customer Part No */
+      customer_part_no?: string | null;
+      /** Maker Item Code */
+      maker_item_code?: string | null;
+      /** Is Active */
+      is_active?: boolean | null;
     };
     /**
      * ResponseBase
@@ -4766,27 +4914,17 @@ export interface components {
        */
       warehouse_type: string;
     };
-    /**
-     * WarehouseListResponse
-     * @description Warehouse list response.
-     */
+    /** WarehouseListResponse */
     WarehouseListResponse: {
       /** Items */
       items: components["schemas"]["WarehouseOut"][];
     };
-    /**
-     * WarehouseOut
-     * @description Simplified warehouse output (for list views).
-     */
+    /** WarehouseOut */
     WarehouseOut: {
       /** Warehouse Id */
       warehouse_id: number;
-      /** Warehouse Code */
-      warehouse_code: string;
       /** Warehouse Name */
       warehouse_name: string;
-      /** Warehouse Type */
-      warehouse_type: string;
     };
     /**
      * WarehouseResponse
@@ -4992,6 +5130,72 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  lock_lot_api_lots__lot_id__lock_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LotLock"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  unlock_lot_api_lots__lot_id__unlock_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -5228,6 +5432,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  refresh_all_order_line_statuses_api_orders_refresh_all_statuses_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
     };
@@ -6610,7 +6834,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ProductResponse"][];
+          "application/json": components["schemas"]["ProductOut"][];
         };
       };
       /** @description Validation Error */
@@ -6643,7 +6867,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ProductResponse"];
+          "application/json": components["schemas"]["ProductOut"];
         };
       };
       /** @description Validation Error */
@@ -6674,7 +6898,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ProductResponse"];
+          "application/json": components["schemas"]["ProductOut"];
         };
       };
       /** @description Validation Error */
@@ -6709,7 +6933,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ProductResponse"];
+          "application/json": components["schemas"]["ProductOut"];
         };
       };
       /** @description Validation Error */

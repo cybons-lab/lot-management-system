@@ -18,6 +18,13 @@ class LotStatus(str, Enum):
     DEPLETED = "depleted"
     EXPIRED = "expired"
     QUARANTINE = "quarantine"
+    LOCKED = "locked"
+
+
+class LotLock(BaseSchema):
+    """Payload for locking a lot."""
+
+    reason: str
 
 
 class LotBase(BaseSchema):
@@ -34,6 +41,11 @@ class LotBase(BaseSchema):
     allocated_quantity: Decimal = Decimal("0")
     unit: str
     status: LotStatus = LotStatus.ACTIVE
+
+    # Inspection certificate fields
+    inspection_status: str = "not_required"
+    inspection_date: date | None = None
+    inspection_cert_number: str | None = None
 
 
 class LotCreate(LotBase):
@@ -54,18 +66,25 @@ class LotUpdate(BaseSchema):
     unit: str | None = None
     status: LotStatus | None = None
 
+    # Inspection certificate fields (optional for updates)
+    inspection_status: str | None = None
+    inspection_date: date | None = None
+    inspection_cert_number: str | None = None
+
 
 class LotResponse(LotBase, TimestampMixin):
     """API response model for lots."""
 
     id: int = Field(serialization_alias="lot_id")
 
-    # Joined fields from related tables (populated by router)
-    product_name: str | None = None
-    product_code: str | None = None
+    # Joined fields from v_lots_with_master view (non-nullable due to INNER JOIN)
+    product_name: str
+    product_code: str
+    supplier_name: str
+
+    # Optional joined fields
     warehouse_name: str | None = None
     warehouse_code: str | None = None
-    supplier_name: str | None = None
     supplier_code: str | None = None
     last_updated: datetime | None = None
 

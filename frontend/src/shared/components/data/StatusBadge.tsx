@@ -7,6 +7,7 @@
  * - 受注専用ステータスバッジ
  */
 
+import { Lock } from "lucide-react";
 import { type VariantProps, cva } from "class-variance-authority";
 
 import { cn } from "@/shared/libs/utils";
@@ -63,7 +64,14 @@ export function StatusBadge({ children, variant, className, ...props }: StatusBa
 // ロット専用ステータスバッジ
 // ============================================
 
-export type LotStatus = "available" | "allocated" | "shipped" | "expired" | "quarantine";
+export type LotStatus =
+  | "available"
+  | "allocated"
+  | "shipped"
+  | "expired"
+  | "quarantine"
+  | "locked"
+  | "depleted";
 
 interface LotStatusConfig {
   label: string;
@@ -91,6 +99,14 @@ const lotStatusConfig: Record<LotStatus, LotStatusConfig> = {
     label: "検査中",
     variant: "warning",
   },
+  locked: {
+    label: "ロック中",
+    variant: "warning",
+  },
+  depleted: {
+    label: "在庫なし",
+    variant: "gray",
+  },
 };
 
 export interface LotStatusBadgeProps {
@@ -115,6 +131,7 @@ export function LotStatusBadge({ status, className }: LotStatusBadgeProps) {
 
   return (
     <StatusBadge variant={config.variant} className={className}>
+      {status === "locked" && <Lock className="mr-1 h-3 w-3" />}
       {config.label}
     </StatusBadge>
   );

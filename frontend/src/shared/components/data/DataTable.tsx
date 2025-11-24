@@ -71,6 +71,8 @@ export interface DataTableProps<T = never> {
   isLoading?: boolean;
   /** テーブルのクラス名 */
   className?: string;
+  /** 行のクラス名取得関数 */
+  getRowClassName?: (row: T) => string;
 }
 
 // ============================================
@@ -91,6 +93,7 @@ export function DataTable<T = never>({
   emptyMessage = "データがありません",
   isLoading = false,
   className,
+  getRowClassName,
 }: DataTableProps<T>) {
   // 全選択の状態
   const allSelected = useMemo(() => {
@@ -227,6 +230,7 @@ export function DataTable<T = never>({
           {data.map((row) => {
             const rowId = getRowId(row);
             const isSelected = selectedIds.includes(rowId);
+            const customClassName = getRowClassName?.(row);
 
             return (
               <tr
@@ -235,6 +239,7 @@ export function DataTable<T = never>({
                   "transition-colors",
                   onRowClick && "cursor-pointer hover:bg-gray-50",
                   isSelected && "bg-blue-50",
+                  customClassName,
                 )}
                 onClick={() => onRowClick?.(row)}
               >

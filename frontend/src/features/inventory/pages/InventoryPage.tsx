@@ -82,72 +82,78 @@ export function InventoryPage() {
   };
 
   return (
-    <PageContainer>
-      <PageHeader
-        title="ロット管理"
-        subtitle="在庫ロットの一覧と登録"
-        actions={
-          <>
-            <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              更新
-            </Button>
-            <Button size="sm" onClick={createDialog.open}>
-              <Plus className="mr-2 h-4 w-4" />
-              新規登録
-            </Button>
-          </>
-        }
-      />
-
-      {/* 統計情報 */}
-      <LotStatsCards stats={stats} />
-
-      {/* フィルター */}
-      <Section className="mb-6">
-        <LotFilters filters={filters.values} onFilterChange={filters.set} onReset={filters.reset} />
-      </Section>
-
-      {/* エラー表示 */}
-      {error && (
-        <Section>
-          <div className={styles.errorState.root}>
-            <p className={styles.errorState.title}>データの取得に失敗しました</p>
-            <p className={styles.errorState.message}>
-              {error instanceof Error ? error.message : "サーバーエラーが発生しました"}
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              className={styles.errorState.retryButton}
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              再試行
-            </Button>
-          </div>
-        </Section>
-      )}
-
-      {/* テーブル */}
-      <Section>
-        <LotTable lots={filteredLots} table={table} isLoading={isLoading} error={error} />
-      </Section>
-
-      {/* 新規登録ダイアログ */}
-      <FormDialog
-        open={createDialog.isOpen}
-        onClose={createDialog.close}
-        title="ロット新規登録"
-        description="新しいロットを登録します"
-        size="lg"
-      >
-        <LotCreateForm
-          onSubmit={handleCreateLot}
-          onCancel={createDialog.close}
-          isSubmitting={createLotMutation.isPending}
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
+      <PageContainer maxWidth="2xl" className="space-y-6">
+        <PageHeader
+          title="ロット管理"
+          subtitle="在庫ロットの一覧と登録"
+          actions={
+            <>
+              <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                更新
+              </Button>
+              <Button size="sm" onClick={createDialog.open}>
+                <Plus className="mr-2 h-4 w-4" />
+                新規登録
+              </Button>
+            </>
+          }
         />
-      </FormDialog>
-    </PageContainer>
+
+        {/* 統計情報 */}
+        <LotStatsCards stats={stats} />
+
+        {/* フィルター */}
+        <Section className="mb-6 shadow-sm">
+          <LotFilters
+            filters={filters.values}
+            onFilterChange={filters.set}
+            onReset={filters.reset}
+          />
+        </Section>
+
+        {/* エラー表示 */}
+        {error && (
+          <Section className="shadow-sm">
+            <div className={styles.errorState.root}>
+              <p className={styles.errorState.title}>データの取得に失敗しました</p>
+              <p className={styles.errorState.message}>
+                {error instanceof Error ? error.message : "サーバーエラーが発生しました"}
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refetch()}
+                className={styles.errorState.retryButton}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                再試行
+              </Button>
+            </div>
+          </Section>
+        )}
+
+        {/* テーブル */}
+        <Section className="shadow-sm">
+          <LotTable lots={filteredLots} table={table} isLoading={isLoading} error={error} />
+        </Section>
+
+        {/* 新規登録ダイアログ */}
+        <FormDialog
+          open={createDialog.isOpen}
+          onClose={createDialog.close}
+          title="ロット新規登録"
+          description="新しいロットを登録します"
+          size="lg"
+        >
+          <LotCreateForm
+            onSubmit={handleCreateLot}
+            onCancel={createDialog.close}
+            isSubmitting={createLotMutation.isPending}
+          />
+        </FormDialog>
+      </PageContainer>
+    </div>
   );
 }

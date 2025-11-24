@@ -18,7 +18,7 @@ interface LotStatsCardsProps {
  */
 export function LotStatsCards({ stats }: LotStatsCardsProps) {
   return (
-    <div className="mb-6 grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       <StatCard title="総ロット数" value={stats.totalLots.toString()} />
       <StatCard title="有効ロット数" value={stats.activeLots.toString()} highlight />
       <StatCard

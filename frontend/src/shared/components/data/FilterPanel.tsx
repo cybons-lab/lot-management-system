@@ -47,24 +47,34 @@ export function FilterPanel({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className={cn("rounded-lg border border-gray-200 bg-white shadow-sm", className)}>
+    <div
+      className={cn(
+        "rounded-lg border border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm",
+        className,
+      )}
+    >
       {/* ヘッダー */}
-      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+      <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3">
         <div className="flex items-center gap-2">
           {collapsible && (
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-500 transition-colors hover:text-gray-700"
+              className="text-slate-500 transition-colors hover:text-slate-700"
               aria-label={isOpen ? "フィルターを閉じる" : "フィルターを開く"}
             >
               {isOpen ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
             </button>
           )}
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
         </div>
 
         {onReset && (
-          <Button variant="ghost" size="sm" onClick={onReset} className="h-8 text-xs">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onReset}
+            className="h-8 text-xs text-slate-700"
+          >
             <X className="mr-1 h-4 w-4" />
             リセット
           </Button>
