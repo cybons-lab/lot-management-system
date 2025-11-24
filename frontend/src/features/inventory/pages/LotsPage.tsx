@@ -52,7 +52,6 @@ import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
-import { Section } from "@/shared/components/layout";
 import type { LotUI } from "@/shared/libs/normalize";
 import type { LotResponse } from "@/shared/types/aliases";
 import { fmt } from "@/shared/utils/number";
@@ -428,7 +427,7 @@ export function LotsPage() {
       <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
             <Input
               placeholder="ロット番号、製品コード、製品名で検索..."
               value={searchTerm}
@@ -534,7 +533,10 @@ export function LotsPage() {
         // グループ化表示
         <div className="space-y-6">
           {groupedLots.map((group) => (
-            <div key={group.key} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div
+              key={group.key}
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            >
               <ProductGroupHeader
                 productCode={group.productCode}
                 productName={group.productName}

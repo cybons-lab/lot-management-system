@@ -31,14 +31,18 @@ export const columns: Column<OrderUI>[] = [
   {
     id: "order_date",
     header: "受注日",
-    cell: (order: OrderUI) => <span className="text-slate-900">{formatDate(order.order_date)}</span>,
+    cell: (order: OrderUI) => (
+      <span className="text-slate-900">{formatDate(order.order_date)}</span>
+    ),
     sortable: true,
     width: "120px",
   },
   {
     id: "due_date",
     header: "納期",
-    cell: (order: OrderUI) => <span className="text-slate-900">{formatDate(order.due_date || null)}</span>,
+    cell: (order: OrderUI) => (
+      <span className="text-slate-900">{formatDate(order.due_date || null)}</span>
+    ),
     sortable: true,
     width: "120px",
   },

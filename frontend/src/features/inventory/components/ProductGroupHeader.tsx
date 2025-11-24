@@ -65,7 +65,9 @@ export function ProductGroupHeader({
 
         <div className="w-[120px] text-right">
           <div className="text-xs font-medium text-slate-500">合計在庫</div>
-          <div className="font-semibold text-slate-900">{formatQuantity(totalCurrentQuantity, unit)}</div>
+          <div className="font-semibold text-slate-900">
+            {formatQuantity(totalCurrentQuantity, unit)}
+          </div>
         </div>
 
         <div className="flex w-[180px] items-center gap-4">
