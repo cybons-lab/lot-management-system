@@ -7,7 +7,6 @@
  * - Section 3: Dekad (left) and Monthly (right) aggregations beneath the grid
  */
 
-
 import { ForecastAggregations } from "./ForecastAggregations";
 import { ForecastCardHeader } from "./ForecastCardHeader";
 import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";

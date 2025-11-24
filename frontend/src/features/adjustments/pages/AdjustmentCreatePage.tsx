@@ -12,7 +12,6 @@ import { useCreateAdjustment } from "../hooks";
 
 import { ROUTES } from "@/constants/routes";
 
-
 export function AdjustmentCreatePage() {
   const navigate = useNavigate();
   const createMutation = useCreateAdjustment();

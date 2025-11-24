@@ -7,7 +7,6 @@ import * as styles from "./styles";
 import { StatCard } from "@/components/ui";
 import { getStats } from "@/services/api";
 
-
 export function DashboardStats() {
   const {
     data: stats,

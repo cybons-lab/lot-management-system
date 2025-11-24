@@ -10,7 +10,6 @@
 
 import { useMemo, useState } from "react";
 
-
 import type { OrderLineDisplay } from "./OrderLinesPaneView";
 import { OrderLinesPaneView } from "./OrderLinesPaneView";
 

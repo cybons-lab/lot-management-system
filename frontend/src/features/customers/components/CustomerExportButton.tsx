@@ -6,7 +6,6 @@
 import { Download } from "lucide-react";
 import { useCallback, useState } from "react";
 
-
 import type { Customer } from "../api/customers-api";
 import { customersToCSV, downloadCSV } from "../utils/customer-csv";
 
