@@ -26,8 +26,6 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-import * as styles from "./styles";
-
 import { Button } from "@/components/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { Input } from "@/components/ui";
@@ -170,32 +168,31 @@ export function LotsPage() {
         id: "lot_number",
         header: "ロット番号",
         cell: (lot) => (
-          <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            {lot.status === "locked" && <Lock className="h-4 w-4 text-slate-400" />}
             <span className="font-medium">{lot.lot_number}</span>
-            {lot.status === "locked" && (
-              <span className="flex items-center gap-1 text-xs text-amber-500">
-                <Lock className="h-3 w-3" /> ロック中
-              </span>
-            )}
           </div>
         ),
         sortable: true,
+        width: "200px",
       },
       {
         id: "current_quantity",
         header: "現在在庫",
         cell: (lot) => {
           const qty = Number(lot.current_quantity);
-          return <span className={qty > 0 ? "font-semibold" : "text-gray-400"}>{fmt(qty)}</span>;
+          return <span className={qty > 0 ? "font-semibold" : "text-slate-400"}>{fmt(qty)}</span>;
         },
         sortable: true,
         align: "right",
+        width: "120px",
       },
       {
         id: "unit",
         header: "単位",
         cell: (lot) => lot.unit,
-        align: "center",
+        align: "left",
+        width: "80px",
       },
       {
         id: "receipt_date",
@@ -205,6 +202,7 @@ export function LotsPage() {
             ? format(new Date(lot.receipt_date), "yyyy/MM/dd")
             : "-",
         sortable: true,
+        width: "120px",
       },
       {
         id: "expiry_date",
@@ -214,6 +212,7 @@ export function LotsPage() {
             ? format(new Date(lot.expiry_date), "yyyy/MM/dd")
             : "-",
         sortable: true,
+        width: "120px",
       },
       {
         id: "status",
@@ -221,7 +220,7 @@ export function LotsPage() {
         cell: (lot) => {
           const statuses = getLotStatuses(lot);
           return (
-            <div className="flex items-center justify-start gap-1">
+            <div className="flex items-center gap-1">
               {statuses.map((s) => (
                 <LotStatusIcon key={s} status={s as "locked" | "available" | "depleted"} />
               ))}
@@ -229,7 +228,8 @@ export function LotsPage() {
           );
         },
         sortable: true,
-        align: "center",
+        align: "left",
+        width: "120px",
       },
       {
         id: "actions",
@@ -370,19 +370,19 @@ export function LotsPage() {
   const getRowClassName = (lot: LotUI) => {
     const statuses = getLotStatuses(lot);
     if (statuses.includes("locked")) {
-      // ロック中は左端にアクセントカラーのみ (背景白)
-      return "bg-white border-l-4 border-amber-400";
+      // ロック中は全体を薄く表示
+      return "opacity-50";
     }
-    return "bg-white border-l-4 border-transparent"; // デフォルトも透明なボーダーを入れて位置ずれ防止
+    return "";
   };
 
   // グループ化されたロット
   const groupedLots = useMemo(() => groupLotsByProduct(paginatedLots), [paginatedLots]);
 
   return (
-    <div className={styles.root}>
+    <div className="space-y-6 px-6 py-6 md:px-8">
       {/* アクションバー */}
-      <div className={styles.actionBar}>
+      <div className="flex items-center justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
           <RefreshCw className="mr-2 h-4 w-4" />
           更新
@@ -394,46 +394,46 @@ export function LotsPage() {
       </div>
 
       {/* 統計情報 */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card className="border-slate-200 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">総ロット数</CardTitle>
-            <Package className="text-muted-foreground h-4 w-4" />
+            <CardTitle className="text-sm font-medium text-slate-600">総ロット数</CardTitle>
+            <Package className="h-5 w-5 text-slate-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalLots}</div>
+            <div className="text-3xl font-bold text-slate-900">{stats.totalLots}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-slate-200 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">有効ロット数</CardTitle>
-            <div className="h-4 w-4 rounded-full bg-blue-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">有効ロット数</CardTitle>
+            <div className="h-5 w-5 rounded-full bg-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.activeLots}</div>
+            <div className="text-3xl font-bold text-blue-600">{stats.activeLots}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-slate-200 bg-white shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">総在庫数</CardTitle>
-            <div className="h-4 w-4 rounded-full bg-green-500" />
+            <CardTitle className="text-sm font-medium text-slate-600">総在庫数</CardTitle>
+            <div className="h-5 w-5 rounded-full bg-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{fmt(stats.totalQuantity)}</div>
+            <div className="text-3xl font-bold text-slate-900">{fmt(stats.totalQuantity)}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* フィルター */}
-      <Section className="space-y-4">
+      <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="text-muted-foreground absolute top-2.5 left-2 h-4 w-4" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
             <Input
               placeholder="ロット番号、製品コード、製品名で検索..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
+              className="pl-9"
             />
           </div>
           <Button
@@ -451,7 +451,7 @@ export function LotsPage() {
         </div>
 
         {isAdvancedFilterOpen && (
-          <div className="grid grid-cols-1 gap-4 rounded-lg border bg-gray-50 p-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 bg-slate-50/50 p-4 md:grid-cols-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">製品コード</label>
               <Input
@@ -493,9 +493,9 @@ export function LotsPage() {
                   id="inStockOnly"
                   checked={filters.inStockOnly ?? false}
                   onChange={(e) => handleFilterChange("inStockOnly", e.target.checked)}
-                  className={styles.checkbox}
+                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
-                <label htmlFor="inStockOnly" className={styles.checkboxLabel}>
+                <label htmlFor="inStockOnly" className="text-sm font-medium text-slate-700">
                   在庫ありのみ表示
                 </label>
               </div>
@@ -510,27 +510,22 @@ export function LotsPage() {
             </div>
           </div>
         )}
-      </Section>
+      </div>
 
       {/* エラー表示 */}
       {error && (
-        <Section>
-          <div className={styles.errorState.root}>
-            <p className={styles.errorState.title}>データの取得に失敗しました</p>
-            <p className={styles.errorState.message}>
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 shadow-sm">
+          <div className="space-y-2 text-center">
+            <p className="text-lg font-semibold text-red-900">データの取得に失敗しました</p>
+            <p className="text-sm text-red-700">
               {error instanceof Error ? error.message : "サーバーエラーが発生しました"}
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => refetch()}
-              className={styles.errorState.retryButton}
-            >
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-4">
               <RefreshCw className="mr-2 h-4 w-4" />
               再試行
             </Button>
           </div>
-        </Section>
+        </div>
       )}
 
       {/* テーブル */}
@@ -539,7 +534,7 @@ export function LotsPage() {
         // グループ化表示
         <div className="space-y-6">
           {groupedLots.map((group) => (
-            <div key={group.key} className="overflow-hidden rounded-lg border bg-white shadow-sm">
+            <div key={group.key} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
               <ProductGroupHeader
                 productCode={group.productCode}
                 productName={group.productName}
@@ -577,7 +572,7 @@ export function LotsPage() {
         </div>
       ) : (
         // フラット表示（従来通り）
-        <Section>
+        <div className="space-y-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <DataTable
             data={paginatedLots}
             columns={columns}
@@ -592,17 +587,19 @@ export function LotsPage() {
           />
           {/* ページネーション */}
           {!isLoading && !error && sortedLots.length > 0 && (
-            <TablePagination
-              currentPage={(tableSettings.page ?? 0) + 1}
-              pageSize={tableSettings.pageSize ?? 25}
-              totalCount={sortedLots.length}
-              onPageChange={(page) => setTableSettings({ ...tableSettings, page: page - 1 })}
-              onPageSizeChange={(pageSize) =>
-                setTableSettings({ ...tableSettings, pageSize, page: 0 })
-              }
-            />
+            <div className="border-t border-slate-200 px-6 py-4">
+              <TablePagination
+                currentPage={(tableSettings.page ?? 0) + 1}
+                pageSize={tableSettings.pageSize ?? 25}
+                totalCount={sortedLots.length}
+                onPageChange={(page) => setTableSettings({ ...tableSettings, page: page - 1 })}
+                onPageSizeChange={(pageSize) =>
+                  setTableSettings({ ...tableSettings, pageSize, page: 0 })
+                }
+              />
+            </div>
           )}
-        </Section>
+        </div>
       )}
 
       {/* 新規登録ダイアログ */}

@@ -32,52 +32,52 @@ export function ProductGroupHeader({
 }: ProductGroupHeaderProps) {
   return (
     <div
-      className="flex cursor-pointer items-center gap-4 bg-gray-100 px-4 py-3 font-medium hover:bg-gray-200"
+      className="flex cursor-pointer items-center gap-4 border-b-2 border-slate-200 bg-white px-6 py-4 hover:bg-slate-50"
       onClick={onToggle}
     >
       <div className="flex items-center">
         {isExpanded ? (
-          <ChevronDown className="h-5 w-5 text-gray-600" />
+          <ChevronDown className="h-5 w-5 text-slate-600" />
         ) : (
-          <ChevronRight className="h-5 w-5 text-gray-600" />
+          <ChevronRight className="h-5 w-5 text-slate-600" />
         )}
       </div>
 
-      <div className="grid flex-1 grid-cols-5 gap-4">
-        <div>
-          <div className="text-xs text-gray-500">製品コード</div>
-          <div className="font-medium">{productCode}</div>
+      <div className="flex flex-1 items-center gap-8">
+        <div className="w-[200px]">
+          <div className="text-xs font-medium text-slate-500">製品コード</div>
+          <div className="font-semibold text-slate-900">{productCode}</div>
         </div>
 
-        <div className="col-span-1">
-          <div className="text-xs text-gray-500">製品名</div>
-          <div className="truncate font-medium" title={productName}>
+        <div className="flex-1">
+          <div className="text-xs font-medium text-slate-500">製品名</div>
+          <div className="truncate font-semibold text-slate-900" title={productName}>
             {productName}
           </div>
         </div>
 
-        <div className="col-span-1">
-          <div className="text-xs text-gray-500">仕入先</div>
-          <div className="truncate font-medium" title={supplierName}>
+        <div className="w-[150px]">
+          <div className="text-xs font-medium text-slate-500">仕入先</div>
+          <div className="truncate font-semibold text-slate-900" title={supplierName}>
             {supplierName}
           </div>
         </div>
 
-        <div>
-          <div className="text-xs text-gray-500">合計在庫</div>
-          <div className="font-medium">{formatQuantity(totalCurrentQuantity, unit)}</div>
+        <div className="w-[120px] text-right">
+          <div className="text-xs font-medium text-slate-500">合計在庫</div>
+          <div className="font-semibold text-slate-900">{formatQuantity(totalCurrentQuantity, unit)}</div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex w-[180px] items-center gap-4">
           <div>
-            <div className="text-xs text-gray-500">ロット数</div>
-            <div className="font-medium">{lotCount} 件</div>
+            <div className="text-xs font-medium text-slate-500">ロット数</div>
+            <div className="font-semibold text-slate-900">{lotCount} 件</div>
           </div>
 
           {minExpiryDate && (
             <div>
-              <div className="text-xs text-gray-500">最短有効期限</div>
-              <div className="text-sm font-medium">{minExpiryDate}</div>
+              <div className="text-xs font-medium text-slate-500">最短有効期限</div>
+              <div className="text-sm font-semibold text-slate-900">{minExpiryDate}</div>
             </div>
           )}
         </div>
