@@ -138,70 +138,147 @@ def warehouse_strategy(draw, warehouse_id: int):
     )
 
 
-@st.composite
-def forecast_strategy(draw, product_id: int, customer_id: int, delivery_place_id: int):
-    """Generate a forecast with proper daily/jyun/monthly period logic.
+def _create_daily_forecasts(
+    customer_id: int,
+    delivery_place_id: int,
+    product: Product,
+    start_date: date,
+    end_date: date,
+    now: datetime,
+) -> tuple[list[ForecastCurrent], Decimal]:
+    """Create daily forecast entries for a product.
 
-    Logic matches seed_simulate_service.py:
-    - If today < 25th: target_month = current month
-    - If today >= 25th: target_month = next month
+    Returns:
+        Tuple of (forecast_entries, total_quantity)
+    """
+    import random
 
-    Forecast types:
-    - Daily: forecast_date within target_month (1st to last day), period = target_month
-    - Jyun: forecast_date on target_month's 1st/11th/21st, period = target_month + 1 month
-    - Monthly: forecast_date on target_month's 1st, period = target_month + 2 months
+    entries = []
+    total_quantity = Decimal(0)
+    current_date = start_date
+
+    while current_date <= end_date:
+        # Calculate forecast_period as YYYY-MM from forecast_date
+        forecast_period = current_date.strftime("%Y-%m")
+
+        # Random quantity for each day
+        qty = Decimal(random.randint(10, 100))
+        total_quantity += qty
+
+        entries.append(
+            ForecastCurrent(
+                customer_id=customer_id,
+                delivery_place_id=delivery_place_id,
+                product_id=product.id,
+                forecast_date=current_date,
+                forecast_quantity=qty,
+                unit=product.base_unit or "PCS",
+                forecast_period=forecast_period,
+                snapshot_at=now,
+                created_at=now,
+                updated_at=now,
+            )
+        )
+        current_date += timedelta(days=1)
+
+    return entries, total_quantity
+
+
+def _create_jyun_forecasts_from_daily(
+    customer_id: int,
+    delivery_place_id: int,
+    product: Product,
+    target_month: date,
+    daily_total: Decimal,
+    now: datetime,
+) -> list[ForecastCurrent]:
+    """Create jyun (10-day period) forecast entries based on daily total.
+
+    Creates 3 entries for the target month:
+    - 上旬 (1st-10th): forecast_date = 1st of month
+    - 中旬 (11th-20th): forecast_date = 11th of month
+    - 下旬 (21st-end): forecast_date = 21st of month
+
+    Quantity for each jyun = daily_total / 3 (approximately)
+    forecast_period is set to next month (target_month + 1 month).
     """
     from dateutil.relativedelta import relativedelta
 
-    # Choose forecast type: 60% daily, 30% jyun, 10% monthly
-    forecast_type = draw(st.sampled_from([
-        'daily', 'daily', 'daily', 'daily', 'daily', 'daily',  # 60%
-        'jyun', 'jyun', 'jyun',  # 30%
-        'monthly',  # 10%
-    ]))
+    entries = []
+    # Jyun forecast_period is next month
+    next_month = target_month + relativedelta(months=1)
+    forecast_period = next_month.strftime("%Y-%m")
 
-    base_date = date.today()
+    # 上旬 (early 10-day), 中旬 (middle 10-day), 下旬 (late 10-day)
+    jyun_days = [1, 11, 21]
 
-    # Determine target month based on current day (same as seed_simulate_service.py)
-    if base_date.day < 25:
-        target_month = base_date.replace(day=1)
-    else:
-        target_month = base_date.replace(day=1) + relativedelta(months=1)
+    for day in jyun_days:
+        forecast_date = target_month.replace(day=day)
 
-    # Calculate last day of target month
-    last_day_of_month = (target_month + relativedelta(months=1)) - timedelta(days=1)
-    days_in_month = last_day_of_month.day
+        # Calculate jyun quantity as daily total / 3
+        jyun_quantity = daily_total / Decimal(3)
 
-    if forecast_type == 'daily':
-        # Daily forecast: random date within target_month (1st to last day)
-        day_offset = draw(st.integers(min_value=0, max_value=days_in_month - 1))
-        forecast_date = target_month + timedelta(days=day_offset)
-        forecast_period = target_month.strftime("%Y-%m")
+        entries.append(
+            ForecastCurrent(
+                customer_id=customer_id,
+                delivery_place_id=delivery_place_id,
+                product_id=product.id,
+                forecast_date=forecast_date,
+                forecast_quantity=jyun_quantity.quantize(Decimal("1")),  # Round to integer
+                unit=product.base_unit or "PCS",
+                forecast_period=forecast_period,
+                snapshot_at=now,
+                created_at=now,
+                updated_at=now,
+            )
+        )
 
-    elif forecast_type == 'jyun':
-        # Jyun forecast: target_month's 1st/11th/21st, period = target_month + 1 month
-        jyun_day = draw(st.sampled_from([1, 11, 21]))
-        forecast_date = target_month.replace(day=jyun_day)
-        period_month = target_month + relativedelta(months=1)
-        forecast_period = period_month.strftime("%Y-%m")
+    return entries
 
-    else:  # monthly
-        # Monthly forecast: target_month's 1st, period = target_month + 2 months
-        forecast_date = target_month.replace(day=1)
-        period_month = target_month + relativedelta(months=2)
-        forecast_period = period_month.strftime("%Y-%m")
 
-    return ForecastCurrent(
-        product_id=product_id,
-        customer_id=customer_id,
-        delivery_place_id=delivery_place_id,
-        forecast_date=forecast_date,
-        forecast_quantity=Decimal(str(draw(st.integers(min_value=10, max_value=500)))),
-        unit="PCS",  # Simplified
-        forecast_period=forecast_period,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+def _create_monthly_forecasts_from_daily(
+    customer_id: int,
+    delivery_place_id: int,
+    product: Product,
+    target_month: date,
+    daily_total: Decimal,
+    now: datetime,
+) -> list[ForecastCurrent]:
+    """Create monthly forecast entry based on daily total.
+
+    Creates 1 entry for the target month.
+    forecast_date is set to the 1st of the month.
+    Quantity = daily_total (same as sum of all daily forecasts)
+    forecast_period is set to 2 months after target_month.
+    """
+    from dateutil.relativedelta import relativedelta
+
+    entries = []
+    # Monthly forecast_period is 2 months after target_month
+    two_months_later = target_month + relativedelta(months=2)
+    forecast_period = two_months_later.strftime("%Y-%m")
+
+    forecast_date = target_month.replace(day=1)
+
+    # Monthly quantity = daily total
+    monthly_quantity = daily_total
+
+    entries.append(
+        ForecastCurrent(
+            customer_id=customer_id,
+            delivery_place_id=delivery_place_id,
+            product_id=product.id,
+            forecast_date=forecast_date,
+            forecast_quantity=monthly_quantity.quantize(Decimal("1")),  # Round to integer
+            unit=product.base_unit or "PCS",
+            forecast_period=forecast_period,
+            snapshot_at=now,
+            created_at=now,
+            updated_at=now,
+        )
     )
+
+    return entries
 
 
 @st.composite
@@ -369,40 +446,81 @@ def generate_test_data():
         db.flush()
         print(f"✓ Created {len(customer_items)} customer items")
         
-        # Generate Forecasts
-        print("\n📈 Generating forecasts...")
+        # Generate Forecasts (daily/jyun/monthly as a set per DemandKey)
+        print("\n📈 Generating forecasts (daily/jyun/monthly sets)...")
+        from dateutil.relativedelta import relativedelta
+
         forecast_count = 0
-        generated_keys = set()
-        
-        for product in products:
-            # Generate 5-10 forecasts per product
-            import random
-            num_forecasts = random.randint(5, 10)
-            attempts = 0
-            created = 0
-            
-            while created < num_forecasts and attempts < 20:
-                attempts += 1
-                dp = random.choice(delivery_places)
-                
-                # Generate a potential forecast
-                forecast = forecast_strategy(
-                    product_id=product.id,
-                    customer_id=dp.customer_id,
-                    delivery_place_id=dp.id
-                ).example()
-                
-                key = (forecast.product_id, forecast.delivery_place_id, forecast.forecast_date)
-                if key in generated_keys:
-                    continue
-                
-                generated_keys.add(key)
-                db.add(forecast)
-                forecast_count += 1
-                created += 1
-                
+        now = datetime.utcnow()
+        base_date = date.today()
+
+        # Calculate target month (same logic as seed_simulate_service.py)
+        if base_date.day < 25:
+            target_month = base_date.replace(day=1)
+        else:
+            target_month = base_date.replace(day=1) + relativedelta(months=1)
+
+        # Date range: 1st to last day of target month
+        daily_start = target_month
+        daily_end = (target_month + relativedelta(months=1)) - timedelta(days=1)
+
+        print(f"  Target month: {target_month.strftime('%Y-%m')} (days: {daily_start} to {daily_end})")
+
+        # Generate forecasts for a subset of delivery_place × product combinations
+        import random
+        for delivery_place in delivery_places:
+            # Each delivery place gets forecasts for 30-50% of all products
+            num_forecast_products = max(1, int(len(products) * random.uniform(0.3, 0.5)))
+            selected_products = random.sample(products, min(num_forecast_products, len(products)))
+
+            for product in selected_products:
+                # Step 1: Generate daily forecasts
+                daily_entries, daily_total = _create_daily_forecasts(
+                    customer_id=delivery_place.customer_id,
+                    delivery_place_id=delivery_place.id,
+                    product=product,
+                    start_date=daily_start,
+                    end_date=daily_end,
+                    now=now,
+                )
+
+                # Add daily forecasts
+                for entry in daily_entries:
+                    db.add(entry)
+                    forecast_count += 1
+
+                # Step 2: Generate jyun forecasts (qty = daily_total / 3 for each jyun)
+                jyun_entries = _create_jyun_forecasts_from_daily(
+                    customer_id=delivery_place.customer_id,
+                    delivery_place_id=delivery_place.id,
+                    product=product,
+                    target_month=target_month,
+                    daily_total=daily_total,
+                    now=now,
+                )
+
+                # Add jyun forecasts
+                for entry in jyun_entries:
+                    db.add(entry)
+                    forecast_count += 1
+
+                # Step 3: Generate monthly forecasts (qty = daily_total)
+                monthly_entries = _create_monthly_forecasts_from_daily(
+                    customer_id=delivery_place.customer_id,
+                    delivery_place_id=delivery_place.id,
+                    product=product,
+                    target_month=target_month,
+                    daily_total=daily_total,
+                    now=now,
+                )
+
+                # Add monthly forecasts
+                for entry in monthly_entries:
+                    db.add(entry)
+                    forecast_count += 1
+
         db.flush()
-        print(f"✓ Generated {forecast_count} forecasts")
+        print(f"✓ Generated {forecast_count} forecasts (daily + jyun + monthly sets)")
         
         # Create scenario-based lots per product
         print("\n🎯 Generating lots per product...")
