@@ -29,7 +29,7 @@ class InventoryService:
         warehouse_id: int | None = None,
     ) -> list[InventoryItemResponse]:
         """
-        Get inventory items from v_inventory_summary view.
+        Get inventory items from v_inventory_summary view with product and warehouse names.
 
         Args:
             skip: Number of records to skip (pagination)
@@ -40,23 +40,35 @@ class InventoryService:
         Returns:
             List of inventory items
         """
-        # Use raw SQL or map a model to the view.
-        # Here we use raw SQL for simplicity as we haven't defined a SQLAlchemy model for the view yet.
-        # Alternatively, we could define a read-only model.
-
-        # Construct query
-        query = "SELECT product_id, warehouse_id, total_quantity, allocated_quantity, available_quantity, last_updated FROM v_inventory_summary WHERE 1=1"
+        # Join with products and warehouses to get names
+        query = """
+            SELECT 
+                v.product_id, 
+                v.warehouse_id, 
+                v.total_quantity, 
+                v.allocated_quantity, 
+                v.available_quantity, 
+                v.last_updated,
+                p.product_name,
+                p.maker_part_code AS product_code,
+                w.warehouse_name,
+                w.warehouse_code
+            FROM v_inventory_summary v
+            LEFT JOIN products p ON v.product_id = p.id
+            LEFT JOIN warehouses w ON v.warehouse_id = w.id
+            WHERE 1=1
+        """
         params = {}
 
         if product_id is not None:
-            query += " AND product_id = :product_id"
+            query += " AND v.product_id = :product_id"
             params["product_id"] = product_id
 
         if warehouse_id is not None:
-            query += " AND warehouse_id = :warehouse_id"
+            query += " AND v.warehouse_id = :warehouse_id"
             params["warehouse_id"] = warehouse_id
 
-        query += " ORDER BY product_id, warehouse_id LIMIT :limit OFFSET :skip"
+        query += " ORDER BY v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
         params["limit"] = limit
         params["skip"] = skip
 
@@ -73,6 +85,10 @@ class InventoryService:
                 allocated_quantity=row.allocated_quantity,
                 available_quantity=row.available_quantity,
                 last_updated=row.last_updated,
+                product_name=row.product_name,
+                product_code=row.product_code,
+                warehouse_name=row.warehouse_name,
+                warehouse_code=row.warehouse_code,
             )
             for idx, row in enumerate(result)
         ]
@@ -81,7 +97,7 @@ class InventoryService:
         self, product_id: int, warehouse_id: int
     ) -> InventoryItemResponse | None:
         """
-        Get inventory item by product ID and warehouse ID using view.
+        Get inventory item by product ID and warehouse ID with names.
 
         Args:
             product_id: Product ID
@@ -91,9 +107,21 @@ class InventoryService:
             Inventory item, or None if not found
         """
         query = """
-            SELECT product_id, warehouse_id, total_quantity, allocated_quantity, available_quantity, last_updated
-            FROM v_inventory_summary
-            WHERE product_id = :product_id AND warehouse_id = :warehouse_id
+            SELECT 
+                v.product_id, 
+                v.warehouse_id, 
+                v.total_quantity, 
+                v.allocated_quantity, 
+                v.available_quantity, 
+                v.last_updated,
+                p.product_name,
+                p.maker_part_code AS product_code,
+                w.warehouse_name,
+                w.warehouse_code
+            FROM v_inventory_summary v
+            LEFT JOIN products p ON v.product_id = p.id
+            LEFT JOIN warehouses w ON v.warehouse_id = w.id
+            WHERE v.product_id = :product_id AND v.warehouse_id = :warehouse_id
         """
         from sqlalchemy import text
 
@@ -112,4 +140,8 @@ class InventoryService:
             allocated_quantity=row.allocated_quantity,
             available_quantity=row.available_quantity,
             last_updated=row.last_updated,
+            product_name=row.product_name,
+            product_code=row.product_code,
+            warehouse_name=row.warehouse_name,
+            warehouse_code=row.warehouse_code,
         )
