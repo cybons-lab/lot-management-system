@@ -1,3 +1,25 @@
+-- ============================================================
+-- ビュー再作成スクリプト
+-- ============================================================
+
+-- 1. 既存ビューの削除（CASCADEで依存関係もまとめて削除）
+DROP VIEW IF EXISTS public.v_lots_with_master CASCADE;
+DROP VIEW IF EXISTS public.v_candidate_lots_by_order_line CASCADE;
+DROP VIEW IF EXISTS public.v_forecast_order_pairs CASCADE;
+DROP VIEW IF EXISTS public.v_delivery_place_code_to_id CASCADE;
+DROP VIEW IF EXISTS public.v_customer_code_to_id CASCADE;
+DROP VIEW IF EXISTS public.v_order_line_context CASCADE;
+DROP VIEW IF EXISTS public.v_lot_available_qty CASCADE;
+DROP VIEW IF EXISTS public.v_customer_daily_products CASCADE;
+DROP VIEW IF EXISTS public.v_lot_current_stock CASCADE;
+DROP VIEW IF EXISTS public.v_product_code_to_id CASCADE;
+DROP VIEW IF EXISTS public.v_order_line_details CASCADE;
+DROP VIEW IF EXISTS public.v_inventory_summary CASCADE;
+DROP VIEW IF EXISTS public.v_lot_details CASCADE;
+
+-- 2. 新規ビューの作成
+
+CREATE VIEW public.v_lot_current_stock AS
 SELECT 
     l.id AS lot_id,
     l.product_id,
@@ -181,6 +203,7 @@ LEFT JOIN public.warehouses w ON l.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON l.supplier_id = s.id;
 
 COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー';
+
 CREATE VIEW public.v_lots_with_master AS
 SELECT 
     l.id,
