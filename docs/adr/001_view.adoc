@@ -1,0 +1,38 @@
+= ADR 001: ビュー管理方針の決定
+:toc: left
+:icons: font
+:source-highlighter: highlightjs
+
+== コンテキスト
+現在、FastAPI + SQLAlchemy + Alembic環境において、データベースの「ビュー（View）」管理が課題となっている。
+初期構築時のSQLダンプ依存を解消しつつ、頻繁なロジック変更に追従する必要がある。
+
+== 決定事項
+**「ハイブリッド構成」を採用する。**
+
+. **テーブル定義**
+* Alembic (Pythonコード) で管理する。
+* 理由: `autogenerate` による整合性確保のため。
+
+. **ビュー定義**
+* 外部SQLファイル (`sql/views/create_views.sql`) で管理する。
+* 理由: Statelessであり、再作成 (`DROP & CREATE`) が容易なため。
+
+== 実装詳細
+
+=== 1. ファイル構成
+* `sql/views/create_views.sql`: ビュー定義の正本
+* `scripts/refresh_views.py`: 開発用更新スクリプト
+* `alembic/versions/xxxx_initial.py`: 初期構築用
+
+=== 2. 運用フロー
+[cols="1,2", options="header"]
+|===
+|シーン |アクション
+|開発時 | SQLファイルを修正し、 `python scripts/refresh_views.py` を実行
+|本番反映 | Alembicのリビジョンを作成し、SQLファイルを読み込ませる
+|===
+
+=== 3. 参照コード
+// 実際のファイルがある場合、AsciiDocならこう書くだけで中身が展開されます！
+// include::../../sql/views/create_views.sql[]

@@ -53,7 +53,7 @@ def apply_views():
     """ビュー作成SQLを実行"""
     
     # ビューSQLファイルのパス
-    views_sql_path = project_root / "backend" / "views" / "create_views.sql"
+    views_sql_path = project_root / "backend" / "sql" / "views" / "create_views.sql"
     
     if not views_sql_path.exists():
         print(f"❌ ビューSQLファイルが見つかりません: {views_sql_path}")
