@@ -33,7 +33,7 @@ SELECT DISTINCT
     f.customer_id,
     f.product_id
 FROM public.forecast_current f
-WHERE f.forecast_date IS NOT NULL;
+WHERE f.forecast_period IS NOT NULL;
 
 CREATE VIEW public.v_lot_available_qty AS
 SELECT 
