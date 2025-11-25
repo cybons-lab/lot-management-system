@@ -5,7 +5,7 @@
 - [CLAUDE.md](../CLAUDE.md) - AI Assistant Guidelines & Project Overview
 - [README.md](../README.md) - Project Quick Start
 - [SETUP_GUIDE.md](../SETUP_GUIDE.md) - Complete Setup Instructions
-- [DOCUMENT_GUIDELINES.md](DOCUMENT_GUIDELINES.md) - Document Naming Conventions
+- [DOCUMENT_GUIDELINES.adoc](DOCUMENT_GUIDELINES.adoc) - Document Naming Conventions
 
 ---
 
@@ -14,7 +14,7 @@
 ```
 docs/
 ├── README.md                    # このファイル（ドキュメントインデックス）
-├── DOCUMENT_GUIDELINES.md       # 命名規則・管理ガイドライン
+├── DOCUMENT_GUIDELINES.adoc       # 命名規則・管理ガイドライン
 │
 ├── schema/                      # データベーススキーマ
 │   ├── er-diagram-v2.3.md       # ER図（Mermaid）
@@ -101,12 +101,12 @@ docs/
 1. **Git is the archive** - 不要なドキュメントは削除（Gitで復元可能）
 2. **Keep it simple** - 必要最小限のドキュメントのみ保持
 3. **Update or delete** - 古くなったら更新するか削除
-4. **Follow naming conventions** - [DOCUMENT_GUIDELINES.md](DOCUMENT_GUIDELINES.md) 参照
+4. **Follow naming conventions** - [DOCUMENT_GUIDELINES.adoc](DOCUMENT_GUIDELINES.adoc) 参照
 
 ### Adding New Documents
 
 1. カテゴリを決定（schema / architecture / api / design / troubleshooting）
-2. [命名規則](DOCUMENT_GUIDELINES.md)に従ってファイル名を決定
+2. [命名規則](DOCUMENT_GUIDELINES.adoc)に従ってファイル名を決定
 3. 適切なフォルダに配置
 4. このインデックスを更新
 5. 必要に応じて CLAUDE.md も更新
