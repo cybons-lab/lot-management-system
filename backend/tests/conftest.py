@@ -9,9 +9,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 # Configure test database before importing the app
 # Use PostgreSQL for testing to support JSONB and other PG-specific features
-# TEST_DB_PATH = Path(tempfile.gettempdir()) / "lot_management_test.db"
 os.environ.setdefault("ENVIRONMENT", "test")
-# os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH}"
 # Override DATABASE_URL to use the test database
 os.environ["DATABASE_URL"] = "postgresql://admin:dev_password@db-postgres:5432/lot_management_test"
 

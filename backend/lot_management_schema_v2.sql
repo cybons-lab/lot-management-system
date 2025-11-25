@@ -1,8 +1,8 @@
 -- lot_management_schema_v2.sql
--- ロット管理システム v2.0 データベーススキーマ(SQLite)
+-- ロット管理システム v2.0 データベーススキーマ(PostgreSQL)
 -- このファイルは参考用です。実際のテーブルはSQLAlchemyモデルから自動生成されます。
 
-PRAGMA foreign_keys = ON;
+-- PostgreSQL用の設定
 
 -- ===== マスタテーブル =====
 

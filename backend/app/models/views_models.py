@@ -10,9 +10,9 @@ from .base_model import Base
 
 
 class VLotCurrentStock(Base):
-    """lot_current_stock ビュー."""
+    """v_lot_current_stock ビュー."""
 
-    __tablename__ = "lot_current_stock"
+    __tablename__ = "v_lot_current_stock"
     __table_args__ = {"info": {"is_view": True}}
 
     lot_id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -182,3 +182,72 @@ class VLotDetails(Base):
 # Backward compatibility alias for lot_current_stock (deprecated)
 # Use VLotDetails or Lot model instead
 LotDetails = VLotDetails
+
+
+class VOrderLineDetails(Base):
+    """
+    v_order_line_details ビュー（読み取り専用）.
+
+    受注明細の詳細情報ビュー。
+    - 受注、顧客、商品、納入先、仕入元、引当情報を含む
+    - OrderServiceの_populate_additional_info処理をDB側に委譲
+    """
+
+    __tablename__ = "v_order_line_details"
+    __table_args__ = {"info": {"is_view": True}}
+
+    # 受注情報
+    order_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    order_number: Mapped[str] = mapped_column(String)
+    order_date: Mapped[date | None] = mapped_column(Date)
+    customer_id: Mapped[int] = mapped_column(Integer)
+
+    # 顧客情報
+    customer_code: Mapped[str | None] = mapped_column(String)
+    customer_name: Mapped[str | None] = mapped_column(String)
+
+    # 受注明細情報
+    line_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    product_id: Mapped[int | None] = mapped_column(Integer)
+    delivery_date: Mapped[date | None] = mapped_column(Date)
+    order_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    unit: Mapped[str | None] = mapped_column(String)
+    delivery_place_id: Mapped[int | None] = mapped_column(Integer)
+    line_status: Mapped[str | None] = mapped_column(String)
+
+    # 商品情報
+    product_code: Mapped[str | None] = mapped_column(String)
+    product_name: Mapped[str | None] = mapped_column(String)
+    product_internal_unit: Mapped[str | None] = mapped_column(String)
+    product_external_unit: Mapped[str | None] = mapped_column(String)
+    product_qty_per_internal_unit: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+
+    # 納入先情報
+    delivery_place_code: Mapped[str | None] = mapped_column(String)
+    delivery_place_name: Mapped[str | None] = mapped_column(String)
+
+    # 仕入元情報
+    supplier_name: Mapped[str | None] = mapped_column(String)
+
+    # 引当情報（集計）
+    allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+
+
+class VInventorySummary(Base):
+    """
+    v_inventory_summary ビュー（読み取り専用）.
+
+    在庫集計ビュー。
+    - 商品・倉庫ごとの在庫総数、引当済数、有効在庫数を集計
+    - InventoryServiceの集計処理をDB側に委譲
+    """
+
+    __tablename__ = "v_inventory_summary"
+    __table_args__ = {"info": {"is_view": True}}
+
+    product_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    warehouse_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    total_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    available_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    last_updated: Mapped[datetime | None] = mapped_column(DateTime)

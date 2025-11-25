@@ -1,15 +1,10 @@
 """データベース接続設定 / SQLAlchemyセッション管理."""
 
 import logging
-import os
 from collections.abc import Generator
-from pathlib import Path
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
-
-# モデル登録（init_db内でimportするが、型参照のためここにも置いて問題なし）
-from app.models.base_model import set_sqlite_pragma
 
 from .config import settings
 
@@ -19,11 +14,8 @@ logger = logging.getLogger(__name__)
 # --- Engine ---------------------------------------------------------------
 engine = create_engine(
     settings.DATABASE_URL,
-    connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {},
     echo=settings.ENVIRONMENT == "development",  # 開発時はSQLログ
 )
-if engine.dialect.name == "sqlite":
-    event.listen(engine, "connect", set_sqlite_pragma)
 
 # --- Session --------------------------------------------------------------
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -56,9 +48,6 @@ def _drop_dependent_views() -> None:
     テーブル依存のVIEWを先にDROPする。
     依存で落ちる代表VIEWをここへ列挙。存在しない場合はスキップ。.
     """
-    if "sqlite" in settings.DATABASE_URL:
-        return
-
     dependent_views = [
         # v2.2: lot_current_stock ビューは廃止（lots テーブルに統合済み）
         # 追加のVIEWがあればここに追記
@@ -83,12 +72,6 @@ def truncate_all_tables() -> None:
     """
     if settings.ENVIRONMENT == "production":
         raise ValueError("本番環境ではデータの削除はできません")
-
-    # SQLite: 従来のdrop_db()を使用
-    if "sqlite" in settings.DATABASE_URL:
-        logger.warning("⚠️ SQLite環境ではTRUNCATEが利用できないため、drop_db()を使用します")
-        drop_db()
-        return
 
     # PostgreSQL: 全テーブルをTRUNCATE
     logger.info("🗑️ Truncating all tables in schema 'public'...")
@@ -122,26 +105,12 @@ def truncate_all_tables() -> None:
 def drop_db() -> None:
     """
     データベースの削除（開発/検証用途）
-    - SQLite: 物理ファイル削除
-    - PostgreSQL: スキーマ public を CASCADE で落として再作成.
+    スキーマ public を CASCADE で落として再作成.
 
     ⚠️ 推奨: データのみをリセットする場合は truncate_all_tables() を使用してください
     """
     if settings.ENVIRONMENT == "production":
         raise ValueError("本番環境ではデータベースの削除はできません")
-
-    # SQLite: 物理ファイル削除（従来どおり）
-    if "sqlite" in settings.DATABASE_URL:
-        engine.dispose()
-        try:
-            db_path_str = settings.DATABASE_URL.split(":///")[1]
-        except IndexError:
-            return
-        db_path = Path(db_path_str)
-        if db_path.exists():
-            os.remove(db_path)
-            logger.info("🗑️ Deleted SQLite database file")
-        return
 
     # PostgreSQL: スキーマごと初期化
     logger.info("🗑️ Dropping and recreating schema 'public'...")
