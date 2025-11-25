@@ -32,7 +32,7 @@ def verify_unit_conversion():
 
             db.commit()
         except Exception as e:
-            print(f"Sequence reset failed (might be sqlite?): {e}")
+            print(f"Sequence reset failed: {e}")
             db.rollback()
 
         # 1. Setup Product with Unit Info

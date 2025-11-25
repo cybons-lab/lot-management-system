@@ -178,6 +178,12 @@ ALTER TABLE public.v_candidate_lots_by_order_line OWNER TO admin;
 -- ------------------------------------------------------------
 -- 10. v_order_line_details（受注明細詳細ビュー）
 -- 目的: OrderService._populate_additional_infoの処理をDB側に委譲
+-- 
+-- 注意: 以下のカラムは将来のマイグレーション(2dca571dcd33_add_unit_columns)で
+--      order_linesテーブルに追加予定だが、現時点では未適用のため除外している:
+--      - converted_quantity (Numeric(15,3)) - 内部単位換算後の数量
+--      - version_id (Integer) - 楽観的ロック用バージョン番号
+--      マイグレーション適用後は、これらのカラムをビューに追加すること
 -- ------------------------------------------------------------
 CREATE VIEW public.v_order_line_details AS
 SELECT
@@ -197,7 +203,6 @@ SELECT
     ol.delivery_date,
     ol.order_quantity,
     ol.unit,
-    ol.converted_quantity,
     ol.delivery_place_id,
     ol.status AS line_status,
     
@@ -242,7 +247,7 @@ GROUP BY
     c.customer_code, c.customer_name,
     -- 受注明細情報
     ol.id, ol.product_id, ol.delivery_date, 
-    ol.order_quantity, ol.unit, ol.converted_quantity, 
+    ol.order_quantity, ol.unit,
     ol.delivery_place_id, ol.status,
     -- 商品情報
     p.maker_part_code, p.product_name, 
@@ -280,6 +285,48 @@ COMMENT ON VIEW public.v_inventory_summary IS
 '在庫集計ビュー - 商品・倉庫ごとの在庫総数、引当済数、有効在庫数を集計';
 
 
+-- ------------------------------------------------------------
+-- 12. v_lot_details（ロット詳細ビュー）
+-- 目的: ロット詳細情報を提供（products, warehouses, suppliers をJOIN）
+-- ------------------------------------------------------------
+CREATE VIEW public.v_lot_details AS
+SELECT
+    l.id AS lot_id,
+    l.lot_number,
+    l.product_id,
+    p.maker_part_code,
+    p.product_name,
+    l.warehouse_id,
+    w.warehouse_code,
+    w.warehouse_name,
+    l.supplier_id,
+    s.supplier_code,
+    s.supplier_name,
+    l.received_date,
+    l.expiry_date,
+    l.current_quantity,
+    l.allocated_quantity,
+    (l.current_quantity - l.allocated_quantity) AS available_quantity,
+    l.unit,
+    l.status,
+    CASE 
+        WHEN l.expiry_date IS NOT NULL THEN 
+            CAST((l.expiry_date - CURRENT_DATE) AS INTEGER)
+        ELSE NULL
+    END AS days_to_expiry,
+    l.created_at,
+    l.updated_at
+FROM public.lots l
+LEFT JOIN public.products p ON l.product_id = p.id
+LEFT JOIN public.warehouses w ON l.warehouse_id = w.id
+LEFT JOIN public.suppliers s ON l.supplier_id = s.id;
+
+ALTER TABLE public.v_lot_details OWNER TO admin;
+
+COMMENT ON VIEW public.v_lot_details IS 
+'ロット詳細ビュー - ロット、商品、倉庫、仕入元情報を含み、在庫数量と賞味期限までの日数を算出';
+
+
 -- ============================================================
 -- 完了メッセージ
 -- ============================================================
@@ -299,5 +346,6 @@ BEGIN
     RAISE NOTICE '  9. v_candidate_lots_by_order_line';
     RAISE NOTICE ' 10. v_order_line_details';
     RAISE NOTICE ' 11. v_inventory_summary';
+    RAISE NOTICE ' 12. v_lot_details';
     RAISE NOTICE '==============================================';
 END $$;

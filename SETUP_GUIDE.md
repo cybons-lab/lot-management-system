@@ -154,7 +154,50 @@ ENVIRONMENT=development
 # DATABASE_URL=sqlite:///./lot_management.db
 ```
 
-### Step 5: アプリケーションの起動
+### Step 5: データベースマイグレーションの実行
+
+```bash
+cd backend
+
+# Alembicマイグレーション実行
+alembic upgrade head
+
+# データベースビューの作成
+python scripts/apply_views.py
+```
+
+**マイグレーション成功時の出力例:**
+
+```
+INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+INFO  [alembic.runtime.migration] Running upgrade  -> 977979c11ee5, add_optimistic_lock_and_allocation_traces
+INFO  [alembic.runtime.migration] Running upgrade 977979c11ee5 -> 2dca571dcd33, add_unit_columns
+...
+```
+
+**ビュー作成成功時の出力例:**
+
+```
+============================================================
+🔧 データベースビュー作成スクリプト
+============================================================
+📁 SQLファイル: backend/views/create_views.sql
+🗄️  データベース: localhost:5432/lot_management
+
+⏳ ビューを作成中...
+
+============================================================
+✅ ビューの作成が完了しました
+============================================================
+
+作成されたビュー:
+  1. v_lot_current_stock
+  2. v_customer_daily_products
+  ...
+```
+
+### Step 6: アプリケーションの起動
 
 ```bash
 # 開発サーバー起動(ホットリロード有効)

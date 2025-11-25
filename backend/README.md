@@ -16,7 +16,7 @@
 
 - **Framework**: FastAPI 0.115.5
 - **ORM**: SQLAlchemy 2.0.36
-- **Database**: SQLite (開発), PostgreSQL/MySQL (本番想定)
+- **Database**: PostgreSQL
 - **Validation**: Pydantic 2.10.1
 - **Server**: Uvicorn 0.32.0
 
@@ -257,22 +257,13 @@ curl -X POST "http://localhost:8000/api/admin/init-sample-data"
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 ```
 
-### データベースロック
-
-SQLite のロックが発生した場合:
-
-```bash
-rm lot_management.db
-# アプリを再起動すると自動で再作成されます
-```
-
 ## 今後の拡張
 
 - [ ] 認証・認可(JWT)
 - [ ] WebSocket(リアルタイム在庫更新)
 - [ ] ファイルアップロード(検査成績書)
 - [ ] バックグラウンドジョブ(期限アラート)
-- [ ] PostgreSQL/MySQL 対応
+- [ ] PostgreSQL/MySQL 最適化
 - [ ] Docker 対応
 
 ## ライセンス
