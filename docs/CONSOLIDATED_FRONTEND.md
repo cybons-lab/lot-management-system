@@ -1,0 +1,817 @@
+# フロントエンド開発 統合ドキュメント
+
+最終更新: 2025-11-25
+
+---
+
+## 📚 目次
+
+1. [概要](#概要)
+2. [Changelog](#changelog)
+3. [Style Guide（スタイルガイド）](#style-guideスタイルガイド)
+4. [Refactoring Summary（リファクタリング要約）](#refactoring-summaryリファクタリング要約)
+5. [ESLint Issues Report](#eslint-issues-report)
+
+---
+
+## 概要
+
+本ドキュメントは、ロット管理システムのフロントエンド開発に関する以下の4つの資料を統合したものです。
+
+### 統合元ドキュメント
+
+1. **Changelog**
+   - 元ファイル: `frontend/CHANGELOG.md`
+   - 内容: フロントエンドの変更履歴とリリース情報
+
+2. **Style Guide（スタイルガイド）**
+   - 元ファイル: `frontend/STYLE_GUIDE.md`
+   - 内容: Tailwind CSS の使用方針とコーディング規約（日本語）
+
+3. **Refactoring Summary（リファクタリング要約）**
+   - 元ファイル: `frontend/REFACTORING_SUMMARY.md`
+   - 内容: 2025-11-10実施の大規模リファクタリングの記録
+
+4. **ESLint Issues Report**
+   - 元ファイル: `frontend/ESLINT_ISSUES.md`
+   - 内容: リファクタリング後の残存ESLint問題の詳細
+
+---
+
+# Changelog
+
+All notable changes to the Lot Management System will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Frontend - Initial Release
+
+#### Added
+
+- 🎨 Modern UI with Tailwind CSS and shadcn/ui components
+- 📋 Inventory management page with lot listing
+- ➕ Create new lots with modal form
+- 🔍 Search and filter functionality for lots
+- 🎯 Status badges for lot tracking (active, shipped, expired)
+- 📅 Date formatting with date-fns
+- 🔄 React Query for efficient server state management
+- 🎨 Responsive design for mobile and desktop
+- ✨ Clean and accessible UI components using Radix UI primitives
+- 🚀 Fast development experience with Vite
+- 📱 Tab-based navigation (Inventory, Shipping, Alerts)
+
+#### Technical Stack
+
+- React 19.2.0 with TypeScript
+- Vite for build tooling
+- Tailwind CSS for styling
+- shadcn/ui components (Radix UI based)
+- TanStack Query for data fetching
+- Lucide React for icons
+
+#### Components
+
+- Button component with multiple variants
+- Dialog (Modal) component
+- Input and Label components
+- Tabs component for navigation
+- Custom table with sorting and filtering
+- Form components with validation
+
+#### API Integration
+
+- Full CRUD operations for lots
+- RESTful API client with TypeScript types
+- Error handling and loading states
+- Optimistic updates with React Query
+
+#### Developer Experience
+
+- Hot Module Replacement (HMR)
+- TypeScript for type safety
+- ESLint configuration
+- Git ignore for clean repository
+- Comprehensive README documentation
+
+### Backend - Previously Released
+
+#### Added
+
+- FastAPI backend with SQLAlchemy ORM
+- SQLite database for data persistence
+- CRUD APIs for lot management
+- CRUD APIs for shipment management
+- Database reset endpoint for development
+- Environment configuration
+- CORS middleware for frontend integration
+- Comprehensive API documentation with Swagger
+
+## [1.0.0] - 2025-11-01
+
+### Initial Release
+
+- Project setup and structure
+- Backend API implementation
+- Frontend application with modern UI
+- Documentation and setup guides
+
+---
+
+# Style Guide（スタイルガイド）
+
+Lot Management System (React + TypeScript)
+
+本ガイドは、フロントエンド実装時の統一ルールです。
+特に **「Tailwind クラスを JSX から追い出し、可読性と再利用性を高める」** ことを目的とします。
+
+---
+
+## 🎨 1. Styling Strategy（スタイル方針）
+
+### 1-1. TailwindCSS は継続利用（ただし JSX には書かない）
+
+Tailwind は引き続き利用しますが、
+**JSX 内にクラスを直接ベタ書きすることは禁止** とします。
+
+理由：
+
+- JSX の可読性が著しく低下するため
+- 状態によるクラス分岐が複雑化するため
+- 再利用不能な記述が増えるため
+
+---
+
+## 📍 2. スタイルファイルの置き場所ルール
+
+> 「1コンポーネント = 1フォルダ」を強制しない。
+> **フォルダ内のコンポーネント数に応じてスタイルファイルの形を変える。**
+
+### 2-1. フォルダ内にコンポーネントが 1 ファイルだけのとき
+
+**同じ名前のスタイルファイルを隣に置く。**
+
+```text
+// 例: 1コンポーネントだけのフォルダ
+src/features/allocations/components/LotAllocationPane/
+  LotAllocationPane.tsx
+  LotAllocationPane.styles.ts
+```
+
+- `.tsx` が 1つだけなら、同名の `*.styles.ts` を作成する
+- 追加でコンポーネントが増えたら、後述の 2-2 の形に移行してもよい
+
+### 2-2. フォルダ内にコンポーネントが複数あるとき
+
+**フォルダ共通の `styles.ts` にまとめる。**
+
+```text
+// 例: 複数コンポーネントをまとめたフォルダ
+src/features/allocations/components/LotAllocationPage/
+  LotAllocationPane.tsx
+  LotAllocationPanel.tsx
+  LotList.tsx
+  styles.ts
+```
+
+- フォルダ単位（画面単位 / 機能単位）で `styles.ts` を1つだけ置く
+- export 名で「どのコンポーネント用か」が分かるようにする
+  例: `paneRoot`, `panelRoot`, `lotList`, `lotRow` など
+
+### 2-3. 既存コードからの移行方針
+
+- まずは **既存の .tsx の横にスタイルファイルを増やすだけ** でOK
+  - 1ファイルだけのフォルダ → `ComponentName.styles.ts` を追加
+  - 複数ファイルあるフォルダ → `styles.ts` を追加
+
+- 新規画面や大幅リファクタ時に、フォルダ構成を整理する
+
+---
+
+## 📁 3. Style Modules（\*.styles.ts / styles.ts）の書き方
+
+### 3-1. Tailwind はすべてスタイルファイルに逃がす
+
+```ts
+// LotAllocationPane.styles.ts または styles.ts
+export const paneRoot = "flex flex-col gap-3 p-3";
+```
+
+### 3-2. JSX からは className に直接 Tailwind を書かない
+
+```tsx
+// ❌ Bad
+<div className="flex flex-col gap-3 p-3">...</div>;
+
+// ✅ Good
+import * as styles from "./LotAllocationPane.styles";
+// または import * as styles from "./styles";
+
+<div className={styles.paneRoot}>...</div>;
+```
+
+### 3-3. export 名の付け方
+
+- コンポーネント構造がイメージできる名前にする
+  - `root`, `header`, `body`, `footer`
+  - `paneRoot`, `panelRoot`, `lotList`, `lotRow` など
+
+- `styles.xxx` を見ただけで、DOM の役割が分かることを目指す
+
+---
+
+## ⚙ 4. class-variance-authority (cva) の利用ルール
+
+### 4-1. 状態・バリアントがある場合は cva を使う
+
+例：アクティブ状態・エラー状態・サイズなど
+
+```ts
+// styles.ts
+import { cva } from "class-variance-authority";
+
+export const lotRow = cva("flex items-center h-9 px-2 cursor-pointer transition-colors", {
+  variants: {
+    active: {
+      true: "bg-primary/10 border-l-2 border-primary",
+      false: "hover:bg-muted",
+    },
+    disabled: {
+      true: "opacity-50 cursor-not-allowed",
+      false: "",
+    },
+  },
+  defaultVariants: {
+    active: false,
+    disabled: false,
+  },
+});
+```
+
+### 4-2. JSX 側での使用
+
+```tsx
+// LotList.tsx
+import * as styles from "./styles";
+
+<div
+  className={styles.lotRow({
+    active: lot.id === selectedLotId,
+    disabled: lot.available_quantity === 0,
+  })}
+>
+  ...
+</div>;
+```
+
+---
+
+## 🔄 5. Class 結合は `clsx` 推奨
+
+Tailwind の要素追加が必要な場合は `clsx` をスタイルファイル側で使う。
+
+```ts
+// styles.ts
+import clsx from "clsx";
+
+export const tableRow = clsx("flex items-center h-10 px-2", "hover:bg-muted transition-colors");
+```
+
+- **JSX では `styles.tableRow` のみを参照**し、`clsx` 呼び出しは `.styles.ts` / `styles.ts` に閉じ込める
+
+---
+
+## 🚫 6. 禁止事項
+
+以下は禁止とする：
+
+- JSX に長い Tailwind クラスを直接書く
+- 状態に応じて JSX 内で文字列連結する
+  例: `className={isActive ? "..." : "..."}` をベタ書き
+- インライン style を常用する（緊急の一時的対応を除く）
+- デザインに影響するクラス（色・レイアウト・余白）をコンポーネント内にハードコードする
+
+---
+
+## 🎯 7. 推奨ディレクトリ構成
+
+### 7-1. 画面・機能単位でフォルダをまとめる
+
+```text
+src/features/allocations/components/lots/
+  LotAllocationPage/
+    LotAllocationPane.tsx
+    LotAllocationPanel.tsx
+    LotList.tsx
+    styles.ts
+```
+
+- ロット引き当てのような「1画面に複数コンポーネント」がある場合は、この形を推奨
+- スタイルは `styles.ts` に集約し、コンポーネントは `styles.xxx` を参照する
+
+### 7-2. 小さい単機能コンポーネントの場合
+
+```text
+src/shared/components/
+  IconButton.tsx
+  IconButton.styles.ts
+```
+
+- フォルダを切るほどでもない小さな UI 部品は、
+  `.tsx` と `.styles.ts` を横に並べるだけでも良い
+
+---
+
+## 🎨 8. 共通スタイル・トークンの扱い
+
+### 8-1. トークンは `src/shared/styles` に置く
+
+```text
+src/shared/styles/
+  theme.ts        // 色、スペース、radius など
+  table.styles.ts // 汎用テーブルのクラスなど（必要なら）
+```
+
+- コンポーネント側の `styles.ts` からは、必要であれば `theme` の値だけ参照する
+- 具体的な Tailwind クラスは、基本的に各 feature の `*.styles.ts` / `styles.ts` に閉じ込める
+
+---
+
+## 🧪 9. テスト方針（任意）
+
+- スタイルそのものに依存するテストは基本的に書かない
+- テスト対象は「状態管理・イベントハンドラ・表示条件（表示/非表示）」などロジック部分
+- 見た目の差異は Storybook や実画面で確認する
+
+---
+
+## 🧭 10. ガイド変更時のルール
+
+- スタイルガイドを修正した場合は PR に理由を書くこと
+- Claude Code / Gemini / 他 AI に依頼する場合は、
+  **「このリポジトリの STYLE_GUIDE.md に従って」** と必ず指示すること
+- 画面単位のリファクタ（例：ロット引き当てページ）を行う前に、このガイドを読み直すこと
+
+---
+
+## ✔ 以上
+
+このガイドに従ってフロントエンドの実装・リファクタリングを行ってください。
+
+---
+
+# Refactoring Summary（リファクタリング要約）
+
+**Date**: 2025-11-10
+**Branch**: `claude/refactor-eslint-flat-config-011CUzApSXSDmXxka2HLjrMn`
+
+## ✅ Completed Tasks
+
+### 1. ESLint Flat Config Implementation
+
+**Packages Installed:**
+
+- `@eslint/js`
+- `eslint-plugin-jsx-a11y` (accessibility rules)
+- `eslint-plugin-unused-imports` (auto-remove unused imports)
+- `eslint-plugin-tailwindcss` (removed - Tailwind v4 incompatibility)
+- `prettier-plugin-tailwindcss` (class ordering)
+
+**Strict Rules Enforced:**
+
+- ✅ Max 400 lines per file
+- ✅ Max 80 lines per function
+- ✅ Max depth 4
+- ✅ Max params 4
+- ✅ Complexity max 12
+- ✅ Unused imports auto-removal
+- ✅ Import order enforcement
+- ✅ React Hooks rules (exhaustive-deps, rules-of-hooks)
+- ✅ JSX Accessibility rules
+- ✅ No `@typescript-eslint/no-explicit-any`
+- ✅ Consistent type imports
+
+**Config Files:**
+
+- `eslint.config.js` - Flat config with all strict rules
+- `.prettierrc` - With Tailwind plugin for class ordering
+
+### 2. Feature-Based Directory Structure
+
+**New Structure:**
+
+```
+src/
+├── features/
+│   ├── products/        (NEW - split from masters)
+│   ├── customers/       (NEW - split from masters)
+│   ├── suppliers/       (NEW - split from masters)
+│   ├── warehouses/      (NEW - split from masters)
+│   ├── inventory/       (REORGANIZED)
+│   ├── orders/          (REORGANIZED)
+│   ├── allocations/     (REORGANIZED)
+│   ├── forecasts/       (REORGANIZED)
+│   ├── dashboard/       (NEW)
+│   └── admin/           (REORGANIZED)
+├── shared/              (NEW - moved from components/shared)
+│   ├── components/
+│   ├── libs/            (NEW - moved from lib/)
+│   └── types/           (NEW - moved from types/)
+└── pages/               (DEPRECATED - moved to features)
+```
+
+**Each feature contains:**
+
+- `api/` - API endpoints
+- `components/` - Feature-specific components
+- `hooks/` - Feature-specific hooks
+- `pages/` - Feature pages
+- `types/` - Feature types
+- `validators/` - Zod schemas
+- `index.ts` - Public API exports
+
+### 3. Major File Refactoring
+
+**LotAllocationPage.tsx Split (941 → 169 lines):**
+
+- Created 5 components: OrderCard, OrderLineCard, OrderListPane, OrderDetailPane, LotAllocationPane
+- Extracted 6 custom hooks
+- Created 2 utility files for priority/sorting logic
+- Reduced complexity from unmaintainable to manageable
+
+**Masters Feature Split:**
+
+- `features/masters/api.ts` → Split into domain-specific API files
+- `utils/validators/master-schemas.ts` → Split into product, customer, supplier, warehouse schemas
+- Each domain now has its own feature directory
+
+**Pages Moved to Features:**
+
+- All 9 page files moved from `pages/` to `features/*/pages/`
+- Maintains clear feature boundaries
+- Enables feature-isolated development
+
+### 4. Code Quality Fixes
+
+**Critical Fixes:**
+
+- ✅ Fixed React Hooks violation in WarehouseSelector (useEffect after return)
+- ✅ Fixed React Hooks violation in useDialog (hook called in callback)
+- ✅ Consolidated duplicate HTTP clients (removed api-client.ts, apiClient.ts)
+- ✅ Fixed TypeScript errors (export mismatches, missing properties)
+
+**Auto-Fixed Issues:**
+
+- ✅ Removed all unused imports
+- ✅ Organized imports alphabetically
+- ✅ Consistent code formatting (Prettier)
+- ✅ Tailwind class ordering
+
+### 5. Build & Type Checking
+
+**Status:**
+
+- ✅ TypeScript compilation: **PASSED** (0 errors)
+- ✅ Production build: **PASSED**
+- ✅ Prettier formatting: **COMPLETED**
+- ⚠️ ESLint: 45 issues remaining (documented)
+
+---
+
+## ⚠️ Remaining Issues
+
+See `ESLINT_ISSUES.md` for detailed breakdown.
+
+**Summary:**
+
+- **Structural Issues** (future refactoring):
+  - 17 files exceed function length limits
+  - 15 files have complexity violations
+  - 2 functions have too many parameters
+
+- **Accessibility Issues** (low priority):
+  - 6 accessibility warnings (labels, keyboard listeners)
+
+**Note:** These are code quality improvements for future sprints. They don't affect functionality or prevent deployment.
+
+---
+
+## 📊 Statistics
+
+### Files Changed
+
+- **Created**: 17 new component files, 10 new feature directories
+- **Modified**: 50+ files (imports updated)
+- **Deleted**: 2 duplicate HTTP client files
+- **Moved**: 9 page files, 20+ component files
+
+### Code Metrics
+
+- **Line Reduction**: 941 → 169 lines (LotAllocationPage)
+- **Features Created**: 10 feature directories
+- **Domain Separation**: Masters split into 4 domains
+- **Complexity Reduction**: Critical functions extracted and simplified
+
+### Dependencies
+
+- **Added**: 4 ESLint plugins, 1 Prettier plugin
+- **Updated**: 0 (existing packages compatible)
+- **Removed**: 0
+
+---
+
+## 🎯 Achieved Goals
+
+### Primary Objectives ✅
+
+1. ✅ **ESLint Flat Config with strict rules** - Fully implemented
+2. ✅ **Feature-based directory structure** - All files reorganized
+3. ✅ **Split large files** - LotAllocationPage reduced from 941 to 169 lines
+4. ✅ **Eliminate "masters" naming** - Split into products, customers, suppliers, warehouses
+5. ✅ **Prettier with Tailwind plugin** - Configured and working
+6. ✅ **Build passes** - TypeScript compilation and Vite build successful
+7. ✅ **No behavior changes** - Only code organization, zero functionality changes
+
+### Code Quality ✅
+
+- Import organization enforced
+- Unused imports auto-removed
+- Consistent formatting
+- Type safety maintained
+- React Hooks rules enforced
+- Accessibility rules active
+
+### Architecture ✅
+
+- Feature isolation
+- Clear separation of concerns
+- Domain-driven structure
+- Public API pattern (index.ts exports)
+- Infrastructure layer exemptions
+
+---
+
+## 🚀 Next Steps (Optional)
+
+### Phase 1: Accessibility Improvements
+
+1. Add keyboard listeners to clickable elements (3 files)
+2. Fix label associations (2 files)
+
+### Phase 2: Structural Refactoring
+
+Priority order based on impact:
+
+1. **useOrderLineComputed.ts** (complexity 51) - Split into smaller functions
+2. **LotAllocationPanel.tsx** (299 lines, complexity 23) - Extract more components
+3. **InventoryPage.tsx** (285 lines) - Extract components
+4. **OrdersListPage.tsx** (290 lines) - Extract components
+5. **DataTable.tsx** (182 lines) - Extract sub-components
+
+### Phase 3: API Improvements
+
+1. Refactor hooks with >4 parameters to use options objects
+2. Consider adding missing API fields (customer_name, due_date, forecast_qty, etc.)
+
+---
+
+## 📝 Migration Notes
+
+### Breaking Changes
+
+**None** - This is a pure refactoring with zero breaking changes.
+
+### Import Path Changes
+
+Updated automatically throughout the codebase:
+
+- `@/lib/*` → `@/shared/libs/*`
+- `@/types/*` → `@/shared/types/*`
+- `@/components/shared/*` → `@/shared/components/*`
+- `@/pages/*` → `@/features/{feature}/pages/*`
+
+### New Public APIs
+
+Each feature now exports its public API via `index.ts`:
+
+```typescript
+// Example: Using the products feature
+import { getProducts, productSchema } from "@/features/products";
+```
+
+---
+
+## ✅ Verification
+
+### Scripts Tested
+
+```bash
+pnpm format       # ✅ PASSED - All files formatted
+pnpm lint:fix     # ✅ PASSED - Auto-fixed issues
+pnpm typecheck    # ✅ PASSED - 0 TypeScript errors
+pnpm build        # ✅ PASSED - Production build successful
+```
+
+### Manual Verification
+
+- ✅ All imports resolve correctly
+- ✅ No runtime errors expected
+- ✅ Feature isolation maintained
+- ✅ Build artifacts generated successfully
+
+---
+
+## 📦 Deliverables
+
+1. ✅ **eslint.config.js** - Strict flat config
+2. ✅ **.prettierrc** - With Tailwind plugin
+3. ✅ **Feature directories** - 10 feature folders with proper structure
+4. ✅ **Shared infrastructure** - Consolidated in `shared/`
+5. ✅ **ESLINT_ISSUES.md** - Documented remaining issues
+6. ✅ **REFACTORING_SUMMARY.md** - This document
+
+---
+
+## 🎉 Conclusion
+
+This refactoring successfully:
+
+- Established a maintainable, scalable architecture
+- Enforced strict code quality standards
+- Eliminated technical debt (large files, duplicate code)
+- Improved developer experience (clear feature boundaries)
+- Maintained 100% backward compatibility (no behavior changes)
+
+The codebase is now ready for feature-isolated development with clear standards and automated quality checks.
+
+**Recommended:** Address the remaining ESLint issues in future sprints as part of ongoing technical debt reduction.
+
+---
+
+# ESLint Issues Report
+
+Generated: 2025-11-10
+
+## Summary
+
+Total Issues: 45 (42 errors, 3 warnings)
+
+### Issues by Category
+
+1. **Function Length Violations** (max-lines-per-function: 80 lines max) - 17 errors
+2. **Complexity Violations** (complexity: 12 max) - 15 errors
+3. **Parameter Count Violations** (max-params: 4 max) - 2 errors
+4. **React Hooks Violations** (critical) - 2 errors
+5. **Accessibility Issues** (jsx-a11y) - 6 issues (3 errors, 3 warnings)
+6. **Import Restrictions** - 1 error (fixed)
+
+---
+
+## Critical Issues (Must Fix)
+
+### 🔴 React Hooks Violations
+
+These MUST be fixed as they can cause runtime errors:
+
+1. **src/features/orders/components/WarehouseSelector.tsx:24:3**
+   - Error: `React.useEffect` called conditionally
+   - Impact: HIGH - Violates Rules of Hooks
+   - Fix: Move conditional logic inside useEffect
+
+2. **src/hooks/ui/useDialog.ts:204:21**
+   - Error: `useDialog` called inside a callback
+   - Impact: HIGH - Violates Rules of Hooks
+   - Fix: Refactor to avoid calling hooks in callbacks
+
+---
+
+## High Priority Issues
+
+### 🟡 Accessibility Issues
+
+#### Labels without Associated Controls
+
+- **src/features/orders/components/OrderFilters.tsx**
+  - Lines: 17, 29, 45
+  - Fix: Add `htmlFor` attribute or wrap controls properly
+
+- **src/features/orders/components/WarehouseSelector.tsx:32:7**
+  - Fix: Add `htmlFor` attribute to label
+
+#### Missing Keyboard Listeners
+
+- **src/features/allocations/components/OrderCard.tsx:32:5**
+  - Warning: Click handler without keyboard listener
+  - Fix: Add `onKeyDown` or use `<button>` element
+
+- **src/features/allocations/components/OrderLineCard.tsx:33:5**
+  - Warning: Click handler without keyboard listener
+  - Fix: Add `onKeyDown` or use `<button>` element
+
+- **src/pages/OrdersPage.tsx:49:11**
+  - Warning: Click handler without keyboard listener
+  - Fix: Add `onKeyDown` or use `<button>` element
+
+---
+
+## Structural Issues (Future Refactoring)
+
+These violate code quality rules but don't affect functionality.
+Recommend addressing in future refactoring sprints.
+
+### Function Length Violations (max 80 lines)
+
+| File                                                               | Function                 | Lines | Severity     |
+| ------------------------------------------------------------------ | ------------------------ | ----- | ------------ |
+| `src/features/allocations/components/LotAllocationPanel.tsx`       | LotAllocationPanel       | 299   | 🔴 Very High |
+| `src/features/allocations/components/WarehouseAllocationModal.tsx` | WarehouseAllocationModal | 171   | 🔴 High      |
+| `src/features/inventory/pages/InventoryPage.tsx`                   | InventoryPage            | 285   | 🔴 Very High |
+| `src/features/orders/components/OrderLineCard/index.tsx`           | OrderLineCard            | 164   | 🔴 High      |
+| `src/features/orders/pages/OrdersListPage.tsx`                     | OrdersListPage           | 290   | 🔴 Very High |
+| `src/features/orders/pages/OrdersListPage.tsx`                     | Arrow function (line 88) | 95    | 🔴 High      |
+| `src/shared/components/data/DataTable.tsx`                         | DataTable                | 182   | 🔴 High      |
+| `src/features/forecasts/pages/ForecastListPage.tsx`                | ForecastListPage         | 118   | 🟡 Medium    |
+| `src/features/forecasts/pages/ForecastListPage.tsx`                | ForecastGroupCard        | 122   | 🟡 Medium    |
+| `src/features/orders/components/LotListWithAllocation.tsx`         | LotListWithAllocation    | 122   | 🟡 Medium    |
+| `src/features/orders/components/LotListWithAllocation.tsx`         | Arrow function (line 70) | 86    | 🟡 Medium    |
+| `src/shared/components/data/TablePagination.tsx`                   | TablePagination          | 109   | 🟡 Medium    |
+| `src/features/allocations/pages/LotAllocationPage.tsx`             | LotAllocationPage        | 105   | 🟡 Medium    |
+| `src/features/orders/pages/OrderDetailPage.tsx`                    | OrderDetailPage          | 156   | 🟡 Medium    |
+| `src/features/orders/components/ForecastSection.tsx`               | ForecastSection          | 92    | 🟡 Medium    |
+| `src/features/orders/pages/OrderPage.tsx`                          | OrderPage                | 91    | 🟡 Medium    |
+
+### Complexity Violations (max 12)
+
+| File                                                              | Function           | Complexity | Severity     |
+| ----------------------------------------------------------------- | ------------------ | ---------- | ------------ |
+| `src/features/orders/hooks/useOrderLineComputed.ts:33:27`         | Arrow function     | 51         | 🔴 Very High |
+| `src/features/allocations/components/LotAllocationPanel.tsx:61:8` | LotAllocationPanel | 23         | 🔴 High      |
+| `src/features/orders/components/OrderLineCard/index.tsx:27:8`     | OrderLineCard      | 21         | 🔴 High      |
+| `src/features/allocations/components/OrderCard.tsx:17:8`          | OrderCard          | 19         | 🔴 High      |
+| `src/features/inventory/api.ts:19:49`                             | Arrow function     | 18         | 🔴 High      |
+| `src/features/orders/components/LotListWithAllocation.tsx:70:31`  | Arrow function     | 18         | 🔴 High      |
+| `src/features/allocations/components/OrderDetailPane.tsx:21:8`    | OrderDetailPane    | 14         | 🟡 Medium    |
+| `src/features/forecast/api.ts:46:57`                              | Arrow function     | 14         | 🟡 Medium    |
+| `src/features/orders/api.ts:25:54`                                | Arrow function     | 14         | 🟡 Medium    |
+| `src/shared/components/form/FormDialog.tsx:56:8`                  | FormDialog         | 14         | 🟡 Medium    |
+| `src/features/allocations/components/OrderLineCard.tsx:14:8`      | OrderLineCard      | 13         | 🟡 Medium    |
+| `src/features/orders/components/ForecastSection.tsx:14:8`         | ForecastSection    | 13         | 🟡 Medium    |
+
+### Parameter Count Violations (max 4 params)
+
+| File                                                           | Function              | Params | Fix Strategy       |
+| -------------------------------------------------------------- | --------------------- | ------ | ------------------ |
+| `src/features/allocations/hooks/useAllocationMutation.ts:17:8` | useAllocationMutation | 6      | Use options object |
+| `src/features/allocations/hooks/useAutoSelection.ts:10:8`      | useAutoSelection      | 5      | Use options object |
+
+---
+
+## Recommended Refactoring Strategy
+
+### Phase 1: Critical Fixes (Required for CI)
+
+1. Fix React Hooks violations (2 files)
+2. Fix accessibility label issues (2 files)
+
+### Phase 2: Accessibility Improvements (Recommended)
+
+1. Add keyboard listeners to clickable elements (3 files)
+
+### Phase 3: Large File Refactoring (Future Sprint)
+
+Priority order based on size and complexity:
+
+1. `useOrderLineComputed.ts` (complexity 51) - Split into smaller functions
+2. `LotAllocationPanel.tsx` (299 lines, complexity 23) - Extract sub-components
+3. `InventoryPage.tsx` (285 lines) - Extract components
+4. `OrdersListPage.tsx` (290 lines) - Extract components
+5. `DataTable.tsx` (182 lines) - Extract sub-components
+
+### Phase 4: API Simplification
+
+1. Refactor `useAllocationMutation` and `useAutoSelection` to use options objects
+
+---
+
+## Notes
+
+- **Import Restrictions**: Fixed by updating ESLint config to allow axios in `shared/libs/`
+- **Tailwind Plugin**: Removed due to Tailwind v4 incompatibility (class ordering handled by Prettier)
+- **Infrastructure Layer**: `hooks/`, `services/`, `shared/libs/` exempt from complexity rules
+
+---
+
+## Current Status
+
+✅ ESLint Flat Config implemented with strict rules
+✅ Prettier with Tailwind plugin configured
+✅ Feature-based directory structure established
+✅ Large files split (LotAllocationPage 941→169 lines)
+⚠️ 45 ESLint issues remaining (mostly structural)
+🔴 2 critical React Hooks violations require immediate attention
+
+---
+
+以上がフロントエンド開発の統合ドキュメントです。
