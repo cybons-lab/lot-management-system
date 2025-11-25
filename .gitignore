@@ -90,6 +90,7 @@ yarn-error.log*
 # Reports / Diagnostics
 # ============================================
 reports/
+!docs/archive/reports/
 diagnostics*.txt
 
 # ============================================
