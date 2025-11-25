@@ -1,11 +1,9 @@
 """データベース接続設定 / SQLAlchemyセッション管理."""
 
 import logging
-import os
 from collections.abc import Generator
-from pathlib import Path
 
-from sqlalchemy import create_engine, event, text
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 from .config import settings
