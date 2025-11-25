@@ -1,0 +1,57 @@
+
+=== Frontend: Prettier --check (detect only) ===
+Checking formatting...
+[[33mwarn[39m] src/components/common/InfoRow.tsx
+[[33mwarn[39m] src/components/ui/badge.tsx
+[[33mwarn[39m] src/components/ui/button.tsx
+[[33mwarn[39m] src/components/ui/dialog.tsx
+[[33mwarn[39m] src/components/ui/icons.tsx
+[[33mwarn[39m] src/components/ui/input.tsx
+[[33mwarn[39m] src/components/ui/label.tsx
+[[33mwarn[39m] src/components/ui/progress.tsx
+[[33mwarn[39m] src/components/ui/select.tsx
+[[33mwarn[39m] src/components/ui/StatCard.tsx
+[[33mwarn[39m] src/components/ui/table.tsx
+[[33mwarn[39m] src/components/ui/tabs.tsx
+[[33mwarn[39m] src/components/ui/textarea.tsx
+[[33mwarn[39m] src/components/WarehouseAllocationModal.tsx
+[[33mwarn[39m] src/features/forecast/api.ts
+[[33mwarn[39m] src/features/inventory/api.ts
+[[33mwarn[39m] src/features/masters/api.ts
+[[33mwarn[39m] src/features/orders/api.ts
+[[33mwarn[39m] src/features/orders/components/AllocationProgress.tsx
+[[33mwarn[39m] src/features/orders/components/ForecastSection-v2.tsx
+[[33mwarn[39m] src/features/orders/components/ForecastSection.tsx
+[[33mwarn[39m] src/features/orders/components/LotAllocationPanel.tsx
+[[33mwarn[39m] src/features/orders/components/LotListWithAllocation.tsx
+[[33mwarn[39m] src/features/orders/components/OrderCard.tsx
+[[33mwarn[39m] src/features/orders/components/OrderFilters.tsx
+[[33mwarn[39m] src/features/orders/components/OrderLineCard/index.tsx
+[[33mwarn[39m] src/features/orders/components/OrderLineHeader.tsx
+[[33mwarn[39m] src/features/orders/components/WarehouseBadges.tsx
+[[33mwarn[39m] src/features/orders/components/WarehouseSelector.tsx
+[[33mwarn[39m] src/features/orders/hooks/useAllocationActions.ts
+[[33mwarn[39m] src/features/orders/hooks/useAllocations.ts
+[[33mwarn[39m] src/features/orders/hooks/useOrderLineComputed.ts
+[[33mwarn[39m] src/features/orders/hooks/useOrders.ts
+[[33mwarn[39m] src/hooks/use-toast.ts
+[[33mwarn[39m] src/lib/admin-api.ts
+[[33mwarn[39m] src/lib/csv.ts
+[[33mwarn[39m] src/lib/http.ts
+[[33mwarn[39m] src/lib/query-client.ts
+[[33mwarn[39m] src/lib/utils.ts
+[[33mwarn[39m] src/main.tsx
+[[33mwarn[39m] src/pages/AdminPage.tsx
+[[33mwarn[39m] src/pages/DashboardPage.tsx
+[[33mwarn[39m] src/pages/ForecastImportPage.tsx
+[[33mwarn[39m] src/pages/ForecastListPage.tsx
+[[33mwarn[39m] src/pages/InventoryPage.tsx
+[[33mwarn[39m] src/pages/OrderCardPage.tsx
+[[33mwarn[39m] src/pages/OrderDetailPage.tsx
+[[33mwarn[39m] src/pages/OrderPage.tsx
+[[33mwarn[39m] src/pages/OrdersListPage.tsx
+[[33mwarn[39m] src/types/index.ts
+[[33mwarn[39m] src/types/orders.ts
+[[33mwarn[39m] Code style issues found in 51 files. Run Prettier with --write to fix.
+
+*** Lint/Format check FAILED. See logs above. ***

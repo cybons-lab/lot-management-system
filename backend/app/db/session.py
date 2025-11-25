@@ -1,6 +1,7 @@
 """Compatibility layer for legacy ``app.db.session`` imports."""
 
-from app.core.database import Base, SessionLocal, drop_db, engine, get_db, init_db
+from app.core.database import SessionLocal, drop_db, engine, get_db, init_db
+from app.models.base_model import Base
 
 
 __all__ = [

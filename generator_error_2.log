@@ -1,0 +1,549 @@
+Generating test data...
+2025-11-26 06:52:27,916 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2025-11-26 06:52:27,916 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-11-26 06:52:27,917 INFO sqlalchemy.engine.Engine select current_schema()
+2025-11-26 06:52:27,917 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-11-26 06:52:27,919 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2025-11-26 06:52:27,919 INFO sqlalchemy.engine.Engine [raw sql] {}
+2025-11-26 06:52:27,921 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-11-26 06:52:27,921 INFO sqlalchemy.engine.Engine SET session_replication_role = 'replica';
+2025-11-26 06:52:27,921 INFO sqlalchemy.engine.Engine [generated in 0.00011s] {}
+2025-11-26 06:52:27,923 INFO sqlalchemy.engine.Engine TRUNCATE TABLE allocation_suggestions RESTART IDENTITY CASCADE;
+2025-11-26 06:52:27,923 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {}
+2025-11-26 06:52:27,929 INFO sqlalchemy.engine.Engine TRUNCATE TABLE order_lines RESTART IDENTITY CASCADE;
+2025-11-26 06:52:27,930 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {}
+2025-11-26 06:52:27,940 INFO sqlalchemy.engine.Engine TRUNCATE TABLE orders RESTART IDENTITY CASCADE;
+2025-11-26 06:52:27,940 INFO sqlalchemy.engine.Engine [generated in 0.00013s] {}
+2025-11-26 06:52:27,963 INFO sqlalchemy.engine.Engine TRUNCATE TABLE forecast_current RESTART IDENTITY CASCADE;
+2025-11-26 06:52:27,963 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {}
+2025-11-26 06:52:27,981 INFO sqlalchemy.engine.Engine TRUNCATE TABLE forecast_history RESTART IDENTITY CASCADE;
+2025-11-26 06:52:27,981 INFO sqlalchemy.engine.Engine [generated in 0.00015s] {}
+2025-11-26 06:52:27,991 INFO sqlalchemy.engine.Engine TRUNCATE TABLE lots RESTART IDENTITY CASCADE;
+2025-11-26 06:52:27,991 INFO sqlalchemy.engine.Engine [generated in 0.00013s] {}
+2025-11-26 06:52:28,034 INFO sqlalchemy.engine.Engine TRUNCATE TABLE customer_items RESTART IDENTITY CASCADE;
+2025-11-26 06:52:28,034 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {}
+2025-11-26 06:52:28,043 INFO sqlalchemy.engine.Engine TRUNCATE TABLE products RESTART IDENTITY CASCADE;
+2025-11-26 06:52:28,043 INFO sqlalchemy.engine.Engine [generated in 0.00013s] {}
+2025-11-26 06:52:28,161 INFO sqlalchemy.engine.Engine TRUNCATE TABLE delivery_places RESTART IDENTITY CASCADE;
+2025-11-26 06:52:28,161 INFO sqlalchemy.engine.Engine [generated in 0.00013s] {}
+2025-11-26 06:52:28,223 INFO sqlalchemy.engine.Engine TRUNCATE TABLE customers RESTART IDENTITY CASCADE;
+2025-11-26 06:52:28,223 INFO sqlalchemy.engine.Engine [generated in 0.00016s] {}
+2025-11-26 06:52:28,325 INFO sqlalchemy.engine.Engine TRUNCATE TABLE suppliers RESTART IDENTITY CASCADE;
+2025-11-26 06:52:28,326 INFO sqlalchemy.engine.Engine [generated in 0.00013s] {}
+2025-11-26 06:52:28,421 INFO sqlalchemy.engine.Engine TRUNCATE TABLE warehouses RESTART IDENTITY CASCADE;
+2025-11-26 06:52:28,421 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {}
+2025-11-26 06:52:28,483 INFO sqlalchemy.engine.Engine SET session_replication_role = 'origin';
+2025-11-26 06:52:28,483 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {}
+2025-11-26 06:52:28,484 INFO sqlalchemy.engine.Engine COMMIT
+2025-11-26 06:52:28,541 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-11-26 06:52:28,543 INFO sqlalchemy.engine.Engine INSERT INTO warehouses (warehouse_code, warehouse_name, warehouse_type) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR FROM (VALUES (%(warehouse_code__0)s, %(warehouse_name__0)s, %(warehouse_type__0)s, 0), (%(warehouse_code__1)s, %(warehouse_name__1)s, ... 226 characters truncated ... ounter RETURNING warehouses.id, warehouses.created_at, warehouses.updated_at, warehouses.id AS id__1
+2025-11-26 06:52:28,543 INFO sqlalchemy.engine.Engine [generated in 0.00006s (insertmanyvalues) 1/1 (ordered)] {'warehouse_name__0': '株式会社石川運輸倉庫', 'warehouse_code__0': 'WH-1043', 'warehouse_type__0': 'internal', 'warehouse_name__1': '株式会社鈴木建設倉庫', 'warehouse_code__1': 'WH-8196', 'warehouse_type__1': 'supplier', 'warehouse_name__2': '合同会社阿部情報倉庫', 'warehouse_code__2': 'WH-8908', 'warehouse_type__2': 'external', 'warehouse_name__3': '岡田水産株式会社倉庫', 'warehouse_code__3': 'WH-6379', 'warehouse_type__3': 'internal'}
+2025-11-26 06:52:28,546 INFO sqlalchemy.engine.Engine COMMIT
+2025-11-26 06:52:28,550 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-11-26 06:52:28,551 INFO sqlalchemy.engine.Engine INSERT INTO suppliers (supplier_code, supplier_name) SELECT p0::VARCHAR, p1::VARCHAR FROM (VALUES (%(supplier_code__0)s, %(supplier_name__0)s, 0), (%(supplier_code__1)s, %(supplier_name__1)s, 1), (%(supplier_code__2)s, %(supplier_name__2)s, 2)) AS imp_sen(p0, p1, sen_counter) ORDER BY sen_counter RETURNING suppliers.id, suppliers.created_at, suppliers.updated_at, suppliers.id AS id__1
+2025-11-26 06:52:28,551 INFO sqlalchemy.engine.Engine [generated in 0.00008s (insertmanyvalues) 1/1 (ordered)] {'supplier_name__0': '有限会社鈴木電気', 'supplier_code__0': 'SUP-6542', 'supplier_name__1': '岡田銀行有限会社', 'supplier_code__1': 'SUP-1559', 'supplier_name__2': '村上通信有限会社', 'supplier_code__2': 'SUP-8161'}
+2025-11-26 06:52:28,553 INFO sqlalchemy.engine.Engine COMMIT
+2025-11-26 06:52:28,556 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-11-26 06:52:28,556 INFO sqlalchemy.engine.Engine INSERT INTO customers (customer_code, customer_name) VALUES (%(customer_code)s, %(customer_name)s) RETURNING customers.id, customers.created_at, customers.updated_at
+2025-11-26 06:52:28,557 INFO sqlalchemy.engine.Engine [generated in 0.00011s] {'customer_code': 'CUST-9310', 'customer_name': '有限会社岡本建設'}
+2025-11-26 06:52:28,560 INFO sqlalchemy.engine.Engine INSERT INTO customers (customer_code, customer_name) VALUES (%(customer_code)s, %(customer_name)s) RETURNING customers.id, customers.created_at, customers.updated_at
+2025-11-26 06:52:28,560 INFO sqlalchemy.engine.Engine [cached since 0.00305s ago] {'customer_code': 'CUST-4192', 'customer_name': '株式会社山田食品'}
+2025-11-26 06:52:28,562 INFO sqlalchemy.engine.Engine INSERT INTO delivery_places (jiku_code, delivery_place_code, delivery_place_name, customer_id) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::BIGINT FROM (VALUES (%(jiku_code__0)s, %(delivery_place_code__0)s, %(delivery_place_name__0)s, %(customer ... 187 characters truncated ... ivery_places.id, delivery_places.created_at, delivery_places.updated_at, delivery_places.id AS id__1
+2025-11-26 06:52:28,562 INFO sqlalchemy.engine.Engine [generated in 0.00005s (insertmanyvalues) 1/1 (ordered)] {'jiku_code__0': None, 'customer_id__0': 1, 'delivery_place_code__0': 'DP-1647', 'delivery_place_name__0': '武蔵村山市センター', 'jiku_code__1': None, 'customer_id__1': 1, 'delivery_place_code__1': 'DP-5255', 'delivery_place_name__1': '山武郡九十九里町センター'}
+2025-11-26 06:52:28,565 INFO sqlalchemy.engine.Engine INSERT INTO customers (customer_code, customer_name) VALUES (%(customer_code)s, %(customer_name)s) RETURNING customers.id, customers.created_at, customers.updated_at
+2025-11-26 06:52:28,565 INFO sqlalchemy.engine.Engine [cached since 0.008079s ago] {'customer_code': 'CUST-3953', 'customer_name': '加藤運輸有限会社'}
+2025-11-26 06:52:28,566 INFO sqlalchemy.engine.Engine INSERT INTO delivery_places (jiku_code, delivery_place_code, delivery_place_name, customer_id) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::BIGINT FROM (VALUES (%(jiku_code__0)s, %(delivery_place_code__0)s, %(delivery_place_name__0)s, %(customer ... 187 characters truncated ... ivery_places.id, delivery_places.created_at, delivery_places.updated_at, delivery_places.id AS id__1
+2025-11-26 06:52:28,566 INFO sqlalchemy.engine.Engine [cached since 0.004524s ago (insertmanyvalues) 1/1 (ordered)] {'jiku_code__0': None, 'customer_id__0': 2, 'delivery_place_code__0': 'DP-8350', 'delivery_place_name__0': '長生郡一宮町センター', 'jiku_code__1': None, 'customer_id__1': 2, 'delivery_place_code__1': 'DP-0564', 'delivery_place_name__1': '袖ケ浦市センター'}
+2025-11-26 06:52:28,568 INFO sqlalchemy.engine.Engine INSERT INTO customers (customer_code, customer_name) VALUES (%(customer_code)s, %(customer_name)s) RETURNING customers.id, customers.created_at, customers.updated_at
+2025-11-26 06:52:28,568 INFO sqlalchemy.engine.Engine [cached since 0.01155s ago] {'customer_code': 'CUST-8710', 'customer_name': '株式会社清水保険'}
+2025-11-26 06:52:28,569 INFO sqlalchemy.engine.Engine INSERT INTO delivery_places (jiku_code, delivery_place_code, delivery_place_name, customer_id) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::BIGINT FROM (VALUES (%(jiku_code__0)s, %(delivery_place_code__0)s, %(delivery_place_name__0)s, %(customer ... 286 characters truncated ... ivery_places.id, delivery_places.created_at, delivery_places.updated_at, delivery_places.id AS id__1
+2025-11-26 06:52:28,569 INFO sqlalchemy.engine.Engine [cached since 0.007873s ago (insertmanyvalues) 1/1 (ordered)] {'jiku_code__0': None, 'customer_id__0': 3, 'delivery_place_code__0': 'DP-2423', 'delivery_place_name__0': '三宅島三宅村センター', 'jiku_code__1': None, 'customer_id__1': 3, 'delivery_place_code__1': 'DP-8849', 'delivery_place_name__1': '北区センター', 'jiku_code__2': None, 'customer_id__2': 3, 'delivery_place_code__2': 'DP-9653', 'delivery_place_name__2': 'いすみ市センター'}
+2025-11-26 06:52:28,572 INFO sqlalchemy.engine.Engine INSERT INTO customers (customer_code, customer_name) VALUES (%(customer_code)s, %(customer_name)s) RETURNING customers.id, customers.created_at, customers.updated_at
+2025-11-26 06:52:28,572 INFO sqlalchemy.engine.Engine [cached since 0.01505s ago] {'customer_code': 'CUST-0184', 'customer_name': '鈴木電気株式会社'}
+2025-11-26 06:52:28,572 INFO sqlalchemy.engine.Engine INSERT INTO delivery_places (jiku_code, delivery_place_code, delivery_place_name, customer_id) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::BIGINT FROM (VALUES (%(jiku_code__0)s, %(delivery_place_code__0)s, %(delivery_place_name__0)s, %(customer ... 187 characters truncated ... ivery_places.id, delivery_places.created_at, delivery_places.updated_at, delivery_places.id AS id__1
+2025-11-26 06:52:28,573 INFO sqlalchemy.engine.Engine [cached since 0.01135s ago (insertmanyvalues) 1/1 (ordered)] {'jiku_code__0': None, 'customer_id__0': 4, 'delivery_place_code__0': 'DP-6916', 'delivery_place_name__0': '大田区センター', 'jiku_code__1': None, 'customer_id__1': 4, 'delivery_place_code__1': 'DP-9784', 'delivery_place_name__1': '小金井市センター'}
+2025-11-26 06:52:28,575 INFO sqlalchemy.engine.Engine INSERT INTO customers (customer_code, customer_name) VALUES (%(customer_code)s, %(customer_name)s) RETURNING customers.id, customers.created_at, customers.updated_at
+2025-11-26 06:52:28,575 INFO sqlalchemy.engine.Engine [cached since 0.01822s ago] {'customer_code': 'CUST-8932', 'customer_name': '前田情報合同会社'}
+2025-11-26 06:52:28,576 INFO sqlalchemy.engine.Engine INSERT INTO delivery_places (jiku_code, delivery_place_code, delivery_place_name, customer_id) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::BIGINT FROM (VALUES (%(jiku_code__0)s, %(delivery_place_code__0)s, %(delivery_place_name__0)s, %(customer ... 187 characters truncated ... ivery_places.id, delivery_places.created_at, delivery_places.updated_at, delivery_places.id AS id__1
+2025-11-26 06:52:28,576 INFO sqlalchemy.engine.Engine [cached since 0.01453s ago (insertmanyvalues) 1/1 (ordered)] {'jiku_code__0': None, 'customer_id__0': 5, 'delivery_place_code__0': 'DP-7048', 'delivery_place_name__0': '八丈島八丈町センター', 'jiku_code__1': None, 'customer_id__1': 5, 'delivery_place_code__1': 'DP-2814', 'delivery_place_name__1': '横浜市金沢区センター'}
+2025-11-26 06:52:28,577 INFO sqlalchemy.engine.Engine INSERT INTO delivery_places (jiku_code, delivery_place_code, delivery_place_name, customer_id) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::BIGINT FROM (VALUES (%(jiku_code__0)s, %(delivery_place_code__0)s, %(delivery_place_name__0)s, %(customer ... 187 characters truncated ... ivery_places.id, delivery_places.created_at, delivery_places.updated_at, delivery_places.id AS id__1
+2025-11-26 06:52:28,577 INFO sqlalchemy.engine.Engine [cached since 0.01636s ago (insertmanyvalues) 1/1 (ordered)] {'jiku_code__0': None, 'customer_id__0': 6, 'delivery_place_code__0': 'DP-0957', 'delivery_place_name__0': '鴨川市センター', 'jiku_code__1': None, 'customer_id__1': 6, 'delivery_place_code__1': 'DP-1543', 'delivery_place_name__1': '四街道市センター'}
+2025-11-26 06:52:28,579 INFO sqlalchemy.engine.Engine COMMIT
+2025-11-26 06:52:28,583 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-11-26 06:52:28,584 INFO sqlalchemy.engine.Engine INSERT INTO products (maker_part_code, product_name, base_unit, consumption_limit_days) SELECT p0::VARCHAR, p1::VARCHAR, p2::VARCHAR, p3::INTEGER FROM (VALUES (%(maker_part_code__0)s, %(product_name__0)s, %(base_unit__0)s, %(consumption_limit_days__0 ... 2065 characters truncated ... products.internal_unit, products.external_unit, products.qty_per_internal_unit, products.id AS id__1
+2025-11-26 06:52:28,585 INFO sqlalchemy.engine.Engine [generated in 0.00008s (insertmanyvalues) 1/1 (ordered)] {'base_unit__0': 'pcs', 'product_name__0': 'PRODUCT-7182I', 'maker_part_code__0': 'PRD-391fU', 'consumption_limit_days__0': 60, 'base_unit__1': 'pcs', 'product_name__1': 'PRODUCT-9638W', 'maker_part_code__1': 'PRD-782qH', 'consumption_limit_days__1': 60, 'base_unit__2': 'pcs', 'product_name__2': 'PRODUCT-5787H', 'maker_part_code__2': 'PRD-346QP', 'consumption_limit_days__2': 180, 'base_unit__3': 'pcs', 'product_name__3': 'PRODUCT-9839O', 'maker_part_code__3': 'PRD-331vb', 'consumption_limit_days__3': 180, 'base_unit__4': 'pcs', 'product_name__4': 'PRODUCT-0518P', 'maker_part_code__4': 'PRD-010oe', 'consumption_limit_days__4': 30, 'base_unit__5': 'pcs', 'product_name__5': 'PRODUCT-9973Y', 'maker_part_code__5': 'PRD-473Ii', 'consumption_limit_days__5': 180, 'base_unit__6': 'pcs', 'product_name__6': 'PRODUCT-6566D', 'maker_part_code__6': 'PRD-763gg', 'consumption_limit_days__6': 60, 'base_unit__7': 'pcs', 'product_name__7': 'PRODUCT-5133M', 'maker_part_code__7': 'PRD-010zU', 'consumption_limit_days__7': 365, 'base_unit__8': 'pcs', 'product_name__8': 'PRODUCT-4731C', 'maker_part_code__8': 'PRD-872Bl', 'consumption_limit_days__8': 365, 'base_unit__9': 'pcs', 'product_name__9': 'PRODUCT-0132A', 'maker_part_code__9': 'PRD-810PI', 'consumption_limit_days__9': 365, 'base_unit__10': 'pcs', 'product_name__10': 'PRODUCT-2606Q', 'maker_part_code__10': 'PRD-773zd', 'consumption_limit_days__10': 180, 'base_unit__11': 'pcs', 'product_name__11': 'PRODUCT-8723S', 'maker_part_code__11': 'PRD-746SU', 'consumption_limit_days__11': 120, 'base_unit__12': 'pcs', 'product_name__12': 'PRODUCT-0500L', 'maker_part_code__12': 'PRD-309VI', 'consumption_limit_days__12': 60, 'base_unit__13': 'pcs', 'product_name__13': 'PRODUCT-8121M', 'maker_part_code__13': 'PRD-788kd', 'consumption_limit_days__13': 120, 'base_unit__14': 'pcs', 'product_name__14': 'PRODUCT-3990N', 'maker_part_code__14': 'PRD-136hK', 'consumption_limit_days__14': 180, 'base_unit__15': 'pcs', 'product_name__15': 'PRODUCT-5435P', 'maker_part_code__15': 'PRD-169KH', 'consumption_limit_days__15': 90, 'base_unit__16': 'pcs', 'product_name__16': 'PRODUCT-4751A', 'maker_part_code__16': 'PRD-462QP', 'consumption_limit_days__16': 30, 'base_unit__17': 'pcs', 'product_name__17': 'PRODUCT-8384I', 'maker_part_code__17': 'PRD-799ge', 'consumption_limit_days__17': 60, 'base_unit__18': 'pcs', 'product_name__18': 'PRODUCT-2784N', 'maker_part_code__18': 'PRD-513xs', 'consumption_limit_days__18': 365, 'base_unit__19': 'pcs', 'product_name__19': 'PRODUCT-1241G', 'maker_part_code__19': 'PRD-808tQ', 'consumption_limit_days__19': 120}
+2025-11-26 06:52:28,587 INFO sqlalchemy.engine.Engine COMMIT
+2025-11-26 06:52:28,591 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-11-26 06:52:28,593 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,593 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {'pk_1': 3}
+2025-11-26 06:52:28,596 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,596 INFO sqlalchemy.engine.Engine [generated in 0.00017s] {'pk_1': 1}
+2025-11-26 06:52:28,598 INFO sqlalchemy.engine.Engine SELECT suppliers.id AS suppliers_id, suppliers.supplier_code AS suppliers_supplier_code, suppliers.supplier_name AS suppliers_supplier_name, suppliers.created_at AS suppliers_created_at, suppliers.updated_at AS suppliers_updated_at 
+FROM suppliers 
+WHERE suppliers.id = %(pk_1)s
+2025-11-26 06:52:28,599 INFO sqlalchemy.engine.Engine [generated in 0.00013s] {'pk_1': 1}
+2025-11-26 06:52:28,600 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,600 INFO sqlalchemy.engine.Engine [cached since 0.006465s ago] {'pk_1': 1}
+2025-11-26 06:52:28,601 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,601 INFO sqlalchemy.engine.Engine [cached since 0.00768s ago] {'pk_1': 2}
+2025-11-26 06:52:28,602 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,602 INFO sqlalchemy.engine.Engine [cached since 0.009108s ago] {'pk_1': 4}
+2025-11-26 06:52:28,603 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,604 INFO sqlalchemy.engine.Engine [cached since 0.01024s ago] {'pk_1': 5}
+2025-11-26 06:52:28,605 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,605 INFO sqlalchemy.engine.Engine [cached since 0.01132s ago] {'pk_1': 6}
+2025-11-26 06:52:28,606 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,606 INFO sqlalchemy.engine.Engine [cached since 0.009534s ago] {'pk_1': 2}
+2025-11-26 06:52:28,607 INFO sqlalchemy.engine.Engine SELECT suppliers.id AS suppliers_id, suppliers.supplier_code AS suppliers_supplier_code, suppliers.supplier_name AS suppliers_supplier_name, suppliers.created_at AS suppliers_created_at, suppliers.updated_at AS suppliers_updated_at 
+FROM suppliers 
+WHERE suppliers.id = %(pk_1)s
+2025-11-26 06:52:28,607 INFO sqlalchemy.engine.Engine [cached since 0.008536s ago] {'pk_1': 2}
+2025-11-26 06:52:28,608 INFO sqlalchemy.engine.Engine SELECT suppliers.id AS suppliers_id, suppliers.supplier_code AS suppliers_supplier_code, suppliers.supplier_name AS suppliers_supplier_name, suppliers.created_at AS suppliers_created_at, suppliers.updated_at AS suppliers_updated_at 
+FROM suppliers 
+WHERE suppliers.id = %(pk_1)s
+2025-11-26 06:52:28,608 INFO sqlalchemy.engine.Engine [cached since 0.009819s ago] {'pk_1': 3}
+2025-11-26 06:52:28,609 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,609 INFO sqlalchemy.engine.Engine [cached since 0.01326s ago] {'pk_1': 3}
+2025-11-26 06:52:28,611 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,611 INFO sqlalchemy.engine.Engine [cached since 0.01442s ago] {'pk_1': 4}
+2025-11-26 06:52:28,612 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,612 INFO sqlalchemy.engine.Engine [cached since 0.0157s ago] {'pk_1': 5}
+2025-11-26 06:52:28,613 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,613 INFO sqlalchemy.engine.Engine [cached since 0.01712s ago] {'pk_1': 6}
+2025-11-26 06:52:28,615 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,615 INFO sqlalchemy.engine.Engine [cached since 0.01834s ago] {'pk_1': 7}
+2025-11-26 06:52:28,615 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,616 INFO sqlalchemy.engine.Engine [cached since 0.01939s ago] {'pk_1': 8}
+2025-11-26 06:52:28,617 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,617 INFO sqlalchemy.engine.Engine [cached since 0.02054s ago] {'pk_1': 9}
+2025-11-26 06:52:28,617 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,617 INFO sqlalchemy.engine.Engine [cached since 0.02171s ago] {'pk_1': 10}
+2025-11-26 06:52:28,619 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,619 INFO sqlalchemy.engine.Engine [cached since 0.02301s ago] {'pk_1': 11}
+2025-11-26 06:52:28,620 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,621 INFO sqlalchemy.engine.Engine [cached since 0.0242s ago] {'pk_1': 12}
+2025-11-26 06:52:28,622 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,622 INFO sqlalchemy.engine.Engine [cached since 0.02548s ago] {'pk_1': 13}
+2025-11-26 06:52:28,622 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,622 INFO sqlalchemy.engine.Engine [cached since 0.02654s ago] {'pk_1': 14}
+2025-11-26 06:52:28,623 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,623 INFO sqlalchemy.engine.Engine [cached since 0.02761s ago] {'pk_1': 15}
+2025-11-26 06:52:28,625 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,625 INFO sqlalchemy.engine.Engine [cached since 0.02892s ago] {'pk_1': 16}
+2025-11-26 06:52:28,626 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,627 INFO sqlalchemy.engine.Engine [cached since 0.03017s ago] {'pk_1': 17}
+2025-11-26 06:52:28,627 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,627 INFO sqlalchemy.engine.Engine [cached since 0.03139s ago] {'pk_1': 18}
+2025-11-26 06:52:28,629 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,629 INFO sqlalchemy.engine.Engine [cached since 0.03262s ago] {'pk_1': 19}
+2025-11-26 06:52:28,630 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,630 INFO sqlalchemy.engine.Engine [cached since 0.03396s ago] {'pk_1': 20}
+2025-11-26 06:52:28,633 INFO sqlalchemy.engine.Engine INSERT INTO customer_items (customer_id, external_product_code, product_id, supplier_id, base_unit, pack_unit, pack_quantity, special_instructions) VALUES (%(customer_id__0)s, %(external_product_code__0)s, %(product_id__0)s, %(supplier_id__0)s, %(bas ... 3944 characters truncated ... ated_at, customer_items.updated_at, customer_items.customer_id, customer_items.external_product_code
+2025-11-26 06:52:28,633 INFO sqlalchemy.engine.Engine [generated in 0.00010s (insertmanyvalues) 1/1 (ordered)] {'base_unit__0': 'pcs', 'product_id__0': 1, 'external_product_code__0': 'EXT-CUST-3953-PRD-391fU', 'supplier_id__0': 1, 'pack_quantity__0': None, 'pack_unit__0': None, 'special_instructions__0': None, 'customer_id__0': 3, 'base_unit__1': 'pcs', 'product_id__1': 2, 'external_product_code__1': 'EXT-CUST-3953-PRD-782qH', 'supplier_id__1': 2, 'pack_quantity__1': None, 'pack_unit__1': None, 'special_instructions__1': None, 'customer_id__1': 3, 'base_unit__2': 'pcs', 'product_id__2': 2, 'external_product_code__2': 'EXT-CUST-9310-PRD-782qH', 'supplier_id__2': 3, 'pack_quantity__2': None, 'pack_unit__2': None, 'special_instructions__2': None, 'customer_id__2': 1, 'base_unit__3': 'pcs', 'product_id__3': 2, 'external_product_code__3': 'EXT-CUST-8710-PRD-782qH', 'supplier_id__3': 2, 'pack_quantity__3': None, 'pack_unit__3': None, 'special_instructions__3': None, 'customer_id__3': 4, 'base_unit__4': 'pcs', 'product_id__4': 3, 'external_product_code__4': 'EXT-CUST-9310-PRD-346QP', 'supplier_id__4': 3, 'pack_quantity__4': None, 'pack_unit__4': None, 'special_instructions__4': None, 'customer_id__4': 1, 'base_unit__5': 'pcs', 'product_id__5': 4, 'external_product_code__5': 'EXT-CUST-9310-PRD-331vb', 'supplier_id__5': 2, 'pack_quantity__5': None, 'pack_unit__5': None, 'special_instructions__5': None, 'customer_id__5': 1, 'base_unit__6': 'pcs', 'product_id__6': 5 ... 76 parameters truncated ... 'special_instructions__15': None, 'customer_id__15': 6, 'base_unit__16': 'pcs', 'product_id__16': 15, 'external_product_code__16': 'EXT-CUST-4192-PRD-136hK', 'supplier_id__16': 2, 'pack_quantity__16': None, 'pack_unit__16': None, 'special_instructions__16': None, 'customer_id__16': 2, 'base_unit__17': 'pcs', 'product_id__17': 16, 'external_product_code__17': 'EXT-CUST-3953-PRD-169KH', 'supplier_id__17': 3, 'pack_quantity__17': None, 'pack_unit__17': None, 'special_instructions__17': None, 'customer_id__17': 3, 'base_unit__18': 'pcs', 'product_id__18': 17, 'external_product_code__18': 'EXT-CUST-8932-PRD-462QP', 'supplier_id__18': 3, 'pack_quantity__18': None, 'pack_unit__18': None, 'special_instructions__18': None, 'customer_id__18': 6, 'base_unit__19': 'pcs', 'product_id__19': 18, 'external_product_code__19': 'EXT-CUST-3953-PRD-799ge', 'supplier_id__19': 1, 'pack_quantity__19': None, 'pack_unit__19': None, 'special_instructions__19': None, 'customer_id__19': 3, 'base_unit__20': 'pcs', 'product_id__20': 19, 'external_product_code__20': 'EXT-CUST-4192-PRD-513xs', 'supplier_id__20': 2, 'pack_quantity__20': None, 'pack_unit__20': None, 'special_instructions__20': None, 'customer_id__20': 2, 'base_unit__21': 'pcs', 'product_id__21': 20, 'external_product_code__21': 'EXT-CUST-8710-PRD-808tQ', 'supplier_id__21': 1, 'pack_quantity__21': None, 'pack_unit__21': None, 'special_instructions__21': None, 'customer_id__21': 4}
+2025-11-26 06:52:28,638 INFO sqlalchemy.engine.Engine COMMIT
+2025-11-26 06:52:28,640 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-11-26 06:52:28,640 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,640 INFO sqlalchemy.engine.Engine [cached since 0.04699s ago] {'pk_1': 1}
+2025-11-26 06:52:28,643 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,643 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {'pk_1': 1}
+2025-11-26 06:52:28,644 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,644 INFO sqlalchemy.engine.Engine [cached since 0.001548s ago] {'pk_1': 2}
+2025-11-26 06:52:28,645 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,645 INFO sqlalchemy.engine.Engine [cached since 0.002813s ago] {'pk_1': 3}
+2025-11-26 06:52:28,646 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,647 INFO sqlalchemy.engine.Engine [cached since 0.004127s ago] {'pk_1': 4}
+2025-11-26 06:52:28,648 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,648 INFO sqlalchemy.engine.Engine [cached since 0.00532s ago] {'pk_1': 5}
+2025-11-26 06:52:28,649 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,649 INFO sqlalchemy.engine.Engine [cached since 0.006825s ago] {'pk_1': 6}
+2025-11-26 06:52:28,650 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,651 INFO sqlalchemy.engine.Engine [cached since 0.008332s ago] {'pk_1': 7}
+2025-11-26 06:52:28,652 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,652 INFO sqlalchemy.engine.Engine [cached since 0.009468s ago] {'pk_1': 8}
+2025-11-26 06:52:28,653 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,653 INFO sqlalchemy.engine.Engine [cached since 0.0108s ago] {'pk_1': 9}
+2025-11-26 06:52:28,654 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,654 INFO sqlalchemy.engine.Engine [cached since 0.01207s ago] {'pk_1': 10}
+2025-11-26 06:52:28,655 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,655 INFO sqlalchemy.engine.Engine [cached since 0.0133s ago] {'pk_1': 11}
+2025-11-26 06:52:28,657 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,657 INFO sqlalchemy.engine.Engine [cached since 0.01447s ago] {'pk_1': 12}
+2025-11-26 06:52:28,658 INFO sqlalchemy.engine.Engine SELECT delivery_places.id AS delivery_places_id, delivery_places.jiku_code AS delivery_places_jiku_code, delivery_places.delivery_place_code AS delivery_places_delivery_place_code, delivery_places.delivery_place_name AS delivery_places_delivery_place_name, delivery_places.customer_id AS delivery_places_customer_id, delivery_places.created_at AS delivery_places_created_at, delivery_places.updated_at AS delivery_places_updated_at 
+FROM delivery_places 
+WHERE delivery_places.id = %(pk_1)s
+2025-11-26 06:52:28,658 INFO sqlalchemy.engine.Engine [cached since 0.01571s ago] {'pk_1': 13}
+2025-11-26 06:52:28,659 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,659 INFO sqlalchemy.engine.Engine [cached since 0.06605s ago] {'pk_1': 2}
+2025-11-26 06:52:28,660 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,660 INFO sqlalchemy.engine.Engine [cached since 0.06732s ago] {'pk_1': 3}
+2025-11-26 06:52:28,662 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,662 INFO sqlalchemy.engine.Engine [cached since 0.06856s ago] {'pk_1': 4}
+2025-11-26 06:52:28,663 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,663 INFO sqlalchemy.engine.Engine [cached since 0.0697s ago] {'pk_1': 5}
+2025-11-26 06:52:28,664 INFO sqlalchemy.engine.Engine SELECT customers.id AS customers_id, customers.customer_code AS customers_customer_code, customers.customer_name AS customers_customer_name, customers.created_at AS customers_created_at, customers.updated_at AS customers_updated_at 
+FROM customers 
+WHERE customers.id = %(pk_1)s
+2025-11-26 06:52:28,664 INFO sqlalchemy.engine.Engine [cached since 0.07088s ago] {'pk_1': 6}
+2025-11-26 06:52:28,665 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,665 INFO sqlalchemy.engine.Engine [cached since 0.06925s ago] {'pk_1': 1}
+2025-11-26 06:52:28,670 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,670 INFO sqlalchemy.engine.Engine [cached since 0.07327s ago] {'pk_1': 2}
+2025-11-26 06:52:28,672 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,672 INFO sqlalchemy.engine.Engine [cached since 0.07702s ago] {'pk_1': 3}
+2025-11-26 06:52:28,677 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,677 INFO sqlalchemy.engine.Engine [cached since 0.08095s ago] {'pk_1': 4}
+2025-11-26 06:52:28,681 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,681 INFO sqlalchemy.engine.Engine [cached since 0.08417s ago] {'pk_1': 5}
+2025-11-26 06:52:28,684 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,684 INFO sqlalchemy.engine.Engine [cached since 0.08777s ago] {'pk_1': 6}
+2025-11-26 06:52:28,688 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,688 INFO sqlalchemy.engine.Engine [cached since 0.09114s ago] {'pk_1': 7}
+2025-11-26 06:52:28,691 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,691 INFO sqlalchemy.engine.Engine [cached since 0.09467s ago] {'pk_1': 8}
+2025-11-26 06:52:28,694 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,694 INFO sqlalchemy.engine.Engine [cached since 0.0979s ago] {'pk_1': 9}
+2025-11-26 06:52:28,698 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,699 INFO sqlalchemy.engine.Engine [cached since 0.1023s ago] {'pk_1': 10}
+2025-11-26 06:52:28,702 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,702 INFO sqlalchemy.engine.Engine [cached since 0.1059s ago] {'pk_1': 11}
+2025-11-26 06:52:28,705 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,705 INFO sqlalchemy.engine.Engine [cached since 0.109s ago] {'pk_1': 12}
+2025-11-26 06:52:28,709 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,709 INFO sqlalchemy.engine.Engine [cached since 0.1125s ago] {'pk_1': 13}
+2025-11-26 06:52:28,712 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,712 INFO sqlalchemy.engine.Engine [cached since 0.1161s ago] {'pk_1': 14}
+2025-11-26 06:52:28,735 INFO sqlalchemy.engine.Engine INSERT INTO forecast_current (customer_id, delivery_place_id, product_id, forecast_date, forecast_quantity, unit, forecast_period) SELECT p0::BIGINT, p1::BIGINT, p2::BIGINT, p3::DATE, p4::NUMERIC, p5::VARCHAR, p6::VARCHAR FROM (VALUES (%(customer_id_ ... 162017 characters truncated ... .snapshot_at, forecast_current.created_at, forecast_current.updated_at, forecast_current.id AS id__1
+2025-11-26 06:52:28,735 INFO sqlalchemy.engine.Engine [generated in 0.00193s (insertmanyvalues) 1/1 (ordered)] {'forecast_period__0': '2025-12', 'forecast_quantity__0': Decimal('60'), 'forecast_date__0': datetime.date(2025, 12, 1), 'product_id__0': 1, 'delivery_place_id__0': 1, 'unit__0': 'pcs', 'customer_id__0': 1, 'forecast_period__1': '2025-12', 'forecast_quantity__1': Decimal('102'), 'forecast_date__1': datetime.date(2025, 12, 21), 'product_id__1': 1, 'delivery_place_id__1': 1, 'unit__1': 'pcs', 'customer_id__1': 1, 'forecast_period__2': '2025-12', 'forecast_quantity__2': Decimal('53'), 'forecast_date__2': datetime.date(2025, 12, 31), 'product_id__2': 1, 'delivery_place_id__2': 1, 'unit__2': 'pcs', 'customer_id__2': 1, 'forecast_period__3': '2025-12', 'forecast_quantity__3': Decimal('53'), 'forecast_date__3': datetime.date(2025, 12, 4), 'product_id__3': 1, 'delivery_place_id__3': 2, 'unit__3': 'pcs', 'customer_id__3': 1, 'forecast_period__4': '2025-12', 'forecast_quantity__4': Decimal('74'), 'forecast_date__4': datetime.date(2025, 12, 7), 'product_id__4': 1, 'delivery_place_id__4': 2, 'unit__4': 'pcs', 'customer_id__4': 1, 'forecast_period__5': '2025-12', 'forecast_quantity__5': Decimal('71'), 'forecast_date__5': datetime.date(2025, 12, 10), 'product_id__5': 1, 'delivery_place_id__5': 2, 'unit__5': 'pcs', 'customer_id__5': 1, 'forecast_period__6': '2025-12', 'forecast_quantity__6': Decimal('37'), 'forecast_date__6': datetime.date(2025, 12, 13), 'product_id__6': 1, 'delivery_place_id__6': 2, 'unit__6': 'pcs', 'customer_id__6': 1, 'forecast_period__7': '2025-12' ... 6564 parameters truncated ... 'customer_id__944': 6, 'forecast_period__945': '2025-12', 'forecast_quantity__945': Decimal('22'), 'forecast_date__945': datetime.date(2025, 12, 25), 'product_id__945': 14, 'delivery_place_id__945': 12, 'unit__945': 'pcs', 'customer_id__945': 6, 'forecast_period__946': '2025-12', 'forecast_quantity__946': Decimal('21'), 'forecast_date__946': datetime.date(2025, 12, 31), 'product_id__946': 14, 'delivery_place_id__946': 12, 'unit__946': 'pcs', 'customer_id__946': 6, 'forecast_period__947': '2025-12', 'forecast_quantity__947': Decimal('55'), 'forecast_date__947': datetime.date(2025, 12, 1), 'product_id__947': 14, 'delivery_place_id__947': 13, 'unit__947': 'pcs', 'customer_id__947': 6, 'forecast_period__948': '2025-12', 'forecast_quantity__948': Decimal('56'), 'forecast_date__948': datetime.date(2025, 12, 4), 'product_id__948': 14, 'delivery_place_id__948': 13, 'unit__948': 'pcs', 'customer_id__948': 6, 'forecast_period__949': '2025-12', 'forecast_quantity__949': Decimal('106'), 'forecast_date__949': datetime.date(2025, 12, 10), 'product_id__949': 14, 'delivery_place_id__949': 13, 'unit__949': 'pcs', 'customer_id__949': 6, 'forecast_period__950': '2025-12', 'forecast_quantity__950': Decimal('42'), 'forecast_date__950': datetime.date(2025, 12, 13), 'product_id__950': 14, 'delivery_place_id__950': 13, 'unit__950': 'pcs', 'customer_id__950': 6, 'forecast_period__951': '2025-12', 'forecast_quantity__951': Decimal('65'), 'forecast_date__951': datetime.date(2025, 12, 28), 'product_id__951': 14, 'delivery_place_id__951': 13, 'unit__951': 'pcs', 'customer_id__951': 6}
+2025-11-26 06:52:28,829 INFO sqlalchemy.engine.Engine COMMIT
+2025-11-26 06:52:28,832 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-11-26 06:52:28,832 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,832 INFO sqlalchemy.engine.Engine [cached since 0.236s ago] {'pk_1': 1}
+[DEBUG] Product PRD-391fU (id=1): is_fragmented=False, forecast_total=4733, creating 1 lots
+2025-11-26 06:52:28,835 INFO sqlalchemy.engine.Engine SELECT warehouses.id AS warehouses_id, warehouses.warehouse_code AS warehouses_warehouse_code, warehouses.warehouse_name AS warehouses_warehouse_name, warehouses.warehouse_type AS warehouses_warehouse_type, warehouses.created_at AS warehouses_created_at, warehouses.updated_at AS warehouses_updated_at 
+FROM warehouses 
+WHERE warehouses.id = %(pk_1)s
+2025-11-26 06:52:28,835 INFO sqlalchemy.engine.Engine [generated in 0.00014s] {'pk_1': 2}
+2025-11-26 06:52:28,836 INFO sqlalchemy.engine.Engine SELECT suppliers.id AS suppliers_id, suppliers.supplier_code AS suppliers_supplier_code, suppliers.supplier_name AS suppliers_supplier_name, suppliers.created_at AS suppliers_created_at, suppliers.updated_at AS suppliers_updated_at 
+FROM suppliers 
+WHERE suppliers.id = %(pk_1)s
+2025-11-26 06:52:28,836 INFO sqlalchemy.engine.Engine [cached since 0.2375s ago] {'pk_1': 3}
+2025-11-26 06:52:28,837 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,837 INFO sqlalchemy.engine.Engine [cached since 0.2408s ago] {'pk_1': 2}
+[DEBUG] Product PRD-782qH (id=2): is_fragmented=False, forecast_total=4900, creating 1 lots
+2025-11-26 06:52:28,838 INFO sqlalchemy.engine.Engine SELECT warehouses.id AS warehouses_id, warehouses.warehouse_code AS warehouses_warehouse_code, warehouses.warehouse_name AS warehouses_warehouse_name, warehouses.warehouse_type AS warehouses_warehouse_type, warehouses.created_at AS warehouses_created_at, warehouses.updated_at AS warehouses_updated_at 
+FROM warehouses 
+WHERE warehouses.id = %(pk_1)s
+2025-11-26 06:52:28,838 INFO sqlalchemy.engine.Engine [cached since 0.003567s ago] {'pk_1': 1}
+2025-11-26 06:52:28,839 INFO sqlalchemy.engine.Engine SELECT suppliers.id AS suppliers_id, suppliers.supplier_code AS suppliers_supplier_code, suppliers.supplier_name AS suppliers_supplier_name, suppliers.created_at AS suppliers_created_at, suppliers.updated_at AS suppliers_updated_at 
+FROM suppliers 
+WHERE suppliers.id = %(pk_1)s
+2025-11-26 06:52:28,839 INFO sqlalchemy.engine.Engine [cached since 0.2409s ago] {'pk_1': 1}
+2025-11-26 06:52:28,840 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,840 INFO sqlalchemy.engine.Engine [cached since 0.2444s ago] {'pk_1': 3}
+[DEBUG] Product PRD-346QP (id=3): is_fragmented=False, forecast_total=5951, creating 1 lots
+2025-11-26 06:52:28,842 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,842 INFO sqlalchemy.engine.Engine [cached since 0.246s ago] {'pk_1': 4}
+[DEBUG] Product PRD-331vb (id=4): is_fragmented=False, forecast_total=4158, creating 1 lots
+2025-11-26 06:52:28,843 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,843 INFO sqlalchemy.engine.Engine [cached since 0.2474s ago] {'pk_1': 5}
+[DEBUG] Product PRD-010oe (id=5): is_fragmented=False, forecast_total=5063, creating 1 lots
+2025-11-26 06:52:28,844 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,844 INFO sqlalchemy.engine.Engine [cached since 0.2488s ago] {'pk_1': 6}
+[DEBUG] Product PRD-473Ii (id=6): is_fragmented=False, forecast_total=4607, creating 1 lots
+2025-11-26 06:52:28,847 INFO sqlalchemy.engine.Engine SELECT suppliers.id AS suppliers_id, suppliers.supplier_code AS suppliers_supplier_code, suppliers.supplier_name AS suppliers_supplier_name, suppliers.created_at AS suppliers_created_at, suppliers.updated_at AS suppliers_updated_at 
+FROM suppliers 
+WHERE suppliers.id = %(pk_1)s
+2025-11-26 06:52:28,847 INFO sqlalchemy.engine.Engine [cached since 0.2481s ago] {'pk_1': 2}
+2025-11-26 06:52:28,848 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,848 INFO sqlalchemy.engine.Engine [cached since 0.2518s ago] {'pk_1': 7}
+[DEBUG] Product PRD-763gg (id=7): is_fragmented=False, forecast_total=4378, creating 1 lots
+2025-11-26 06:52:28,850 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,850 INFO sqlalchemy.engine.Engine [cached since 0.2535s ago] {'pk_1': 8}
+[DEBUG] Product PRD-010zU (id=8): is_fragmented=False, forecast_total=4185, creating 1 lots
+2025-11-26 06:52:28,852 INFO sqlalchemy.engine.Engine SELECT warehouses.id AS warehouses_id, warehouses.warehouse_code AS warehouses_warehouse_code, warehouses.warehouse_name AS warehouses_warehouse_name, warehouses.warehouse_type AS warehouses_warehouse_type, warehouses.created_at AS warehouses_created_at, warehouses.updated_at AS warehouses_updated_at 
+FROM warehouses 
+WHERE warehouses.id = %(pk_1)s
+2025-11-26 06:52:28,852 INFO sqlalchemy.engine.Engine [cached since 0.01677s ago] {'pk_1': 3}
+2025-11-26 06:52:28,853 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,853 INFO sqlalchemy.engine.Engine [cached since 0.2565s ago] {'pk_1': 9}
+[DEBUG] Product PRD-872Bl (id=9): is_fragmented=False, forecast_total=5849, creating 1 lots
+2025-11-26 06:52:28,854 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,855 INFO sqlalchemy.engine.Engine [cached since 0.2581s ago] {'pk_1': 10}
+[DEBUG] Product PRD-810PI (id=10): is_fragmented=False, forecast_total=4158, creating 1 lots
+2025-11-26 06:52:28,856 INFO sqlalchemy.engine.Engine SELECT warehouses.id AS warehouses_id, warehouses.warehouse_code AS warehouses_warehouse_code, warehouses.warehouse_name AS warehouses_warehouse_name, warehouses.warehouse_type AS warehouses_warehouse_type, warehouses.created_at AS warehouses_created_at, warehouses.updated_at AS warehouses_updated_at 
+FROM warehouses 
+WHERE warehouses.id = %(pk_1)s
+2025-11-26 06:52:28,857 INFO sqlalchemy.engine.Engine [cached since 0.02174s ago] {'pk_1': 4}
+2025-11-26 06:52:28,858 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,858 INFO sqlalchemy.engine.Engine [cached since 0.2619s ago] {'pk_1': 11}
+[DEBUG] Product PRD-773zd (id=11): is_fragmented=False, forecast_total=4208, creating 1 lots
+2025-11-26 06:52:28,859 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,860 INFO sqlalchemy.engine.Engine [cached since 0.2636s ago] {'pk_1': 12}
+[DEBUG] Product PRD-746SU (id=12): is_fragmented=False, forecast_total=5154, creating 1 lots
+2025-11-26 06:52:28,862 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,862 INFO sqlalchemy.engine.Engine [cached since 0.2655s ago] {'pk_1': 13}
+[DEBUG] Product PRD-309VI (id=13): is_fragmented=False, forecast_total=5439, creating 1 lots
+2025-11-26 06:52:28,864 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,864 INFO sqlalchemy.engine.Engine [cached since 0.2675s ago] {'pk_1': 14}
+[DEBUG] Product PRD-788kd (id=14): is_fragmented=False, forecast_total=5184, creating 2 lots
+2025-11-26 06:52:28,866 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,866 INFO sqlalchemy.engine.Engine [cached since 0.2693s ago] {'pk_1': 15}
+[DEBUG] Product PRD-136hK (id=15): is_fragmented=False, forecast_total=0, creating 2 lots
+2025-11-26 06:52:28,868 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,868 INFO sqlalchemy.engine.Engine [cached since 0.2711s ago] {'pk_1': 16}
+[DEBUG] Product PRD-169KH (id=16): is_fragmented=False, forecast_total=0, creating 2 lots
+2025-11-26 06:52:28,869 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,869 INFO sqlalchemy.engine.Engine [cached since 0.2727s ago] {'pk_1': 17}
+[DEBUG] Product PRD-462QP (id=17): is_fragmented=False, forecast_total=0, creating 2 lots
+2025-11-26 06:52:28,871 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,871 INFO sqlalchemy.engine.Engine [cached since 0.2745s ago] {'pk_1': 18}
+[DEBUG] Product PRD-799ge (id=18): is_fragmented=False, forecast_total=0, creating 2 lots
+2025-11-26 06:52:28,872 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,872 INFO sqlalchemy.engine.Engine [cached since 0.2762s ago] {'pk_1': 19}
+[DEBUG] Product PRD-513xs (id=19): is_fragmented=False, forecast_total=0, creating 2 lots
+2025-11-26 06:52:28,874 INFO sqlalchemy.engine.Engine SELECT products.id AS products_id, products.maker_part_code AS products_maker_part_code, products.product_name AS products_product_name, products.base_unit AS products_base_unit, products.consumption_limit_days AS products_consumption_limit_days, products.created_at AS products_created_at, products.updated_at AS products_updated_at, products.internal_unit AS products_internal_unit, products.external_unit AS products_external_unit, products.qty_per_internal_unit AS products_qty_per_internal_unit 
+FROM products 
+WHERE products.id = %(pk_1)s
+2025-11-26 06:52:28,874 INFO sqlalchemy.engine.Engine [cached since 0.2779s ago] {'pk_1': 20}
+[DEBUG] Product PRD-808tQ (id=20): is_fragmented=False, forecast_total=0, creating 1 lots
+2025-11-26 06:52:28,877 INFO sqlalchemy.engine.Engine INSERT INTO lots (lot_number, product_id, warehouse_id, supplier_id, expected_lot_id, received_date, expiry_date, current_quantity, allocated_quantity, unit, status, lock_reason, inspection_date, inspection_cert_number, version_id) SELECT p0::VARCHAR ... 8982 characters truncated ... ounter RETURNING lots.id, lots.inspection_status, lots.created_at, lots.updated_at, lots.id AS id__1
+2025-11-26 06:52:28,877 INFO sqlalchemy.engine.Engine [generated in 0.00015s (insertmanyvalues) 1/1 (ordered)] {'warehouse_id__0': 2, 'allocated_quantity__0': Decimal('0'), 'status__0': 'active', 'inspection_date__0': None, 'received_date__0': datetime.date(2025, 11, 18), 'product_id__0': 1, 'current_quantity__0': Decimal('4688'), 'inspection_cert_number__0': None, 'lock_reason__0': None, 'supplier_id__0': 3, 'expiry_date__0': datetime.date(2026, 3, 8), 'unit__0': 'pcs', 'version_id__0': 1, 'expected_lot_id__0': None, 'lot_number__0': 'LOT-82449353', 'warehouse_id__1': 1, 'allocated_quantity__1': Decimal('0'), 'status__1': 'active', 'inspection_date__1': None, 'received_date__1': datetime.date(2025, 11, 13), 'product_id__1': 2, 'current_quantity__1': Decimal('4694'), 'inspection_cert_number__1': None, 'lock_reason__1': None, 'supplier_id__1': 1, 'expiry_date__1': datetime.date(2026, 3, 19), 'unit__1': 'pcs', 'version_id__1': 1, 'expected_lot_id__1': None, 'lot_number__1': 'LOT-48740164', 'warehouse_id__2': 2, 'allocated_quantity__2': Decimal('0'), 'status__2': 'active', 'inspection_date__2': None, 'received_date__2': datetime.date(2025, 11, 10), 'product_id__2': 3, 'current_quantity__2': Decimal('5686'), 'inspection_cert_number__2': None, 'lock_reason__2': None, 'supplier_id__2': 1, 'expiry_date__2': datetime.date(2025, 12, 27), 'unit__2': 'pcs', 'version_id__2': 1, 'expected_lot_id__2': None, 'lot_number__2': 'LOT-00524278', 'warehouse_id__3': 1, 'allocated_quantity__3': Decimal('0'), 'status__3': 'active', 'inspection_date__3': None, 'received_date__3': datetime.date(2025, 11, 19) ... 290 parameters truncated ... 'expiry_date__22': datetime.date(2026, 1, 20), 'unit__22': 'pcs', 'version_id__22': 1, 'expected_lot_id__22': None, 'lot_number__22': 'LOT-20163287', 'warehouse_id__23': 3, 'allocated_quantity__23': Decimal('0'), 'status__23': 'active', 'inspection_date__23': None, 'received_date__23': datetime.date(2025, 11, 15), 'product_id__23': 19, 'current_quantity__23': Decimal('185'), 'inspection_cert_number__23': None, 'lock_reason__23': None, 'supplier_id__23': 2, 'expiry_date__23': datetime.date(2026, 2, 12), 'unit__23': 'pcs', 'version_id__23': 1, 'expected_lot_id__23': None, 'lot_number__23': 'LOT-08317278', 'warehouse_id__24': 2, 'allocated_quantity__24': Decimal('0'), 'status__24': 'active', 'inspection_date__24': None, 'received_date__24': datetime.date(2025, 11, 15), 'product_id__24': 19, 'current_quantity__24': Decimal('258'), 'inspection_cert_number__24': None, 'lock_reason__24': None, 'supplier_id__24': 2, 'expiry_date__24': datetime.date(2026, 2, 19), 'unit__24': 'pcs', 'version_id__24': 1, 'expected_lot_id__24': None, 'lot_number__24': 'LOT-89579868', 'warehouse_id__25': 2, 'allocated_quantity__25': Decimal('0'), 'status__25': 'active', 'inspection_date__25': None, 'received_date__25': datetime.date(2025, 11, 15), 'product_id__25': 20, 'current_quantity__25': Decimal('222'), 'inspection_cert_number__25': None, 'lock_reason__25': None, 'supplier_id__25': 2, 'expiry_date__25': datetime.date(2026, 2, 4), 'unit__25': 'pcs', 'version_id__25': 1, 'expected_lot_id__25': None, 'lot_number__25': 'LOT-72774348'}
+2025-11-26 06:52:28,880 INFO sqlalchemy.engine.Engine ROLLBACK
+Error generating test data: (psycopg2.errors.UndefinedColumn) column "lock_reason" of relation "lots" does not exist
+LINE 1: ...rrent_quantity, allocated_quantity, unit, status, lock_reaso...
+                                                             ^
+
+[SQL: INSERT INTO lots (lot_number, product_id, warehouse_id, supplier_id, expected_lot_id, received_date, expiry_date, current_quantity, allocated_quantity, unit, status, lock_reason, inspection_date, inspection_cert_number, version_id) SELECT p0::VARCHAR ... 8982 characters truncated ... ounter RETURNING lots.id, lots.inspection_status, lots.created_at, lots.updated_at, lots.id AS id__1]
+[parameters: {'warehouse_id__0': 2, 'allocated_quantity__0': Decimal('0'), 'status__0': 'active', 'inspection_date__0': None, 'received_date__0': datetime.date(2025, 11, 18), 'product_id__0': 1, 'current_quantity__0': Decimal('4688'), 'inspection_cert_number__0': None, 'lock_reason__0': None, 'supplier_id__0': 3, 'expiry_date__0': datetime.date(2026, 3, 8), 'unit__0': 'pcs', 'version_id__0': 1, 'expected_lot_id__0': None, 'lot_number__0': 'LOT-82449353', 'warehouse_id__1': 1, 'allocated_quantity__1': Decimal('0'), 'status__1': 'active', 'inspection_date__1': None, 'received_date__1': datetime.date(2025, 11, 13), 'product_id__1': 2, 'current_quantity__1': Decimal('4694'), 'inspection_cert_number__1': None, 'lock_reason__1': None, 'supplier_id__1': 1, 'expiry_date__1': datetime.date(2026, 3, 19), 'unit__1': 'pcs', 'version_id__1': 1, 'expected_lot_id__1': None, 'lot_number__1': 'LOT-48740164', 'warehouse_id__2': 2, 'allocated_quantity__2': Decimal('0'), 'status__2': 'active', 'inspection_date__2': None, 'received_date__2': datetime.date(2025, 11, 10), 'product_id__2': 3, 'current_quantity__2': Decimal('5686'), 'inspection_cert_number__2': None, 'lock_reason__2': None, 'supplier_id__2': 1, 'expiry_date__2': datetime.date(2025, 12, 27), 'unit__2': 'pcs', 'version_id__2': 1, 'expected_lot_id__2': None, 'lot_number__2': 'LOT-00524278', 'warehouse_id__3': 1, 'allocated_quantity__3': Decimal('0'), 'status__3': 'active', 'inspection_date__3': None, 'received_date__3': datetime.date(2025, 11, 19) ... 290 parameters truncated ... 'expiry_date__22': datetime.date(2026, 1, 20), 'unit__22': 'pcs', 'version_id__22': 1, 'expected_lot_id__22': None, 'lot_number__22': 'LOT-20163287', 'warehouse_id__23': 3, 'allocated_quantity__23': Decimal('0'), 'status__23': 'active', 'inspection_date__23': None, 'received_date__23': datetime.date(2025, 11, 15), 'product_id__23': 19, 'current_quantity__23': Decimal('185'), 'inspection_cert_number__23': None, 'lock_reason__23': None, 'supplier_id__23': 2, 'expiry_date__23': datetime.date(2026, 2, 12), 'unit__23': 'pcs', 'version_id__23': 1, 'expected_lot_id__23': None, 'lot_number__23': 'LOT-08317278', 'warehouse_id__24': 2, 'allocated_quantity__24': Decimal('0'), 'status__24': 'active', 'inspection_date__24': None, 'received_date__24': datetime.date(2025, 11, 15), 'product_id__24': 19, 'current_quantity__24': Decimal('258'), 'inspection_cert_number__24': None, 'lock_reason__24': None, 'supplier_id__24': 2, 'expiry_date__24': datetime.date(2026, 2, 19), 'unit__24': 'pcs', 'version_id__24': 1, 'expected_lot_id__24': None, 'lot_number__24': 'LOT-89579868', 'warehouse_id__25': 2, 'allocated_quantity__25': Decimal('0'), 'status__25': 'active', 'inspection_date__25': None, 'received_date__25': datetime.date(2025, 11, 15), 'product_id__25': 20, 'current_quantity__25': Decimal('222'), 'inspection_cert_number__25': None, 'lock_reason__25': None, 'supplier_id__25': 2, 'expiry_date__25': datetime.date(2026, 2, 4), 'unit__25': 'pcs', 'version_id__25': 1, 'expected_lot_id__25': None, 'lot_number__25': 'LOT-72774348'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+Traceback (most recent call last):
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 2118, in _exec_insertmany_context
+    dialect.do_execute(
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+psycopg2.errors.UndefinedColumn: column "lock_reason" of relation "lots" does not exist
+LINE 1: ...rrent_quantity, allocated_quantity, unit, status, lock_reaso...
+                                                             ^
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\Work\Lot-management-system\backend\app\services\test_data_generator.py", line 530, in <module>
+    generate_all_test_data(db)
+  File "D:\Work\Lot-management-system\backend\app\services\test_data_generator.py", line 522, in generate_all_test_data
+    raise e
+  File "D:\Work\Lot-management-system\backend\app\services\test_data_generator.py", line 510, in generate_all_test_data
+    generate_lots(db, products, warehouses, suppliers, forecast_totals)
+  File "D:\Work\Lot-management-system\backend\app\services\test_data_generator.py", line 262, in generate_lots
+    db.commit()
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\session.py", line 2030, in commit
+    trans.commit(_to_root=True)
+  File "<string>", line 2, in commit
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\session.py", line 1311, in commit
+    self._prepare_impl()
+  File "<string>", line 2, in _prepare_impl
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+                ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\session.py", line 1286, in _prepare_impl
+    self.session.flush()
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\session.py", line 4331, in flush
+    self._flush(objects)
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\session.py", line 4466, in _flush
+    with util.safe_reraise():
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\util\langhelpers.py", line 224, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\session.py", line 4427, in _flush
+    flush_context.execute()
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 466, in execute
+    rec.execute(self)
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\unitofwork.py", line 642, in execute
+    util.preloaded.orm_persistence.save_obj(
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\persistence.py", line 93, in save_obj
+    _emit_insert_statements(
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\orm\persistence.py", line 1143, in _emit_insert_statements
+    result = connection.execute(
+             ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+           ^^^^^
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 1844, in _execute_context
+    return self._exec_insertmany_context(dialect, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 2126, in _exec_insertmany_context
+    self._handle_dbapi_exception(
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 2118, in _exec_insertmany_context
+    dialect.do_execute(
+  File "C:\Users\kazuk\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.ProgrammingError: (psycopg2.errors.UndefinedColumn) column "lock_reason" of relation "lots" does not exist
+LINE 1: ...rrent_quantity, allocated_quantity, unit, status, lock_reaso...
+                                                             ^
+
+[SQL: INSERT INTO lots (lot_number, product_id, warehouse_id, supplier_id, expected_lot_id, received_date, expiry_date, current_quantity, allocated_quantity, unit, status, lock_reason, inspection_date, inspection_cert_number, version_id) SELECT p0::VARCHAR ... 8982 characters truncated ... ounter RETURNING lots.id, lots.inspection_status, lots.created_at, lots.updated_at, lots.id AS id__1]
+[parameters: {'warehouse_id__0': 2, 'allocated_quantity__0': Decimal('0'), 'status__0': 'active', 'inspection_date__0': None, 'received_date__0': datetime.date(2025, 11, 18), 'product_id__0': 1, 'current_quantity__0': Decimal('4688'), 'inspection_cert_number__0': None, 'lock_reason__0': None, 'supplier_id__0': 3, 'expiry_date__0': datetime.date(2026, 3, 8), 'unit__0': 'pcs', 'version_id__0': 1, 'expected_lot_id__0': None, 'lot_number__0': 'LOT-82449353', 'warehouse_id__1': 1, 'allocated_quantity__1': Decimal('0'), 'status__1': 'active', 'inspection_date__1': None, 'received_date__1': datetime.date(2025, 11, 13), 'product_id__1': 2, 'current_quantity__1': Decimal('4694'), 'inspection_cert_number__1': None, 'lock_reason__1': None, 'supplier_id__1': 1, 'expiry_date__1': datetime.date(2026, 3, 19), 'unit__1': 'pcs', 'version_id__1': 1, 'expected_lot_id__1': None, 'lot_number__1': 'LOT-48740164', 'warehouse_id__2': 2, 'allocated_quantity__2': Decimal('0'), 'status__2': 'active', 'inspection_date__2': None, 'received_date__2': datetime.date(2025, 11, 10), 'product_id__2': 3, 'current_quantity__2': Decimal('5686'), 'inspection_cert_number__2': None, 'lock_reason__2': None, 'supplier_id__2': 1, 'expiry_date__2': datetime.date(2025, 12, 27), 'unit__2': 'pcs', 'version_id__2': 1, 'expected_lot_id__2': None, 'lot_number__2': 'LOT-00524278', 'warehouse_id__3': 1, 'allocated_quantity__3': Decimal('0'), 'status__3': 'active', 'inspection_date__3': None, 'received_date__3': datetime.date(2025, 11, 19) ... 290 parameters truncated ... 'expiry_date__22': datetime.date(2026, 1, 20), 'unit__22': 'pcs', 'version_id__22': 1, 'expected_lot_id__22': None, 'lot_number__22': 'LOT-20163287', 'warehouse_id__23': 3, 'allocated_quantity__23': Decimal('0'), 'status__23': 'active', 'inspection_date__23': None, 'received_date__23': datetime.date(2025, 11, 15), 'product_id__23': 19, 'current_quantity__23': Decimal('185'), 'inspection_cert_number__23': None, 'lock_reason__23': None, 'supplier_id__23': 2, 'expiry_date__23': datetime.date(2026, 2, 12), 'unit__23': 'pcs', 'version_id__23': 1, 'expected_lot_id__23': None, 'lot_number__23': 'LOT-08317278', 'warehouse_id__24': 2, 'allocated_quantity__24': Decimal('0'), 'status__24': 'active', 'inspection_date__24': None, 'received_date__24': datetime.date(2025, 11, 15), 'product_id__24': 19, 'current_quantity__24': Decimal('258'), 'inspection_cert_number__24': None, 'lock_reason__24': None, 'supplier_id__24': 2, 'expiry_date__24': datetime.date(2026, 2, 19), 'unit__24': 'pcs', 'version_id__24': 1, 'expected_lot_id__24': None, 'lot_number__24': 'LOT-89579868', 'warehouse_id__25': 2, 'allocated_quantity__25': Decimal('0'), 'status__25': 'active', 'inspection_date__25': None, 'received_date__25': datetime.date(2025, 11, 15), 'product_id__25': 20, 'current_quantity__25': Decimal('222'), 'inspection_cert_number__25': None, 'lock_reason__25': None, 'supplier_id__25': 2, 'expiry_date__25': datetime.date(2026, 2, 4), 'unit__25': 'pcs', 'version_id__25': 1, 'expected_lot_id__25': None, 'lot_number__25': 'LOT-72774348'}]
+(Background on this error at: https://sqlalche.me/e/20/f405)

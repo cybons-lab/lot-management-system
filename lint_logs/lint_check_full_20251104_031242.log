@@ -1,0 +1,1749 @@
+[Start] Full Lint/Type check 20251104_031242
+
+
+=== Backend: Ruff version ===
+ruff 0.14.3
+
+=== Backend: ruff check ===
+warning: The top-level linter settings are deprecated in favour of their counterparts in the `lint` section. Please update the following options in `pyproject.toml`:
+  - 'ignore' -> 'lint.ignore'
+  - 'select' -> 'lint.select'
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\env.py:2:1
+   |
+ 1 |   # backend/alembic/env.py
+ 2 | / from __future__ import annotations
+ 3 | |
+ 4 | | # --- ▼▼▼ ここから追加 ▼▼▼ ---
+ 5 | | import os
+ 6 | | import sys
+ 7 | | from logging.config import fileConfig
+ 8 | |
+ 9 | | from alembic import context
+10 | | from sqlalchemy import engine_from_config, pool
+   | |_______________________________________________^
+11 |
+12 |   # 'backend' フォルダ (app/ と alembic/ がある場所) へのパスを追加
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\1743593a6a5b_add_forecast_table_order_lines_forecast_.py:9:1
+   |
+ 7 |   """
+ 8 |
+ 9 | / import sqlalchemy as sa
+10 | | from alembic import op
+   | |______________________^
+11 |
+12 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\59a2122108a3_add_warehouse_and_allocation_tables.py:9:1
+   |
+ 7 |   """
+ 8 |
+ 9 | / import sqlalchemy as sa
+10 | | from alembic import op
+   | |______________________^
+11 |
+12 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\7f5c6f4e5b15_add_audit_columns.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\93c1d055cc3f_add_base_unit_to_products.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\a13c02758a9d_create_history_tables.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\b4dd2e0b31c8_ensure_warehouse_master.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\b7a02f6db5a0_create_unit_conversions.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\c6d1f3f1e2ab_rename_client_to_customer.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\d89f17c6d6a1_add_warehouse_to_lots.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\e4bc5d4fa1c4_remove_warehouse_from_order_lines.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> alembic\versions\f6c1d5c07f58_update_stock_movements_schema.py:8:1
+   |
+ 6 |   """
+ 7 |
+ 8 | / from alembic import op
+ 9 | | import sqlalchemy as sa
+   | |_______________________^
+10 |
+11 |   # revision identifiers, used by Alembic.
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> alembic\versions\f835c7b8f21c_initial_schema_from_models.py:8:1
+  |
+7 |   """
+8 | / from alembic import op
+9 | | import sqlalchemy as sa
+  | |_______________________^
+  |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> app\api\deps.py:7:1
+  |
+5 |   """
+6 |
+7 | / from typing import Generator
+8 | | from sqlalchemy.orm import Session
+9 | | from app.core.database import SessionLocal
+  | |__________________________________________^
+  |
+help: Organize imports
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\admin.py:43:39
+   |
+42 | @router.get("/stats", response_model=DashboardStatsResponse)
+43 | def get_dashboard_stats(db: Session = Depends(get_db)):
+   |                                       ^^^^^^^^^^^^^^^
+44 |     """ダッシュボード用の統計情報を返す"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\admin.py:79:34
+   |
+78 | @router.post("/reset-database", response_model=ResponseBase)
+79 | def reset_database(db: Session = Depends(get_db)):
+   |                                  ^^^^^^^^^^^^^^^
+80 |     """
+81 |     データベースリセット（開発環境のみ）
+   |
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   --> app\api\routes\admin.py:124:9
+    |
+122 |       except Exception as e:
+123 |           db.rollback()
+124 | /         raise HTTPException(
+125 | |             status_code=500, detail=f"DBリセット失敗: {e}\n{traceback.format_exc()}"
+126 | |         )
+    | |_________^
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\admin.py:130:70
+    |
+129 | @router.post("/load-full-sample-data", response_model=ResponseBase)
+130 | def load_full_sample_data(data: FullSampleDataRequest, db: Session = Depends(get_db)):
+    |                                                                      ^^^^^^^^^^^^^^^
+131 |     """
+132 |     一括サンプルデータ投入（新スキーマ対応版）
+    |
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   --> app\api\routes\admin.py:508:9
+    |
+506 |       except Exception as e:
+507 |           db.rollback()
+508 | /         raise HTTPException(
+509 | |             status_code=500,
+510 | |             detail=f"サンプルデータ投入中にエラーが発生しました: {e}\n{traceback.format_exc()}",
+511 | |         )
+    | |_________^
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\forecast.py:39:19
+   |
+37 |     product_code: Optional[str] = Query(default=None),
+38 |     supplier_code: Optional[str] = Query(default=None),
+39 |     db: Session = Depends(get_db),
+   |                   ^^^^^^^^^^^^^^^
+40 | ):
+41 |     """
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:115:19
+    |
+113 |     is_active: Optional[bool] = None,
+114 |     version_no: Optional[int] = None,
+115 |     db: Session = Depends(get_db),
+    |                   ^^^^^^^^^^^^^^^
+116 | ):
+117 |     """
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:166:61
+    |
+165 | @router.post("", response_model=ForecastResponse, status_code=201)
+166 | def create_forecast(forecast: ForecastCreate, db: Session = Depends(get_db)):
+    |                                                             ^^^^^^^^^^^^^^^
+167 |     """
+168 |     フォーキャスト単一登録
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:187:50
+    |
+186 | @router.get("/{forecast_id}", response_model=ForecastResponse)
+187 | def get_forecast(forecast_id: int, db: Session = Depends(get_db)):
+    |                                                  ^^^^^^^^^^^^^^^
+188 |     """フォーキャスト詳細取得"""
+189 |     forecast = db.query(Forecast).filter(Forecast.id == forecast_id).first()
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:197:63
+    |
+195 | @router.put("/{forecast_id}", response_model=ForecastResponse)
+196 | def update_forecast(
+197 |     forecast_id: int, forecast: ForecastUpdate, db: Session = Depends(get_db)
+    |                                                               ^^^^^^^^^^^^^^^
+198 | ):
+199 |     """フォーキャスト更新"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:213:53
+    |
+212 | @router.delete("/{forecast_id}", status_code=204)
+213 | def delete_forecast(forecast_id: int, db: Session = Depends(get_db)):
+    |                                                     ^^^^^^^^^^^^^^^
+214 |     """フォーキャスト削除"""
+215 |     db_forecast = db.query(Forecast).filter(Forecast.id == forecast_id).first()
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:227:55
+    |
+225 | @router.post("/bulk", response_model=ForecastBulkImportResponse, status_code=201)
+226 | def bulk_import_forecasts(
+227 |     request: ForecastBulkImportRequest, db: Session = Depends(get_db)
+    |                                                       ^^^^^^^^^^^^^^^
+228 | ):
+229 |     """
+    |
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+   --> app\api\routes\forecast.py:239:55
+    |
+237 |     if request.deactivate_old_version:
+238 |         db.query(Forecast).filter(
+239 |             Forecast.version_no < request.version_no, Forecast.is_active == True
+    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+240 |         ).update({"is_active": False})
+    |
+help: Replace with `Forecast.is_active`
+
+F841 Local variable `status` is assigned to but never used
+   --> app\api\routes\forecast.py:273:5
+    |
+271 |     db.commit()
+272 |
+273 |     status = (
+    |     ^^^^^^
+274 |         "success" if error_count == 0 else "partial" if imported_count > 0 else "failed"
+275 |     )
+    |
+help: Remove assignment to unused variable `status`
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:290:33
+    |
+288 | # ===== Version Management =====
+289 | @router.get("/versions", response_model=ForecastVersionListResponse)
+290 | def list_versions(db: Session = Depends(get_db)):
+    |                                 ^^^^^^^^^^^^^^^
+291 |     """
+292 |     フォーキャストバージョン一覧取得
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:327:70
+    |
+326 | @router.post("/activate", response_model=ForecastActivateResponse)
+327 | def activate_version(request: ForecastActivateRequest, db: Session = Depends(get_db)):
+    |                                                                      ^^^^^^^^^^^^^^^
+328 |     """
+329 |     指定バージョンをアクティブ化
+    |
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+   --> app\api\routes\forecast.py:345:60
+    |
+343 |             db.query(Forecast.version_no)
+344 |             .filter(
+345 |                 Forecast.version_no != request.version_no, Forecast.is_active == True
+    |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+346 |             )
+347 |             .distinct()
+    |
+help: Replace with `Forecast.is_active`
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+   --> app\api\routes\forecast.py:353:56
+    |
+352 |         db.query(Forecast).filter(
+353 |             Forecast.version_no != request.version_no, Forecast.is_active == True
+    |                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+354 |         ).update({"is_active": False})
+    |
+help: Replace with `Forecast.is_active`
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\forecast.py:372:66
+    |
+370 | # ===== Matching =====
+371 | @router.post("/match", response_model=ForecastMatchResponse)
+372 | def match_forecasts(request: ForecastMatchRequest, db: Session = Depends(get_db)):
+    |                                                                  ^^^^^^^^^^^^^^^
+373 |     """
+374 |     フォーキャストと受注明細の手動マッチング
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\integration.py:38:69
+   |
+36 | # ===== OCR Submission =====
+37 | @router.post("/ai-ocr/submit", response_model=OcrSubmissionResponse)
+38 | def submit_ocr_data(submission: OcrSubmissionRequest, db: Session = Depends(get_db)):
+   |                                                                     ^^^^^^^^^^^^^^^
+39 |     """
+40 |     AI-OCR受注データ取込
+   |
+
+B007 Loop control variable `idx` not used within loop body
+  --> app\api\routes\integration.py:66:9
+   |
+65 |     # 各受注レコードを処理
+66 |     for idx, record in enumerate(submission.records):
+   |         ^^^
+67 |         try:
+68 |             # 重複チェック
+   |
+help: Rename unused `idx` to `_idx`
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\integration.py:187:52
+    |
+185 | @router.get("/ai-ocr/submissions", response_model=List[OcrSubmissionResponse])
+186 | def list_ocr_submissions(
+187 |     skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+    |                                                    ^^^^^^^^^^^^^^^
+188 | ):
+189 |     """OCR取込ログ一覧取得"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\integration.py:216:64
+    |
+214 | # ===== SAP Sync =====
+215 | @router.post("/sap/register", response_model=SapRegisterResponse)
+216 | def register_to_sap(request: SapRegisterRequest, db: Session = Depends(get_db)):
+    |                                                                ^^^^^^^^^^^^^^^
+217 |     """
+218 |     SAP連携(手動送信)
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\integration.py:287:66
+    |
+286 | @router.get("/sap/logs", response_model=List[SapSyncLogResponse])
+287 | def list_sap_logs(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    |                                                                  ^^^^^^^^^^^^^^^
+288 |     """SAP連携ログ一覧取得"""
+289 |     logs = (
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\lots.py:44:19
+   |
+42 |     expiry_to: Optional[date] = None,
+43 |     with_stock: bool = True,
+44 |     db: Session = Depends(get_db),
+   |                   ^^^^^^^^^^^^^^^
+45 | ):
+46 |     """
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\lots.py:126:46
+    |
+125 | @router.post("", response_model=LotResponse, status_code=201)
+126 | def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
+    |                                              ^^^^^^^^^^^^^^^
+127 |     """
+128 |     ロット新規登録
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\lots.py:200:40
+    |
+199 | @router.get("/{lot_id}", response_model=LotResponse)
+200 | def get_lot(lot_id: int, db: Session = Depends(get_db)):
+    |                                        ^^^^^^^^^^^^^^^
+201 |     """ロット詳細取得"""
+202 |     lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\lots.py:215:59
+    |
+214 | @router.put("/{lot_id}", response_model=LotResponse)
+215 | def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
+    |                                                           ^^^^^^^^^^^^^^^
+216 |     """ロット更新"""
+217 |     db_lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\lots.py:238:43
+    |
+237 | @router.delete("/{lot_id}", status_code=204)
+238 | def delete_lot(lot_id: int, db: Session = Depends(get_db)):
+    |                                           ^^^^^^^^^^^^^^^
+239 |     """ロット削除"""
+240 |     db_lot = db.query(Lot).filter(Lot.id == lot_id).first()
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\lots.py:251:51
+    |
+249 | # ===== Stock Movements =====
+250 | @router.get("/{lot_id}/movements", response_model=List[StockMovementResponse])
+251 | def list_lot_movements(lot_id: int, db: Session = Depends(get_db)):
+    |                                                   ^^^^^^^^^^^^^^^
+252 |     """ロットの在庫変動履歴取得"""
+253 |     movements = (
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\lots.py:263:72
+    |
+262 | @router.post("/movements", response_model=StockMovementResponse, status_code=201)
+263 | def create_stock_movement(movement: StockMovementCreate, db: Session = Depends(get_db)):
+    |                                                                        ^^^^^^^^^^^^^^^
+264 |     """
+265 |     在庫変動記録
+    |
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   --> app\api\routes\lots.py:288:9
+    |
+286 |         reason_enum = StockMovementReason(reason)
+287 |     except ValueError:
+288 |         raise HTTPException(status_code=400, detail=f"無効な理由: {reason}")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+289 |
+290 |     db_movement = StockMovement(
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app\api\routes\masters.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from fastapi import APIRouter, Depends, HTTPException
+ 8 | | from sqlalchemy.orm import Session
+ 9 | | from typing import List
+10 | |
+11 | | from app.api.deps import get_db
+12 | | from app.models import Warehouse, Supplier, Customer, Product
+13 | | from app.schemas import (
+14 | |     WarehouseCreate, WarehouseUpdate, WarehouseResponse,
+15 | |     SupplierCreate, SupplierUpdate, SupplierResponse,
+16 | |     CustomerCreate, CustomerUpdate, CustomerResponse,
+17 | |     ProductCreate, ProductUpdate, ProductResponse,
+18 | | )
+   | |_^
+19 |
+20 |   router = APIRouter(prefix="/masters", tags=["masters"])
+   |
+help: Organize imports
+
+F401 [*] `app.schemas.SupplierUpdate` imported but unused
+  --> app\api\routes\masters.py:15:21
+   |
+13 | from app.schemas import (
+14 |     WarehouseCreate, WarehouseUpdate, WarehouseResponse,
+15 |     SupplierCreate, SupplierUpdate, SupplierResponse,
+   |                     ^^^^^^^^^^^^^^
+16 |     CustomerCreate, CustomerUpdate, CustomerResponse,
+17 |     ProductCreate, ProductUpdate, ProductResponse,
+   |
+help: Remove unused import
+
+F401 [*] `app.schemas.CustomerUpdate` imported but unused
+  --> app\api\routes\masters.py:16:21
+   |
+14 |     WarehouseCreate, WarehouseUpdate, WarehouseResponse,
+15 |     SupplierCreate, SupplierUpdate, SupplierResponse,
+16 |     CustomerCreate, CustomerUpdate, CustomerResponse,
+   |                     ^^^^^^^^^^^^^^
+17 |     ProductCreate, ProductUpdate, ProductResponse,
+18 | )
+   |
+help: Remove unused import
+
+F401 [*] `app.schemas.ProductUpdate` imported but unused
+  --> app\api\routes\masters.py:17:20
+   |
+15 |     SupplierCreate, SupplierUpdate, SupplierResponse,
+16 |     CustomerCreate, CustomerUpdate, CustomerResponse,
+17 |     ProductCreate, ProductUpdate, ProductResponse,
+   |                    ^^^^^^^^^^^^^
+18 | )
+   |
+help: Remove unused import
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\masters.py:28:19
+   |
+26 |     skip: int = 0,
+27 |     limit: int = 100,
+28 |     db: Session = Depends(get_db)
+   |                   ^^^^^^^^^^^^^^^
+29 | ):
+30 |     """倉庫一覧取得"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\masters.py:38:19
+   |
+36 | def create_warehouse(
+37 |     warehouse: WarehouseCreate,
+38 |     db: Session = Depends(get_db)
+   |                   ^^^^^^^^^^^^^^^
+39 | ):
+40 |     """倉庫登録"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\masters.py:59:19
+   |
+57 |     warehouse_code: str,
+58 |     warehouse: WarehouseUpdate,
+59 |     db: Session = Depends(get_db)
+   |                   ^^^^^^^^^^^^^^^
+60 | ):
+61 |     """倉庫更新"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\masters.py:81:19
+   |
+79 |     skip: int = 0,
+80 |     limit: int = 100,
+81 |     db: Session = Depends(get_db)
+   |                   ^^^^^^^^^^^^^^^
+82 | ):
+83 |     """仕入先一覧取得"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\masters.py:91:19
+   |
+89 | def create_supplier(
+90 |     supplier: SupplierCreate,
+91 |     db: Session = Depends(get_db)
+   |                   ^^^^^^^^^^^^^^^
+92 | ):
+93 |     """仕入先登録"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\masters.py:112:19
+    |
+110 |     skip: int = 0,
+111 |     limit: int = 100,
+112 |     db: Session = Depends(get_db)
+    |                   ^^^^^^^^^^^^^^^
+113 | ):
+114 |     """得意先一覧取得"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\masters.py:122:19
+    |
+120 | def create_customer(
+121 |     customer: CustomerCreate,
+122 |     db: Session = Depends(get_db)
+    |                   ^^^^^^^^^^^^^^^
+123 | ):
+124 |     """得意先登録"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\masters.py:144:19
+    |
+142 |     limit: int = 100,
+143 |     search: str = None,
+144 |     db: Session = Depends(get_db)
+    |                   ^^^^^^^^^^^^^^^
+145 | ):
+146 |     """製品一覧取得"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\masters.py:162:19
+    |
+160 | def create_product(
+161 |     product: ProductCreate,
+162 |     db: Session = Depends(get_db)
+    |                   ^^^^^^^^^^^^^^^
+163 | ):
+164 |     """製品登録"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\masters.py:181:19
+    |
+179 | def get_product(
+180 |     product_code: str,
+181 |     db: Session = Depends(get_db)
+    |                   ^^^^^^^^^^^^^^^
+182 | ):
+183 |     """製品詳細取得"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\orders.py:75:19
+   |
+73 |     date_from: Optional[date] = None,
+74 |     date_to: Optional[date] = None,
+75 |     db: Session = Depends(get_db),
+   |                   ^^^^^^^^^^^^^^^
+76 | ):
+77 |     """受注一覧取得"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:98:47
+    |
+ 96 | # ===================================================================
+ 97 | @router.get("/orders-with-allocations", response_model=OrdersWithAllocResponse)
+ 98 | def get_orders_with_allocations(db: Session = Depends(get_db)):
+    |                                               ^^^^^^^^^^^^^^^
+ 99 |     """倉庫配分情報 + 既引当ロット情報を含む受注明細一覧を取得"""
+100 |     query = (
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:176:44
+    |
+174 | # ===================================================================
+175 | @router.get("/{order_id}", response_model=OrderWithLinesResponse)
+176 | def get_order(order_id: int, db: Session = Depends(get_db)):
+    |                                            ^^^^^^^^^^^^^^^
+177 |     """受注詳細取得(明細含む)"""
+178 |     order = (
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:198:52
+    |
+197 | @router.post("", response_model=OrderResponse, status_code=201)
+198 | def create_order(order: OrderCreate, db: Session = Depends(get_db)):
+    |                                                    ^^^^^^^^^^^^^^^
+199 |     """
+200 |     受注登録
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:243:67
+    |
+242 | @router.put("/{order_id}", response_model=OrderResponse)
+243 | def update_order(order_id: int, order: OrderUpdate, db: Session = Depends(get_db)):
+    |                                                                   ^^^^^^^^^^^^^^^
+244 |     """受注更新"""
+245 |     db_order = db.query(Order).filter(Order.id == order_id).first()
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:258:57
+    |
+257 | @router.post("/{order_id}/re-match", response_model=OrderWithLinesResponse)
+258 | def rematch_order_forecast(order_id: int, db: Session = Depends(get_db)):
+    |                                                         ^^^^^^^^^^^^^^^
+259 |     """
+260 |     受注のフォーキャストを再マッチング
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:309:51
+    |
+307 | # ===== Order Lines =====
+308 | @router.get("/{order_id}/lines", response_model=List[OrderLineResponse])
+309 | def list_order_lines(order_id: int, db: Session = Depends(get_db)):
+    |                                                   ^^^^^^^^^^^^^^^
+310 |     """受注明細一覧取得"""
+311 |     lines = (
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:330:70
+    |
+328 | # ===== Drag & Drop Allocation (Lot Allocation) =====
+329 | @router.post("/allocations/drag-assign", response_model=DragAssignResponse)
+330 | def drag_assign_allocation(request: DragAssignRequest, db: Session = Depends(get_db)):
+    |                                                                      ^^^^^^^^^^^^^^^
+331 |     """
+332 |     ドラッグ引当 (ロット引当)
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:392:57
+    |
+391 | @router.delete("/allocations/{allocation_id}", status_code=204)
+392 | def cancel_allocation(allocation_id: int, db: Session = Depends(get_db)):
+    |                                                         ^^^^^^^^^^^^^^^
+393 |     """
+394 |     引当取消 (ロット引当)
+    |
+
+F821 Undefined name `order_line`
+   --> app\api\routes\orders.py:415:49
+    |
+413 |         )
+414 |     movement = StockMovement(
+415 |         product_id=lot.product_code if lot else order_line.product_code,
+    |                                                 ^^^^^^^^^^
+416 |         warehouse_id=warehouse_id,
+417 |         lot_id=allocation.lot_id,
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:446:68
+    |
+444 | @router.post("/{order_line_id}/warehouse-allocations", response_model=ResponseBase)
+445 | def save_warehouse_allocations(
+446 |     order_line_id: int, req: SaveAllocationsRequest, db: Session = Depends(get_db)
+    |                                                                    ^^^^^^^^^^^^^^^
+447 | ):
+448 |     """
+    |
+
+B904 Within an `except` clause, raise exceptions with `raise ... from err` or `raise ... from None` to distinguish them from errors in exception handling
+   --> app\api\routes\orders.py:492:9
+    |
+490 |     except Exception as e:
+491 |         db.rollback()
+492 |         raise HTTPException(status_code=500, detail=f"保存に失敗しました: {str(e)}")
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:504:19
+    |
+502 |     product_code: Optional[str] = None,
+503 |     customer_code: Optional[str] = None,
+504 |     db: Session = Depends(get_db),
+    |                   ^^^^^^^^^^^^^^^
+505 | ):
+506 |     """受注明細に対する引当候補ロットを取得"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:676:54
+    |
+674 | @router.post("/{order_line_id}/allocations")
+675 | def create_lot_allocations(
+676 |     order_line_id: int, request: dict, db: Session = Depends(get_db)
+    |                                                      ^^^^^^^^^^^^^^^
+677 | ):
+678 |     """ロット引当を実行（複数ロット対応）"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:782:54
+    |
+780 | @router.post("/{order_line_id}/allocations/cancel")
+781 | def cancel_lot_allocations(
+782 |     order_line_id: int, request: dict, db: Session = Depends(get_db)
+    |                                                      ^^^^^^^^^^^^^^^
+783 | ):
+784 |     """ロット引当を取消"""
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\orders.py:876:69
+    |
+874 | @router.patch("/{order_line_id}/status")
+875 | def update_order_line_status(
+876 |     order_line_id: int, request: StatusUpdateRequest, db: Session = Depends(get_db)
+    |                                                                     ^^^^^^^^^^^^^^^
+877 | ):
+878 |     """
+    |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app\api\routes\receipts.py:6:1
+   |
+ 4 |   """
+ 5 |
+ 6 | / from fastapi import APIRouter, Depends, HTTPException
+ 7 | | from sqlalchemy.orm import Session
+ 8 | | from typing import List
+ 9 | | from datetime import datetime
+10 | |
+11 | | from app.api.deps import get_db
+12 | | from app.models import (
+13 | |     ReceiptHeader,
+14 | |     ReceiptLine,
+15 | |     Lot,
+16 | |     LotCurrentStock,
+17 | |     Product,
+18 | |     StockMovement,
+19 | |     StockMovementReason,
+20 | |     Supplier,
+21 | |     Warehouse,
+22 | | )
+23 | | from app.schemas import (
+24 | |     ReceiptCreateRequest, ReceiptResponse, ReceiptHeaderResponse,
+25 | |     ReceiptLineResponse
+26 | | )
+   | |_^
+27 |
+28 |   router = APIRouter(prefix="/receipts", tags=["receipts"])
+   |
+help: Organize imports
+
+F401 [*] `app.schemas.ReceiptLineResponse` imported but unused
+  --> app\api\routes\receipts.py:25:5
+   |
+23 | from app.schemas import (
+24 |     ReceiptCreateRequest, ReceiptResponse, ReceiptHeaderResponse,
+25 |     ReceiptLineResponse
+   |     ^^^^^^^^^^^^^^^^^^^
+26 | )
+   |
+help: Remove unused import: `app.schemas.ReceiptLineResponse`
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\receipts.py:35:19
+   |
+33 |     skip: int = 0,
+34 |     limit: int = 100,
+35 |     db: Session = Depends(get_db)
+   |                   ^^^^^^^^^^^^^^^
+36 | ):
+37 |     """入荷伝票一覧取得"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\receipts.py:47:19
+   |
+45 | def get_receipt(
+46 |     receipt_id: int,
+47 |     db: Session = Depends(get_db)
+   |                   ^^^^^^^^^^^^^^^
+48 | ):
+49 |     """入荷伝票詳細取得(明細含む)"""
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\receipts.py:59:19
+   |
+57 | def create_receipt(
+58 |     receipt: ReceiptCreateRequest,
+59 |     db: Session = Depends(get_db)
+   |                   ^^^^^^^^^^^^^^^
+60 | ):
+61 |     """
+   |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> app\api\routes\receipts.py:203:19
+    |
+201 | def delete_receipt(
+202 |     receipt_id: int,
+203 |     db: Session = Depends(get_db)
+    |                   ^^^^^^^^^^^^^^^
+204 | ):
+205 |     """
+    |
+
+B008 Do not perform function call `Depends` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+  --> app\api\routes\warehouse_alloc.py:20:35
+   |
+19 | @router.get("/warehouses", response_model=WarehouseListResponse)
+20 | def list_warehouses(db: Session = Depends(get_db)):
+   |                                   ^^^^^^^^^^^^^^^
+21 |     """
+22 |     配分対象の倉庫一覧（新しいwarehouseテーブル）を取得
+   |
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app\core\__init__.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from .config import settings
+ 8 | | from .database import get_db, init_db, drop_db, engine, SessionLocal
+   | |____________________________________________________________________^
+ 9 |
+10 |   __all__ = [
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> app\core\config.py:7:1
+  |
+5 |   """
+6 |
+7 | / import os
+8 | | from pathlib import Path
+9 | | from pydantic_settings import BaseSettings
+  | |__________________________________________^
+  |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app\models\__init__.py:13:1
+   |
+12 |   # 1. 共通のBaseをインポートする
+13 | / from .base_model import Base
+14 | |
+15 | | # 2. 各ドメインのモデルをすべてインポートする
+16 | | from .masters import (
+17 | |     Customer,
+18 | |     Product,
+19 | |     ProductUomConversion,
+20 | |     Supplier,
+21 | |     UnitConversion,
+22 | |     Warehouse,  # 統合された新Warehouse
+23 | | )
+24 | | from .inventory import (
+25 | |     ExpiryRule,
+26 | |     Lot,
+27 | |     LotCurrentStock,
+28 | |     ReceiptHeader,
+29 | |     ReceiptLine,
+30 | |     StockMovement,
+31 | |     StockMovementReason,
+32 | | )
+33 | | from .orders import (
+34 | |     Allocation,
+35 | |     Order,
+36 | |     OrderLine,
+37 | |     OrderLineWarehouseAllocation,  # orders.pyから直接インポート
+38 | |     PurchaseRequest,
+39 | |     Shipping,
+40 | | )
+41 | | from .logs import (
+42 | |     OcrSubmission,
+43 | |     SapSyncLog,
+44 | | )
+45 | | from .forecast import (
+46 | |     Forecast,
+47 | | )
+   | |_^
+48 |
+49 |   # 3. 外部に公開するモデルを明示
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app\models\base_model.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from sqlalchemy import Column, DateTime, Integer, String, event, func
+ 8 | | from sqlalchemy.ext.declarative import declarative_base
+ 9 | | from sqlalchemy.engine import Engine
+   | |____________________________________^
+10 |
+11 |   # SQLiteで外部キー制約を有効化
+   |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> app\models\logs.py:7:1
+  |
+5 |   """
+6 |
+7 | / from sqlalchemy import Column, DateTime, ForeignKey, Integer, Text, func
+8 | | from sqlalchemy.orm import relationship
+9 | | from .base_model import AuditMixin, Base
+  | |________________________________________^
+  |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+   --> app\schemas\__init__.py:7:1
+    |
+  5 |   """
+  6 |
+  7 | / from .admin import (
+  8 | |     DashboardStatsResponse,
+  9 | |     FullSampleDataRequest,
+ 10 | | )
+ 11 | | from .base import BaseSchema, ResponseBase, TimestampMixin
+ 12 | |
+ 13 | | # 🔽 [修正] Forecastスキーマのインポート
+ 14 | | from .forecast import (
+ 15 | |     ForecastActivateRequest,
+ 16 | |     ForecastActivateResponse,
+ 17 | |     ForecastBase,
+ 18 | |     ForecastBulkImportRequest,
+ 19 | |     ForecastBulkImportResponse,
+ 20 | |     ForecastCreate,
+ 21 | |     ForecastItemOut,  # 🔽 [追加]
+ 22 | |     ForecastListResponse,  # 🔽 [追加]
+ 23 | |     ForecastMatchRequest,
+ 24 | |     ForecastMatchResponse,
+ 25 | |     ForecastMatchResult,
+ 26 | |     ForecastResponse,
+ 27 | |     ForecastUpdate,
+ 28 | |     ForecastVersionInfo,
+ 29 | |     ForecastVersionListResponse,
+ 30 | | )
+ 31 | | from .integration import (
+ 32 | |     # OCR
+ 33 | |     OcrOrderRecord,
+ 34 | |     OcrSubmissionRequest,
+ 35 | |     OcrSubmissionResponse,
+ 36 | |     SapRegisterOptions,
+ 37 | |     SapRegisterRequest,
+ 38 | |     SapRegisterResponse,
+ 39 | |     # SAP
+ 40 | |     SapRegisterTarget,
+ 41 | |     SapSyncLogResponse,
+ 42 | | )
+ 43 | | from .inventory import (
+ 44 | |     # ExpiryRule
+ 45 | |     ExpiryRuleBase,
+ 46 | |     ExpiryRuleCreate,
+ 47 | |     ExpiryRuleResponse,
+ 48 | |     ExpiryRuleUpdate,
+ 49 | |     # Lot
+ 50 | |     LotBase,
+ 51 | |     LotCreate,
+ 52 | |     # LotCurrentStock
+ 53 | |     LotCurrentStockResponse,
+ 54 | |     LotResponse,
+ 55 | |     LotUpdate,
+ 56 | |     ReceiptCreateRequest,
+ 57 | |     # Receipt
+ 58 | |     ReceiptHeaderBase,
+ 59 | |     ReceiptHeaderCreate,
+ 60 | |     ReceiptHeaderResponse,
+ 61 | |     ReceiptLineBase,
+ 62 | |     ReceiptLineCreate,
+ 63 | |     ReceiptLineResponse,
+ 64 | |     ReceiptResponse,
+ 65 | |     # StockMovement
+ 66 | |     StockMovementBase,
+ 67 | |     StockMovementCreate,
+ 68 | |     StockMovementResponse,
+ 69 | | )
+ 70 | | from .masters import (
+ 71 | |     # Customer
+ 72 | |     CustomerBase,
+ 73 | |     CustomerCreate,
+ 74 | |     CustomerResponse,
+ 75 | |     CustomerUpdate,
+ 76 | |     # Product
+ 77 | |     ProductBase,
+ 78 | |     ProductCreate,
+ 79 | |     ProductResponse,
+ 80 | |     # ProductUomConversion
+ 81 | |     ProductUomConversionBase,
+ 82 | |     ProductUomConversionCreate,
+ 83 | |     ProductUomConversionResponse,
+ 84 | |     ProductUomConversionUpdate,
+ 85 | |     ProductUpdate,
+ 86 | |     # Supplier
+ 87 | |     SupplierBase,
+ 88 | |     SupplierCreate,
+ 89 | |     SupplierResponse,
+ 90 | |     SupplierUpdate,
+ 91 | |     # Warehouse (Old)
+ 92 | |     WarehouseBase,
+ 93 | |     WarehouseCreate,
+ 94 | |     WarehouseResponse,
+ 95 | |     WarehouseUpdate,
+ 96 | | )
+ 97 | | from .orders import (
+ 98 | |     # Allocation
+ 99 | |     AllocationBase,
+100 | |     AllocationCancelRequest,
+101 | |     AllocationCancelResponse,
+102 | |     AllocationCreate,
+103 | |     AllocationResponse,
+104 | |     DragAssignRequest,
+105 | |     DragAssignResponse,
+106 | |     LotAllocationRequest,
+107 | |     LotAllocationResponse,
+108 | |     LotCandidateListResponse,
+109 | |     LotCandidateOut,
+110 | |     AllocationWarning,
+111 | |     # Order
+112 | |     OrderBase,
+113 | |     OrderCreate,
+114 | |     # OrderLine
+115 | |     OrderLineBase,
+116 | |     OrderLineCreate,
+117 | |     OrderLineOut,
+118 | |     OrderLineResponse,
+119 | |     OrderResponse,
+120 | |     OrdersWithAllocResponse,
+121 | |     OrderUpdate,
+122 | |     OrderWithLinesResponse,
+123 | |     # PurchaseRequest
+124 | |     PurchaseRequestBase,
+125 | |     PurchaseRequestCreate,
+126 | |     PurchaseRequestResponse,
+127 | |     PurchaseRequestUpdate,
+128 | |     SaveAllocationsRequest,
+129 | |     # Shipping
+130 | |     ShippingBase,
+131 | |     ShippingCreate,
+132 | |     ShippingResponse,
+133 | |     ShippingUpdate,
+134 | |     # warehouse allocation
+135 | |     WarehouseAllocIn,
+136 | |     WarehouseAllocOut,
+137 | | )
+138 | |
+139 | | # 🔽 [追加] 新しい倉庫スキーマ
+140 | | from .warehouses import WarehouseListResponse, WarehouseOut
+    | |___________________________________________________________^
+141 |
+142 |   __all__ = [
+    |
+help: Organize imports
+
+I001 [*] Import block is un-sorted or un-formatted
+ --> app\schemas\base.py:7:1
+  |
+5 |   """
+6 |
+7 | / from pydantic import BaseModel, ConfigDict
+8 | | from datetime import datetime, date
+9 | | from typing import Optional
+  | |___________________________^
+  |
+help: Organize imports
+
+F401 [*] `datetime.date` imported but unused
+ --> app\schemas\base.py:8:32
+  |
+7 | from pydantic import BaseModel, ConfigDict
+8 | from datetime import datetime, date
+  |                                ^^^^
+9 | from typing import Optional
+  |
+help: Remove unused import: `datetime.date`
+
+I001 [*] Import block is un-sorted or un-formatted
+  --> app\schemas\integration.py:7:1
+   |
+ 5 |   """
+ 6 |
+ 7 | / from pydantic import Field
+ 8 | | from typing import Optional, Any
+ 9 | | from datetime import datetime
+10 | | from .base import BaseSchema
+11 | | from .orders import OrderLineCreate
+   | |___________________________________^
+   |
+help: Organize imports
+
+F401 [*] `pydantic.Field` imported but unused
+ --> app\schemas\integration.py:7:22
+  |
+5 | """
+6 |
+7 | from pydantic import Field
+  |                      ^^^^^
+8 | from typing import Optional, Any
+9 | from datetime import datetime
+  |
+help: Remove unused import: `pydantic.Field`
+
+F841 Local variable `year_month` is assigned to but never used
+  --> app\services\forecast.py:80:13
+   |
+78 |         )
+79 |         if monthly_forecast:
+80 |             year_month = order_date.strftime("%Y-%m")
+   |             ^^^^^^^^^^
+81 |             return {
+82 |                 "forecast_id": monthly_forecast.id,
+   |
+help: Remove assignment to unused variable `year_month`
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+   --> app\services\forecast.py:103:17
+    |
+101 |                 Forecast.granularity == "daily",
+102 |                 Forecast.date_day == target_date,
+103 |                 Forecast.is_active == True,
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+104 |             )
+105 |             .order_by(Forecast.version_no.desc())
+    |
+help: Replace with `Forecast.is_active`
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+   --> app\services\forecast.py:128:17
+    |
+126 |                 Forecast.granularity == "dekad",
+127 |                 Forecast.date_dekad_start == dekad_start,
+128 |                 Forecast.is_active == True,
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+129 |             )
+130 |             .order_by(Forecast.version_no.desc())
+    |
+help: Replace with `Forecast.is_active`
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+   --> app\services\forecast.py:147:17
+    |
+145 |                 Forecast.granularity == "monthly",
+146 |                 Forecast.year_month == year_month,
+147 |                 Forecast.is_active == True,
+    |                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+148 |             )
+149 |             .order_by(Forecast.version_no.desc())
+    |
+help: Replace with `Forecast.is_active`
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+  --> app\services\forecast_matcher.py:37:13
+   |
+35 |             Forecast.granularity == "daily",
+36 |             Forecast.date_day == order_date,
+37 |             Forecast.is_active == True,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+38 |         )
+39 |         .order_by(desc(Forecast.version_no))
+   |
+help: Replace with `Forecast.is_active`
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+  --> app\services\forecast_matcher.py:56:13
+   |
+54 |             Forecast.granularity == "dekad",
+55 |             Forecast.date_dekad_start == dk_start,
+56 |             Forecast.is_active == True,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+57 |         )
+58 |         .order_by(desc(Forecast.version_no))
+   |
+help: Replace with `Forecast.is_active`
+
+E712 Avoid equality comparisons to `True`; use `Forecast.is_active:` for truth checks
+  --> app\services\forecast_matcher.py:75:13
+   |
+73 |             Forecast.granularity == "monthly",
+74 |             Forecast.year_month == ym,
+75 |             Forecast.is_active == True,
+   |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+76 |         )
+77 |         .order_by(desc(Forecast.version_no))
+   |
+help: Replace with `Forecast.is_active`
+
+Found 100 errors.
+[*] 30 fixable with the `--fix` option (12 hidden fixes can be enabled with the `--unsafe-fixes` option).
+
+=== Backend: Black version ===
+python -m black, 25.9.0 (compiled: yes)
+Python (CPython) 3.12.4
+
+=== Backend: black --check ===
+would reformat D:\Work\Lot-management-system\backend\alembic\versions\93c1d055cc3f_add_base_unit_to_products.py
+would reformat D:\Work\Lot-management-system\backend\app\api\deps.py
+would reformat D:\Work\Lot-management-system\backend\alembic\versions\59a2122108a3_add_warehouse_and_allocation_tables.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\alerts.py
+would reformat D:\Work\Lot-management-system\backend\app\models\base_model.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\shipping.py
+would reformat D:\Work\Lot-management-system\backend\app\models\forecast.py
+would reformat D:\Work\Lot-management-system\backend\app\core\database.py
+would reformat D:\Work\Lot-management-system\backend\alembic\versions\1743593a6a5b_add_forecast_table_order_lines_forecast_.py
+would reformat D:\Work\Lot-management-system\backend\app\models\logs.py
+would reformat D:\Work\Lot-management-system\backend\app\schemas\base.py
+would reformat D:\Work\Lot-management-system\backend\app\core\config.py
+would reformat D:\Work\Lot-management-system\backend\alembic\versions\f6c1d5c07f58_update_stock_movements_schema.py
+would reformat D:\Work\Lot-management-system\backend\app\schemas\integration.py
+would reformat D:\Work\Lot-management-system\backend\app\models\masters.py
+would reformat D:\Work\Lot-management-system\backend\app\services\forecast_matcher.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\masters.py
+would reformat D:\Work\Lot-management-system\backend\scripts\run_api_smoke.py
+would reformat D:\Work\Lot-management-system\backend\app\models\inventory.py
+would reformat D:\Work\Lot-management-system\backend\app\services\forecast.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\receipts.py
+would reformat D:\Work\Lot-management-system\backend\app\models\orders.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\integration.py
+would reformat D:\Work\Lot-management-system\backend\app\schemas\orders.py
+would reformat D:\Work\Lot-management-system\backend\scripts\seed_sample_data.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\lots.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\forecast.py
+would reformat D:\Work\Lot-management-system\backend\alembic\versions\f835c7b8f21c_initial_schema_from_models.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\admin.py
+would reformat D:\Work\Lot-management-system\backend\app\api\routes\orders.py
+
+Oh no! \U0001f4a5 \U0001f494 \U0001f4a5
+30 files would be reformatted, 23 files would be left unchanged.
+[SKIP] pylint not installed (optional)
+[SKIP] mypy not installed (optional)
+
+=== Frontend: ESLint ===
+
+D:\Work\Lot-management-system\frontend\src\App.tsx
+   1:1  warning  There should be at least one empty line between import groups                              import/order
+   3:1  warning  There should be no empty line within import group                                          import/order
+   3:1  warning  `@/components/ui/tabs` import should occur before import of `@/lib/query-client`           import/order
+   9:1  warning  `@/pages/ForecastImportPage` import should occur before import of `@/pages/InventoryPage`  import/order
+  10:1  warning  There should be at least one empty line between import groups                              import/order
+  10:1  warning  `@/pages/AdminPage` import should occur before import of `@/pages/DashboardPage`           import/order
+  11:1  warning  `./pages/OrderCardPage` import should occur before import of `@/lib/query-client`          import/order
+  12:1  warning  `./pages/ForecastListPage` import should occur before import of `@/lib/query-client`       import/order
+
+D:\Work\Lot-management-system\frontend\src\components\DashboardStats.tsx
+  1:1  warning  There should be at least one empty line between import groups                       import/order
+  3:1  warning  There should be at least one empty line between import groups                       import/order
+  3:1  warning  `@/components/ui/StatCard` import should occur before import of `@/lib/api-client`  import/order
+  4:1  warning  `lucide-react` import should occur before import of `@/lib/api-client`              import/order
+
+D:\Work\Lot-management-system\frontend\src\components\WarehouseAllocationModal.tsx
+   1:1   warning  There should be at least one empty line between import groups                          import/order
+   4:10  warning  'Label' is defined but never used. Allowed unused vars must match /^_/u                @typescript-eslint/no-unused-vars
+   5:1   warning  `@/components/ui/dialog` import should occur before import of `@/components/ui/input`  import/order
+  12:1   warning  There should be at least one empty line between import groups                          import/order
+  19:1   warning  `lucide-react` import should occur before import of `react`                            import/order
+
+D:\Work\Lot-management-system\frontend\src\components\ui\StatCard.tsx
+  1:1  warning  There should be at least one empty line between import groups      import/order
+  2:1  warning  `lucide-react` import should occur before import of `@/lib/utils`  import/order
+
+D:\Work\Lot-management-system\frontend\src\components\ui\badge.tsx
+  2:1  warning  `class-variance-authority` import should occur before import of `react`  import/order
+
+D:\Work\Lot-management-system\frontend\src\components\ui\dialog.tsx
+  1:1  warning  `react` import should occur after import of `lucide-react`  import/order
+
+D:\Work\Lot-management-system\frontend\src\components\ui\input.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+D:\Work\Lot-management-system\frontend\src\components\ui\label.tsx
+  1:1  warning  `react` import should occur after import of `class-variance-authority`  import/order
+
+D:\Work\Lot-management-system\frontend\src\components\ui\progress.tsx
+  2:1  warning  `@radix-ui/react-progress` import should occur before import of `react`  import/order
+
+D:\Work\Lot-management-system\frontend\src\components\ui\select.tsx
+  1:1  warning  `react` import should occur after import of `lucide-react`  import/order
+
+D:\Work\Lot-management-system\frontend\src\components\ui\tabs.tsx
+  2:1  warning  `@radix-ui/react-tabs` import should occur before import of `react`  import/order
+
+D:\Work\Lot-management-system\frontend\src\components\ui\textarea.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+D:\Work\Lot-management-system\frontend\src\features\orders\api.ts
+  83:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\features\orders\components\ForecastSection.tsx
+  3:1  warning  `@tanstack/react-query` import should occur before import of `react`  import/order
+
+D:\Work\Lot-management-system\frontend\src\features\orders\components\LotAllocationPanel.tsx
+   2:1   warning  There should be at least one empty line between import groups  import/order
+  23:34  error    Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\features\orders\components\LotListWithAllocation.tsx
+  3:1  warning  There should be at least one empty line between import groups  import/order
+  3:1  warning  `lucide-react` import should occur before import of `react`    import/order
+
+D:\Work\Lot-management-system\frontend\src\features\orders\components\OrderFilters.tsx
+  2:1  warning  There should be at least one empty line between import groups  import/order
+
+D:\Work\Lot-management-system\frontend\src\features\orders\components\OrderLineCard\index.tsx
+   2:1   warning  There should be at least one empty line between import groups                                                                             import/order
+   3:1   warning  There should be at least one empty line between import groups                                                                             import/order
+   4:1   warning  `lucide-react` import should occur before import of `react`                                                                               import/order
+   4:22  warning  'Check' is defined but never used. Allowed unused vars must match /^_/u                                                                   @typescript-eslint/no-unused-vars
+   7:1   warning  `@/features/orders/components/AllocationProgress` import should occur before import of `@/features/orders/components/OrderLineHeader`     import/order
+   8:1   warning  `@/features/orders/components/LotListWithAllocation` import should occur before import of `@/features/orders/components/OrderLineHeader`  import/order
+   9:1   warning  `@/features/orders/components/ForecastSection` import should occur before import of `@/features/orders/components/OrderLineHeader`        import/order
+  10:1   warning  There should be no empty line within import group                                                                                         import/order
+  10:1   warning  `@/components/common/InfoRow` import should occur before import of `@/components/ui/button`                                               import/order
+  13:1   warning  `@/features/orders/hooks/useAllocationActions` import should occur before import of `@/features/orders/hooks/useOrderLineComputed`        import/order
+  17:11  error    Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+  18:9   error    Unexpected any. Specify a different type                                                                                                  @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\features\orders\hooks\useAllocations.ts
+   2:1  warning  There should be at least one empty line between import groups                              import/order
+   5:3  warning  'LotCandidate' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+   8:3  warning  'LotAllocationResponse' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+   9:3  warning  'SaveAllocationsResponse' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  15:7  warning  'keyOrderLine' is assigned a value but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+  53:3  warning  'refetchParams' is defined but never used. Allowed unused args must match /^_/u            @typescript-eslint/no-unused-vars
+
+D:\Work\Lot-management-system\frontend\src\features\orders\hooks\useMasters.ts
+   2:1   warning  There should be at least one empty line between import groups                                                        import/order
+  10:19  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  17:9   error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  19:11  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+D:\Work\Lot-management-system\frontend\src\features\orders\hooks\useOrderLineComputed.ts
+   2:1   warning  There should be at least one empty line between import groups                import/order
+   4:15  warning  'OrderLine' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  10:9   error    Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  11:11  error    Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\features\orders\hooks\useOrders.ts
+   2:1   warning  There should be at least one empty line between import groups  import/order
+   4:1   warning  There should be no empty line within import group              import/order
+  38:19  error    Unexpected any. Specify a different type                       @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\hooks\use-toast.ts
+  19:7  warning  'actionTypes' is assigned a value but only used as a type. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\Work\Lot-management-system\frontend\src\lib\api.ts
+  2:1  warning  `@/features/orders/api` import should occur after import of `@/features/masters/api`      import/order
+  3:1  warning  `@/features/inventory/api` import should occur after import of `@/features/forecast/api`  import/order
+
+D:\Work\Lot-management-system\frontend\src\lib\csv.ts
+  9:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\main.tsx
+  2:1  warning  There should be at least one empty line between import groups  import/order
+
+D:\Work\Lot-management-system\frontend\src\pages\AdminPage.tsx
+    2:1   warning  There should be at least one empty line between import groups              import/order
+    2:1   warning  `@tanstack/react-query` import should occur before import of `react`       import/order
+    4:1   warning  There should be at least one empty line between import groups              import/order
+    4:1   warning  `@/components/ui/button` import should occur before import of `@/lib/api`  import/order
+    5:1   warning  `lucide-react` import should occur before import of `react`                import/order
+   18:22  error    Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  123:34  error    Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  129:36  error    Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  172:27  error    Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  200:27  error    Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+  228:27  error    Unexpected any. Specify a different type                                   @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\pages\DashboardPage.tsx
+  1:1  warning  There should be at least one empty line between import groups           import/order
+  2:1  warning  There should be at least one empty line between import groups           import/order
+  3:1  warning  `lucide-react` import should occur before import of `@/lib/api-client`  import/order
+
+D:\Work\Lot-management-system\frontend\src\pages\ForecastImportPage.tsx
+    1:1   warning  `react` import should occur after import of `lucide-react`                     import/order
+    2:1   warning  There should be at least one empty line between import groups                  import/order
+    3:1   warning  `@/lib/api-client` import should occur after import of `@/hooks/use-toast`     import/order
+    4:1   warning  `@/components/ui/button` import should occur after import of `lucide-react`    import/order
+    5:1   warning  `@/components/ui/label` import should occur after import of `lucide-react`     import/order
+    6:1   warning  There should be at least one empty line between import groups                  import/order
+    6:1   warning  `@/components/ui/textarea` import should occur after import of `lucide-react`  import/order
+    7:1   warning  There should be at least one empty line between import groups                  import/order
+   12:40  error    Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+   16:24  error    Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+   32:22  error    Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+   58:21  error    Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+  181:44  error    Unexpected any. Specify a different type                                       @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\pages\ForecastListPage.tsx
+    3:1   warning  There should be at least one empty line between import groups                     import/order
+    3:1   warning  `@tanstack/react-query` import should occur before import of `react`              import/order
+    5:1   warning  `@/components/ui/button` import should occur before import of `@/lib/api-client`  import/order
+    6:1   warning  `@/components/ui/input` import should occur before import of `@/lib/api-client`   import/order
+    7:1   warning  There should be at least one empty line between import groups                     import/order
+    7:1   warning  `@/components/ui/badge` import should occur before import of `@/lib/api-client`   import/order
+    8:1   warning  `lucide-react` import should occur before import of `react`                       import/order
+   16:1   warning  There should be at least one empty line between import groups                     import/order
+   16:1   warning  `date-fns` import should occur before import of `react`                           import/order
+  224:3   warning  'unit' is defined but never used. Allowed unused args must match /^_/u            @typescript-eslint/no-unused-vars
+  313:51  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  421:51  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  429:35  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\pages\InventoryPage.tsx
+   1:1  warning  `react` import should occur after import of `@hookform/resolvers/zod`                  import/order
+   2:1  warning  `@tanstack/react-query` import should occur after import of `@hookform/resolvers/zod`  import/order
+   3:1  warning  `date-fns` import should occur after import of `@hookform/resolvers/zod`               import/order
+   4:1  warning  `lucide-react` import should occur after import of `@hookform/resolvers/zod`           import/order
+   5:1  warning  `react-hook-form` import should occur after import of `@hookform/resolvers/zod`        import/order
+   9:1  warning  `@/lib/api-client` import should occur after import of `@/components/ui/select`        import/order
+  11:1  warning  `@/components/ui/input` import should occur after import of `@/components/ui/dialog`   import/order
+  12:1  warning  `@/components/ui/label` import should occur after import of `@/components/ui/dialog`   import/order
+  30:3  warning  'LotResponse' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  32:3  warning  'Product' is defined but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+  33:3  warning  'Supplier' is defined but never used. Allowed unused vars must match /^_/u             @typescript-eslint/no-unused-vars
+  34:3  warning  'Warehouse' is defined but never used. Allowed unused vars must match /^_/u            @typescript-eslint/no-unused-vars
+
+D:\Work\Lot-management-system\frontend\src\pages\OrderCardPage.tsx
+    2:1   warning  There should be at least one empty line between import groups           import/order
+    7:1   warning  `@/lib/utils/date` import should occur before type import of `@/types`  import/order
+   33:19  error    Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+   34:16  error    Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+   69:17  error    Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+   70:17  error    Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+  126:44  error    Unexpected any. Specify a different type                                @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\pages\OrderDetailPage.tsx
+   2:1   warning  `@tanstack/react-query` import should occur before import of `react`              import/order
+   3:1   warning  There should be at least one empty line between import groups                     import/order
+   5:1   warning  There should be at least one empty line between import groups                     import/order
+   5:1   warning  `@/components/ui/button` import should occur before import of `@/lib/api-client`  import/order
+   6:1   warning  `lucide-react` import should occur before import of `react`                       import/order
+   7:1   warning  There should be at least one empty line between import groups                     import/order
+   7:1   warning  `date-fns` import should occur before import of `react`                           import/order
+   8:1   warning  `@/hooks/use-toast` import should occur before import of `@/lib/api-client`       import/order
+  35:22  error    Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+
+D:\Work\Lot-management-system\frontend\src\pages\OrderPage.tsx
+   1:1  warning  There should be at least one empty line between import groups                         import/order
+   2:1  warning  There should be at least one empty line between import groups                         import/order
+   2:1  warning  `@/lib/api-client` import should occur after import of `@/components/ui/badge`        import/order
+   3:1  warning  There should be at least one empty line between import groups                         import/order
+   4:1  warning  `@/components/ui/table` import should occur after import of `@/components/ui/badge`   import/order
+  12:1  warning  `@/components/ui/button` import should occur after import of `@/components/ui/badge`  import/order
+
+D:\Work\Lot-management-system\frontend\src\pages\OrdersListPage.tsx
+   2:1  warning  There should be at least one empty line between import groups                     import/order
+   2:1  warning  `@tanstack/react-query` import should occur before import of `react`              import/order
+   4:1  warning  `@/components/ui/button` import should occur before import of `@/lib/api-client`  import/order
+   5:1  warning  `@/components/ui/input` import should occur before import of `@/lib/api-client`   import/order
+   6:1  warning  `@/components/ui/label` import should occur before import of `@/lib/api-client`   import/order
+   7:1  warning  There should be at least one empty line between import groups                     import/order
+   7:1  warning  `@/components/ui/select` import should occur before import of `@/lib/api-client`  import/order
+  14:1  warning  `lucide-react` import should occur before import of `react`                       import/order
+  15:1  warning  `date-fns` import should occur before import of `react`                           import/order
+
+✖ 152 problems (34 errors, 118 warnings)
+  0 errors and 103 warnings potentially fixable with the `--fix` option.
+
+
+=== Frontend: Prettier --check ===
+Checking formatting...
+[[33mwarn[39m] src/components/common/InfoRow.tsx
+[[33mwarn[39m] src/components/ui/badge.tsx
+[[33mwarn[39m] src/components/ui/button.tsx
+[[33mwarn[39m] src/components/ui/dialog.tsx
+[[33mwarn[39m] src/components/ui/icons.tsx
+[[33mwarn[39m] src/components/ui/input.tsx
+[[33mwarn[39m] src/components/ui/label.tsx
+[[33mwarn[39m] src/components/ui/progress.tsx
+[[33mwarn[39m] src/components/ui/select.tsx
+[[33mwarn[39m] src/components/ui/StatCard.tsx
+[[33mwarn[39m] src/components/ui/table.tsx
+[[33mwarn[39m] src/components/ui/tabs.tsx
+[[33mwarn[39m] src/components/ui/textarea.tsx
+[[33mwarn[39m] src/components/WarehouseAllocationModal.tsx
+[[33mwarn[39m] src/features/forecast/api.ts
+[[33mwarn[39m] src/features/inventory/api.ts
+[[33mwarn[39m] src/features/masters/api.ts
+[[33mwarn[39m] src/features/orders/api.ts
+[[33mwarn[39m] src/features/orders/components/AllocationProgress.tsx
+[[33mwarn[39m] src/features/orders/components/ForecastSection-v2.tsx
+[[33mwarn[39m] src/features/orders/components/ForecastSection.tsx
+[[33mwarn[39m] src/features/orders/components/LotAllocationPanel.tsx
+[[33mwarn[39m] src/features/orders/components/LotListWithAllocation.tsx
+[[33mwarn[39m] src/features/orders/components/OrderCard.tsx
+[[33mwarn[39m] src/features/orders/components/OrderFilters.tsx
+[[33mwarn[39m] src/features/orders/components/OrderLineCard/index.tsx
+[[33mwarn[39m] src/features/orders/components/OrderLineHeader.tsx
+[[33mwarn[39m] src/features/orders/components/WarehouseBadges.tsx
+[[33mwarn[39m] src/features/orders/components/WarehouseSelector.tsx
+[[33mwarn[39m] src/features/orders/hooks/useAllocationActions.ts
+[[33mwarn[39m] src/features/orders/hooks/useAllocations.ts
+[[33mwarn[39m] src/features/orders/hooks/useOrderLineComputed.ts
+[[33mwarn[39m] src/features/orders/hooks/useOrders.ts
+[[33mwarn[39m] src/hooks/use-toast.ts
+[[33mwarn[39m] src/lib/admin-api.ts
+[[33mwarn[39m] src/lib/csv.ts
+[[33mwarn[39m] src/lib/http.ts
+[[33mwarn[39m] src/lib/query-client.ts
+[[33mwarn[39m] src/lib/utils.ts
+[[33mwarn[39m] src/main.tsx
+[[33mwarn[39m] src/pages/AdminPage.tsx
+[[33mwarn[39m] src/pages/DashboardPage.tsx
+[[33mwarn[39m] src/pages/ForecastImportPage.tsx
+[[33mwarn[39m] src/pages/ForecastListPage.tsx
+[[33mwarn[39m] src/pages/InventoryPage.tsx
+[[33mwarn[39m] src/pages/OrderCardPage.tsx
+[[33mwarn[39m] src/pages/OrderDetailPage.tsx
+[[33mwarn[39m] src/pages/OrderPage.tsx
+[[33mwarn[39m] src/pages/OrdersListPage.tsx
+[[33mwarn[39m] src/types/index.ts
+[[33mwarn[39m] src/types/orders.ts
+[[33mwarn[39m] Code style issues found in 51 files. Run Prettier with --write to fix.
+
+=== Frontend: TypeScript type check ===
+src/components/common/InfoRow.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/components/WarehouseAllocationModal.tsx(4,1): error TS6133: 'Label' is declared but its value is never read.
+src/components/WarehouseAllocationModal.tsx(157,23): error TS2322: Type '"ghost"' is not assignable to type '"default" | "secondary" | "outline" | "destructive" | undefined'.
+src/features/forecast/api.ts(4,3): error TS2724: '"@/types"' has no exported member named 'ForecastListParams'. Did you mean 'OrdersListParams'?
+src/features/forecast/api.ts(5,3): error TS2724: '"@/types"' has no exported member named 'ForecastListResponse'. Did you mean 'ForecastResponse'?
+src/features/forecast/api.ts(6,3): error TS2305: Module '"@/types"' has no exported member 'ForecastBulkRequest'.
+src/features/forecast/api.ts(7,3): error TS2724: '"@/types"' has no exported member named 'ForecastBulkResponse'. Did you mean 'ForecastResponse'?
+src/features/inventory/api.ts(3,15): error TS2305: Module '"@/types"' has no exported member 'LotResponse'.
+src/features/inventory/api.ts(3,28): error TS2305: Module '"@/types"' has no exported member 'LotCreate'.
+src/features/masters/api.ts(3,15): error TS2305: Module '"@/types"' has no exported member 'Product'.
+src/features/masters/api.ts(3,24): error TS2305: Module '"@/types"' has no exported member 'Supplier'.
+src/features/masters/api.ts(3,34): error TS2305: Module '"@/types"' has no exported member 'OldWarehouse'.
+src/features/orders/api.ts(5,3): error TS2305: Module '"@/types"' has no exported member 'OrderResponse'.
+src/features/orders/api.ts(6,3): error TS2305: Module '"@/types"' has no exported member 'OrderWithLinesResponse'.
+src/features/orders/api.ts(7,3): error TS2305: Module '"@/types"' has no exported member 'ReMatchResponse'.
+src/features/orders/api.ts(8,3): error TS2305: Module '"@/types"' has no exported member 'OrdersWithAllocResponse'.
+src/features/orders/api.ts(9,3): error TS2305: Module '"@/types"' has no exported member 'WarehouseListResponse'.
+src/features/orders/api.ts(13,3): error TS2724: '"@/types"' has no exported member named 'SaveAllocationsRequest'. Did you mean 'LotAllocationRequest'?
+src/features/orders/components/AllocationProgress.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/features/orders/components/OrderCard.tsx(2,15): error TS2305: Module '"@/types"' has no exported member 'OrderWithLinesResponse'.
+src/features/orders/components/OrderCard.tsx(44,32): error TS7006: Parameter 'ln' implicitly has an 'any' type.
+src/features/orders/components/OrderFilters.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/features/orders/components/OrderLineCard/index.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/features/orders/components/OrderLineCard/index.tsx(4,22): error TS6133: 'Check' is declared but its value is never read.
+src/features/orders/components/OrderLineCard/index.tsx(60,7): error TS2345: Argument of type '{ allocation_ids: number[]; }' is not assignable to parameter of type 'AllocationCancelRequest'.
+  Property 'order_line_id' is missing in type '{ allocation_ids: number[]; }' but required in type 'AllocationCancelRequest'.
+src/features/orders/components/OrderLineHeader.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/features/orders/components/WarehouseBadges.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/features/orders/hooks/useAllocations.ts(5,3): error TS6196: 'LotCandidate' is declared but never used.
+src/features/orders/hooks/useAllocations.ts(8,3): error TS6196: 'LotAllocationResponse' is declared but never used.
+src/features/orders/hooks/useAllocations.ts(9,3): error TS6196: 'SaveAllocationsResponse' is declared but never used.
+src/features/orders/hooks/useAllocations.ts(15,7): error TS6133: 'keyOrderLine' is declared but its value is never read.
+src/features/orders/hooks/useAllocations.ts(53,3): error TS6133: 'refetchParams' is declared but its value is never read.
+src/features/orders/hooks/useOrderLineComputed.ts(4,15): error TS6196: 'OrderLine' is declared but never used.
+src/features/orders/hooks/useOrders.ts(6,33): error TS2305: Module '"@/types"' has no exported member 'OrderWithLinesResponse'.
+src/hooks/use-toast.ts(154,7): error TS2353: Object literal may only specify known properties, and 'open' does not exist in type 'ToasterToast'.
+src/hooks/use-toast.ts(155,22): error TS7006: Parameter 'open' implicitly has an 'any' type.
+src/pages/ForecastListPage.tsx(17,10): error TS2305: Module '"@/types"' has no exported member 'ForecastItemOut'.
+src/pages/ForecastListPage.tsx(83,25): error TS7006: Parameter 'forecast' implicitly has an 'any' type.
+src/pages/ForecastListPage.tsx(191,19): error TS2322: Type '"ghost"' is not assignable to type '"default" | "secondary" | "outline" | "destructive" | undefined'.
+src/pages/ForecastListPage.tsx(224,3): error TS6133: 'unit' is declared but its value is never read.
+src/pages/InventoryPage.tsx(30,3): error TS2305: Module '"@/types"' has no exported member 'LotResponse'.
+src/pages/InventoryPage.tsx(30,3): error TS6196: 'LotResponse' is declared but never used.
+src/pages/InventoryPage.tsx(31,3): error TS2305: Module '"@/types"' has no exported member 'LotCreate'.
+src/pages/InventoryPage.tsx(32,3): error TS2305: Module '"@/types"' has no exported member 'Product'.
+src/pages/InventoryPage.tsx(32,3): error TS6196: 'Product' is declared but never used.
+src/pages/InventoryPage.tsx(33,3): error TS2305: Module '"@/types"' has no exported member 'Supplier'.
+src/pages/InventoryPage.tsx(33,3): error TS6196: 'Supplier' is declared but never used.
+src/pages/InventoryPage.tsx(34,3): error TS2305: Module '"@/types"' has no exported member 'Warehouse'.
+src/pages/InventoryPage.tsx(34,3): error TS6196: 'Warehouse' is declared but never used.
+src/pages/InventoryPage.tsx(301,25): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+src/pages/OrderDetailPage.tsx(3,40): error TS2307: Cannot find module 'react-router-dom' or its corresponding type declarations.
+src/pages/OrderDetailPage.tsx(54,17): error TS2322: Type '"ghost"' is not assignable to type '"default" | "secondary" | "outline" | "destructive" | undefined'.
+src/pages/OrderDetailPage.tsx(70,19): error TS2322: Type '"ghost"' is not assignable to type '"default" | "secondary" | "outline" | "destructive" | undefined'.
+src/pages/OrderDetailPage.tsx(131,33): error TS7006: Parameter 'line' implicitly has an 'any' type.
+src/pages/OrderPage.tsx(22,5): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(options: DefinedInitialDataOptions<unknown, Error, unknown, string[]>, queryClient?: QueryClient | undefined): DefinedUseQueryResult<unknown, Error>', gave the following error.
+    Type '(params: OrdersListParams) => Promise<OrderResponse[]>' is not assignable to type 'QueryFunction<unknown, string[]>'.
+      Types of parameters 'params' and 'context' are incompatible.
+        Type '{ client: QueryClient; queryKey: string[]; signal: AbortSignal; meta: Record<string, unknown> | undefined; pageParam?: unknown; direction?: unknown; }' has no properties in common with type 'OrdersListParams'.
+  Overload 2 of 3, '(options: UndefinedInitialDataOptions<OrderResponse[], Error, OrderResponse[], string[]>, queryClient?: QueryClient | undefined): UseQueryResult<OrderResponse[], Error>', gave the following error.
+    Type '(params: OrdersListParams) => Promise<OrderResponse[]>' is not assignable to type 'unique symbol | QueryFunction<OrderResponse[], string[], never> | undefined'.
+      Type '(params: OrdersListParams) => Promise<OrderResponse[]>' is not assignable to type 'QueryFunction<OrderResponse[], string[], never>'.
+        Types of parameters 'params' and 'context' are incompatible.
+          Type '{ client: QueryClient; queryKey: string[]; signal: AbortSignal; meta: Record<string, unknown> | undefined; pageParam?: unknown; direction?: unknown; }' has no properties in common with type 'OrdersListParams'.
+  Overload 3 of 3, '(options: UseQueryOptions<OrderResponse[], Error, OrderResponse[], string[]>, queryClient?: QueryClient | undefined): UseQueryResult<OrderResponse[], Error>', gave the following error.
+    Type '(params: OrdersListParams) => Promise<OrderResponse[]>' is not assignable to type 'unique symbol | QueryFunction<OrderResponse[], string[], never> | undefined'.
+      Type '(params: OrdersListParams) => Promise<OrderResponse[]>' is not assignable to type 'QueryFunction<OrderResponse[], string[], never>'.
+        Types of parameters 'params' and 'context' are incompatible.
+          Type '{ client: QueryClient; queryKey: string[]; signal: AbortSignal; meta: Record<string, unknown> | undefined; pageParam?: unknown; direction?: unknown; }' has no properties in common with type 'OrdersListParams'.
+src/pages/OrderPage.tsx(77,17): error TS18046: 'orders' is of type 'unknown'.
+src/pages/OrderPage.tsx(84,15): error TS18046: 'orders' is of type 'unknown'.
+src/pages/OrderPage.tsx(84,27): error TS7006: Parameter 'order' implicitly has an 'any' type.
+src/pages/OrdersListPage.tsx(54,9): error TS2339: Property 'exportToCSV' does not exist on type '{ getStats: () => Promise<DashboardStats>; resetDatabase: () => Promise<ResetResponse>; loadFullSampleData: (payload: FullSampleDataRequest) => Promise<{ success: boolean; message: string; }>; ... 18 more ...; updateOrderLineStatus: (orderLineId: number, newStatus: string) => Promise<...>; }'.
+src/pages/OrdersListPage.tsx(158,27): error TS2322: Type '"ghost"' is not assignable to type '"default" | "secondary" | "outline" | "destructive" | undefined'.
+
+============================================================
+*** Lint/Format check FAILED. See logs above. ***

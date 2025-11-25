@@ -520,3 +520,14 @@ def generate_all_test_data(db: Session):
         db.rollback()
         print(f"Error generating test data: {e}")
         raise e
+
+if __name__ == "__main__":
+    from app.db.session import SessionLocal
+
+    db = SessionLocal()
+    try:
+        print("Generating test data...")
+        generate_all_test_data(db)
+        print("Test data generation completed!")
+    finally:
+        db.close()
