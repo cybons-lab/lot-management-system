@@ -2,8 +2,13 @@ import json
 import sys
 from pathlib import Path
 
+import os
+
 # プロジェクトルートをパスに追加
 sys.path.append(str(Path(__file__).parent.parent))
+
+# DB接続が必要ないため、ダミーのURLを設定してcreate_engineのエラーを回避
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
 from app.main import app
 
