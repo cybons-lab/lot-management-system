@@ -31,7 +31,7 @@ export function ForecastDayCell({ date, quantity, isToday, isPast }: DayCellProp
         <span className="text-[10px] text-gray-500">{date.getDate()}</span>
         <span
           className={cn(
-            "text-xs tabular-nums",
+            "text-sm font-semibold tabular-nums",
             !hasValue || isZero
               ? "text-gray-400"
               : isPast

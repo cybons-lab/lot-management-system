@@ -20,7 +20,7 @@ export function ForecastAggregations({ dekadData, monthlyData }: ForecastAggrega
             {dekadData.map((dekad) => (
               <div
                 key={dekad.label}
-                className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-center"
+                className="flex min-h-[100px] flex-col justify-center rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-center"
               >
                 <div className="text-xs font-medium text-green-700">{dekad.label}</div>
                 <div className="text-lg font-bold text-green-900">{dekad.total}</div>
@@ -38,7 +38,7 @@ export function ForecastAggregations({ dekadData, monthlyData }: ForecastAggrega
       <div className="space-y-3">
         <h4 className="text-sm font-semibold text-gray-700">月別予測</h4>
         {monthlyData ? (
-          <div className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-center">
+          <div className="flex min-h-[100px] flex-col justify-center rounded-lg border border-purple-200 bg-purple-50 px-4 py-3 text-center">
             <div className="text-xs font-medium text-purple-700">{monthlyData.label}</div>
             <div className="text-2xl font-bold text-purple-900">{monthlyData.total}</div>
           </div>
