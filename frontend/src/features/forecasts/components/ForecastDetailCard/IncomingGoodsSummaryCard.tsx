@@ -17,9 +17,11 @@ export function IncomingGoodsSummaryCard({ productId }: IncomingGoodsSummaryCard
 
     // 直近3件のみ、未来の日付のみフィルタ
     const today = new Date();
-    const upcomingPlans = (inboundPlans || [])
-        .filter(plan => new Date(plan.planned_arrival_date) >= today)
-        .slice(0, 3);
+    const upcomingPlans = Array.isArray(inboundPlans)
+        ? inboundPlans
+            .filter((plan) => new Date(plan.planned_arrival_date) >= today)
+            .slice(0, 3)
+        : [];
 
     return (
         <Card className="border-green-200 bg-green-50/30">
