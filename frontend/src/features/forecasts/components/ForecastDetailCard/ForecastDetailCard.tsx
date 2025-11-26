@@ -7,6 +7,8 @@
  * - Section 3: Dekad (left) and Monthly (right) aggregations beneath the grid
  */
 
+import { useNavigate } from "react-router-dom";
+
 import { ForecastAggregations } from "./ForecastAggregations";
 import { ForecastCardHeader } from "./ForecastCardHeader";
 import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
@@ -15,7 +17,6 @@ import { useForecastCalculations } from "./hooks/use-forecast-calculations";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
 
-import { useNavigate } from "react-router-dom";
 import { Button, Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/shared/libs/utils";

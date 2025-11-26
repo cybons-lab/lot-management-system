@@ -81,6 +81,15 @@ erDiagram
         timestamp updated_at
     }
 
+    product_uom_conversions {
+        bigint conversion_id PK
+        bigint product_id FK
+        varchar external_unit
+        numeric factor
+        timestamp created_at
+        timestamp updated_at
+    }
+
     %% ==========================================
     %% Users & Authentication
     %% ==========================================
@@ -176,6 +185,8 @@ erDiagram
         numeric order_quantity
         varchar unit
         varchar status "pending/allocated/shipped/completed/cancelled"
+        integer version_id
+        numeric converted_quantity
         timestamp created_at
         timestamp updated_at
     }
@@ -190,39 +201,61 @@ erDiagram
         timestamp updated_at
     }
 
+    allocation_traces {
+        bigint id PK
+        bigint order_line_id FK
+        bigint lot_id FK
+        numeric score
+        varchar decision "adopted/rejected/partial"
+        varchar reason
+        numeric allocated_qty
+        timestamp created_at
+    }
+
     %% ==========================================
     %% Forecasts
     %% ==========================================
 
-    forecast_headers {
+    forecast_current {
         bigint id PK
         bigint customer_id FK
         bigint delivery_place_id FK
-        varchar forecast_number UK
-        date forecast_start_date
-        date forecast_end_date
-        varchar status "active/completed/cancelled"
+        bigint product_id FK
+        date forecast_date
+        numeric forecast_quantity
+        varchar unit
+        varchar forecast_period
+        timestamp snapshot_at
         timestamp created_at
         timestamp updated_at
     }
 
-    forecast_lines {
+    forecast_history {
         bigint id PK
-        bigint forecast_id FK
+        bigint customer_id FK
+        bigint delivery_place_id FK
         bigint product_id FK
-        date delivery_date
+        date forecast_date
         numeric forecast_quantity
         varchar unit
+        varchar forecast_period
+        timestamp snapshot_at
+        timestamp archived_at
         timestamp created_at
         timestamp updated_at
     }
 
     allocation_suggestions {
         bigint id PK
-        bigint forecast_line_id FK
+        bigint order_line_id FK
+        varchar forecast_period
+        bigint customer_id FK
+        bigint delivery_place_id FK
+        bigint product_id FK
         bigint lot_id FK
-        numeric suggested_quantity
-        varchar allocation_logic
+        numeric quantity
+        varchar allocation_type
+        varchar source
         timestamp created_at
         timestamp updated_at
     }
@@ -329,6 +362,7 @@ erDiagram
     customers ||--o{ customer_items : "has"
     products ||--o{ customer_items : "mapped_to"
     suppliers ||--o{ customer_items : "supplied_by"
+    products ||--o{ product_uom_conversions : "has_conversions"
 
     %% User Relations
     users ||--o{ user_roles : "has"
@@ -346,6 +380,7 @@ erDiagram
     lots ||--o{ adjustments : "adjusted"
     lots ||--o{ allocations : "allocated_from"
     lots ||--o{ allocation_suggestions : "suggested_for"
+    lots ||--o{ allocation_traces : "traced_in"
 
     %% Order Relations
     customers ||--o{ orders : "places"
@@ -353,13 +388,17 @@ erDiagram
     products ||--o{ order_lines : "ordered"
     delivery_places ||--o{ order_lines : "delivered_to"
     order_lines ||--o{ allocations : "allocated"
+    order_lines ||--o{ allocation_traces : "traced"
+    order_lines ||--o{ allocation_suggestions : "suggested_for"
 
     %% Forecast Relations
-    customers ||--o{ forecast_headers : "forecasts"
-    delivery_places ||--o{ forecast_headers : "forecast_for"
-    forecast_headers ||--o{ forecast_lines : "contains"
-    products ||--o{ forecast_lines : "forecasted"
-    forecast_lines ||--o{ allocation_suggestions : "suggested"
+    customers ||--o{ forecast_current : "forecasts"
+    delivery_places ||--o{ forecast_current : "forecast_for"
+    products ||--o{ forecast_current : "forecasted"
+    
+    customers ||--o{ forecast_history : "forecast_history"
+    delivery_places ||--o{ forecast_history : "forecast_history_for"
+    products ||--o{ forecast_history : "forecasted_history"
 
     %% Inbound Plan Relations
     suppliers ||--o{ inbound_plans : "supplies"
@@ -370,7 +409,7 @@ erDiagram
 
 === Table Groups
 
-==== 1. Master Data (6 tables)
+==== 1. Master Data (7 tables)
 
 |===
 | Table | Description
@@ -381,6 +420,7 @@ erDiagram
 | `delivery_places` | 納品先マスタ
 | `products` | 製品マスタ
 | `customer_items` | 得意先品目マッピング (外部品番→内部品番)
+| `product_uom_conversions` | 単位換算マスタ
 |===
 
 ==== 2. Users & Authentication (3 tables)
@@ -403,7 +443,7 @@ erDiagram
 | `adjustments` | 在庫調整履歴
 |===
 
-==== 4. Orders & Allocations (3 tables)
+==== 4. Orders & Allocations (4 tables)
 
 |===
 | Table | Description
@@ -411,6 +451,7 @@ erDiagram
 | `orders` | 受注ヘッダー
 | `order_lines` | 受注明細
 | `allocations` | 引当 (ロット→受注明細)
+| `allocation_traces` | 引当ロジック追跡ログ
 |===
 
 ==== 5. Forecasts (3 tables)
@@ -418,9 +459,9 @@ erDiagram
 |===
 | Table | Description
 
-| `forecast_headers` | 内示ヘッダー
-| `forecast_lines` | 内示明細
-| `allocation_suggestions` | 引当提案 (ロット→内示明細)
+| `forecast_current` | 最新フォーキャスト
+| `forecast_history` | フォーキャスト履歴
+| `allocation_suggestions` | 引当提案
 |===
 
 ==== 6. Inbound Plans (3 tables)

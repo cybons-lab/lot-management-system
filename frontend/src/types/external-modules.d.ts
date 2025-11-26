@@ -2,7 +2,7 @@
 // These declarations ensure the TypeScript compiler can resolve module imports
 // used throughout the project without altering runtime behavior.
 declare module "@radix-ui/react-dropdown-menu" {
-  import * as React from "react";
+  import type * as React from "react";
 
   export const Root: React.FC<any>;
   export const Trigger: React.FC<any>;

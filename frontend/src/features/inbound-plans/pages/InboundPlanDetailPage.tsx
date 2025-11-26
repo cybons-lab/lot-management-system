@@ -3,6 +3,7 @@
  * Inbound plan detail page with receive functionality
  */
 
+import { FileBarChart, MoreHorizontal, Package } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -17,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-import { FileBarChart, MoreHorizontal, Package } from "lucide-react";
 
 export function InboundPlanDetailPage() {
   const { id } = useParams<{ id: string }>();

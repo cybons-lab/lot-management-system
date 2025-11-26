@@ -5,7 +5,7 @@
  */
 
 import { Button, Input, Label } from "@/components/ui";
-import type { LotResponse } from "@/shared/types/aliases";
+import type { LotUI } from "@/shared/libs/normalize";
 
 /**
  * ロット更新データの型定義
@@ -21,7 +21,7 @@ export interface LotUpdateData {
 
 interface LotEditFormProps {
   /** 編集対象のロットデータ */
-  initialData: LotResponse;
+  initialData: LotUI;
   /** フォーム送信ハンドラ */
   onSubmit: (data: LotUpdateData) => Promise<void>;
   /** キャンセルハンドラ */
