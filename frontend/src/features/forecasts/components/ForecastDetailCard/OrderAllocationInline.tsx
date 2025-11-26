@@ -1,13 +1,14 @@
 import { Loader2 } from "lucide-react";
 
-import { cn } from "@/shared/libs/utils";
-import { formatQuantity } from "@/shared/utils/formatQuantity";
-import type { OrderLine } from "@/shared/types/aliases";
-import type { useLotAllocationForOrder } from "@/features/forecasts/hooks/useLotAllocationForOrder";
+import { LotCandidateRow } from "./LotCandidateRow";
+
 import { useAllocationCandidates } from "@/features/allocations/hooks/api/useAllocationCandidates";
 import { ALLOCATION_CONSTANTS } from "@/features/allocations/hooks/useLotAllocation/allocationConstants";
+import type { useLotAllocationForOrder } from "@/features/forecasts/hooks/useLotAllocationForOrder";
+import { cn } from "@/shared/libs/utils";
+import type { OrderLine } from "@/shared/types/aliases";
+import { formatQuantity } from "@/shared/utils/formatQuantity";
 
-import { LotCandidateRow } from "./LotCandidateRow";
 
 interface OrderAllocationInlineProps {
   line: OrderLine;

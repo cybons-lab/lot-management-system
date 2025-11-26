@@ -14,6 +14,7 @@ import { ForecastCardHeader } from "./ForecastCardHeader";
 import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
 import { ForecastDailyGrid } from "./ForecastDailyGrid";
 import { useForecastCalculations } from "./hooks/use-forecast-calculations";
+import { RelatedOrdersSection } from "./RelatedOrdersSection";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
 
@@ -21,7 +22,6 @@ import { Button, Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/shared/libs/utils";
 
-import { RelatedOrdersSection } from "./RelatedOrdersSection";
 
 export function ForecastDetailCard({
   group,

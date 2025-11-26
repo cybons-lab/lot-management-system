@@ -2,8 +2,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import * as ordersApi from "@/features/orders/api";
-import type { CandidateLotItem, ManualAllocationSavePayload } from "@/shared/types/schema";
 import type { WarehouseAllocationItem } from "@/features/orders/api";
+import type { CandidateLotItem, ManualAllocationSavePayload } from "@/shared/types/schema";
 
 // Temporary alias for missing type
 type AllocationCancelRequest = { order_line_id?: number; allocation_ids?: number[] };
