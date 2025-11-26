@@ -206,9 +206,6 @@
 
                 <div class="diagram-container">
                     <div class="mermaid">
-                        flowchart TD
-                        A([📥 フォーキャスト受信])
-                        B[📊 インポート]
                         flowchart TB
                         subgraph forecast ["📊 予測・調達ライン"]
                         A1([フォーキャスト<br />受信])
@@ -221,7 +218,7 @@
                         A1 --> A2 --> A3 --> A4 --> A5 --> A6
                         end
 
-                        subgraph order ["� 受注・出荷ライン"]
+                        subgraph order ["📦 受注・出荷ライン"]
                         B1([受注登録])
                         B2[在庫引当]
                         B3[SAP受注登録]
