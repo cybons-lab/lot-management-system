@@ -107,9 +107,9 @@ export function ForecastDetailCard({
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />
             </div>
 
-            <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 md:col-span-5">
-              <h4 className="mb-3 text-sm font-semibold text-gray-700">関連情報</h4>
-              <div className="space-y-3">
+            <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3 md:col-span-5">
+              <h4 className="text-xs font-semibold text-gray-700">関連情報</h4>
+              <div className="space-y-2">
                 <InventorySummaryCard productId={group_key.product_id} />
                 <IncomingGoodsSummaryCard productId={group_key.product_id} />
               </div>

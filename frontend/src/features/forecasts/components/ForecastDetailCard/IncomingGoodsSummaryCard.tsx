@@ -54,7 +54,7 @@ export function IncomingGoodsSummaryCard({ productId }: IncomingGoodsSummaryCard
                                 asChild
                             >
                                 <Link to={`${ROUTES.INBOUND_PLANS.LIST}?product_id=${productId}`}>
-                                    詳細を確認
+                                    実績を確認
                                 </Link>
                             </Button>
                         </div>
