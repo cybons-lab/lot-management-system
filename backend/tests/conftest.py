@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session, sessionmaker
 # Use PostgreSQL for testing to support JSONB and other PG-specific features
 os.environ.setdefault("ENVIRONMENT", "test")
 # Override DATABASE_URL to use the test database
-os.environ["DATABASE_URL"] = "postgresql://admin:dev_password@db-postgres:5432/lot_management_test"
+# Allow host to be configured via TEST_DB_HOST (default: db-postgres for Docker, localhost for host)
+test_db_host = os.environ.get("TEST_DB_HOST", "db-postgres")
+os.environ["DATABASE_URL"] = f"postgresql://admin:dev_password@{test_db_host}:5432/lot_management_test"
 
 from app.core.database import engine  # noqa: E402
 
@@ -133,14 +135,14 @@ def setup_database():
         # Apply views manually (since they are not in alembic migrations)
         from pathlib import Path
 
-        view_sql_path = Path("/app/apply_views_v2_5.sql")
+        view_sql_path = Path("/app/sql/views/create_views.sql")
         if view_sql_path.exists():
             sql_content = view_sql_path.read_text(encoding="utf-8")
             with engine.connect() as conn:
                 # Execute the whole script at once
                 conn.execute(text(sql_content))
                 conn.commit()
-            logger.info("✅ ビュー定義(apply_views_v2_5.sql)を適用しました")
+            logger.info("✅ ビュー定義(create_views.sql)を適用しました")
         else:
             logger.warning(f"⚠️ ビュー定義ファイルが見つかりません: {view_sql_path}")
 
