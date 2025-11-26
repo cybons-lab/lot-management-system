@@ -209,6 +209,8 @@
                         flowchart LR
                         flowchart TD
                         A([📥 フォーキャスト受信])
+                        flowchart TD
+                        A([📥 フォーキャスト受信])
                         B[📊 インポート]
                         C[📈 需要予測登録]
                         D[📝 発注処理]
@@ -217,8 +219,8 @@
                         G[🏷️ ロット在庫生成]
                         H[📋 受注登録]
                         I[🎯 在庫引当]
-                        J[🚚 出荷処理]
-                        K[💼 SAP受注登録]
+                        J[💼 SAP受注登録]
+                        K[🚚 出荷処理]
                         L[🔄 受注番号書き戻し]
                         M([✅ 完了])
 
@@ -234,9 +236,10 @@
                         style G fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
                         style H fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
                         style I fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style J fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style K fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+                        style J fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+                        style K fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
                         style L fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+
                     </div>
                 </div>
             </section>
@@ -249,30 +252,26 @@
                     <div class="mermaid">
                         flowchart TD
                         A([📥 かんばん注文受信])
-                        B{📊 フォーキャスト確認}
-                        C[📝 受注登録 定例出荷]
-                        D[🎯 在庫引当]
-                        E[🚚 出荷処理]
-                        F[💼 SAP受注登録]
-                        G[🔄 受注番号書き戻し]
-                        H[📋 履歴保存]
-                        I[📊 フォーキャスト消化記録]
-                        J([✅ 完了])
+                        B[📝 受注登録]
+                        C[🎯 在庫引当]
+                        D[💼 SAP受注登録]
+                        E[🚚 出荷指示]
+                        F[🔄 受注番号書き戻し]
+                        G[📋 履歴保存]
+                        H[📊 フォーキャスト消化記録]
+                        I([✅ 完了])
 
-                        A --> B
-                        B -->|なし| C
-                        C --> D --> E --> F --> G --> H --> I --> J
+                        A --> B --> C --> D --> E --> F --> G --> H --> I
 
                         style A fill:#fff9c4,stroke:#f57c00,stroke-width:2px
-                        style J fill:#fff9c4,stroke:#f57c00,stroke-width:2px
-                        style B fill:#ffccbc,stroke:#d84315,stroke-width:2px
+                        style I fill:#fff9c4,stroke:#f57c00,stroke-width:2px
+                        style B fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
                         style C fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style D fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style D fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
                         style E fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style H fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style I fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
                         style F fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
-                        style G fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+                        style G fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style H fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
                     </div>
                 </div>
             </section>
