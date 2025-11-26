@@ -2,10 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import * as ordersApi from "@/features/orders/api";
-import type {
-  CandidateLotItem,
-  ManualAllocationSavePayload,
-} from "@/shared/types/schema";
+import type { CandidateLotItem, ManualAllocationSavePayload } from "@/shared/types/schema";
 import type { WarehouseAllocationItem } from "@/features/orders/api";
 
 // Temporary alias for missing type
@@ -82,9 +79,7 @@ export function useCreateAllocations(orderLineId: number | undefined) {
             return {
               ...old,
               items: old.items.map((lot) => {
-                const allocItem = newAlloc.allocations.find(
-                  (item) => item.lot_id === lot.lot_id,
-                );
+                const allocItem = newAlloc.allocations.find((item) => item.lot_id === lot.lot_id);
                 if (!allocItem) return lot;
 
                 const currentAvailable = Number(lot.available_quantity ?? 0);
@@ -102,7 +97,11 @@ export function useCreateAllocations(orderLineId: number | undefined) {
 
       return { previousData };
     },
-    onError: (_err: Error, _vars: ManualAllocationSavePayload, context?: { previousData: unknown }) => {
+    onError: (
+      _err: Error,
+      _vars: ManualAllocationSavePayload,
+      context?: { previousData: unknown },
+    ) => {
       // エラー時はロールバック
       if (context?.previousData) {
         qc.setQueryData(["orders"], context.previousData);
@@ -156,7 +155,11 @@ export function useSaveWarehouseAllocations(orderLineId: number | undefined) {
       const previousData = qc.getQueryData(["orders"]);
       return { previousData };
     },
-    onError: (_err: Error, _vars: WarehouseAllocationItem[], context?: { previousData: unknown }) => {
+    onError: (
+      _err: Error,
+      _vars: WarehouseAllocationItem[],
+      context?: { previousData: unknown },
+    ) => {
       if (context?.previousData) {
         qc.setQueryData(["orders"], context.previousData);
       }

@@ -15,11 +15,7 @@ interface OrderAllocationInlineProps {
 }
 
 export function OrderAllocationInline({ line, logic }: OrderAllocationInlineProps) {
-  const {
-    getAllocationsForLine,
-    changeAllocation,
-    saveAllocations,
-  } = logic;
+  const { getAllocationsForLine, changeAllocation, saveAllocations } = logic;
 
   // ロット候補の取得 (useAllocationCandidatesを直接使用)
   const { data: candidatesData, isLoading } = useAllocationCandidates({
@@ -74,15 +70,14 @@ export function OrderAllocationInline({ line, logic }: OrderAllocationInlineProp
         </div>
         <div>/</div>
         <div className={cn(allocatedTotal > 0 ? "text-blue-600" : "")}>
-          引当済: <span className="font-bold">{formatQuantity(allocatedTotal, line.unit || "PCS")}</span>
+          引当済:{" "}
+          <span className="font-bold">{formatQuantity(allocatedTotal, line.unit || "PCS")}</span>
         </div>
         <div>/</div>
         <div className={cn(remainingQty > 0 ? "text-orange-600" : "text-green-600")}>
           残: <span className="font-bold">{formatQuantity(remainingQty, line.unit || "PCS")}</span>
         </div>
-        <div className="ml-auto text-xs text-gray-500">
-          単位: {line.unit || "PCS"}
-        </div>
+        <div className="ml-auto text-xs text-gray-500">単位: {line.unit || "PCS"}</div>
       </div>
 
       {/* ロット候補リスト */}

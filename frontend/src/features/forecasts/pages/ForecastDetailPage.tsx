@@ -107,7 +107,7 @@ export function ForecastDetailPage() {
 
       {/* Meta Info */}
       <div className="text-sm text-gray-500">
-        更新日: {new Date(forecast.updated_at).toLocaleString("ja-JP")}
+        更新日: {forecast.updated_at ? new Date(forecast.updated_at).toLocaleString("ja-JP") : "-"}
       </div>
     </div>
   );

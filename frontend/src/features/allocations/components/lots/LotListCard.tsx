@@ -59,7 +59,7 @@ export function LotListCard({
     }
   }, [isShaking]);
 
-  const freeQty = Number(lot.free_qty ?? lot.current_quantity ?? 0);
+  const freeQty = Number(lot.available_quantity ?? 0);
   const remainingInLot = Math.max(0, freeQty - allocatedQty);
   const isExpired = lot.expiry_date ? new Date(lot.expiry_date) < new Date() : false;
 
@@ -182,7 +182,7 @@ export function LotListCard({
 
         <div className="min-w-[120px] shrink-0">
           <div className="text-xs font-bold text-gray-400">保管倉庫</div>
-          <div className="truncate text-sm text-gray-600" title={lot.warehouse_name}>
+          <div className="truncate text-sm text-gray-600" title={lot.warehouse_name ?? undefined}>
             {lot.warehouse_name || "未登録"}
           </div>
           {isExpired && freeQty > 0 && (

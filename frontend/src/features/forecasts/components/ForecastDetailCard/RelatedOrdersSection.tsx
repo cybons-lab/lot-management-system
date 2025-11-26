@@ -84,7 +84,7 @@ export function RelatedOrdersSection({ group }: RelatedOrdersSectionProps) {
 function OrderSummaryRowWrapper({
   order,
   targetProductId,
-  targetDeliveryPlaceId
+  targetDeliveryPlaceId,
 }: {
   order: OrderWithLinesResponse;
   targetProductId: number;

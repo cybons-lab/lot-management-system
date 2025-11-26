@@ -56,7 +56,7 @@ export function getAllocatedQuantity(line: OrderLine): number {
  * @returns Free quantity as number
  */
 export function getFreeQuantity(lot: CandidateLotItem): number {
-  return Number(lot.free_qty ?? lot.current_quantity ?? 0);
+  return Number(lot.available_quantity ?? 0);
 }
 
 /**

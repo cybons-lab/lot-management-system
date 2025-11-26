@@ -10,7 +10,8 @@ import type {
 
 // api.d.ts から型を抽出
 export type OrdersListParams = operations["list_orders_api_orders_get"]["parameters"]["query"];
-type OrderGetResponse = operations["get_order_api_orders__order_id__get"]["responses"][200]["content"]["application/json"];
+type OrderGetResponse =
+  operations["get_order_api_orders__order_id__get"]["responses"][200]["content"]["application/json"];
 
 /**
  * 受注一覧取得
@@ -82,10 +83,7 @@ export const getCandidateLots = (params: {
 /**
  * ロット引当実行
  */
-export const createLotAllocations = (
-  orderLineId: number,
-  request: ManualAllocationSavePayload,
-) =>
+export const createLotAllocations = (orderLineId: number, request: ManualAllocationSavePayload) =>
   fetchApi.post<{
     success?: boolean;
     message?: string;

@@ -28,116 +28,40 @@ export type AllocationResult = {
 
 // ===== New API Types (v2.2.1) =====
 
-/**
- * Candidate Lot Item
- */
-export interface CandidateLotItem {
-  lot_id: number;
-  lot_number: string;
-  free_qty?: number; // Deprecated: use available_quantity
-  current_quantity: number;
-  available_qty?: number; // Deprecated: use available_quantity
-  available_quantity?: number; // Backend v2.2+ returns this
-  allocated_qty?: number; // Deprecated: use allocated_quantity
-  allocated_quantity?: number;
-  product_id?: number;
-  product_code?: string;
-  warehouse_id?: number;
-  warehouse_code?: string;
-  warehouse_name?: string;
-  delivery_place_id?: number;
-  delivery_place_code?: string;
-  delivery_place_name?: string;
-  expiry_date?: string;
-  last_updated?: string;
-  internal_unit?: string;
-  external_unit?: string;
-  qty_per_internal_unit?: number;
-  status?: string;
-  lock_reason?: string;
-}
+import type {
+  CandidateLotItem,
+  CandidateLotsResponse,
+  ManualAllocationRequest,
+  ManualAllocationResponse,
+  FefoPreviewRequest,
+  FefoPreviewResponse,
+  FefoLineAllocation,
+  FefoLotAllocation,
+  AllocationCommitRequest,
+  AllocationCommitResponse,
+  ManualAllocationSavePayload,
+} from "@/shared/types/schema";
 
-export interface CandidateLotsResponse {
-  items: CandidateLotItem[];
-  total: number;
-}
-
-/**
- * Manual Allocation Suggestion
- */
-export interface ManualAllocationRequest {
-  order_line_id: number;
-  lot_id: number;
-  quantity: number;
-}
-
-export interface ManualAllocationResponse {
-  order_line_id: number;
-  lot_id: number;
-  lot_number: string;
-  suggested_quantity: number;
-  available_quantity: number;
-  product_id?: number;
-  product_code?: string;
-  delivery_place_id?: number;
-  expiry_date?: string;
-  status: string;
-  message?: string;
-}
-
-/**
- * FEFO Allocation
- */
-export interface FefoPreviewRequest {
-  order_id: number;
-}
-
-export interface FefoLotAllocation {
-  lot_id: number;
-  lot_number: string;
-  allocated_quantity: string; // Backend uses string (DECIMAL)
-  expiry_date?: string;
-  received_date?: string; // Backend uses received_date, not receipt_date
-}
-
-export interface FefoLineAllocation {
-  order_line_id: number;
-  product_id?: number;
-  product_code: string;
-  delivery_place_id?: number;
-  required_qty: number;
-  already_allocated_qty: number;
-  allocations: FefoLotAllocation[];
-  next_div?: string;
-  warnings: string[];
-}
-
-export interface FefoPreviewResponse {
-  order_id: number;
-  lines: FefoLineAllocation[];
-  warnings: string[];
-}
-
-/**
- * Allocation Commit
- */
-export interface AllocationCommitRequest {
-  order_id: number;
-}
-
-export interface AllocationCommitResponse {
-  order_id: number;
-  created_allocation_ids: number[];
-  preview?: FefoPreviewResponse;
-  status: string;
-  message?: string;
-}
+export type {
+  CandidateLotItem,
+  CandidateLotsResponse,
+  ManualAllocationRequest,
+  ManualAllocationResponse,
+  FefoPreviewRequest,
+  FefoPreviewResponse,
+  FefoLineAllocation,
+  FefoLotAllocation,
+  AllocationCommitRequest,
+  AllocationCommitResponse,
+  ManualAllocationSavePayload,
+  // ManualAllocationSaveResponse, // Removed from re-export as it's redefined below
+};
 
 /** Manual allocation save payload/response */
-export interface ManualAllocationSavePayload {
+// Schema doesn't include order_line_id as it's a path param, but frontend needs it for the function arg
+export type ManualAllocationSavePayloadExtended = ManualAllocationSavePayload & {
   order_line_id: number;
-  allocations: Array<{ lot_id: number; quantity: number }>;
-}
+};
 
 export interface ManualAllocationSaveResponse {
   success?: boolean;
@@ -171,6 +95,7 @@ export const getAllocationCandidates = (params: {
  * Create manual allocation suggestion (preview only)
  * @endpoint POST /allocation-suggestions/manual
  */
+// TODO: Use generated types once available
 export const createManualAllocationSuggestion = (data: ManualAllocationRequest) => {
   return fetchApi.post<ManualAllocationResponse>("/allocation-suggestions/manual", data);
 };
@@ -195,7 +120,7 @@ export const commitAllocation = (data: AllocationCommitRequest) => {
  * Save manual allocations for a specific order line
  * @endpoint POST /orders/{order_line_id}/allocations
  */
-export const saveManualAllocations = (data: ManualAllocationSavePayload) => {
+export const saveManualAllocations = (data: ManualAllocationSavePayloadExtended) => {
   return fetchApi.post<ManualAllocationSaveResponse>(`/orders/${data.order_line_id}/allocations`, {
     allocations: data.allocations,
   });

@@ -33,7 +33,7 @@ export function ForecastDetailCard({
   onToggle,
 }: ForecastDetailCardProps) {
   const navigate = useNavigate();
-  const { group_key, forecasts } = group;
+  const { group_key, forecasts = [] } = group;
 
   // Calculate all forecast data using custom hook
   const { dailyData, unit, targetMonthStartDate, dates, dekadData, monthlyData, targetMonthTotal } =
@@ -54,8 +54,9 @@ export function ForecastDetailCard({
   const now = new Date();
   const todayKey = formatDateKey(now);
   const todayStart = getTodayStart();
-  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${targetMonthStartDate.getMonth() + 1
-    }月`;
+  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
+    targetMonthStartDate.getMonth() + 1
+  }月`;
 
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =

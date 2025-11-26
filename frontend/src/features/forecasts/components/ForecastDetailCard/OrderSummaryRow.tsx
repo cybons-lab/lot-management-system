@@ -24,14 +24,14 @@ export function OrderSummaryRow({
   order,
   targetProductId,
   targetDeliveryPlaceId,
-  logic
+  logic,
 }: OrderSummaryRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { targetLines, totalRequired, totalAllocated, statusLabel, statusColor } = useOrderSummary(
     order,
     targetProductId,
     targetDeliveryPlaceId,
-    logic
+    logic,
   );
 
   if (targetLines.length === 0) return null;
@@ -47,7 +47,11 @@ export function OrderSummaryRow({
             className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
             onClick={() => setIsExpanded(!isExpanded)}
           >
-            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
           </Button>
 
           <div className="flex items-center gap-2 text-sm">
@@ -64,7 +68,9 @@ export function OrderSummaryRow({
           <div className="text-right text-sm">
             <div className="mb-1 text-xs text-gray-500">明細: {targetLines.length}件</div>
             <span className="text-gray-500">必要 </span>
-            <span className="font-medium">{formatQuantity(totalRequired, targetLines[0]?.unit || "")}</span>
+            <span className="font-medium">
+              {formatQuantity(totalRequired, targetLines[0]?.unit || "")}
+            </span>
             <span className="mx-1 text-gray-300">/</span>
             <span className="text-gray-500">引当 </span>
             <span className={cn("font-medium", totalAllocated > 0 ? "text-blue-600" : "")}>
@@ -73,7 +79,9 @@ export function OrderSummaryRow({
             <span className="ml-1 text-xs text-gray-400">{targetLines[0]?.unit}</span>
           </div>
 
-          <Badge className={cn("h-5 px-1.5 text-[10px] font-normal", statusColor)}>{statusLabel}</Badge>
+          <Badge className={cn("h-5 px-1.5 text-[10px] font-normal", statusColor)}>
+            {statusLabel}
+          </Badge>
 
           <Link
             to={ROUTES.ORDERS.DETAIL(order.id.toString())}
@@ -87,13 +95,9 @@ export function OrderSummaryRow({
 
       {/* 展開ビュー */}
       {isExpanded && (
-        <div className="pb-3 pl-9 pr-2">
+        <div className="pr-2 pb-3 pl-9">
           {targetLines.map((line) => (
-            <OrderAllocationInline
-              key={line.id}
-              line={line}
-              logic={logic}
-            />
+            <OrderAllocationInline key={line.id} line={line} logic={logic} />
           ))}
         </div>
       )}
@@ -105,15 +109,18 @@ function useOrderSummary(
   order: OrderWithLinesResponse,
   targetProductId: number,
   targetDeliveryPlaceId: number,
-  logic: ReturnType<typeof useLotAllocationForOrder>
+  logic: ReturnType<typeof useLotAllocationForOrder>,
 ) {
-  const targetLines = order.lines?.filter(
-    (line) =>
-      line.product_id === targetProductId &&
-      line.delivery_place_id === targetDeliveryPlaceId
-  ) || [];
+  const targetLines =
+    order.lines?.filter(
+      (line) =>
+        line.product_id === targetProductId && line.delivery_place_id === targetDeliveryPlaceId,
+    ) || [];
 
-  const totalRequired = targetLines.reduce((sum, line) => sum + Number(line.order_quantity || 0), 0);
+  const totalRequired = targetLines.reduce(
+    (sum, line) => sum + Number(line.order_quantity || 0),
+    0,
+  );
 
   const totalAllocated = targetLines.reduce((sum, line) => {
     const allocsMap = logic.getAllocationsForLine(line.id);

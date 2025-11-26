@@ -30,7 +30,7 @@ export function ForecastsTab({ productId }: ForecastsTabProps) {
 
   const totalQuantity =
     forecastData?.items.reduce((sum, group) => {
-      return sum + group.forecasts.reduce((s, f) => s + f.forecast_quantity, 0);
+      return sum + (group.forecasts ?? []).reduce((s, f) => s + Number(f.forecast_quantity), 0);
     }, 0) || 0;
 
   return (
@@ -58,7 +58,7 @@ export function ForecastsTab({ productId }: ForecastsTabProps) {
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <div className="text-sm font-medium text-gray-600">予測エントリ数</div>
               <div className="mt-2 text-2xl font-bold text-gray-900">
-                {forecastData.items.reduce((sum, g) => sum + g.forecasts.length, 0)}
+                {forecastData.items.reduce((sum, g) => sum + (g.forecasts ?? []).length, 0)}
               </div>
             </div>
           </div>
@@ -82,7 +82,9 @@ export function ForecastsTab({ productId }: ForecastsTabProps) {
                     </span>
                   </div>
                   <div className="text-sm font-semibold text-blue-600">
-                    {fmt(group.forecasts.reduce((s, f) => s + f.forecast_quantity, 0))}
+                    {fmt(
+                      (group.forecasts ?? []).reduce((s, f) => s + Number(f.forecast_quantity), 0),
+                    )}
                   </div>
                 </div>
               ))}

@@ -36,4 +36,3 @@ export type WarehouseListResponse = Schema["WarehouseListResponse"];
 
 // Lots
 // export type Lot = Schema["Lot"]; // Likely LotRead
-
