@@ -1,0 +1,38 @@
+import random
+
+from faker import Faker
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+
+# Initialize Faker
+fake = Faker("ja_JP")
+Faker.seed(42)
+random.seed(42)
+
+
+def clear_data(db: Session):
+    """Clear all data from related tables."""
+    # Disable foreign key checks temporarily to avoid constraint errors during truncation
+    db.execute(text("SET session_replication_role = 'replica';"))
+
+    tables = [
+        "allocation_suggestions",
+        "order_lines",
+        "orders",
+        "forecast_current",
+        "forecast_history",
+        "lots",
+        "customer_items",
+        "products",
+        "delivery_places",
+        "customers",
+        "suppliers",
+        "warehouses",
+    ]
+
+    for table in tables:
+        db.execute(text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE;"))
+
+    db.execute(text("SET session_replication_role = 'origin';"))
+    db.commit()
