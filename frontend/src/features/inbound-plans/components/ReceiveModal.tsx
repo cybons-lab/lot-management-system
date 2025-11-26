@@ -97,10 +97,11 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
           // Result display
           <div>
             <div
-              className={`mb-4 rounded-lg p-4 ${result.success
+              className={`mb-4 rounded-lg p-4 ${
+                result.success
                   ? "border border-green-300 bg-green-50 text-green-800"
                   : "border border-red-300 bg-red-50 text-red-800"
-                }`}
+              }`}
             >
               {result.message}
             </div>

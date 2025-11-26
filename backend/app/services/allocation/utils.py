@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 from sqlalchemy import Select, func, nulls_last, select
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, selectinload
 
 from app.models import (
     Allocation,

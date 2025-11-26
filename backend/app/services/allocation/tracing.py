@@ -43,7 +43,6 @@ def allocate_with_tracing(
         ValueError: 注文明細が見つからない場合
         AllocationCommitError: 引当処理に失敗した場合
     """
-
     if reference_date is None:
         reference_date = date_type.today()
 
@@ -136,8 +135,7 @@ def allocate_with_tracing(
 
         return {
             "allocated_lots": [
-                {"lot_id": a.lot_id, "quantity": a.allocated_quantity}
-                for a in result.allocations
+                {"lot_id": a.lot_id, "quantity": a.allocated_quantity} for a in result.allocations
             ],
             "total_allocated": result.total_allocated,
             "shortage": result.shortage,

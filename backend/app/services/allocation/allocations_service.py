@@ -40,6 +40,7 @@ from .utils import (
     update_order_line_status,
 )
 
+
 __all__ = [
     "FefoLotPlan",
     "FefoLinePlan",

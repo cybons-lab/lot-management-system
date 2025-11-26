@@ -13,7 +13,9 @@ os.environ.setdefault("ENVIRONMENT", "test")
 # Override DATABASE_URL to use the test database
 # Allow host to be configured via TEST_DB_HOST (default: db-postgres for Docker, localhost for host)
 test_db_host = os.environ.get("TEST_DB_HOST", "db-postgres")
-os.environ["DATABASE_URL"] = f"postgresql://admin:dev_password@{test_db_host}:5432/lot_management_test"
+os.environ["DATABASE_URL"] = (
+    f"postgresql://admin:dev_password@{test_db_host}:5432/lot_management_test"
+)
 
 from app.core.database import engine  # noqa: E402
 

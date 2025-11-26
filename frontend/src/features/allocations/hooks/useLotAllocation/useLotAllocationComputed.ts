@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { listCustomers, listProducts } from "@/services/api/master-service";
+import { type listCustomers, type listProducts } from "@/services/api/master-service";
 
 type CustomerList = Awaited<ReturnType<typeof listCustomers>>;
 type ProductList = Awaited<ReturnType<typeof listProducts>>;

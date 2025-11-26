@@ -1,7 +1,7 @@
-import { } from // Archive, // Removed: Not used
-  // Library, // Removed: Not used
-  // AlertCircle, // Removed: Not used
-  "lucide-react";
+import {} from // Archive, // Removed: Not used
+// Library, // Removed: Not used
+// AlertCircle, // Removed: Not used
+"lucide-react";
 
 // ============================================
 // 型定義
@@ -85,7 +85,16 @@ export function Dashboard({ stats, isLoading, isError }: DashboardProps) {
   );
 }
 
-function DashboardStats({ stats }: { stats: { totalStock: number; totalOrders: number; unallocatedOrders: number; allocationRate: number } }) {
+function DashboardStats({
+  stats,
+}: {
+  stats: {
+    totalStock: number;
+    totalOrders: number;
+    unallocatedOrders: number;
+    allocationRate: number;
+  };
+}) {
   return (
     <div className={styles.grid}>
       <StatCard

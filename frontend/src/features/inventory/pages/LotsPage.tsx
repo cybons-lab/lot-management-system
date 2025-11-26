@@ -10,10 +10,7 @@
 /* eslint-disable complexity */
 
 import { useAtom } from "jotai";
-import {
-  Plus,
-  RefreshCw,
-} from "lucide-react";
+import { Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -21,8 +18,8 @@ import { Button } from "@/components/ui";
 import { LotCreateForm } from "@/features/inventory/components/LotCreateForm";
 import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
-import { LotStatsCards } from "@/features/inventory/components/LotStatsCards";
 import { LotsPageFilters } from "@/features/inventory/components/LotsPageFilters";
+import { LotStatsCards } from "@/features/inventory/components/LotStatsCards";
 import { ProductGroupHeader } from "@/features/inventory/components/ProductGroupHeader";
 import { useLotColumns } from "@/features/inventory/hooks/useLotColumns";
 import { useLotStats } from "@/features/inventory/hooks/useLotStats";
@@ -119,28 +116,37 @@ export function LotsPage() {
   });
 
   // ハンドラー
-  const handleEdit = useCallback((lot: LotUI) => {
-    // LotUI -> LotResponse 変換（簡易的）
-    const lotData = allLots.find((l) => l.id === lot.id);
-    if (lotData) {
-      setSelectedLot(lotData);
-      editDialog.open();
-    }
-  }, [allLots, editDialog]);
+  const handleEdit = useCallback(
+    (lot: LotUI) => {
+      // LotUI -> LotResponse 変換（簡易的）
+      const lotData = allLots.find((l) => l.id === lot.id);
+      if (lotData) {
+        setSelectedLot(lotData);
+        editDialog.open();
+      }
+    },
+    [allLots, editDialog],
+  );
 
-  const handleLock = useCallback((lot: LotUI) => {
-    const lotData = allLots.find((l) => l.id === lot.id);
-    if (lotData) {
-      setSelectedLot(lotData);
-      lockDialog.open();
-    }
-  }, [allLots, lockDialog]);
+  const handleLock = useCallback(
+    (lot: LotUI) => {
+      const lotData = allLots.find((l) => l.id === lot.id);
+      if (lotData) {
+        setSelectedLot(lotData);
+        lockDialog.open();
+      }
+    },
+    [allLots, lockDialog],
+  );
 
-  const handleUnlock = useCallback(async (lot: LotUI) => {
-    if (confirm(`ロット ${lot.lot_number} のロックを解除しますか？`)) {
-      await unlockLotMutation.mutateAsync(lot.id);
-    }
-  }, [unlockLotMutation]);
+  const handleUnlock = useCallback(
+    async (lot: LotUI) => {
+      if (confirm(`ロット ${lot.lot_number} のロックを解除しますか？`)) {
+        await unlockLotMutation.mutateAsync(lot.id);
+      }
+    },
+    [unlockLotMutation],
+  );
 
   // カラム定義
   const columns = useLotColumns({

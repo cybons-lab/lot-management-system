@@ -1,11 +1,13 @@
-import sys
 import os
+import sys
+
 
 # Add backend directory to sys.path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 try:
     from app.services.allocation import allocations_service
+
     print("Successfully imported allocations_service")
 except ImportError as e:
     print(f"Failed to import allocations_service: {e}")
