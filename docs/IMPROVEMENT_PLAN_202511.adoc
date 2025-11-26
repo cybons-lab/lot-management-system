@@ -34,35 +34,55 @@
 
 == アクションプラン
 
-=== Phase 1: 型定義自動生成の導入（直近）
+=== Phase 1: 基盤整備と依存管理の刷新（優先度：高）
 
-1.  **OpenAPI スキーマの出力スクリプト作成**
-    *   バックエンドの FastAPI アプリケーションから `openapi.json` をファイルとして出力するスクリプトを用意する。
+1.  **Backend: 依存管理のモダン化 (`uv` 導入)**
+    *   現状の `requirements.txt` から、高速なパッケージマネージャー `uv` (または `poetry`) へ移行する。
+    *   開発依存（`ruff`, `pytest` 等）と本番依存を明確に分離し、`pyproject.toml` で一元管理する。
+    *   Python 3.12 向けの最新ライブラリバージョンに更新する。
 
-2.  **フロントエンドへの生成ツール導入**
-    *   `openapi-typescript` などのツールを導入する。
-    *   `npm run generate:types` コマンドで、`openapi.json` から TypeScript 型定義ファイル（例：`src/shared/types/schema.d.ts`）を生成できるようにする。
+2.  **Backend: OpenAPI スキーマ出力の自動化**
+    *   FastAPI アプリを起動せずに `openapi.json` を静的ファイルとして出力するスクリプト (`scripts/export_openapi.py`) を作成する。
+    *   これを CI やフロントエンドの型生成コマンドから参照できるようにする。
 
-3.  **試験的な適用**
-    *   一部の機能（例：今回修正した `Allocations` 周り）で、自動生成された型定義を使用するようにリファクタリングし、運用の課題を洗い出す。
+3.  **Frontend: 型定義生成フローの確立**
+    *   `openapi-typescript` を用いて、バックエンドの `openapi.json` から型定義 (`src/shared/types/openapi.d.ts`) を生成する npm スクリプトを整備する。
+    *   生成された型定義が Git 管理対象となるよう `.gitignore` を調整する（開発者間の同期のため）。
 
-=== Phase 2: 全体適用とCI/CD連携（中期）
+4.  **CI/CD: 品質チェックの強化**
+    *   GitHub Actions (`quality.yml`) に以下を追加する：
+        *   Backend: `ruff format --check`, `ruff check`, `pytest`
+        *   Frontend: `tsc` (型チェック), `eslint`, `prettier` (フォーマットチェック)
+        *   **型定義同期チェック**: バックエンドのスキーマとフロントエンドの型定義が一致しているか検証。
 
-1.  **既存型定義の置き換え**
-    *   `src/features/*/api.ts` などで手動定義されている型を、自動生成された型に順次置き換える。
-    *   Utility Types（`Pick`, `Omit` 等）を活用し、フロントエンドで必要な形に整形するラッパー層を設けることも検討する。
+=== Phase 2: 型定義の同期とリファクタリング（優先度：中）
 
-2.  **CI/CD パイプラインへの組み込み**
-    *   バックエンドの変更時に自動で型定義生成コマンドを実行し、差分があれば検知（または自動コミット）する仕組みを構築する。
+1.  **Frontend: 生成型への移行（パイロット）**
+    *   `features/allocations` を対象に、手動定義された `CandidateLotItem` 等を、自動生成された型 (`components["schemas"]["CandidateLotItem"]`) に置き換える。
+    *   必要に応じて、使いやすいエイリアス型（Utility Types）を `src/shared/types/schema.ts` に定義する。
 
-=== Phase 3: ドキュメントとディレクトリ構造の整理（長期）
+2.  **Frontend: 全体適用**
+    *   他の機能（`orders`, `inventory` 等）にも同様の置き換えを展開する。
+    *   最終的に `src/features/*/api.ts` 内の手動インターフェース定義を全廃する。
 
-1.  **API リファレンスの軽量化**
-    *   `docs/api_reference.adoc` から詳細なパラメータ定義などを削除し、OpenAPI ドキュメントへのリンクに置き換える。
+=== Phase 3: コード品質と構成の標準化（優先度：中）
 
-2.  **ディレクトリ構造の再定義**
-    *   自動生成された型定義の配置場所を明確化する（例：`src/shared/types/openapi`）。
-    *   Feature ごとの型定義は、そこからの引用（Re-export）や拡張に留めるルールを徹底する。
+1.  **Frontend: ディレクトリ構造の厳格化**
+    *   `features` 間での直接インポートを禁止する Lint ルール（`import/no-restricted-paths`）が正しく機能しているか確認し、違反があれば修正する。
+    *   `shared` ディレクトリの責務を明確化し、汎用コンポーネントとドメイン固有コンポーネントを整理する。
+
+2.  **Backend: テスト構成の整備**
+    *   `tests` ディレクトリの構造を見直し、単体テストと統合テストを分離する。
+    *   テストデータの生成ロジック（`Factory` パターン等）を整備する。
+
+=== Phase 4: ドキュメントと開発フローの定着（優先度：低）
+
+1.  **ドキュメントの軽量化**
+    *   `docs/api_reference.adoc` を簡素化し、Swagger UI への誘導を強化する。
+    *   開発者向けガイド (`docs/frontend.adoc` 等) に、新しい型定義生成フローと依存管理コマンドの手順を追記する。
+
+2.  **開発フローのドキュメント化**
+    *   「バックエンド変更 → 型生成 → フロントエンド修正」という一連の流れを `CONTRIBUTING.md` 等にまとめる。
 
 == 運用ルール案
 
