@@ -121,6 +121,6 @@ edf38eb feat: Implement UOM conversion system with product_uom_conversions table
 
 === 依存関係
 
-* `aiosqlite` - SQLite非同期サポート
+
 * `greenlet` - SQLAlchemy非同期処理に必要
 * `asyncpg` - PostgreSQL非同期サポート

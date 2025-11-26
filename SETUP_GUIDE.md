@@ -144,14 +144,14 @@ python-dateutil==2.9.0
 cp .env.example .env
 
 # 必要に応じて編集
-# デフォルトのまま(SQLite)でOK
+# Docker環境では自動設定されます
 ```
 
 **.env の例:**
 
 ```env
 ENVIRONMENT=development
-# DATABASE_URL=sqlite:///./lot_management.db
+# DATABASE_URL=postgresql://admin:dev_password@localhost:5432/lot_management
 ```
 
 ### Step 5: データベースマイグレーションの実行
@@ -212,7 +212,7 @@ python -m app.main
 ```
 🚀 ロット管理システム v2.0.0 を起動しています...
 📦 環境: development
-💾 データベース: sqlite:////path/to/lot_management.db
+💾 データベース: postgresql://admin:***@localhost:5432/lot_management
 ✅ データベーステーブルを作成しました
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 INFO:     Started reloader process
@@ -241,7 +241,7 @@ curl http://localhost:8000/api/admin/health
   "environment": "development",
   "app_name": "ロット管理システム",
   "app_version": "2.0.0",
-  "database": "sqlite"
+  "database": "postgresql"
 }
 ```
 
@@ -391,17 +391,18 @@ export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 pip install -e .
 ```
 
-### エラー: database is locked
+### エラー: Connection refused
 
-**原因:** SQLite ファイルが他のプロセスで使用中
+**原因:** データベースが起動していない
 
 **解決方法:**
 
 ```bash
-# データベースファイルを削除
-rm lot_management.db
+# Dockerコンテナの状態確認
+docker-compose ps
 
-# アプリを再起動すると自動で再作成されます
+# ログ確認
+docker-compose logs db
 ```
 
 ### エラー: pydantic_core.\_pydantic_core.ValidationError
@@ -460,7 +461,7 @@ curl -X POST http://localhost:8000/api/admin/reset-database
 
 3. **本番環境準備**
 
-   - PostgreSQL/MySQL への移行
+   - 本番用データベースの構築
    - 環境変数の本番設定
    - Docker 化
 
@@ -475,7 +476,7 @@ curl -X POST http://localhost:8000/api/admin/reset-database
 問題が発生した場合:
 
 1. ログを確認: アプリケーションのコンソール出力
-2. データベースの状態確認: SQLite ファイルを直接確認
+2. データベースの状態確認: pgAdminまたはCLIで確認
 3. API ドキュメント参照: http://localhost:8000/api/docs
 
 ---

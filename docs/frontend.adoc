@@ -90,7 +90,7 @@ and this project adheres to link:https://semver.org/spec/v2.0.0.html[Semantic Ve
 ===== Added
 
 * FastAPI backend with SQLAlchemy ORM
-* SQLite database for data persistence
+* PostgreSQL database for data persistence
 * CRUD APIs for lot management
 * CRUD APIs for shipment management
 * Database reset endpoint for development
