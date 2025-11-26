@@ -13,7 +13,6 @@ from app.api.routes import (
     adjustments_router,
     admin_healthcheck_router,
     admin_router,
-    admin_simulate_router,
     alerts_router,
     allocation_candidates_router,
     allocation_suggestions_router,
@@ -123,7 +122,6 @@ app.include_router(roles_router, prefix=settings.API_PREFIX)
 # Admin & system endpoints
 app.include_router(admin_router, prefix=settings.API_PREFIX)
 app.include_router(admin_healthcheck_router, prefix=settings.API_PREFIX)
-app.include_router(admin_simulate_router, prefix=settings.API_PREFIX)
 app.include_router(test_data_router, prefix=settings.API_PREFIX + "/admin/test-data")
 app.include_router(health_router, prefix=settings.API_PREFIX)
 

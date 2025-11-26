@@ -58,10 +58,12 @@ export function Dashboard({ stats, isLoading, isError }: DashboardProps) {
   }
 
   // データがない場合は0を表示
-  const totalStock = stats?.total_stock ?? 0;
-  const totalOrders = stats?.total_orders ?? 0;
-  const unallocatedOrders = stats?.unallocated_orders ?? 0;
-  const allocationRate = stats?.allocation_rate ?? 0;
+  const statsData = {
+    totalStock: stats?.total_stock ?? 0,
+    totalOrders: stats?.total_orders ?? 0,
+    unallocatedOrders: stats?.unallocated_orders ?? 0,
+    allocationRate: stats?.allocation_rate ?? 0,
+  };
 
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-6">
@@ -72,38 +74,53 @@ export function Dashboard({ stats, isLoading, isError }: DashboardProps) {
         </div>
 
         {/* KPIカード */}
-        <div className={styles.grid}>
-          <StatCard
-            title="総在庫数"
-            value={Number(totalStock) || 0}
-            colorClass="border-blue-500"
-            description="現在の総在庫量"
-          />
-          <StatCard
-            title="総受注数"
-            value={Number(totalOrders) || 0}
-            colorClass="border-green-500"
-            description="登録された受注の総数"
-          />
-          <StatCard
-            title="未引当受注"
-            value={Number(unallocatedOrders) || 0}
-            colorClass="border-amber-500"
-            description="引当が必要な受注件数"
-          />
-          <StatCard
-            title="引当率"
-            value={`${allocationRate.toFixed(1)}%`}
-            colorClass="border-purple-500"
-            description="引当済受注の割合"
-          />
-        </div>
+        <DashboardStats stats={statsData} />
 
         <div className={styles.activity.root}>
           <h3 className={styles.activity.title}>最近の活動</h3>
           <p className={styles.activity.text}>アクティビティログは準備中です...</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function DashboardStats({
+  stats,
+}: {
+  stats: {
+    totalStock: number;
+    totalOrders: number;
+    unallocatedOrders: number;
+    allocationRate: number;
+  };
+}) {
+  return (
+    <div className={styles.grid}>
+      <StatCard
+        title="総在庫数"
+        value={Number(stats.totalStock) || 0}
+        colorClass="border-blue-500"
+        description="現在の総在庫量"
+      />
+      <StatCard
+        title="総受注数"
+        value={Number(stats.totalOrders) || 0}
+        colorClass="border-green-500"
+        description="登録された受注の総数"
+      />
+      <StatCard
+        title="未引当受注"
+        value={Number(stats.unallocatedOrders) || 0}
+        colorClass="border-amber-500"
+        description="引当が必要な受注件数"
+      />
+      <StatCard
+        title="引当率"
+        value={`${stats.allocationRate.toFixed(1)}%`}
+        colorClass="border-purple-500"
+        description="引当済受注の割合"
+      />
     </div>
   );
 }

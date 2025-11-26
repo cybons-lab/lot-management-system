@@ -1,4 +1,5 @@
 import { ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
 import type { Column } from "@/shared/components/data/DataTable";
@@ -122,7 +123,6 @@ export const columns: Column<OrderUI>[] = [
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              const { toast } = require("sonner");
               toast.success("SAP連携データを送信しました(Mock)");
             }}
             className="text-xs"

@@ -18,6 +18,42 @@ interface AlertTableProps {
   onAlertClick?: (alert: AlertItem) => void;
 }
 
+interface AlertRowProps {
+  alert: AlertItem;
+  onClick: (alert: AlertItem) => void;
+}
+
+function AlertRow({ alert, onClick }: AlertRowProps) {
+  return (
+    <tr
+      onClick={() => onClick(alert)}
+      className="cursor-pointer transition-colors hover:bg-slate-50"
+    >
+      <td className="px-6 py-4 whitespace-nowrap">
+        <AlertBadge severity={alert.severity} />
+      </td>
+      <td className="px-6 py-4">
+        <div className="text-sm font-medium text-slate-900">{alert.title}</div>
+        {alert.message && (
+          <div className="mt-1 line-clamp-2 text-sm text-slate-500">{alert.message}</div>
+        )}
+      </td>
+      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
+        {alert.target.resourceType === "order" && `受注 #${alert.target.id}`}
+        {alert.target.resourceType === "lot" && `ロット #${alert.target.id}`}
+        {alert.target.resourceType === "inventory_item" && `在庫 #${alert.target.id}`}
+        {alert.target.resourceType === "forecast_daily" && `予測 #${alert.target.id}`}
+      </td>
+      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
+        {formatDate(alert.occurred_at)}
+      </td>
+      <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+        <ChevronRight className="inline h-5 w-5 text-slate-400" />
+      </td>
+    </tr>
+  );
+}
+
 export function AlertTable({ alerts, isLoading = false, onAlertClick }: AlertTableProps) {
   const navigate = useNavigate();
 
@@ -91,33 +127,7 @@ export function AlertTable({ alerts, isLoading = false, onAlertClick }: AlertTab
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white">
           {alerts.map((alert) => (
-            <tr
-              key={alert.id}
-              onClick={() => handleAlertClick(alert)}
-              className="cursor-pointer transition-colors hover:bg-slate-50"
-            >
-              <td className="px-6 py-4 whitespace-nowrap">
-                <AlertBadge severity={alert.severity} />
-              </td>
-              <td className="px-6 py-4">
-                <div className="text-sm font-medium text-slate-900">{alert.title}</div>
-                {alert.message && (
-                  <div className="mt-1 line-clamp-2 text-sm text-slate-500">{alert.message}</div>
-                )}
-              </td>
-              <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
-                {alert.target.resourceType === "order" && `受注 #${alert.target.id}`}
-                {alert.target.resourceType === "lot" && `ロット #${alert.target.id}`}
-                {alert.target.resourceType === "inventory_item" && `在庫 #${alert.target.id}`}
-                {alert.target.resourceType === "forecast_daily" && `予測 #${alert.target.id}`}
-              </td>
-              <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
-                {formatDate(alert.occurred_at)}
-              </td>
-              <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-                <ChevronRight className="inline h-5 w-5 text-slate-400" />
-              </td>
-            </tr>
+            <AlertRow key={alert.id} alert={alert} onClick={handleAlertClick} />
           ))}
         </tbody>
       </table>

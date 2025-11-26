@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Type stubs for packages unavailable in the current environment
 // These declarations ensure the TypeScript compiler can resolve module imports
 // used throughout the project without altering runtime behavior.

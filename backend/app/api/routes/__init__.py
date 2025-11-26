@@ -15,7 +15,6 @@ Organized into feature-based subpackages:
 from app.api.routes.admin import (
     admin_healthcheck_router,
     admin_router,
-    admin_simulate_router,
     batch_jobs_router,
     business_rules_router,
     health_router,
@@ -76,10 +75,9 @@ __all__ = [
     "forecasts_router",
     # Alerts (1)
     "alerts_router",
-    # Admin (9)
+    # Admin (8)
     "admin_healthcheck_router",
     "admin_router",
-    "admin_simulate_router",
     "batch_jobs_router",
     "business_rules_router",
     "health_router",

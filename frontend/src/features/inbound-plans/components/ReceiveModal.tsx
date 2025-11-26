@@ -68,11 +68,14 @@ export function ReceiveModal({ planId, lines, onClose, onSuccess }: ReceiveModal
       setTimeout(() => {
         onSuccess();
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Receive failed:", error);
+      const errorMessage =
+        (error as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        "入荷実績登録に失敗しました";
       setResult({
         success: false,
-        message: error?.response?.data?.detail || "入荷実績登録に失敗しました",
+        message: errorMessage,
       });
     }
   };

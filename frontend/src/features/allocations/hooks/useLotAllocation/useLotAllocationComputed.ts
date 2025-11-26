@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 
-type CustomerList = Awaited<
-  ReturnType<typeof import("@/services/api/master-service").listCustomers>
->;
-type ProductList = Awaited<ReturnType<typeof import("@/services/api/master-service").listProducts>>;
+import { type listCustomers, type listProducts } from "@/services/api/master-service";
+
+type CustomerList = Awaited<ReturnType<typeof listCustomers>>;
+type ProductList = Awaited<ReturnType<typeof listProducts>>;
 
 interface UseLotAllocationComputedOptions {
   customers?: CustomerList;

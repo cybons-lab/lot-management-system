@@ -146,21 +146,21 @@ export function CustomerDetailPage() {
         ) : (
           <div className="space-y-4">
             <div className={styles.form.field}>
-              <label className={styles.form.label}>得意先コード</label>
+              <span className={styles.form.label}>得意先コード</span>
               <p className="font-mono text-lg font-medium">{customer.customer_code}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>得意先名</label>
+              <span className={styles.form.label}>得意先名</span>
               <p className="text-lg">{customer.customer_name}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>作成日時</label>
+              <span className={styles.form.label}>作成日時</span>
               <p className="text-gray-600">
                 {new Date(customer.created_at).toLocaleString("ja-JP")}
               </p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>更新日時</label>
+              <span className={styles.form.label}>更新日時</span>
               <p className="text-gray-600">
                 {new Date(customer.updated_at).toLocaleString("ja-JP")}
               </p>
