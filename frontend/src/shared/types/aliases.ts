@@ -24,7 +24,7 @@ export type Customer = {
   address?: string | null;
 };
 export type Warehouse = {
-  warehouse_code: string;  
+  warehouse_code: string;
   warehouse_name: string;
   address?: string | null;
   is_active?: boolean | null;

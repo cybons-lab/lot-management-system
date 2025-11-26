@@ -4,8971 +4,8975 @@
  */
 
 export interface paths {
-    "/api/lots": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Lots
-         * @description ロット一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数
-         *         product_id: 製品ID
-         *         product_code: 製品コード
-         *         supplier_code: 仕入先コード
-         *         warehouse_code: 倉庫コード
-         *         expiry_from: 有効期限開始日
-         *         expiry_to: 有効期限終了日
-         *         with_stock: 在庫ありのみ取得するかどうか
-         *         db: データベースセッション
-         *
-         *     ロット一覧取得（v_lots_with_master ビュー使用）.
-         *
-         *     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.
-         *     FEFO (先入先出) 順に並べて返す.
-         */
-        get: operations["list_lots_api_lots_get"];
-        put?: never;
-        /**
-         * Create Lot
-         * @description ロット新規登録.
-         *
-         *     - ロットマスタ登録
-         *     - 現在在庫テーブル初期化
-         */
-        post: operations["create_lot_api_lots_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lots/{lot_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Lot
-         * @description ロット詳細取得（v2.2: Lot モデルから直接取得）.
-         */
-        get: operations["get_lot_api_lots__lot_id__get"];
-        /**
-         * Update Lot
-         * @description ロット更新.
-         */
-        put: operations["update_lot_api_lots__lot_id__put"];
-        post?: never;
-        /**
-         * Delete Lot
-         * @description ロット削除.
-         */
-        delete: operations["delete_lot_api_lots__lot_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lots/{lot_id}/lock": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Lock Lot
-         * @description ロットをロックする.
-         */
-        post: operations["lock_lot_api_lots__lot_id__lock_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lots/{lot_id}/unlock": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Unlock Lot
-         * @description ロットのロックを解除する.
-         */
-        post: operations["unlock_lot_api_lots__lot_id__unlock_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lots/{lot_id}/movements": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Lot Movements
-         * @description ロットの在庫変動履歴取得.
-         */
-        get: operations["list_lot_movements_api_lots__lot_id__movements_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/lots/movements": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Stock Movement
-         * @description 在庫変動記録.
-         *
-         *     - 在庫変動履歴追加
-         *     - 現在在庫更新
-         */
-        post: operations["create_stock_movement_api_lots_movements_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orders": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Orders
-         * @description 受注一覧取得（読み取り専用）.
-         */
-        get: operations["list_orders_api_orders_get"];
-        put?: never;
-        /**
-         * Create Order
-         * @description 受注作成.
-         */
-        post: operations["create_order_api_orders_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orders/{order_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Order
-         * @description 受注詳細取得（読み取り専用、明細含む）.
-         */
-        get: operations["get_order_api_orders__order_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orders/{order_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Cancel Order
-         * @description 受注キャンセル.
-         */
-        delete: operations["cancel_order_api_orders__order_id__cancel_delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orders/{order_line_id}/allocations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Save Manual Allocations
-         * @description 手動引当保存 (確定).
-         *
-         *     既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。
-         *     これにより、DB上の在庫数(allocated_quantity)とステータスが更新される。
-         */
-        post: operations["save_manual_allocations_api_orders__order_line_id__allocations_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/orders/refresh-all-statuses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Refresh All Order Line Statuses
-         * @description 全受注明細および受注のステータスを再計算・更新.
-         *
-         *     既存の allocations データに基づいて OrderLine.status と Order.status を正しい値に更新します。
-         */
-        post: operations["refresh_all_order_line_statuses_api_orders_refresh_all_statuses_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocations/drag-assign": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Drag Assign
-         * @description 手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility.
-         */
-        post: operations["drag_assign_api_allocations_drag_assign_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocations/{allocation_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Allocation
-         * @description 引当取消（DELETE API, ソフトキャンセル対応）.
-         */
-        delete: operations["delete_allocation_api_allocations__allocation_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocations/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preview Allocations
-         * @description FEFO引当シミュレーション実行.
-         *
-         *     Args:
-         *         request: プレビューリクエスト（order_id）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         FefoPreviewResponse: 引当プレビュー結果
-         */
-        post: operations["preview_allocations_api_allocations_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocations/commit": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Commit Allocation
-         * @description 引当確定（v2.2.1準拠）.
-         *
-         *     FEFO・手動いずれかで作成された仮引当案を元に、実績の allocations を生成し、在庫を確定させる。
-         *
-         *     Args:
-         *         request: 引当確定リクエスト（order_id）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         AllocationCommitResponse: 確定結果
-         *
-         *     Note:
-         *         - allocations テーブルにレコード作成
-         *         - lots.quantity から実績数量を減算
-         *         - stock_history への出庫履歴記録
-         */
-        post: operations["commit_allocation_api_allocations_commit_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocation-candidates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Allocation Candidates
-         * @description 候補ロット一覧取得（v2.5準拠）.
-         *
-         *     指定された受注明細に対して、利用可能なロット候補を返却する（プレビューのみ、DB保存なし）。
-         *
-         *     v2.5 Refactor:
-         *     - forecast に含まれない商品でも、有効在庫があれば候補ロットを返す
-         *     - v_lot_available_qty + v_order_line_context を使用
-         *
-         *     Args:
-         *         order_line_id: 対象の受注明細 ID（必須）
-         *         strategy: 引当戦略（デフォルト "fefo"、将来 "fifo" や "custom" 拡張を想定）
-         *         limit: 最大取得件数（デフォルト200）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         CandidateLotsResponse: 候補ロット一覧
-         *
-         *     Note:
-         *         - available_quantity > 0 のみ返却
-         *         - ロック済み・期限切れは除外
-         *         - 並び順: expiry_date NULLS LAST, received_date, lot_id（FEFO戦略の場合）
-         */
-        get: operations["get_allocation_candidates_api_allocation_candidates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocation-suggestions/preview": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Preview Allocation Suggestions
-         * @description 引当推奨の生成・プレビュー.
-         *
-         *     Mode:
-         *     - forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）
-         *     - order: 指定オーダー行に対して引当プレビュー（DB保存なし）
-         */
-        post: operations["preview_allocation_suggestions_api_allocation_suggestions_preview_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/allocation-suggestions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Allocation Suggestions
-         * @description 引当推奨一覧取得.
-         */
-        get: operations["list_allocation_suggestions_api_allocation_suggestions_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/warehouse-alloc/warehouses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Warehouses
-         * @description 配分対象の倉庫一覧（新しいwarehouseテーブル）を取得.
-         */
-        get: operations["list_warehouses_api_warehouse_alloc_warehouses_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/forecasts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Forecasts
-         * @description フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.
-         *
-         *     Args:
-         *         skip: スキップ件数（ページネーション用）
-         *         limit: 取得件数上限
-         *         customer_id: 得意先IDでフィルタ
-         *         delivery_place_id: 納入先IDでフィルタ
-         *         product_id: 製品IDでフィルタ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         グループ化されたフォーキャストリスト
-         */
-        get: operations["list_forecasts_api_forecasts_get"];
-        put?: never;
-        /**
-         * Create Forecast
-         * @description フォーキャスト作成.
-         *
-         *     Args:
-         *         data: フォーキャスト作成データ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         作成されたフォーキャスト
-         */
-        post: operations["create_forecast_api_forecasts_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/forecasts/history": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Forecast History
-         * @description フォーキャスト履歴取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数上限
-         *         customer_id: 得意先IDでフィルタ
-         *         delivery_place_id: 納入先IDでフィルタ
-         *         product_id: 製品IDでフィルタ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         アーカイブ済みフォーキャストリスト
-         */
-        get: operations["list_forecast_history_api_forecasts_history_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/forecasts/{forecast_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Forecast
-         * @description フォーキャスト詳細取得.
-         *
-         *     Args:
-         *         forecast_id: フォーキャストID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         フォーキャスト
-         *
-         *     Raises:
-         *         HTTPException: 見つからない場合は404
-         */
-        get: operations["get_forecast_api_forecasts__forecast_id__get"];
-        /**
-         * Update Forecast
-         * @description フォーキャスト更新.
-         *
-         *     Args:
-         *         forecast_id: フォーキャストID
-         *         data: 更新データ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         更新後のフォーキャスト
-         *
-         *     Raises:
-         *         HTTPException: 見つからない場合は404
-         */
-        put: operations["update_forecast_api_forecasts__forecast_id__put"];
-        post?: never;
-        /**
-         * Delete Forecast
-         * @description フォーキャスト削除.
-         *
-         *     Args:
-         *         forecast_id: フォーキャストID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         None
-         *
-         *     Raises:
-         *         HTTPException: 見つからない場合は404
-         */
-        delete: operations["delete_forecast_api_forecasts__forecast_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/forecasts/bulk-import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Bulk Import Forecasts
-         * @description フォーキャスト一括インポート.
-         *
-         *     CSVデータからフォーキャストを一括登録します。
-         *     replace_existing=True の場合、同じ顧客×納入先×製品の既存データを
-         *     履歴テーブルにアーカイブしてから新データを登録します。
-         *
-         *     Args:
-         *         request: インポートリクエスト（items + replace_existing）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         インポート結果サマリ
-         */
-        post: operations["bulk_import_forecasts_api_forecasts_bulk_import_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/alerts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Alerts
-         * @description Get list of current alerts.
-         *
-         *     Query parameters:
-         *     - severity: Filter by severity (comma-separated: critical,warning,info)
-         *     - category: Filter by category (comma-separated: order,inventory,lot,forecast)
-         *     - limit: Max alerts to return (default: 50, max: 500)
-         *     - only_open: Only show open alerts (default: true)
-         *
-         *     Returns:
-         *         List of alert items sorted by severity and time
-         */
-        get: operations["list_alerts_api_alerts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/alerts/summary": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Alert Summary
-         * @description Get summary of all current alerts.
-         *
-         *     Returns:
-         *         Alert counts grouped by severity and category
-         */
-        get: operations["get_alert_summary_api_alerts_summary_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inbound-plans": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Inbound Plans
-         * @description 入荷予定一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数（ページネーション用）
-         *         limit: 取得件数上限
-         *         supplier_id: 仕入先IDでフィルタ
-         *         product_id: 商品IDでフィルタ
-         *         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         入荷予定リスト
-         */
-        get: operations["list_inbound_plans_api_inbound_plans_get"];
-        put?: never;
-        /**
-         * Create Inbound Plan
-         * @description 入荷予定登録（明細も同時登録可能）.
-         *
-         *     Args:
-         *         plan: 入荷予定作成データ（明細含む）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         作成された入荷予定（明細含む）
-         */
-        post: operations["create_inbound_plan_api_inbound_plans_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inbound-plans/{plan_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Inbound Plan
-         * @description 入荷予定詳細取得（明細含む）.
-         *
-         *     Args:
-         *         plan_id: 入荷予定ID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         入荷予定（明細含む）
-         *
-         *     Raises:
-         *         HTTPException: 入荷予定が見つからない場合は404
-         */
-        get: operations["get_inbound_plan_api_inbound_plans__plan_id__get"];
-        /**
-         * Update Inbound Plan
-         * @description 入荷予定更新.
-         *
-         *     Args:
-         *         plan_id: 入荷予定ID
-         *         plan: 更新データ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         更新後の入荷予定
-         *
-         *     Raises:
-         *         HTTPException: 入荷予定が見つからない場合は404
-         */
-        put: operations["update_inbound_plan_api_inbound_plans__plan_id__put"];
-        post?: never;
-        /**
-         * Delete Inbound Plan
-         * @description 入荷予定削除（カスケード削除：明細も削除される）.
-         *
-         *     Args:
-         *         plan_id: 入荷予定ID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         None
-         *
-         *     Raises:
-         *         HTTPException: 入荷予定が見つからない場合は404
-         */
-        delete: operations["delete_inbound_plan_api_inbound_plans__plan_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inbound-plans/{plan_id}/lines": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Inbound Plan Lines
-         * @description 入荷予定明細一覧取得.
-         *
-         *     Args:
-         *         plan_id: 入荷予定ID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         入荷予定明細のリスト
-         */
-        get: operations["list_inbound_plan_lines_api_inbound_plans__plan_id__lines_get"];
-        put?: never;
-        /**
-         * Create Inbound Plan Line
-         * @description 入荷予定明細追加.
-         *
-         *     Args:
-         *         plan_id: 入荷予定ID
-         *         line: 明細作成データ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         作成された明細
-         *
-         *     Raises:
-         *         HTTPException: 入荷予定が見つからない場合は404
-         */
-        post: operations["create_inbound_plan_line_api_inbound_plans__plan_id__lines_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inbound-plans/{plan_id}/receive": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Receive Inbound Plan
-         * @description 入荷実績登録（ロット自動生成）.
-         *
-         *     Args:
-         *         plan_id: 入荷予定ID
-         *         request: 入荷実績データ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         入荷実績登録結果（生成されたロットIDリスト）
-         *
-         *     Raises:
-         *         HTTPException: 入荷予定が見つからない場合は404
-         */
-        post: operations["receive_inbound_plan_api_inbound_plans__plan_id__receive_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/adjustments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Adjustments
-         * @description 在庫調整履歴取得.
-         *
-         *     Args:
-         *         skip: スキップ件数（ページネーション用）
-         *         limit: 取得件数上限
-         *         lot_id: ロットIDでフィルタ
-         *         adjustment_type: 調整タイプでフィルタ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         在庫調整レコードのリスト
-         */
-        get: operations["list_adjustments_api_adjustments_get"];
-        put?: never;
-        /**
-         * Create Adjustment
-         * @description 在庫調整登録.
-         *
-         *     Args:
-         *         adjustment: 在庫調整データ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         作成された在庫調整レコード
-         *
-         *     Note:
-         *         - ロットの current_quantity を更新
-         *         - stock_history に履歴を記録
-         */
-        post: operations["create_adjustment_api_adjustments_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/adjustments/{adjustment_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Adjustment
-         * @description 在庫調整詳細取得.
-         *
-         *     Args:
-         *         adjustment_id: 在庫調整ID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         在庫調整レコード
-         *
-         *     Raises:
-         *         HTTPException: レコードが見つからない場合は404
-         */
-        get: operations["get_adjustment_api_adjustments__adjustment_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inventory-items": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Inventory Items
-         * @description 在庫サマリ一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数（ページネーション用）
-         *         limit: 取得件数上限
-         *         product_id: 製品IDでフィルタ
-         *         warehouse_id: 倉庫IDでフィルタ
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         在庫サマリのリスト
-         */
-        get: operations["list_inventory_items_api_inventory_items_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/inventory-items/{product_id}/{warehouse_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Inventory Item
-         * @description 在庫サマリ詳細取得（製品ID + 倉庫ID単位）.
-         *
-         *     Args:
-         *         product_id: 製品ID
-         *         warehouse_id: 倉庫ID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         在庫サマリ
-         *
-         *     Raises:
-         *         HTTPException: 在庫サマリが見つからない場合は404
-         */
-        get: operations["get_inventory_item_api_inventory_items__product_id___warehouse_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/warehouses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Warehouses
-         * @description List warehouses.
-         */
-        get: operations["list_warehouses_api_warehouses_get"];
-        put?: never;
-        /**
-         * Create Warehouse
-         * @description Create warehouse.
-         */
-        post: operations["create_warehouse_api_warehouses_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/warehouses/{warehouse_code}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Warehouse
-         * @description Get warehouse by code.
-         */
-        get: operations["get_warehouse_api_warehouses__warehouse_code__get"];
-        /**
-         * Update Warehouse
-         * @description Update warehouse.
-         */
-        put: operations["update_warehouse_api_warehouses__warehouse_code__put"];
-        post?: never;
-        /**
-         * Delete Warehouse
-         * @description Delete warehouse.
-         */
-        delete: operations["delete_warehouse_api_warehouses__warehouse_code__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/suppliers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Suppliers
-         * @description List suppliers.
-         */
-        get: operations["list_suppliers_api_suppliers_get"];
-        put?: never;
-        /**
-         * Create Supplier
-         * @description Create supplier.
-         */
-        post: operations["create_supplier_api_suppliers_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/suppliers/{supplier_code}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Supplier
-         * @description Get supplier by code.
-         */
-        get: operations["get_supplier_api_suppliers__supplier_code__get"];
-        /**
-         * Update Supplier
-         * @description Update supplier.
-         */
-        put: operations["update_supplier_api_suppliers__supplier_code__put"];
-        post?: never;
-        /**
-         * Delete Supplier
-         * @description Delete supplier.
-         */
-        delete: operations["delete_supplier_api_suppliers__supplier_code__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/customers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Customers
-         * @description Return customers.
-         */
-        get: operations["list_customers_api_customers_get"];
-        put?: never;
-        /**
-         * Create Customer
-         * @description Create a new customer.
-         */
-        post: operations["create_customer_api_customers_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/customers/{customer_code}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Customer
-         * @description Fetch a customer by code.
-         */
-        get: operations["get_customer_api_customers__customer_code__get"];
-        /**
-         * Update Customer
-         * @description Update a customer.
-         */
-        put: operations["update_customer_api_customers__customer_code__put"];
-        post?: never;
-        /**
-         * Delete Customer
-         * @description Delete a customer.
-         */
-        delete: operations["delete_customer_api_customers__customer_code__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/products": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Products
-         * @description Return a paginated list of products.
-         */
-        get: operations["list_products_api_products_get"];
-        put?: never;
-        /**
-         * Create Product
-         * @description Create a new product.
-         */
-        post: operations["create_product_api_products_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/products/{product_code}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Product
-         * @description Fetch a product by its code (maker_part_code).
-         */
-        get: operations["get_product_api_products__product_code__get"];
-        /**
-         * Update Product
-         * @description Update an existing product (by maker_part_code).
-         */
-        put: operations["update_product_api_products__product_code__put"];
-        post?: never;
-        /**
-         * Delete Product
-         * @description Delete a product by its code (maker_part_code).
-         */
-        delete: operations["delete_product_api_products__product_code__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/customer-items": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Customer Items
-         * @description 得意先品番マッピング一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数上限
-         *         customer_id: 得意先IDでフィルタ（オプション）
-         *         product_id: 製品IDでフィルタ（オプション）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         得意先品番マッピングのリスト
-         */
-        get: operations["list_customer_items_api_customer_items_get"];
-        put?: never;
-        /**
-         * Create Customer Item
-         * @description 得意先品番マッピング登録.
-         *
-         *     Args:
-         *         item: 登録する品番マッピング情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         登録された品番マッピング
-         *
-         *     Raises:
-         *         HTTPException: 既に同じマッピングが存在する場合
-         */
-        post: operations["create_customer_item_api_customer_items_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/customer-items/{customer_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Customer Items By Customer
-         * @description 特定得意先の品番マッピング一覧取得.
-         *
-         *     Args:
-         *         customer_id: 得意先ID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         該当得意先の品番マッピングリスト
-         */
-        get: operations["list_customer_items_by_customer_api_customer_items__customer_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/customer-items/{customer_id}/{external_product_code}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        /**
-         * Update Customer Item
-         * @description 得意先品番マッピング更新.
-         *
-         *     Args:
-         *         customer_id: 得意先ID
-         *         external_product_code: 得意先品番
-         *         item: 更新する品番マッピング情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         更新された品番マッピング
-         *
-         *     Raises:
-         *         HTTPException: マッピングが存在しない場合
-         */
-        put: operations["update_customer_item_api_customer_items__customer_id___external_product_code__put"];
-        post?: never;
-        /**
-         * Delete Customer Item
-         * @description 得意先品番マッピング削除.
-         *
-         *     Args:
-         *         customer_id: 得意先ID
-         *         external_product_code: 得意先品番
-         *         db: データベースセッション
-         *
-         *     Raises:
-         *         HTTPException: マッピングが存在しない場合
-         */
-        delete: operations["delete_customer_item_api_customer_items__customer_id___external_product_code__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Users
-         * @description ユーザー一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数上限
-         *         is_active: 有効フラグでフィルタ（オプション）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         ユーザーのリスト
-         */
-        get: operations["list_users_api_users_get"];
-        put?: never;
-        /**
-         * Create User
-         * @description ユーザー作成.
-         *
-         *     Args:
-         *         user: 作成するユーザー情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         作成されたユーザー
-         *
-         *     Raises:
-         *         HTTPException: ユーザー名またはメールアドレスが既に存在する場合
-         */
-        post: operations["create_user_api_users_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/users/{user_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get User
-         * @description ユーザー詳細取得.
-         *
-         *     Args:
-         *         user_id: ユーザーID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         ユーザー詳細（ロール情報含む）
-         *
-         *     Raises:
-         *         HTTPException: ユーザーが存在しない場合
-         */
-        get: operations["get_user_api_users__user_id__get"];
-        /**
-         * Update User
-         * @description ユーザー更新.
-         *
-         *     Args:
-         *         user_id: ユーザーID
-         *         user: 更新するユーザー情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         更新されたユーザー
-         *
-         *     Raises:
-         *         HTTPException: ユーザーが存在しない場合
-         */
-        put: operations["update_user_api_users__user_id__put"];
-        post?: never;
-        /**
-         * Delete User
-         * @description ユーザー削除.
-         *
-         *     Args:
-         *         user_id: ユーザーID
-         *         db: データベースセッション
-         *
-         *     Raises:
-         *         HTTPException: ユーザーが存在しない場合
-         */
-        delete: operations["delete_user_api_users__user_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/users/{user_id}/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Assign User Roles
-         * @description ユーザーへのロール割当.
-         *
-         *     Args:
-         *         user_id: ユーザーID
-         *         assignment: 割り当てるロールID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         ロール割り当て後のユーザー情報
-         *
-         *     Raises:
-         *         HTTPException: ユーザーが存在しない場合
-         */
-        patch: operations["assign_user_roles_api_users__user_id__roles_patch"];
-        trace?: never;
-    };
-    "/api/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Roles
-         * @description ロール一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数上限
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         ロールのリスト
-         */
-        get: operations["list_roles_api_roles_get"];
-        put?: never;
-        /**
-         * Create Role
-         * @description ロール作成.
-         *
-         *     Args:
-         *         role: 作成するロール情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         作成されたロール
-         *
-         *     Raises:
-         *         HTTPException: ロールコードが既に存在する場合
-         */
-        post: operations["create_role_api_roles_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/roles/{role_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Role
-         * @description ロール詳細取得.
-         *
-         *     Args:
-         *         role_id: ロールID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         ロール詳細
-         *
-         *     Raises:
-         *         HTTPException: ロールが存在しない場合
-         */
-        get: operations["get_role_api_roles__role_id__get"];
-        /**
-         * Update Role
-         * @description ロール更新.
-         *
-         *     Args:
-         *         role_id: ロールID
-         *         role: 更新するロール情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         更新されたロール
-         *
-         *     Raises:
-         *         HTTPException: ロールが存在しない場合
-         */
-        put: operations["update_role_api_roles__role_id__put"];
-        post?: never;
-        /**
-         * Delete Role
-         * @description ロール削除.
-         *
-         *     Args:
-         *         role_id: ロールID
-         *         db: データベースセッション
-         *
-         *     Raises:
-         *         HTTPException: ロールが存在しない場合、またはロールが使用中の場合
-         */
-        delete: operations["delete_role_api_roles__role_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Dashboard Stats
-         * @description ダッシュボード用の統計情報を返す.
-         *
-         *     在庫総数は lots.current_quantity の合計値を使用。
-         *     lot_current_stock ビューは使用しない（v2.2 以降は廃止）。
-         */
-        get: operations["get_dashboard_stats_api_admin_stats_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/reset-database": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Reset Database
-         * @description データベースリセット（開発環境のみ）
-         *     - テーブル構造は保持したまま、全データを削除
-         *     - alembic_versionは保持（マイグレーション履歴を維持）
-         *     - TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.
-         */
-        post: operations["reset_database_api_admin_reset_database_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/seeds": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create Seeds
-         * @description シードデータ生成（UPSERT方式）.
-         *
-         *     - 既存データに追加する形でサンプルデータを投入
-         *     - UPSERT（ON CONFLICT DO NOTHING）で重複を防止
-         *     - dry_run=true で投入前のサマリのみ確認可能
-         */
-        post: operations["create_seeds_api_admin_seeds_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/diagnostics/allocatable-lots": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Allocatable Lots
-         * @description 診断API: 引当可能ロット一覧（読み取り専用）.
-         *
-         *     v2.2: v_lot_details ビューを使用して在庫情報を取得。
-         *     lot_current_stock ビューは廃止。
-         *
-         *     Args:
-         *         prod: 製品コード（任意フィルタ）
-         *         wh: 倉庫コード（任意フィルタ）
-         *         limit: 最大取得件数（デフォルト100）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         CandidateLotsResponse: 引当可能ロット一覧
-         *
-         *     Note:
-         *         - 読み取り専用トランザクション
-         *         - available_quantity > 0 のみ
-         *         - 期限切れは除外
-         */
-        get: operations["get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/healthcheck/db-counts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Db Counts
-         * @description 各テーブルのレコード件数を返す.
-         *
-         *     Returns:
-         *         dict: テーブル名をキー、件数を値とする辞書
-         */
-        get: operations["get_db_counts_api_admin_healthcheck_db_counts_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/healthcheck/masters": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Masters Health
-         * @description マスタテーブルのヘルスチェック.
-         *
-         *     Returns:
-         *         dict: 各マスタテーブルの件数とサンプルデータ（先頭5件のコード）
-         */
-        get: operations["get_masters_health_api_admin_healthcheck_masters_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/simulate-seed-data": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Simulate Seed Data
-         * @description テストデータシミュレーションを開始.
-         *
-         *     - Reset → Insert を一括実行
-         *     - バックグラウンドでジョブを起動
-         *     - task_id を返す
-         */
-        post: operations["simulate_seed_data_api_admin_simulate_seed_data_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/simulate-progress/{task_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Simulate Progress
-         * @description テストデータシミュレーションの進捗を取得.
-         *
-         *     - ポーリングJSONで進捗を返す（3〜5秒間隔でクライアントが呼び出す想定）
-         */
-        get: operations["get_simulate_progress_api_admin_simulate_progress__task_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/simulate-result/{task_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Simulate Result
-         * @description テストデータシミュレーションの結果を取得.
-         *
-         *     - 完了サマリを返す
-         */
-        get: operations["get_simulate_result_api_admin_simulate_result__task_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/seed-snapshots": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Seed Snapshots
-         * @description スナップショット一覧を取得.
-         */
-        get: operations["list_seed_snapshots_api_admin_seed_snapshots_get"];
-        put?: never;
-        /**
-         * Create Seed Snapshot
-         * @description スナップショットを手動作成.
-         */
-        post: operations["create_seed_snapshot_api_admin_seed_snapshots_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/seed-snapshots/{snapshot_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Delete Seed Snapshot
-         * @description スナップショットを削除.
-         */
-        delete: operations["delete_seed_snapshot_api_admin_seed_snapshots__snapshot_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/seed-snapshots/{snapshot_id}/restore": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Restore Seed Snapshot
-         * @description スナップショットから復元.
-         *
-         *     - 保存されたパラメータで Reset → Insert を実行
-         *     - task_id を返す
-         */
-        post: operations["restore_seed_snapshot_api_admin_seed_snapshots__snapshot_id__restore_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/test-data/generate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Generate Test Data Endpoint
-         * @description Generate test data for development.
-         *     WARNING: This will DELETE all existing data in related tables.
-         */
-        post: operations["generate_test_data_endpoint_api_admin_test_data_generate_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/healthz": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Healthz */
-        get: operations["healthz_api_healthz_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/readyz": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Readyz */
-        get: operations["readyz_api_readyz_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/health": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health */
-        get: operations["health_api_health_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/operation-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Operation Logs
-         * @description 操作ログ一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数上限
-         *         user_id: ユーザーIDでフィルタ（オプション）
-         *         operation_type: 操作種別でフィルタ（オプション）
-         *         target_table: 対象テーブル名でフィルタ（オプション）
-         *         start_date: 開始日時（オプション）
-         *         end_date: 終了日時（オプション）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         操作ログのリスト（ページネーション付き）
-         */
-        get: operations["list_operation_logs_api_operation_logs_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/operation-logs/{log_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Operation Log
-         * @description 操作ログ詳細取得.
-         *
-         *     Args:
-         *         log_id: ログID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         操作ログ詳細
-         *
-         *     Raises:
-         *         HTTPException: ログが存在しない場合
-         */
-        get: operations["get_operation_log_api_operation_logs__log_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/master-change-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Master Change Logs
-         * @description マスタ変更履歴一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数上限
-         *         table_name: テーブル名でフィルタ（オプション）
-         *         record_id: レコードIDでフィルタ（オプション）
-         *         change_type: 変更種別でフィルタ（オプション）
-         *         changed_by: 変更者でフィルタ（オプション）
-         *         start_date: 開始日時（オプション）
-         *         end_date: 終了日時（オプション）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         マスタ変更履歴のリスト（ページネーション付き）
-         */
-        get: operations["list_master_change_logs_api_master_change_logs_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/master-change-logs/{change_log_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Master Change Log
-         * @description マスタ変更履歴詳細取得.
-         *
-         *     Args:
-         *         change_log_id: 変更ログID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         マスタ変更履歴詳細
-         *
-         *     Raises:
-         *         HTTPException: ログが存在しない場合
-         */
-        get: operations["get_master_change_log_api_master_change_logs__change_log_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/master-change-logs/record/{table_name}/{record_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Master Change Logs By Record
-         * @description 特定レコードのマスタ変更履歴取得.
-         *
-         *     Args:
-         *         table_name: テーブル名
-         *         record_id: レコードID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         マスタ変更履歴のリスト（降順）
-         */
-        get: operations["get_master_change_logs_by_record_api_master_change_logs_record__table_name___record_id__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/business-rules": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Business Rules
-         * @description 業務ルール一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数上限
-         *         rule_type: ルール種別でフィルタ（オプション）
-         *         is_active: 有効フラグでフィルタ（オプション）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         業務ルールのリスト
-         */
-        get: operations["list_business_rules_api_business_rules_get"];
-        put?: never;
-        /**
-         * Create Business Rule
-         * @description 業務ルール作成.
-         *
-         *     Args:
-         *         rule: 作成する業務ルール情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         作成された業務ルール
-         *
-         *     Raises:
-         *         HTTPException: ルールコードが重複している場合
-         */
-        post: operations["create_business_rule_api_business_rules_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/business-rules/{rule_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Business Rule
-         * @description 業務ルール詳細取得（ID指定）.
-         *
-         *     Args:
-         *         rule_id: ルールID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         業務ルール詳細
-         *
-         *     Raises:
-         *         HTTPException: ルールが存在しない場合
-         */
-        get: operations["get_business_rule_api_business_rules__rule_id__get"];
-        /**
-         * Update Business Rule
-         * @description 業務ルール更新（ID指定）.
-         *
-         *     Args:
-         *         rule_id: ルールID
-         *         rule: 更新する業務ルール情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         更新された業務ルール
-         *
-         *     Raises:
-         *         HTTPException: ルールが存在しない場合
-         */
-        put: operations["update_business_rule_api_business_rules__rule_id__put"];
-        post?: never;
-        /**
-         * Delete Business Rule
-         * @description 業務ルール削除.
-         *
-         *     Args:
-         *         rule_id: ルールID
-         *         db: データベースセッション
-         *
-         *     Raises:
-         *         HTTPException: ルールが存在しない場合
-         */
-        delete: operations["delete_business_rule_api_business_rules__rule_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/business-rules/code/{rule_code}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Business Rule By Code
-         * @description 業務ルール詳細取得（コード指定）.
-         *
-         *     Args:
-         *         rule_code: ルールコード
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         業務ルール詳細
-         *
-         *     Raises:
-         *         HTTPException: ルールが存在しない場合
-         */
-        get: operations["get_business_rule_by_code_api_business_rules_code__rule_code__get"];
-        /**
-         * Update Business Rule By Code
-         * @description 業務ルール更新（コード指定）.
-         *
-         *     Args:
-         *         rule_code: ルールコード
-         *         rule: 更新する業務ルール情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         更新された業務ルール
-         *
-         *     Raises:
-         *         HTTPException: ルールが存在しない場合
-         */
-        put: operations["update_business_rule_by_code_api_business_rules_code__rule_code__put"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/business-rules/{rule_id}/toggle": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * Toggle Business Rule Active
-         * @description 業務ルール有効/無効切り替え.
-         *
-         *     Args:
-         *         rule_id: ルールID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         更新された業務ルール
-         *
-         *     Raises:
-         *         HTTPException: ルールが存在しない場合
-         */
-        patch: operations["toggle_business_rule_active_api_business_rules__rule_id__toggle_patch"];
-        trace?: never;
-    };
-    "/api/batch-jobs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List Batch Jobs
-         * @description バッチジョブ一覧取得.
-         *
-         *     Args:
-         *         skip: スキップ件数
-         *         limit: 取得件数上限
-         *         job_type: ジョブ種別でフィルタ（オプション）
-         *         status: ステータスでフィルタ（オプション）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         バッチジョブのリスト（ページネーション付き）
-         */
-        get: operations["list_batch_jobs_api_batch_jobs_get"];
-        put?: never;
-        /**
-         * Create Batch Job
-         * @description バッチジョブ作成.
-         *
-         *     Args:
-         *         job: 作成するバッチジョブ情報
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         作成されたバッチジョブ
-         */
-        post: operations["create_batch_job_api_batch_jobs_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/batch-jobs/{job_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get Batch Job
-         * @description バッチジョブ詳細取得.
-         *
-         *     Args:
-         *         job_id: ジョブID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         バッチジョブ詳細
-         *
-         *     Raises:
-         *         HTTPException: ジョブが存在しない場合
-         */
-        get: operations["get_batch_job_api_batch_jobs__job_id__get"];
-        put?: never;
-        post?: never;
-        /**
-         * Delete Batch Job
-         * @description バッチジョブ削除.
-         *
-         *     Args:
-         *         job_id: ジョブID
-         *         db: データベースセッション
-         *
-         *     Raises:
-         *         HTTPException: ジョブが存在しない場合
-         */
-        delete: operations["delete_batch_job_api_batch_jobs__job_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/batch-jobs/{job_id}/execute": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Execute Batch Job
-         * @description バッチジョブ実行.
-         *
-         *     注意: これはスタブ実装です。本番環境では、非同期ジョブキュー（Celery、RQ等）を使用してください。
-         *
-         *     Args:
-         *         job_id: ジョブID
-         *         request: 実行リクエスト（パラメータ上書き可能）
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         実行結果
-         *
-         *     Raises:
-         *         HTTPException: ジョブが存在しない場合
-         */
-        post: operations["execute_batch_job_api_batch_jobs__job_id__execute_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/batch-jobs/{job_id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Cancel Batch Job
-         * @description バッチジョブキャンセル.
-         *
-         *     Args:
-         *         job_id: ジョブID
-         *         db: データベースセッション
-         *
-         *     Returns:
-         *         キャンセルされたバッチジョブ
-         *
-         *     Raises:
-         *         HTTPException: ジョブが存在しないか、キャンセルできない状態の場合
-         */
-        post: operations["cancel_batch_job_api_batch_jobs__job_id__cancel_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Root
-         * @description ルートエンドポイント.
-         */
-        get: operations["root__get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  "/api/lots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Lots
+     * @description ロット一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数
+     *         product_id: 製品ID
+     *         product_code: 製品コード
+     *         supplier_code: 仕入先コード
+     *         warehouse_code: 倉庫コード
+     *         expiry_from: 有効期限開始日
+     *         expiry_to: 有効期限終了日
+     *         with_stock: 在庫ありのみ取得するかどうか
+     *         db: データベースセッション
+     *
+     *     ロット一覧取得（v_lots_with_master ビュー使用）.
+     *
+     *     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.
+     *     FEFO (先入先出) 順に並べて返す.
+     */
+    get: operations["list_lots_api_lots_get"];
+    put?: never;
+    /**
+     * Create Lot
+     * @description ロット新規登録.
+     *
+     *     - ロットマスタ登録
+     *     - 現在在庫テーブル初期化
+     */
+    post: operations["create_lot_api_lots_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/lots/{lot_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Lot
+     * @description ロット詳細取得（v2.2: Lot モデルから直接取得）.
+     */
+    get: operations["get_lot_api_lots__lot_id__get"];
+    /**
+     * Update Lot
+     * @description ロット更新.
+     */
+    put: operations["update_lot_api_lots__lot_id__put"];
+    post?: never;
+    /**
+     * Delete Lot
+     * @description ロット削除.
+     */
+    delete: operations["delete_lot_api_lots__lot_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/lots/{lot_id}/lock": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Lock Lot
+     * @description ロットをロックする.
+     */
+    post: operations["lock_lot_api_lots__lot_id__lock_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/lots/{lot_id}/unlock": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Unlock Lot
+     * @description ロットのロックを解除する.
+     */
+    post: operations["unlock_lot_api_lots__lot_id__unlock_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/lots/{lot_id}/movements": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Lot Movements
+     * @description ロットの在庫変動履歴取得.
+     */
+    get: operations["list_lot_movements_api_lots__lot_id__movements_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/lots/movements": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Stock Movement
+     * @description 在庫変動記録.
+     *
+     *     - 在庫変動履歴追加
+     *     - 現在在庫更新
+     */
+    post: operations["create_stock_movement_api_lots_movements_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/orders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Orders
+     * @description 受注一覧取得（読み取り専用）.
+     */
+    get: operations["list_orders_api_orders_get"];
+    put?: never;
+    /**
+     * Create Order
+     * @description 受注作成.
+     */
+    post: operations["create_order_api_orders_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/orders/{order_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Order
+     * @description 受注詳細取得（読み取り専用、明細含む）.
+     */
+    get: operations["get_order_api_orders__order_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/orders/{order_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Cancel Order
+     * @description 受注キャンセル.
+     */
+    delete: operations["cancel_order_api_orders__order_id__cancel_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/orders/{order_line_id}/allocations": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Save Manual Allocations
+     * @description 手動引当保存 (確定).
+     *
+     *     既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。
+     *     これにより、DB上の在庫数(allocated_quantity)とステータスが更新される。
+     */
+    post: operations["save_manual_allocations_api_orders__order_line_id__allocations_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/orders/refresh-all-statuses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Refresh All Order Line Statuses
+     * @description 全受注明細および受注のステータスを再計算・更新.
+     *
+     *     既存の allocations データに基づいて OrderLine.status と Order.status を正しい値に更新します。
+     */
+    post: operations["refresh_all_order_line_statuses_api_orders_refresh_all_statuses_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/drag-assign": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Drag Assign
+     * @description 手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility.
+     */
+    post: operations["drag_assign_api_allocations_drag_assign_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/{allocation_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Allocation
+     * @description 引当取消（DELETE API, ソフトキャンセル対応）.
+     */
+    delete: operations["delete_allocation_api_allocations__allocation_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview Allocations
+     * @description FEFO引当シミュレーション実行.
+     *
+     *     Args:
+     *         request: プレビューリクエスト（order_id）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         FefoPreviewResponse: 引当プレビュー結果
+     */
+    post: operations["preview_allocations_api_allocations_preview_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/commit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Commit Allocation
+     * @description 引当確定（v2.2.1準拠）.
+     *
+     *     FEFO・手動いずれかで作成された仮引当案を元に、実績の allocations を生成し、在庫を確定させる。
+     *
+     *     Args:
+     *         request: 引当確定リクエスト（order_id）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         AllocationCommitResponse: 確定結果
+     *
+     *     Note:
+     *         - allocations テーブルにレコード作成
+     *         - lots.quantity から実績数量を減算
+     *         - stock_history への出庫履歴記録
+     */
+    post: operations["commit_allocation_api_allocations_commit_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocation-candidates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Allocation Candidates
+     * @description 候補ロット一覧取得（v2.5準拠）.
+     *
+     *     指定された受注明細に対して、利用可能なロット候補を返却する（プレビューのみ、DB保存なし）。
+     *
+     *     v2.5 Refactor:
+     *     - forecast に含まれない商品でも、有効在庫があれば候補ロットを返す
+     *     - v_lot_available_qty + v_order_line_context を使用
+     *
+     *     Args:
+     *         order_line_id: 対象の受注明細 ID（必須）
+     *         strategy: 引当戦略（デフォルト "fefo"、将来 "fifo" や "custom" 拡張を想定）
+     *         limit: 最大取得件数（デフォルト200）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         CandidateLotsResponse: 候補ロット一覧
+     *
+     *     Note:
+     *         - available_quantity > 0 のみ返却
+     *         - ロック済み・期限切れは除外
+     *         - 並び順: expiry_date NULLS LAST, received_date, lot_id（FEFO戦略の場合）
+     */
+    get: operations["get_allocation_candidates_api_allocation_candidates_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocation-suggestions/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview Allocation Suggestions
+     * @description 引当推奨の生成・プレビュー.
+     *
+     *     Mode:
+     *     - forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）
+     *     - order: 指定オーダー行に対して引当プレビュー（DB保存なし）
+     */
+    post: operations["preview_allocation_suggestions_api_allocation_suggestions_preview_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocation-suggestions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Allocation Suggestions
+     * @description 引当推奨一覧取得.
+     */
+    get: operations["list_allocation_suggestions_api_allocation_suggestions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/warehouse-alloc/warehouses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Warehouses
+     * @description 配分対象の倉庫一覧（新しいwarehouseテーブル）を取得.
+     */
+    get: operations["list_warehouses_api_warehouse_alloc_warehouses_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/forecasts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Forecasts
+     * @description フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数上限
+     *         customer_id: 得意先IDでフィルタ
+     *         delivery_place_id: 納入先IDでフィルタ
+     *         product_id: 製品IDでフィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         グループ化されたフォーキャストリスト
+     */
+    get: operations["list_forecasts_api_forecasts_get"];
+    put?: never;
+    /**
+     * Create Forecast
+     * @description フォーキャスト作成.
+     *
+     *     Args:
+     *         data: フォーキャスト作成データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成されたフォーキャスト
+     */
+    post: operations["create_forecast_api_forecasts_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/forecasts/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Forecast History
+     * @description フォーキャスト履歴取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         customer_id: 得意先IDでフィルタ
+     *         delivery_place_id: 納入先IDでフィルタ
+     *         product_id: 製品IDでフィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         アーカイブ済みフォーキャストリスト
+     */
+    get: operations["list_forecast_history_api_forecasts_history_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/forecasts/{forecast_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Forecast
+     * @description フォーキャスト詳細取得.
+     *
+     *     Args:
+     *         forecast_id: フォーキャストID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         フォーキャスト
+     *
+     *     Raises:
+     *         HTTPException: 見つからない場合は404
+     */
+    get: operations["get_forecast_api_forecasts__forecast_id__get"];
+    /**
+     * Update Forecast
+     * @description フォーキャスト更新.
+     *
+     *     Args:
+     *         forecast_id: フォーキャストID
+     *         data: 更新データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         更新後のフォーキャスト
+     *
+     *     Raises:
+     *         HTTPException: 見つからない場合は404
+     */
+    put: operations["update_forecast_api_forecasts__forecast_id__put"];
+    post?: never;
+    /**
+     * Delete Forecast
+     * @description フォーキャスト削除.
+     *
+     *     Args:
+     *         forecast_id: フォーキャストID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         None
+     *
+     *     Raises:
+     *         HTTPException: 見つからない場合は404
+     */
+    delete: operations["delete_forecast_api_forecasts__forecast_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/forecasts/bulk-import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Import Forecasts
+     * @description フォーキャスト一括インポート.
+     *
+     *     CSVデータからフォーキャストを一括登録します。
+     *     replace_existing=True の場合、同じ顧客×納入先×製品の既存データを
+     *     履歴テーブルにアーカイブしてから新データを登録します。
+     *
+     *     Args:
+     *         request: インポートリクエスト（items + replace_existing）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         インポート結果サマリ
+     */
+    post: operations["bulk_import_forecasts_api_forecasts_bulk_import_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/alerts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Alerts
+     * @description Get list of current alerts.
+     *
+     *     Query parameters:
+     *     - severity: Filter by severity (comma-separated: critical,warning,info)
+     *     - category: Filter by category (comma-separated: order,inventory,lot,forecast)
+     *     - limit: Max alerts to return (default: 50, max: 500)
+     *     - only_open: Only show open alerts (default: true)
+     *
+     *     Returns:
+     *         List of alert items sorted by severity and time
+     */
+    get: operations["list_alerts_api_alerts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/alerts/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Alert Summary
+     * @description Get summary of all current alerts.
+     *
+     *     Returns:
+     *         Alert counts grouped by severity and category
+     */
+    get: operations["get_alert_summary_api_alerts_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inbound-plans": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Inbound Plans
+     * @description 入荷予定一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数上限
+     *         supplier_id: 仕入先IDでフィルタ
+     *         product_id: 商品IDでフィルタ
+     *         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         入荷予定リスト
+     */
+    get: operations["list_inbound_plans_api_inbound_plans_get"];
+    put?: never;
+    /**
+     * Create Inbound Plan
+     * @description 入荷予定登録（明細も同時登録可能）.
+     *
+     *     Args:
+     *         plan: 入荷予定作成データ（明細含む）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成された入荷予定（明細含む）
+     */
+    post: operations["create_inbound_plan_api_inbound_plans_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inbound-plans/{plan_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Inbound Plan
+     * @description 入荷予定詳細取得（明細含む）.
+     *
+     *     Args:
+     *         plan_id: 入荷予定ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         入荷予定（明細含む）
+     *
+     *     Raises:
+     *         HTTPException: 入荷予定が見つからない場合は404
+     */
+    get: operations["get_inbound_plan_api_inbound_plans__plan_id__get"];
+    /**
+     * Update Inbound Plan
+     * @description 入荷予定更新.
+     *
+     *     Args:
+     *         plan_id: 入荷予定ID
+     *         plan: 更新データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         更新後の入荷予定
+     *
+     *     Raises:
+     *         HTTPException: 入荷予定が見つからない場合は404
+     */
+    put: operations["update_inbound_plan_api_inbound_plans__plan_id__put"];
+    post?: never;
+    /**
+     * Delete Inbound Plan
+     * @description 入荷予定削除（カスケード削除：明細も削除される）.
+     *
+     *     Args:
+     *         plan_id: 入荷予定ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         None
+     *
+     *     Raises:
+     *         HTTPException: 入荷予定が見つからない場合は404
+     */
+    delete: operations["delete_inbound_plan_api_inbound_plans__plan_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inbound-plans/{plan_id}/lines": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Inbound Plan Lines
+     * @description 入荷予定明細一覧取得.
+     *
+     *     Args:
+     *         plan_id: 入荷予定ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         入荷予定明細のリスト
+     */
+    get: operations["list_inbound_plan_lines_api_inbound_plans__plan_id__lines_get"];
+    put?: never;
+    /**
+     * Create Inbound Plan Line
+     * @description 入荷予定明細追加.
+     *
+     *     Args:
+     *         plan_id: 入荷予定ID
+     *         line: 明細作成データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成された明細
+     *
+     *     Raises:
+     *         HTTPException: 入荷予定が見つからない場合は404
+     */
+    post: operations["create_inbound_plan_line_api_inbound_plans__plan_id__lines_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inbound-plans/{plan_id}/receive": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Receive Inbound Plan
+     * @description 入荷実績登録（ロット自動生成）.
+     *
+     *     Args:
+     *         plan_id: 入荷予定ID
+     *         request: 入荷実績データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         入荷実績登録結果（生成されたロットIDリスト）
+     *
+     *     Raises:
+     *         HTTPException: 入荷予定が見つからない場合は404
+     */
+    post: operations["receive_inbound_plan_api_inbound_plans__plan_id__receive_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/adjustments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Adjustments
+     * @description 在庫調整履歴取得.
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数上限
+     *         lot_id: ロットIDでフィルタ
+     *         adjustment_type: 調整タイプでフィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         在庫調整レコードのリスト
+     */
+    get: operations["list_adjustments_api_adjustments_get"];
+    put?: never;
+    /**
+     * Create Adjustment
+     * @description 在庫調整登録.
+     *
+     *     Args:
+     *         adjustment: 在庫調整データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成された在庫調整レコード
+     *
+     *     Note:
+     *         - ロットの current_quantity を更新
+     *         - stock_history に履歴を記録
+     */
+    post: operations["create_adjustment_api_adjustments_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/adjustments/{adjustment_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Adjustment
+     * @description 在庫調整詳細取得.
+     *
+     *     Args:
+     *         adjustment_id: 在庫調整ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         在庫調整レコード
+     *
+     *     Raises:
+     *         HTTPException: レコードが見つからない場合は404
+     */
+    get: operations["get_adjustment_api_adjustments__adjustment_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inventory-items": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Inventory Items
+     * @description 在庫サマリ一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数上限
+     *         product_id: 製品IDでフィルタ
+     *         warehouse_id: 倉庫IDでフィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         在庫サマリのリスト
+     */
+    get: operations["list_inventory_items_api_inventory_items_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/inventory-items/{product_id}/{warehouse_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Inventory Item
+     * @description 在庫サマリ詳細取得（製品ID + 倉庫ID単位）.
+     *
+     *     Args:
+     *         product_id: 製品ID
+     *         warehouse_id: 倉庫ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         在庫サマリ
+     *
+     *     Raises:
+     *         HTTPException: 在庫サマリが見つからない場合は404
+     */
+    get: operations["get_inventory_item_api_inventory_items__product_id___warehouse_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/warehouses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Warehouses
+     * @description List warehouses.
+     */
+    get: operations["list_warehouses_api_warehouses_get"];
+    put?: never;
+    /**
+     * Create Warehouse
+     * @description Create warehouse.
+     */
+    post: operations["create_warehouse_api_warehouses_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/warehouses/{warehouse_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Warehouse
+     * @description Get warehouse by code.
+     */
+    get: operations["get_warehouse_api_warehouses__warehouse_code__get"];
+    /**
+     * Update Warehouse
+     * @description Update warehouse.
+     */
+    put: operations["update_warehouse_api_warehouses__warehouse_code__put"];
+    post?: never;
+    /**
+     * Delete Warehouse
+     * @description Delete warehouse.
+     */
+    delete: operations["delete_warehouse_api_warehouses__warehouse_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/suppliers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Suppliers
+     * @description List suppliers.
+     */
+    get: operations["list_suppliers_api_suppliers_get"];
+    put?: never;
+    /**
+     * Create Supplier
+     * @description Create supplier.
+     */
+    post: operations["create_supplier_api_suppliers_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/suppliers/{supplier_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Supplier
+     * @description Get supplier by code.
+     */
+    get: operations["get_supplier_api_suppliers__supplier_code__get"];
+    /**
+     * Update Supplier
+     * @description Update supplier.
+     */
+    put: operations["update_supplier_api_suppliers__supplier_code__put"];
+    post?: never;
+    /**
+     * Delete Supplier
+     * @description Delete supplier.
+     */
+    delete: operations["delete_supplier_api_suppliers__supplier_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/customers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Customers
+     * @description Return customers.
+     */
+    get: operations["list_customers_api_customers_get"];
+    put?: never;
+    /**
+     * Create Customer
+     * @description Create a new customer.
+     */
+    post: operations["create_customer_api_customers_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/customers/{customer_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Customer
+     * @description Fetch a customer by code.
+     */
+    get: operations["get_customer_api_customers__customer_code__get"];
+    /**
+     * Update Customer
+     * @description Update a customer.
+     */
+    put: operations["update_customer_api_customers__customer_code__put"];
+    post?: never;
+    /**
+     * Delete Customer
+     * @description Delete a customer.
+     */
+    delete: operations["delete_customer_api_customers__customer_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/products": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Products
+     * @description Return a paginated list of products.
+     */
+    get: operations["list_products_api_products_get"];
+    put?: never;
+    /**
+     * Create Product
+     * @description Create a new product.
+     */
+    post: operations["create_product_api_products_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/products/{product_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Product
+     * @description Fetch a product by its code (maker_part_code).
+     */
+    get: operations["get_product_api_products__product_code__get"];
+    /**
+     * Update Product
+     * @description Update an existing product (by maker_part_code).
+     */
+    put: operations["update_product_api_products__product_code__put"];
+    post?: never;
+    /**
+     * Delete Product
+     * @description Delete a product by its code (maker_part_code).
+     */
+    delete: operations["delete_product_api_products__product_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/customer-items": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Customer Items
+     * @description 得意先品番マッピング一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         customer_id: 得意先IDでフィルタ（オプション）
+     *         product_id: 製品IDでフィルタ（オプション）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         得意先品番マッピングのリスト
+     */
+    get: operations["list_customer_items_api_customer_items_get"];
+    put?: never;
+    /**
+     * Create Customer Item
+     * @description 得意先品番マッピング登録.
+     *
+     *     Args:
+     *         item: 登録する品番マッピング情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         登録された品番マッピング
+     *
+     *     Raises:
+     *         HTTPException: 既に同じマッピングが存在する場合
+     */
+    post: operations["create_customer_item_api_customer_items_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/customer-items/{customer_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Customer Items By Customer
+     * @description 特定得意先の品番マッピング一覧取得.
+     *
+     *     Args:
+     *         customer_id: 得意先ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         該当得意先の品番マッピングリスト
+     */
+    get: operations["list_customer_items_by_customer_api_customer_items__customer_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/customer-items/{customer_id}/{external_product_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Customer Item
+     * @description 得意先品番マッピング更新.
+     *
+     *     Args:
+     *         customer_id: 得意先ID
+     *         external_product_code: 得意先品番
+     *         item: 更新する品番マッピング情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         更新された品番マッピング
+     *
+     *     Raises:
+     *         HTTPException: マッピングが存在しない場合
+     */
+    put: operations["update_customer_item_api_customer_items__customer_id___external_product_code__put"];
+    post?: never;
+    /**
+     * Delete Customer Item
+     * @description 得意先品番マッピング削除.
+     *
+     *     Args:
+     *         customer_id: 得意先ID
+     *         external_product_code: 得意先品番
+     *         db: データベースセッション
+     *
+     *     Raises:
+     *         HTTPException: マッピングが存在しない場合
+     */
+    delete: operations["delete_customer_item_api_customer_items__customer_id___external_product_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Users
+     * @description ユーザー一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         is_active: 有効フラグでフィルタ（オプション）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         ユーザーのリスト
+     */
+    get: operations["list_users_api_users_get"];
+    put?: never;
+    /**
+     * Create User
+     * @description ユーザー作成.
+     *
+     *     Args:
+     *         user: 作成するユーザー情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成されたユーザー
+     *
+     *     Raises:
+     *         HTTPException: ユーザー名またはメールアドレスが既に存在する場合
+     */
+    post: operations["create_user_api_users_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/users/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get User
+     * @description ユーザー詳細取得.
+     *
+     *     Args:
+     *         user_id: ユーザーID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         ユーザー詳細（ロール情報含む）
+     *
+     *     Raises:
+     *         HTTPException: ユーザーが存在しない場合
+     */
+    get: operations["get_user_api_users__user_id__get"];
+    /**
+     * Update User
+     * @description ユーザー更新.
+     *
+     *     Args:
+     *         user_id: ユーザーID
+     *         user: 更新するユーザー情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         更新されたユーザー
+     *
+     *     Raises:
+     *         HTTPException: ユーザーが存在しない場合
+     */
+    put: operations["update_user_api_users__user_id__put"];
+    post?: never;
+    /**
+     * Delete User
+     * @description ユーザー削除.
+     *
+     *     Args:
+     *         user_id: ユーザーID
+     *         db: データベースセッション
+     *
+     *     Raises:
+     *         HTTPException: ユーザーが存在しない場合
+     */
+    delete: operations["delete_user_api_users__user_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/users/{user_id}/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Assign User Roles
+     * @description ユーザーへのロール割当.
+     *
+     *     Args:
+     *         user_id: ユーザーID
+     *         assignment: 割り当てるロールID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         ロール割り当て後のユーザー情報
+     *
+     *     Raises:
+     *         HTTPException: ユーザーが存在しない場合
+     */
+    patch: operations["assign_user_roles_api_users__user_id__roles_patch"];
+    trace?: never;
+  };
+  "/api/roles": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Roles
+     * @description ロール一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         ロールのリスト
+     */
+    get: operations["list_roles_api_roles_get"];
+    put?: never;
+    /**
+     * Create Role
+     * @description ロール作成.
+     *
+     *     Args:
+     *         role: 作成するロール情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成されたロール
+     *
+     *     Raises:
+     *         HTTPException: ロールコードが既に存在する場合
+     */
+    post: operations["create_role_api_roles_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/roles/{role_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Role
+     * @description ロール詳細取得.
+     *
+     *     Args:
+     *         role_id: ロールID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         ロール詳細
+     *
+     *     Raises:
+     *         HTTPException: ロールが存在しない場合
+     */
+    get: operations["get_role_api_roles__role_id__get"];
+    /**
+     * Update Role
+     * @description ロール更新.
+     *
+     *     Args:
+     *         role_id: ロールID
+     *         role: 更新するロール情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         更新されたロール
+     *
+     *     Raises:
+     *         HTTPException: ロールが存在しない場合
+     */
+    put: operations["update_role_api_roles__role_id__put"];
+    post?: never;
+    /**
+     * Delete Role
+     * @description ロール削除.
+     *
+     *     Args:
+     *         role_id: ロールID
+     *         db: データベースセッション
+     *
+     *     Raises:
+     *         HTTPException: ロールが存在しない場合、またはロールが使用中の場合
+     */
+    delete: operations["delete_role_api_roles__role_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/stats": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Dashboard Stats
+     * @description ダッシュボード用の統計情報を返す.
+     *
+     *     在庫総数は lots.current_quantity の合計値を使用。
+     *     lot_current_stock ビューは使用しない（v2.2 以降は廃止）。
+     */
+    get: operations["get_dashboard_stats_api_admin_stats_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/reset-database": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset Database
+     * @description データベースリセット（開発環境のみ）
+     *     - テーブル構造は保持したまま、全データを削除
+     *     - alembic_versionは保持（マイグレーション履歴を維持）
+     *     - TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.
+     */
+    post: operations["reset_database_api_admin_reset_database_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/seeds": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Seeds
+     * @description シードデータ生成（UPSERT方式）.
+     *
+     *     - 既存データに追加する形でサンプルデータを投入
+     *     - UPSERT（ON CONFLICT DO NOTHING）で重複を防止
+     *     - dry_run=true で投入前のサマリのみ確認可能
+     */
+    post: operations["create_seeds_api_admin_seeds_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/diagnostics/allocatable-lots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Allocatable Lots
+     * @description 診断API: 引当可能ロット一覧（読み取り専用）.
+     *
+     *     v2.2: v_lot_details ビューを使用して在庫情報を取得。
+     *     lot_current_stock ビューは廃止。
+     *
+     *     Args:
+     *         prod: 製品コード（任意フィルタ）
+     *         wh: 倉庫コード（任意フィルタ）
+     *         limit: 最大取得件数（デフォルト100）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         CandidateLotsResponse: 引当可能ロット一覧
+     *
+     *     Note:
+     *         - 読み取り専用トランザクション
+     *         - available_quantity > 0 のみ
+     *         - 期限切れは除外
+     */
+    get: operations["get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/healthcheck/db-counts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Db Counts
+     * @description 各テーブルのレコード件数を返す.
+     *
+     *     Returns:
+     *         dict: テーブル名をキー、件数を値とする辞書
+     */
+    get: operations["get_db_counts_api_admin_healthcheck_db_counts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/healthcheck/masters": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Masters Health
+     * @description マスタテーブルのヘルスチェック.
+     *
+     *     Returns:
+     *         dict: 各マスタテーブルの件数とサンプルデータ（先頭5件のコード）
+     */
+    get: operations["get_masters_health_api_admin_healthcheck_masters_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/simulate-seed-data": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Simulate Seed Data
+     * @description テストデータシミュレーションを開始.
+     *
+     *     - Reset → Insert を一括実行
+     *     - バックグラウンドでジョブを起動
+     *     - task_id を返す
+     */
+    post: operations["simulate_seed_data_api_admin_simulate_seed_data_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/simulate-progress/{task_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Simulate Progress
+     * @description テストデータシミュレーションの進捗を取得.
+     *
+     *     - ポーリングJSONで進捗を返す（3〜5秒間隔でクライアントが呼び出す想定）
+     */
+    get: operations["get_simulate_progress_api_admin_simulate_progress__task_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/simulate-result/{task_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Simulate Result
+     * @description テストデータシミュレーションの結果を取得.
+     *
+     *     - 完了サマリを返す
+     */
+    get: operations["get_simulate_result_api_admin_simulate_result__task_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/seed-snapshots": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Seed Snapshots
+     * @description スナップショット一覧を取得.
+     */
+    get: operations["list_seed_snapshots_api_admin_seed_snapshots_get"];
+    put?: never;
+    /**
+     * Create Seed Snapshot
+     * @description スナップショットを手動作成.
+     */
+    post: operations["create_seed_snapshot_api_admin_seed_snapshots_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/seed-snapshots/{snapshot_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Delete Seed Snapshot
+     * @description スナップショットを削除.
+     */
+    delete: operations["delete_seed_snapshot_api_admin_seed_snapshots__snapshot_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/seed-snapshots/{snapshot_id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Seed Snapshot
+     * @description スナップショットから復元.
+     *
+     *     - 保存されたパラメータで Reset → Insert を実行
+     *     - task_id を返す
+     */
+    post: operations["restore_seed_snapshot_api_admin_seed_snapshots__snapshot_id__restore_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/test-data/generate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Generate Test Data Endpoint
+     * @description Generate test data for development.
+     *     WARNING: This will DELETE all existing data in related tables.
+     */
+    post: operations["generate_test_data_endpoint_api_admin_test_data_generate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/healthz": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Healthz */
+    get: operations["healthz_api_healthz_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/readyz": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Readyz */
+    get: operations["readyz_api_readyz_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/health": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Health */
+    get: operations["health_api_health_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/operation-logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Operation Logs
+     * @description 操作ログ一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         user_id: ユーザーIDでフィルタ（オプション）
+     *         operation_type: 操作種別でフィルタ（オプション）
+     *         target_table: 対象テーブル名でフィルタ（オプション）
+     *         start_date: 開始日時（オプション）
+     *         end_date: 終了日時（オプション）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         操作ログのリスト（ページネーション付き）
+     */
+    get: operations["list_operation_logs_api_operation_logs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/operation-logs/{log_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Operation Log
+     * @description 操作ログ詳細取得.
+     *
+     *     Args:
+     *         log_id: ログID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         操作ログ詳細
+     *
+     *     Raises:
+     *         HTTPException: ログが存在しない場合
+     */
+    get: operations["get_operation_log_api_operation_logs__log_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/master-change-logs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Master Change Logs
+     * @description マスタ変更履歴一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         table_name: テーブル名でフィルタ（オプション）
+     *         record_id: レコードIDでフィルタ（オプション）
+     *         change_type: 変更種別でフィルタ（オプション）
+     *         changed_by: 変更者でフィルタ（オプション）
+     *         start_date: 開始日時（オプション）
+     *         end_date: 終了日時（オプション）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         マスタ変更履歴のリスト（ページネーション付き）
+     */
+    get: operations["list_master_change_logs_api_master_change_logs_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/master-change-logs/{change_log_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Master Change Log
+     * @description マスタ変更履歴詳細取得.
+     *
+     *     Args:
+     *         change_log_id: 変更ログID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         マスタ変更履歴詳細
+     *
+     *     Raises:
+     *         HTTPException: ログが存在しない場合
+     */
+    get: operations["get_master_change_log_api_master_change_logs__change_log_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/master-change-logs/record/{table_name}/{record_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Master Change Logs By Record
+     * @description 特定レコードのマスタ変更履歴取得.
+     *
+     *     Args:
+     *         table_name: テーブル名
+     *         record_id: レコードID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         マスタ変更履歴のリスト（降順）
+     */
+    get: operations["get_master_change_logs_by_record_api_master_change_logs_record__table_name___record_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/business-rules": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Business Rules
+     * @description 業務ルール一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         rule_type: ルール種別でフィルタ（オプション）
+     *         is_active: 有効フラグでフィルタ（オプション）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         業務ルールのリスト
+     */
+    get: operations["list_business_rules_api_business_rules_get"];
+    put?: never;
+    /**
+     * Create Business Rule
+     * @description 業務ルール作成.
+     *
+     *     Args:
+     *         rule: 作成する業務ルール情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成された業務ルール
+     *
+     *     Raises:
+     *         HTTPException: ルールコードが重複している場合
+     */
+    post: operations["create_business_rule_api_business_rules_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/business-rules/{rule_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Business Rule
+     * @description 業務ルール詳細取得（ID指定）.
+     *
+     *     Args:
+     *         rule_id: ルールID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         業務ルール詳細
+     *
+     *     Raises:
+     *         HTTPException: ルールが存在しない場合
+     */
+    get: operations["get_business_rule_api_business_rules__rule_id__get"];
+    /**
+     * Update Business Rule
+     * @description 業務ルール更新（ID指定）.
+     *
+     *     Args:
+     *         rule_id: ルールID
+     *         rule: 更新する業務ルール情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         更新された業務ルール
+     *
+     *     Raises:
+     *         HTTPException: ルールが存在しない場合
+     */
+    put: operations["update_business_rule_api_business_rules__rule_id__put"];
+    post?: never;
+    /**
+     * Delete Business Rule
+     * @description 業務ルール削除.
+     *
+     *     Args:
+     *         rule_id: ルールID
+     *         db: データベースセッション
+     *
+     *     Raises:
+     *         HTTPException: ルールが存在しない場合
+     */
+    delete: operations["delete_business_rule_api_business_rules__rule_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/business-rules/code/{rule_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Business Rule By Code
+     * @description 業務ルール詳細取得（コード指定）.
+     *
+     *     Args:
+     *         rule_code: ルールコード
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         業務ルール詳細
+     *
+     *     Raises:
+     *         HTTPException: ルールが存在しない場合
+     */
+    get: operations["get_business_rule_by_code_api_business_rules_code__rule_code__get"];
+    /**
+     * Update Business Rule By Code
+     * @description 業務ルール更新（コード指定）.
+     *
+     *     Args:
+     *         rule_code: ルールコード
+     *         rule: 更新する業務ルール情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         更新された業務ルール
+     *
+     *     Raises:
+     *         HTTPException: ルールが存在しない場合
+     */
+    put: operations["update_business_rule_by_code_api_business_rules_code__rule_code__put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/business-rules/{rule_id}/toggle": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Toggle Business Rule Active
+     * @description 業務ルール有効/無効切り替え.
+     *
+     *     Args:
+     *         rule_id: ルールID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         更新された業務ルール
+     *
+     *     Raises:
+     *         HTTPException: ルールが存在しない場合
+     */
+    patch: operations["toggle_business_rule_active_api_business_rules__rule_id__toggle_patch"];
+    trace?: never;
+  };
+  "/api/batch-jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Batch Jobs
+     * @description バッチジョブ一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         job_type: ジョブ種別でフィルタ（オプション）
+     *         status: ステータスでフィルタ（オプション）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         バッチジョブのリスト（ページネーション付き）
+     */
+    get: operations["list_batch_jobs_api_batch_jobs_get"];
+    put?: never;
+    /**
+     * Create Batch Job
+     * @description バッチジョブ作成.
+     *
+     *     Args:
+     *         job: 作成するバッチジョブ情報
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成されたバッチジョブ
+     */
+    post: operations["create_batch_job_api_batch_jobs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/batch-jobs/{job_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Batch Job
+     * @description バッチジョブ詳細取得.
+     *
+     *     Args:
+     *         job_id: ジョブID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         バッチジョブ詳細
+     *
+     *     Raises:
+     *         HTTPException: ジョブが存在しない場合
+     */
+    get: operations["get_batch_job_api_batch_jobs__job_id__get"];
+    put?: never;
+    post?: never;
+    /**
+     * Delete Batch Job
+     * @description バッチジョブ削除.
+     *
+     *     Args:
+     *         job_id: ジョブID
+     *         db: データベースセッション
+     *
+     *     Raises:
+     *         HTTPException: ジョブが存在しない場合
+     */
+    delete: operations["delete_batch_job_api_batch_jobs__job_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/batch-jobs/{job_id}/execute": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Batch Job
+     * @description バッチジョブ実行.
+     *
+     *     注意: これはスタブ実装です。本番環境では、非同期ジョブキュー（Celery、RQ等）を使用してください。
+     *
+     *     Args:
+     *         job_id: ジョブID
+     *         request: 実行リクエスト（パラメータ上書き可能）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         実行結果
+     *
+     *     Raises:
+     *         HTTPException: ジョブが存在しない場合
+     */
+    post: operations["execute_batch_job_api_batch_jobs__job_id__execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/batch-jobs/{job_id}/cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel Batch Job
+     * @description バッチジョブキャンセル.
+     *
+     *     Args:
+     *         job_id: ジョブID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         キャンセルされたバッチジョブ
+     *
+     *     Raises:
+     *         HTTPException: ジョブが存在しないか、キャンセルできない状態の場合
+     */
+    post: operations["cancel_batch_job_api_batch_jobs__job_id__cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Root
+     * @description ルートエンドポイント.
+     */
+    get: operations["root__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        /**
-         * ActualCounts
-         * @description 実際のDB件数（投入後）.
-         */
-        ActualCounts: {
-            /** Customers */
-            customers: number;
-            /** Suppliers */
-            suppliers: number;
-            /** Delivery Places */
-            delivery_places: number;
-            /** Products */
-            products: number;
-            /** Warehouses */
-            warehouses: number;
-            /** Lots */
-            lots: number;
-            /** Stock Movements */
-            stock_movements: number;
-            /** Orders */
-            orders: number;
-            /** Order Lines */
-            order_lines: number;
-            /** Allocations */
-            allocations: number;
-        };
-        /**
-         * AdjustmentCreate
-         * @description Payload for recording adjustments.
-         */
-        AdjustmentCreate: {
-            /** Lot Id */
-            lot_id: number;
-            adjustment_type: components["schemas"]["AdjustmentType"];
-            /** Adjusted Quantity */
-            adjusted_quantity: number | string;
-            /** Reason */
-            reason: string;
-            /** Adjusted By */
-            adjusted_by: number;
-        };
-        /**
-         * AdjustmentResponse
-         * @description API response model for adjustments.
-         */
-        AdjustmentResponse: {
-            /** Lot Id */
-            lot_id: number;
-            adjustment_type: components["schemas"]["AdjustmentType"];
-            /** Adjusted Quantity */
-            adjusted_quantity: string;
-            /** Reason */
-            reason: string;
-            /** Adjusted By */
-            adjusted_by: number;
-            /** Adjustment Id */
-            adjustment_id: number;
-            /**
-             * Adjusted At
-             * Format: date-time
-             */
-            adjusted_at: string;
-        };
-        /**
-         * AdjustmentType
-         * @description Allowed adjustment reason codes.
-         * @enum {string}
-         */
-        AdjustmentType: "physical_count" | "damage" | "loss" | "found" | "other";
-        /**
-         * AlertItem
-         * @description Represents a single alert item.
-         *
-         *     Attributes:
-         *         id: Unique identifier for the alert
-         *         category: Alert category (order, inventory, lot, forecast)
-         *         type: Specific alert type code (e.g., 'UNFORECASTED_ORDER_STALE')
-         *         severity: Alert severity level
-         *         title: Short description displayed in alert list
-         *         message: Detailed explanation (optional)
-         *         occurred_at: When the alert condition was detected
-         *         target: Resource this alert is about (for navigation)
-         * @example {
-         *       "category": "order",
-         *       "id": "alert_order_12345_20231124",
-         *       "message": "受注番号 ORD-12345 はフォーキャストに紐づいておらず、30分以上未処理です。",
-         *       "occurred_at": "2023-11-24T10:30:00Z",
-         *       "severity": "critical",
-         *       "target": {
-         *         "id": 12345,
-         *         "resource_type": "order"
-         *       },
-         *       "title": "無予測受注が30分以上未処理",
-         *       "type": "UNFORECASTED_ORDER_STALE"
-         *     }
-         */
-        AlertItem: {
-            /**
-             * Id
-             * @description Unique alert identifier
-             */
-            id: string;
-            /**
-             * Category
-             * @description Alert category
-             * @enum {string}
-             */
-            category: "order" | "inventory" | "lot" | "forecast";
-            /**
-             * Type
-             * @description Specific alert type code
-             */
-            type: string;
-            /**
-             * Severity
-             * @description Alert severity level
-             * @enum {string}
-             */
-            severity: "info" | "warning" | "critical";
-            /**
-             * Title
-             * @description Short alert description
-             */
-            title: string;
-            /**
-             * Message
-             * @description Detailed explanation
-             * @default
-             */
-            message: string;
-            /**
-             * Occurred At
-             * Format: date-time
-             * @description Alert occurrence timestamp
-             */
-            occurred_at: string;
-            /**
-             * Target
-             * @description Target resource for navigation
-             */
-            target: components["schemas"]["AlertTargetOrder"] | components["schemas"]["AlertTargetInventoryItem"] | components["schemas"]["AlertTargetLot"] | components["schemas"]["AlertTargetForecastDaily"];
-        };
-        /**
-         * AlertSummaryResponse
-         * @description Summary of alert counts by severity and category.
-         *
-         *     Attributes:
-         *         total: Total number of alerts
-         *         by_severity: Count of alerts grouped by severity
-         *         by_category: Count of alerts grouped by category
-         * @example {
-         *       "by_category": {
-         *         "forecast": 5,
-         *         "inventory": 7,
-         *         "lot": 6,
-         *         "order": 5
-         *       },
-         *       "by_severity": {
-         *         "critical": 3,
-         *         "info": 8,
-         *         "warning": 12
-         *       },
-         *       "total": 23
-         *     }
-         */
-        AlertSummaryResponse: {
-            /**
-             * Total
-             * @description Total alert count
-             */
-            total: number;
-            /**
-             * By Severity
-             * @description Alert counts by severity
-             */
-            by_severity?: {
-                [key: string]: number;
-            };
-            /**
-             * By Category
-             * @description Alert counts by category
-             */
-            by_category?: {
-                [key: string]: number;
-            };
-        };
-        /**
-         * AlertTargetForecastDaily
-         * @description Alert target for daily forecast resources.
-         */
-        AlertTargetForecastDaily: {
-            /**
-             * Resource Type
-             * @default forecast_daily
-             * @constant
-             */
-            resource_type: "forecast_daily";
-            /** Id */
-            id: number;
-        };
-        /**
-         * AlertTargetInventoryItem
-         * @description Alert target for inventory item resources.
-         */
-        AlertTargetInventoryItem: {
-            /**
-             * Resource Type
-             * @default inventory_item
-             * @constant
-             */
-            resource_type: "inventory_item";
-            /** Id */
-            id: number;
-        };
-        /**
-         * AlertTargetLot
-         * @description Alert target for lot resources.
-         */
-        AlertTargetLot: {
-            /**
-             * Resource Type
-             * @default lot
-             * @constant
-             */
-            resource_type: "lot";
-            /** Id */
-            id: number;
-        };
-        /**
-         * AlertTargetOrder
-         * @description Alert target for order resources.
-         */
-        AlertTargetOrder: {
-            /**
-             * Resource Type
-             * @default order
-             * @constant
-             */
-            resource_type: "order";
-            /** Id */
-            id: number;
-        };
-        /**
-         * AllocationCommitRequest
-         * @description Allocation commit request (v2.2.1).
-         */
-        AllocationCommitRequest: {
-            /** Order Id */
-            order_id: number;
-        };
-        /**
-         * AllocationCommitResponse
-         * @description Allocation commit response (v2.2.1).
-         */
-        AllocationCommitResponse: {
-            /** Order Id */
-            order_id: number;
-            /** Created Allocation Ids */
-            created_allocation_ids?: number[];
-            preview?: components["schemas"]["FefoPreviewResponse"] | null;
-            /**
-             * Status
-             * @default committed
-             */
-            status: string;
-            /** Message */
-            message?: string | null;
-        };
-        /**
-         * AllocationGap
-         * @description 不足情報.
-         */
-        AllocationGap: {
-            /** Customer Id */
-            customer_id: number;
-            /** Delivery Place Id */
-            delivery_place_id: number;
-            /** Product Id */
-            product_id: number;
-            /** Forecast Period */
-            forecast_period: string;
-            /** Shortage Quantity */
-            shortage_quantity: string;
-            /** Related Order Line Ids */
-            related_order_line_ids?: number[] | null;
-        };
-        /** AllocationOptions */
-        AllocationOptions: {
-            /**
-             * Allocation Type
-             * @default soft
-             * @enum {string}
-             */
-            allocation_type: "soft" | "hard";
-            /**
-             * Fefo
-             * @default true
-             */
-            fefo: boolean;
-            /**
-             * Allow Cross Warehouse
-             * @default false
-             */
-            allow_cross_warehouse: boolean;
-            /**
-             * Ignore Existing Suggestions
-             * @default false
-             */
-            ignore_existing_suggestions: boolean;
-        };
-        /**
-         * AllocationResponse
-         * @description Allocation response for order line (DDL: allocations).
-         */
-        AllocationResponse: {
-            /** Id */
-            id: number;
-            /** Order Line Id */
-            order_line_id: number;
-            /** Lot Id */
-            lot_id: number;
-            /** Allocated Quantity */
-            allocated_quantity: string;
-            /** Status */
-            status: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /** AllocationScopeForecast */
-        AllocationScopeForecast: {
-            /** Forecast Periods */
-            forecast_periods: string[];
-            /** Customer Ids */
-            customer_ids?: number[] | null;
-            /** Delivery Place Ids */
-            delivery_place_ids?: number[] | null;
-            /** Product Ids */
-            product_ids?: number[] | null;
-        };
-        /** AllocationScopeOrder */
-        AllocationScopeOrder: {
-            /** Order Line Id */
-            order_line_id: number;
-        };
-        /**
-         * AllocationStatsPerKey
-         * @description キーごとの集計結果.
-         */
-        AllocationStatsPerKey: {
-            /** Customer Id */
-            customer_id: number;
-            /** Delivery Place Id */
-            delivery_place_id: number;
-            /** Product Id */
-            product_id: number;
-            /** Forecast Period */
-            forecast_period: string;
-            /** Forecast Quantity */
-            forecast_quantity: string;
-            /** Allocated Quantity */
-            allocated_quantity: string;
-            /** Shortage Quantity */
-            shortage_quantity: string;
-        };
-        /**
-         * AllocationStatsSummary
-         * @description 全体集計.
-         */
-        AllocationStatsSummary: {
-            /** Total Forecast Quantity */
-            total_forecast_quantity: string;
-            /** Total Allocated Quantity */
-            total_allocated_quantity: string;
-            /** Total Shortage Quantity */
-            total_shortage_quantity: string;
-            /** Per Key */
-            per_key: components["schemas"]["AllocationStatsPerKey"][];
-        };
-        /**
-         * AllocationSuggestionListResponse
-         * @description 引当推奨一覧レスポンス.
-         */
-        AllocationSuggestionListResponse: {
-            /** Suggestions */
-            suggestions: components["schemas"]["AllocationSuggestionResponse"][];
-            /** Total */
-            total: number;
-        };
-        /**
-         * AllocationSuggestionPreviewResponse
-         * @description プレビュー/生成結果レスポンス.
-         */
-        AllocationSuggestionPreviewResponse: {
-            /** Suggestions */
-            suggestions: components["schemas"]["AllocationSuggestionResponse"][];
-            stats: components["schemas"]["AllocationStatsSummary"];
-            /** Gaps */
-            gaps: components["schemas"]["AllocationGap"][];
-        };
-        /**
-         * AllocationSuggestionRequest
-         * @description 引当推奨生成/プレビューリクエスト.
-         */
-        AllocationSuggestionRequest: {
-            /**
-             * Mode
-             * @enum {string}
-             */
-            mode: "forecast" | "order";
-            forecast_scope?: components["schemas"]["AllocationScopeForecast"] | null;
-            order_scope?: components["schemas"]["AllocationScopeOrder"] | null;
-            options?: components["schemas"]["AllocationOptions"];
-        };
-        /**
-         * AllocationSuggestionResponse
-         * @description 引当推奨レスポンス.
-         */
-        AllocationSuggestionResponse: {
-            /**
-             * Forecast Period
-             * @description 対象期間 (YYYY-MM)
-             */
-            forecast_period: string;
-            /**
-             * Customer Id
-             * @description 得意先ID
-             */
-            customer_id: number;
-            /**
-             * Delivery Place Id
-             * @description 納入先ID
-             */
-            delivery_place_id: number;
-            /**
-             * Product Id
-             * @description 製品ID
-             */
-            product_id: number;
-            /**
-             * Lot Id
-             * @description ロットID
-             */
-            lot_id: number;
-            /**
-             * Quantity
-             * @description 引当数量
-             */
-            quantity: string;
-            /**
-             * Allocation Type
-             * @description 引当タイプ
-             * @enum {string}
-             */
-            allocation_type: "soft" | "hard";
-            /**
-             * Source
-             * @description 発生源 (forecast_import / order_preview)
-             */
-            source: string;
-            /**
-             * Order Line Id
-             * @description オーダー明細ID (Preview時など)
-             */
-            order_line_id?: number | null;
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /**
-             * Lot Number
-             * @description ロット番号
-             */
-            lot_number?: string | null;
-            /**
-             * Lot Expiry Date
-             * @description ロット有効期限
-             */
-            lot_expiry_date?: string | null;
-            /**
-             * Warehouse Name
-             * @description 倉庫名
-             */
-            warehouse_name?: string | null;
-        };
-        /**
-         * BatchJobCreate
-         * @description バッチジョブ作成スキーマ.
-         */
-        BatchJobCreate: {
-            /**
-             * Job Name
-             * @description ジョブ名
-             */
-            job_name: string;
-            /**
-             * Job Type
-             * @description ジョブ種別（allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation）
-             */
-            job_type: string;
-            /**
-             * Parameters
-             * @description ジョブパラメータ（JSON）
-             */
-            parameters?: Record<string, never> | null;
-        };
-        /**
-         * BatchJobExecuteRequest
-         * @description バッチジョブ実行リクエスト.
-         */
-        BatchJobExecuteRequest: {
-            /**
-             * Parameters
-             * @description 実行時パラメータ（上書き）
-             */
-            parameters?: Record<string, never> | null;
-        };
-        /**
-         * BatchJobExecuteResponse
-         * @description バッチジョブ実行レスポンス.
-         */
-        BatchJobExecuteResponse: {
-            /** Job Id */
-            job_id: number;
-            /** Status */
-            status: string;
-            /** Message */
-            message: string;
-        };
-        /**
-         * BatchJobListResponse
-         * @description バッチジョブ一覧レスポンス.
-         */
-        BatchJobListResponse: {
-            /** Jobs */
-            jobs: components["schemas"]["BatchJobResponse"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-        };
-        /**
-         * BatchJobResponse
-         * @description バッチジョブレスポンス.
-         */
-        BatchJobResponse: {
-            /**
-             * Job Name
-             * @description ジョブ名
-             */
-            job_name: string;
-            /**
-             * Job Type
-             * @description ジョブ種別（allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation）
-             */
-            job_type: string;
-            /**
-             * Parameters
-             * @description ジョブパラメータ（JSON）
-             */
-            parameters?: Record<string, never> | null;
-            /** Job Id */
-            job_id: number;
-            /**
-             * Status
-             * @description ステータス（pending/running/completed/failed）
-             */
-            status: string;
-            /**
-             * Result Message
-             * @description 実行結果メッセージ
-             */
-            result_message?: string | null;
-            /**
-             * Started At
-             * @description 開始日時
-             */
-            started_at?: string | null;
-            /**
-             * Completed At
-             * @description 完了日時
-             */
-            completed_at?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             * @description 作成日時
-             */
-            created_at: string;
-        };
-        /**
-         * BusinessRuleCreate
-         * @description 業務ルール作成スキーマ.
-         */
-        BusinessRuleCreate: {
-            /**
-             * Rule Code
-             * @description ルールコード（一意）
-             */
-            rule_code: string;
-            /**
-             * Rule Name
-             * @description ルール名
-             */
-            rule_name: string;
-            /**
-             * Rule Type
-             * @description ルール種別（allocation/expiry_warning/kanban/other）
-             */
-            rule_type: string;
-            /**
-             * Rule Parameters
-             * @description ルールパラメータ（JSON）
-             */
-            rule_parameters: Record<string, never>;
-            /**
-             * Is Active
-             * @description 有効フラグ
-             * @default true
-             */
-            is_active: boolean;
-        };
-        /**
-         * BusinessRuleListResponse
-         * @description 業務ルール一覧レスポンス.
-         */
-        BusinessRuleListResponse: {
-            /** Rules */
-            rules: components["schemas"]["BusinessRuleResponse"][];
-            /** Total */
-            total: number;
-        };
-        /**
-         * BusinessRuleResponse
-         * @description 業務ルールレスポンス.
-         */
-        BusinessRuleResponse: {
-            /**
-             * Rule Code
-             * @description ルールコード（一意）
-             */
-            rule_code: string;
-            /**
-             * Rule Name
-             * @description ルール名
-             */
-            rule_name: string;
-            /**
-             * Rule Type
-             * @description ルール種別（allocation/expiry_warning/kanban/other）
-             */
-            rule_type: string;
-            /**
-             * Rule Parameters
-             * @description ルールパラメータ（JSON）
-             */
-            rule_parameters: Record<string, never>;
-            /**
-             * Is Active
-             * @description 有効フラグ
-             * @default true
-             */
-            is_active: boolean;
-            /** Rule Id */
-            rule_id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * BusinessRuleUpdate
-         * @description 業務ルール更新スキーマ.
-         */
-        BusinessRuleUpdate: {
-            /**
-             * Rule Name
-             * @description ルール名
-             */
-            rule_name?: string | null;
-            /**
-             * Rule Type
-             * @description ルール種別
-             */
-            rule_type?: string | null;
-            /**
-             * Rule Parameters
-             * @description ルールパラメータ（JSON）
-             */
-            rule_parameters?: Record<string, never> | null;
-            /**
-             * Is Active
-             * @description 有効フラグ
-             */
-            is_active?: boolean | null;
-        };
-        /**
-         * CandidateLotItem
-         * @description Candidate lot item (DDL: lots).
-         */
-        CandidateLotItem: {
-            /** Lot Id */
-            lot_id: number;
-            /** Lot Number */
-            lot_number: string;
-            /** Current Quantity */
-            current_quantity: string;
-            /** Allocated Quantity */
-            allocated_quantity: string;
-            /**
-             * Available Quantity
-             * @description 引当可能数量
-             */
-            available_quantity: string;
-            /** Product Id */
-            product_id: number;
-            /** Warehouse Id */
-            warehouse_id: number;
-            /** Warehouse Code */
-            warehouse_code?: string | null;
-            /** Warehouse Name */
-            warehouse_name?: string | null;
-            /** Expiry Date */
-            expiry_date?: string | null;
-            /** Received Date */
-            received_date?: string | null;
-            /** Delivery Place Id */
-            delivery_place_id?: number | null;
-            /** Delivery Place Name */
-            delivery_place_name?: string | null;
-            /** Internal Unit */
-            internal_unit?: string | null;
-            /** External Unit */
-            external_unit?: string | null;
-            /** Qty Per Internal Unit */
-            qty_per_internal_unit?: number | null;
-            /**
-             * Status
-             * @default active
-             */
-            status: string;
-            /** Lock Reason */
-            lock_reason?: string | null;
-        };
-        /**
-         * CandidateLotsResponse
-         * @description Candidate lots list response.
-         */
-        CandidateLotsResponse: {
-            /** Items */
-            items?: components["schemas"]["CandidateLotItem"][];
-            /**
-             * Total
-             * @default 0
-             */
-            total: number;
-        };
-        /**
-         * CapCheckResult
-         * @description 上限チェック結果.
-         */
-        CapCheckResult: {
-            /**
-             * Lot Split
-             * @description ロット分割チェック（OK/NG）
-             */
-            lot_split: string;
-            /**
-             * Destinations
-             * @description 納品先数チェック（OK/NG）
-             */
-            destinations: string;
-            /**
-             * Order Lines
-             * @description 受注明細行チェック（OK/NG）
-             */
-            order_lines: string;
-        };
-        /**
-         * CustomerCreate
-         * @description Create customer request.
-         */
-        CustomerCreate: {
-            /** Customer Code */
-            customer_code: string;
-            /** Customer Name */
-            customer_name: string;
-        };
-        /**
-         * CustomerItemCreate
-         * @description Schema for creating a customer item mapping.
-         */
-        CustomerItemCreate: {
-            /**
-             * Customer Id
-             * @description 得意先ID
-             */
-            customer_id: number;
-            /**
-             * External Product Code
-             * @description 得意先品番
-             */
-            external_product_code: string;
-            /**
-             * Product Id
-             * @description 製品ID
-             */
-            product_id: number;
-            /**
-             * Supplier Id
-             * @description 仕入先ID
-             */
-            supplier_id?: number | null;
-            /**
-             * Base Unit
-             * @description 基本単位
-             */
-            base_unit: string;
-            /**
-             * Pack Unit
-             * @description 梱包単位
-             */
-            pack_unit?: string | null;
-            /**
-             * Pack Quantity
-             * @description 梱包数量
-             */
-            pack_quantity?: number | null;
-            /**
-             * Special Instructions
-             * @description 特記事項
-             */
-            special_instructions?: string | null;
-        };
-        /**
-         * CustomerItemResponse
-         * @description Schema for customer item response.
-         */
-        CustomerItemResponse: {
-            /**
-             * Customer Id
-             * @description 得意先ID
-             */
-            customer_id: number;
-            /**
-             * External Product Code
-             * @description 得意先品番
-             */
-            external_product_code: string;
-            /**
-             * Product Id
-             * @description 製品ID
-             */
-            product_id: number;
-            /**
-             * Supplier Id
-             * @description 仕入先ID
-             */
-            supplier_id?: number | null;
-            /**
-             * Base Unit
-             * @description 基本単位
-             */
-            base_unit: string;
-            /**
-             * Pack Unit
-             * @description 梱包単位
-             */
-            pack_unit?: string | null;
-            /**
-             * Pack Quantity
-             * @description 梱包数量
-             */
-            pack_quantity?: number | null;
-            /**
-             * Special Instructions
-             * @description 特記事項
-             */
-            special_instructions?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * CustomerItemUpdate
-         * @description Schema for updating a customer item mapping.
-         */
-        CustomerItemUpdate: {
-            /**
-             * Product Id
-             * @description 製品ID
-             */
-            product_id?: number | null;
-            /**
-             * Supplier Id
-             * @description 仕入先ID
-             */
-            supplier_id?: number | null;
-            /**
-             * Base Unit
-             * @description 基本単位
-             */
-            base_unit?: string | null;
-            /**
-             * Pack Unit
-             * @description 梱包単位
-             */
-            pack_unit?: string | null;
-            /**
-             * Pack Quantity
-             * @description 梱包数量
-             */
-            pack_quantity?: number | null;
-            /**
-             * Special Instructions
-             * @description 特記事項
-             */
-            special_instructions?: string | null;
-        };
-        /**
-         * CustomerResponse
-         * @description Customer response (DDL: customers).
-         */
-        CustomerResponse: {
-            /** Customer Code */
-            customer_code: string;
-            /** Customer Name */
-            customer_name: string;
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * CustomerUpdate
-         * @description Update customer request.
-         */
-        CustomerUpdate: {
-            /** Customer Name */
-            customer_name?: string | null;
-        };
-        /**
-         * DashboardStatsResponse
-         * @description ダッシュボード統計レスポンス.
-         */
-        DashboardStatsResponse: {
-            /** Total Stock */
-            total_stock: number;
-            /** Total Orders */
-            total_orders: number;
-            /** Unallocated Orders */
-            unallocated_orders: number;
-            /** Allocation Rate */
-            allocation_rate: number;
-        };
-        /**
-         * DragAssignRequest
-         * @description Deprecated: Use ManualAllocationRequest instead.
-         */
-        DragAssignRequest: {
-            /** Order Line Id */
-            order_line_id: number;
-            /** Lot Id */
-            lot_id: number;
-            /** Allocated Quantity */
-            allocated_quantity?: number | string | null;
-            /**
-             * Allocate Qty
-             * @description Deprecated: use allocated_quantity
-             */
-            allocate_qty?: number | string | null;
-        };
-        /**
-         * DragAssignResponse
-         * @description Deprecated: Use ManualAllocationResponse instead.
-         */
-        DragAssignResponse: {
-            /** Success */
-            success: boolean;
-            /** Message */
-            message: string;
-            /** Allocation Id */
-            allocation_id: number;
-            /** Remaining Lot Qty */
-            remaining_lot_qty?: string | null;
-        };
-        /**
-         * ExpectedLotCreate
-         * @description Payload for creating expected lots.
-         */
-        ExpectedLotCreate: {
-            /** Inbound Plan Line Id */
-            inbound_plan_line_id: number;
-            /** Expected Lot Number */
-            expected_lot_number?: string | null;
-            /** Expected Quantity */
-            expected_quantity: number | string;
-            /** Expected Expiry Date */
-            expected_expiry_date?: string | null;
-        };
-        /**
-         * ExpectedLotResponse
-         * @description Response model for expected lots.
-         */
-        ExpectedLotResponse: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Updated At */
-            updated_at?: string | null;
-            /** Inbound Plan Line Id */
-            inbound_plan_line_id: number;
-            /** Expected Lot Number */
-            expected_lot_number?: string | null;
-            /** Expected Quantity */
-            expected_quantity: string;
-            /** Expected Expiry Date */
-            expected_expiry_date?: string | null;
-            /** Expected Lot Id */
-            expected_lot_id: number;
-        };
-        /**
-         * FefoLineAllocation
-         * @description FEFO line allocation detail.
-         */
-        FefoLineAllocation: {
-            /** Order Line Id */
-            order_line_id: number;
-            /** Product Id */
-            product_id: number;
-            /**
-             * Order Quantity
-             * @description 受注数量
-             */
-            order_quantity: string;
-            /**
-             * Already Allocated Quantity
-             * @description 既存引当数量
-             * @default 0
-             */
-            already_allocated_quantity: string;
-            /** Allocations */
-            allocations?: components["schemas"]["FefoLotAllocation"][];
-            /** Warnings */
-            warnings?: string[];
-        };
-        /**
-         * FefoLotAllocation
-         * @description FEFO lot allocation detail.
-         */
-        FefoLotAllocation: {
-            /** Lot Id */
-            lot_id: number;
-            /** Lot Number */
-            lot_number: string;
-            /**
-             * Allocated Quantity
-             * @description 引当数量
-             */
-            allocated_quantity: string;
-            /** Expiry Date */
-            expiry_date?: string | null;
-            /** Received Date */
-            received_date?: string | null;
-        };
-        /**
-         * FefoPreviewRequest
-         * @description FEFO preview request.
-         */
-        FefoPreviewRequest: {
-            /** Order Id */
-            order_id: number;
-        };
-        /**
-         * FefoPreviewResponse
-         * @description FEFO preview response.
-         */
-        FefoPreviewResponse: {
-            /** Order Id */
-            order_id: number;
-            /** Lines */
-            lines?: components["schemas"]["FefoLineAllocation"][];
-            /** Warnings */
-            warnings?: string[];
-        };
-        /**
-         * ForecastBulkImportItem
-         * @description Single item for bulk import.
-         */
-        ForecastBulkImportItem: {
-            /** Customer Code */
-            customer_code: string;
-            /** Delivery Place Code */
-            delivery_place_code: string;
-            /** Product Code */
-            product_code: string;
-            /**
-             * Forecast Date
-             * Format: date
-             */
-            forecast_date: string;
-            /** Forecast Quantity */
-            forecast_quantity: number | string;
-            /** Unit */
-            unit?: string | null;
-            /** Forecast Period */
-            forecast_period: string;
-        };
-        /**
-         * ForecastBulkImportRequest
-         * @description Bulk import request payload.
-         */
-        ForecastBulkImportRequest: {
-            /** Items */
-            items: components["schemas"]["ForecastBulkImportItem"][];
-            /**
-             * Replace Existing
-             * @description If true, archive existing forecasts before importing new ones
-             * @default true
-             */
-            replace_existing: boolean;
-        };
-        /**
-         * ForecastBulkImportSummary
-         * @description Aggregated summary of bulk import outcomes.
-         */
-        ForecastBulkImportSummary: {
-            /** Imported Count */
-            imported_count: number;
-            /** Archived Count */
-            archived_count: number;
-            /**
-             * Skipped Count
-             * @default 0
-             */
-            skipped_count: number;
-            /** Errors */
-            errors?: string[];
-        };
-        /**
-         * ForecastCreate
-         * @description Payload for creating a new forecast entry.
-         */
-        ForecastCreate: {
-            /** Customer Id */
-            customer_id: number;
-            /** Delivery Place Id */
-            delivery_place_id: number;
-            /** Product Id */
-            product_id: number;
-            /**
-             * Forecast Date
-             * Format: date
-             */
-            forecast_date: string;
-            /** Forecast Quantity */
-            forecast_quantity: number | string;
-            /** Unit */
-            unit?: string | null;
-            /** Forecast Period */
-            forecast_period: string;
-        };
-        /**
-         * ForecastGroupKey
-         * @description Group key for customer × delivery_place × product.
-         */
-        ForecastGroupKey: {
-            /** Customer Id */
-            customer_id: number;
-            /** Delivery Place Id */
-            delivery_place_id: number;
-            /** Product Id */
-            product_id: number;
-            /** Customer Code */
-            customer_code?: string | null;
-            /** Customer Name */
-            customer_name?: string | null;
-            /** Delivery Place Code */
-            delivery_place_code?: string | null;
-            /** Delivery Place Name */
-            delivery_place_name?: string | null;
-            /** Product Code */
-            product_code?: string | null;
-            /** Product Name */
-            product_name?: string | null;
-        };
-        /**
-         * ForecastGroupResponse
-         * @description Grouped forecasts by customer × delivery_place × product.
-         */
-        ForecastGroupResponse: {
-            group_key: components["schemas"]["ForecastGroupKey"];
-            /** Forecasts */
-            forecasts?: components["schemas"]["ForecastResponse"][];
-            /** Snapshot At */
-            snapshot_at?: string | null;
-        };
-        /**
-         * ForecastHistoryResponse
-         * @description API response model for forecast_history entries.
-         */
-        ForecastHistoryResponse: {
-            /** Customer Id */
-            customer_id: number;
-            /** Delivery Place Id */
-            delivery_place_id: number;
-            /** Product Id */
-            product_id: number;
-            /**
-             * Forecast Date
-             * Format: date
-             */
-            forecast_date: string;
-            /** Forecast Quantity */
-            forecast_quantity: string;
-            /** Unit */
-            unit?: string | null;
-            /** Forecast Period */
-            forecast_period: string;
-            /** Id */
-            id: number;
-            /**
-             * Snapshot At
-             * Format: date-time
-             */
-            snapshot_at: string;
-            /**
-             * Archived At
-             * Format: date-time
-             */
-            archived_at: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /** Customer Code */
-            customer_code?: string | null;
-            /** Customer Name */
-            customer_name?: string | null;
-            /** Delivery Place Code */
-            delivery_place_code?: string | null;
-            /** Delivery Place Name */
-            delivery_place_name?: string | null;
-            /** Product Code */
-            product_code?: string | null;
-            /** Product Name */
-            product_name?: string | null;
-        };
-        /**
-         * ForecastListResponse
-         * @description List response with grouped forecasts.
-         */
-        ForecastListResponse: {
-            /** Items */
-            items: components["schemas"]["ForecastGroupResponse"][];
-            /** Total */
-            total: number;
-        };
-        /**
-         * ForecastResponse
-         * @description API response model for forecast_current entries.
-         */
-        ForecastResponse: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Updated At */
-            updated_at?: string | null;
-            /** Customer Id */
-            customer_id: number;
-            /** Delivery Place Id */
-            delivery_place_id: number;
-            /** Product Id */
-            product_id: number;
-            /**
-             * Forecast Date
-             * Format: date
-             */
-            forecast_date: string;
-            /** Forecast Quantity */
-            forecast_quantity: string;
-            /** Unit */
-            unit?: string | null;
-            /** Forecast Period */
-            forecast_period: string;
-            /** Id */
-            id: number;
-            /**
-             * Snapshot At
-             * Format: date-time
-             */
-            snapshot_at: string;
-            /** Customer Code */
-            customer_code?: string | null;
-            /** Customer Name */
-            customer_name?: string | null;
-            /** Delivery Place Code */
-            delivery_place_code?: string | null;
-            /** Delivery Place Name */
-            delivery_place_name?: string | null;
-            /** Product Code */
-            product_code?: string | null;
-            /** Product Name */
-            product_name?: string | null;
-        };
-        /**
-         * ForecastUpdate
-         * @description Mutable fields for updating a forecast entry.
-         */
-        ForecastUpdate: {
-            /** Forecast Quantity */
-            forecast_quantity?: number | string | null;
-            /** Unit */
-            unit?: string | null;
-        };
-        /** HTTPValidationError */
-        HTTPValidationError: {
-            /** Detail */
-            detail?: components["schemas"]["ValidationError"][];
-        };
-        /**
-         * InboundPlanCreate
-         * @description Payload for registering inbound plans.
-         */
-        InboundPlanCreate: {
-            /** Plan Number */
-            plan_number: string;
-            /** Supplier Id */
-            supplier_id: number;
-            /**
-             * Planned Arrival Date
-             * Format: date
-             */
-            planned_arrival_date: string;
-            /** @default planned */
-            status: components["schemas"]["InboundPlanStatus"];
-            /** Notes */
-            notes?: string | null;
-            /** Lines */
-            lines?: components["schemas"]["InboundPlanLineCreate"][] | null;
-        };
-        /**
-         * InboundPlanDetailResponse
-         * @description Inbound plan representation bundled with lines and expected lots.
-         */
-        InboundPlanDetailResponse: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Updated At */
-            updated_at?: string | null;
-            /** Plan Number */
-            plan_number: string;
-            /** Supplier Id */
-            supplier_id: number;
-            /**
-             * Planned Arrival Date
-             * Format: date
-             */
-            planned_arrival_date: string;
-            /** @default planned */
-            status: components["schemas"]["InboundPlanStatus"];
-            /** Notes */
-            notes?: string | null;
-            /** Inbound Plan Id */
-            inbound_plan_id: number;
-            /** Lines */
-            lines?: components["schemas"]["InboundPlanLineResponse"][];
-        };
-        /**
-         * InboundPlanLineCreate
-         * @description Payload for creating inbound plan lines.
-         */
-        InboundPlanLineCreate: {
-            /** Product Id */
-            product_id: number;
-            /** Planned Quantity */
-            planned_quantity: number | string;
-            /** Unit */
-            unit: string;
-            /** Expected Lots */
-            expected_lots?: components["schemas"]["ExpectedLotCreate"][] | null;
-        };
-        /**
-         * InboundPlanLineResponse
-         * @description Response model for inbound plan lines.
-         */
-        InboundPlanLineResponse: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Updated At */
-            updated_at?: string | null;
-            /** Product Id */
-            product_id: number;
-            /** Planned Quantity */
-            planned_quantity: string;
-            /** Unit */
-            unit: string;
-            /** Inbound Plan Line Id */
-            inbound_plan_line_id: number;
-            /** Inbound Plan Id */
-            inbound_plan_id: number;
-            /** Expected Lots */
-            expected_lots?: components["schemas"]["ExpectedLotResponse"][];
-        };
-        /**
-         * InboundPlanListResponse
-         * @description Response wrapper for inbound plan listings.
-         */
-        InboundPlanListResponse: {
-            /** Items */
-            items: components["schemas"]["InboundPlanResponse"][];
-            /** Total */
-            total: number;
-        };
-        /**
-         * InboundPlanReceiveRequest
-         * @description Payload for confirming inbound receipt.
-         */
-        InboundPlanReceiveRequest: {
-            /**
-             * Received At
-             * Format: date-time
-             */
-            received_at: string;
-            /** Lot Ids */
-            lot_ids?: number[] | null;
-        };
-        /**
-         * InboundPlanReceiveResponse
-         * @description Response model returned after processing inbound receipt.
-         */
-        InboundPlanReceiveResponse: {
-            /** Success */
-            success: boolean;
-            /** Message */
-            message?: string | null;
-            /** Created Lot Ids */
-            created_lot_ids?: number[];
-        };
-        /**
-         * InboundPlanResponse
-         * @description Response model for inbound plans.
-         */
-        InboundPlanResponse: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Updated At */
-            updated_at?: string | null;
-            /** Plan Number */
-            plan_number: string;
-            /** Supplier Id */
-            supplier_id: number;
-            /**
-             * Planned Arrival Date
-             * Format: date
-             */
-            planned_arrival_date: string;
-            /** @default planned */
-            status: components["schemas"]["InboundPlanStatus"];
-            /** Notes */
-            notes?: string | null;
-            /** Inbound Plan Id */
-            inbound_plan_id: number;
-        };
-        /**
-         * InboundPlanStatus
-         * @description Valid lifecycle states for inbound plans.
-         * @enum {string}
-         */
-        InboundPlanStatus: "planned" | "partially_received" | "received" | "cancelled";
-        /**
-         * InboundPlanUpdate
-         * @description Mutable fields for inbound plans.
-         */
-        InboundPlanUpdate: {
-            /** Planned Arrival Date */
-            planned_arrival_date?: string | null;
-            status?: components["schemas"]["InboundPlanStatus"] | null;
-            /** Notes */
-            notes?: string | null;
-        };
-        /**
-         * InventoryItemResponse
-         * @description API response model for inventory items (aggregated summary).
-         *
-         *     This schema represents a calculated summary of inventory from the lots table,
-         *     aggregated by product and warehouse. It does not map to a physical table.
-         */
-        InventoryItemResponse: {
-            /** Inventory Item Id */
-            inventory_item_id: number;
-            /** Product Id */
-            product_id: number;
-            /** Warehouse Id */
-            warehouse_id: number;
-            /** Total Quantity */
-            total_quantity: string;
-            /** Allocated Quantity */
-            allocated_quantity: string;
-            /** Available Quantity */
-            available_quantity: string;
-            /**
-             * Last Updated
-             * Format: date-time
-             */
-            last_updated: string;
-            /** Product Name */
-            product_name?: string | null;
-            /** Product Code */
-            product_code?: string | null;
-            /** Warehouse Name */
-            warehouse_name?: string | null;
-            /** Warehouse Code */
-            warehouse_code?: string | null;
-        };
-        /**
-         * LotCreate
-         * @description Payload for creating lots.
-         */
-        LotCreate: {
-            /** Lot Number */
-            lot_number: string;
-            /** Product Id */
-            product_id: number;
-            /** Warehouse Id */
-            warehouse_id: number;
-            /** Supplier Id */
-            supplier_id?: number | null;
-            /** Expected Lot Id */
-            expected_lot_id?: number | null;
-            /**
-             * Received Date
-             * Format: date
-             */
-            received_date: string;
-            /** Expiry Date */
-            expiry_date?: string | null;
-            /**
-             * Current Quantity
-             * @default 0
-             */
-            current_quantity: number | string;
-            /**
-             * Allocated Quantity
-             * @default 0
-             */
-            allocated_quantity: number | string;
-            /** Unit */
-            unit: string;
-            /** @default active */
-            status: components["schemas"]["LotStatus"];
-            /**
-             * Inspection Status
-             * @default not_required
-             */
-            inspection_status: string;
-            /** Inspection Date */
-            inspection_date?: string | null;
-            /** Inspection Cert Number */
-            inspection_cert_number?: string | null;
-        };
-        /**
-         * LotLock
-         * @description Payload for locking a lot.
-         */
-        LotLock: {
-            /** Reason */
-            reason: string;
-        };
-        /**
-         * LotResponse
-         * @description API response model for lots.
-         */
-        LotResponse: {
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Updated At */
-            updated_at?: string | null;
-            /** Lot Number */
-            lot_number: string;
-            /** Product Id */
-            product_id: number;
-            /** Warehouse Id */
-            warehouse_id: number;
-            /** Supplier Id */
-            supplier_id?: number | null;
-            /** Expected Lot Id */
-            expected_lot_id?: number | null;
-            /**
-             * Received Date
-             * Format: date
-             */
-            received_date: string;
-            /** Expiry Date */
-            expiry_date?: string | null;
-            /**
-             * Current Quantity
-             * @default 0
-             */
-            current_quantity: string;
-            /**
-             * Allocated Quantity
-             * @default 0
-             */
-            allocated_quantity: string;
-            /** Unit */
-            unit: string;
-            /** @default active */
-            status: components["schemas"]["LotStatus"];
-            /**
-             * Inspection Status
-             * @default not_required
-             */
-            inspection_status: string;
-            /** Inspection Date */
-            inspection_date?: string | null;
-            /** Inspection Cert Number */
-            inspection_cert_number?: string | null;
-            /** Lot Id */
-            lot_id: number;
-            /** Product Name */
-            product_name: string;
-            /** Product Code */
-            product_code: string;
-            /** Supplier Name */
-            supplier_name: string;
-            /** Warehouse Name */
-            warehouse_name?: string | null;
-            /** Warehouse Code */
-            warehouse_code?: string | null;
-            /** Supplier Code */
-            supplier_code?: string | null;
-            /** Last Updated */
-            last_updated?: string | null;
-        };
-        /**
-         * LotStatus
-         * @description Valid lot lifecycle statuses.
-         * @enum {string}
-         */
-        LotStatus: "active" | "depleted" | "expired" | "quarantine" | "locked";
-        /**
-         * LotUpdate
-         * @description Mutable fields for lot updates.
-         */
-        LotUpdate: {
-            /** Supplier Id */
-            supplier_id?: number | null;
-            /** Expected Lot Id */
-            expected_lot_id?: number | null;
-            /** Received Date */
-            received_date?: string | null;
-            /** Expiry Date */
-            expiry_date?: string | null;
-            /** Current Quantity */
-            current_quantity?: number | string | null;
-            /** Allocated Quantity */
-            allocated_quantity?: number | string | null;
-            /** Unit */
-            unit?: string | null;
-            status?: components["schemas"]["LotStatus"] | null;
-            /** Inspection Status */
-            inspection_status?: string | null;
-            /** Inspection Date */
-            inspection_date?: string | null;
-            /** Inspection Cert Number */
-            inspection_cert_number?: string | null;
-        };
-        /** ManualAllocationItem */
-        ManualAllocationItem: {
-            /** Lot Id */
-            lot_id: number;
-            /** Quantity */
-            quantity: number;
-        };
-        /** ManualAllocationSavePayload */
-        ManualAllocationSavePayload: {
-            /** Allocations */
-            allocations: components["schemas"]["ManualAllocationItem"][];
-        };
-        /**
-         * MasterChangeLogListResponse
-         * @description マスタ変更履歴一覧レスポンス.
-         */
-        MasterChangeLogListResponse: {
-            /** Logs */
-            logs: components["schemas"]["MasterChangeLogResponse"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-        };
-        /**
-         * MasterChangeLogResponse
-         * @description マスタ変更履歴レスポンス.
-         */
-        MasterChangeLogResponse: {
-            /** Change Log Id */
-            change_log_id: number;
-            /**
-             * Table Name
-             * @description テーブル名
-             */
-            table_name: string;
-            /**
-             * Record Id
-             * @description レコードID
-             */
-            record_id: number;
-            /**
-             * Change Type
-             * @description 変更種別（insert/update/delete）
-             */
-            change_type: string;
-            /**
-             * Old Values
-             * @description 変更前の値（JSON）
-             */
-            old_values?: Record<string, never> | null;
-            /**
-             * New Values
-             * @description 変更後の値（JSON）
-             */
-            new_values?: Record<string, never> | null;
-            /**
-             * Changed By
-             * @description 変更者（ユーザーID）
-             */
-            changed_by: number;
-            /**
-             * Changed At
-             * Format: date-time
-             * @description 変更日時
-             */
-            changed_at: string;
-        };
-        /**
-         * OperationLogListResponse
-         * @description 操作ログ一覧レスポンス.
-         */
-        OperationLogListResponse: {
-            /** Logs */
-            logs: components["schemas"]["OperationLogResponse"][];
-            /** Total */
-            total: number;
-            /** Page */
-            page: number;
-            /** Page Size */
-            page_size: number;
-        };
-        /**
-         * OperationLogResponse
-         * @description 操作ログレスポンス.
-         */
-        OperationLogResponse: {
-            /** Log Id */
-            log_id: number;
-            /** User Id */
-            user_id?: number | null;
-            /**
-             * Operation Type
-             * @description 操作種別（create/update/delete/login/logout/export）
-             */
-            operation_type: string;
-            /**
-             * Target Table
-             * @description 対象テーブル名
-             */
-            target_table: string;
-            /**
-             * Target Id
-             * @description 対象レコードID
-             */
-            target_id?: number | null;
-            /**
-             * Changes
-             * @description 変更内容（JSON）
-             */
-            changes?: Record<string, never> | null;
-            /**
-             * Ip Address
-             * @description IPアドレス
-             */
-            ip_address?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             * @description 作成日時
-             */
-            created_at: string;
-        };
-        /**
-         * OrderCreate
-         * @description Create order request.
-         */
-        OrderCreate: {
-            /** Order Number */
-            order_number: string;
-            /** Customer Id */
-            customer_id: number;
-            /**
-             * Order Date
-             * Format: date
-             */
-            order_date: string;
-            /** Lines */
-            lines?: components["schemas"]["OrderLineCreate"][];
-        };
-        /**
-         * OrderLineCreate
-         * @description Create order line request.
-         */
-        OrderLineCreate: {
-            /** Product Id */
-            product_id: number;
-            /**
-             * Delivery Date
-             * Format: date
-             */
-            delivery_date: string;
-            /**
-             * Order Quantity
-             * @description 受注数量
-             */
-            order_quantity: number | string;
-            /** Unit */
-            unit: string;
-            /**
-             * Converted Quantity
-             * @description 社内基準単位換算数量
-             */
-            converted_quantity?: number | string | null;
-            /** Delivery Place Id */
-            delivery_place_id: number;
-            /**
-             * Status
-             * @default pending
-             */
-            status: string;
-        };
-        /**
-         * OrderLineResponse
-         * @description Order line response (DDL: order_lines).
-         */
-        OrderLineResponse: {
-            /** Product Id */
-            product_id: number;
-            /**
-             * Delivery Date
-             * Format: date
-             */
-            delivery_date: string;
-            /**
-             * Order Quantity
-             * @description 受注数量
-             */
-            order_quantity: string;
-            /** Unit */
-            unit: string;
-            /**
-             * Converted Quantity
-             * @description 社内基準単位換算数量
-             */
-            converted_quantity?: string | null;
-            /** Delivery Place Id */
-            delivery_place_id: number;
-            /**
-             * Status
-             * @default pending
-             */
-            status: string;
-            /** Id */
-            id: number;
-            /** Order Id */
-            order_id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /** Supplier Name */
-            supplier_name?: string | null;
-            /** Product Internal Unit */
-            product_internal_unit?: string | null;
-            /** Product External Unit */
-            product_external_unit?: string | null;
-            /** Product Qty Per Internal Unit */
-            product_qty_per_internal_unit?: number | null;
-            /** Product Code */
-            product_code?: string | null;
-            /** Product Name */
-            product_name?: string | null;
-            /** Delivery Place Name */
-            delivery_place_name?: string | null;
-            /** Allocations */
-            allocations?: components["schemas"]["AllocationResponse"][];
-            /**
-             * Allocated Quantity
-             * @description 引当済数量
-             * @default 0
-             */
-            allocated_quantity: string;
-        };
-        /**
-         * OrderWithLinesResponse
-         * @description Order with lines response.
-         */
-        OrderWithLinesResponse: {
-            /** Order Number */
-            order_number: string;
-            /** Customer Id */
-            customer_id: number;
-            /**
-             * Order Date
-             * Format: date
-             */
-            order_date: string;
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /** Lines */
-            lines?: components["schemas"]["OrderLineResponse"][];
-        };
-        /**
-         * ProductCreate
-         * @description Payload to create a product.
-         */
-        ProductCreate: {
-            /** Product Code */
-            product_code: string;
-            /** Product Name */
-            product_name: string;
-            /**
-             * Internal Unit
-             * @default CAN
-             */
-            internal_unit: string;
-            /**
-             * External Unit
-             * @default KG
-             */
-            external_unit: string;
-            /**
-             * Qty Per Internal Unit
-             * @default 1
-             */
-            qty_per_internal_unit: number;
-            /** Customer Part No */
-            customer_part_no?: string | null;
-            /** Maker Item Code */
-            maker_item_code?: string | null;
-            /**
-             * Is Active
-             * @default true
-             */
-            is_active: boolean;
-        };
-        /**
-         * ProductOut
-         * @description Product response model.
-         */
-        ProductOut: {
-            /** Id */
-            id: number;
-            /** Product Code */
-            product_code: string;
-            /** Product Name */
-            product_name: string;
-            /** Internal Unit */
-            internal_unit: string;
-            /** External Unit */
-            external_unit: string;
-            /** Qty Per Internal Unit */
-            qty_per_internal_unit: number;
-            /** Customer Part No */
-            customer_part_no: string | null;
-            /** Maker Item Code */
-            maker_item_code: string | null;
-            /** Is Active */
-            is_active: boolean;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * ProductUpdate
-         * @description Payload to partially update a product.
-         */
-        ProductUpdate: {
-            /** Product Code */
-            product_code?: string | null;
-            /** Product Name */
-            product_name?: string | null;
-            /** Internal Unit */
-            internal_unit?: string | null;
-            /** External Unit */
-            external_unit?: string | null;
-            /** Qty Per Internal Unit */
-            qty_per_internal_unit?: number | null;
-            /** Customer Part No */
-            customer_part_no?: string | null;
-            /** Maker Item Code */
-            maker_item_code?: string | null;
-            /** Is Active */
-            is_active?: boolean | null;
-        };
-        /**
-         * ResponseBase
-         * @description API共通レスポンス.
-         */
-        ResponseBase: {
-            /** Success */
-            success: boolean;
-            /** Message */
-            message?: string | null;
-            /** Data */
-            data?: Record<string, never> | null;
-        };
-        /**
-         * RoleCreate
-         * @description Schema for creating a role.
-         */
-        RoleCreate: {
-            /**
-             * Role Code
-             * @description ロールコード
-             */
-            role_code: string;
-            /**
-             * Role Name
-             * @description ロール名
-             */
-            role_name: string;
-            /**
-             * Description
-             * @description 説明
-             */
-            description?: string | null;
-        };
-        /**
-         * RoleResponse
-         * @description Schema for role response (DDL: roles).
-         */
-        RoleResponse: {
-            /**
-             * Role Code
-             * @description ロールコード
-             */
-            role_code: string;
-            /**
-             * Role Name
-             * @description ロール名
-             */
-            role_name: string;
-            /**
-             * Description
-             * @description 説明
-             */
-            description?: string | null;
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * RoleUpdate
-         * @description Schema for updating a role.
-         */
-        RoleUpdate: {
-            /**
-             * Role Name
-             * @description ロール名
-             */
-            role_name?: string | null;
-            /**
-             * Description
-             * @description 説明
-             */
-            description?: string | null;
-        };
-        /** SeedRequest */
-        SeedRequest: {
-            /**
-             * Seed
-             * @description Random seed for reproducibility
-             * @default 42
-             */
-            seed: number | null;
-            /**
-             * Dry Run
-             * @default false
-             */
-            dry_run: boolean;
-            /**
-             * Customers
-             * @default 3
-             */
-            customers: number;
-            /**
-             * Suppliers
-             * @default 2
-             */
-            suppliers: number;
-            /**
-             * Delivery Places
-             * @default 2
-             */
-            delivery_places: number;
-            /**
-             * Products
-             * @default 5
-             */
-            products: number;
-            /**
-             * Warehouses
-             * @default 2
-             */
-            warehouses: number;
-            /**
-             * Lots
-             * @default 10
-             */
-            lots: number;
-            /**
-             * Orders
-             * @default 5
-             */
-            orders: number;
-        };
-        /** SeedResponse */
-        SeedResponse: {
-            /** Dry Run */
-            dry_run: boolean;
-            /** Seed */
-            seed: number;
-            summary: components["schemas"]["SeedSummary"];
-            /** @description 投入後の実際のDB件数（dry_run=falseの場合のみ） */
-            actual_counts?: components["schemas"]["ActualCounts"] | null;
-        };
-        /**
-         * SeedSnapshotCreateRequest
-         * @description スナップショット作成リクエスト.
-         */
-        SeedSnapshotCreateRequest: {
-            /**
-             * Name
-             * @description スナップショット名
-             */
-            name: string;
-            /**
-             * Params Json
-             * @description パラメータJSON
-             */
-            params_json: Record<string, never>;
-            /**
-             * Profile Json
-             * @description プロファイルJSON
-             */
-            profile_json?: Record<string, never> | null;
-            /**
-             * Summary Json
-             * @description サマリJSON
-             */
-            summary_json?: Record<string, never> | null;
-        };
-        /**
-         * SeedSnapshotCreateResponse
-         * @description スナップショット作成レスポンス.
-         */
-        SeedSnapshotCreateResponse: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-        };
-        /**
-         * SeedSnapshotListItem
-         * @description スナップショットリストアイテム.
-         */
-        SeedSnapshotListItem: {
-            /** Id */
-            id: number;
-            /** Name */
-            name: string;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /** Params Json */
-            params_json: Record<string, never>;
-            /** Summary Json */
-            summary_json?: Record<string, never> | null;
-        };
-        /**
-         * SeedSnapshotListResponse
-         * @description スナップショット一覧レスポンス.
-         */
-        SeedSnapshotListResponse: {
-            /** Snapshots */
-            snapshots: components["schemas"]["SeedSnapshotListItem"][];
-        };
-        /**
-         * SeedSnapshotRestoreResponse
-         * @description スナップショット復元レスポンス.
-         */
-        SeedSnapshotRestoreResponse: {
-            /** Task Id */
-            task_id: string;
-            /** Message */
-            message: string;
-        };
-        /**
-         * SeedSummary
-         * @description 作成しようとした件数（UPSERT前）.
-         */
-        SeedSummary: {
-            /** Customers */
-            customers: number;
-            /** Suppliers */
-            suppliers: number;
-            /** Delivery Places */
-            delivery_places: number;
-            /** Products */
-            products: number;
-            /** Warehouses */
-            warehouses: number;
-            /** Lots */
-            lots: number;
-            /** Orders */
-            orders: number;
-            /** Order Lines */
-            order_lines: number;
-            /** Allocations */
-            allocations: number;
-        };
-        /**
-         * SimulateProgressResponse
-         * @description テストデータシミュレーション進捗レスポンス.
-         */
-        SimulateProgressResponse: {
-            /** Task Id */
-            task_id: string;
-            /** Status */
-            status: string;
-            /** Phase */
-            phase: string;
-            /** Progress Pct */
-            progress_pct: number;
-            /** Logs */
-            logs: string[];
-            /** Error */
-            error?: string | null;
-        };
-        /**
-         * SimulateResultResponse
-         * @description テストデータシミュレーション結果レスポンス.
-         */
-        SimulateResultResponse: {
-            /** Success */
-            success: boolean;
-            summary?: components["schemas"]["SimulateResultSummary"] | null;
-            /** Snapshot Id */
-            snapshot_id?: number | null;
-            /** Error */
-            error?: string | null;
-        };
-        /**
-         * SimulateResultSummary
-         * @description テストデータシミュレーション結果サマリ.
-         */
-        SimulateResultSummary: {
-            /** Warehouses */
-            warehouses: number;
-            /**
-             * Forecasts
-             * @description 需要予測データ件数
-             * @default 0
-             */
-            forecasts: number;
-            /** Orders */
-            orders: number;
-            /** Order Lines */
-            order_lines: number;
-            /** Lots */
-            lots: number;
-            /** Allocations */
-            allocations: number;
-            cap_checks: components["schemas"]["CapCheckResult"];
-            /** Stock Equation Ok */
-            stock_equation_ok: boolean;
-            /**
-             * Orphan Count
-             * @description 孤児レコード数
-             * @default 0
-             */
-            orphan_count: number;
-        };
-        /**
-         * SimulateSeedRequest
-         * @description テストデータシミュレーションリクエスト.
-         */
-        SimulateSeedRequest: {
-            /**
-             * Profile
-             * @description プロファイル名（small/medium/large_near、Noneの場合はデフォルト）
-             */
-            profile?: string | null;
-            /**
-             * Random Seed
-             * @description 乱数シード（Noneの場合は現在時刻を使用）
-             */
-            random_seed?: number | null;
-            /**
-             * Warehouses
-             * @description 倉庫数（1〜10、既定=2）
-             * @default 2
-             */
-            warehouses: number;
-            /**
-             * Customers
-             * @description 顧客数（0以上、Noneの場合はプロファイル既定）
-             * @default 3
-             */
-            customers: number | null;
-            /**
-             * Suppliers
-             * @description 仕入先数（0以上、Noneの場合はプロファイル既定）
-             * @default 2
-             */
-            suppliers: number | null;
-            /**
-             * Products
-             * @description 製品数（0以上、Noneの場合はプロファイル既定）
-             * @default 5
-             */
-            products: number | null;
-            /**
-             * Lots
-             * @description ロット数（0以上、Noneの場合はプロファイル既定）
-             * @default 10
-             */
-            lots: number | null;
-            /**
-             * Orders
-             * @description 受注数（0以上、Noneの場合はプロファイル既定）
-             * @default 5
-             */
-            orders: number | null;
-            /**
-             * Lot Split Max Per Line
-             * @description 1明細あたりロット分割上限（1〜3、既定=1）
-             * @default 1
-             */
-            lot_split_max_per_line: number;
-            /**
-             * Order Line Items Per Order
-             * @description 受注明細行の上限（1〜5、既定=1）
-             * @default 1
-             */
-            order_line_items_per_order: number;
-            /**
-             * Destinations Max Per Order
-             * @description 受注の納品先上限（常に5固定）
-             * @default 5
-             */
-            destinations_max_per_order: number;
-            /**
-             * Forecasts
-             * @description 需要予測データ生成（0=無効, 1=有効, Noneはプロファイル既定）
-             * @default 1
-             */
-            forecasts: number | null;
-            /**
-             * Save Snapshot
-             * @description スナップショットを保存するか
-             * @default true
-             */
-            save_snapshot: boolean;
-            /**
-             * Snapshot Name
-             * @description スナップショット名（自動生成の場合はNone）
-             */
-            snapshot_name?: string | null;
-            /**
-             * Use Last Snapshot
-             * @description 最後のスナップショットを使用するか
-             * @default false
-             */
-            use_last_snapshot: boolean;
-            /**
-             * Case Mix
-             * @description ケースミックス比率（API上書き用、合計<=1.0）
-             */
-            case_mix?: {
-                [key: string]: number;
-            } | null;
-        };
-        /**
-         * SimulateSeedResponse
-         * @description テストデータシミュレーション開始レスポンス.
-         */
-        SimulateSeedResponse: {
-            /**
-             * Task Id
-             * @description ジョブID
-             */
-            task_id: string;
-            /**
-             * Message
-             * @description メッセージ
-             */
-            message: string;
-        };
-        /**
-         * StockHistoryCreate
-         * @description Payload for creating stock history records.
-         */
-        StockHistoryCreate: {
-            /** Lot Id */
-            lot_id: number;
-            transaction_type: components["schemas"]["StockTransactionType"];
-            /** Quantity Change */
-            quantity_change: number | string;
-            /** Quantity After */
-            quantity_after: number | string;
-            /** Reference Type */
-            reference_type?: string | null;
-            /** Reference Id */
-            reference_id?: number | null;
-            /** Transaction Date */
-            transaction_date?: string | null;
-        };
-        /**
-         * StockHistoryResponse
-         * @description API response model for stock history entries.
-         */
-        StockHistoryResponse: {
-            /** Lot Id */
-            lot_id: number;
-            transaction_type: components["schemas"]["StockTransactionType"];
-            /** Quantity Change */
-            quantity_change: string;
-            /** Quantity After */
-            quantity_after: string;
-            /** Reference Type */
-            reference_type?: string | null;
-            /** Reference Id */
-            reference_id?: number | null;
-            /** History Id */
-            history_id: number;
-            /**
-             * Transaction Date
-             * Format: date-time
-             */
-            transaction_date: string;
-        };
-        /**
-         * StockTransactionType
-         * @description Transaction types tracked in stock history.
-         * @enum {string}
-         */
-        StockTransactionType: "inbound" | "allocation" | "shipment" | "adjustment" | "return";
-        /**
-         * SupplierCreate
-         * @description Create supplier request.
-         */
-        SupplierCreate: {
-            /** Supplier Code */
-            supplier_code: string;
-            /** Supplier Name */
-            supplier_name: string;
-        };
-        /**
-         * SupplierResponse
-         * @description Supplier response (DDL: suppliers).
-         */
-        SupplierResponse: {
-            /** Supplier Code */
-            supplier_code: string;
-            /** Supplier Name */
-            supplier_name: string;
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * SupplierUpdate
-         * @description Update supplier request.
-         */
-        SupplierUpdate: {
-            /** Supplier Name */
-            supplier_name?: string | null;
-        };
-        /**
-         * UserCreate
-         * @description Schema for creating a user.
-         */
-        UserCreate: {
-            /**
-             * Username
-             * @description ユーザー名
-             */
-            username: string;
-            /**
-             * Email
-             * Format: email
-             * @description メールアドレス
-             */
-            email: string;
-            /**
-             * Display Name
-             * @description 表示名
-             */
-            display_name: string;
-            /**
-             * Is Active
-             * @description 有効フラグ
-             * @default true
-             */
-            is_active: boolean;
-            /**
-             * Password
-             * @description パスワード（平文）
-             */
-            password: string;
-        };
-        /**
-         * UserResponse
-         * @description Schema for user response (DDL: users).
-         */
-        UserResponse: {
-            /**
-             * Username
-             * @description ユーザー名
-             */
-            username: string;
-            /**
-             * Email
-             * Format: email
-             * @description メールアドレス
-             */
-            email: string;
-            /**
-             * Display Name
-             * @description 表示名
-             */
-            display_name: string;
-            /**
-             * Is Active
-             * @description 有効フラグ
-             * @default true
-             */
-            is_active: boolean;
-            /** Id */
-            id: number;
-            /** Last Login At */
-            last_login_at?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * UserRoleAssignment
-         * @description Schema for assigning roles to a user.
-         */
-        UserRoleAssignment: {
-            /**
-             * Role Ids
-             * @description 割り当てるロールIDリスト
-             */
-            role_ids: number[];
-        };
-        /**
-         * UserUpdate
-         * @description Schema for updating a user.
-         */
-        UserUpdate: {
-            /**
-             * Email
-             * @description メールアドレス
-             */
-            email?: string | null;
-            /**
-             * Display Name
-             * @description 表示名
-             */
-            display_name?: string | null;
-            /**
-             * Is Active
-             * @description 有効フラグ
-             */
-            is_active?: boolean | null;
-            /**
-             * Password
-             * @description パスワード（平文）
-             */
-            password?: string | null;
-        };
-        /**
-         * UserWithRoles
-         * @description Schema for user with assigned roles.
-         */
-        UserWithRoles: {
-            /**
-             * Username
-             * @description ユーザー名
-             */
-            username: string;
-            /**
-             * Email
-             * Format: email
-             * @description メールアドレス
-             */
-            email: string;
-            /**
-             * Display Name
-             * @description 表示名
-             */
-            display_name: string;
-            /**
-             * Is Active
-             * @description 有効フラグ
-             * @default true
-             */
-            is_active: boolean;
-            /** Id */
-            id: number;
-            /** Last Login At */
-            last_login_at?: string | null;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-            /**
-             * Role Codes
-             * @description 割り当てられたロールコード
-             */
-            role_codes?: string[];
-        };
-        /** ValidationError */
-        ValidationError: {
-            /** Location */
-            loc: (string | number)[];
-            /** Message */
-            msg: string;
-            /** Error Type */
-            type: string;
-        };
-        /**
-         * WarehouseCreate
-         * @description Create warehouse request.
-         */
-        WarehouseCreate: {
-            /** Warehouse Code */
-            warehouse_code: string;
-            /** Warehouse Name */
-            warehouse_name: string;
-            /**
-             * Warehouse Type
-             * @description internal/external/supplier
-             */
-            warehouse_type: string;
-        };
-        /** WarehouseListResponse */
-        WarehouseListResponse: {
-            /** Items */
-            items: components["schemas"]["WarehouseOut"][];
-        };
-        /** WarehouseOut */
-        WarehouseOut: {
-            /** Warehouse Id */
-            warehouse_id: number;
-            /** Warehouse Name */
-            warehouse_name: string;
-        };
-        /**
-         * WarehouseResponse
-         * @description Warehouse response (DDL: warehouses).
-         */
-        WarehouseResponse: {
-            /** Warehouse Code */
-            warehouse_code: string;
-            /** Warehouse Name */
-            warehouse_name: string;
-            /**
-             * Warehouse Type
-             * @description internal/external/supplier
-             */
-            warehouse_type: string;
-            /** Id */
-            id: number;
-            /**
-             * Created At
-             * Format: date-time
-             */
-            created_at: string;
-            /**
-             * Updated At
-             * Format: date-time
-             */
-            updated_at: string;
-        };
-        /**
-         * WarehouseUpdate
-         * @description Update warehouse request.
-         */
-        WarehouseUpdate: {
-            /** Warehouse Name */
-            warehouse_name?: string | null;
-            /**
-             * Warehouse Type
-             * @description internal/external/supplier
-             */
-            warehouse_type?: string | null;
-        };
+  schemas: {
+    /**
+     * ActualCounts
+     * @description 実際のDB件数（投入後）.
+     */
+    ActualCounts: {
+      /** Customers */
+      customers: number;
+      /** Suppliers */
+      suppliers: number;
+      /** Delivery Places */
+      delivery_places: number;
+      /** Products */
+      products: number;
+      /** Warehouses */
+      warehouses: number;
+      /** Lots */
+      lots: number;
+      /** Stock Movements */
+      stock_movements: number;
+      /** Orders */
+      orders: number;
+      /** Order Lines */
+      order_lines: number;
+      /** Allocations */
+      allocations: number;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    /**
+     * AdjustmentCreate
+     * @description Payload for recording adjustments.
+     */
+    AdjustmentCreate: {
+      /** Lot Id */
+      lot_id: number;
+      adjustment_type: components["schemas"]["AdjustmentType"];
+      /** Adjusted Quantity */
+      adjusted_quantity: number | string;
+      /** Reason */
+      reason: string;
+      /** Adjusted By */
+      adjusted_by: number;
+    };
+    /**
+     * AdjustmentResponse
+     * @description API response model for adjustments.
+     */
+    AdjustmentResponse: {
+      /** Lot Id */
+      lot_id: number;
+      adjustment_type: components["schemas"]["AdjustmentType"];
+      /** Adjusted Quantity */
+      adjusted_quantity: string;
+      /** Reason */
+      reason: string;
+      /** Adjusted By */
+      adjusted_by: number;
+      /** Adjustment Id */
+      adjustment_id: number;
+      /**
+       * Adjusted At
+       * Format: date-time
+       */
+      adjusted_at: string;
+    };
+    /**
+     * AdjustmentType
+     * @description Allowed adjustment reason codes.
+     * @enum {string}
+     */
+    AdjustmentType: "physical_count" | "damage" | "loss" | "found" | "other";
+    /**
+     * AlertItem
+     * @description Represents a single alert item.
+     *
+     *     Attributes:
+     *         id: Unique identifier for the alert
+     *         category: Alert category (order, inventory, lot, forecast)
+     *         type: Specific alert type code (e.g., 'UNFORECASTED_ORDER_STALE')
+     *         severity: Alert severity level
+     *         title: Short description displayed in alert list
+     *         message: Detailed explanation (optional)
+     *         occurred_at: When the alert condition was detected
+     *         target: Resource this alert is about (for navigation)
+     * @example {
+     *       "category": "order",
+     *       "id": "alert_order_12345_20231124",
+     *       "message": "受注番号 ORD-12345 はフォーキャストに紐づいておらず、30分以上未処理です。",
+     *       "occurred_at": "2023-11-24T10:30:00Z",
+     *       "severity": "critical",
+     *       "target": {
+     *         "id": 12345,
+     *         "resource_type": "order"
+     *       },
+     *       "title": "無予測受注が30分以上未処理",
+     *       "type": "UNFORECASTED_ORDER_STALE"
+     *     }
+     */
+    AlertItem: {
+      /**
+       * Id
+       * @description Unique alert identifier
+       */
+      id: string;
+      /**
+       * Category
+       * @description Alert category
+       * @enum {string}
+       */
+      category: "order" | "inventory" | "lot" | "forecast";
+      /**
+       * Type
+       * @description Specific alert type code
+       */
+      type: string;
+      /**
+       * Severity
+       * @description Alert severity level
+       * @enum {string}
+       */
+      severity: "info" | "warning" | "critical";
+      /**
+       * Title
+       * @description Short alert description
+       */
+      title: string;
+      /**
+       * Message
+       * @description Detailed explanation
+       * @default
+       */
+      message: string;
+      /**
+       * Occurred At
+       * Format: date-time
+       * @description Alert occurrence timestamp
+       */
+      occurred_at: string;
+      /**
+       * Target
+       * @description Target resource for navigation
+       */
+      target:
+        | components["schemas"]["AlertTargetOrder"]
+        | components["schemas"]["AlertTargetInventoryItem"]
+        | components["schemas"]["AlertTargetLot"]
+        | components["schemas"]["AlertTargetForecastDaily"];
+    };
+    /**
+     * AlertSummaryResponse
+     * @description Summary of alert counts by severity and category.
+     *
+     *     Attributes:
+     *         total: Total number of alerts
+     *         by_severity: Count of alerts grouped by severity
+     *         by_category: Count of alerts grouped by category
+     * @example {
+     *       "by_category": {
+     *         "forecast": 5,
+     *         "inventory": 7,
+     *         "lot": 6,
+     *         "order": 5
+     *       },
+     *       "by_severity": {
+     *         "critical": 3,
+     *         "info": 8,
+     *         "warning": 12
+     *       },
+     *       "total": 23
+     *     }
+     */
+    AlertSummaryResponse: {
+      /**
+       * Total
+       * @description Total alert count
+       */
+      total: number;
+      /**
+       * By Severity
+       * @description Alert counts by severity
+       */
+      by_severity?: {
+        [key: string]: number;
+      };
+      /**
+       * By Category
+       * @description Alert counts by category
+       */
+      by_category?: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * AlertTargetForecastDaily
+     * @description Alert target for daily forecast resources.
+     */
+    AlertTargetForecastDaily: {
+      /**
+       * Resource Type
+       * @default forecast_daily
+       * @constant
+       */
+      resource_type: "forecast_daily";
+      /** Id */
+      id: number;
+    };
+    /**
+     * AlertTargetInventoryItem
+     * @description Alert target for inventory item resources.
+     */
+    AlertTargetInventoryItem: {
+      /**
+       * Resource Type
+       * @default inventory_item
+       * @constant
+       */
+      resource_type: "inventory_item";
+      /** Id */
+      id: number;
+    };
+    /**
+     * AlertTargetLot
+     * @description Alert target for lot resources.
+     */
+    AlertTargetLot: {
+      /**
+       * Resource Type
+       * @default lot
+       * @constant
+       */
+      resource_type: "lot";
+      /** Id */
+      id: number;
+    };
+    /**
+     * AlertTargetOrder
+     * @description Alert target for order resources.
+     */
+    AlertTargetOrder: {
+      /**
+       * Resource Type
+       * @default order
+       * @constant
+       */
+      resource_type: "order";
+      /** Id */
+      id: number;
+    };
+    /**
+     * AllocationCommitRequest
+     * @description Allocation commit request (v2.2.1).
+     */
+    AllocationCommitRequest: {
+      /** Order Id */
+      order_id: number;
+    };
+    /**
+     * AllocationCommitResponse
+     * @description Allocation commit response (v2.2.1).
+     */
+    AllocationCommitResponse: {
+      /** Order Id */
+      order_id: number;
+      /** Created Allocation Ids */
+      created_allocation_ids?: number[];
+      preview?: components["schemas"]["FefoPreviewResponse"] | null;
+      /**
+       * Status
+       * @default committed
+       */
+      status: string;
+      /** Message */
+      message?: string | null;
+    };
+    /**
+     * AllocationGap
+     * @description 不足情報.
+     */
+    AllocationGap: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Forecast Period */
+      forecast_period: string;
+      /** Shortage Quantity */
+      shortage_quantity: string;
+      /** Related Order Line Ids */
+      related_order_line_ids?: number[] | null;
+    };
+    /** AllocationOptions */
+    AllocationOptions: {
+      /**
+       * Allocation Type
+       * @default soft
+       * @enum {string}
+       */
+      allocation_type: "soft" | "hard";
+      /**
+       * Fefo
+       * @default true
+       */
+      fefo: boolean;
+      /**
+       * Allow Cross Warehouse
+       * @default false
+       */
+      allow_cross_warehouse: boolean;
+      /**
+       * Ignore Existing Suggestions
+       * @default false
+       */
+      ignore_existing_suggestions: boolean;
+    };
+    /**
+     * AllocationResponse
+     * @description Allocation response for order line (DDL: allocations).
+     */
+    AllocationResponse: {
+      /** Id */
+      id: number;
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Status */
+      status: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /** AllocationScopeForecast */
+    AllocationScopeForecast: {
+      /** Forecast Periods */
+      forecast_periods: string[];
+      /** Customer Ids */
+      customer_ids?: number[] | null;
+      /** Delivery Place Ids */
+      delivery_place_ids?: number[] | null;
+      /** Product Ids */
+      product_ids?: number[] | null;
+    };
+    /** AllocationScopeOrder */
+    AllocationScopeOrder: {
+      /** Order Line Id */
+      order_line_id: number;
+    };
+    /**
+     * AllocationStatsPerKey
+     * @description キーごとの集計結果.
+     */
+    AllocationStatsPerKey: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Forecast Period */
+      forecast_period: string;
+      /** Forecast Quantity */
+      forecast_quantity: string;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Shortage Quantity */
+      shortage_quantity: string;
+    };
+    /**
+     * AllocationStatsSummary
+     * @description 全体集計.
+     */
+    AllocationStatsSummary: {
+      /** Total Forecast Quantity */
+      total_forecast_quantity: string;
+      /** Total Allocated Quantity */
+      total_allocated_quantity: string;
+      /** Total Shortage Quantity */
+      total_shortage_quantity: string;
+      /** Per Key */
+      per_key: components["schemas"]["AllocationStatsPerKey"][];
+    };
+    /**
+     * AllocationSuggestionListResponse
+     * @description 引当推奨一覧レスポンス.
+     */
+    AllocationSuggestionListResponse: {
+      /** Suggestions */
+      suggestions: components["schemas"]["AllocationSuggestionResponse"][];
+      /** Total */
+      total: number;
+    };
+    /**
+     * AllocationSuggestionPreviewResponse
+     * @description プレビュー/生成結果レスポンス.
+     */
+    AllocationSuggestionPreviewResponse: {
+      /** Suggestions */
+      suggestions: components["schemas"]["AllocationSuggestionResponse"][];
+      stats: components["schemas"]["AllocationStatsSummary"];
+      /** Gaps */
+      gaps: components["schemas"]["AllocationGap"][];
+    };
+    /**
+     * AllocationSuggestionRequest
+     * @description 引当推奨生成/プレビューリクエスト.
+     */
+    AllocationSuggestionRequest: {
+      /**
+       * Mode
+       * @enum {string}
+       */
+      mode: "forecast" | "order";
+      forecast_scope?: components["schemas"]["AllocationScopeForecast"] | null;
+      order_scope?: components["schemas"]["AllocationScopeOrder"] | null;
+      options?: components["schemas"]["AllocationOptions"];
+    };
+    /**
+     * AllocationSuggestionResponse
+     * @description 引当推奨レスポンス.
+     */
+    AllocationSuggestionResponse: {
+      /**
+       * Forecast Period
+       * @description 対象期間 (YYYY-MM)
+       */
+      forecast_period: string;
+      /**
+       * Customer Id
+       * @description 得意先ID
+       */
+      customer_id: number;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID
+       */
+      delivery_place_id: number;
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id: number;
+      /**
+       * Lot Id
+       * @description ロットID
+       */
+      lot_id: number;
+      /**
+       * Quantity
+       * @description 引当数量
+       */
+      quantity: string;
+      /**
+       * Allocation Type
+       * @description 引当タイプ
+       * @enum {string}
+       */
+      allocation_type: "soft" | "hard";
+      /**
+       * Source
+       * @description 発生源 (forecast_import / order_preview)
+       */
+      source: string;
+      /**
+       * Order Line Id
+       * @description オーダー明細ID (Preview時など)
+       */
+      order_line_id?: number | null;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /**
+       * Lot Number
+       * @description ロット番号
+       */
+      lot_number?: string | null;
+      /**
+       * Lot Expiry Date
+       * @description ロット有効期限
+       */
+      lot_expiry_date?: string | null;
+      /**
+       * Warehouse Name
+       * @description 倉庫名
+       */
+      warehouse_name?: string | null;
+    };
+    /**
+     * BatchJobCreate
+     * @description バッチジョブ作成スキーマ.
+     */
+    BatchJobCreate: {
+      /**
+       * Job Name
+       * @description ジョブ名
+       */
+      job_name: string;
+      /**
+       * Job Type
+       * @description ジョブ種別（allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation）
+       */
+      job_type: string;
+      /**
+       * Parameters
+       * @description ジョブパラメータ（JSON）
+       */
+      parameters?: Record<string, never> | null;
+    };
+    /**
+     * BatchJobExecuteRequest
+     * @description バッチジョブ実行リクエスト.
+     */
+    BatchJobExecuteRequest: {
+      /**
+       * Parameters
+       * @description 実行時パラメータ（上書き）
+       */
+      parameters?: Record<string, never> | null;
+    };
+    /**
+     * BatchJobExecuteResponse
+     * @description バッチジョブ実行レスポンス.
+     */
+    BatchJobExecuteResponse: {
+      /** Job Id */
+      job_id: number;
+      /** Status */
+      status: string;
+      /** Message */
+      message: string;
+    };
+    /**
+     * BatchJobListResponse
+     * @description バッチジョブ一覧レスポンス.
+     */
+    BatchJobListResponse: {
+      /** Jobs */
+      jobs: components["schemas"]["BatchJobResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+    };
+    /**
+     * BatchJobResponse
+     * @description バッチジョブレスポンス.
+     */
+    BatchJobResponse: {
+      /**
+       * Job Name
+       * @description ジョブ名
+       */
+      job_name: string;
+      /**
+       * Job Type
+       * @description ジョブ種別（allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation）
+       */
+      job_type: string;
+      /**
+       * Parameters
+       * @description ジョブパラメータ（JSON）
+       */
+      parameters?: Record<string, never> | null;
+      /** Job Id */
+      job_id: number;
+      /**
+       * Status
+       * @description ステータス（pending/running/completed/failed）
+       */
+      status: string;
+      /**
+       * Result Message
+       * @description 実行結果メッセージ
+       */
+      result_message?: string | null;
+      /**
+       * Started At
+       * @description 開始日時
+       */
+      started_at?: string | null;
+      /**
+       * Completed At
+       * @description 完了日時
+       */
+      completed_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       * @description 作成日時
+       */
+      created_at: string;
+    };
+    /**
+     * BusinessRuleCreate
+     * @description 業務ルール作成スキーマ.
+     */
+    BusinessRuleCreate: {
+      /**
+       * Rule Code
+       * @description ルールコード（一意）
+       */
+      rule_code: string;
+      /**
+       * Rule Name
+       * @description ルール名
+       */
+      rule_name: string;
+      /**
+       * Rule Type
+       * @description ルール種別（allocation/expiry_warning/kanban/other）
+       */
+      rule_type: string;
+      /**
+       * Rule Parameters
+       * @description ルールパラメータ（JSON）
+       */
+      rule_parameters: Record<string, never>;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+    };
+    /**
+     * BusinessRuleListResponse
+     * @description 業務ルール一覧レスポンス.
+     */
+    BusinessRuleListResponse: {
+      /** Rules */
+      rules: components["schemas"]["BusinessRuleResponse"][];
+      /** Total */
+      total: number;
+    };
+    /**
+     * BusinessRuleResponse
+     * @description 業務ルールレスポンス.
+     */
+    BusinessRuleResponse: {
+      /**
+       * Rule Code
+       * @description ルールコード（一意）
+       */
+      rule_code: string;
+      /**
+       * Rule Name
+       * @description ルール名
+       */
+      rule_name: string;
+      /**
+       * Rule Type
+       * @description ルール種別（allocation/expiry_warning/kanban/other）
+       */
+      rule_type: string;
+      /**
+       * Rule Parameters
+       * @description ルールパラメータ（JSON）
+       */
+      rule_parameters: Record<string, never>;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** Rule Id */
+      rule_id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * BusinessRuleUpdate
+     * @description 業務ルール更新スキーマ.
+     */
+    BusinessRuleUpdate: {
+      /**
+       * Rule Name
+       * @description ルール名
+       */
+      rule_name?: string | null;
+      /**
+       * Rule Type
+       * @description ルール種別
+       */
+      rule_type?: string | null;
+      /**
+       * Rule Parameters
+       * @description ルールパラメータ（JSON）
+       */
+      rule_parameters?: Record<string, never> | null;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       */
+      is_active?: boolean | null;
+    };
+    /**
+     * CandidateLotItem
+     * @description Candidate lot item (DDL: lots).
+     */
+    CandidateLotItem: {
+      /** Lot Id */
+      lot_id: number;
+      /** Lot Number */
+      lot_number: string;
+      /** Current Quantity */
+      current_quantity: string;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /**
+       * Available Quantity
+       * @description 引当可能数量
+       */
+      available_quantity: string;
+      /** Product Id */
+      product_id: number;
+      /** Warehouse Id */
+      warehouse_id: number;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
+      /** Warehouse Name */
+      warehouse_name?: string | null;
+      /** Expiry Date */
+      expiry_date?: string | null;
+      /** Received Date */
+      received_date?: string | null;
+      /** Delivery Place Id */
+      delivery_place_id?: number | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Internal Unit */
+      internal_unit?: string | null;
+      /** External Unit */
+      external_unit?: string | null;
+      /** Qty Per Internal Unit */
+      qty_per_internal_unit?: number | null;
+      /**
+       * Status
+       * @default active
+       */
+      status: string;
+      /** Lock Reason */
+      lock_reason?: string | null;
+    };
+    /**
+     * CandidateLotsResponse
+     * @description Candidate lots list response.
+     */
+    CandidateLotsResponse: {
+      /** Items */
+      items?: components["schemas"]["CandidateLotItem"][];
+      /**
+       * Total
+       * @default 0
+       */
+      total: number;
+    };
+    /**
+     * CapCheckResult
+     * @description 上限チェック結果.
+     */
+    CapCheckResult: {
+      /**
+       * Lot Split
+       * @description ロット分割チェック（OK/NG）
+       */
+      lot_split: string;
+      /**
+       * Destinations
+       * @description 納品先数チェック（OK/NG）
+       */
+      destinations: string;
+      /**
+       * Order Lines
+       * @description 受注明細行チェック（OK/NG）
+       */
+      order_lines: string;
+    };
+    /**
+     * CustomerCreate
+     * @description Create customer request.
+     */
+    CustomerCreate: {
+      /** Customer Code */
+      customer_code: string;
+      /** Customer Name */
+      customer_name: string;
+    };
+    /**
+     * CustomerItemCreate
+     * @description Schema for creating a customer item mapping.
+     */
+    CustomerItemCreate: {
+      /**
+       * Customer Id
+       * @description 得意先ID
+       */
+      customer_id: number;
+      /**
+       * External Product Code
+       * @description 得意先品番
+       */
+      external_product_code: string;
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id: number;
+      /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
+      supplier_id?: number | null;
+      /**
+       * Base Unit
+       * @description 基本単位
+       */
+      base_unit: string;
+      /**
+       * Pack Unit
+       * @description 梱包単位
+       */
+      pack_unit?: string | null;
+      /**
+       * Pack Quantity
+       * @description 梱包数量
+       */
+      pack_quantity?: number | null;
+      /**
+       * Special Instructions
+       * @description 特記事項
+       */
+      special_instructions?: string | null;
+    };
+    /**
+     * CustomerItemResponse
+     * @description Schema for customer item response.
+     */
+    CustomerItemResponse: {
+      /**
+       * Customer Id
+       * @description 得意先ID
+       */
+      customer_id: number;
+      /**
+       * External Product Code
+       * @description 得意先品番
+       */
+      external_product_code: string;
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id: number;
+      /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
+      supplier_id?: number | null;
+      /**
+       * Base Unit
+       * @description 基本単位
+       */
+      base_unit: string;
+      /**
+       * Pack Unit
+       * @description 梱包単位
+       */
+      pack_unit?: string | null;
+      /**
+       * Pack Quantity
+       * @description 梱包数量
+       */
+      pack_quantity?: number | null;
+      /**
+       * Special Instructions
+       * @description 特記事項
+       */
+      special_instructions?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * CustomerItemUpdate
+     * @description Schema for updating a customer item mapping.
+     */
+    CustomerItemUpdate: {
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id?: number | null;
+      /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
+      supplier_id?: number | null;
+      /**
+       * Base Unit
+       * @description 基本単位
+       */
+      base_unit?: string | null;
+      /**
+       * Pack Unit
+       * @description 梱包単位
+       */
+      pack_unit?: string | null;
+      /**
+       * Pack Quantity
+       * @description 梱包数量
+       */
+      pack_quantity?: number | null;
+      /**
+       * Special Instructions
+       * @description 特記事項
+       */
+      special_instructions?: string | null;
+    };
+    /**
+     * CustomerResponse
+     * @description Customer response (DDL: customers).
+     */
+    CustomerResponse: {
+      /** Customer Code */
+      customer_code: string;
+      /** Customer Name */
+      customer_name: string;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * CustomerUpdate
+     * @description Update customer request.
+     */
+    CustomerUpdate: {
+      /** Customer Name */
+      customer_name?: string | null;
+    };
+    /**
+     * DashboardStatsResponse
+     * @description ダッシュボード統計レスポンス.
+     */
+    DashboardStatsResponse: {
+      /** Total Stock */
+      total_stock: number;
+      /** Total Orders */
+      total_orders: number;
+      /** Unallocated Orders */
+      unallocated_orders: number;
+      /** Allocation Rate */
+      allocation_rate: number;
+    };
+    /**
+     * DragAssignRequest
+     * @description Deprecated: Use ManualAllocationRequest instead.
+     */
+    DragAssignRequest: {
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Allocated Quantity */
+      allocated_quantity?: number | string | null;
+      /**
+       * Allocate Qty
+       * @description Deprecated: use allocated_quantity
+       */
+      allocate_qty?: number | string | null;
+    };
+    /**
+     * DragAssignResponse
+     * @description Deprecated: Use ManualAllocationResponse instead.
+     */
+    DragAssignResponse: {
+      /** Success */
+      success: boolean;
+      /** Message */
+      message: string;
+      /** Allocation Id */
+      allocation_id: number;
+      /** Remaining Lot Qty */
+      remaining_lot_qty?: string | null;
+    };
+    /**
+     * ExpectedLotCreate
+     * @description Payload for creating expected lots.
+     */
+    ExpectedLotCreate: {
+      /** Inbound Plan Line Id */
+      inbound_plan_line_id: number;
+      /** Expected Lot Number */
+      expected_lot_number?: string | null;
+      /** Expected Quantity */
+      expected_quantity: number | string;
+      /** Expected Expiry Date */
+      expected_expiry_date?: string | null;
+    };
+    /**
+     * ExpectedLotResponse
+     * @description Response model for expected lots.
+     */
+    ExpectedLotResponse: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Inbound Plan Line Id */
+      inbound_plan_line_id: number;
+      /** Expected Lot Number */
+      expected_lot_number?: string | null;
+      /** Expected Quantity */
+      expected_quantity: string;
+      /** Expected Expiry Date */
+      expected_expiry_date?: string | null;
+      /** Expected Lot Id */
+      expected_lot_id: number;
+    };
+    /**
+     * FefoLineAllocation
+     * @description FEFO line allocation detail.
+     */
+    FefoLineAllocation: {
+      /** Order Line Id */
+      order_line_id: number;
+      /** Product Id */
+      product_id: number;
+      /**
+       * Order Quantity
+       * @description 受注数量
+       */
+      order_quantity: string;
+      /**
+       * Already Allocated Quantity
+       * @description 既存引当数量
+       * @default 0
+       */
+      already_allocated_quantity: string;
+      /** Allocations */
+      allocations?: components["schemas"]["FefoLotAllocation"][];
+      /** Warnings */
+      warnings?: string[];
+    };
+    /**
+     * FefoLotAllocation
+     * @description FEFO lot allocation detail.
+     */
+    FefoLotAllocation: {
+      /** Lot Id */
+      lot_id: number;
+      /** Lot Number */
+      lot_number: string;
+      /**
+       * Allocated Quantity
+       * @description 引当数量
+       */
+      allocated_quantity: string;
+      /** Expiry Date */
+      expiry_date?: string | null;
+      /** Received Date */
+      received_date?: string | null;
+    };
+    /**
+     * FefoPreviewRequest
+     * @description FEFO preview request.
+     */
+    FefoPreviewRequest: {
+      /** Order Id */
+      order_id: number;
+    };
+    /**
+     * FefoPreviewResponse
+     * @description FEFO preview response.
+     */
+    FefoPreviewResponse: {
+      /** Order Id */
+      order_id: number;
+      /** Lines */
+      lines?: components["schemas"]["FefoLineAllocation"][];
+      /** Warnings */
+      warnings?: string[];
+    };
+    /**
+     * ForecastBulkImportItem
+     * @description Single item for bulk import.
+     */
+    ForecastBulkImportItem: {
+      /** Customer Code */
+      customer_code: string;
+      /** Delivery Place Code */
+      delivery_place_code: string;
+      /** Product Code */
+      product_code: string;
+      /**
+       * Forecast Date
+       * Format: date
+       */
+      forecast_date: string;
+      /** Forecast Quantity */
+      forecast_quantity: number | string;
+      /** Unit */
+      unit?: string | null;
+      /** Forecast Period */
+      forecast_period: string;
+    };
+    /**
+     * ForecastBulkImportRequest
+     * @description Bulk import request payload.
+     */
+    ForecastBulkImportRequest: {
+      /** Items */
+      items: components["schemas"]["ForecastBulkImportItem"][];
+      /**
+       * Replace Existing
+       * @description If true, archive existing forecasts before importing new ones
+       * @default true
+       */
+      replace_existing: boolean;
+    };
+    /**
+     * ForecastBulkImportSummary
+     * @description Aggregated summary of bulk import outcomes.
+     */
+    ForecastBulkImportSummary: {
+      /** Imported Count */
+      imported_count: number;
+      /** Archived Count */
+      archived_count: number;
+      /**
+       * Skipped Count
+       * @default 0
+       */
+      skipped_count: number;
+      /** Errors */
+      errors?: string[];
+    };
+    /**
+     * ForecastCreate
+     * @description Payload for creating a new forecast entry.
+     */
+    ForecastCreate: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /**
+       * Forecast Date
+       * Format: date
+       */
+      forecast_date: string;
+      /** Forecast Quantity */
+      forecast_quantity: number | string;
+      /** Unit */
+      unit?: string | null;
+      /** Forecast Period */
+      forecast_period: string;
+    };
+    /**
+     * ForecastGroupKey
+     * @description Group key for customer × delivery_place × product.
+     */
+    ForecastGroupKey: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Customer Code */
+      customer_code?: string | null;
+      /** Customer Name */
+      customer_name?: string | null;
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Product Code */
+      product_code?: string | null;
+      /** Product Name */
+      product_name?: string | null;
+    };
+    /**
+     * ForecastGroupResponse
+     * @description Grouped forecasts by customer × delivery_place × product.
+     */
+    ForecastGroupResponse: {
+      group_key: components["schemas"]["ForecastGroupKey"];
+      /** Forecasts */
+      forecasts?: components["schemas"]["ForecastResponse"][];
+      /** Snapshot At */
+      snapshot_at?: string | null;
+    };
+    /**
+     * ForecastHistoryResponse
+     * @description API response model for forecast_history entries.
+     */
+    ForecastHistoryResponse: {
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /**
+       * Forecast Date
+       * Format: date
+       */
+      forecast_date: string;
+      /** Forecast Quantity */
+      forecast_quantity: string;
+      /** Unit */
+      unit?: string | null;
+      /** Forecast Period */
+      forecast_period: string;
+      /** Id */
+      id: number;
+      /**
+       * Snapshot At
+       * Format: date-time
+       */
+      snapshot_at: string;
+      /**
+       * Archived At
+       * Format: date-time
+       */
+      archived_at: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Customer Code */
+      customer_code?: string | null;
+      /** Customer Name */
+      customer_name?: string | null;
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Product Code */
+      product_code?: string | null;
+      /** Product Name */
+      product_name?: string | null;
+    };
+    /**
+     * ForecastListResponse
+     * @description List response with grouped forecasts.
+     */
+    ForecastListResponse: {
+      /** Items */
+      items: components["schemas"]["ForecastGroupResponse"][];
+      /** Total */
+      total: number;
+    };
+    /**
+     * ForecastResponse
+     * @description API response model for forecast_current entries.
+     */
+    ForecastResponse: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Customer Id */
+      customer_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Product Id */
+      product_id: number;
+      /**
+       * Forecast Date
+       * Format: date
+       */
+      forecast_date: string;
+      /** Forecast Quantity */
+      forecast_quantity: string;
+      /** Unit */
+      unit?: string | null;
+      /** Forecast Period */
+      forecast_period: string;
+      /** Id */
+      id: number;
+      /**
+       * Snapshot At
+       * Format: date-time
+       */
+      snapshot_at: string;
+      /** Customer Code */
+      customer_code?: string | null;
+      /** Customer Name */
+      customer_name?: string | null;
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Product Code */
+      product_code?: string | null;
+      /** Product Name */
+      product_name?: string | null;
+    };
+    /**
+     * ForecastUpdate
+     * @description Mutable fields for updating a forecast entry.
+     */
+    ForecastUpdate: {
+      /** Forecast Quantity */
+      forecast_quantity?: number | string | null;
+      /** Unit */
+      unit?: string | null;
+    };
+    /** HTTPValidationError */
+    HTTPValidationError: {
+      /** Detail */
+      detail?: components["schemas"]["ValidationError"][];
+    };
+    /**
+     * InboundPlanCreate
+     * @description Payload for registering inbound plans.
+     */
+    InboundPlanCreate: {
+      /** Plan Number */
+      plan_number: string;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Planned Arrival Date
+       * Format: date
+       */
+      planned_arrival_date: string;
+      /** @default planned */
+      status: components["schemas"]["InboundPlanStatus"];
+      /** Notes */
+      notes?: string | null;
+      /** Lines */
+      lines?: components["schemas"]["InboundPlanLineCreate"][] | null;
+    };
+    /**
+     * InboundPlanDetailResponse
+     * @description Inbound plan representation bundled with lines and expected lots.
+     */
+    InboundPlanDetailResponse: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Plan Number */
+      plan_number: string;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Planned Arrival Date
+       * Format: date
+       */
+      planned_arrival_date: string;
+      /** @default planned */
+      status: components["schemas"]["InboundPlanStatus"];
+      /** Notes */
+      notes?: string | null;
+      /** Inbound Plan Id */
+      inbound_plan_id: number;
+      /** Lines */
+      lines?: components["schemas"]["InboundPlanLineResponse"][];
+    };
+    /**
+     * InboundPlanLineCreate
+     * @description Payload for creating inbound plan lines.
+     */
+    InboundPlanLineCreate: {
+      /** Product Id */
+      product_id: number;
+      /** Planned Quantity */
+      planned_quantity: number | string;
+      /** Unit */
+      unit: string;
+      /** Expected Lots */
+      expected_lots?: components["schemas"]["ExpectedLotCreate"][] | null;
+    };
+    /**
+     * InboundPlanLineResponse
+     * @description Response model for inbound plan lines.
+     */
+    InboundPlanLineResponse: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Product Id */
+      product_id: number;
+      /** Planned Quantity */
+      planned_quantity: string;
+      /** Unit */
+      unit: string;
+      /** Inbound Plan Line Id */
+      inbound_plan_line_id: number;
+      /** Inbound Plan Id */
+      inbound_plan_id: number;
+      /** Expected Lots */
+      expected_lots?: components["schemas"]["ExpectedLotResponse"][];
+    };
+    /**
+     * InboundPlanListResponse
+     * @description Response wrapper for inbound plan listings.
+     */
+    InboundPlanListResponse: {
+      /** Items */
+      items: components["schemas"]["InboundPlanResponse"][];
+      /** Total */
+      total: number;
+    };
+    /**
+     * InboundPlanReceiveRequest
+     * @description Payload for confirming inbound receipt.
+     */
+    InboundPlanReceiveRequest: {
+      /**
+       * Received At
+       * Format: date-time
+       */
+      received_at: string;
+      /** Lot Ids */
+      lot_ids?: number[] | null;
+    };
+    /**
+     * InboundPlanReceiveResponse
+     * @description Response model returned after processing inbound receipt.
+     */
+    InboundPlanReceiveResponse: {
+      /** Success */
+      success: boolean;
+      /** Message */
+      message?: string | null;
+      /** Created Lot Ids */
+      created_lot_ids?: number[];
+    };
+    /**
+     * InboundPlanResponse
+     * @description Response model for inbound plans.
+     */
+    InboundPlanResponse: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Plan Number */
+      plan_number: string;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Planned Arrival Date
+       * Format: date
+       */
+      planned_arrival_date: string;
+      /** @default planned */
+      status: components["schemas"]["InboundPlanStatus"];
+      /** Notes */
+      notes?: string | null;
+      /** Inbound Plan Id */
+      inbound_plan_id: number;
+    };
+    /**
+     * InboundPlanStatus
+     * @description Valid lifecycle states for inbound plans.
+     * @enum {string}
+     */
+    InboundPlanStatus: "planned" | "partially_received" | "received" | "cancelled";
+    /**
+     * InboundPlanUpdate
+     * @description Mutable fields for inbound plans.
+     */
+    InboundPlanUpdate: {
+      /** Planned Arrival Date */
+      planned_arrival_date?: string | null;
+      status?: components["schemas"]["InboundPlanStatus"] | null;
+      /** Notes */
+      notes?: string | null;
+    };
+    /**
+     * InventoryItemResponse
+     * @description API response model for inventory items (aggregated summary).
+     *
+     *     This schema represents a calculated summary of inventory from the lots table,
+     *     aggregated by product and warehouse. It does not map to a physical table.
+     */
+    InventoryItemResponse: {
+      /** Inventory Item Id */
+      inventory_item_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Warehouse Id */
+      warehouse_id: number;
+      /** Total Quantity */
+      total_quantity: string;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Available Quantity */
+      available_quantity: string;
+      /**
+       * Last Updated
+       * Format: date-time
+       */
+      last_updated: string;
+      /** Product Name */
+      product_name?: string | null;
+      /** Product Code */
+      product_code?: string | null;
+      /** Warehouse Name */
+      warehouse_name?: string | null;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
+    };
+    /**
+     * LotCreate
+     * @description Payload for creating lots.
+     */
+    LotCreate: {
+      /** Lot Number */
+      lot_number: string;
+      /** Product Id */
+      product_id: number;
+      /** Warehouse Id */
+      warehouse_id: number;
+      /** Supplier Id */
+      supplier_id?: number | null;
+      /** Expected Lot Id */
+      expected_lot_id?: number | null;
+      /**
+       * Received Date
+       * Format: date
+       */
+      received_date: string;
+      /** Expiry Date */
+      expiry_date?: string | null;
+      /**
+       * Current Quantity
+       * @default 0
+       */
+      current_quantity: number | string;
+      /**
+       * Allocated Quantity
+       * @default 0
+       */
+      allocated_quantity: number | string;
+      /** Unit */
+      unit: string;
+      /** @default active */
+      status: components["schemas"]["LotStatus"];
+      /**
+       * Inspection Status
+       * @default not_required
+       */
+      inspection_status: string;
+      /** Inspection Date */
+      inspection_date?: string | null;
+      /** Inspection Cert Number */
+      inspection_cert_number?: string | null;
+    };
+    /**
+     * LotLock
+     * @description Payload for locking a lot.
+     */
+    LotLock: {
+      /** Reason */
+      reason: string;
+    };
+    /**
+     * LotResponse
+     * @description API response model for lots.
+     */
+    LotResponse: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Lot Number */
+      lot_number: string;
+      /** Product Id */
+      product_id: number;
+      /** Warehouse Id */
+      warehouse_id: number;
+      /** Supplier Id */
+      supplier_id?: number | null;
+      /** Expected Lot Id */
+      expected_lot_id?: number | null;
+      /**
+       * Received Date
+       * Format: date
+       */
+      received_date: string;
+      /** Expiry Date */
+      expiry_date?: string | null;
+      /**
+       * Current Quantity
+       * @default 0
+       */
+      current_quantity: string;
+      /**
+       * Allocated Quantity
+       * @default 0
+       */
+      allocated_quantity: string;
+      /** Unit */
+      unit: string;
+      /** @default active */
+      status: components["schemas"]["LotStatus"];
+      /**
+       * Inspection Status
+       * @default not_required
+       */
+      inspection_status: string;
+      /** Inspection Date */
+      inspection_date?: string | null;
+      /** Inspection Cert Number */
+      inspection_cert_number?: string | null;
+      /** Lot Id */
+      lot_id: number;
+      /** Product Name */
+      product_name: string;
+      /** Product Code */
+      product_code: string;
+      /** Supplier Name */
+      supplier_name: string;
+      /** Warehouse Name */
+      warehouse_name?: string | null;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      /** Last Updated */
+      last_updated?: string | null;
+    };
+    /**
+     * LotStatus
+     * @description Valid lot lifecycle statuses.
+     * @enum {string}
+     */
+    LotStatus: "active" | "depleted" | "expired" | "quarantine" | "locked";
+    /**
+     * LotUpdate
+     * @description Mutable fields for lot updates.
+     */
+    LotUpdate: {
+      /** Supplier Id */
+      supplier_id?: number | null;
+      /** Expected Lot Id */
+      expected_lot_id?: number | null;
+      /** Received Date */
+      received_date?: string | null;
+      /** Expiry Date */
+      expiry_date?: string | null;
+      /** Current Quantity */
+      current_quantity?: number | string | null;
+      /** Allocated Quantity */
+      allocated_quantity?: number | string | null;
+      /** Unit */
+      unit?: string | null;
+      status?: components["schemas"]["LotStatus"] | null;
+      /** Inspection Status */
+      inspection_status?: string | null;
+      /** Inspection Date */
+      inspection_date?: string | null;
+      /** Inspection Cert Number */
+      inspection_cert_number?: string | null;
+    };
+    /** ManualAllocationItem */
+    ManualAllocationItem: {
+      /** Lot Id */
+      lot_id: number;
+      /** Quantity */
+      quantity: number;
+    };
+    /** ManualAllocationSavePayload */
+    ManualAllocationSavePayload: {
+      /** Allocations */
+      allocations: components["schemas"]["ManualAllocationItem"][];
+    };
+    /**
+     * MasterChangeLogListResponse
+     * @description マスタ変更履歴一覧レスポンス.
+     */
+    MasterChangeLogListResponse: {
+      /** Logs */
+      logs: components["schemas"]["MasterChangeLogResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+    };
+    /**
+     * MasterChangeLogResponse
+     * @description マスタ変更履歴レスポンス.
+     */
+    MasterChangeLogResponse: {
+      /** Change Log Id */
+      change_log_id: number;
+      /**
+       * Table Name
+       * @description テーブル名
+       */
+      table_name: string;
+      /**
+       * Record Id
+       * @description レコードID
+       */
+      record_id: number;
+      /**
+       * Change Type
+       * @description 変更種別（insert/update/delete）
+       */
+      change_type: string;
+      /**
+       * Old Values
+       * @description 変更前の値（JSON）
+       */
+      old_values?: Record<string, never> | null;
+      /**
+       * New Values
+       * @description 変更後の値（JSON）
+       */
+      new_values?: Record<string, never> | null;
+      /**
+       * Changed By
+       * @description 変更者（ユーザーID）
+       */
+      changed_by: number;
+      /**
+       * Changed At
+       * Format: date-time
+       * @description 変更日時
+       */
+      changed_at: string;
+    };
+    /**
+     * OperationLogListResponse
+     * @description 操作ログ一覧レスポンス.
+     */
+    OperationLogListResponse: {
+      /** Logs */
+      logs: components["schemas"]["OperationLogResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+    };
+    /**
+     * OperationLogResponse
+     * @description 操作ログレスポンス.
+     */
+    OperationLogResponse: {
+      /** Log Id */
+      log_id: number;
+      /** User Id */
+      user_id?: number | null;
+      /**
+       * Operation Type
+       * @description 操作種別（create/update/delete/login/logout/export）
+       */
+      operation_type: string;
+      /**
+       * Target Table
+       * @description 対象テーブル名
+       */
+      target_table: string;
+      /**
+       * Target Id
+       * @description 対象レコードID
+       */
+      target_id?: number | null;
+      /**
+       * Changes
+       * @description 変更内容（JSON）
+       */
+      changes?: Record<string, never> | null;
+      /**
+       * Ip Address
+       * @description IPアドレス
+       */
+      ip_address?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       * @description 作成日時
+       */
+      created_at: string;
+    };
+    /**
+     * OrderCreate
+     * @description Create order request.
+     */
+    OrderCreate: {
+      /** Order Number */
+      order_number: string;
+      /** Customer Id */
+      customer_id: number;
+      /**
+       * Order Date
+       * Format: date
+       */
+      order_date: string;
+      /** Lines */
+      lines?: components["schemas"]["OrderLineCreate"][];
+    };
+    /**
+     * OrderLineCreate
+     * @description Create order line request.
+     */
+    OrderLineCreate: {
+      /** Product Id */
+      product_id: number;
+      /**
+       * Delivery Date
+       * Format: date
+       */
+      delivery_date: string;
+      /**
+       * Order Quantity
+       * @description 受注数量
+       */
+      order_quantity: number | string;
+      /** Unit */
+      unit: string;
+      /**
+       * Converted Quantity
+       * @description 社内基準単位換算数量
+       */
+      converted_quantity?: number | string | null;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /**
+       * Status
+       * @default pending
+       */
+      status: string;
+    };
+    /**
+     * OrderLineResponse
+     * @description Order line response (DDL: order_lines).
+     */
+    OrderLineResponse: {
+      /** Product Id */
+      product_id: number;
+      /**
+       * Delivery Date
+       * Format: date
+       */
+      delivery_date: string;
+      /**
+       * Order Quantity
+       * @description 受注数量
+       */
+      order_quantity: string;
+      /** Unit */
+      unit: string;
+      /**
+       * Converted Quantity
+       * @description 社内基準単位換算数量
+       */
+      converted_quantity?: string | null;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /**
+       * Status
+       * @default pending
+       */
+      status: string;
+      /** Id */
+      id: number;
+      /** Order Id */
+      order_id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Supplier Name */
+      supplier_name?: string | null;
+      /** Product Internal Unit */
+      product_internal_unit?: string | null;
+      /** Product External Unit */
+      product_external_unit?: string | null;
+      /** Product Qty Per Internal Unit */
+      product_qty_per_internal_unit?: number | null;
+      /** Product Code */
+      product_code?: string | null;
+      /** Product Name */
+      product_name?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Allocations */
+      allocations?: components["schemas"]["AllocationResponse"][];
+      /**
+       * Allocated Quantity
+       * @description 引当済数量
+       * @default 0
+       */
+      allocated_quantity: string;
+    };
+    /**
+     * OrderWithLinesResponse
+     * @description Order with lines response.
+     */
+    OrderWithLinesResponse: {
+      /** Order Number */
+      order_number: string;
+      /** Customer Id */
+      customer_id: number;
+      /**
+       * Order Date
+       * Format: date
+       */
+      order_date: string;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Lines */
+      lines?: components["schemas"]["OrderLineResponse"][];
+    };
+    /**
+     * ProductCreate
+     * @description Payload to create a product.
+     */
+    ProductCreate: {
+      /** Product Code */
+      product_code: string;
+      /** Product Name */
+      product_name: string;
+      /**
+       * Internal Unit
+       * @default CAN
+       */
+      internal_unit: string;
+      /**
+       * External Unit
+       * @default KG
+       */
+      external_unit: string;
+      /**
+       * Qty Per Internal Unit
+       * @default 1
+       */
+      qty_per_internal_unit: number;
+      /** Customer Part No */
+      customer_part_no?: string | null;
+      /** Maker Item Code */
+      maker_item_code?: string | null;
+      /**
+       * Is Active
+       * @default true
+       */
+      is_active: boolean;
+    };
+    /**
+     * ProductOut
+     * @description Product response model.
+     */
+    ProductOut: {
+      /** Id */
+      id: number;
+      /** Product Code */
+      product_code: string;
+      /** Product Name */
+      product_name: string;
+      /** Internal Unit */
+      internal_unit: string;
+      /** External Unit */
+      external_unit: string;
+      /** Qty Per Internal Unit */
+      qty_per_internal_unit: number;
+      /** Customer Part No */
+      customer_part_no: string | null;
+      /** Maker Item Code */
+      maker_item_code: string | null;
+      /** Is Active */
+      is_active: boolean;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * ProductUpdate
+     * @description Payload to partially update a product.
+     */
+    ProductUpdate: {
+      /** Product Code */
+      product_code?: string | null;
+      /** Product Name */
+      product_name?: string | null;
+      /** Internal Unit */
+      internal_unit?: string | null;
+      /** External Unit */
+      external_unit?: string | null;
+      /** Qty Per Internal Unit */
+      qty_per_internal_unit?: number | null;
+      /** Customer Part No */
+      customer_part_no?: string | null;
+      /** Maker Item Code */
+      maker_item_code?: string | null;
+      /** Is Active */
+      is_active?: boolean | null;
+    };
+    /**
+     * ResponseBase
+     * @description API共通レスポンス.
+     */
+    ResponseBase: {
+      /** Success */
+      success: boolean;
+      /** Message */
+      message?: string | null;
+      /** Data */
+      data?: Record<string, never> | null;
+    };
+    /**
+     * RoleCreate
+     * @description Schema for creating a role.
+     */
+    RoleCreate: {
+      /**
+       * Role Code
+       * @description ロールコード
+       */
+      role_code: string;
+      /**
+       * Role Name
+       * @description ロール名
+       */
+      role_name: string;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+    };
+    /**
+     * RoleResponse
+     * @description Schema for role response (DDL: roles).
+     */
+    RoleResponse: {
+      /**
+       * Role Code
+       * @description ロールコード
+       */
+      role_code: string;
+      /**
+       * Role Name
+       * @description ロール名
+       */
+      role_name: string;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * RoleUpdate
+     * @description Schema for updating a role.
+     */
+    RoleUpdate: {
+      /**
+       * Role Name
+       * @description ロール名
+       */
+      role_name?: string | null;
+      /**
+       * Description
+       * @description 説明
+       */
+      description?: string | null;
+    };
+    /** SeedRequest */
+    SeedRequest: {
+      /**
+       * Seed
+       * @description Random seed for reproducibility
+       * @default 42
+       */
+      seed: number | null;
+      /**
+       * Dry Run
+       * @default false
+       */
+      dry_run: boolean;
+      /**
+       * Customers
+       * @default 3
+       */
+      customers: number;
+      /**
+       * Suppliers
+       * @default 2
+       */
+      suppliers: number;
+      /**
+       * Delivery Places
+       * @default 2
+       */
+      delivery_places: number;
+      /**
+       * Products
+       * @default 5
+       */
+      products: number;
+      /**
+       * Warehouses
+       * @default 2
+       */
+      warehouses: number;
+      /**
+       * Lots
+       * @default 10
+       */
+      lots: number;
+      /**
+       * Orders
+       * @default 5
+       */
+      orders: number;
+    };
+    /** SeedResponse */
+    SeedResponse: {
+      /** Dry Run */
+      dry_run: boolean;
+      /** Seed */
+      seed: number;
+      summary: components["schemas"]["SeedSummary"];
+      /** @description 投入後の実際のDB件数（dry_run=falseの場合のみ） */
+      actual_counts?: components["schemas"]["ActualCounts"] | null;
+    };
+    /**
+     * SeedSnapshotCreateRequest
+     * @description スナップショット作成リクエスト.
+     */
+    SeedSnapshotCreateRequest: {
+      /**
+       * Name
+       * @description スナップショット名
+       */
+      name: string;
+      /**
+       * Params Json
+       * @description パラメータJSON
+       */
+      params_json: Record<string, never>;
+      /**
+       * Profile Json
+       * @description プロファイルJSON
+       */
+      profile_json?: Record<string, never> | null;
+      /**
+       * Summary Json
+       * @description サマリJSON
+       */
+      summary_json?: Record<string, never> | null;
+    };
+    /**
+     * SeedSnapshotCreateResponse
+     * @description スナップショット作成レスポンス.
+     */
+    SeedSnapshotCreateResponse: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * SeedSnapshotListItem
+     * @description スナップショットリストアイテム.
+     */
+    SeedSnapshotListItem: {
+      /** Id */
+      id: number;
+      /** Name */
+      name: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Params Json */
+      params_json: Record<string, never>;
+      /** Summary Json */
+      summary_json?: Record<string, never> | null;
+    };
+    /**
+     * SeedSnapshotListResponse
+     * @description スナップショット一覧レスポンス.
+     */
+    SeedSnapshotListResponse: {
+      /** Snapshots */
+      snapshots: components["schemas"]["SeedSnapshotListItem"][];
+    };
+    /**
+     * SeedSnapshotRestoreResponse
+     * @description スナップショット復元レスポンス.
+     */
+    SeedSnapshotRestoreResponse: {
+      /** Task Id */
+      task_id: string;
+      /** Message */
+      message: string;
+    };
+    /**
+     * SeedSummary
+     * @description 作成しようとした件数（UPSERT前）.
+     */
+    SeedSummary: {
+      /** Customers */
+      customers: number;
+      /** Suppliers */
+      suppliers: number;
+      /** Delivery Places */
+      delivery_places: number;
+      /** Products */
+      products: number;
+      /** Warehouses */
+      warehouses: number;
+      /** Lots */
+      lots: number;
+      /** Orders */
+      orders: number;
+      /** Order Lines */
+      order_lines: number;
+      /** Allocations */
+      allocations: number;
+    };
+    /**
+     * SimulateProgressResponse
+     * @description テストデータシミュレーション進捗レスポンス.
+     */
+    SimulateProgressResponse: {
+      /** Task Id */
+      task_id: string;
+      /** Status */
+      status: string;
+      /** Phase */
+      phase: string;
+      /** Progress Pct */
+      progress_pct: number;
+      /** Logs */
+      logs: string[];
+      /** Error */
+      error?: string | null;
+    };
+    /**
+     * SimulateResultResponse
+     * @description テストデータシミュレーション結果レスポンス.
+     */
+    SimulateResultResponse: {
+      /** Success */
+      success: boolean;
+      summary?: components["schemas"]["SimulateResultSummary"] | null;
+      /** Snapshot Id */
+      snapshot_id?: number | null;
+      /** Error */
+      error?: string | null;
+    };
+    /**
+     * SimulateResultSummary
+     * @description テストデータシミュレーション結果サマリ.
+     */
+    SimulateResultSummary: {
+      /** Warehouses */
+      warehouses: number;
+      /**
+       * Forecasts
+       * @description 需要予測データ件数
+       * @default 0
+       */
+      forecasts: number;
+      /** Orders */
+      orders: number;
+      /** Order Lines */
+      order_lines: number;
+      /** Lots */
+      lots: number;
+      /** Allocations */
+      allocations: number;
+      cap_checks: components["schemas"]["CapCheckResult"];
+      /** Stock Equation Ok */
+      stock_equation_ok: boolean;
+      /**
+       * Orphan Count
+       * @description 孤児レコード数
+       * @default 0
+       */
+      orphan_count: number;
+    };
+    /**
+     * SimulateSeedRequest
+     * @description テストデータシミュレーションリクエスト.
+     */
+    SimulateSeedRequest: {
+      /**
+       * Profile
+       * @description プロファイル名（small/medium/large_near、Noneの場合はデフォルト）
+       */
+      profile?: string | null;
+      /**
+       * Random Seed
+       * @description 乱数シード（Noneの場合は現在時刻を使用）
+       */
+      random_seed?: number | null;
+      /**
+       * Warehouses
+       * @description 倉庫数（1〜10、既定=2）
+       * @default 2
+       */
+      warehouses: number;
+      /**
+       * Customers
+       * @description 顧客数（0以上、Noneの場合はプロファイル既定）
+       * @default 3
+       */
+      customers: number | null;
+      /**
+       * Suppliers
+       * @description 仕入先数（0以上、Noneの場合はプロファイル既定）
+       * @default 2
+       */
+      suppliers: number | null;
+      /**
+       * Products
+       * @description 製品数（0以上、Noneの場合はプロファイル既定）
+       * @default 5
+       */
+      products: number | null;
+      /**
+       * Lots
+       * @description ロット数（0以上、Noneの場合はプロファイル既定）
+       * @default 10
+       */
+      lots: number | null;
+      /**
+       * Orders
+       * @description 受注数（0以上、Noneの場合はプロファイル既定）
+       * @default 5
+       */
+      orders: number | null;
+      /**
+       * Lot Split Max Per Line
+       * @description 1明細あたりロット分割上限（1〜3、既定=1）
+       * @default 1
+       */
+      lot_split_max_per_line: number;
+      /**
+       * Order Line Items Per Order
+       * @description 受注明細行の上限（1〜5、既定=1）
+       * @default 1
+       */
+      order_line_items_per_order: number;
+      /**
+       * Destinations Max Per Order
+       * @description 受注の納品先上限（常に5固定）
+       * @default 5
+       */
+      destinations_max_per_order: number;
+      /**
+       * Forecasts
+       * @description 需要予測データ生成（0=無効, 1=有効, Noneはプロファイル既定）
+       * @default 1
+       */
+      forecasts: number | null;
+      /**
+       * Save Snapshot
+       * @description スナップショットを保存するか
+       * @default true
+       */
+      save_snapshot: boolean;
+      /**
+       * Snapshot Name
+       * @description スナップショット名（自動生成の場合はNone）
+       */
+      snapshot_name?: string | null;
+      /**
+       * Use Last Snapshot
+       * @description 最後のスナップショットを使用するか
+       * @default false
+       */
+      use_last_snapshot: boolean;
+      /**
+       * Case Mix
+       * @description ケースミックス比率（API上書き用、合計<=1.0）
+       */
+      case_mix?: {
+        [key: string]: number;
+      } | null;
+    };
+    /**
+     * SimulateSeedResponse
+     * @description テストデータシミュレーション開始レスポンス.
+     */
+    SimulateSeedResponse: {
+      /**
+       * Task Id
+       * @description ジョブID
+       */
+      task_id: string;
+      /**
+       * Message
+       * @description メッセージ
+       */
+      message: string;
+    };
+    /**
+     * StockHistoryCreate
+     * @description Payload for creating stock history records.
+     */
+    StockHistoryCreate: {
+      /** Lot Id */
+      lot_id: number;
+      transaction_type: components["schemas"]["StockTransactionType"];
+      /** Quantity Change */
+      quantity_change: number | string;
+      /** Quantity After */
+      quantity_after: number | string;
+      /** Reference Type */
+      reference_type?: string | null;
+      /** Reference Id */
+      reference_id?: number | null;
+      /** Transaction Date */
+      transaction_date?: string | null;
+    };
+    /**
+     * StockHistoryResponse
+     * @description API response model for stock history entries.
+     */
+    StockHistoryResponse: {
+      /** Lot Id */
+      lot_id: number;
+      transaction_type: components["schemas"]["StockTransactionType"];
+      /** Quantity Change */
+      quantity_change: string;
+      /** Quantity After */
+      quantity_after: string;
+      /** Reference Type */
+      reference_type?: string | null;
+      /** Reference Id */
+      reference_id?: number | null;
+      /** History Id */
+      history_id: number;
+      /**
+       * Transaction Date
+       * Format: date-time
+       */
+      transaction_date: string;
+    };
+    /**
+     * StockTransactionType
+     * @description Transaction types tracked in stock history.
+     * @enum {string}
+     */
+    StockTransactionType: "inbound" | "allocation" | "shipment" | "adjustment" | "return";
+    /**
+     * SupplierCreate
+     * @description Create supplier request.
+     */
+    SupplierCreate: {
+      /** Supplier Code */
+      supplier_code: string;
+      /** Supplier Name */
+      supplier_name: string;
+    };
+    /**
+     * SupplierResponse
+     * @description Supplier response (DDL: suppliers).
+     */
+    SupplierResponse: {
+      /** Supplier Code */
+      supplier_code: string;
+      /** Supplier Name */
+      supplier_name: string;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * SupplierUpdate
+     * @description Update supplier request.
+     */
+    SupplierUpdate: {
+      /** Supplier Name */
+      supplier_name?: string | null;
+    };
+    /**
+     * UserCreate
+     * @description Schema for creating a user.
+     */
+    UserCreate: {
+      /**
+       * Username
+       * @description ユーザー名
+       */
+      username: string;
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name: string;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /**
+       * Password
+       * @description パスワード（平文）
+       */
+      password: string;
+    };
+    /**
+     * UserResponse
+     * @description Schema for user response (DDL: users).
+     */
+    UserResponse: {
+      /**
+       * Username
+       * @description ユーザー名
+       */
+      username: string;
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name: string;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** Id */
+      id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * UserRoleAssignment
+     * @description Schema for assigning roles to a user.
+     */
+    UserRoleAssignment: {
+      /**
+       * Role Ids
+       * @description 割り当てるロールIDリスト
+       */
+      role_ids: number[];
+    };
+    /**
+     * UserUpdate
+     * @description Schema for updating a user.
+     */
+    UserUpdate: {
+      /**
+       * Email
+       * @description メールアドレス
+       */
+      email?: string | null;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name?: string | null;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       */
+      is_active?: boolean | null;
+      /**
+       * Password
+       * @description パスワード（平文）
+       */
+      password?: string | null;
+    };
+    /**
+     * UserWithRoles
+     * @description Schema for user with assigned roles.
+     */
+    UserWithRoles: {
+      /**
+       * Username
+       * @description ユーザー名
+       */
+      username: string;
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name: string;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** Id */
+      id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /**
+       * Role Codes
+       * @description 割り当てられたロールコード
+       */
+      role_codes?: string[];
+    };
+    /** ValidationError */
+    ValidationError: {
+      /** Location */
+      loc: (string | number)[];
+      /** Message */
+      msg: string;
+      /** Error Type */
+      type: string;
+    };
+    /**
+     * WarehouseCreate
+     * @description Create warehouse request.
+     */
+    WarehouseCreate: {
+      /** Warehouse Code */
+      warehouse_code: string;
+      /** Warehouse Name */
+      warehouse_name: string;
+      /**
+       * Warehouse Type
+       * @description internal/external/supplier
+       */
+      warehouse_type: string;
+    };
+    /** WarehouseListResponse */
+    WarehouseListResponse: {
+      /** Items */
+      items: components["schemas"]["WarehouseOut"][];
+    };
+    /** WarehouseOut */
+    WarehouseOut: {
+      /** Warehouse Id */
+      warehouse_id: number;
+      /** Warehouse Name */
+      warehouse_name: string;
+    };
+    /**
+     * WarehouseResponse
+     * @description Warehouse response (DDL: warehouses).
+     */
+    WarehouseResponse: {
+      /** Warehouse Code */
+      warehouse_code: string;
+      /** Warehouse Name */
+      warehouse_name: string;
+      /**
+       * Warehouse Type
+       * @description internal/external/supplier
+       */
+      warehouse_type: string;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * WarehouseUpdate
+     * @description Update warehouse request.
+     */
+    WarehouseUpdate: {
+      /** Warehouse Name */
+      warehouse_name?: string | null;
+      /**
+       * Warehouse Type
+       * @description internal/external/supplier
+       */
+      warehouse_type?: string | null;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    list_lots_api_lots_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                product_id?: number | null;
-                product_code?: string | null;
-                supplier_code?: string | null;
-                warehouse_code?: string | null;
-                expiry_from?: string | null;
-                expiry_to?: string | null;
-                with_stock?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LotResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_lot_api_lots_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LotCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LotResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_lot_api_lots__lot_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lot_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LotResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_lot_api_lots__lot_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lot_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LotUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LotResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_lot_api_lots__lot_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lot_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    lock_lot_api_lots__lot_id__lock_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lot_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LotLock"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LotResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    unlock_lot_api_lots__lot_id__unlock_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lot_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LotResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_lot_movements_api_lots__lot_id__movements_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                lot_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StockHistoryResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_stock_movement_api_lots_movements_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StockHistoryCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StockHistoryResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_orders_api_orders_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                status?: string | null;
-                customer_code?: string | null;
-                date_from?: string | null;
-                date_to?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderWithLinesResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_order_api_orders_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["OrderCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderWithLinesResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_order_api_orders__order_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                order_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OrderWithLinesResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cancel_order_api_orders__order_id__cancel_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                order_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    save_manual_allocations_api_orders__order_line_id__allocations_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                order_line_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ManualAllocationSavePayload"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    refresh_all_order_line_statuses_api_orders_refresh_all_statuses_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    drag_assign_api_allocations_drag_assign_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DragAssignRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DragAssignResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_allocation_api_allocations__allocation_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                allocation_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_allocations_api_allocations_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["FefoPreviewRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FefoPreviewResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    commit_allocation_api_allocations_commit_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AllocationCommitRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllocationCommitResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_allocation_candidates_api_allocation_candidates_get: {
-        parameters: {
-            query: {
-                order_line_id: number;
-                strategy?: string;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CandidateLotsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    preview_allocation_suggestions_api_allocation_suggestions_preview_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AllocationSuggestionRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_allocation_suggestions_api_allocation_suggestions_get: {
-        parameters: {
-            query?: {
-                /** @description スキップ件数 */
-                skip?: number;
-                /** @description 取得件数上限 */
-                limit?: number;
-                /** @description 期間 (YYYY-MM) */
-                forecast_period?: string | null;
-                /** @description 製品ID */
-                product_id?: number | null;
-                /** @description 得意先ID */
-                customer_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllocationSuggestionListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_warehouses_api_warehouse_alloc_warehouses_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WarehouseListResponse"];
-                };
-            };
-        };
-    };
-    list_forecasts_api_forecasts_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                customer_id?: number | null;
-                delivery_place_id?: number | null;
-                product_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ForecastListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_forecast_api_forecasts_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ForecastCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ForecastResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_forecast_history_api_forecasts_history_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                customer_id?: number | null;
-                delivery_place_id?: number | null;
-                product_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ForecastHistoryResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_forecast_api_forecasts__forecast_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                forecast_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ForecastResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_forecast_api_forecasts__forecast_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                forecast_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ForecastUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ForecastResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_forecast_api_forecasts__forecast_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                forecast_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    bulk_import_forecasts_api_forecasts_bulk_import_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ForecastBulkImportRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ForecastBulkImportSummary"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_alerts_api_alerts_get: {
-        parameters: {
-            query?: {
-                /** @description Comma-separated severity levels: critical,warning,info */
-                severity?: string | null;
-                /** @description Comma-separated categories: order,inventory,lot,forecast */
-                category?: string | null;
-                /** @description Maximum number of alerts to return */
-                limit?: number;
-                /** @description Only return open/active alerts */
-                only_open?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AlertItem"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_alert_summary_api_alerts_summary_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AlertSummaryResponse"];
-                };
-            };
-        };
-    };
-    list_inbound_plans_api_inbound_plans_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                supplier_id?: number | null;
-                product_id?: number | null;
-                status?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundPlanListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_inbound_plan_api_inbound_plans_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InboundPlanCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundPlanDetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_inbound_plan_api_inbound_plans__plan_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundPlanDetailResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_inbound_plan_api_inbound_plans__plan_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InboundPlanUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundPlanResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_inbound_plan_api_inbound_plans__plan_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_inbound_plan_lines_api_inbound_plans__plan_id__lines_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundPlanLineResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_inbound_plan_line_api_inbound_plans__plan_id__lines_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InboundPlanLineCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundPlanLineResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    receive_inbound_plan_api_inbound_plans__plan_id__receive_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                plan_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InboundPlanReceiveRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InboundPlanReceiveResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_adjustments_api_adjustments_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                lot_id?: number | null;
-                adjustment_type?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdjustmentResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_adjustment_api_adjustments_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AdjustmentCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdjustmentResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_adjustment_api_adjustments__adjustment_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                adjustment_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AdjustmentResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_inventory_items_api_inventory_items_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                product_id?: number | null;
-                warehouse_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InventoryItemResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_inventory_item_api_inventory_items__product_id___warehouse_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                product_id: number;
-                warehouse_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InventoryItemResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_warehouses_api_warehouses_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WarehouseResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_warehouse_api_warehouses_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WarehouseCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WarehouseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_warehouse_api_warehouses__warehouse_code__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                warehouse_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WarehouseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_warehouse_api_warehouses__warehouse_code__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                warehouse_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WarehouseUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WarehouseResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_warehouse_api_warehouses__warehouse_code__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                warehouse_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_suppliers_api_suppliers_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SupplierResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_supplier_api_suppliers_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SupplierCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SupplierResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_supplier_api_suppliers__supplier_code__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                supplier_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SupplierResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_supplier_api_suppliers__supplier_code__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                supplier_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SupplierUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SupplierResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_supplier_api_suppliers__supplier_code__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                supplier_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_customers_api_customers_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_customer_api_customers_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CustomerCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_customer_api_customers__customer_code__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                customer_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_customer_api_customers__customer_code__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                customer_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CustomerUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_customer_api_customers__customer_code__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                customer_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_products_api_products_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                search?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductOut"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_product_api_products_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_product_api_products__product_code__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                product_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_product_api_products__product_code__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                product_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProductUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProductOut"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_product_api_products__product_code__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                product_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_customer_items_api_customer_items_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                /** @description 得意先IDでフィルタ */
-                customer_id?: number | null;
-                /** @description 製品IDでフィルタ */
-                product_id?: number | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerItemResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_customer_item_api_customer_items_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CustomerItemCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerItemResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_customer_items_by_customer_api_customer_items__customer_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                customer_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerItemResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_customer_item_api_customer_items__customer_id___external_product_code__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                customer_id: number;
-                external_product_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CustomerItemUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerItemResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_customer_item_api_customer_items__customer_id___external_product_code__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                customer_id: number;
-                external_product_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_users_api_users_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-                /** @description 有効フラグでフィルタ */
-                is_active?: boolean | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_user_api_users_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_user_api_users__user_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserWithRoles"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_user_api_users__user_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_user_api_users__user_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    assign_user_roles_api_users__user_id__roles_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                user_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UserRoleAssignment"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserWithRoles"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_roles_api_roles_get: {
-        parameters: {
-            query?: {
-                skip?: number;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_role_api_roles_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoleCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_role_api_roles__role_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                role_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_role_api_roles__role_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                role_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RoleUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_role_api_roles__role_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                role_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_dashboard_stats_api_admin_stats_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DashboardStatsResponse"];
-                };
-            };
-        };
-    };
-    reset_database_api_admin_reset_database_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResponseBase"];
-                };
-            };
-        };
-    };
-    create_seeds_api_admin_seeds_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SeedRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SeedResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get: {
-        parameters: {
-            query?: {
-                prod?: string | null;
-                wh?: string | null;
-                limit?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CandidateLotsResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_db_counts_api_admin_healthcheck_db_counts_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    get_masters_health_api_admin_healthcheck_masters_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    simulate_seed_data_api_admin_simulate_seed_data_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SimulateSeedRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SimulateSeedResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_simulate_progress_api_admin_simulate_progress__task_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description タスクID */
-                task_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SimulateProgressResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_simulate_result_api_admin_simulate_result__task_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description タスクID */
-                task_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SimulateResultResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_seed_snapshots_api_admin_seed_snapshots_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SeedSnapshotListResponse"];
-                };
-            };
-        };
-    };
-    create_seed_snapshot_api_admin_seed_snapshots_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SeedSnapshotCreateRequest"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SeedSnapshotCreateResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_seed_snapshot_api_admin_seed_snapshots__snapshot_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description スナップショットID */
-                snapshot_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    restore_seed_snapshot_api_admin_seed_snapshots__snapshot_id__restore_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description スナップショットID */
-                snapshot_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SeedSnapshotRestoreResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    generate_test_data_endpoint_api_admin_test_data_generate_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    healthz_api_healthz_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    readyz_api_readyz_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    health_api_health_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
-    list_operation_logs_api_operation_logs_get: {
-        parameters: {
-            query?: {
-                /** @description スキップ件数 */
-                skip?: number;
-                /** @description 取得件数上限 */
-                limit?: number;
-                /** @description ユーザーIDでフィルタ */
-                user_id?: number | null;
-                /** @description 操作種別でフィルタ */
-                operation_type?: string | null;
-                /** @description 対象テーブル名でフィルタ */
-                target_table?: string | null;
-                /** @description 開始日時（この日時以降） */
-                start_date?: string | null;
-                /** @description 終了日時（この日時以前） */
-                end_date?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationLogListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_operation_log_api_operation_logs__log_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                log_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["OperationLogResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_master_change_logs_api_master_change_logs_get: {
-        parameters: {
-            query?: {
-                /** @description スキップ件数 */
-                skip?: number;
-                /** @description 取得件数上限 */
-                limit?: number;
-                /** @description テーブル名でフィルタ */
-                table_name?: string | null;
-                /** @description レコードIDでフィルタ */
-                record_id?: number | null;
-                /** @description 変更種別でフィルタ */
-                change_type?: string | null;
-                /** @description 変更者でフィルタ */
-                changed_by?: number | null;
-                /** @description 開始日時（この日時以降） */
-                start_date?: string | null;
-                /** @description 終了日時（この日時以前） */
-                end_date?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MasterChangeLogListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_master_change_log_api_master_change_logs__change_log_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                change_log_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MasterChangeLogResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_master_change_logs_by_record_api_master_change_logs_record__table_name___record_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                table_name: string;
-                record_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MasterChangeLogResponse"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_business_rules_api_business_rules_get: {
-        parameters: {
-            query?: {
-                /** @description スキップ件数 */
-                skip?: number;
-                /** @description 取得件数上限 */
-                limit?: number;
-                /** @description ルール種別でフィルタ */
-                rule_type?: string | null;
-                /** @description 有効フラグでフィルタ */
-                is_active?: boolean | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BusinessRuleListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_business_rule_api_business_rules_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BusinessRuleCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BusinessRuleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_business_rule_api_business_rules__rule_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rule_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BusinessRuleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_business_rule_api_business_rules__rule_id__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rule_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BusinessRuleUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BusinessRuleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_business_rule_api_business_rules__rule_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rule_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_business_rule_by_code_api_business_rules_code__rule_code__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rule_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BusinessRuleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_business_rule_by_code_api_business_rules_code__rule_code__put: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rule_code: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BusinessRuleUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BusinessRuleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    toggle_business_rule_active_api_business_rules__rule_id__toggle_patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rule_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BusinessRuleResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    list_batch_jobs_api_batch_jobs_get: {
-        parameters: {
-            query?: {
-                /** @description スキップ件数 */
-                skip?: number;
-                /** @description 取得件数上限 */
-                limit?: number;
-                /** @description ジョブ種別でフィルタ */
-                job_type?: string | null;
-                /** @description ステータスでフィルタ */
-                status?: string | null;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BatchJobListResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    create_batch_job_api_batch_jobs_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BatchJobCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BatchJobResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_batch_job_api_batch_jobs__job_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BatchJobResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    delete_batch_job_api_batch_jobs__job_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    execute_batch_job_api_batch_jobs__job_id__execute_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["BatchJobExecuteRequest"] | null;
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BatchJobExecuteResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    cancel_batch_job_api_batch_jobs__job_id__cancel_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                job_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BatchJobResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    root__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": unknown;
-                };
-            };
-        };
-    };
+  list_lots_api_lots_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        product_id?: number | null;
+        product_code?: string | null;
+        supplier_code?: string | null;
+        warehouse_code?: string | null;
+        expiry_from?: string | null;
+        expiry_to?: string | null;
+        with_stock?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_lot_api_lots_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LotCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_lot_api_lots__lot_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_lot_api_lots__lot_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LotUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_lot_api_lots__lot_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  lock_lot_api_lots__lot_id__lock_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LotLock"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  unlock_lot_api_lots__lot_id__unlock_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_lot_movements_api_lots__lot_id__movements_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StockHistoryResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_stock_movement_api_lots_movements_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["StockHistoryCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StockHistoryResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_orders_api_orders_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        status?: string | null;
+        customer_code?: string | null;
+        date_from?: string | null;
+        date_to?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderWithLinesResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_order_api_orders_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OrderCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderWithLinesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_order_api_orders__order_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderWithLinesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_order_api_orders__order_id__cancel_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  save_manual_allocations_api_orders__order_line_id__allocations_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_line_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ManualAllocationSavePayload"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  refresh_all_order_line_statuses_api_orders_refresh_all_statuses_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  drag_assign_api_allocations_drag_assign_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DragAssignRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DragAssignResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_allocation_api_allocations__allocation_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        allocation_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  preview_allocations_api_allocations_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FefoPreviewRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FefoPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  commit_allocation_api_allocations_commit_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AllocationCommitRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationCommitResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_allocation_candidates_api_allocation_candidates_get: {
+    parameters: {
+      query: {
+        order_line_id: number;
+        strategy?: string;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CandidateLotsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  preview_allocation_suggestions_api_allocation_suggestions_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AllocationSuggestionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_allocation_suggestions_api_allocation_suggestions_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description 期間 (YYYY-MM) */
+        forecast_period?: string | null;
+        /** @description 製品ID */
+        product_id?: number | null;
+        /** @description 得意先ID */
+        customer_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationSuggestionListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_warehouses_api_warehouse_alloc_warehouses_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseListResponse"];
+        };
+      };
+    };
+  };
+  list_forecasts_api_forecasts_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        customer_id?: number | null;
+        delivery_place_id?: number | null;
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_forecast_api_forecasts_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ForecastCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_forecast_history_api_forecasts_history_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        customer_id?: number | null;
+        delivery_place_id?: number | null;
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastHistoryResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_forecast_api_forecasts__forecast_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        forecast_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_forecast_api_forecasts__forecast_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        forecast_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ForecastUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_forecast_api_forecasts__forecast_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        forecast_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_import_forecasts_api_forecasts_bulk_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ForecastBulkImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastBulkImportSummary"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_alerts_api_alerts_get: {
+    parameters: {
+      query?: {
+        /** @description Comma-separated severity levels: critical,warning,info */
+        severity?: string | null;
+        /** @description Comma-separated categories: order,inventory,lot,forecast */
+        category?: string | null;
+        /** @description Maximum number of alerts to return */
+        limit?: number;
+        /** @description Only return open/active alerts */
+        only_open?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AlertItem"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_alert_summary_api_alerts_summary_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AlertSummaryResponse"];
+        };
+      };
+    };
+  };
+  list_inbound_plans_api_inbound_plans_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        supplier_id?: number | null;
+        product_id?: number | null;
+        status?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InboundPlanListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_inbound_plan_api_inbound_plans_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InboundPlanCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InboundPlanDetailResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_inbound_plan_api_inbound_plans__plan_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        plan_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InboundPlanDetailResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_inbound_plan_api_inbound_plans__plan_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        plan_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InboundPlanUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InboundPlanResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_inbound_plan_api_inbound_plans__plan_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        plan_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_inbound_plan_lines_api_inbound_plans__plan_id__lines_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        plan_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InboundPlanLineResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_inbound_plan_line_api_inbound_plans__plan_id__lines_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        plan_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InboundPlanLineCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InboundPlanLineResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  receive_inbound_plan_api_inbound_plans__plan_id__receive_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        plan_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["InboundPlanReceiveRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InboundPlanReceiveResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_adjustments_api_adjustments_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        lot_id?: number | null;
+        adjustment_type?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdjustmentResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_adjustment_api_adjustments_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AdjustmentCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdjustmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_adjustment_api_adjustments__adjustment_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        adjustment_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdjustmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_inventory_items_api_inventory_items_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        product_id?: number | null;
+        warehouse_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryItemResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_inventory_item_api_inventory_items__product_id___warehouse_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_id: number;
+        warehouse_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_warehouses_api_warehouses_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_warehouse_api_warehouses_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WarehouseCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_warehouse_api_warehouses__warehouse_code__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouse_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_warehouse_api_warehouses__warehouse_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouse_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WarehouseUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_warehouse_api_warehouses__warehouse_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouse_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_suppliers_api_suppliers_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_supplier_api_suppliers_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SupplierCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_supplier_api_suppliers__supplier_code__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_supplier_api_suppliers__supplier_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SupplierUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_supplier_api_suppliers__supplier_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_customers_api_customers_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_customer_api_customers_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CustomerCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_customer_api_customers__customer_code__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_customer_api_customers__customer_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CustomerUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_customer_api_customers__customer_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_products_api_products_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        search?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductOut"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_product_api_products_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_product_api_products__product_code__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_product_api_products__product_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_product_api_products__product_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_customer_items_api_customer_items_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        /** @description 得意先IDでフィルタ */
+        customer_id?: number | null;
+        /** @description 製品IDでフィルタ */
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_customer_item_api_customer_items_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CustomerItemCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_customer_items_by_customer_api_customer_items__customer_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customer_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_customer_item_api_customer_items__customer_id___external_product_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customer_id: number;
+        external_product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CustomerItemUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_customer_item_api_customer_items__customer_id___external_product_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customer_id: number;
+        external_product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_users_api_users_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        /** @description 有効フラグでフィルタ */
+        is_active?: boolean | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_user_api_users_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_user_api_users__user_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserWithRoles"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_user_api_users__user_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_user_api_users__user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  assign_user_roles_api_users__user_id__roles_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserRoleAssignment"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserWithRoles"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_roles_api_roles_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_role_api_roles_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RoleCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_role_api_roles__role_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        role_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_role_api_roles__role_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        role_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RoleUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RoleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_role_api_roles__role_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        role_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_dashboard_stats_api_admin_stats_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DashboardStatsResponse"];
+        };
+      };
+    };
+  };
+  reset_database_api_admin_reset_database_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ResponseBase"];
+        };
+      };
+    };
+  };
+  create_seeds_api_admin_seeds_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SeedRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeedResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get: {
+    parameters: {
+      query?: {
+        prod?: string | null;
+        wh?: string | null;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CandidateLotsResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_db_counts_api_admin_healthcheck_db_counts_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  get_masters_health_api_admin_healthcheck_masters_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  simulate_seed_data_api_admin_simulate_seed_data_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SimulateSeedRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SimulateSeedResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_simulate_progress_api_admin_simulate_progress__task_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description タスクID */
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SimulateProgressResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_simulate_result_api_admin_simulate_result__task_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description タスクID */
+        task_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SimulateResultResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_seed_snapshots_api_admin_seed_snapshots_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeedSnapshotListResponse"];
+        };
+      };
+    };
+  };
+  create_seed_snapshot_api_admin_seed_snapshots_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SeedSnapshotCreateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeedSnapshotCreateResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_seed_snapshot_api_admin_seed_snapshots__snapshot_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description スナップショットID */
+        snapshot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  restore_seed_snapshot_api_admin_seed_snapshots__snapshot_id__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description スナップショットID */
+        snapshot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SeedSnapshotRestoreResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  generate_test_data_endpoint_api_admin_test_data_generate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  healthz_api_healthz_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  readyz_api_readyz_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  health_api_health_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  list_operation_logs_api_operation_logs_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description ユーザーIDでフィルタ */
+        user_id?: number | null;
+        /** @description 操作種別でフィルタ */
+        operation_type?: string | null;
+        /** @description 対象テーブル名でフィルタ */
+        target_table?: string | null;
+        /** @description 開始日時（この日時以降） */
+        start_date?: string | null;
+        /** @description 終了日時（この日時以前） */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OperationLogListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_operation_log_api_operation_logs__log_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        log_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OperationLogResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_master_change_logs_api_master_change_logs_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description テーブル名でフィルタ */
+        table_name?: string | null;
+        /** @description レコードIDでフィルタ */
+        record_id?: number | null;
+        /** @description 変更種別でフィルタ */
+        change_type?: string | null;
+        /** @description 変更者でフィルタ */
+        changed_by?: number | null;
+        /** @description 開始日時（この日時以降） */
+        start_date?: string | null;
+        /** @description 終了日時（この日時以前） */
+        end_date?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MasterChangeLogListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_master_change_log_api_master_change_logs__change_log_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        change_log_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MasterChangeLogResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_master_change_logs_by_record_api_master_change_logs_record__table_name___record_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        table_name: string;
+        record_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MasterChangeLogResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_business_rules_api_business_rules_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description ルール種別でフィルタ */
+        rule_type?: string | null;
+        /** @description 有効フラグでフィルタ */
+        is_active?: boolean | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BusinessRuleListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_business_rule_api_business_rules_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BusinessRuleCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BusinessRuleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_business_rule_api_business_rules__rule_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        rule_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BusinessRuleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_business_rule_api_business_rules__rule_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        rule_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BusinessRuleUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BusinessRuleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_business_rule_api_business_rules__rule_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        rule_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_business_rule_by_code_api_business_rules_code__rule_code__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        rule_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BusinessRuleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_business_rule_by_code_api_business_rules_code__rule_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        rule_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BusinessRuleUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BusinessRuleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  toggle_business_rule_active_api_business_rules__rule_id__toggle_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        rule_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BusinessRuleResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_batch_jobs_api_batch_jobs_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description ジョブ種別でフィルタ */
+        job_type?: string | null;
+        /** @description ステータスでフィルタ */
+        status?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchJobListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_batch_job_api_batch_jobs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BatchJobCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchJobResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_batch_job_api_batch_jobs__job_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchJobResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_batch_job_api_batch_jobs__job_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_batch_job_api_batch_jobs__job_id__execute_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["BatchJobExecuteRequest"] | null;
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchJobExecuteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_batch_job_api_batch_jobs__job_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        job_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchJobResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  root__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
 }
