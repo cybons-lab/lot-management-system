@@ -120,7 +120,7 @@ export function ForecastDetailCard({
           <RelatedOrdersSection group={group} />
 
           {/* SAP連携セクション (ダミー実装) */}
-          <SAPIntegrationSection relatedOrders={group.related_orders} />
+          <SAPIntegrationSection relatedOrders={undefined} />
         </CardContent>
       ) : (
         <ForecastCollapsedSummary
