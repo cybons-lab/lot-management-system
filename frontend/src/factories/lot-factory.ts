@@ -40,6 +40,17 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     inspection_date: null,
     inspection_cert_number: null,
 
+    // Required fields for LotResponse (extended type)
+    product_name: faker.commerce.productName(),
+    product_code: `PROD-${faker.string.alphanumeric(6).toUpperCase()}`,
+    warehouse_name: "Main Warehouse",
+    supplier_name: faker.company.name(),
+    supplier_code: `SUP-${faker.string.alphanumeric(6).toUpperCase()}`,
+    delivery_place_id: null,
+    delivery_place_code: null,
+    delivery_place_name: null,
+    lot_no: null,
+
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
     ...overrides,

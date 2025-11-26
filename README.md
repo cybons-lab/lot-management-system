@@ -8,7 +8,7 @@
 - **Framework**: FastAPI 0.115.5
 - **ORM**: SQLAlchemy 2.0.36
 - **Validation**: Pydantic 2.10.1
-- **Database**: PostgreSQL/MySQL (本番), SQLite (開発)
+- **Database**: PostgreSQL 15
 
 ### Frontend
 - **Framework**: React 19

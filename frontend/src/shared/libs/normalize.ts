@@ -65,8 +65,8 @@ export interface LotUI extends Record<string, unknown> {
   // Legacy fields (deprecated, for backward compatibility)
   product_code?: string | null;
   product_name?: string | null;
-  supplier_code?: string | null;
   supplier_name?: string | null;
+  warehouse_name?: string | null;
   warehouse_code?: string;
   receipt_date?: string;
   delivery_place_id?: number | null;
@@ -188,6 +188,7 @@ export function normalizeLot(lot: LotResponse): LotUI {
     product_code: lot.product_code,
     supplier_name: lot.supplier_name,
     supplier_code: lot.supplier_code,
+    warehouse_name: (lot as any).warehouse_name,
   };
 }
 

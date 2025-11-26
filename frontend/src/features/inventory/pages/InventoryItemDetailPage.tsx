@@ -3,9 +3,10 @@
  * Inventory item detail page (product × warehouse) with tabbed interface
  */
 
-import { useParams, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
 import { useInventoryItem } from "../hooks";
 
@@ -17,10 +18,9 @@ import { ROUTES } from "@/constants/routes";
 import { useLotsQuery } from "@/hooks/api";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
-import { getLotStatuses } from "@/shared/utils/status";
-import { fmt } from "@/shared/utils/number";
-import { format } from "date-fns";
 import type { LotUI } from "@/shared/libs/normalize";
+import { fmt } from "@/shared/utils/number";
+import { getLotStatuses } from "@/shared/utils/status";
 
 // eslint-disable-next-line max-lines-per-function
 export function InventoryItemDetailPage() {

@@ -30,7 +30,7 @@ def setup_database():
     from sqlalchemy import text
 
     from app.models import Base
-    
+
     # Drop views first (they depend on tables)
     view_names = [
         "v_candidate_lots_by_order_line",
@@ -45,13 +45,13 @@ def setup_database():
         "v_lot_current_stock",
         "lot_current_stock",
     ]
-    
+
     with engine.connect() as conn:
         for view_name in view_names:
             conn.execute(text(f"DROP VIEW IF EXISTS {view_name} CASCADE"))
         conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
         conn.commit()
-    
+
     # Drop all tables
     Base.metadata.drop_all(bind=engine)
     # Create only actual tables (exclude view models)
@@ -84,6 +84,7 @@ def setup_database():
         UserRole,
         Warehouse,
     )
+
     tables = [
         Lot.__table__,
         Product.__table__,
@@ -115,22 +116,23 @@ def setup_database():
     ]
     Base.metadata.create_all(bind=engine, tables=tables)
     logger.info("✅ テスト用テーブルのみ作成しました")
-    
+
     # Apply Alembic migrations (including views)
     try:
         from alembic.config import Config
 
         from alembic import command
-        
+
         alembic_cfg = Config("/app/alembic.ini")
         alembic_cfg.set_main_option("script_location", "/app/alembic")
-        
+
         # Stamp head (since create_all created the latest schema)
         command.stamp(alembic_cfg, "head")
         logger.info("✅ Alembic head をスタンプしました")
-        
+
         # Apply views manually (since they are not in alembic migrations)
         from pathlib import Path
+
         view_sql_path = Path("/app/apply_views_v2_5.sql")
         if view_sql_path.exists():
             sql_content = view_sql_path.read_text(encoding="utf-8")

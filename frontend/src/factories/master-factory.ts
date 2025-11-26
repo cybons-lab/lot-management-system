@@ -52,7 +52,7 @@ export function createWarehouse(overrides?: Partial<Warehouse>): Warehouse {
   const city = faker.helpers.arrayElement(cities);
 
   return {
-    warehouse_code: `WH-${city.charAt(0)}${faker.number.int({ min: 1, max: 99 })}`, // eslint-disable-line no-restricted-syntax
+    warehouse_code: `WH-${city.charAt(0)}${faker.number.int({ min: 1, max: 99 })}`,
     warehouse_name: `${city}倉庫`,
     address: faker.location.streetAddress({ useFullAddress: true }),
     is_active: faker.helpers.arrayElement([true, false]),

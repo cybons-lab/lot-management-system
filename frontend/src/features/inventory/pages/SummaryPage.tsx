@@ -8,10 +8,10 @@
  */
 /* eslint-disable max-lines-per-function */
 
+import { format } from "date-fns";
 import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { Fragment, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { format } from "date-fns";
 
 import { useInventoryItems } from "../hooks";
 
@@ -24,10 +24,10 @@ import { ROUTES } from "@/constants/routes";
 import { StatCard } from "@/features/inventory/components/StatCard";
 import { useInventoryStats } from "@/features/inventory/hooks/useInventoryStats";
 import { useLotsQuery } from "@/hooks/api";
-import { Section } from "@/shared/components/layout";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
-import { getLotStatuses } from "@/shared/utils/status";
+import { Section } from "@/shared/components/layout";
 import { fmt } from "@/shared/utils/number";
+import { getLotStatuses } from "@/shared/utils/status";
 
 // ============================================
 // メインコンポーネント

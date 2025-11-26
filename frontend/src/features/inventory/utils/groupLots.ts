@@ -35,7 +35,7 @@ export function groupLotsByProduct(lots: LotUI[]): ProductGroup[] {
         productId,
         productCode: lot.product_code ?? "",
         productName: lot.product_name ?? "",
-        supplierCode: lot.supplier_code ?? "",
+        supplierCode: (lot.supplier_code as string) ?? "",
         supplierName: lot.supplier_name ?? "",
         lots: [],
         totalCurrentQuantity: 0,

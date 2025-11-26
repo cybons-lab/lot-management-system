@@ -28,7 +28,7 @@ A full-stack inventory management system for tracking materials by lot, with aut
 - **ORM:** SQLAlchemy 2.0.36 with Alembic migrations
 - **Validation:** Pydantic 2.10.1 with pydantic-settings 2.6.1
 - **Server:** Uvicorn 0.32.0
-- **Database:** PostgreSQL 15 (production), SQLite (development/testing)
+- **Database:** PostgreSQL 15
 - **Testing:** pytest with pytest-asyncio
 - **Linting:** Ruff v0.6.9 (lint + format)
 - **Code Quality:** docformatter v1.7.7, pre-commit hooks
@@ -75,7 +75,7 @@ A full-stack inventory management system for tracking materials by lot, with aut
          │              │
     ┌────┘              └────┐
     ▼                        ▼
-Schemas (I/O)          Database (PostgreSQL/SQLite)
+Schemas (I/O)          Database (PostgreSQL)
 ```
 
 **Dependency Direction:** API → Services → Repositories → Models
@@ -450,7 +450,7 @@ pip install -r requirements.txt
 
 # Setup environment
 cp .env.example .env
-# Edit .env if needed (SQLite by default)
+# Edit .env if needed
 
 # Start server (with hot reload)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
@@ -464,7 +464,7 @@ python -m app.main
 ```
 🚀 ロット管理システム v2.0.0 を起動しています...
 📦 環境: development
-💾 データベース: sqlite:////path/to/lot_management.db
+💾 データベース: postgresql://admin:***@localhost:5432/lot_management
 ✅ データベーステーブルを作成しました
 INFO:     Uvicorn running on http://0.0.0.0:8000
 ```
@@ -556,7 +556,6 @@ alembic revision --autogenerate -m "description"
 curl -X POST http://localhost:8000/api/admin/reset-database
 
 # Manual
-rm lot_management.db  # SQLite only
 # Restart server to recreate
 ```
 
@@ -829,8 +828,8 @@ docker compose logs -f lot-backend
 #### Database Inspection
 
 ```bash
-# SQLite
-sqlite3 backend/lot_management.db
+# PostgreSQL
+psql -h localhost -U admin -d lot_management
 .tables
 .schema lots
 SELECT * FROM lots;
@@ -1013,7 +1012,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "ロット管理システム"
     APP_VERSION: str = "2.0.0"
     ENVIRONMENT: str = "development"
-    DATABASE_URL: str  # SQLite default, PostgreSQL in prod
+    DATABASE_URL: str
 
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:5173", ...]
@@ -1234,19 +1233,7 @@ VITE_BACKEND_ORIGIN=http://localhost:8000
 
 ### Common Pitfalls
 
-1. **SQLite vs PostgreSQL differences**
-
-   - SQLite is development default
-   - PostgreSQL is production (use docker-compose)
-   - Some date/time operations differ
-
-2. **Foreign key constraints**
-
-   - SQLite requires `PRAGMA foreign_keys=ON` (see base_model.py)
-   - Deleting referenced records will fail
-   - Use cascade or set null appropriately
-
-3. **Async context**
+1. **Async context**
 
    - FastAPI is async, but SQLAlchemy sessions are sync
    - Use `def` (sync) for route handlers with DB operations

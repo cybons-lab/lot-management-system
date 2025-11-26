@@ -3,7 +3,7 @@
 :toc-title: 目次
 :sectnums:
 
-**最終更新:** 2025-11-25
+**最終更新:** 2025-11-26
 
 == 概要
 
@@ -11,6 +11,40 @@
 散在していたドキュメントを機能別に統合し、参照性を向上させました。
 
 == 統合ドキュメント一覧
+
+=== link:api_reference.adoc[API リファレンス]
+
+**統合元**: `docs/api/api_reference.md`
+
+**内容**:
+* REST API エンドポイント一覧
+* リクエスト/レスポンス仕様
+* 共通仕様（ページネーション、エラー等）
+
+**対象読者**: 全開発者
+
+=== link:architecture.adoc[アーキテクチャ]
+
+**統合元**: `docs/architecture/*.md`
+
+**内容**:
+* コードベース構造
+* API/Frontend ギャップ分析
+* 共通型定義
+* APIリファクタリング計画
+
+**対象読者**: アーキテクト、リードエンジニア
+
+=== link:design.adoc[基本設計]
+
+**統合元**: `docs/design/*.md`
+
+**内容**:
+* システム概要
+* 業務フロー
+* UI/UX設計（アラート、オーダー管理）
+
+**対象読者**: 設計者、PM
 
 === link:schema.adoc[データベーススキーマ関連]
 
@@ -133,6 +167,9 @@ lot-management-system/
 ├── SETUP_GUIDE.md                  # セットアップ手順
 ├── docs/
 │   ├── README.adoc                 # このファイル（ドキュメント索引）
+│   ├── api_reference.adoc          # API リファレンス
+│   ├── architecture.adoc           # アーキテクチャ
+│   ├── design.adoc                 # 基本設計
 │   ├── schema.adoc                 # DB スキーマ統合
 │   ├── forecast.adoc               # 需要予測統合
 │   ├── allocation.adoc             # ロット引当統合
@@ -140,19 +177,22 @@ lot-management-system/
 │   ├── frontend.adoc               # フロントエンド統合
 │   ├── misc.adoc                   # その他技術実装統合
 │   ├── remaining_issues.adoc       # 残課題・TODO
-│   ├── architecture/               # アーキテクチャドキュメント
-│   ├── design/                     # 設計書（個別ファイル）
-│   ├── schema/                     # スキーマ関連（個別ファイル）
-│   ├── allocations/                # 引当関連（個別ファイル）
-│   ├── troubleshooting/            # トラブルシューティング（個別ファイル）
-│   └── archive/                    # 過去のドキュメントアーカイブ
 ├── backend/
 │   └── (バックエンドコード)
 └── frontend/
-    └── (フロントエンドコード)
+│   └── (フロントエンドコード)
 ----
 
 == 目的別ドキュメント参照ガイド
+
+=== APIの仕様を知りたい
+→ link:api_reference.adoc[api_reference.adoc]
+
+=== システム全体の構造を知りたい
+→ link:architecture.adoc[architecture.adoc]
+
+=== 業務フローや画面設計を知りたい
+→ link:design.adoc[design.adoc]
 
 === データベース設計を理解したい
 → link:schema.adoc[schema.adoc]
@@ -214,6 +254,9 @@ lot-management-system/
 === 新しい技術実装を追加する場合
 
 . **適切な統合ドキュメントを選択**:
+* API関連 → `api_reference.adoc`
+* アーキテクチャ → `architecture.adoc`
+* 設計 → `design.adoc`
 * DB関連 → `schema.adoc`
 * 予測関連 → `forecast.adoc`
 * 引当関連 → `allocation.adoc`
@@ -246,5 +289,5 @@ lot-management-system/
 . 該当する統合ドキュメントの詳細セクションを参照
 . それでも解決しない場合は、開発チームに問い合わせ
 
-**最終更新**: 2025-11-25
+**最終更新**: 2025-11-26
 **ドキュメント整理**: ドキュメントの散在を防ぎ、統合ドキュメントに集約しました。

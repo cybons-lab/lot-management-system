@@ -14,29 +14,28 @@ Scenarios covered:
 6. Zero inventory (depleted)
 """
 
+# Ensure app module is importable
+import os
+import random
 import sys
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from pathlib import Path
 
-# Ensure app module is importable
-import os
+from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
+from hypothesis import strategies as st
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
-# sys.path.insert(0, '/app')
 
-from hypothesis import given, settings, strategies as st
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-
-from app.core.database import SessionLocal
-from app.models import (
+from app.core.database import SessionLocal  # noqa: E402
+from app.models import (  # noqa: E402
     Customer,
     CustomerItem,
     DeliveryPlace,
-    ForecastCurrent,
     Lot,
     Order,
     OrderLine,
@@ -44,7 +43,7 @@ from app.models import (
     Supplier,
     Warehouse,
 )
-from app.services.forecasts.forecast_generator import (
+from app.services.forecasts.forecast_generator import (  # noqa: E402
     create_daily_forecasts,
     create_jyun_forecasts_from_daily,
     create_monthly_forecasts_from_daily,
@@ -165,10 +164,6 @@ def scenario_lot_strategy(
     - 'depleted': Zero inventory
     - 'large': Large inventory
     """
-    from faker import Faker
-
-    faker = Faker("ja_JP")
-
     # Scenario-specific parameters
     if scenario == "normal":
         qty_range = (100, 500)
@@ -230,8 +225,6 @@ def scenario_lot_strategy(
 
 def generate_test_data():
     """Main function to generate test data."""
-    import random
-
     print("=" * 60)
     print("Property-Based Test Data Generator")
     print("=" * 60)
@@ -303,8 +296,6 @@ def generate_test_data():
             # Each customer gets mappings for all products (simple approach for test data)
             for product in products:
                 # Assign a random supplier for this customer×product combination
-                import random
-
                 supplier = random.choice(suppliers)
 
                 customer_item = CustomerItem(
@@ -326,7 +317,6 @@ def generate_test_data():
 
         # Generate Forecasts (daily/jyun/monthly as a set per DemandKey)
         print("\n📈 Generating forecasts (daily/jyun/monthly sets)...")
-        from dateutil.relativedelta import relativedelta
 
         forecast_count = 0
         now = datetime.utcnow()
@@ -347,7 +337,6 @@ def generate_test_data():
         )
 
         # Generate forecasts for a subset of delivery_place × product combinations
-        import random
 
         for delivery_place in delivery_places:
             # Each delivery place gets forecasts for 30-50% of all products
@@ -413,7 +402,6 @@ def generate_test_data():
         for product in products:
             # Decide scenario for this product
             # 70% Normal, 10% Shortage, 10% Expiring, 5% Expired, 5% Depleted
-            import random
 
             scenario = random.choices(
                 ["normal", "shortage", "expiring", "expired", "depleted"],
@@ -464,8 +452,6 @@ def generate_test_data():
         for scenario_name, order_count, qty_min, qty_max in order_scenarios:
             print(f"  - {scenario_name}: {order_count} orders")
             for _ in range(order_count):
-                import random
-
                 customer = random.choice(customers)
 
                 order = Order(
@@ -498,7 +484,6 @@ def generate_test_data():
                     unit = None
 
                     # Debug: Track which path is taken
-                    debug_product_info = f"Product {product.id}: internal={product.internal_unit}, external={product.external_unit}, factor={product.qty_per_internal_unit}"
 
                     for attempt in range(max_retries):
                         # Determine unit (70% external, 30% internal)

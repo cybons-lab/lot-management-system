@@ -18,14 +18,19 @@ export interface paths {
      *     Args:
      *         skip: スキップ件数
      *         limit: 取得件数
-     *         product_id: 製品IDでフィルタ（優先）
-     *         product_code: 製品コードでフィルタ
-     *         supplier_code: 仕入先コードでフィルタ
-     *         warehouse_code: 倉庫コードでフィルタ
+     *         product_id: 製品ID
+     *         product_code: 製品コード
+     *         supplier_code: 仕入先コード
+     *         warehouse_code: 倉庫コード
      *         expiry_from: 有効期限開始日
      *         expiry_to: 有効期限終了日
-     *         with_stock: 在庫あり(>0)のみ取得
+     *         with_stock: 在庫ありのみ取得するかどうか
      *         db: データベースセッション
+     *
+     *     ロット一覧取得（v_lots_with_master ビュー使用）.
+     *
+     *     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.
+     *     FEFO (先入先出) 順に並べて返す.
      */
     get: operations["list_lots_api_lots_get"];
     put?: never;
@@ -298,6 +303,33 @@ export interface paths {
      * @description 引当取消（DELETE API, ソフトキャンセル対応）.
      */
     delete: operations["delete_allocation_api_allocations__allocation_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview Allocations
+     * @description FEFO引当シミュレーション実行.
+     *
+     *     Args:
+     *         request: プレビューリクエスト（order_id）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         FefoPreviewResponse: 引当プレビュー結果
+     */
+    post: operations["preview_allocations_api_allocations_preview_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -604,6 +636,58 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/alerts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Alerts
+     * @description Get list of current alerts.
+     *
+     *     Query parameters:
+     *     - severity: Filter by severity (comma-separated: critical,warning,info)
+     *     - category: Filter by category (comma-separated: order,inventory,lot,forecast)
+     *     - limit: Max alerts to return (default: 50, max: 500)
+     *     - only_open: Only show open alerts (default: true)
+     *
+     *     Returns:
+     *         List of alert items sorted by severity and time
+     */
+    get: operations["list_alerts_api_alerts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/alerts/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Alert Summary
+     * @description Get summary of all current alerts.
+     *
+     *     Returns:
+     *         Alert counts grouped by severity and category
+     */
+    get: operations["get_alert_summary_api_alerts_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/inbound-plans": {
     parameters: {
       query?: never;
@@ -619,6 +703,7 @@ export interface paths {
      *         skip: スキップ件数（ページネーション用）
      *         limit: 取得件数上限
      *         supplier_id: 仕入先IDでフィルタ
+     *         product_id: 商品IDでフィルタ
      *         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
      *         db: データベースセッション
      *
@@ -2393,6 +2478,183 @@ export interface components {
      */
     AdjustmentType: "physical_count" | "damage" | "loss" | "found" | "other";
     /**
+     * AlertItem
+     * @description Represents a single alert item.
+     *
+     *     Attributes:
+     *         id: Unique identifier for the alert
+     *         category: Alert category (order, inventory, lot, forecast)
+     *         type: Specific alert type code (e.g., 'UNFORECASTED_ORDER_STALE')
+     *         severity: Alert severity level
+     *         title: Short description displayed in alert list
+     *         message: Detailed explanation (optional)
+     *         occurred_at: When the alert condition was detected
+     *         target: Resource this alert is about (for navigation)
+     * @example {
+     *       "category": "order",
+     *       "id": "alert_order_12345_20231124",
+     *       "message": "受注番号 ORD-12345 はフォーキャストに紐づいておらず、30分以上未処理です。",
+     *       "occurred_at": "2023-11-24T10:30:00Z",
+     *       "severity": "critical",
+     *       "target": {
+     *         "id": 12345,
+     *         "resource_type": "order"
+     *       },
+     *       "title": "無予測受注が30分以上未処理",
+     *       "type": "UNFORECASTED_ORDER_STALE"
+     *     }
+     */
+    AlertItem: {
+      /**
+       * Id
+       * @description Unique alert identifier
+       */
+      id: string;
+      /**
+       * Category
+       * @description Alert category
+       * @enum {string}
+       */
+      category: "order" | "inventory" | "lot" | "forecast";
+      /**
+       * Type
+       * @description Specific alert type code
+       */
+      type: string;
+      /**
+       * Severity
+       * @description Alert severity level
+       * @enum {string}
+       */
+      severity: "info" | "warning" | "critical";
+      /**
+       * Title
+       * @description Short alert description
+       */
+      title: string;
+      /**
+       * Message
+       * @description Detailed explanation
+       * @default
+       */
+      message: string;
+      /**
+       * Occurred At
+       * Format: date-time
+       * @description Alert occurrence timestamp
+       */
+      occurred_at: string;
+      /**
+       * Target
+       * @description Target resource for navigation
+       */
+      target:
+        | components["schemas"]["AlertTargetOrder"]
+        | components["schemas"]["AlertTargetInventoryItem"]
+        | components["schemas"]["AlertTargetLot"]
+        | components["schemas"]["AlertTargetForecastDaily"];
+    };
+    /**
+     * AlertSummaryResponse
+     * @description Summary of alert counts by severity and category.
+     *
+     *     Attributes:
+     *         total: Total number of alerts
+     *         by_severity: Count of alerts grouped by severity
+     *         by_category: Count of alerts grouped by category
+     * @example {
+     *       "by_category": {
+     *         "forecast": 5,
+     *         "inventory": 7,
+     *         "lot": 6,
+     *         "order": 5
+     *       },
+     *       "by_severity": {
+     *         "critical": 3,
+     *         "info": 8,
+     *         "warning": 12
+     *       },
+     *       "total": 23
+     *     }
+     */
+    AlertSummaryResponse: {
+      /**
+       * Total
+       * @description Total alert count
+       */
+      total: number;
+      /**
+       * By Severity
+       * @description Alert counts by severity
+       */
+      by_severity?: {
+        [key: string]: number;
+      };
+      /**
+       * By Category
+       * @description Alert counts by category
+       */
+      by_category?: {
+        [key: string]: number;
+      };
+    };
+    /**
+     * AlertTargetForecastDaily
+     * @description Alert target for daily forecast resources.
+     */
+    AlertTargetForecastDaily: {
+      /**
+       * Resource Type
+       * @default forecast_daily
+       * @constant
+       */
+      resource_type: "forecast_daily";
+      /** Id */
+      id: number;
+    };
+    /**
+     * AlertTargetInventoryItem
+     * @description Alert target for inventory item resources.
+     */
+    AlertTargetInventoryItem: {
+      /**
+       * Resource Type
+       * @default inventory_item
+       * @constant
+       */
+      resource_type: "inventory_item";
+      /** Id */
+      id: number;
+    };
+    /**
+     * AlertTargetLot
+     * @description Alert target for lot resources.
+     */
+    AlertTargetLot: {
+      /**
+       * Resource Type
+       * @default lot
+       * @constant
+       */
+      resource_type: "lot";
+      /** Id */
+      id: number;
+    };
+    /**
+     * AlertTargetOrder
+     * @description Alert target for order resources.
+     */
+    AlertTargetOrder: {
+      /**
+       * Resource Type
+       * @default order
+       * @constant
+       */
+      resource_type: "order";
+      /** Id */
+      id: number;
+    };
+    /**
      * AllocationCommitRequest
      * @description Allocation commit request (v2.2.1).
      */
@@ -3140,6 +3402,8 @@ export interface components {
       total_orders: number;
       /** Unallocated Orders */
       unallocated_orders: number;
+      /** Allocation Rate */
+      allocation_rate: number;
     };
     /**
      * DragAssignRequest
@@ -3252,6 +3516,14 @@ export interface components {
       expiry_date?: string | null;
       /** Received Date */
       received_date?: string | null;
+    };
+    /**
+     * FefoPreviewRequest
+     * @description FEFO preview request.
+     */
+    FefoPreviewRequest: {
+      /** Order Id */
+      order_id: number;
     };
     /**
      * FefoPreviewResponse
@@ -3703,6 +3975,14 @@ export interface components {
        * Format: date-time
        */
       last_updated: string;
+      /** Product Name */
+      product_name?: string | null;
+      /** Product Code */
+      product_code?: string | null;
+      /** Warehouse Name */
+      warehouse_name?: string | null;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
     };
     /**
      * LotCreate
@@ -3813,15 +4093,15 @@ export interface components {
       /** Lot Id */
       lot_id: number;
       /** Product Name */
-      product_name?: string | null;
+      product_name: string;
       /** Product Code */
-      product_code?: string | null;
+      product_code: string;
+      /** Supplier Name */
+      supplier_name: string;
       /** Warehouse Name */
       warehouse_name?: string | null;
       /** Warehouse Code */
       warehouse_code?: string | null;
-      /** Supplier Name */
-      supplier_name?: string | null;
       /** Supplier Code */
       supplier_code?: string | null;
       /** Last Updated */
@@ -5518,6 +5798,39 @@ export interface operations {
       };
     };
   };
+  preview_allocations_api_allocations_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FefoPreviewRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FefoPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   commit_allocation_api_allocations_commit_post: {
     parameters: {
       query?: never;
@@ -5908,12 +6221,71 @@ export interface operations {
       };
     };
   };
+  list_alerts_api_alerts_get: {
+    parameters: {
+      query?: {
+        /** @description Comma-separated severity levels: critical,warning,info */
+        severity?: string | null;
+        /** @description Comma-separated categories: order,inventory,lot,forecast */
+        category?: string | null;
+        /** @description Maximum number of alerts to return */
+        limit?: number;
+        /** @description Only return open/active alerts */
+        only_open?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AlertItem"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_alert_summary_api_alerts_summary_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AlertSummaryResponse"];
+        };
+      };
+    };
+  };
   list_inbound_plans_api_inbound_plans_get: {
     parameters: {
       query?: {
         skip?: number;
         limit?: number;
         supplier_id?: number | null;
+        product_id?: number | null;
         status?: string | null;
       };
       header?: never;

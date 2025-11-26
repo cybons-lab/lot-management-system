@@ -9,6 +9,7 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable complexity */
 
+import { format } from "date-fns";
 import { useAtom } from "jotai";
 import {
   Plus,
@@ -24,7 +25,6 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { format } from "date-fns";
 
 import { Button } from "@/components/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
@@ -47,14 +47,13 @@ import { useLotsQuery } from "@/hooks/api";
 import { useCreateLot, useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import { useDebounce } from "@/hooks/ui/useDebounce";
-import { getLotStatuses } from "@/shared/utils/status";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import type { LotUI } from "@/shared/libs/normalize";
-import type { LotResponse } from "@/shared/types/aliases";
 import { fmt } from "@/shared/utils/number";
+import { getLotStatuses } from "@/shared/utils/status";
 
 // ============================================
 // メインコンポーネント
@@ -69,7 +68,7 @@ export function LotsPage() {
   const createDialog = useDialog();
   const editDialog = useDialog();
   const lockDialog = useDialog();
-  const [selectedLot, setSelectedLot] = useState<LotResponse | null>(null);
+  const [selectedLot, setSelectedLot] = useState<LotUI | null>(null);
 
   // 表示モード（製品別グループ / フラット）
   const [viewMode] = useState<"grouped" | "flat">("grouped");

@@ -4,7 +4,7 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.domain.order import InvalidOrderStatusError, OrderStateMachine, OrderStatus
-from app.models import Customer, Order, OrderLine, Product, DeliveryPlace
+from app.models import Customer, DeliveryPlace, Order, OrderLine, Product
 from app.services.allocation.allocations_service import _load_order
 
 
@@ -117,12 +117,21 @@ class TestLoadOrder:
         product = Product(maker_part_code="PROD001", product_name="Test Product", base_unit="EA")
         db_session.add(product)
         db_session.flush()
-        
-        delivery_place = DeliveryPlace(customer_id=customer.id, delivery_place_code="DP001", delivery_place_name="Test DP")
+
+        delivery_place = DeliveryPlace(
+            customer_id=customer.id, delivery_place_code="DP001", delivery_place_name="Test DP"
+        )
         db_session.add(delivery_place)
         db_session.flush()
 
-        order_line = OrderLine(order_id=order.id, product_id=product.id, order_quantity=10.0, unit="EA", delivery_date="2025-01-02", delivery_place_id=delivery_place.id)
+        order_line = OrderLine(
+            order_id=order.id,
+            product_id=product.id,
+            order_quantity=10.0,
+            unit="EA",
+            delivery_date="2025-01-02",
+            delivery_place_id=delivery_place.id,
+        )
         db_session.add(order_line)
         db_session.commit()
 
@@ -236,8 +245,10 @@ class TestAllocationCommitStatus:
         customer = Customer(customer_code="CUST005", customer_name="Test Customer 5")
         db_session.add(customer)
         db_session.flush()
-        
-        delivery_place = DeliveryPlace(customer_id=customer.id, delivery_place_code="DP005", delivery_place_name="Test DP 5")
+
+        delivery_place = DeliveryPlace(
+            customer_id=customer.id, delivery_place_code="DP005", delivery_place_name="Test DP 5"
+        )
         db_session.add(delivery_place)
         db_session.flush()
 
@@ -257,7 +268,12 @@ class TestAllocationCommitStatus:
             db_session.flush()
 
             order_line = OrderLine(
-                order_id=order.id, product_id=product.id, order_quantity=10.0, unit="EA", delivery_date="2025-01-06", delivery_place_id=delivery_place.id
+                order_id=order.id,
+                product_id=product.id,
+                order_quantity=10.0,
+                unit="EA",
+                delivery_date="2025-01-06",
+                delivery_place_id=delivery_place.id,
             )
             db_session.add(order_line)
             db_session.commit()
