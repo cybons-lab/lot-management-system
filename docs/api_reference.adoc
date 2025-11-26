@@ -1,0 +1,254 @@
+= API Reference - Lot Management System
+:toc: left
+:toc-title: 目次
+:sectnums:
+
+**最終更新**: 2025-11-26 +
+**API バージョン**: v2.2.1 +
+**ベースURL**: `/api`
+
+このドキュメントは、ロット管理システムの実装済み API エンドポイント一覧です。詳細な仕様は http://localhost:8000/api/docs[OpenAPI ドキュメント] を参照してください。
+
+== Masters API
+
+マスタデータの参照・登録・更新を行います。
+
+**ベースパス**: `/api` (各リソース直下)
+
+[cols="1,1,2,2", options="header"]
+|===
+| リソース | メソッド | エンドポイント | 説明
+
+.4+| **Warehouses**
+| `GET` | `/warehouses` | 倉庫一覧取得
+| `POST` | `/warehouses` | 倉庫登録
+| `GET` | `/warehouses/{id}` | 倉庫詳細取得
+| `PUT` | `/warehouses/{id}` | 倉庫更新
+
+.4+| **Suppliers**
+| `GET` | `/suppliers` | 仕入先一覧取得
+| `POST` | `/suppliers` | 仕入先登録
+| `GET` | `/suppliers/{id}` | 仕入先詳細取得
+| `PUT` | `/suppliers/{id}` | 仕入先更新
+
+.4+| **Customers**
+| `GET` | `/customers` | 得意先一覧取得
+| `POST` | `/customers` | 得意先登録
+| `GET` | `/customers/{id}` | 得意先詳細取得
+| `PUT` | `/customers/{id}` | 得意先更新
+
+.4+| **Products**
+| `GET` | `/products` | 製品一覧取得
+| `POST` | `/products` | 製品登録
+| `GET` | `/products/{id}` | 製品詳細取得
+| `PUT` | `/products/{id}` | 製品更新
+
+.4+| **Customer Items**
+| `GET` | `/customer-items` | 品番マッピング一覧取得
+| `POST` | `/customer-items` | 品番マッピング登録
+| `GET` | `/customer-items/{customer_id}` | 特定得意先の品番一覧
+| `DELETE` | `/customer-items/{customer_id}/{product_id}` | 品番マッピング削除
+|===
+
+== Orders API
+
+受注情報の管理を行います。
+
+**ベースパス**: `/api/orders`
+
+[cols="1,2,2", options="header"]
+|===
+| メソッド | エンドポイント | 説明
+
+| `GET` | `/orders` | 受注一覧取得
+| `POST` | `/orders` | 受注作成
+| `GET` | `/orders/{id}` | 受注詳細取得
+| `PATCH` | `/orders/{id}/status` | ステータス更新
+| `DELETE` | `/orders/{id}` | 受注削除（キャンセル）
+|===
+
+== Allocations API
+
+在庫引当の計算、提案、確定を行います。
+
+**ベースパス**: `/api`
+
+[cols="1,1,2,2", options="header"]
+|===
+| カテゴリ | メソッド | エンドポイント | 説明
+
+.2+| **Allocations**
+| `POST` | `/allocations/commit` | 引当確定
+| `DELETE` | `/allocations/{id}` | 引当取消
+
+.3+| **Suggestions**
+| `GET` | `/allocation-suggestions` | 引当推奨一覧取得
+| `POST` | `/allocation-suggestions/manual` | 手動引当登録
+| `POST` | `/allocation-suggestions/fefo` | FEFO引当プレビュー
+
+| **Candidates**
+| `GET` | `/allocation-candidates` | 候補ロット一覧取得
+
+| **Warehouse**
+| `GET` | `/warehouse-allocations` | 倉庫別引当状況取得
+|===
+
+== Forecasts API
+
+フォーキャスト（需要予測）の管理を行います。
+
+**ベースパス**: `/api/forecasts`
+
+[cols="1,2,2", options="header"]
+|===
+| メソッド | エンドポイント | 説明
+
+| `GET` | `/forecasts/headers` | ヘッダ一覧取得
+| `POST` | `/forecasts/headers` | ヘッダ作成
+| `GET` | `/forecasts/headers/{id}` | ヘッダ詳細取得
+| `PUT` | `/forecasts/headers/{id}` | ヘッダ更新
+| `DELETE` | `/forecasts/headers/{id}` | ヘッダ削除
+| `GET` | `/forecasts/headers/{id}/lines` | 明細一覧取得
+| `POST` | `/forecasts/headers/{id}/lines` | 明細追加
+| `PUT` | `/forecasts/lines/{id}` | 明細更新
+| `DELETE` | `/forecasts/lines/{id}` | 明細削除
+| `POST` | `/forecasts/headers/bulk-import` | 一括インポート
+|===
+
+== Inventory API
+
+在庫、入荷予定、在庫調整の管理を行います。
+
+**ベースパス**: `/api`
+
+[cols="1,1,2,2", options="header"]
+|===
+| カテゴリ | メソッド | エンドポイント | 説明
+
+.5+| **Lots**
+| `GET` | `/lots` | ロット一覧取得
+| `POST` | `/lots` | ロット登録
+| `GET` | `/lots/{id}` | ロット詳細取得
+| `PUT` | `/lots/{id}` | ロット更新
+| `DELETE` | `/lots/{id}` | ロット削除
+
+.2+| **Inventory Items**
+| `GET` | `/inventory-items` | 在庫サマリ一覧取得
+| `GET` | `/inventory-items/{product_id}/{warehouse_id}` | 在庫サマリ詳細取得
+
+.7+| **Inbound Plans**
+| `GET` | `/inbound-plans` | 入荷予定一覧取得
+| `POST` | `/inbound-plans` | 入荷予定登録
+| `GET` | `/inbound-plans/{id}` | 入荷予定詳細取得
+| `PUT` | `/inbound-plans/{id}` | 入荷予定更新
+| `DELETE` | `/inbound-plans/{id}` | 入荷予定削除
+| `GET` | `/inbound-plans/{id}/lines` | 入荷予定明細一覧取得
+| `POST` | `/inbound-plans/{id}/lines` | 入荷予定明細追加
+| `POST` | `/inbound-plans/{id}/receive` | 入荷実績登録
+
+.3+| **Adjustments**
+| `GET` | `/adjustments` | 在庫調整履歴取得
+| `POST` | `/adjustments` | 在庫調整登録
+| `GET` | `/adjustments/{id}` | 在庫調整詳細取得
+|===
+
+== Alerts API
+
+システムアラートの管理を行います。
+
+**ベースパス**: `/api/alerts`
+
+[cols="1,2,2", options="header"]
+|===
+| メソッド | エンドポイント | 説明
+
+| `GET` | `/alerts` | アラート一覧取得
+| `POST` | `/alerts` | アラート作成
+| `GET` | `/alerts/{id}` | アラート詳細取得
+| `PUT` | `/alerts/{id}` | アラート更新
+| `DELETE` | `/alerts/{id}` | アラート削除
+|===
+
+== Admin & System API
+
+ユーザー管理、システム設定、ログ、テストデータ等の管理機能です。
+
+**ベースパス**: `/api`
+
+[cols="1,1,2,2", options="header"]
+|===
+| カテゴリ | メソッド | エンドポイント | 説明
+
+.5+| **Users**
+| `GET` | `/users` | ユーザー一覧取得
+| `POST` | `/users` | ユーザー作成
+| `GET` | `/users/{id}` | ユーザー詳細取得
+| `PUT` | `/users/{id}` | ユーザー更新
+| `DELETE` | `/users/{id}` | ユーザー削除
+| `PATCH` | `/users/{id}/roles` | ロール割当
+
+.4+| **Roles**
+| `GET` | `/roles` | ロール一覧取得
+| `POST` | `/roles` | ロール作成
+| `GET` | `/roles/{id}` | ロール詳細取得
+| `PUT` | `/roles/{id}` | ロール更新
+
+.2+| **Operation Logs**
+| `GET` | `/operation-logs` | 操作ログ一覧取得
+| `GET` | `/operation-logs/{id}` | 操作ログ詳細取得
+
+.3+| **Business Rules**
+| `GET` | `/business-rules` | 業務ルール一覧取得
+| `GET` | `/business-rules/{code}` | 業務ルール詳細取得
+| `PUT` | `/business-rules/{code}` | 業務ルール更新
+
+.3+| **Batch Jobs**
+| `GET` | `/batch-jobs` | バッチジョブ一覧取得
+| `GET` | `/batch-jobs/{id}` | バッチジョブ詳細取得
+| `POST` | `/batch-jobs/{id}/execute` | バッチジョブ実行
+
+.2+| **Health**
+| `GET` | `/health` | ヘルスチェック
+| `GET` | `/admin/healthcheck` | 管理者用ヘルスチェック
+
+.2+| **Simulation**
+| `POST` | `/admin/simulate/day-forward` | 日付進行シミュレーション
+| `POST` | `/admin/simulate/reset` | シミュレーションリセット
+
+.2+| **Test Data**
+| `POST` | `/admin/test-data/generate` | テストデータ生成
+| `POST` | `/admin/test-data/reset` | テストデータリセット
+|===
+
+== 共通仕様
+
+=== ページネーション
+
+多くの一覧取得APIは、以下のクエリパラメータをサポートします：
+
+* `skip` (INT, default: 0) - スキップ件数
+* `limit` (INT, default: 100, max: 1000) - 取得件数上限
+
+=== エラーレスポンス
+
+[source,json]
+----
+{
+  "detail": "Error message here"
+}
+----
+
+HTTPステータスコード：
+
+* `200` - 成功
+* `201` - 作成成功
+* `204` - 削除成功（レスポンスボディなし）
+* `400` - リクエストエラー
+* `404` - リソースが見つからない
+* `409` - コンフリクト（引当エラー等）
+* `500` - サーバーエラー
+
+== 関連ドキュメント
+
+* http://localhost:8000/api/docs[OpenAPI 仕様（Swagger UI）]
+* link:schema.adoc[Database Schema]
