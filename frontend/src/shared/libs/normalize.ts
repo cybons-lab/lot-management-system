@@ -5,8 +5,11 @@
  * null/undefinedを安全な値に変換
  */
 
-import type { OrderLine, OrderResponse as OrderResponseAlias } from "@/shared/types/aliases";
-import type { components } from "@/types/api";
+import type {
+  OrderLineResponse as OrderLine,
+  OrderResponse as OrderResponseAlias,
+} from "@/shared/types/schema";
+import type { components } from "@/shared/types/openapi";
 
 // ヘルパー関数
 export const S = (v: string | null | undefined, fallback = "-"): string => v ?? fallback;
@@ -134,16 +137,16 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
     id: order.id,
     order_number: S(order.order_number),
     customer_id: N(order.customer_id),
-    customer_name: S(order.customer_name),
+    customer_name: S((order as any).customer_name),
     order_date: S(order.order_date),
-    status: S(order.status, "pending"),
-    remarks: S(order.remarks),
+    status: S((order as any).status, "pending"),
+    remarks: S((order as any).remarks),
     created_at: S(order.created_at),
     updated_at: S(order.updated_at),
     // Legacy fields (for backward compatibility)
-    order_no: S(order.order_no ?? order.order_number),
-    customer_code: S(order.customer_code),
-    due_date: order.due_date ?? null,
+    order_no: S((order as any).order_no ?? order.order_number),
+    customer_code: S((order as any).customer_code),
+    due_date: (order as any).due_date ?? null,
     delivery_place: (order as Record<string, unknown>).delivery_place ?? null,
     delivery_place_code: (order as Record<string, unknown>).delivery_place_code ?? null,
     delivery_place_name: (order as Record<string, unknown>).delivery_place_name ?? null,
@@ -231,15 +234,15 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
     warehouse_allocations:
       ((line as Record<string, unknown>).warehouse_allocations as unknown[]) ?? [],
     related_lots: ((line as Record<string, unknown>).related_lots as unknown[]) ?? [],
-    allocated_lots: line.allocated_lots ?? [],
+    allocated_lots: (line as any).allocated_lots ?? [],
     // Legacy fields (for backward compatibility)
-    line_no: line.line_no ?? undefined,
-    product_code: S(line.product_code),
-    customer_code: S(line.customer_code),
+    line_no: (line as any).line_no ?? undefined,
+    product_code: S((line as any).product_code),
+    customer_code: S((line as any).customer_code),
     supplier_code: S((line as Record<string, unknown>).supplier_code as string | undefined),
-    quantity: line.quantity ?? line.order_quantity,
-    due_date: line.due_date ?? line.delivery_date ?? undefined,
-    allocated_qty: line.allocated_qty ?? undefined,
+    quantity: (line as any).quantity ?? line.order_quantity,
+    due_date: (line as any).due_date ?? line.delivery_date ?? undefined,
+    allocated_qty: (line as any).allocated_qty ?? undefined,
     next_div: S((line as Record<string, unknown>).next_div as string | undefined),
   };
 }
