@@ -7,7 +7,13 @@
 **API バージョン**: v2.2.1 +
 **ベースURL**: `/api`
 
-このドキュメントは、ロット管理システムの実装済み API エンドポイント一覧です。詳細な仕様は http://localhost:8000/api/docs[OpenAPI ドキュメント] を参照してください。
+このドキュメントは、ロット管理システムの実装済み API エンドポイント一覧です。
+
+[IMPORTANT]
+====
+詳細な仕様（リクエスト/レスポンスのフィールド定義など）は、常に自動生成される **http://localhost:8000/api/docs[OpenAPI ドキュメント (Swagger UI)]** を正（Source of Truth）として参照してください。 +
+本ドキュメントの記述と OpenAPI ドキュメントに差異がある場合は、OpenAPI ドキュメントが優先されます。
+====
 
 == Masters API
 
