@@ -15,6 +15,7 @@ import { IncomingGoodsSummaryCard } from "./IncomingGoodsSummaryCard";
 import { InventorySummaryCard } from "./InventorySummaryCard";
 import { useForecastCalculations } from "./hooks/use-forecast-calculations";
 import { RelatedOrdersSection } from "./RelatedOrdersSection";
+import { SAPIntegrationSection } from "./SAPIntegrationSection";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
 
@@ -117,6 +118,9 @@ export function ForecastDetailCard({
 
           {/* 関連受注セクション */}
           <RelatedOrdersSection group={group} />
+
+          {/* SAP連携セクション (ダミー実装) */}
+          <SAPIntegrationSection relatedOrders={group.related_orders} />
         </CardContent>
       ) : (
         <ForecastCollapsedSummary
