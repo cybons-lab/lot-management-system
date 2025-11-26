@@ -18,16 +18,17 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 # app/models/base_model.py から Base をインポート
 # app/models/__init__.py が他の全モデルをインポートするため、
 # 'Base.metadata' に全テーブル定義がアタッチされる
+from app.core.config import settings
 from app.models import Base
 
-from app.core.config import settings
+
 # --- ▲▲▲ ここまで追加 ▲▲▲ ---
 
 
 def include_object(object, name, type_, reflected, compare_to):
     """
     Alembicのautogenerate対象を制御する関数.
-    
+
     ビュー（is_view=Trueのテーブル）を除外します。
     """
     if type_ == "table" and hasattr(object, "info") and object.info.get("is_view"):

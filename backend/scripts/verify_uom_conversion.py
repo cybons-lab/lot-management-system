@@ -2,31 +2,35 @@ import asyncio
 import sys
 from pathlib import Path
 
+
 # Add backend directory to path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.core.config import settings
 from app.models import Product, ProductUomConversion
 from app.services.common.quantity_service import to_internal_qty
+
 
 async def main():
     # Setup DB connection - default to PostgreSQL
     import os
-    db_url = os.getenv("DATABASE_URL", "postgresql://admin:dev_password@localhost:5432/lot_management")
-    
+
+    db_url = os.getenv(
+        "DATABASE_URL", "postgresql://admin:dev_password@localhost:5432/lot_management"
+    )
+
     if db_url.startswith("postgresql://"):
         db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
-    
+
     print(f"Connecting to DB: {db_url}")
     engine = create_async_engine(db_url)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as db:
         print("--- Starting Verification ---")
-        
+
         try:
             # 1. Create Test Product
             product = Product(
@@ -35,7 +39,7 @@ async def main():
                 base_unit="PCS",
                 internal_unit="PCS",
                 external_unit="BOX",
-                qty_per_internal_unit=1.0
+                qty_per_internal_unit=1.0,
             )
             db.add(product)
             await db.flush()
@@ -44,9 +48,7 @@ async def main():
             # 2. Create Conversion
             # 1 BOX = 12 PCS
             conversion = ProductUomConversion(
-                product_id=product.id,
-                external_unit="BOX",
-                factor=12.0
+                product_id=product.id, external_unit="BOX", factor=12.0
             )
             db.add(conversion)
             await db.flush()
@@ -67,9 +69,11 @@ async def main():
         except Exception as e:
             print(f"❌ Verification Failed: {e}")
             import traceback
+
             traceback.print_exc()
         finally:
-            await db.rollback() # Clean up
+            await db.rollback()  # Clean up
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -80,7 +80,7 @@ def setup_test_data(db_session):
     # Forecast (APIテスト用にデータを保持)
     # ✅ v2.5: forecast が無くても候補ロットは返されるべき
     from app.models.forecast_models import ForecastCurrent
-    
+
     today = date.today()
     forecast = ForecastCurrent(
         customer_id=customer.id,
@@ -104,17 +104,13 @@ def setup_test_data(db_session):
         current_quantity=100.0,
         allocated_quantity=0.0,
         unit="EA",
-        status="active"
+        status="active",
     )
     db_session.add(lot)
     db_session.flush()
 
     # 受注
-    order = Order(
-        order_number="ORD-001",
-        customer_id=customer.id,
-        order_date=today
-    )
+    order = Order(order_number="ORD-001", customer_id=customer.id, order_date=today)
     db_session.add(order)
     db_session.flush()
 
@@ -126,7 +122,7 @@ def setup_test_data(db_session):
         order_quantity=50.0,
         unit="EA",
         delivery_place_id=delivery_place.id,
-        status="pending"
+        status="pending",
     )
     db_session.add(order_line)
     db_session.flush()
@@ -169,7 +165,7 @@ class TestAllocationAPI:
         """forecast に含まれない商品でも、有効在庫があれば候補ロットが返ること"""
         # 新しい商品を作成（forecast 無し）
         from app.models import Lot, Order, OrderLine, Product
-        
+
         product_no_forecast = Product(
             maker_part_code="PROD-NO-FORECAST",
             product_name="Forecast無し商品",
@@ -177,7 +173,7 @@ class TestAllocationAPI:
         )
         db_session.add(product_no_forecast)
         db_session.flush()
-        
+
         # この商品のロットを作成（有効在庫あり）
         today = date.today()
         lot_no_forecast = Lot(
@@ -194,7 +190,7 @@ class TestAllocationAPI:
         )
         db_session.add(lot_no_forecast)
         db_session.flush()
-        
+
         # この商品の受注明細を作成
         order = db_session.query(Order).first()  # 既存の受注を使う
         order_line_no_forecast = OrderLine(
@@ -208,12 +204,12 @@ class TestAllocationAPI:
         )
         db_session.add(order_line_no_forecast)
         db_session.flush()
-        
+
         # ✅ 重要: forecast が無い商品でも候補ロットが返るか確認
         response = client.get(
             f"/api/allocation-candidates?order_line_id={order_line_no_forecast.id}"
         )
-        
+
         assert response.status_code == 200
         data = response.json()
         assert "items" in data

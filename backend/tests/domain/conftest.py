@@ -5,9 +5,7 @@ import pytest
 
 def pytest_configure(config):
     """Configure pytest to skip database setup for domain tests."""
-    config.addinivalue_line(
-        "markers", "no_db: mark test as not requiring database setup"
-    )
+    config.addinivalue_line("markers", "no_db: mark test as not requiring database setup")
 
 
 # Override the session-level setup_database fixture to do nothing for domain tests
