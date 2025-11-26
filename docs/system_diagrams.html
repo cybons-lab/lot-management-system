@@ -209,33 +209,47 @@
                         flowchart TD
                         A([📥 フォーキャスト受信])
                         B[📊 インポート]
-                        C[📈 需要予測登録]
-                        D[📝 発注処理]
-                        E[📦 入荷予定登録]
-                        F[✅ 入荷実績登録]
-                        G[🏷️ ロット在庫生成]
-                        H[📋 受注登録]
-                        I[🎯 在庫引当]
-                        J[💼 SAP受注登録]
-                        K[🚚 出荷処理]
-                        L[🔄 受注番号書き戻し]
-                        M([✅ 完了])
+                        flowchart TB
+                        subgraph forecast ["📊 予測・調達ライン"]
+                        A1([フォーキャスト<br />受信])
+                        A2[需要予測登録]
+                        A3[発注処理]
+                        A4[入荷予定登録]
+                        A5[入荷実績登録]
+                        A6[ロット在庫生成]
 
-                        A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L --> M
+                        A1 --> A2 --> A3 --> A4 --> A5 --> A6
+                        end
 
-                        style A fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
-                        style M fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
-                        style B fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style C fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style D fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style E fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style F fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style G fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style H fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style I fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style J fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
-                        style K fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-                        style L fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+                        subgraph order ["� 受注・出荷ライン"]
+                        B1([受注登録])
+                        B2[在庫引当]
+                        B3[SAP受注登録]
+                        B4[出荷処理]
+                        B5[受注番号書き戻し]
+                        B6([完了])
+
+                        B1 --> B2 --> B3 --> B4 --> B5 --> B6
+                        end
+
+                        A6 -.->|在庫準備完了| B2
+
+                        style A1 fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+                        style A2 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style A3 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style A4 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style A5 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style A6 fill:#f1f8e9,stroke:#558b2f,stroke-width:3px
+
+                        style B1 fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+                        style B2 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style B3 fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+                        style B4 fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style B5 fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+                        style B6 fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+
+                        style forecast fill:#f0f9ff,stroke:#0284c7,stroke-width:2px
+                        style order fill:#fef3c7,stroke:#ca8a04,stroke-width:2px
                     </div>
                 </div>
             </section>
