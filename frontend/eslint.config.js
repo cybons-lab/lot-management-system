@@ -21,6 +21,7 @@ export default [
       "public/**",
       "../backend/**",
       "scripts/**",
+      "src/types/api.d.ts",
     ],
   },
 
