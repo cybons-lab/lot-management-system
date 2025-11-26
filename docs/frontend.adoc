@@ -107,6 +107,156 @@ and this project adheres to link:https://semver.org/spec/v2.0.0.html[Semantic Ve
 * Frontend application with modern UI
 * Documentation and setup guides
 
+== 型定義生成フロー
+
+**最終更新:** 2025-11-27
+
+=== 概要
+
+このプロジェクトでは、バックエンドのOpenAPI定義を **Single Source of Truth** とし、フロントエンドのTypeScript型定義を自動生成しています。
+
+=== ワークフロー
+
+バックエンドAPIを変更した場合、以下の手順で型定義を更新します：
+
+[source,bash]
+----
+# 1. バックエンドで OpenAPI スキーマを再生成
+cd backend
+python scripts/export_openapi.py
+
+# 2. フロントエンドで TypeScript 型定義を生成
+cd ../frontend
+npm run typegen
+
+# 3. 型チェック
+npm run typecheck
+----
+
+==== npm スクリプト
+
+`package.json` に定義されているコマンド：
+
+[source,json]
+----
+{
+  "scripts": {
+    "typegen": "openapi-typescript ../backend/openapi.json -o src/shared/types/openapi.d.ts && prettier --write src/shared/types/openapi.d.ts"
+  }
+}
+----
+
+このコマンドは：
+
+. `openapi-typescript` で `openapi.json` から型定義を生成
+. `prettier` で自動フォーマット
+
+=== 型の使用方法
+
+==== 基本的な使い方
+
+[source,typescript]
+----
+// src/shared/types/schema.ts でエイリアスを定義
+import type { components } from './openapi';
+
+export type CandidateLotItem = components['schemas']['CandidateLotItem'];
+export type ManualAllocationSavePayload = components['schemas']['ManualAllocationSavePayload'];
+
+// コンポーネントで使用
+import type { CandidateLotItem } from '@/shared/types/schema';
+
+function LotList({ lots }: { lots: CandidateLotItem[] }) {
+  // ...
+}
+----
+
+==== ❌ 避けるべきパターン
+
+[source,typescript]
+----
+// ❌ Bad: 手動で型を定義
+interface LotCandidate {
+  lot_id: number;
+  lot_number: string;
+  // ... バックエンドと不整合が発生する
+}
+
+// ❌ Bad: openapi.d.ts を直接編集
+// このファイルは自動生成されるため、変更は上書きされます
+----
+
+==== ✅ 推奨パターン
+
+[source,typescript]
+----
+// ✅ Good: 生成された型を使用
+import type { CandidateLotItem } from '@/shared/types/schema';
+
+// ✅ Good: 必要に応じてエイリアスを schema.ts に追加
+export type LotWithAllocation = CandidateLotItem & {
+  allocated_quantity: number;
+};
+----
+
+=== トラブルシューティング
+
+==== 型定義が古い
+
+[source,bash]
+----
+# バックエンドで最新のスキーマを出力
+cd backend
+python scripts/export_openapi.py
+
+# フロントエンドで型定義を再生成
+cd ../frontend
+npm run typegen
+----
+
+==== CI で型同期チェックが失敗する
+
+GitHub Actions の `schema-sync-check` ジョブは、コミットされた `openapi.d.ts` がバックエンドのスキーマと一致しているかを検証します。
+
+失敗した場合：
+
+. ローカルで `npm run typegen` を実行
+. 生成された `openapi.d.ts` をコミット
+. プッシュ
+
+=== 依存関係管理
+
+==== Backend: uv
+
+[source,bash]
+----
+# 依存関係のインストール
+uv sync
+
+# 開発依存も含む
+uv sync --all-extras --dev
+
+# パッケージ追加
+uv add <package-name>
+
+# 開発依存追加
+uv add --dev <package-name>
+----
+
+==== Frontend: npm
+
+[source,bash]
+----
+# 依存関係のインストール
+npm ci
+
+# パッケージ追加
+npm install <package-name>
+
+# 開発依存追加
+npm install --save-dev <package-name>
+----
+
 == Style Guide（スタイルガイド）
 
 Lot Management System (React + TypeScript)
