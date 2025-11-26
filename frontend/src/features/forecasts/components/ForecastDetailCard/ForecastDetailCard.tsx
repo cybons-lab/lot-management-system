@@ -22,7 +22,6 @@ import { Button, Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/shared/libs/utils";
 
-
 export function ForecastDetailCard({
   group,
   onDelete,

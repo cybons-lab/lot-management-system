@@ -13,7 +13,6 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
-
 interface OrderSummaryRowProps {
   order: OrderWithLinesResponse;
   targetProductId: number; // フィルタリング対象の製品ID

@@ -9,7 +9,6 @@ import { cn } from "@/shared/libs/utils";
 import type { OrderLine } from "@/shared/types/aliases";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
-
 interface OrderAllocationInlineProps {
   line: OrderLine;
   logic: ReturnType<typeof useLotAllocationForOrder>;
