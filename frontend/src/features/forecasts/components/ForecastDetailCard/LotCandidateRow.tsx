@@ -3,12 +3,11 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button, Input, Badge } from "@/components/ui";
+import { CandidateLotItem } from "@/features/allocations/api";
 import { cn } from "@/shared/libs/utils";
+import { OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
-
-import type { CandidateLotItem } from "@/features/allocations/api";
-import type { OrderLine } from "@/shared/types/aliases";
 
 interface LotCandidateRowProps {
     lot: CandidateLotItem;
@@ -32,7 +31,6 @@ export function LotCandidateRow({
     const [isShaking, setIsShaking] = useState(false);
     const [isConfirmed, setIsConfirmed] = useState(false);
 
-    // シェイクを一定時間で止めるエフェクト
     useEffect(() => {
         if (isShaking) {
             const timer = setTimeout(() => setIsShaking(false), 500);
@@ -40,20 +38,17 @@ export function LotCandidateRow({
         }
     }, [isShaking]);
 
-    const freeQty = Number(lot.free_qty ?? 0);
+    const freeQty = Number(lot.available_quantity ?? lot.available_qty ?? lot.free_qty ?? 0);
     const remainingInLot = Math.max(0, freeQty - currentQty);
     const isExpired = lot.expiry_date ? new Date(lot.expiry_date) < new Date() : false;
     const isLocked = lot.status === "locked" || lot.status === "quarantine";
 
-    // 入力上限（ロット在庫 または 必要残数 の小さい方。ただし現在の入力値は除外して計算）
-    // ここでは単純に freeQty を上限とし、必要数超えは警告のみとする（LotListCard準拠）
     const limit = freeQty;
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         const numValue = Number(value);
 
-        // 空文字の場合は0扱い
         if (value === "") {
             onChangeAllocation(line.id, lot.lot_id, 0);
             setIsConfirmed(false);
@@ -62,7 +57,6 @@ export function LotCandidateRow({
 
         if (isNaN(numValue)) return;
 
-        // マイナスチェック
         if (numValue < 0) {
             setIsShaking(true);
             toast.error("マイナスの数量は入力できません");
@@ -71,7 +65,6 @@ export function LotCandidateRow({
             return;
         }
 
-        // 上限チェック
         if (numValue > limit) {
             setIsShaking(true);
             toast.warning(`在庫数量(${freeQty})を超えています`);
@@ -84,13 +77,9 @@ export function LotCandidateRow({
         setIsConfirmed(false);
     };
 
-    // 全量ボタン
     const handleFull = () => {
-        // 他のロットでの引当分を計算
         const otherAllocated = allocatedTotal - currentQty;
-        // このロットで埋めるべき不足分
         const needed = Math.max(0, requiredQty - otherAllocated);
-        // ロット在庫と不足分の小さい方
         const fillQty = Math.min(freeQty, needed);
 
         if (fillQty === 0 && needed === 0) {
@@ -99,10 +88,9 @@ export function LotCandidateRow({
         }
 
         onChangeAllocation(line.id, lot.lot_id, fillQty);
-        setIsConfirmed(true); // 全量ボタンは自動的に確定扱い（保存はまだ）
+        setIsConfirmed(true);
     };
 
-    // 引確ボタン
     const handleConfirm = () => {
         if (currentQty > 0) {
             onSave();
@@ -111,7 +99,6 @@ export function LotCandidateRow({
         }
     };
 
-    // クリアボタン
     const handleClear = () => {
         onChangeAllocation(line.id, lot.lot_id, 0);
         setIsConfirmed(false);
@@ -128,81 +115,20 @@ export function LotCandidateRow({
         >
             <LotInfoSection lot={lot} line={line} currentQty={currentQty} isLocked={isLocked} isExpired={isExpired} />
 
-            {/* 右側: 数量入力とアクション */}
-            <div className="flex shrink-0 items-center gap-x-3">
-                <div className="min-w-[140px] text-right">
-                    <div className="text-xs font-bold text-gray-400">残量 / 総量</div>
-                    <div className="text-sm font-bold text-gray-900">
-                        {formatQuantity(remainingInLot, line.unit || "PCS")} /{" "}
-                        {formatQuantity(freeQty, line.unit || "PCS")} {line.unit}
-                    </div>
-                </div>
-
-                <div className="h-8 w-px shrink-0 bg-gray-100" />
-
-                <div className="flex items-center gap-1">
-                    <Input
-                        type="number"
-                        className={cn(
-                            "h-8 w-20 text-center text-sm font-bold transition-all",
-                            isConfirmed
-                                ? "border-blue-600 text-blue-900 ring-2 ring-blue-600/20"
-                                : currentQty > 0
-                                    ? "border-orange-500 text-orange-700 ring-1 ring-orange-500/20"
-                                    : "border-gray-300 text-gray-900",
-                            isShaking && "animate-shake border-red-500 text-red-600 ring-red-500",
-                        )}
-                        value={currentQty > 0 ? currentQty : ""}
-                        placeholder="0"
-                        onChange={handleInputChange}
-                        min={0}
-                        max={limit}
-                    />
-                    <span className="text-xs text-gray-500">{line.unit}</span>
-                </div>
-
-                <div className="flex items-center gap-1 rounded-md bg-gray-50 p-1">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-2 text-xs"
-                        onClick={handleFull}
-                        disabled={freeQty <= 0 || isLocked}
-                        title="不足分をこのロットで埋める"
-                    >
-                        全量
-                    </Button>
-
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        className={cn(
-                            "h-8 px-2 text-xs",
-                            isConfirmed && "border-blue-300 bg-blue-50 text-blue-700"
-                        )}
-                        onClick={handleConfirm}
-                        disabled={currentQty === 0}
-                    >
-                        引確
-                    </Button>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className={cn(
-                            "h-8 w-8 p-0 text-gray-500 transition-colors",
-                            "border border-gray-300 bg-white shadow-sm",
-                            "hover:border-red-300 hover:bg-red-50 hover:text-red-600",
-                            currentQty === 0 && "cursor-not-allowed border-gray-200 bg-gray-50 opacity-50",
-                        )}
-                        onClick={handleClear}
-                        disabled={currentQty === 0}
-                        title="クリア"
-                    >
-                        <Trash2 className="h-4 w-4" />
-                    </Button>
-                </div>
-            </div>
+            <LotActionSection
+                currentQty={currentQty}
+                remainingInLot={remainingInLot}
+                freeQty={freeQty}
+                line={line}
+                limit={limit}
+                isConfirmed={isConfirmed}
+                isShaking={isShaking}
+                isLocked={isLocked}
+                onInputChange={handleInputChange}
+                onFull={handleFull}
+                onConfirm={handleConfirm}
+                onClear={handleClear}
+            />
         </div>
     );
 }
@@ -221,7 +147,7 @@ function LotInfoSection({
     isExpired: boolean;
 }) {
     const lockReason = lot.lock_reason || (lot.status === "quarantine" ? "検疫中" : "ロック中");
-    const freeQty = Number(lot.free_qty ?? 0);
+    const freeQty = Number(lot.available_quantity ?? lot.available_qty ?? lot.free_qty ?? 0);
 
     return (
         <div className="flex min-w-0 flex-grow items-center gap-x-4">
@@ -269,6 +195,113 @@ function LotInfoSection({
                 <div className="text-sm text-gray-500">
                     {formatDate(lot.expiry_date, { fallback: "-" })}
                 </div>
+            </div>
+        </div>
+    );
+}
+
+interface LotActionSectionProps {
+    currentQty: number;
+    remainingInLot: number;
+    freeQty: number;
+    line: OrderLine;
+    limit: number;
+    isConfirmed: boolean;
+    isShaking: boolean;
+    isLocked: boolean;
+    onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onFull: () => void;
+    onConfirm: () => void;
+    onClear: () => void;
+}
+
+function LotActionSection({
+    currentQty,
+    remainingInLot,
+    freeQty,
+    line,
+    limit,
+    isConfirmed,
+    isShaking,
+    isLocked,
+    onInputChange,
+    onFull,
+    onConfirm,
+    onClear,
+}: LotActionSectionProps) {
+    return (
+        <div className="flex shrink-0 items-center gap-x-3">
+            <div className="min-w-[140px] text-right">
+                <div className="text-xs font-bold text-gray-400">残量 / 総量</div>
+                <div className="text-sm font-bold text-gray-900">
+                    {formatQuantity(remainingInLot, line.unit || "PCS")} /{" "}
+                    {formatQuantity(freeQty, line.unit || "PCS")} {line.unit}
+                </div>
+            </div>
+
+            <div className="h-8 w-px shrink-0 bg-gray-100" />
+
+            <div className="flex items-center gap-1">
+                <Input
+                    type="number"
+                    className={cn(
+                        "h-8 w-20 text-center text-sm font-bold transition-all",
+                        isConfirmed
+                            ? "border-blue-600 text-blue-900 ring-2 ring-blue-600/20"
+                            : currentQty > 0
+                                ? "border-orange-500 text-orange-700 ring-1 ring-orange-500/20"
+                                : "border-gray-300 text-gray-900",
+                        isShaking && "animate-shake border-red-500 text-red-600 ring-red-500",
+                    )}
+                    value={currentQty > 0 ? currentQty : ""}
+                    placeholder="0"
+                    onChange={onInputChange}
+                    min={0}
+                    max={limit}
+                />
+                <span className="text-xs text-gray-500">{line.unit}</span>
+            </div>
+
+            <div className="flex items-center gap-1 rounded-md bg-gray-50 p-1">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-2 text-xs"
+                    onClick={onFull}
+                    disabled={freeQty <= 0 || isLocked}
+                    title="不足分をこのロットで埋める"
+                >
+                    全量
+                </Button>
+
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                        "h-8 px-2 text-xs",
+                        isConfirmed && "border-blue-300 bg-blue-50 text-blue-700"
+                    )}
+                    onClick={onConfirm}
+                    disabled={currentQty === 0}
+                >
+                    引確
+                </Button>
+
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                        "h-8 w-8 p-0 text-gray-500 transition-colors",
+                        "border border-gray-300 bg-white shadow-sm",
+                        "hover:border-red-300 hover:bg-red-50 hover:text-red-600",
+                        currentQty === 0 && "cursor-not-allowed border-gray-200 bg-gray-50 opacity-50",
+                    )}
+                    onClick={onClear}
+                    disabled={currentQty === 0}
+                    title="クリア"
+                >
+                    <Trash2 className="h-4 w-4" />
+                </Button>
             </div>
         </div>
     );

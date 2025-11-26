@@ -34,10 +34,12 @@ export type AllocationResult = {
 export interface CandidateLotItem {
   lot_id: number;
   lot_number: string;
-  free_qty: number;
+  free_qty?: number; // Deprecated: use available_quantity
   current_quantity: number;
-  available_qty?: number;
-  allocated_qty: number;
+  available_qty?: number; // Deprecated: use available_quantity
+  available_quantity?: number; // Backend v2.2+ returns this
+  allocated_qty?: number; // Deprecated: use allocated_quantity
+  allocated_quantity?: number;
   product_id?: number;
   product_code?: string;
   warehouse_id?: number;
