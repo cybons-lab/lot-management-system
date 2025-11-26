@@ -56,7 +56,7 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
       }
 
       createAlloc.mutate(
-        { allocations: [{ lot_id: lotId, qty }] },
+        { allocations: [{ lot_id: lotId, quantity: qty }] },
         {
           onSuccess: () => {
             toast.success("引当が完了しました");

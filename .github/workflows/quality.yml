@@ -17,32 +17,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: "3.12"
-          cache: "pip"
-          cache-dependency-path: backend/requirements.txt
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff pytest
-          pip install -r requirements.txt
+        run: uv sync --all-extras --dev
 
       - name: Ruff lint check
-        run: ruff check app/
+        run: uv run ruff check app/
 
       - name: Ruff format check
-        run: ruff format --check app/
+        run: uv run ruff format --check app/
 
       - name: Check maximum file lines (300 lines)
-        run: python tools/check_max_lines.py
-        continue-on-error: true  # 一時的に違反を許容（2ファイルが基準超過）
+        run: uv run python tools/check_max_lines.py
+        continue-on-error: true
 
       - name: Run pytest (smoke tests)
-        run: pytest -q -k "not integration" --maxfail=5
-        continue-on-error: true  # 一時的にテスト失敗を許容（SQLite互換性問題のため）
+        run: uv run pytest -q -k "not integration" --maxfail=5
+        continue-on-error: true
 
   frontend-quality:
     name: Frontend Quality
@@ -76,3 +74,48 @@ jobs:
 
       - name: Check circular dependencies
         run: npx madge src --circular --extensions ts,tsx
+
+  schema-sync-check:
+    name: Schema Synchronization Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Backend Setup & Export
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: uv sync --no-dev
+
+      - name: Export OpenAPI Schema
+        working-directory: backend
+        run: uv run python scripts/export_openapi.py
+
+      # Frontend Setup & Generate
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Generate TypeScript Types
+        working-directory: frontend
+        run: npm run typegen
+
+      # Diff Check
+      - name: Check for Uncommitted Changes
+        continue-on-error: true
+        run: |
+          git diff --exit-code frontend/src/shared/types/openapi.d.ts || (echo "⚠️ Warning: Frontend type definitions may be out of sync with Backend schema. Please run 'npm run typegen' in frontend directory and commit the changes." && exit 1)

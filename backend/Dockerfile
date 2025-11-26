@@ -13,12 +13,19 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+# uvのインストール
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 # 依存関係ファイルをコピー
-COPY requirements.txt .
+COPY pyproject.toml uv.lock ./
 
 # 依存関係インストール
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# --frozen: lockファイルを使用
+# --no-dev: 開発依存を除外
+RUN uv sync --frozen --no-dev
+
+# PATHを通す（.venv内のコマンドを使えるようにする）
+ENV PATH="/app/.venv/bin:$PATH"
 
 # アプリケーションコードをコピー
 COPY . .

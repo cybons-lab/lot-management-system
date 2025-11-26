@@ -21,7 +21,7 @@ export default [
       "public/**",
       "../backend/**",
       "scripts/**",
-      "src/types/api.d.ts",
+      "src/shared/types/openapi.d.ts",
     ],
   },
 
@@ -31,7 +31,7 @@ export default [
   {
     files: ["src/**/*.{ts,tsx,js,jsx}"],
     ignores: [
-      "src/types/api.d.ts", // OpenAPI generated file
+      "src/shared/types/openapi.d.ts", // OpenAPI generated file
     ],
     plugins: {
       "@typescript-eslint": tseslint.plugin,

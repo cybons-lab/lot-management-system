@@ -21,7 +21,7 @@ export function useForecastData(
     staleTime: 1000 * 60 * 5, // 5分間キャッシュ
     select: (data) => {
       // 全グループのforecastsを結合
-      const allForecasts: Forecast[] = data.items.flatMap((item) => item.forecasts);
+      const allForecasts: Forecast[] = data.items.flatMap((item) => item.forecasts ?? []);
 
       // 日付順にソート
       return allForecasts.sort(

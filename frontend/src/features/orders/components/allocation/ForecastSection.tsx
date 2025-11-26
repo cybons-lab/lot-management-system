@@ -29,7 +29,7 @@ export function ForecastSection({ productId, customerId, fullWidth = false }: Pr
   const allForecasts: Forecast[] = [];
   if (forecastQ.data?.items) {
     for (const group of forecastQ.data.items) {
-      allForecasts.push(...group.forecasts);
+      allForecasts.push(...(group.forecasts ?? []));
     }
   }
 

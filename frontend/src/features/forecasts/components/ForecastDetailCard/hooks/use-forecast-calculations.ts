@@ -31,7 +31,7 @@ interface UseForecastCalculationsResult {
  * @returns Calculated data for rendering
  */
 export function useForecastCalculations(group: ForecastGroup): UseForecastCalculationsResult {
-  const { forecasts } = group;
+  const { forecasts = [] } = group;
 
   // Separate forecasts by forecast_period
   // - Daily forecasts: forecast_period matches forecast_date's month

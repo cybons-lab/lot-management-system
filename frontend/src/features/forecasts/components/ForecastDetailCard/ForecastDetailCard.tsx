@@ -21,6 +21,8 @@ import { Button, Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/shared/libs/utils";
 
+import { RelatedOrdersSection } from "./RelatedOrdersSection";
+
 export function ForecastDetailCard({
   group,
   onDelete,
@@ -31,7 +33,7 @@ export function ForecastDetailCard({
   onToggle,
 }: ForecastDetailCardProps) {
   const navigate = useNavigate();
-  const { group_key, forecasts } = group;
+  const { group_key, forecasts = [] } = group;
 
   // Calculate all forecast data using custom hook
   const { dailyData, unit, targetMonthStartDate, dates, dekadData, monthlyData, targetMonthTotal } =
@@ -147,6 +149,9 @@ export function ForecastDetailCard({
               </div>
             </div>
           </div>
+
+          {/* 関連受注セクション */}
+          <RelatedOrdersSection group={group} />
         </CardContent>
       ) : (
         <ForecastCollapsedSummary

@@ -1,18 +1,17 @@
 import { fetchApi } from "@/shared/libs/http";
-import type { CandidateLotsResponse, OrderResponse } from "@/shared/types/aliases";
-import type { paths, components } from "@/types/api";
+import type { operations } from "@/shared/types/openapi";
+import type {
+  CandidateLotsResponse,
+  OrderResponse,
+  AllocationCommitResponse,
+  WarehouseListResponse,
+  ManualAllocationSavePayload,
+} from "@/shared/types/schema";
 
 // api.d.ts から型を抽出
-type OrdersGetParams = paths["/api/orders"]["get"]["parameters"]["query"];
-// type OrdersGetResponse =
-//   paths["/api/orders"]["get"]["responses"][200]["content"]["application/json"];
+export type OrdersListParams = operations["list_orders_api_orders_get"]["parameters"]["query"];
 type OrderGetResponse =
-  paths["/api/orders/{order_id}"]["get"]["responses"][200]["content"]["application/json"];
-
-// 互換性のためのエイリアス型（既存コードで使用中）
-export type OrdersListParams = OrdersGetParams;
-// export type OrderResponse = components["schemas"]["OrderResponse"]; // Use alias
-// export type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"]; // Use alias
+  operations["get_order_api_orders__order_id__get"]["responses"][200]["content"]["application/json"];
 
 /**
  * 受注一覧取得
@@ -46,7 +45,7 @@ export const getOrder = (orderId: number) => fetchApi.get<OrderGetResponse>(`/or
  * @description 新しいAllocationCommitResponseを使用（FefoCommitResponseは非推奨）
  */
 export const reMatchOrder = (orderId: number) =>
-  fetchApi.post<components["schemas"]["AllocationCommitResponse"]>(`/orders/${orderId}/re-match`);
+  fetchApi.post<AllocationCommitResponse>(`/orders/${orderId}/re-match`);
 
 /**
  * 引当情報付き受注一覧取得
@@ -57,7 +56,7 @@ export const getOrdersWithAllocations = (): Promise<unknown> =>
 /**
  * 倉庫別引当情報取得
  */
-export const getWarehouseAllocList = (): Promise<components["schemas"]["WarehouseListResponse"]> =>
+export const getWarehouseAllocList = (): Promise<WarehouseListResponse> =>
   fetchApi.get("/warehouse-alloc/warehouses");
 
 /**
@@ -84,10 +83,7 @@ export const getCandidateLots = (params: {
 /**
  * ロット引当実行
  */
-export const createLotAllocations = (
-  orderLineId: number,
-  request: { allocations: { lot_id: number; qty: number }[] },
-) =>
+export const createLotAllocations = (orderLineId: number, request: ManualAllocationSavePayload) =>
   fetchApi.post<{
     success?: boolean;
     message?: string;
@@ -106,18 +102,20 @@ export const cancelLotAllocations = (
     request,
   );
 
+export type WarehouseAllocationItem = {
+  delivery_place_id: number;
+  delivery_place_code: string;
+  warehouse_name?: string;
+  lot_id: number;
+  quantity: number;
+};
+
 /**
  * 倉庫別引当保存
  */
 export const saveWarehouseAllocations = (
   orderLineId: number,
-  allocations: Array<{
-    delivery_place_id: number;
-    delivery_place_code: string;
-    warehouse_name?: string;
-    lot_id: number;
-    quantity: number;
-  }>,
+  allocations: WarehouseAllocationItem[],
 ) =>
   fetchApi.post<{ success?: boolean; message?: string }>(
     `/orders/${orderLineId}/warehouse-allocations`,
