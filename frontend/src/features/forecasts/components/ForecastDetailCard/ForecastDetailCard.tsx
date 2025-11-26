@@ -21,6 +21,8 @@ import { Button, Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/shared/libs/utils";
 
+import { RelatedOrdersSection } from "./RelatedOrdersSection";
+
 export function ForecastDetailCard({
   group,
   onDelete,
@@ -52,9 +54,8 @@ export function ForecastDetailCard({
   const now = new Date();
   const todayKey = formatDateKey(now);
   const todayStart = getTodayStart();
-  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
-    targetMonthStartDate.getMonth() + 1
-  }月`;
+  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${targetMonthStartDate.getMonth() + 1
+    }月`;
 
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =
@@ -147,6 +148,9 @@ export function ForecastDetailCard({
               </div>
             </div>
           </div>
+
+          {/* 関連受注セクション */}
+          <RelatedOrdersSection group={group} />
         </CardContent>
       ) : (
         <ForecastCollapsedSummary
