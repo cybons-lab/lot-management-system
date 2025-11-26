@@ -50,7 +50,7 @@ interface LotCandidate {
 }
 ```
 
-エイリアスが必要な場合は `src/shared/types/schema.ts` に追加：
+#### エイリアスが必要な場合は `src/shared/types/schema.ts` に追加：
 
 ```typescript
 // src/shared/types/schema.ts
@@ -58,6 +58,25 @@ import type { components } from './openapi';
 
 export type CandidateLotItem = components['schemas']['CandidateLotItem'];
 ```
+
+### マイグレーション作成時のワークフロー
+
+データベーススキーマを変更した場合、以下の手順で**ER図とスキーマダンプを更新**してください：
+
+```bash
+# 1. マイグレーションファイルを作成
+cd backend
+alembic revision --autogenerate -m "description"
+
+# 2. ER図とスキーマダンプを更新（必須）
+python scripts/generate_er_diagram.py
+
+# 3. 変更をコミット
+git add alembic/versions/*.py docs/schema.adoc docs/schema_dump.sql
+git commit -m "feat(db): add migration - description"
+```
+
+**重要**: マイグレーション作成時にER図の更新を忘れないでください。ドキュメントとコードの同期を保つことが重要です。
 
 ## 依存関係管理
 

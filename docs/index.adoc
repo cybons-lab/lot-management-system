@@ -1,0 +1,59 @@
+= Lot Management System - Documentation Portal
+:toc: left
+:toc-title: 目次
+:sectnums:
+
+**最終更新**: 2025-11-27
+
+== はじめに
+
+このドキュメントは、ロット管理システムの技術ドキュメントポータルです。
+各トピックへのナビゲーションとして利用してください。
+
+include::README.adoc[leveloffset=+1]
+
+== アーキテクチャ
+
+include::architecture.adoc[leveloffset=+1]
+
+== データベース
+
+include::schema.adoc[leveloffset=+1]
+
+== 機能仕様
+
+=== 引当機能
+
+include::allocation.adoc[leveloffset=+2]
+
+=== フォーキャスト機能
+
+include::forecast.adoc[leveloffset=+2]
+
+== 開発ガイド
+
+=== フロントエンド開発
+
+include::frontend.adoc[leveloffset=+2]
+
+=== API リファレンス
+
+詳細なAPI仕様は、自動生成される **http://localhost:8000/api/docs[OpenAPI ドキュメント (Swagger UI)]** を参照してください。
+
+include::api_reference.adoc[leveloffset=+2]
+
+== 運用・トラブルシューティング
+
+include::troubleshooting.adoc[leveloffset=+1]
+
+== その他
+
+=== ドキュメント作成ガイドライン
+
+include::DOCUMENT_GUIDELINES.adoc[leveloffset=+2]
+
+== 関連リンク
+
+* link:../CONTRIBUTING.md[コントリビューションガイド]
+* http://localhost:8000/api/docs[Swagger UI (API ドキュメント)]
+* link:https://github.com/cybons-lab/lot-management-system[GitHub Repository]
