@@ -20,6 +20,10 @@ include::architecture.adoc[leveloffset=+1]
 
 include::schema.adoc[leveloffset=+1]
 
+== システム連携
+
+include::system_integration.adoc[leveloffset=+1]
+
 == 機能仕様
 
 === 引当機能

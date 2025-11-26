@@ -1,0 +1,249 @@
+= システム連携仕様
+:toc: left
+:toc-title: 目次
+:sectnums:
+
+**最終更新**: 2025-11-27
+
+== 概要
+
+本ドキュメントは、ロット管理システムと外部システム（SAP ERP、フォーキャストシステム等）との連携仕様を定義する。
+
+== システム構成
+
+[mermaid]
+....
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#e3f2fd','primaryTextColor':'#1565c0','primaryBorderColor':'#1976d2','lineColor':'#424242','fontSize':'16px'}}}%%
+graph TB
+    subgraph ext ["外部システム層"]
+        direction LR
+        FC["📊 フォーキャスト<br/>システム"]
+        KB["🏭 かんばん<br/>システム"]
+    end
+    
+    subgraph lms ["ロット管理システム"]
+        direction TB
+        FE["🖥️ フロントエンド<br/>(React + TypeScript)"]
+        BE["⚙️ バックエンド<br/>(FastAPI + Python)"]
+        DB[("🗄️ PostgreSQL<br/>データベース")]
+        
+        FE ---|REST API| BE
+        BE ---|SQL| DB
+    end
+    
+    subgraph erp ["基幹システム"]
+        SAP["💼 SAP ERP"]
+    end
+    
+    FC -.->|CSVファイル<br/>インポート| FE
+    KB -.->|受注データ| FE
+    BE <-.->|REST API<br/>(将来実装)| SAP
+    
+    classDef extStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#1565c0
+    classDef lmsStyle fill:#f1f8e9,stroke:#558b2f,stroke-width:3px,color:#33691e
+    classDef erpStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#e65100
+    
+    class FC,KB extStyle
+    class FE,BE,DB lmsStyle
+    class SAP erpStyle
+....
+
+== 業務フロー
+
+=== 通常フロー（フォーキャストあり）
+
+[mermaid]
+....
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#e8f5e9','primaryBorderColor':'#4caf50','tertiaryColor':'#fff9c4'}}}%%
+flowchart LR
+    A([📥 フォーキャスト<br/>受信]) --> B[📊 インポート]
+    B --> C[📈 需要予測登録]
+    C --> D[📝 発注処理]
+    D --> E[📦 入荷予定登録]
+    E --> F[✅ 入荷実績登録]
+    F --> G[🏷️ ロット在庫生成]
+    G --> H[📋 受注登録]
+    H --> I[🎯 在庫引当]
+    I --> J[🚚 出荷処理]
+    J --> K[💼 SAP受注登録]
+    K --> L[🔄 受注番号<br/>書き戻し]
+    L --> M([✅ 完了])
+    
+    classDef startEnd fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+    classDef process fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef sap fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+    
+    class A,M startEnd
+    class B,C,D,E,F,G,H,I,J process
+    class K,L sap
+....
+
+=== 例外フロー（かんばん方式）
+
+フォーキャストがない定例出荷パターン。
+需要予測を自社で立てるケース。
+
+[mermaid]
+....
+%%{init: {'theme':'base', 'themeVariables': {'primaryColor':'#fff9c4','primaryBorderColor':'#f57c00'}}}%%
+flowchart LR
+    A([📥 かんばん注文<br/>受信]) --> B{📊 フォーキャスト<br/>確認}
+    B -->|なし| C[📝 受注登録<br/>定例出荷]
+    C --> D[🎯 在庫引当]
+    D --> E[🚚 出荷処理]
+    E --> F[💼 SAP受注登録]
+    F --> G[🔄 受注番号<br/>書き戻し]
+    G --> H[📋 履歴保存]
+    H --> I[📊 フォーキャスト<br/>消化記録]
+    I --> J([✅ 完了])
+    
+    classDef startEnd fill:#fff9c4,stroke:#f57c00,stroke-width:2px
+    classDef process fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef sap fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+    classDef decision fill:#ffccbc,stroke:#d84315,stroke-width:2px
+    
+    class A,J startEnd
+    class C,D,E,H,I process
+    class F,G sap
+    class B decision
+....
+
+== システム間連携（シーケンス）
+
+[mermaid]
+....
+%%{init: {'theme':'base', 'themeVariables': {'actorBorder':'#1976d2','actorBkg':'#e3f2fd','signalColor':'#424242','labelBoxBkgColor':'#fff3e0'}}}%%
+sequenceDiagram
+    autonumber
+    participant U as 👤 担当者
+    participant L as 🖥️ ロット管理<br/>システム
+    participant S as 💼 SAP ERP
+    participant E as 📊 外部システム
+    
+    rect rgb(227, 242, 253)
+        Note over U,E: フォーキャスト処理
+        E->>L: フォーキャストファイル送信
+        U->>L: インポート操作
+        L->>L: 需要予測データ登録
+    end
+    
+    rect rgb(255, 243, 224)
+        Note over U,L: 発注・入荷
+        U->>L: 発注処理
+        Note right of L: 将来的にSAP連携
+        U->>L: 入荷実績登録
+        L->>L: ロット在庫生成
+    end
+    
+    rect rgb(232, 245, 233)
+        Note over U,S: 受注・引当・出荷
+        U->>L: 受注登録
+        L->>L: 在庫引当実行
+        U->>L: 出荷承認
+        L->>L: 在庫減算
+    end
+    
+    rect rgb(255, 249, 196)
+        Note over L,S: SAP連携（重要）
+        L->>S: 受注データ送信
+        S-->>L: 受注番号返却
+        L->>L: 受注番号書き戻し
+        L->>L: 履歴保存
+    end
+....
+
+== SAP ERP 連携仕様
+
+=== 連携概要
+
+[cols="2,3,2,2", options="header"]
+|===
+| 処理 | タイミング | データフロー | 実装状況
+
+| 受注登録
+| 出荷承認後
+| LMS → SAP
+| ❌ 未実装
+
+| 受注番号取得
+| SAP受注登録後
+| SAP → LMS
+| ❌ 未実装
+
+| 在庫同期
+| 定期バッチ
+| SAP ⇄ LMS
+| ❌ 未実装
+
+| 発注データ連携
+| 発注処理時
+| LMS → SAP
+| ❌ 未実装
+|===
+
+=== API仕様（予定）
+
+==== POST /api/sap/orders
+
+受注データをSAP ERPに登録する。
+
+*リクエスト例:*
+[source,json]
+----
+{
+  "order_id": 123,
+  "customer_code": "C001",
+  "delivery_date": "2025-12-28",
+  "items": [
+    {
+      "product_code": "PROD-001",
+      "quantity": 100,
+      "unit": "ML"
+    }
+  ]
+}
+----
+
+*レスポンス例:*
+[source,json]
+----
+{
+  "sap_order_number": "SAP-123-20251127",
+  "status": "registered"
+}
+----
+
+==== GET /api/sap/orders/{sap_order_number}
+
+SAP受注ステータスを取得する。
+
+=== 実装状況
+
+現在は**ダミー実装**。
+将来的にSAP標準APIまたはRFC（Remote Function Call）経由で実装予定。
+
+== 実装計画
+
+=== フェーズ1: ダミー実装（完了予定: 2026Q1）
+
+* [ ] SAP連携APIエンドポイント追加（ダミー）
+* [ ] フロントエンドにSAP登録ボタン追加
+* [ ] ダミーレスポンス返却
+
+=== フェーズ2: 仕様確定（完了予定: 2026Q2）
+
+* [ ] SAP側の連携仕様確認
+* [ ] 認証方式の決定（API Key / OAuth / RFC）
+* [ ] データマッピング定義
+
+=== フェーズ3: 本実装（完了予定: 2026Q3-Q4）
+
+* [ ] SAP REST APIまたはRFC接続実装
+* [ ] エラーハンドリング・リトライ機構
+* [ ] 連携ログ・監視機能
+
+== 関連ドキュメント
+
+* link:architecture.adoc[システムアーキテクチャ]
+* link:schema.adoc[データベーススキーマ]
+* http://localhost:8000/api/docs[API リファレンス（Swagger UI）]
