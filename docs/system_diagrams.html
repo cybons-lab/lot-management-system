@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ロット管理システム - システム構成図</title>
     <script type="module">
         import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
-        mermaid.initialize({ 
+        mermaid.initialize({
             startOnLoad: true,
             theme: 'base',
             themeVariables: {
@@ -24,41 +25,41 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 2rem;
         }
-        
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
             background: white;
             border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             overflow: hidden;
         }
-        
+
         header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 2rem;
             text-align: center;
         }
-        
+
         header h1 {
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
-        
+
         header p {
             font-size: 1.1rem;
             opacity: 0.9;
         }
-        
+
         nav {
             background: #f8f9fa;
             padding: 1rem 2rem;
@@ -67,33 +68,33 @@
             top: 0;
             z-index: 100;
         }
-        
+
         nav ul {
             list-style: none;
             display: flex;
             gap: 2rem;
             flex-wrap: wrap;
         }
-        
+
         nav a {
             color: #495057;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.2s;
         }
-        
+
         nav a:hover {
             color: #667eea;
         }
-        
+
         .content {
             padding: 3rem 2rem;
         }
-        
+
         section {
             margin-bottom: 4rem;
         }
-        
+
         section h2 {
             font-size: 2rem;
             color: #212529;
@@ -101,27 +102,27 @@
             padding-bottom: 0.5rem;
             border-bottom: 3px solid #667eea;
         }
-        
+
         section p {
             color: #6c757d;
             line-height: 1.8;
             margin-bottom: 1.5rem;
         }
-        
+
         .diagram-container {
             background: #f8f9fa;
             border-radius: 12px;
             padding: 2rem;
             margin: 2rem 0;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        
+
         .mermaid {
             display: flex;
             justify-content: center;
             margin: 1rem 0;
         }
-        
+
         footer {
             background: #212529;
             color: white;
@@ -129,24 +130,26 @@
             padding: 2rem;
             font-size: 0.9rem;
         }
-        
+
         @media print {
             body {
                 background: white;
             }
+
             nav {
                 display: none;
             }
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <header>
             <h1>🏭 ロット管理システム</h1>
             <p>システム構成図・業務フロー図</p>
         </header>
-        
+
         <nav>
             <ul>
                 <li><a href="#system-architecture">システム構成</a></li>
@@ -155,163 +158,178 @@
                 <li><a href="#sequence">システム間連携</a></li>
             </ul>
         </nav>
-        
+
         <div class="content">
             <section id="system-architecture">
                 <h2>📊 システム構成</h2>
                 <p>ロット管理システムと外部システム（SAP ERP、フォーキャストシステム等）の全体構成を示します。</p>
-                
+
                 <div class="diagram-container">
                     <div class="mermaid">
-graph TB
-    subgraph ext ["外部システム層"]
-        direction LR
-        FC["📊 フォーキャスト<br/>システム"]
-        KB["🏭 かんばん<br/>システム"]
-    end
-    
-    subgraph lms ["ロット管理システム"]
-        direction TB
-        FE["🖥️ フロントエンド<br/>(React + TypeScript)"]
-        BE["⚙️ バックエンド<br/>(FastAPI + Python)"]
-        DB[("🗄️ PostgreSQL<br/>データベース")]
-        
-        FE ---|REST API| BE
-        BE ---|SQL| DB
-    end
-    
-    subgraph erp ["基幹システム"]
-        SAP["💼 SAP ERP"]
-    end
-    
-    FC -.->|CSVファイル<br/>インポート| FE
-    KB -.->|受注データ| FE
-    BE <-.->|REST API<br/>(将来実装)| SAP
-    
-    classDef extStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#1565c0
-    classDef lmsStyle fill:#f1f8e9,stroke:#558b2f,stroke-width:3px,color:#33691e
-    classDef erpStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#e65100
-    
-    class FC,KB extStyle
-    class FE,BE,DB lmsStyle
-    class SAP erpStyle
+                        graph TB
+                        FC["📊 フォーキャストシステム"]
+                        KB["🏭 かんばんシステム"]
+
+                        FE["🖥️ フロントエンド<br />(React + TypeScript)"]
+                        BE["⚙️ バックエンド<br />(FastAPI + Python)"]
+                        DB[("🗄️ PostgreSQL")]
+
+                        SAP["💼 SAP ERP"]
+
+                        FC -.->|CSVインポート| FE
+                        KB -.->|受注データ| FE
+                        FE -->|REST API| BE
+                        BE -->|SQL| DB
+                        BE <-.->|REST API<br />将来実装| SAP
+
+                            style FC fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+                            style KB fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+                            style FE fill:#f1f8e9,stroke:#558b2f,stroke-width:3px
+                            style BE fill:#f1f8e9,stroke:#558b2f,stroke-width:3px
+                            style DB fill:#f1f8e9,stroke:#558b2f,stroke-width:3px
+                            style SAP fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+
+                            classDef extStyle fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,color:#1565c0
+                            classDef lmsStyle fill:#f1f8e9,stroke:#558b2f,stroke-width:3px,color:#33691e
+                            classDef erpStyle fill:#fff3e0,stroke:#ef6c00,stroke-width:3px,color:#e65100
+
+                            class FC,KB extStyle
+                            class FE,BE,DB lmsStyle
+                            class SAP erpStyle
                     </div>
                 </div>
             </section>
-            
+
             <section id="flow-standard">
                 <h2>🔄 通常フロー（フォーキャストあり）</h2>
                 <p>フォーキャストデータを基にした標準的な業務フローです。</p>
-                
+
                 <div class="diagram-container">
                     <div class="mermaid">
-flowchart LR
-    A([📥 フォーキャスト<br/>受信]) --> B[📊 インポート]
-    B --> C[📈 需要予測登録]
-    C --> D[📝 発注処理]
-    D --> E[📦 入荷予定登録]
-    E --> F[✅ 入荷実績登録]
-    F --> G[🏷️ ロット在庫生成]
-    G --> H[📋 受注登録]
-    H --> I[🎯 在庫引当]
-    I --> J[🚚 出荷処理]
-    J --> K[💼 SAP受注登録]
-    K --> L[🔄 受注番号<br/>書き戻し]
-    L --> M([✅ 完了])
-    
-    classDef startEnd fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
-    classDef process fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    classDef sap fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
-    
-    class A,M startEnd
-    class B,C,D,E,F,G,H,I,J process
-    class K,L sap
+                        flowchart LR
+                        flowchart TD
+                        A([📥 フォーキャスト受信])
+                        B[📊 インポート]
+                        C[📈 需要予測登録]
+                        D[📝 発注処理]
+                        E[📦 入荷予定登録]
+                        F[✅ 入荷実績登録]
+                        G[🏷️ ロット在庫生成]
+                        H[📋 受注登録]
+                        I[🎯 在庫引当]
+                        J[🚚 出荷処理]
+                        K[💼 SAP受注登録]
+                        L[🔄 受注番号書き戻し]
+                        M([✅ 完了])
+
+                        A --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K --> L --> M
+
+                        style A fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+                        style M fill:#c8e6c9,stroke:#2e7d32,stroke-width:2px
+                        style B fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style C fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style D fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style E fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style F fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style G fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style H fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style I fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style J fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style K fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+                        style L fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
                     </div>
                 </div>
             </section>
-            
+
             <section id="flow-kanban">
                 <h2>⚡ 例外フロー（かんばん方式）</h2>
                 <p>フォーキャストがない定例出荷パターン。需要予測を自社で立てるケースです。</p>
-                
+
                 <div class="diagram-container">
                     <div class="mermaid">
-flowchart LR
-    A([📥 かんばん注文<br/>受信]) --> B{📊 フォーキャスト<br/>確認}
-    B -->|なし| C[📝 受注登録<br/>定例出荷]
-    C --> D[🎯 在庫引当]
-    D --> E[🚚 出荷処理]
-    E --> F[💼 SAP受注登録]
-    F --> G[🔄 受注番号<br/>書き戻し]
-    G --> H[📋 履歴保存]
-    H --> I[📊 フォーキャスト<br/>消化記録]
-    I --> J([✅ 完了])
-    
-    classDef startEnd fill:#fff9c4,stroke:#f57c00,stroke-width:2px
-    classDef process fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    classDef sap fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
-    classDef decision fill:#ffccbc,stroke:#d84315,stroke-width:2px
-    
-    class A,J startEnd
-    class C,D,E,H,I process
-    class F,G sap
-    class B decision
+                        flowchart TD
+                        A([📥 かんばん注文受信])
+                        B{📊 フォーキャスト確認}
+                        C[📝 受注登録 定例出荷]
+                        D[🎯 在庫引当]
+                        E[🚚 出荷処理]
+                        F[💼 SAP受注登録]
+                        G[🔄 受注番号書き戻し]
+                        H[📋 履歴保存]
+                        I[📊 フォーキャスト消化記録]
+                        J([✅ 完了])
+
+                        A --> B
+                        B -->|なし| C
+                        C --> D --> E --> F --> G --> H --> I --> J
+
+                        style A fill:#fff9c4,stroke:#f57c00,stroke-width:2px
+                        style J fill:#fff9c4,stroke:#f57c00,stroke-width:2px
+                        style B fill:#ffccbc,stroke:#d84315,stroke-width:2px
+                        style C fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style D fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style E fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style H fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style I fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+                        style F fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
+                        style G fill:#fff3e0,stroke:#ef6c00,stroke-width:3px
                     </div>
                 </div>
             </section>
-            
+
             <section id="sequence">
                 <h2>🔗 システム間連携（シーケンス図）</h2>
                 <p>各システム間のデータのやり取りを時系列で示します。</p>
-                
+
                 <div class="diagram-container">
                     <div class="mermaid">
-sequenceDiagram
-    autonumber
-    participant U as 👤 担当者
-    participant L as 🖥️ ロット管理<br/>システム
-    participant S as 💼 SAP ERP
-    participant E as 📊 外部システム
-    
-    rect rgb(227, 242, 253)
-        Note over U,E: フォーキャスト処理
-        E->>L: フォーキャストファイル送信
-        U->>L: インポート操作
-        L->>L: 需要予測データ登録
-    end
-    
-    rect rgb(255, 243, 224)
-        Note over U,L: 発注・入荷
-        U->>L: 発注処理
-        Note right of L: 将来的にSAP連携
-        U->>L: 入荷実績登録
-        L->>L: ロット在庫生成
-    end
-    
-    rect rgb(232, 245, 233)
-        Note over U,S: 受注・引当・出荷
-        U->>L: 受注登録
-        L->>L: 在庫引当実行
-        U->>L: 出荷承認
-        L->>L: 在庫減算
-    end
-    
-    rect rgb(255, 249, 196)
-        Note over L,S: SAP連携（重要）
-        L->>S: 受注データ送信
-        S-->>L: 受注番号返却
-        L->>L: 受注番号書き戻し
-        L->>L: 履歴保存
-    end
+                        sequenceDiagram
+                        autonumber
+                        participant U as 👤 担当者
+                        participant L as 🖥️ ロット管理<br />システム
+                        participant S as 💼 SAP ERP
+                        participant E as 📊 外部システム
+
+                        rect rgb(227, 242, 253)
+                        Note over U,E: フォーキャスト処理
+                        E->>L: フォーキャストファイル送信
+                        U->>L: インポート操作
+                        L->>L: 需要予測データ登録
+                        end
+
+                        rect rgb(255, 243, 224)
+                        Note over U,L: 発注・入荷
+                        U->>L: 発注処理
+                        Note right of L: 将来的にSAP連携
+                        U->>L: 入荷実績登録
+                        L->>L: ロット在庫生成
+                        end
+
+                        rect rgb(232, 245, 233)
+                        Note over U,S: 受注・引当・出荷
+                        U->>L: 受注登録
+                        L->>L: 在庫引当実行
+                        U->>L: 出荷承認
+                        L->>L: 在庫減算
+                        end
+
+                        rect rgb(255, 249, 196)
+                        Note over L,S: SAP連携（重要）
+                        L->>S: 受注データ送信
+                        S-->>L: 受注番号返却
+                        L->>L: 受注番号書き戻し
+                        L->>L: 履歴保存
+                        end
                     </div>
                 </div>
             </section>
         </div>
-        
+
         <footer>
             <p>ロット管理システム - システム構成図</p>
             <p>最終更新: 2025-11-27</p>
         </footer>
     </div>
 </body>
+
 </html>
