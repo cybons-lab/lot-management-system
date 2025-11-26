@@ -5,11 +5,11 @@
  * null/undefinedを安全な値に変換
  */
 
+import type { components } from "@/shared/types/openapi";
 import type {
   OrderLineResponse as OrderLine,
   OrderResponse as OrderResponseAlias,
 } from "@/shared/types/schema";
-import type { components } from "@/shared/types/openapi";
 
 // ヘルパー関数
 export const S = (v: string | null | undefined, fallback = "-"): string => v ?? fallback;

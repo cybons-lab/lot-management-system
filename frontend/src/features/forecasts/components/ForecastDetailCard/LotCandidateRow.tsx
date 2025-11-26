@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
 import { Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 import { Button, Input, Badge } from "@/components/ui";
-import { CandidateLotItem } from "@/features/allocations/api";
+import { type CandidateLotItem } from "@/features/allocations/api";
 import { cn } from "@/shared/libs/utils";
-import { OrderLine } from "@/shared/types/aliases";
+import { type OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
