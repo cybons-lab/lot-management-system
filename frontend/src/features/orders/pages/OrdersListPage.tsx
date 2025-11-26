@@ -159,8 +159,11 @@ export function OrdersListPage() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">得意先コード</label>
+            <label htmlFor="customer-code-filter" className="text-sm font-medium text-slate-700">
+              得意先コード
+            </label>
             <Input
+              id="customer-code-filter"
               value={filters.values.customer_code}
               onChange={(e) => filters.set("customer_code", e.target.value)}
               placeholder="例: C001"
@@ -168,12 +171,14 @@ export function OrdersListPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">ステータス</label>
+            <label htmlFor="status-filter" className="text-sm font-medium text-slate-700">
+              ステータス
+            </label>
             <Select
               value={filters.values.status}
               onValueChange={(value) => filters.set("status", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger id="status-filter">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

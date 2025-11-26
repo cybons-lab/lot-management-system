@@ -56,20 +56,22 @@ export function BusinessRulesPage() {
       {/* Filter */}
       <div className="rounded-lg border bg-white p-4">
         <div className="flex items-center gap-4">
-          <label className="text-sm font-medium">状態フィルタ:</label>
-          <select
-            value={isActiveFilter === undefined ? "all" : isActiveFilter ? "active" : "inactive"}
-            onChange={(e) => {
-              if (e.target.value === "all") setIsActiveFilter(undefined);
-              else if (e.target.value === "active") setIsActiveFilter(true);
-              else setIsActiveFilter(false);
-            }}
-            className="rounded-md border px-3 py-2 text-sm"
-          >
-            <option value="all">すべて</option>
-            <option value="active">有効のみ</option>
-            <option value="inactive">無効のみ</option>
-          </select>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            状態フィルタ:
+            <select
+              value={isActiveFilter === undefined ? "all" : isActiveFilter ? "active" : "inactive"}
+              onChange={(e) => {
+                if (e.target.value === "all") setIsActiveFilter(undefined);
+                else if (e.target.value === "active") setIsActiveFilter(true);
+                else setIsActiveFilter(false);
+              }}
+              className="rounded-md border px-3 py-2 text-sm"
+            >
+              <option value="all">すべて</option>
+              <option value="active">有効のみ</option>
+              <option value="inactive">無効のみ</option>
+            </select>
+          </label>
         </div>
       </div>
 
