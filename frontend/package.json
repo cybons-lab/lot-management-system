@@ -13,7 +13,7 @@
     "format:check": "prettier --check .",
     "typegen:curl": "curl -s http://localhost:8000/api/openapi.json -o openapi.json && pnpm typegen",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "typegen": "openapi-typescript ../backend/openapi.json -o src/shared/types/openapi.d.ts",
+    "typegen": "openapi-typescript ../backend/openapi.json -o src/shared/types/openapi.d.ts && prettier --write src/shared/types/openapi.d.ts",
     "doc:api": "widdershins http://localhost:8000/api/openapi.json -o docs/api_reference.md --summary --omitHeader --expandBody --language_tabs 'typescript:TypeScript'",
     "doc:fe": "typedoc --options typedoc.json",
     "doc": "npm run typegen && npm run doc:api && npm run doc:fe"
