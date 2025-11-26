@@ -108,13 +108,6 @@ docs/
 │
 ├── troubleshooting/         # トラブルシューティング
 │   └── {topic}.adoc
-│
-└── archive/                 # アーカイブ
-    ├── README.adoc
-    ├── changelog/
-    ├── migrations/
-    ├── investigations/
-    └── design/
 ----
 
 === カテゴリ説明
@@ -142,10 +135,6 @@ docs/
 | `troubleshooting/`
 | 問題解決ガイド
 | 英語
-
-| `archive/`
-| 歴史的ドキュメント
-| 元のまま保持
 |===
 
 == コンテンツ言語
@@ -234,25 +223,13 @@ docs/
 * *API Guide*: v2.2 (link:api/api-migration-guide-v2.2.adoc[api-migration-guide-v2.2.adoc])
 ----
 
-== アーカイブルール
+== 旧バージョンの扱い
 
-=== アーカイブ対象
+=== 基本ルール
 
-* 旧バージョンのドキュメント（2世代以上前）
-* 完了した調査・移行記録
-* 不採用となった設計案
-
-=== アーカイブ方法
-
-. `docs/archive/{category}/` に移動
-. ファイル名はそのまま保持（履歴追跡のため）
-. archive/README.adoc に記録を追加
-
-=== アーカイブ内のルール
-
-* **削除禁止**: 参照用に保管
-* **編集禁止**: 過去の状態を保持
-* **参照のみ**: 経緯確認に使用
+* **削除推奨**: 不要になったドキュメントは削除する
+* **履歴管理**: 過去のドキュメントが必要な場合は Git の履歴から参照する
+* **アーカイブ不要**: `docs/archive` ディレクトリは作成しない
 
 == ドキュメント作成フロー
 
@@ -270,10 +247,9 @@ docs/
 . バージョン番号更新が必要な場合はファイル名も変更
 . 旧バージョンをarchiveに移動
 
-=== アーカイブ
+=== 削除
 
-. `git mv` で archive フォルダに移動
-. `docs/archive/README.adoc` に記録
+. 不要になった時点で `git rm` で削除
 . `docs/README.adoc` から参照を削除
 
 == レビューチェックリスト
@@ -297,7 +273,7 @@ docs/
 === Phase 1: 即時対応（完了）
 
 * [x] docs/README.md をインデックスとして作成
-* [x] 歴史的ドキュメントを archive に移動
+* [x] 歴史的ドキュメントを削除（Git履歴で管理）
 * [x] API ドキュメントを api/ に移動
 * [x] common_type_candidates を統合
 

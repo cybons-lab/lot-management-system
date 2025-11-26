@@ -177,7 +177,6 @@ lot-management-system/
 │   ├── frontend.adoc               # フロントエンド統合
 │   ├── misc.adoc                   # その他技術実装統合
 │   ├── remaining_issues.adoc       # 残課題・TODO
-│   └── archive/                    # 過去のドキュメントアーカイブ
 ├── backend/
 │   └── (バックエンドコード)
 └── frontend/
