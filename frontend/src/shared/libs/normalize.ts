@@ -188,7 +188,7 @@ export function normalizeLot(lot: LotResponse): LotUI {
     product_code: lot.product_code,
     supplier_name: lot.supplier_name,
     supplier_code: lot.supplier_code,
-    warehouse_name: (lot as any).warehouse_name,
+    warehouse_name: ((lot as Record<string, unknown>).warehouse_name as string | null) ?? null,
   };
 }
 

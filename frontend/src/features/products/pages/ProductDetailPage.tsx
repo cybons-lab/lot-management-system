@@ -121,45 +121,45 @@ export function ProductDetailPage() {
         ) : (
           <div className="space-y-4">
             <div className={styles.form.field}>
-              <label className={styles.form.label}>製品コード</label>
+              <span className={styles.form.label}>製品コード</span>
               <p className="font-mono text-lg font-medium">{product.product_code}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>商品名</label>
+              <span className={styles.form.label}>商品名</span>
               <p className="text-lg">{product.product_name}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>社内単位</label>
+              <span className={styles.form.label}>社内単位</span>
               <p>{product.internal_unit}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>外部単位</label>
+              <span className={styles.form.label}>外部単位</span>
               <p>{product.external_unit}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>内部単位あたりの数量</label>
+              <span className={styles.form.label}>内部単位あたりの数量</span>
               <p>{product.qty_per_internal_unit}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>得意先品番</label>
+              <span className={styles.form.label}>得意先品番</span>
               <p>{product.customer_part_no ?? "-"}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>メーカー品番</label>
+              <span className={styles.form.label}>メーカー品番</span>
               <p>{product.maker_item_code ?? "-"}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>ステータス</label>
+              <span className={styles.form.label}>ステータス</span>
               <p className="text-sm font-medium">{product.is_active ? "有効" : "無効"}</p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>作成日時</label>
+              <span className={styles.form.label}>作成日時</span>
               <p className="text-gray-600">
                 {new Date(product.created_at).toLocaleString("ja-JP")}
               </p>
             </div>
             <div className={styles.form.field}>
-              <label className={styles.form.label}>更新日時</label>
+              <span className={styles.form.label}>更新日時</span>
               <p className="text-gray-600">
                 {new Date(product.updated_at).toLocaleString("ja-JP")}
               </p>
