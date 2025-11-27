@@ -8,9 +8,11 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
+import { type OrderLine } from "@/shared/types/aliases";
+
 interface OrderSummaryHeaderProps {
     order: OrderWithLinesResponse;
-    targetLines: any[]; // OrderLine[]
+    targetLines: OrderLine[];
     isExpanded: boolean;
     isHovered: boolean;
     totalRequired: number;
@@ -44,60 +46,105 @@ export function OrderSummaryHeader({
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
         >
-            <div className="flex items-center gap-3 overflow-hidden">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-                    onClick={onToggleExpand}
-                >
-                    {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                    ) : (
-                        <ChevronRight className="h-4 w-4" />
-                    )}
-                </Button>
+            <HeaderLeftSection
+                order={order}
+                targetLines={targetLines}
+                isExpanded={isExpanded}
+                isHovered={isHovered}
+                onToggleExpand={onToggleExpand}
+            />
 
-                <div className="flex items-center gap-2 text-sm">
-                    <span className="font-mono font-medium text-gray-700">
-                        {order.order_number || `ORD-${order.id}`}
-                    </span>
-                    <span className="hidden text-xs text-gray-500 sm:inline">{order.customer_name}</span>
-                    <span className="text-xs text-gray-400">|</span>
-                    <span className={cn("text-xs text-gray-600", isHovered && "font-bold text-gray-900")}>
-                        納期: {targetLines[0]?.delivery_date ? formatDate(targetLines[0].delivery_date) : "-"}
-                    </span>
-                </div>
+            <HeaderRightSection
+                order={order}
+                targetLines={targetLines}
+                totalRequired={totalRequired}
+                totalAllocated={totalAllocated}
+                statusLabel={statusLabel}
+                statusColor={statusColor}
+            />
+        </div>
+    );
+}
+
+function HeaderLeftSection({
+    order,
+    targetLines,
+    isExpanded,
+    isHovered,
+    onToggleExpand,
+}: {
+    order: OrderWithLinesResponse;
+    targetLines: OrderLine[];
+    isExpanded: boolean;
+    isHovered: boolean;
+    onToggleExpand: () => void;
+}) {
+    return (
+        <div className="flex items-center gap-3 overflow-hidden">
+            <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                onClick={onToggleExpand}
+            >
+                {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            </Button>
+
+            <div className="flex items-center gap-2 text-sm">
+                <span className="font-mono font-medium text-gray-700">
+                    {order.order_number || `ORD-${order.id}`}
+                </span>
+                <span className="hidden text-xs text-gray-500 sm:inline">{order.customer_name}</span>
+                <span className="text-xs text-gray-400">|</span>
+                <span className={cn("text-xs text-gray-600", isHovered && "font-bold text-gray-900")}>
+                    納期: {targetLines[0]?.delivery_date ? formatDate(targetLines[0].delivery_date) : "-"}
+                </span>
+            </div>
+        </div>
+    );
+}
+
+function HeaderRightSection({
+    order,
+    targetLines,
+    totalRequired,
+    totalAllocated,
+    statusLabel,
+    statusColor,
+}: {
+    order: OrderWithLinesResponse;
+    targetLines: OrderLine[];
+    totalRequired: number;
+    totalAllocated: number;
+    statusLabel: string;
+    statusColor: string;
+}) {
+    return (
+        <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm">
+                <span className="text-xs text-gray-500">明細: {targetLines.length}件</span>
+                <span className="text-xs text-gray-400">|</span>
+                <span className="text-xs text-gray-500">必要</span>
+                <span className="text-sm font-medium">
+                    {formatQuantity(totalRequired, targetLines[0]?.unit || "")}
+                </span>
+                <span className="text-xs text-gray-300">/</span>
+                <span className="text-xs text-gray-500">引当</span>
+                <span className={cn("text-sm font-medium", totalAllocated > 0 ? "text-blue-600" : "")}>
+                    {formatQuantity(totalAllocated, targetLines[0]?.unit || "")}
+                </span>
+                <span className="text-xs text-gray-400">{targetLines[0]?.unit}</span>
             </div>
 
-            <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 text-sm">
-                    <span className="text-xs text-gray-500">明細: {targetLines.length}件</span>
-                    <span className="text-xs text-gray-400">|</span>
-                    <span className="text-xs text-gray-500">必要</span>
-                    <span className="text-sm font-medium">
-                        {formatQuantity(totalRequired, targetLines[0]?.unit || "")}
-                    </span>
-                    <span className="text-xs text-gray-300">/</span>
-                    <span className="text-xs text-gray-500">引当</span>
-                    <span className={cn("text-sm font-medium", totalAllocated > 0 ? "text-blue-600" : "")}>
-                        {formatQuantity(totalAllocated, targetLines[0]?.unit || "")}
-                    </span>
-                    <span className="text-xs text-gray-400">{targetLines[0]?.unit}</span>
-                </div>
+            <Badge className={cn("h-5 px-1.5 text-[10px] font-normal", statusColor)}>{statusLabel}</Badge>
 
-                <Badge className={cn("h-5 px-1.5 text-[10px] font-normal", statusColor)}>
-                    {statusLabel}
-                </Badge>
-
-                <Link
-                    to={ROUTES.ORDERS.DETAIL(order.id.toString())}
-                    className="text-gray-400 hover:text-blue-600"
-                    title="受注詳細ページへ"
-                >
-                    <ExternalLink className="h-4 w-4" />
-                </Link>
-            </div>
+            <Link
+                to={ROUTES.ORDERS.DETAIL(order.id.toString())}
+                className="text-gray-400 hover:text-blue-600"
+                title="受注詳細ページへ"
+            >
+                <ExternalLink className="h-4 w-4" />
+            </Link>
         </div>
     );
 }

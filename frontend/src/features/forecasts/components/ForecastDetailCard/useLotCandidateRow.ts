@@ -44,13 +44,11 @@ export function useLotCandidateRow({
         const value = e.target.value;
         const numValue = Number(value);
 
-        if (value === "") {
-            onChangeAllocation(line.id, lot.lot_id, 0);
+        if (value === "" || isNaN(numValue)) {
+            if (value === "") onChangeAllocation(line.id, lot.lot_id, 0);
             setIsConfirmed(false);
             return;
         }
-
-        if (isNaN(numValue)) return;
 
         if (numValue < 0) {
             setIsShaking(true);

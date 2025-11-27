@@ -18,7 +18,6 @@ export function LotInfoSection({
     isLocked,
     isExpired,
 }: LotInfoSectionProps) {
-    const lockReason = lot.lock_reason || (lot.status === "quarantine" ? "検疫中" : "ロック中");
     const freeQty = Number(lot.available_quantity ?? 0);
 
     return (
@@ -31,12 +30,7 @@ export function LotInfoSection({
                             仮払出
                         </Badge>
                     )}
-                    {isLocked && (
-                        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
-                            <span className="i-lucide-lock h-3 w-3" />
-                            {lockReason}
-                        </div>
-                    )}
+                    {isLocked && <LockBadge lot={lot} />}
                 </div>
                 <div className="truncate text-base font-bold text-gray-900" title={lot.lot_number}>
                     {lot.lot_number}
@@ -70,6 +64,16 @@ export function LotInfoSection({
                     {formatDate(lot.expiry_date, { fallback: "-" })}
                 </div>
             </div>
+        </div>
+    );
+}
+
+function LockBadge({ lot }: { lot: CandidateLotItem }) {
+    const lockReason = lot.lock_reason || (lot.status === "quarantine" ? "検疫中" : "ロック中");
+    return (
+        <div className="flex items-center gap-1 text-[10px] font-bold text-gray-500">
+            <span className="i-lucide-lock h-3 w-3" />
+            {lockReason}
         </div>
     );
 }

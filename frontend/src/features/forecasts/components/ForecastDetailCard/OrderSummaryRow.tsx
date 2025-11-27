@@ -5,49 +5,78 @@ import { OrderSummaryHeader } from "./OrderSummaryHeader";
 import { formatDateKey } from "./utils/date-utils";
 
 import type { useLotAllocationForOrder } from "@/features/forecasts/hooks/useLotAllocationForOrder";
-// 納期の取得とハイライト判定
-const deliveryDate = targetLines[0]?.delivery_date
-  ? new Date(targetLines[0].delivery_date)
-  : null;
-const dateKey = deliveryDate ? formatDateKey(deliveryDate) : null;
-const isHovered = Boolean(dateKey && hoveredDate === dateKey);
+import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
-const handleMouseEnter = () => {
-  if (dateKey) {
-    onDateHover?.(dateKey);
-  }
-};
+interface OrderSummaryRowProps {
+  order: OrderWithLinesResponse;
+  targetProductId: number; // フィルタリング対象の製品ID
+  targetDeliveryPlaceId: number; // フィルタリング対象の納入先ID
+  logic: ReturnType<typeof useLotAllocationForOrder>;
+  hoveredDate?: string | null;
+  onDateHover?: (date: string | null) => void;
+}
 
-const handleMouseLeave = () => {
-  onDateHover?.(null);
-};
+export function OrderSummaryRow({
+  order,
+  targetProductId,
+  targetDeliveryPlaceId,
+  logic,
+  hoveredDate,
+  onDateHover,
+}: OrderSummaryRowProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const { targetLines, totalRequired, totalAllocated, statusLabel, statusColor } = useOrderSummary(
+    order,
+    targetProductId,
+    targetDeliveryPlaceId,
+    logic,
+  );
 
-return (
-  <div className="border-b border-slate-100 last:border-0">
-    <OrderSummaryHeader
-      order={order}
-      targetLines={targetLines}
-      isExpanded={isExpanded}
-      isHovered={isHovered}
-      totalRequired={totalRequired}
-      totalAllocated={totalAllocated}
-      statusLabel={statusLabel}
-      statusColor={statusColor}
-      onToggleExpand={() => setIsExpanded(!isExpanded)}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    />
+  if (targetLines.length === 0) return null;
 
-    {/* 展開ビュー */}
-    {isExpanded && (
-      <div className="pr-2 pb-3 pl-9">
-        {targetLines.map((line) => (
-          <OrderAllocationInline key={line.id} line={line} logic={logic} />
-        ))}
-      </div>
-    )}
-  </div>
-);
+  // 納期の取得とハイライト判定
+  const deliveryDate = targetLines[0]?.delivery_date
+    ? new Date(targetLines[0].delivery_date)
+    : null;
+  const dateKey = deliveryDate ? formatDateKey(deliveryDate) : null;
+  const isHovered = Boolean(dateKey && hoveredDate === dateKey);
+
+  const handleMouseEnter = () => {
+    if (dateKey) {
+      onDateHover?.(dateKey);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    onDateHover?.(null);
+  };
+
+  return (
+    <div className="border-b border-slate-100 last:border-0">
+      <OrderSummaryHeader
+        order={order}
+        targetLines={targetLines}
+        isExpanded={isExpanded}
+        isHovered={isHovered}
+        totalRequired={totalRequired}
+        totalAllocated={totalAllocated}
+        statusLabel={statusLabel}
+        statusColor={statusColor}
+        onToggleExpand={() => setIsExpanded(!isExpanded)}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      />
+
+      {/* 展開ビュー */}
+      {isExpanded && (
+        <div className="pr-2 pb-3 pl-9">
+          {targetLines.map((line) => (
+            <OrderAllocationInline key={line.id} line={line} logic={logic} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function useOrderSummary(

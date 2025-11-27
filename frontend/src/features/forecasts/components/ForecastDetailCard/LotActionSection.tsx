@@ -67,47 +67,77 @@ export function LotActionSection({
                 <span className="text-xs text-gray-500">{line.unit}</span>
             </div>
 
-            <div className="flex items-center gap-1 rounded-md bg-gray-50 p-1">
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-2 text-xs"
-                    onClick={onFull}
-                    disabled={freeQty <= 0 || isLocked}
-                    title="不足分をこのロットで埋める"
-                >
-                    全量
-                </Button>
+            <ButtonGroup
+                freeQty={freeQty}
+                isLocked={isLocked}
+                isConfirmed={isConfirmed}
+                currentQty={currentQty}
+                onFull={onFull}
+                onConfirm={onConfirm}
+                onClear={onClear}
+            />
+        </div>
+    );
+}
 
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                        "h-8 px-2 text-xs",
-                        isConfirmed && "border-blue-300 bg-blue-50 text-blue-700",
-                    )}
-                    onClick={onConfirm}
-                    disabled={currentQty === 0}
-                >
-                    引確
-                </Button>
+function ButtonGroup({
+    freeQty,
+    isLocked,
+    isConfirmed,
+    currentQty,
+    onFull,
+    onConfirm,
+    onClear,
+}: {
+    freeQty: number;
+    isLocked: boolean;
+    isConfirmed: boolean;
+    currentQty: number;
+    onFull: () => void;
+    onConfirm: () => void;
+    onClear: () => void;
+}) {
+    return (
+        <div className="flex items-center gap-1 rounded-md bg-gray-50 p-1">
+            <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-xs"
+                onClick={onFull}
+                disabled={freeQty <= 0 || isLocked}
+                title="不足分をこのロットで埋める"
+            >
+                全量
+            </Button>
 
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                        "h-8 w-8 p-0 text-gray-500 transition-colors",
-                        "border border-gray-300 bg-white shadow-sm",
-                        "hover:border-red-300 hover:bg-red-50 hover:text-red-600",
-                        currentQty === 0 && "cursor-not-allowed border-gray-200 bg-gray-50 opacity-50",
-                    )}
-                    onClick={onClear}
-                    disabled={currentQty === 0}
-                    title="クリア"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-            </div>
+            <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                    "h-8 px-2 text-xs",
+                    isConfirmed && "border-blue-300 bg-blue-50 text-blue-700",
+                )}
+                onClick={onConfirm}
+                disabled={currentQty === 0}
+            >
+                引確
+            </Button>
+
+            <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                    "h-8 w-8 p-0 text-gray-500 transition-colors",
+                    "border border-gray-300 bg-white shadow-sm",
+                    "hover:border-red-300 hover:bg-red-50 hover:text-red-600",
+                    currentQty === 0 && "cursor-not-allowed border-gray-200 bg-gray-50 opacity-50",
+                )}
+                onClick={onClear}
+                disabled={currentQty === 0}
+                title="クリア"
+            >
+                <Trash2 className="h-4 w-4" />
+            </Button>
         </div>
     );
 }
