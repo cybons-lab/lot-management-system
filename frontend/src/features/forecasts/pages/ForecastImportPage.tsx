@@ -1,4 +1,4 @@
-import { ForecastFileUploadCard } from "@/features/forecast/components/ForecastFileUploadCard";
+import { ForecastFileUploadCard } from "@/features/forecasts/components/ForecastFileUploadCard";
 
 export function ForecastImportPage() {
   return (
