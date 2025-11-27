@@ -19,11 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-import {
-  useInboundPlan,
-  useReceiveInboundPlan,
-  useUpdateInboundPlan,
-} from "@/shared/hooks/useInboundPlans";
+import { useInboundPlan, useUpdateInboundPlan } from "@/features/inbound-plans/hooks";
+import { useReceiveInboundPlan } from "@/shared/hooks/useInboundPlans";
 import type { components } from "@/shared/types/openapi";
 
 type InboundPlanDetailResponse = components["schemas"]["InboundPlanDetailResponse"];
@@ -133,7 +130,7 @@ export function InboundPlanDetailPage() {
   }
 
   const canReceive = plan.status === "planned";
-  const canEdit = plan.status === "planned" || plan.status === "pending";
+  const canEdit = plan.status === "planned";
 
   return (
     <div className="space-y-6 p-6">
@@ -169,13 +166,12 @@ export function InboundPlanDetailPage() {
             <div className="text-sm font-medium text-gray-500">ステータス</div>
             <div className="mt-1">
               <span
-                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                  plan.status === "planned"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : plan.status === "received"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                }`}
+                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === "planned"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : plan.status === "received"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                  }`}
               >
                 {plan.status}
               </span>
