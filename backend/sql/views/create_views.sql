@@ -167,12 +167,16 @@ SELECT
     SUM(l.current_quantity) AS total_quantity,
     SUM(l.allocated_quantity) AS allocated_quantity,
     (SUM(l.current_quantity) - SUM(l.allocated_quantity)) AS available_quantity,
+    COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
+    (SUM(l.current_quantity) - SUM(l.allocated_quantity) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
     MAX(l.updated_at) AS last_updated
 FROM public.lots l
+LEFT JOIN public.inbound_plan_lines ipl ON l.product_id = ipl.product_id
+LEFT JOIN public.inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
 WHERE l.status = 'active'
 GROUP BY l.product_id, l.warehouse_id;
 
-COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー';
+COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（仮在庫含む）';
 
 CREATE VIEW public.v_lot_details AS
 SELECT

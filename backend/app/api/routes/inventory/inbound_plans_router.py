@@ -14,8 +14,11 @@ from app.schemas.inventory.inbound_schema import (
     InboundPlanReceiveResponse,
     InboundPlanResponse,
     InboundPlanUpdate,
+    SAPSyncRequest,
+    SAPSyncResponse,
 )
 from app.services.inventory.inbound_service import InboundService
+from app.services.sap.sap_service import SAPService
 
 
 router = APIRouter(prefix="/inbound-plans", tags=["inbound-plans"])
@@ -181,6 +184,54 @@ def delete_inbound_plan(
             detail=f"Inbound plan with id={plan_id} not found",
         )
     return None
+
+
+# ===== SAP Integration =====
+
+
+@router.post(
+    "/sync-from-sap",
+    response_model=SAPSyncResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def sync_from_sap(
+    request: SAPSyncRequest,
+    db: Session = Depends(get_db),
+):
+    """SAP から発注データを取得して入荷予定を作成.
+
+    SAP の発注データ（モック）を取得し、入荷予定（InboundPlan）として
+    システムに登録します。既に存在する発注番号はスキップされます。
+
+    Args:
+        request: SAP同期リクエスト（現在パラメータなし）
+        db: データベースセッション
+
+    Returns:
+        SAP同期結果（作成された入荷予定リスト、スキップ数）
+
+    Note:
+        現在はモック実装です。本番環境では実際のSAP RFC/APIに接続します。
+    """
+    sap_service = SAPService(db)
+    try:
+        created_plans, skipped_count = sap_service.sync_purchase_orders_to_inbound_plans()
+
+        message = f"SAP同期完了: {len(created_plans)}件作成"
+        if skipped_count > 0:
+            message += f", {skipped_count}件スキップ（既存）"
+
+        return SAPSyncResponse(
+            success=True,
+            message=message,
+            created_plans=created_plans,
+            skipped_count=skipped_count,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"SAP同期エラー: {str(e)}",
+        )
 
 
 # ===== Inbound Plan Lines =====
