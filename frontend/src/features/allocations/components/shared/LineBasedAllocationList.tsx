@@ -8,11 +8,12 @@ import { FilterBar } from "./line-based/FilterBar";
 import { JumpButtons } from "./line-based/JumpButtons";
 import { LineItem } from "./line-based/LineItem";
 import { OrderGroup } from "./line-based/OrderGroup";
-import type { FilterStatus, ViewMode } from "./line-based/types";
+import type { FilterStatus, ViewMode, LineWithOrderInfo, GroupedOrder } from "./line-based/types";
 import { useLineData } from "./line-based/useLineData";
 import * as styles from "./LineBasedAllocationList.styles";
 
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
+import type { LineStatus } from "../../hooks/useLotAllocation";
 
 /**
  * LineBasedAllocationList - 明細単位でフラットに表示するコンポーネント
@@ -45,7 +46,7 @@ export function LineBasedAllocationList({
   onLotAllocationChange: (lineId: number, lotId: number, quantity: number) => void;
   onAutoAllocate: (lineId: number) => void;
   onClearAllocations: (lineId: number) => void;
-  lineStatuses: Record<number, any>;
+  lineStatuses: Record<number, LineStatus>;
 }) {
   // 選択状態管理
   const [selectedLineIds, setSelectedLineIds] = useState<Set<number>>(new Set());
@@ -187,8 +188,8 @@ export function LineBasedAllocationList({
             >
               {isLineMode ? (
                 <LineItem
-                  item={item as any}
-                  isChecked={selectedLineIds.has((item as any).id)}
+                  item={item as LineWithOrderInfo}
+                  isChecked={selectedLineIds.has((item as LineWithOrderInfo).id)}
                   isFirstChecked={virtualItem.index === firstCheckedIndex && firstCheckedIndex > 0}
                   checkedSectionRef={checkedSectionRef}
                   totalCheckedCount={sortedLines.length - firstCheckedIndex}
@@ -206,7 +207,7 @@ export function LineBasedAllocationList({
                 />
               ) : (
                 <OrderGroup
-                  group={item as any}
+                  group={item as GroupedOrder}
                   selectedLineIds={selectedLineIds}
                   onGroupCheckChange={handleGroupCheckChange}
                   onLineCheckChange={handleCheckChange}

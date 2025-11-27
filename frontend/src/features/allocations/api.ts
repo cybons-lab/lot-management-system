@@ -247,8 +247,8 @@ export interface AllocationSuggestionRequest {
 
 export interface AllocationSuggestionPreviewResponse {
   suggestions: AllocationSuggestionResponse[];
-  stats: any; // Define detailed stats type if needed
-  gaps: any[];
+  stats: Record<string, unknown>; // Define detailed stats type if needed
+  gaps: unknown[];
 }
 
 /**

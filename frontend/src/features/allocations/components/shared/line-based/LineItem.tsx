@@ -4,6 +4,7 @@ import type { RefObject } from "react";
 import { AllocationRowContainer } from "../../lots/AllocationRowContainer";
 import * as styles from "../LineBasedAllocationList.styles";
 
+import type { LineStatus } from "../../../hooks/useLotAllocation";
 import { getDeliveryPlaceName, getProductName } from "./helpers";
 import type { LineWithOrderInfo } from "./types";
 
@@ -37,7 +38,7 @@ export function LineItem({
   onAutoAllocate: (lineId: number) => void;
   onClearAllocations: (lineId: number) => void;
   onSaveAllocations: (lineId: number) => void;
-  lineStatuses: Record<number, any>;
+  lineStatuses: Record<number, LineStatus>;
   isOverAllocated: (lineId: number) => boolean;
   activeLineId: number | null;
   onActivate: (lineId: number) => void;
