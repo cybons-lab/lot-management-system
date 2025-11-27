@@ -8,19 +8,14 @@
  * - 共通コンポーネント: DataTable, etc.
  */
 
-import { Plus, RefreshCw, Search, TrendingUp, Package, CheckCircle } from "lucide-react";
-import { useState } from "react";
+import { Plus, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
-import { OrderGroupHeader } from "@/features/orders/components/OrderGroupHeader";
 import { orderLineColumns } from "@/features/orders/components/OrderLineColumns";
-import { useOrderStats } from "@/features/orders/hooks/useOrderStats";
-import { useOrdersQuery } from "@/hooks/api";
 import { useCreateOrder } from "@/hooks/mutations";
 import { useDialog, useTable, useFilters } from "@/hooks/ui";
 import { DataTable } from "@/shared/components/data/DataTable";
@@ -33,7 +28,6 @@ import { FormDialog } from "@/shared/components/form";
 export function OrdersListPage() {
   // UI状態管理
   const createDialog = useDialog();
-  const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
 
   const table = useTable({
     initialPageSize: 25,
@@ -48,16 +42,15 @@ export function OrdersListPage() {
     unallocatedOnly: false,
   });
 
-  // データ取得
+  // データ取得 (Line-based)
   const {
-    data: allOrders = [],
+    data: allOrderLines = [],
     isLoading,
     error,
     refetch,
-  } = useOrdersQuery({
+  } = useOrderLines({
     customer_code: filters.values.customer_code || undefined,
     status: filters.values.status !== "all" ? filters.values.status : undefined,
-    // TODO: unallocatedOnly パラメータをAPIに追加
   });
 
   // 受注作成Mutation
@@ -65,21 +58,51 @@ export function OrdersListPage() {
     onSuccess: () => {
       toast.success("受注を作成しました");
       createDialog.close();
+      refetch();
     },
     onError: (error) => {
       toast.error(`作成に失敗しました: ${error.message}`);
     },
   });
 
-  // データの加工
-  const sortedOrders = table.sortData(allOrders);
-  const paginatedOrders = table.paginateData(sortedOrders);
-  // 安全なtotal計算
-  const safeTotalCount = sortedOrders?.length ?? allOrders?.length ?? 0;
+  // データの加工 (フィルタリング & ソート)
+  // useFiltersのsearchは受注番号や顧客名での検索を想定
+  const filteredLines = allOrderLines.filter((line) => {
+    if (filters.values.search) {
+      const searchLower = filters.values.search.toLowerCase();
+      const matchOrderNo = line.order_number.toLowerCase().includes(searchLower);
+      const matchCustomer =
+        line.customer_name.toLowerCase().includes(searchLower) ||
+        line.customer_code.toLowerCase().includes(searchLower);
+      const matchProduct =
+        line.product_name?.toLowerCase().includes(searchLower) ||
+        line.product_code?.toLowerCase().includes(searchLower);
+
+      if (!matchOrderNo && !matchCustomer && !matchProduct) return false;
+    }
+
+    if (filters.values.unallocatedOnly) {
+      // 簡易的な未引当判定: 引当率 < 100
+      const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
+      const lots = coerceAllocatedLots(line.allocated_lots);
+      const allocatedQty = lots.reduce(
+        (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+        0,
+      );
+      if (orderQty > 0 && allocatedQty >= orderQty) return false;
+    }
+
+    return true;
+  });
+
+  const sortedLines = table.sortData(filteredLines);
+  const paginatedLines = table.paginateData(sortedLines);
+  const safeTotalCount = filteredLines.length;
   const pagination = table.calculatePagination(safeTotalCount);
 
-  // 統計情報
-  const stats = useOrderStats(allOrders);
+  // 統計情報 (Lineベースでの集計は少し異なるが、一旦既存のuseOrderStatsはOrder単位なのでここでは表示しないか、別途計算が必要)
+  // 今回はシンプルにリスト表示を優先し、統計カードは一旦非表示にするか、後で再実装する。
+  // 要件は「明細単位表示への変更」なので、リスト部分を重点的に変更する。
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
@@ -87,7 +110,7 @@ export function OrdersListPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">受注管理</h1>
-          <p className="mt-1 text-sm text-slate-600">受注一覧と引当状況を管理します</p>
+          <p className="mt-1 text-sm text-slate-600">受注明細一覧と引当状況を管理します</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
@@ -101,48 +124,6 @@ export function OrdersListPage() {
         </div>
       </div>
 
-      {/* 統計情報 */}
-      <div className="grid gap-6 md:grid-cols-4">
-        <Card className="border-slate-200 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">総受注数</CardTitle>
-            <Package className="h-5 w-5 text-slate-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-900">{stats.totalOrders}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">未処理</CardTitle>
-            <div className="h-5 w-5 rounded-full bg-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-yellow-600">{stats.openOrders}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">引当済</CardTitle>
-            <CheckCircle className="h-5 w-5 text-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">{stats.allocatedOrders}</div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 bg-white shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">引当率</CardTitle>
-            <TrendingUp className="h-5 w-5 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              {stats.allocationRate.toFixed(1)}%
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* フィルター */}
       <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex gap-2">
@@ -151,7 +132,7 @@ export function OrdersListPage() {
             <Input
               value={filters.values.search}
               onChange={(e) => filters.set("search", e.target.value)}
-              placeholder="受注番号、得意先コード、得意先名で検索..."
+              placeholder="受注番号、得意先、製品で検索..."
               className="pl-9"
             />
           </div>
@@ -232,65 +213,30 @@ export function OrdersListPage() {
         </div>
       )}
 
-      {/* テーブル（グループ化表示） */}
-      {isLoading ? (
-        <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white p-12 shadow-sm">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
-            <p className="text-sm text-gray-500">読み込み中...</p>
-          </div>
+      {/* テーブル (Flat Line List) */}
+      <div className="space-y-4">
+        <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+          <DataTable
+            data={paginatedLines}
+            columns={orderLineColumns}
+            isLoading={isLoading}
+            emptyMessage="明細がありません"
+          />
         </div>
-      ) : paginatedOrders.length === 0 ? (
-        <div className="flex items-center justify-center rounded-lg border border-slate-200 bg-white p-12 shadow-sm">
-          <p className="text-sm text-gray-500">
-            受注がありません。新規登録ボタンから最初の受注を作成してください。
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {paginatedOrders.map((order) => (
-            <div
-              key={order.id}
-              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-            >
-              <OrderGroupHeader
-                order={order}
-                isExpanded={expandedOrders.has(order.id)}
-                onToggle={() => {
-                  const newExpanded = new Set(expandedOrders);
-                  if (newExpanded.has(order.id)) {
-                    newExpanded.delete(order.id);
-                  } else {
-                    newExpanded.add(order.id);
-                  }
-                  setExpandedOrders(newExpanded);
-                }}
-              />
-              {expandedOrders.has(order.id) && order.lines && order.lines.length > 0 && (
-                <DataTable
-                  data={order.lines}
-                  columns={orderLineColumns}
-                  isLoading={false}
-                  emptyMessage="明細がありません"
-                />
-              )}
-            </div>
-          ))}
 
-          {/* ページネーション */}
-          {!error && sortedOrders.length > 0 && (
-            <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
-              <TablePagination
-                currentPage={pagination.page ?? 1}
-                pageSize={pagination.pageSize ?? 25}
-                totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
-                onPageChange={table.setPage}
-                onPageSizeChange={table.setPageSize}
-              />
-            </div>
-          )}
-        </div>
-      )}
+        {/* ページネーション */}
+        {!error && sortedLines.length > 0 && (
+          <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
+            <TablePagination
+              currentPage={pagination.page ?? 1}
+              pageSize={pagination.pageSize ?? 25}
+              totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
+              onPageChange={table.setPage}
+              onPageSizeChange={table.setPageSize}
+            />
+          </div>
+        )}
+      </div>
 
       {/* 新規登録ダイアログ */}
       <FormDialog
