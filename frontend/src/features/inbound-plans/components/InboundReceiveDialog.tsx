@@ -35,7 +35,7 @@ export function InboundReceiveDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 各expected_lotごとのロット番号フォーム
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const lotForms =
     inboundPlan.lines?.flatMap((line: any) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
