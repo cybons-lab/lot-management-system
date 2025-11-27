@@ -2,7 +2,7 @@
  * ForecastCardHeader - Header section of forecast detail card
  */
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Wand2 } from "lucide-react";
 
 import { type ForecastCardHeaderProps } from "./types";
 
@@ -22,6 +22,7 @@ export function ForecastCardHeader({
   isActive,
   isOpen,
   onToggle,
+  onAutoAllocate,
   onDelete,
   isDeleting,
   firstForecastId,
@@ -65,8 +66,24 @@ export function ForecastCardHeader({
           </div>
         </button>
 
-        {/* Right side: Delete button and chevron */}
+        {/* Right side: Auto-allocation, Delete button and chevron */}
         <div className="flex flex-shrink-0 items-center gap-2 pt-1">
+          {onAutoAllocate ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 px-2 text-xs"
+              onClick={(event) => {
+                event.stopPropagation();
+                onAutoAllocate();
+              }}
+              title="このフォーキャストグループの全受注に対して自動引当を実行します（未実装）"
+            >
+              <Wand2 className="h-3 w-3" />
+              自動引当
+            </Button>
+          ) : null}
+
           {onDelete && firstForecastId ? (
             <Button
               variant="outline"

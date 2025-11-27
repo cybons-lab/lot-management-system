@@ -20,6 +20,7 @@ import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
 import { Card, CardContent } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
+import { toast } from "sonner";
 
 export function ForecastDetailCard({
   group,
@@ -62,6 +63,12 @@ export function ForecastDetailCard({
 
   const groupKey = `${group_key.customer_id}-${group_key.delivery_place_id}-${group_key.product_id}`;
 
+  // 自動引当ハンドラー（未実装）
+  const handleAutoAllocate = () => {
+    console.log("TODO: Implement auto-allocation for forecast group:", groupKey);
+    toast.info("一括自動引当機能は現在開発中です。各受注を展開して個別に引当を行ってください。");
+  };
+
   return (
     <Card
       className={cn(
@@ -84,6 +91,7 @@ export function ForecastDetailCard({
         isActive={isActive}
         isOpen={isOpen}
         onToggle={onToggle}
+        onAutoAllocate={handleAutoAllocate}
         onDelete={onDelete}
         isDeleting={isDeleting}
         firstForecastId={forecasts[0]?.id}
