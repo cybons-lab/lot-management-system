@@ -3,7 +3,7 @@
 :toc-title: 目次
 :sectnums:
 
-**最終更新**: 2025-11-26 +
+**最終更新**: 2025-11-27 +
 **API バージョン**: v2.2.1 +
 **ベースURL**: `/api`
 
@@ -226,9 +226,32 @@
 | `POST` | `/admin/test-data/reset` | テストデータリセット
 |===
 
-== 共通仕様
+== SAP Integration API
 
-=== ページネーション
+SAP基幹システムとの連携機能です。
+
+**ベースパス**: `/api/admin`
+
+[cols="1,1,2,2", options="header"]
+|===
+| カテゴリ | メソッド | エンドポイント | 説明
+
+.2+| **Inventory Sync**
+| `POST` | `/batch-jobs/inventory-sync/execute` | SAP在庫同期を即座に実行
+| `POST` | `/batch-jobs` + `job_type=inventory_sync` | バッチジョブとして登録・実行
+
+| **Purchase Orders**
+| `GET` | `/sap/purchase-orders` | SAP発注情報取得（モック）
+|===
+
+**在庫同期の詳細**:
+
+* ローカルDBとSAPの在庫総量を比較
+* 許容差異率: 1%
+* 差異検出時は `BusinessRule` テーブルに `inventory_sync_alert` として記録
+* 実行結果: チェック商品数、差異検出数、アラート作成数を返却
+
+== 共通仕様
 
 多くの一覧取得APIは、以下のクエリパラメータをサポートします：
 
