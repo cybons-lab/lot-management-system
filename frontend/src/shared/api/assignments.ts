@@ -1,5 +1,6 @@
 // User-Supplier Assignment API functions
 import type { components } from '../types/openapi';
+
 import { apiClient } from './client';
 
 type UserSupplierAssignmentCreate = components['schemas']['UserSupplierAssignmentCreate'];
