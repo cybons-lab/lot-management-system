@@ -16,7 +16,11 @@ interface RelatedOrdersSectionProps {
   onDateHover?: (date: string | null) => void;
 }
 
-export function RelatedOrdersSection({ group, hoveredDate, onDateHover }: RelatedOrdersSectionProps) {
+export function RelatedOrdersSection({
+  group,
+  hoveredDate,
+  onDateHover,
+}: RelatedOrdersSectionProps) {
   const { group_key } = group;
 
   // 関連受注の取得

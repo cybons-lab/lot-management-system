@@ -43,7 +43,9 @@ export function OrderSummaryRow({
   if (targetLines.length === 0) return null;
 
   // 納期の取得とハイライト判定
-  const deliveryDate = targetLines[0]?.delivery_date ? new Date(targetLines[0].delivery_date) : null;
+  const deliveryDate = targetLines[0]?.delivery_date
+    ? new Date(targetLines[0].delivery_date)
+    : null;
   const dateKey = deliveryDate ? formatDateKey(deliveryDate) : null;
   const isHovered = dateKey && hoveredDate === dateKey;
 

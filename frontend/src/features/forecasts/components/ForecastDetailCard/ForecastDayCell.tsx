@@ -39,11 +39,11 @@ export function ForecastDayCell({
   return (
     <div
       className={cn(
-        "rounded border bg-white px-1 py-0.5 text-[11px] leading-tight transition cursor-default",
+        "cursor-default rounded border bg-white px-1 py-0.5 text-[11px] leading-tight transition",
         "focus-within:ring-1 focus-within:ring-blue-200",
         isToday ? "border-blue-400 ring-1 ring-blue-100" : "border-gray-200",
         isPast ? "opacity-80" : undefined,
-        isHovered ? "bg-yellow-50 border-yellow-400 ring-1 ring-yellow-200" : undefined,
+        isHovered ? "border-yellow-400 bg-yellow-50 ring-1 ring-yellow-200" : undefined,
       )}
       aria-disabled={isPast}
       data-locked={isPast ? "true" : undefined}

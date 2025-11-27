@@ -22,16 +22,16 @@ export const infoRow = "flex items-start gap-1 text-xs";
 export const infoLabel = "min-w-[2.5rem] text-gray-600";
 
 export const infoValue = cva("font-semibold tabular-nums", {
-    variants: {
-        type: {
-            inventory: "text-blue-700",
-            inbound: "text-green-700",
-            zero: "text-gray-400",
-        },
+  variants: {
+    type: {
+      inventory: "text-blue-700",
+      inbound: "text-green-700",
+      zero: "text-gray-400",
     },
-    defaultVariants: {
-        type: "inventory",
-    },
+  },
+  defaultVariants: {
+    type: "inventory",
+  },
 });
 
 export const lotCount = "ml-1 text-[10px] text-gray-500";
