@@ -3,11 +3,12 @@
  * Inbound plan detail page with receive functionality
  */
 
-import { FileBarChart, MoreHorizontal, Package } from "lucide-react";
+import { FileBarChart, MoreHorizontal, Package, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 
+import { InboundPlanEditDialog } from "../components/InboundPlanEditDialog";
 import { InboundReceiveDialog } from "../components/InboundReceiveDialog";
 
 import { Button } from "@/components/ui";
@@ -18,7 +19,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-import { useInboundPlan, useReceiveInboundPlan } from "@/shared/hooks/useInboundPlans";
+import {
+  useInboundPlan,
+  useReceiveInboundPlan,
+  useUpdateInboundPlan,
+} from "@/shared/hooks/useInboundPlans";
 import type { components } from "@/shared/types/openapi";
 
 type InboundPlanDetailResponse = components["schemas"]["InboundPlanDetailResponse"];
@@ -44,12 +49,14 @@ export function InboundPlanDetailPage() {
   const navigate = useNavigate();
   const planId = Number(id);
   const [isReceiveDialogOpen, setIsReceiveDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   // Fetch inbound plan with lines
   const { data: rawPlan, isLoading, isError, refetch } = useInboundPlan(planId);
   const plan = rawPlan as unknown as ExtendedInboundPlan | undefined;
 
   const receiveMutation = useReceiveInboundPlan();
+  const updateMutation = useUpdateInboundPlan(planId);
 
   const handleBack = () => {
     navigate(ROUTES.INBOUND_PLANS.LIST);
@@ -86,6 +93,22 @@ export function InboundPlanDetailPage() {
     }
   };
 
+  const handleUpdate = async (data: { planned_arrival_date: string; notes?: string }) => {
+    try {
+      await updateMutation.mutateAsync({
+        planned_arrival_date: data.planned_arrival_date,
+        notes: data.notes,
+      });
+      toast.success("入荷予定を更新しました");
+      setIsEditDialogOpen(false);
+      refetch();
+    } catch (error) {
+      console.error("Failed to update inbound plan:", error);
+      toast.error("更新に失敗しました");
+      throw error;
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -110,6 +133,7 @@ export function InboundPlanDetailPage() {
   }
 
   const canReceive = plan.status === "planned";
+  const canEdit = plan.status === "planned" || plan.status === "pending";
 
   return (
     <div className="space-y-6 p-6">
@@ -123,6 +147,12 @@ export function InboundPlanDetailPage() {
           <Button variant="outline" onClick={handleBack}>
             一覧に戻る
           </Button>
+          {canEdit && (
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              編集
+            </Button>
+          )}
           {canReceive && <Button onClick={() => setIsReceiveDialogOpen(true)}>入庫確定</Button>}
         </div>
       </div>
@@ -270,6 +300,14 @@ export function InboundPlanDetailPage() {
         open={isReceiveDialogOpen}
         onOpenChange={setIsReceiveDialogOpen}
         onReceive={handleReceive}
+      />
+
+      {/* Edit Dialog */}
+      <InboundPlanEditDialog
+        plan={plan}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSubmit={handleUpdate}
       />
     </div>
   );
