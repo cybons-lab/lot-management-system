@@ -29,6 +29,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
+    from .assignment_models import UserSupplierAssignment
     from .forecast_models import ForecastCurrent
     from .inbound_models import InboundPlan, InboundPlanLine
     from .inventory_models import Lot
@@ -100,6 +101,11 @@ class Supplier(Base):
     )
     customer_items: Mapped[list[CustomerItem]] = relationship(
         "CustomerItem", back_populates="supplier"
+    )
+    user_assignments: Mapped[list[UserSupplierAssignment]] = relationship(
+        "UserSupplierAssignment",
+        back_populates="supplier",
+        cascade="all, delete-orphan"
     )
 
 
