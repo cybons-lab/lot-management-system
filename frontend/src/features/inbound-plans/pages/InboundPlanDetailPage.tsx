@@ -34,19 +34,18 @@ export function InboundPlanDetailPage() {
     navigate(ROUTES.INBOUND_PLANS.LIST);
   };
 
-  const handleReceive = async (data: { lots: Array<{ expected_lot_id: number; lot_number: string }> }) => {
+  const handleReceive = async (data: {
+    lots: Array<{ expected_lot_id: number; lot_number: string }>;
+  }) => {
     try {
-      // Convert to backend format
-      const lot_numbers: Record<number, string> = {};
-      data.lots.forEach((lot) => {
-        lot_numbers[lot.expected_lot_id] = lot.lot_number;
-      });
+      // Convert to backend format (lot_ids not lot_numbers based on schema)
+      const lot_ids = data.lots.map((lot) => lot.expected_lot_id);
 
       await receiveMutation.mutateAsync({
         planId,
         data: {
           received_at: new Date().toISOString(),
-          lot_numbers,
+          lot_ids,
         },
       });
 
@@ -116,10 +115,10 @@ export function InboundPlanDetailPage() {
             <div className="mt-1">
               <span
                 className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === 'planned'
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : plan.status === 'received'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
+                  ? 'bg-yellow-100 text-yellow-800'
+                  : plan.status === 'received'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
                   }`}
               >
                 {plan.status}

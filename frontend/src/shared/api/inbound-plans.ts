@@ -3,7 +3,6 @@ import type { components } from '../types/openapi';
 
 import { apiClient } from './client';
 
-type InboundPlanResponse = components['schemas']['InboundPlanResponse'];
 type InboundPlanDetailResponse = components['schemas']['InboundPlanDetailResponse'];
 type InboundPlanReceiveRequest = components['schemas']['InboundPlanReceiveRequest'];
 type InboundPlanReceiveResponse = components['schemas']['InboundPlanReceiveResponse'];

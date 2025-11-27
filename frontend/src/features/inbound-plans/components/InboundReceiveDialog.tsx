@@ -1,7 +1,6 @@
 // Inbound plan receive dialog component
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -15,33 +14,13 @@ import {
 import { Input } from '@/components/ui/input';
 import type { components } from '@/shared/types/openapi';
 
-type InboundPlan = components['schemas']['InboundPlanResponse'];
-type ExpectedLot = components['schemas']['ExpectedLotResponse'];
-
-// ロット番号入力スキーマ
-const lotNumberSchema = z.object({
-    lot_number: z.string().min(1, 'ロット番号を入力してください'),
-});
-
-type LotNumberFormData = z.infer<typeof lotNumberSchema>;
-
-// 入庫確定リクエストスキーマ
-const receiveFormSchema = z.object({
-    lots: z.array(
-        z.object({
-            expected_lot_id: z.number(),
-            lot_number: z.string().min(1),
-        })
-    ),
-});
-
-type ReceiveFormData = z.infer<typeof receiveFormSchema>;
+type InboundPlan = components['schemas']['InboundPlanDetailResponse'];
 
 interface InboundReceiveDialogProps {
     inboundPlan: InboundPlan;
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    onReceive: (data: ReceiveFormData) => Promise<void>;
+    onReceive: (data: { lots: Array<{ expected_lot_id: number; lot_number: string }> }) => Promise<void>;
 }
 
 export function InboundReceiveDialog({
@@ -123,15 +102,18 @@ export function InboundReceiveDialog({
                             </div>
 
                             <div>
-                                <label className="text-sm font-medium">
-                                    ロット番号 <span className="text-red-500">*</span>
-                                </label>
-                                <Input
-                                    placeholder="ロット番号を入力"
-                                    value={lotNumbers[lot.expected_lot_id] || ''}
-                                    onChange={(e) => handleLotNumberChange(lot.expected_lot_id, e.target.value)}
-                                    className="mt-1"
-                                />
+                                <div>
+                                    <label htmlFor={`lot-number-${lot.expected_lot_id}`} className="text-sm font-medium">
+                                        ロット番号 <span className="text-red-500">*</span>
+                                    </label>
+                                    <Input
+                                        id={`lot-number-${lot.expected_lot_id}`}
+                                        placeholder="ロット番号を入力"
+                                        value={lotNumbers[lot.expected_lot_id] || ''}
+                                        onChange={(e) => handleLotNumberChange(lot.expected_lot_id, e.target.value)}
+                                        className="mt-1"
+                                    />
+                                </div>
                             </div>
                         </div>
                     ))}
