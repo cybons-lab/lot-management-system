@@ -1,8 +1,7 @@
 import { Route, Routes, Navigate } from "react-router-dom";
-// Route constants
 import { Toaster } from "sonner";
-import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 
+import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 // Pages - all imported from features (Phase A cleanup)
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
 import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
