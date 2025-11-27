@@ -3,8 +3,8 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.assignment_models import UserSupplierAssignment
-from app.schemas.assignment_schema import (
+from app.models.assignments.assignment_models import UserSupplierAssignment
+from app.schemas.assignments.assignment_schema import (
     UserSupplierAssignmentCreate,
     UserSupplierAssignmentUpdate,
 )
