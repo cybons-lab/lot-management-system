@@ -48,7 +48,7 @@ export function RelatedOrdersSection({ group }: RelatedOrdersSectionProps) {
   }
 
   return (
-    <div className="mt-6 rounded-lg border border-slate-200 bg-white">
+    <div className="mt-8 rounded-lg border border-slate-200 bg-white">
       <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-4 py-2">
         <div className="flex items-center gap-2">
           <PackageSearch className="h-4 w-4 text-slate-500" />

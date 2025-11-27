@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useInboundPlans } from "@/features/inbound-plans/hooks";
 import { Card, CardContent, Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { useLotsQuery } from "@/hooks/api";
 import * as styles from "./WarehouseInfoCard.styles";
 
 interface WarehouseInfoCardProps {
@@ -27,29 +28,33 @@ interface WarehouseData {
 }
 
 export function WarehouseInfoCard({ productId }: WarehouseInfoCardProps) {
-    const { data: inboundPlans, isLoading } = useInboundPlans({ product_id: productId });
+    const { data: inboundPlans, isLoading: isLoadingInbound } = useInboundPlans({ product_id: productId });
+    const { data: lots = [], isLoading: isLoadingLots } = useLotsQuery({ product_id: productId });
 
-    // TODO: Replace with actual inventory API hook
-    // const { data: inventories, isLoading: isLoadingInventory } = useInventoriesByProduct(productId);
+    const isLoading = isLoadingInbound || isLoadingLots;
 
-    // ダミーデータ（実装時に削除）
-    const warehouseData: WarehouseData[] = [
-        {
-            name: "倉庫A",
-            inventory: { total: 150, lotCount: 3, unit: "ML" },
-            upcomingInbounds: [],
-        },
-        {
-            name: "倉庫B",
-            inventory: { total: 80, lotCount: 2, unit: "ML" },
-            upcomingInbounds: [],
-        },
-        {
-            name: "倉庫C",
-            inventory: { total: 0, lotCount: 0, unit: "ML" },
-            upcomingInbounds: [],
-        },
-    ];
+    // ロットデータから倉庫別に集約
+    const warehouseMap = new Map<string, WarehouseData>();
+
+    lots.forEach((lot) => {
+        const warehouseName = String(lot.delivery_place_name || lot.delivery_place_code || "不明");
+        const quantity = Number(lot.current_quantity || 0);
+        const unit = String(lot.unit || "EA");
+
+        if (!warehouseMap.has(warehouseName)) {
+            warehouseMap.set(warehouseName, {
+                name: warehouseName,
+                inventory: { total: 0, lotCount: 0, unit },
+                upcomingInbounds: [],
+            });
+        }
+
+        const warehouse = warehouseMap.get(warehouseName)!;
+        warehouse.inventory.total += quantity;
+        warehouse.inventory.lotCount += 1;
+    });
+
+    const warehouseData: WarehouseData[] = Array.from(warehouseMap.values());
 
     // 直近の入荷予定を取得（未来の日付のみ）
     const today = new Date();
@@ -81,43 +86,46 @@ export function WarehouseInfoCard({ productId }: WarehouseInfoCardProps) {
                             <div key={warehouse.name} className={styles.warehouseSection}>
                                 <div className={styles.warehouseName}>▼ {warehouse.name}</div>
 
-                                {/* 在庫情報 */}
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>在庫:</span>
-                                    <div>
-                                        <span
-                                            className={styles.infoValue({
-                                                type: warehouse.inventory.total > 0 ? "inventory" : "zero",
-                                            })}
-                                        >
-                                            {warehouse.inventory.total.toLocaleString()} {warehouse.inventory.unit}
-                                        </span>
-                                        <span className={styles.lotCount}>
-                                            ({warehouse.inventory.lotCount}ロット)
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* 入荷予定 */}
-                                <div className={styles.infoRow}>
-                                    <span className={styles.infoLabel}>入荷:</span>
-                                    {warehouse.upcomingInbounds.length > 0 ? (
-                                        <div className={styles.inboundList}>
-                                            {warehouse.upcomingInbounds.map((inbound, idx) => (
-                                                <div key={idx} className={styles.inboundItem}>
-                                                    <span className={styles.inboundDate}>
-                                                        {new Date(inbound.date).toLocaleDateString("ja-JP", {
-                                                            month: "numeric",
-                                                            day: "numeric",
-                                                        })}
-                                                    </span>
-                                                    <span className={styles.inboundQuantity}>予定あり</span>
-                                                </div>
-                                            ))}
+                                {/* 2列グリッド: 在庫と入荷 */}
+                                <div className={styles.infoGrid}>
+                                    {/* 在庫情報（左列） */}
+                                    <div className={styles.infoRow}>
+                                        <span className={styles.infoLabel}>在庫:</span>
+                                        <div>
+                                            <span
+                                                className={styles.infoValue({
+                                                    type: warehouse.inventory.total > 0 ? "inventory" : "zero",
+                                                })}
+                                            >
+                                                {warehouse.inventory.total.toLocaleString()} {warehouse.inventory.unit}
+                                            </span>
+                                            <span className={styles.lotCount}>
+                                                ({warehouse.inventory.lotCount}ロット)
+                                            </span>
                                         </div>
-                                    ) : (
-                                        <span className={styles.noData}>予定なし</span>
-                                    )}
+                                    </div>
+
+                                    {/* 入荷予定（右列） */}
+                                    <div className={styles.infoRow}>
+                                        <span className={styles.infoLabel}>入荷:</span>
+                                        {warehouse.upcomingInbounds.length > 0 ? (
+                                            <div className={styles.inboundList}>
+                                                {warehouse.upcomingInbounds.map((inbound, idx) => (
+                                                    <div key={idx} className={styles.inboundItem}>
+                                                        <span className={styles.inboundDate}>
+                                                            {new Date(inbound.date).toLocaleDateString("ja-JP", {
+                                                                month: "numeric",
+                                                                day: "numeric",
+                                                            })}
+                                                        </span>
+                                                        <span className={styles.inboundQuantity}>予定あり</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <span className={styles.noData}>予定なし</span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}

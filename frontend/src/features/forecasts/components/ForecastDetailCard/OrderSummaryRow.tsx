@@ -39,7 +39,7 @@ export function OrderSummaryRow({
   return (
     <div className="border-b border-slate-100 last:border-0">
       {/* 概要行 */}
-      <div className="flex items-center justify-between py-2 hover:bg-slate-50">
+      <div className="flex items-center gap-4 py-2 hover:bg-slate-50">
         <div className="flex items-center gap-3 overflow-hidden">
           <Button
             variant="ghost"
@@ -60,7 +60,9 @@ export function OrderSummaryRow({
             </span>
             <span className="hidden text-xs text-gray-500 sm:inline">{order.customer_name}</span>
             <span className="text-xs text-gray-400">|</span>
-            <span className="text-xs text-gray-600">納期: {formatDate(order.due_date)}</span>
+            <span className="text-xs text-gray-600">
+              納期: {targetLines[0]?.delivery_date ? formatDate(targetLines[0].delivery_date) : "-"}
+            </span>
           </div>
         </div>
 
