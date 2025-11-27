@@ -117,7 +117,7 @@ class OrderLine(Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'pending'")
     )
-    version_id: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
+    version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
 
     __table_args__ = (
         Index("idx_order_lines_order", "order_id"),
@@ -131,7 +131,7 @@ class OrderLine(Base):
         ),
     )
 
-    __mapper_args__ = {"version_id_col": version_id}
+    __mapper_args__ = {"version_id_col": version}
 
     # Relationships
     order: Mapped[Order] = relationship("Order", back_populates="order_lines")

@@ -140,6 +140,8 @@ SELECT
     p.qty_per_internal_unit AS product_qty_per_internal_unit,
     dp.delivery_place_code,
     dp.delivery_place_name,
+    dp.jiku_code,
+    ci.external_product_code,
     s.supplier_name,
     COALESCE(SUM(a.allocated_quantity), 0) AS allocated_quantity
 FROM public.orders o
@@ -155,7 +157,8 @@ GROUP BY
     c.customer_code, c.customer_name,
     ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status,
     p.maker_part_code, p.product_name, p.internal_unit, p.external_unit, p.qty_per_internal_unit,
-    dp.delivery_place_code, dp.delivery_place_name,
+    dp.delivery_place_code, dp.delivery_place_name, dp.jiku_code,
+    ci.external_product_code,
     s.supplier_name;
 
 COMMENT ON VIEW public.v_order_line_details IS '受注明細の詳細情報ビュー';
@@ -229,11 +232,12 @@ SELECT
     l.inspection_date,
     l.inspection_cert_number,
     l.expected_lot_id,
-    l.version_id,
+    l.version,
     l.created_at,
     l.updated_at
 FROM public.lots l
 JOIN public.products p ON p.id = l.product_id
-JOIN public.suppliers s ON s.id = l.supplier_id;
+LEFT JOIN public.suppliers s ON s.id = l.supplier_id;
 
 COMMENT ON VIEW public.v_lots_with_master IS 'ロットとマスタデータの結合ビュー';
+
