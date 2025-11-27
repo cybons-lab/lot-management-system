@@ -29,6 +29,7 @@ from .base_model import Base
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .inventory_models import Lot
     from .masters_models import Product, Supplier
+    from .orders_models import Allocation
 
 
 class InboundPlanStatus(str, PyEnum):
@@ -126,6 +127,12 @@ class InboundPlanLine(Base):
     product: Mapped[Product] = relationship("Product", back_populates="inbound_plan_lines")
     expected_lots: Mapped[list[ExpectedLot]] = relationship(
         "ExpectedLot", back_populates="inbound_plan_line", cascade="all, delete-orphan"
+    )
+    # Provisional allocations (for planned inbound stock)
+    allocations: Mapped[list[Allocation]] = relationship(
+        "Allocation",
+        foreign_keys="[Allocation.inbound_plan_line_id]",
+        back_populates=None,
     )
 
 
