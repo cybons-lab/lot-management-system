@@ -1,11 +1,11 @@
 from datetime import date, timedelta
 
 from app.api.routes.allocations.allocations_router import commit_allocation, preview_allocations
-from app.api.routes.masters_customers import create_customer
-from app.api.routes.masters_products import create_product
-from app.api.routes.masters_suppliers import create_supplier
-from app.api.routes.masters_warehouses import create_warehouse
-from app.api.routes.orders import create_order
+from app.api.routes.masters.customers_router import create_customer
+from app.api.routes.masters.products_router import create_product
+from app.api.routes.masters.suppliers_router import create_supplier
+from app.api.routes.masters.warehouses_router import create_warehouse
+from app.api.routes.orders.orders_router import create_order
 from app.models import Lot, LotCurrentStock, Order, Warehouse
 from app.schemas.allocations.allocations_schema import AllocationCommitRequest, FefoPreviewRequest
 from app.schemas.masters.masters_schema import (
