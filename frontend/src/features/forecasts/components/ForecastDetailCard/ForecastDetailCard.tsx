@@ -11,13 +11,12 @@ import { ForecastAggregations } from "./ForecastAggregations";
 import { ForecastCardHeader } from "./ForecastCardHeader";
 import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
 import { ForecastDailyGrid } from "./ForecastDailyGrid";
-import { IncomingGoodsSummaryCard } from "./IncomingGoodsSummaryCard";
-import { InventorySummaryCard } from "./InventorySummaryCard";
 import { useForecastCalculations } from "./hooks/use-forecast-calculations";
 import { RelatedOrdersSection } from "./RelatedOrdersSection";
 import { SAPIntegrationSection } from "./SAPIntegrationSection";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
+import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
 import { Card, CardContent } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
@@ -109,10 +108,7 @@ export function ForecastDetailCard({
 
             <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3 md:col-span-5">
               <h4 className="text-xs font-semibold text-gray-700">関連情報</h4>
-              <div className="space-y-2">
-                <InventorySummaryCard productId={group_key.product_id} />
-                <IncomingGoodsSummaryCard productId={group_key.product_id} />
-              </div>
+              <WarehouseInfoCard productId={group_key.product_id} />
             </div>
           </div>
 
