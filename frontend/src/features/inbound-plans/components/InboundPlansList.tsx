@@ -33,6 +33,8 @@ interface InboundPlansListProps {
   onDelete: (id: number) => void;
   onViewDetail: (id: number) => void;
   isDeleting?: boolean;
+  onSyncFromSAP?: () => void;
+  isSyncing?: boolean;
 }
 
 // ============================================
@@ -48,6 +50,8 @@ export function InboundPlansList({
   onDelete,
   onViewDetail,
   isDeleting,
+  onSyncFromSAP,
+  isSyncing,
 }: InboundPlansListProps) {
   return (
     <div className="space-y-6 p-6">
@@ -57,6 +61,11 @@ export function InboundPlansList({
           <h2 className="text-3xl font-bold tracking-tight">入荷予定一覧</h2>
           <p className="mt-1 text-gray-600">入荷予定管理（ロット自動生成対応）</p>
         </div>
+        {onSyncFromSAP && (
+          <Button onClick={onSyncFromSAP} disabled={isSyncing} size="default">
+            {isSyncing ? "同期中..." : "SAPから取得"}
+          </Button>
+        )}
       </div>
 
       {/* Filters */}
@@ -163,13 +172,12 @@ export function InboundPlansList({
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          plan.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : plan.status === "received"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
-                        }`}
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === "pending"
+                          ? "bg-yellow-100 text-yellow-800"
+                          : plan.status === "received"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                          }`}
                       >
                         {plan.status}
                       </span>

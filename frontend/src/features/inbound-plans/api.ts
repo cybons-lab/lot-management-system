@@ -194,3 +194,22 @@ export const createInboundPlanLine = (planId: number, data: CreateInboundPlanLin
 export const receiveInbound = (planId: number, data: ReceiveInboundRequest) => {
   return fetchApi.post<ReceiveInboundResponse>(`/inbound-plans/${planId}/receive`, data);
 };
+
+/**
+ * SAP Sync Response
+ */
+export interface SAPSyncResponse {
+  success: boolean;
+  message: string;
+  created_plans: InboundPlanWithLines[];
+  skipped_count: number;
+}
+
+/**
+ * Sync purchase orders from SAP (mock)
+ * @endpoint POST /inbound-plans/sync-from-sap
+ * @note Currently uses mock data. Will be replaced with actual SAP integration.
+ */
+export const syncFromSAP = () => {
+  return fetchApi.post<SAPSyncResponse>("/inbound-plans/sync-from-sap", {});
+};

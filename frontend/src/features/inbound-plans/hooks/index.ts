@@ -21,6 +21,7 @@ import {
   deleteInboundPlan,
   createInboundPlanLine,
   receiveInbound,
+  syncFromSAP,
 } from "../api";
 
 // ===== Query Keys =====
@@ -151,6 +152,22 @@ export const useReceiveInbound = (planId: number) => {
       // Also invalidate lots queries since new lots were generated
       queryClient.invalidateQueries({ queryKey: ["lots"] });
       queryClient.invalidateQueries({ queryKey: ["inventory"] });
+    },
+  });
+};
+
+/**
+ * Sync purchase orders from SAP (mock)
+ * @important This fetches and creates new inbound plans from SAP
+ */
+export const useSyncFromSAP = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => syncFromSAP(),
+    onSuccess: () => {
+      // Invalidate inbound plans list to show newly created plans
+      queryClient.invalidateQueries({ queryKey: inboundPlanKeys.lists() });
     },
   });
 };

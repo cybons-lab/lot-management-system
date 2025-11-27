@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { InboundPlansList, type InboundPlansFilters } from "../components/InboundPlansList";
-import { useInboundPlans, useDeleteInboundPlan } from "../hooks";
+import { useInboundPlans, useDeleteInboundPlan, useSyncFromSAP } from "../hooks";
 
 import { ROUTES } from "@/constants/routes";
 
@@ -38,6 +38,9 @@ export function InboundPlansListPage() {
   // Delete mutation
   const deleteMutation = useDeleteInboundPlan();
 
+  // SAP sync mutation
+  const syncMutation = useSyncFromSAP();
+
   const handleDelete = async (id: number) => {
     if (!confirm("この入荷予定を削除しますか？")) return;
 
@@ -54,6 +57,17 @@ export function InboundPlansListPage() {
     navigate(ROUTES.INBOUND_PLANS.DETAIL(id));
   };
 
+  const handleSyncFromSAP = async () => {
+    try {
+      const result = await syncMutation.mutateAsync();
+      alert(result.message);
+      refetch();
+    } catch (error) {
+      console.error("SAP sync failed:", error);
+      alert("SAP同期に失敗しました");
+    }
+  };
+
   return (
     <InboundPlansList
       plans={plans}
@@ -64,6 +78,8 @@ export function InboundPlansListPage() {
       onDelete={handleDelete}
       onViewDetail={handleViewDetail}
       isDeleting={deleteMutation.isPending}
+      onSyncFromSAP={handleSyncFromSAP}
+      isSyncing={syncMutation.isPending}
     />
   );
 }
