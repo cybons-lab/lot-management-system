@@ -433,26 +433,145 @@ def generate_test_data():
 
                 db.add(lot)
                 lot_id += 1
-
         db.flush()
-        print(f"✓ Generated {lot_id - 1} lots (Strategy: Max 3 lots per product)")
 
-        # Create orders with various quantities
+        # Commit forecast and lot data before generating orders
+        # This ensures orders can query forecast_current table
+        db.commit()
+        print("✓ Committed forecast and lot data")
+
+        # Create orders based on forecasts (80%) and random (20%)
         print("\n📋 Generating orders...")
+        print("  Strategy: 80% forecast-based (standard), 20% random (irregular)")
 
-        order_scenarios = [
-            ("small", 20, 5, 30),  # Small orders (easy to fulfill)
-            ("medium", 15, 30, 100),  # Medium orders (may need partial)
-            ("large", 10, 100, 500),  # Large orders (may cause shortage)
-        ]
+        # Ensure forecast data is flushed before querying
+        db.flush()
 
         order_id = 1
         line_id = 1
 
-        for scenario_name, order_count, qty_min, qty_max in order_scenarios:
-            print(f"  - {scenario_name}: {order_count} orders")
-            for _ in range(order_count):
-                customer = random.choice(customers)
+        # Get forecast groups (customer + delivery_place + product combinations)
+        # Note: forecast_period contains date strings like '2025-12', not 'daily'
+        # So we get all unique combinations with forecast_date
+        forecast_groups_result = db.execute(
+            text("""
+                SELECT DISTINCT customer_id, delivery_place_id, product_id
+                FROM forecast_current
+                WHERE forecast_date IS NOT NULL
+                  AND forecast_quantity > 0
+            """)
+        ).fetchall()
+
+        forecast_groups = [
+            {"customer_id": row[0], "delivery_place_id": row[1], "product_id": row[2]}
+            for row in forecast_groups_result
+        ]
+
+        print(f"  Found {len(forecast_groups)} forecast groups")
+
+        standard_count = 0
+        irregular_count = 0
+
+        for group in forecast_groups:
+            customer_id = group["customer_id"]
+            delivery_place_id = group["delivery_place_id"]
+            product_id = group["product_id"]
+
+            # Get product for this group
+            product = db.query(Product).filter(Product.id == product_id).first()
+            if not product:
+                continue
+
+            # 80% chance: Generate forecast-based order (STANDARD)
+            if random.random() < 0.8:
+                # Get daily forecasts for this group (grouped by forecast_date)
+                daily_forecasts_result = db.execute(
+                    text("""
+                        SELECT forecast_date, SUM(forecast_quantity) as total_qty
+                        FROM forecast_current
+                        WHERE customer_id = :cust_id
+                          AND delivery_place_id = :dp_id
+                          AND product_id = :prod_id
+                          AND forecast_date IS NOT NULL
+                          AND forecast_quantity > 0
+                        GROUP BY forecast_date
+                        ORDER BY forecast_date
+                    """),
+                    {
+                        "cust_id": customer_id,
+                        "dp_id": delivery_place_id,
+                        "prod_id": product_id,
+                    },
+                ).fetchall()
+
+                daily_forecasts = [
+                    {"date": row[0], "qty": float(row[1])} for row in daily_forecasts_result
+                ]
+
+                if not daily_forecasts:
+                    continue
+
+                # Create one order with lines matching forecast dates
+                order = Order(
+                    id=order_id,
+                    customer_id=customer_id,
+                    order_number=f"ORD-{order_id:08d}",
+                    order_date=date.today() - timedelta(days=random.randint(0, 15)),
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
+                )
+                db.add(order)
+
+                # Create order lines for each forecast date (sample 1-3 dates)
+                num_lines = min(random.randint(1, 3), len(daily_forecasts))
+                selected_forecasts = random.sample(daily_forecasts, num_lines)
+
+                for forecast in selected_forecasts:
+                    forecast_date = forecast["date"]
+                    forecast_qty = Decimal(str(forecast["qty"]))
+
+                    # Use product's external unit for order
+                    unit = product.external_unit or product.internal_unit
+                    order_qty = forecast_qty
+
+                    # Convert to external unit if necessary
+                    if unit == product.external_unit and product.external_unit != product.internal_unit:
+                        factor = Decimal(str(product.qty_per_internal_unit))
+                        order_qty = forecast_qty * factor
+
+                    # Round based on unit type
+                    if is_countable_unit(unit):
+                        order_qty = Decimal(str(int(order_qty)))
+                        converted_qty = forecast_qty
+                    else:
+                        order_qty = round(order_qty, 2)
+                        converted_qty = round(forecast_qty, 2)
+
+                    line = OrderLine(
+                        id=line_id,
+                        order_id=order_id,
+                        product_id=product_id,
+                        delivery_date=forecast_date,  # Match forecast date
+                        order_quantity=order_qty,
+                        unit=unit,
+                        converted_quantity=converted_qty,
+                        delivery_place_id=delivery_place_id,
+                        status="pending",
+                        created_at=datetime.utcnow(),
+                        updated_at=datetime.utcnow(),
+                    )
+                    db.add(line)
+                    line_id += 1
+
+                order_id += 1
+                standard_count += 1
+
+            else:
+                # 30% chance: Generate random order (IRREGULAR)
+                # Use existing random generation logic
+                customer = db.query(Customer).filter(Customer.id == customer_id).first()
+                if not customer:
+                    continue
 
                 order = Order(
                     id=order_id,
@@ -464,118 +583,45 @@ def generate_test_data():
                 )
                 db.add(order)
 
-                # 1-3 lines per order
-                num_lines = random.randint(1, 3)
-                for _ in range(num_lines):
-                    product = random.choice(products)
+                # Random quantity and date
+                qty_min, qty_max = 10, 100
+                unit = product.external_unit or product.internal_unit
 
-                    # Choose delivery place belonging to the customer
-                    customer_dps = [dp for dp in delivery_places if dp.customer_id == customer.id]
-                    if customer_dps:
-                        delivery_place = random.choice(customer_dps)
+                if is_countable_unit(product.internal_unit):
+                    if unit == product.external_unit:
+                        qty = random.randint(qty_min, qty_max)
+                        factor = Decimal(str(product.qty_per_internal_unit))
+                        converted_qty = Decimal(str(int(Decimal(str(qty)) / factor)))
                     else:
-                        # Fallback if no specific DP for customer (shouldn't happen with current logic)
-                        delivery_place = random.choice(delivery_places)
+                        qty = random.randint(1, 50)
+                        converted_qty = Decimal(str(qty))
+                else:
+                    qty = round(random.uniform(qty_min, qty_max), 2)
+                    converted_qty = round(Decimal(str(qty)), 2)
 
-                    # Retry logic to ensure clean quantities (no fractional values for countable units)
-                    max_retries = 100
-                    qty = None
-                    converted_qty = None
-                    unit = None
-
-                    # Debug: Track which path is taken
-
-                    for attempt in range(max_retries):
-                        # Determine unit (70% external, 30% internal)
-                        # Order in EXTERNAL unit (customer-facing)
-                        use_external = random.random() < 0.7
-                        if use_external and product.external_unit:
-                            unit = product.external_unit
-                            # Generate quantity in external unit
-                            qty_candidate = random.randint(qty_min, qty_max)
-
-                            # Convert external → internal for allocation
-                            factor = Decimal(str(product.qty_per_internal_unit))
-                            converted_candidate = Decimal(str(qty_candidate)) / factor
-
-                            # Debug
-                            if attempt == 0 and line_id <= 3:  # Only first few lines
-                                print(
-                                    f"  [EXTERNAL] {qty_candidate} {unit} → {converted_candidate} {product.internal_unit} (factor={factor})"
-                                )
-
-                            # For countable internal units, ensure integer result
-                            if is_countable_unit(product.internal_unit):
-                                if converted_candidate == int(converted_candidate):
-                                    # Clean integer result
-                                    qty = qty_candidate
-                                    converted_qty = Decimal(str(int(converted_candidate)))
-                                    break
-                                # else: retry with different quantity
-                            else:
-                                # Measurable unit: round to 2 decimal places
-                                qty = qty_candidate
-                                converted_qty = round(converted_candidate, 2)
-                                break
-                        else:
-                            # Order in INTERNAL unit (same as inventory)
-                            unit = product.internal_unit
-
-                            # Debug
-                            if attempt == 0 and line_id <= 3:
-                                print(
-                                    f"  [INTERNAL] Using internal unit directly: {product.internal_unit}"
-                                )
-
-                            if is_countable_unit(product.internal_unit):
-                                # For countable units, generate integer directly
-                                qty_candidate = random.randint(
-                                    1, max(1, qty_max // int(product.qty_per_internal_unit or 1))
-                                )
-                                qty = qty_candidate
-                                converted_qty = Decimal(str(qty_candidate))
-                                break
-                            else:
-                                # For measurable units, allow decimals but round
-                                qty_candidate = round(
-                                    random.uniform(
-                                        1, qty_max / float(product.qty_per_internal_unit or 1)
-                                    ),
-                                    2,
-                                )
-                                qty = qty_candidate
-                                converted_qty = Decimal(str(qty_candidate))
-                                break
-
-                    # Fallback if retry fails (shouldn't happen)
-                    if qty is None:
-                        print(
-                            f"⚠️  Warning: Could not generate clean quantity for product {product.id}, using fallback"
-                        )
-                        unit = product.internal_unit
-                        qty = 1
-                        converted_qty = Decimal("1")
-
-                    line = OrderLine(
-                        id=line_id,
-                        order_id=order_id,
-                        product_id=product.id,
-                        delivery_date=order.order_date + timedelta(days=random.randint(7, 30)),
-                        order_quantity=Decimal(str(qty)),
-                        unit=unit,
-                        converted_quantity=converted_qty,
-                        delivery_place_id=delivery_place.id,
-                        status="pending",
-                        created_at=datetime.utcnow(),
-                        updated_at=datetime.utcnow(),
-                    )
-                    db.add(line)
-                    line_id += 1
+                line = OrderLine(
+                    id=line_id,
+                    order_id=order_id,
+                    product_id=product_id,
+                    delivery_date=date.today() + timedelta(days=random.randint(7, 60)),
+                    order_quantity=Decimal(str(qty)),
+                    unit=unit,
+                    converted_quantity=converted_qty,
+                    delivery_place_id=delivery_place_id,
+                    status="pending",
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow(),
+                )
+                db.add(line)
+                line_id += 1
 
                 order_id += 1
+                irregular_count += 1
 
         db.commit()
         print(f"✓ Generated {order_id - 1} orders with {line_id - 1} lines")
+        print(f"  - Standard (forecast-based): {standard_count} orders")
+        print(f"  - Irregular (random): {irregular_count} orders")
 
         print("\n" + "=" * 60)
         print("✅ Test data generation completed successfully!")
