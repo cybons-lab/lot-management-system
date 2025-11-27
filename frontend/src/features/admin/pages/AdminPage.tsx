@@ -15,9 +15,22 @@ import {
 } from "@/components/ui";
 import { http } from "@/shared/libs/http";
 
+interface InventorySyncResult {
+  success: boolean;
+  message: string;
+  data?: {
+    checked_products: number;
+    discrepancies_found: number;
+    alerts_created: number;
+    details: unknown[];
+  };
+}
+
 export function AdminPage() {
   const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isInventorySyncing, setIsInventorySyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<InventorySyncResult | null>(null);
 
   const handleGenerateTestData = async () => {
     setIsGenerating(true);
@@ -30,6 +43,32 @@ export function AdminPage() {
     } finally {
       setIsGenerating(false);
       setShowGenerateConfirm(false);
+    }
+  };
+
+  const handleInventorySync = async () => {
+    setIsInventorySyncing(true);
+    setSyncResult(null);
+    try {
+      const result = await http.post<InventorySyncResult>(
+        "/admin/batch-jobs/inventory-sync/execute",
+      );
+      setSyncResult(result);
+
+      if (result.success) {
+        if (result.data && result.data.discrepancies_found > 0) {
+          toast.warning(
+            `SAP在庫チェック完了: ${result.data.discrepancies_found}件の差異を検出しました`,
+          );
+        } else {
+          toast.success("SAP在庫チェック完了: 差異はありませんでした");
+        }
+      }
+    } catch (e) {
+      toast.error("SAP在庫チェックに失敗しました");
+      console.error(e);
+    } finally {
+      setIsInventorySyncing(false);
     }
   };
 
@@ -73,6 +112,33 @@ export function AdminPage() {
               データベースリセット（開発用）
             </Button>
           </div>
+        </div>
+
+        <div className="bg-card rounded-lg border p-6">
+          <h3 className="mb-4 text-lg font-semibold">SAP連携</h3>
+          <div className="space-y-2">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleInventorySync}
+              disabled={isInventorySyncing}
+            >
+              {isInventorySyncing ? "チェック中..." : "SAP在庫トータルチェック実行"}
+            </Button>
+          </div>
+          {syncResult && (
+            <div className="bg-muted/50 mt-4 rounded-md p-4 text-sm">
+              <p className="mb-2 font-semibold">最新の実行結果:</p>
+              <p className="text-muted-foreground">{syncResult.message}</p>
+              {syncResult.data && (
+                <div className="mt-2 space-y-1 text-xs">
+                  <p>チェック商品数: {syncResult.data.checked_products}</p>
+                  <p>差異検出数: {syncResult.data.discrepancies_found}</p>
+                  <p>アラート作成数: {syncResult.data.alerts_created}</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="bg-card rounded-lg border p-6">

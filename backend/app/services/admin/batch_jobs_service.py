@@ -87,11 +87,6 @@ class BatchJobService:
         """
         Execute a batch job.
 
-        This is a stub implementation. In production, this would:
-        1. Update the job status to 'running'
-        2. Trigger the actual job execution (e.g., via Celery, RQ, etc.)
-        3. Return the updated job
-
         Args:
             job_id: Job ID to execute
             parameters: Optional parameters to override job parameters
@@ -110,17 +105,35 @@ class BatchJobService:
         # Update status to running
         db_job.status = "running"
         db_job.started_at = datetime.now()
-        db_job.result_message = "Job execution started"
 
         self.db.commit()
         self.db.refresh(db_job)
 
-        # TODO: In production, trigger actual job execution here
-        # For now, immediately mark as completed (stub)
-        db_job.status = "completed"
-        db_job.completed_at = datetime.now()
-        db_job.result_message = "Job completed successfully (stub implementation)"
+        # Execute actual job based on job_type
+        try:
+            if db_job.job_type == "inventory_sync":
+                # SAP inventory synchronization job
+                from app.services.batch.inventory_sync_service import InventorySyncService
 
+                sync_service = InventorySyncService(self.db)
+                result = sync_service.check_inventory_totals()
+
+                db_job.status = "completed"
+                db_job.result_message = (
+                    f"Success: Checked {result['checked_products']} products, "
+                    f"found {result['discrepancies_found']} discrepancies, "
+                    f"created {result['alerts_created']} alerts."
+                )
+            else:
+                # Other job types: stub implementation
+                db_job.status = "completed"
+                db_job.result_message = "Job completed successfully (stub implementation)"
+
+        except Exception as e:
+            db_job.status = "failed"
+            db_job.result_message = f"Error: {str(e)}"
+
+        db_job.completed_at = datetime.now()
         self.db.commit()
         self.db.refresh(db_job)
 

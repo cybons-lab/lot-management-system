@@ -5,8 +5,9 @@ Revises: 18dcee2f69a3
 Create Date: 2025-11-27 19:33:55.877052
 
 """
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.
@@ -28,11 +29,11 @@ def upgrade() -> None:
     additional_views_path = os.path.join(base_dir, 'sql', 'views', 'additional_views.sql')
     
     # Execute create_views.sql
-    with open(create_views_path, 'r', encoding='utf-8') as f:
+    with open(create_views_path, encoding='utf-8') as f:
         op.execute(f.read())
         
     # Execute additional_views.sql
-    with open(additional_views_path, 'r', encoding='utf-8') as f:
+    with open(additional_views_path, encoding='utf-8') as f:
         op.execute(f.read())
 
 

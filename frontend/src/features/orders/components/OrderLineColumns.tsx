@@ -3,19 +3,38 @@
  * 受注明細行のカラム定義
  */
 
+import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import type { Column } from "@/shared/components/data/DataTable";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
-import type { OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 
-export const orderLineColumns: Column<OrderLine>[] = [
+export const orderLineColumns: Column<OrderLineRow>[] = [
+  {
+    id: "order_number",
+    header: "受注番号",
+    cell: (row: OrderLineRow) => (
+      <div className="font-medium text-slate-900">{row.order_number}</div>
+    ),
+    width: "120px",
+  },
+  {
+    id: "customer_name",
+    header: "得意先",
+    cell: (row: OrderLineRow) => (
+      <div>
+        <div className="font-medium text-slate-900">{row.customer_name}</div>
+        <div className="text-xs text-slate-500">{row.customer_code}</div>
+      </div>
+    ),
+    width: "180px",
+  },
   {
     id: "product_code",
-    header: "製品コード",
-    cell: (line: OrderLine) => (
-      <div className="pl-10">
-        <div className="font-medium text-slate-900">{line.product_code ?? "–"}</div>
-        {line.product_name && <div className="text-xs text-slate-600">{line.product_name}</div>}
+    header: "製品",
+    cell: (row: OrderLineRow) => (
+      <div>
+        <div className="font-medium text-slate-900">{row.product_code ?? "–"}</div>
+        {row.product_name && <div className="text-xs text-slate-600">{row.product_name}</div>}
       </div>
     ),
     width: "250px",
@@ -23,11 +42,11 @@ export const orderLineColumns: Column<OrderLine>[] = [
   {
     id: "order_quantity",
     header: "注文数量",
-    cell: (line: OrderLine) => {
-      const qty = Number(line.order_quantity ?? line.quantity ?? 0);
+    cell: (row: OrderLineRow) => {
+      const qty = Number(row.order_quantity ?? row.quantity ?? 0);
       return (
         <div className="text-slate-900">
-          {qty.toLocaleString()} {line.unit ?? ""}
+          {qty.toLocaleString()} {row.unit ?? ""}
         </div>
       );
     },
@@ -37,15 +56,15 @@ export const orderLineColumns: Column<OrderLine>[] = [
   {
     id: "allocated_quantity",
     header: "引当数量",
-    cell: (line: OrderLine) => {
-      const lots = coerceAllocatedLots(line.allocated_lots);
+    cell: (row: OrderLineRow) => {
+      const lots = coerceAllocatedLots(row.allocated_lots);
       const allocatedQty = lots.reduce(
         (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,
       );
       return (
         <div className="text-slate-900">
-          {allocatedQty.toLocaleString()} {line.unit ?? ""}
+          {allocatedQty.toLocaleString()} {row.unit ?? ""}
         </div>
       );
     },
@@ -55,9 +74,9 @@ export const orderLineColumns: Column<OrderLine>[] = [
   {
     id: "allocation_rate",
     header: "引当率",
-    cell: (line: OrderLine) => {
-      const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
-      const lots = coerceAllocatedLots(line.allocated_lots);
+    cell: (row: OrderLineRow) => {
+      const orderQty = Number(row.order_quantity ?? row.quantity ?? 0);
+      const lots = coerceAllocatedLots(row.allocated_lots);
       const allocatedQty = lots.reduce(
         (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,
@@ -83,11 +102,37 @@ export const orderLineColumns: Column<OrderLine>[] = [
   {
     id: "due_date",
     header: "納期",
-    cell: (line: OrderLine) => {
-      // OrderLineに納期がない場合は親のOrderから取得する必要があるかも
-      const dueDate = line.due_date ?? null;
+    cell: (row: OrderLineRow) => {
+      // OrderLineRow now has due_date from parent order if line doesn't have it
+      const dueDate = row.due_date ?? null;
       return <div className="text-slate-900">{formatDate(dueDate)}</div>;
     },
     width: "120px",
+  },
+  {
+    id: "status",
+    header: "ステータス",
+    cell: (row: OrderLineRow) => {
+      // Simple status badge based on order status
+      const statusMap: Record<string, { label: string; color: string }> = {
+        draft: { label: "未処理", color: "bg-gray-100 text-gray-800" },
+        allocated: { label: "引当済", color: "bg-blue-100 text-blue-800" },
+        shipped: { label: "出荷済", color: "bg-green-100 text-green-800" },
+        closed: { label: "完了", color: "bg-slate-100 text-slate-800" },
+        cancelled: { label: "キャンセル", color: "bg-red-100 text-red-800" },
+      };
+      const status = statusMap[row.order_status] || {
+        label: row.order_status,
+        color: "bg-gray-100 text-gray-800",
+      };
+      return (
+        <span
+          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${status.color}`}
+        >
+          {status.label}
+        </span>
+      );
+    },
+    width: "100px",
   },
 ];
