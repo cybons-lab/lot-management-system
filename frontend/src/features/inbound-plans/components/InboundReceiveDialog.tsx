@@ -11,8 +11,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import type { components } from '@/shared/types/openapi';
+import { InboundReceiveLotForm } from './InboundReceiveLotForm';
 
 type InboundPlan = components['schemas']['InboundPlanDetailResponse'];
 
@@ -32,11 +32,11 @@ export function InboundReceiveDialog({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // 各expected_lotごとのロット番号フォーム
-    const lotForms = inboundPlan.lines?.flatMap((line) =>
-        line.expected_lots?.map((lot) => ({
-            expected_lot_id: lot.id,
-            product_name: line.product_name,
-            planned_quantity: lot.planned_quantity,
+    const lotForms = inboundPlan.lines?.flatMap((line: any) =>
+        line.expected_lots?.map((lot: any) => ({
+            expected_lot_id: lot.expected_lot_id || lot.id,
+            product_name: line.product_name || "Unknown Product",
+            planned_quantity: lot.expected_quantity || lot.planned_quantity,
             unit: line.unit,
         }))
     ) || [];
@@ -89,34 +89,18 @@ export function InboundReceiveDialog({
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
-                    {lotForms.map((lot, index) => (
-                        <div key={lot.expected_lot_id} className="border rounded-lg p-4 space-y-2">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="font-medium">{lot.product_name}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                        数量: {lot.planned_quantity} {lot.unit}
-                                    </p>
-                                </div>
-                                <span className="text-sm text-muted-foreground">#{index + 1}</span>
-                            </div>
-
-                            <div>
-                                <div>
-                                    <label htmlFor={`lot-number-${lot.expected_lot_id}`} className="text-sm font-medium">
-                                        ロット番号 <span className="text-red-500">*</span>
-                                    </label>
-                                    <Input
-                                        id={`lot-number-${lot.expected_lot_id}`}
-                                        placeholder="ロット番号を入力"
-                                        value={lotNumbers[lot.expected_lot_id] || ''}
-                                        onChange={(e) => handleLotNumberChange(lot.expected_lot_id, e.target.value)}
-                                        className="mt-1"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                    {lotForms.map((lot, index) => {
+                        if (!lot) return null;
+                        return (
+                            <InboundReceiveLotForm
+                                key={lot.expected_lot_id}
+                                lot={lot}
+                                index={index}
+                                value={lotNumbers[lot.expected_lot_id] || ''}
+                                onChange={(value) => handleLotNumberChange(lot.expected_lot_id, value)}
+                            />
+                        );
+                    })}
                 </div>
 
                 <DialogFooter>
