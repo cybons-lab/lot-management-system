@@ -7,20 +7,21 @@
  * - Section 3: Dekad (left) and Monthly (right) aggregations beneath the grid
  */
 
-import { useNavigate } from "react-router-dom";
-
+import { useState } from "react";
 import { ForecastAggregations } from "./ForecastAggregations";
 import { ForecastCardHeader } from "./ForecastCardHeader";
 import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
 import { ForecastDailyGrid } from "./ForecastDailyGrid";
 import { useForecastCalculations } from "./hooks/use-forecast-calculations";
 import { RelatedOrdersSection } from "./RelatedOrdersSection";
+import { SAPIntegrationSection } from "./SAPIntegrationSection";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
+import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
-import { Button, Card, CardContent } from "@/components/ui";
-import { ROUTES } from "@/constants/routes";
+import { Card, CardContent } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
+import { toast } from "sonner";
 
 export function ForecastDetailCard({
   group,
@@ -31,8 +32,8 @@ export function ForecastDetailCard({
   isFocused = false,
   onToggle,
 }: ForecastDetailCardProps) {
-  const navigate = useNavigate();
   const { group_key, forecasts = [] } = group;
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   // Calculate all forecast data using custom hook
   const { dailyData, unit, targetMonthStartDate, dates, dekadData, monthlyData, targetMonthTotal } =
@@ -65,6 +66,12 @@ export function ForecastDetailCard({
 
   const groupKey = `${group_key.customer_id}-${group_key.delivery_place_id}-${group_key.product_id}`;
 
+  // 自動引当ハンドラー（未実装）
+  const handleAutoAllocate = () => {
+    console.log("TODO: Implement auto-allocation for forecast group:", groupKey);
+    toast.info("一括自動引当機能は現在開発中です。各受注を展開して個別に引当を行ってください。");
+  };
+
   return (
     <Card
       className={cn(
@@ -87,6 +94,7 @@ export function ForecastDetailCard({
         isActive={isActive}
         isOpen={isOpen}
         onToggle={onToggle}
+        onAutoAllocate={handleAutoAllocate}
         onDelete={onDelete}
         isDeleting={isDeleting}
         firstForecastId={forecasts[0]?.id}
@@ -104,53 +112,28 @@ export function ForecastDetailCard({
                 targetMonthLabel={targetMonthLabel}
                 todayKey={todayKey}
                 todayStart={todayStart}
+                hoveredDate={hoveredDate}
+                onDateHover={setHoveredDate}
               />
 
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />
             </div>
 
-            <div className="rounded-lg border border-slate-200 bg-white p-4 md:col-span-5">
-              <h4 className="mb-3 text-sm font-semibold text-gray-700">関連情報</h4>
-              <div className="space-y-3">
-                <div className="rounded-md bg-blue-50 p-3">
-                  <div className="mb-2 text-xs font-medium text-blue-700">在庫状況</div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-blue-600">この製品の在庫状況を確認します</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 bg-white text-xs hover:bg-blue-100"
-                      onClick={() =>
-                        navigate(`${ROUTES.INVENTORY.SUMMARY}?product_id=${group_key.product_id}`)
-                      }
-                    >
-                      在庫を確認
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="rounded-md bg-green-50 p-3">
-                  <div className="mb-2 text-xs font-medium text-green-700">入荷予定</div>
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-green-600">この製品の入荷予定を確認します</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 bg-white text-xs hover:bg-green-100"
-                      onClick={() =>
-                        navigate(`${ROUTES.INBOUND_PLANS.LIST}?product_id=${group_key.product_id}`)
-                      }
-                    >
-                      入荷予定を確認
-                    </Button>
-                  </div>
-                </div>
-              </div>
+            <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3 md:col-span-5">
+              <h4 className="text-xs font-semibold text-gray-700">関連情報</h4>
+              <WarehouseInfoCard productId={group_key.product_id} />
             </div>
           </div>
 
           {/* 関連受注セクション */}
-          <RelatedOrdersSection group={group} />
+          <RelatedOrdersSection
+            group={group}
+            hoveredDate={hoveredDate}
+            onDateHover={setHoveredDate}
+          />
+
+          {/* SAP連携セクション (ダミー実装) */}
+          <SAPIntegrationSection relatedOrders={undefined} />
         </CardContent>
       ) : (
         <ForecastCollapsedSummary

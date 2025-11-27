@@ -16,11 +16,13 @@ export function ForecastDailyGrid({
   targetMonthLabel,
   todayKey,
   todayStart,
+  hoveredDate,
+  onDateHover,
 }: ForecastDailyGridProps) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between text-xs font-semibold text-gray-500">
-        <span>日次予測</span>
+        <span>日別指示</span>
         <span>{targetMonthLabel}</span>
       </div>
       <div className="grid grid-cols-10 gap-1 text-[11px]">
@@ -35,6 +37,8 @@ export function ForecastDailyGrid({
               quantity={dailyData.get(dateKey)}
               isToday={todayKey === dateKey}
               isPast={isPast}
+              hoveredDate={hoveredDate}
+              onDateHover={onDateHover}
             />
           );
         })}
