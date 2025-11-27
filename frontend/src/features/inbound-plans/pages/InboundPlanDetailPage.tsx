@@ -19,6 +19,25 @@ import {
 } from '@/components/ui';
 import { ROUTES } from '@/constants/routes';
 import { useInboundPlan, useReceiveInboundPlan } from '@/shared/hooks/useInboundPlans';
+import type { components } from '@/shared/types/openapi';
+
+type InboundPlanDetailResponse = components['schemas']['InboundPlanDetailResponse'];
+type InboundPlanLineResponse = components['schemas']['InboundPlanLineResponse'];
+
+interface ExtendedInboundPlanLine extends InboundPlanLineResponse {
+  product_name?: string;
+  product_code?: string;
+  warehouse_name?: string;
+  warehouse_code?: string;
+  notes?: string;
+  line_number?: number;
+  warehouse_id?: number; // Added as it was missing in base type but used in UI
+}
+
+interface ExtendedInboundPlan extends InboundPlanDetailResponse {
+  supplier_name?: string;
+  lines: ExtendedInboundPlanLine[];
+}
 
 export function InboundPlanDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +46,9 @@ export function InboundPlanDetailPage() {
   const [isReceiveDialogOpen, setIsReceiveDialogOpen] = useState(false);
 
   // Fetch inbound plan with lines
-  const { data: plan, isLoading, isError, refetch } = useInboundPlan(planId);
+  const { data: rawPlan, isLoading, isError, refetch } = useInboundPlan(planId);
+  const plan = rawPlan as unknown as ExtendedInboundPlan | undefined;
+
   const receiveMutation = useReceiveInboundPlan();
 
   const handleBack = () => {
@@ -38,14 +59,17 @@ export function InboundPlanDetailPage() {
     lots: Array<{ expected_lot_id: number; lot_number: string }>;
   }) => {
     try {
-      // Convert to backend format (lot_ids not lot_numbers based on schema)
-      const lot_ids = data.lots.map((lot) => lot.expected_lot_id);
+      // Convert to backend format (lot_numbers dict)
+      const lot_numbers = data.lots.reduce((acc, lot) => ({
+        ...acc,
+        [lot.expected_lot_id]: lot.lot_number
+      }), {} as Record<string, string>);
 
       await receiveMutation.mutateAsync({
         planId,
         data: {
           received_at: new Date().toISOString(),
-          lot_ids,
+          lot_numbers,
         },
       });
 
@@ -150,7 +174,7 @@ export function InboundPlanDetailPage() {
           <div>
             <div className="text-sm font-medium text-gray-500">更新日</div>
             <div className="mt-1 text-base">
-              {new Date(plan.updated_at).toLocaleString('ja-JP')}
+              {plan.updated_at ? new Date(plan.updated_at).toLocaleString('ja-JP') : '-'}
             </div>
           </div>
         </div>
@@ -182,14 +206,14 @@ export function InboundPlanDetailPage() {
               </thead>
               <tbody className="divide-y">
                 {plan.lines.map((line) => (
-                  <tr key={line.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{line.line_number}</td>
+                  <tr key={line.inbound_plan_line_id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm">{line.line_number || line.inbound_plan_line_id}</td>
                     <td className="px-4 py-3 text-sm">
                       {line.product_name || line.product_code || `ID: ${line.product_id}`}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium">{line.planned_quantity}</td>
                     <td className="px-4 py-3 text-sm">
-                      {line.warehouse_name || `ID: ${line.warehouse_id}`}
+                      {line.warehouse_name || (line.warehouse_id ? `ID: ${line.warehouse_id}` : '-')}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">{line.notes || '-'}</td>
                     <td className="px-4 py-3 text-right text-sm">
@@ -209,16 +233,18 @@ export function InboundPlanDetailPage() {
                             <FileBarChart className="mr-2 h-4 w-4" />
                             需要予測を確認
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() =>
-                              navigate(
-                                ROUTES.INVENTORY.ITEMS.DETAIL(line.product_id, line.warehouse_id),
-                              )
-                            }
-                          >
-                            <Package className="mr-2 h-4 w-4" />
-                            在庫を確認
-                          </DropdownMenuItem>
+                          {line.warehouse_id && (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                navigate(
+                                  ROUTES.INVENTORY.ITEMS.DETAIL(line.product_id, line.warehouse_id!),
+                                )
+                              }
+                            >
+                              <Package className="mr-2 h-4 w-4" />
+                              在庫を確認
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>

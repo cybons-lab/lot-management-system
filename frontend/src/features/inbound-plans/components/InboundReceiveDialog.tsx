@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { InboundReceiveLotForm } from './InboundReceiveLotForm';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui';
 import {
     Dialog,
     DialogContent,
@@ -12,7 +12,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/ui';
 import type { components } from '@/shared/types/openapi';
 
 type InboundPlan = components['schemas']['InboundPlanDetailResponse'];
