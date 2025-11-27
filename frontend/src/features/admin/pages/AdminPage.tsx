@@ -51,14 +51,14 @@ export function AdminPage() {
     setSyncResult(null);
     try {
       const result = await http.post<InventorySyncResult>(
-        "/admin/batch-jobs/inventory-sync/execute"
+        "/admin/batch-jobs/inventory-sync/execute",
       );
       setSyncResult(result);
 
       if (result.success) {
         if (result.data && result.data.discrepancies_found > 0) {
           toast.warning(
-            `SAP在庫チェック完了: ${result.data.discrepancies_found}件の差異を検出しました`
+            `SAP在庫チェック完了: ${result.data.discrepancies_found}件の差異を検出しました`,
           );
         } else {
           toast.success("SAP在庫チェック完了: 差異はありませんでした");
@@ -71,7 +71,6 @@ export function AdminPage() {
       setIsInventorySyncing(false);
     }
   };
-
 
   return (
     <div className="space-y-6">
@@ -128,11 +127,11 @@ export function AdminPage() {
             </Button>
           </div>
           {syncResult && (
-            <div className="mt-4 bg-muted/50 rounded-md p-4 text-sm">
-              <p className="font-semibold mb-2">最新の実行結果:</p>
+            <div className="bg-muted/50 mt-4 rounded-md p-4 text-sm">
+              <p className="mb-2 font-semibold">最新の実行結果:</p>
               <p className="text-muted-foreground">{syncResult.message}</p>
               {syncResult.data && (
-                <div className="mt-2 text-xs space-y-1">
+                <div className="mt-2 space-y-1 text-xs">
                   <p>チェック商品数: {syncResult.data.checked_products}</p>
                   <p>差異検出数: {syncResult.data.discrepancies_found}</p>
                   <p>アラート作成数: {syncResult.data.alerts_created}</p>

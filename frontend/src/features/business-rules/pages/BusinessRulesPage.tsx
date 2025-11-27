@@ -14,7 +14,11 @@ export function BusinessRulesPage() {
   const [ruleTypeFilter, setRuleTypeFilter] = useState<string | undefined>(undefined);
 
   // Fetch business rules
-  const { data: response, isLoading, isError } = useBusinessRules({
+  const {
+    data: response,
+    isLoading,
+    isError,
+  } = useBusinessRules({
     is_active: isActiveFilter,
     rule_type: ruleTypeFilter,
   });
@@ -59,7 +63,7 @@ export function BusinessRulesPage() {
 
       {/* Filter */}
       <div className="rounded-lg border bg-white p-4">
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex flex-wrap items-center gap-4">
           <label className="flex items-center gap-2 text-sm font-medium">
             状態フィルタ:
             <select
