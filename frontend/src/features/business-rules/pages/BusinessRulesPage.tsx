@@ -11,9 +11,13 @@ import { Button } from "@/components/ui";
 
 export function BusinessRulesPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
+  const [ruleTypeFilter, setRuleTypeFilter] = useState<string | undefined>(undefined);
 
   // Fetch business rules
-  const { data: response, isLoading, isError } = useBusinessRules({ is_active: isActiveFilter });
+  const { data: response, isLoading, isError } = useBusinessRules({
+    is_active: isActiveFilter,
+    rule_type: ruleTypeFilter,
+  });
 
   // Toggle active mutation
   const toggleActiveMutation = useToggleBusinessRuleActive();
@@ -55,7 +59,7 @@ export function BusinessRulesPage() {
 
       {/* Filter */}
       <div className="rounded-lg border bg-white p-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <label className="flex items-center gap-2 text-sm font-medium">
             状態フィルタ:
             <select
@@ -70,6 +74,24 @@ export function BusinessRulesPage() {
               <option value="all">すべて</option>
               <option value="active">有効のみ</option>
               <option value="inactive">無効のみ</option>
+            </select>
+          </label>
+
+          <label className="flex items-center gap-2 text-sm font-medium">
+            ルール種別:
+            <select
+              value={ruleTypeFilter || "all"}
+              onChange={(e) => {
+                setRuleTypeFilter(e.target.value === "all" ? undefined : e.target.value);
+              }}
+              className="rounded-md border px-3 py-2 text-sm"
+            >
+              <option value="all">すべて</option>
+              <option value="allocation">引当ルール</option>
+              <option value="expiry_warning">期限警告</option>
+              <option value="kanban">かんばん</option>
+              <option value="inventory_sync_alert">SAP在庫差異アラート</option>
+              <option value="other">その他</option>
             </select>
           </label>
         </div>
