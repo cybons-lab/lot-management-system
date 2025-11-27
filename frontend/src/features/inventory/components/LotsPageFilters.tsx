@@ -48,11 +48,7 @@ export function LotsPageFilters({
       </div>
 
       {isAdvancedOpen && (
-        <LotAdvancedFilters
-          filters={filters}
-          onFilterChange={onFilterChange}
-          onReset={onReset}
-        />
+        <LotAdvancedFilters filters={filters} onFilterChange={onFilterChange} onReset={onReset} />
       )}
     </div>
   );

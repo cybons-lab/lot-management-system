@@ -7,7 +7,6 @@ import { formatDateKey } from "./utils/date-utils";
 
 import { cn } from "@/shared/libs/utils";
 
-
 /**
  * Render a single day cell for the grid
  * Displays date and quantity with appropriate styling

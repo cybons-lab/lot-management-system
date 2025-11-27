@@ -17,8 +17,6 @@ interface OrderGroupHeaderProps {
   onToggle: () => void;
 }
 
-
-
 export function OrderGroupHeader({ order, isExpanded, onToggle }: OrderGroupHeaderProps) {
   // 全体の引当率を計算
   const lines = order.lines || [];

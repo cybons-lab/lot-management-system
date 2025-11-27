@@ -91,7 +91,11 @@ export function OrderPage() {
                       {order.order_date ? format(parseISO(order.order_date), "yyyy/MM/dd") : "-"}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusVariant(((order as Record<string, unknown>).status as string) ?? "unknown")}>
+                      <Badge
+                        variant={getStatusVariant(
+                          ((order as Record<string, unknown>).status as string) ?? "unknown",
+                        )}
+                      >
                         {((order as Record<string, unknown>).status as string) ?? "-"}
                       </Badge>
                     </TableCell>

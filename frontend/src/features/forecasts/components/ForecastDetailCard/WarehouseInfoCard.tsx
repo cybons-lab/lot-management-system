@@ -47,4 +47,3 @@ export function WarehouseInfoCard({ productId }: WarehouseInfoCardProps) {
     </Card>
   );
 }
-

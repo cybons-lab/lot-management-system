@@ -67,5 +67,3 @@ export function LotEditForm({ initialData, onSubmit, onCancel, isSubmitting }: L
     </form>
   );
 }
-
-

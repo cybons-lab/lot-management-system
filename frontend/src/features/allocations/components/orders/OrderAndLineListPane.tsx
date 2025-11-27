@@ -112,10 +112,11 @@ interface OrderCardProps {
 function OrderCard({ order, isSelected, onSelect }: OrderCardProps) {
   return (
     <div
-      className={`cursor-pointer rounded-lg border p-3 transition ${isSelected
+      className={`cursor-pointer rounded-lg border p-3 transition ${
+        isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-        }`}
+      }`}
       onClick={() => onSelect(order.id)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -162,10 +163,11 @@ function AllocationOrderLineListCard({
 
   return (
     <div
-      className={`cursor-pointer rounded-lg border p-3 transition ${isSelected
+      className={`cursor-pointer rounded-lg border p-3 transition ${
+        isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
-        }`}
+      }`}
       onClick={() => onSelect(line.id)}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {

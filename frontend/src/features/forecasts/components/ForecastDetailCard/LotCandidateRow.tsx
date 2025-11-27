@@ -6,7 +6,6 @@ import { type CandidateLotItem } from "@/features/allocations/api";
 import { cn } from "@/shared/libs/utils";
 import { type OrderLine } from "@/shared/types/aliases";
 
-
 interface LotCandidateRowProps {
   lot: CandidateLotItem;
   line: OrderLine;
@@ -82,4 +81,3 @@ export function LotCandidateRow({
     </div>
   );
 }
-

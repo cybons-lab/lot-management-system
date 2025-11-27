@@ -3,26 +3,26 @@
  * Inbound plan detail page with receive functionality
  */
 
-import { FileBarChart, MoreHorizontal, Package } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { toast } from 'sonner';
+import { FileBarChart, MoreHorizontal, Package } from "lucide-react";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
-import { InboundReceiveDialog } from '../components/InboundReceiveDialog';
+import { InboundReceiveDialog } from "../components/InboundReceiveDialog";
 
-import { Button } from '@/components/ui';
+import { Button } from "@/components/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui';
-import { ROUTES } from '@/constants/routes';
-import { useInboundPlan, useReceiveInboundPlan } from '@/shared/hooks/useInboundPlans';
-import type { components } from '@/shared/types/openapi';
+} from "@/components/ui";
+import { ROUTES } from "@/constants/routes";
+import { useInboundPlan, useReceiveInboundPlan } from "@/shared/hooks/useInboundPlans";
+import type { components } from "@/shared/types/openapi";
 
-type InboundPlanDetailResponse = components['schemas']['InboundPlanDetailResponse'];
-type InboundPlanLineResponse = components['schemas']['InboundPlanLineResponse'];
+type InboundPlanDetailResponse = components["schemas"]["InboundPlanDetailResponse"];
+type InboundPlanLineResponse = components["schemas"]["InboundPlanLineResponse"];
 
 interface ExtendedInboundPlanLine extends InboundPlanLineResponse {
   product_name?: string;
@@ -60,10 +60,13 @@ export function InboundPlanDetailPage() {
   }) => {
     try {
       // Convert to backend format (lot_numbers dict)
-      const lot_numbers = data.lots.reduce((acc, lot) => ({
-        ...acc,
-        [lot.expected_lot_id]: lot.lot_number
-      }), {} as Record<string, string>);
+      const lot_numbers = data.lots.reduce(
+        (acc, lot) => ({
+          ...acc,
+          [lot.expected_lot_id]: lot.lot_number,
+        }),
+        {} as Record<string, string>,
+      );
 
       await receiveMutation.mutateAsync({
         planId,
@@ -73,12 +76,12 @@ export function InboundPlanDetailPage() {
         },
       });
 
-      toast.success('入庫確定しました');
+      toast.success("入庫確定しました");
       setIsReceiveDialogOpen(false);
       refetch();
     } catch (error) {
-      console.error('Failed to receive inbound plan:', error);
-      toast.error('入庫確定に失敗しました');
+      console.error("Failed to receive inbound plan:", error);
+      toast.error("入庫確定に失敗しました");
       throw error;
     }
   };
@@ -106,7 +109,7 @@ export function InboundPlanDetailPage() {
     );
   }
 
-  const canReceive = plan.status === 'planned';
+  const canReceive = plan.status === "planned";
 
   return (
     <div className="space-y-6 p-6">
@@ -120,9 +123,7 @@ export function InboundPlanDetailPage() {
           <Button variant="outline" onClick={handleBack}>
             一覧に戻る
           </Button>
-          {canReceive && (
-            <Button onClick={() => setIsReceiveDialogOpen(true)}>入庫確定</Button>
-          )}
+          {canReceive && <Button onClick={() => setIsReceiveDialogOpen(true)}>入庫確定</Button>}
         </div>
       </div>
 
@@ -138,12 +139,13 @@ export function InboundPlanDetailPage() {
             <div className="text-sm font-medium text-gray-500">ステータス</div>
             <div className="mt-1">
               <span
-                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === 'planned'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : plan.status === 'received'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                  }`}
+                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                  plan.status === "planned"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : plan.status === "received"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                }`}
               >
                 {plan.status}
               </span>
@@ -156,7 +158,7 @@ export function InboundPlanDetailPage() {
           <div>
             <div className="text-sm font-medium text-gray-500">入荷予定日</div>
             <div className="mt-1 text-base">
-              {new Date(plan.planned_arrival_date).toLocaleDateString('ja-JP')}
+              {new Date(plan.planned_arrival_date).toLocaleDateString("ja-JP")}
             </div>
           </div>
           {plan.notes && (
@@ -168,13 +170,13 @@ export function InboundPlanDetailPage() {
           <div>
             <div className="text-sm font-medium text-gray-500">作成日</div>
             <div className="mt-1 text-base">
-              {new Date(plan.created_at).toLocaleString('ja-JP')}
+              {new Date(plan.created_at).toLocaleString("ja-JP")}
             </div>
           </div>
           <div>
             <div className="text-sm font-medium text-gray-500">更新日</div>
             <div className="mt-1 text-base">
-              {plan.updated_at ? new Date(plan.updated_at).toLocaleString('ja-JP') : '-'}
+              {plan.updated_at ? new Date(plan.updated_at).toLocaleString("ja-JP") : "-"}
             </div>
           </div>
         </div>
@@ -207,15 +209,18 @@ export function InboundPlanDetailPage() {
               <tbody className="divide-y">
                 {plan.lines.map((line) => (
                   <tr key={line.inbound_plan_line_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{line.line_number || line.inbound_plan_line_id}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {line.line_number || line.inbound_plan_line_id}
+                    </td>
                     <td className="px-4 py-3 text-sm">
                       {line.product_name || line.product_code || `ID: ${line.product_id}`}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium">{line.planned_quantity}</td>
                     <td className="px-4 py-3 text-sm">
-                      {line.warehouse_name || (line.warehouse_id ? `ID: ${line.warehouse_id}` : '-')}
+                      {line.warehouse_name ||
+                        (line.warehouse_id ? `ID: ${line.warehouse_id}` : "-")}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{line.notes || '-'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{line.notes || "-"}</td>
                     <td className="px-4 py-3 text-right text-sm">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -237,7 +242,10 @@ export function InboundPlanDetailPage() {
                             <DropdownMenuItem
                               onClick={() =>
                                 navigate(
-                                  ROUTES.INVENTORY.ITEMS.DETAIL(line.product_id, line.warehouse_id!),
+                                  ROUTES.INVENTORY.ITEMS.DETAIL(
+                                    line.product_id,
+                                    line.warehouse_id!,
+                                  ),
                                 )
                               }
                             >

@@ -240,9 +240,12 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
     product_code: S((line as Record<string, unknown>).product_code as string),
     customer_code: S((line as Record<string, unknown>).customer_code as string),
     supplier_code: S((line as Record<string, unknown>).supplier_code as string | undefined),
-    quantity: ((line as Record<string, unknown>).quantity as number | string) ?? line.order_quantity,
-    due_date: ((line as Record<string, unknown>).due_date as string) ?? line.delivery_date ?? undefined,
-    allocated_qty: ((line as Record<string, unknown>).allocated_qty as number | string) ?? undefined,
+    quantity:
+      ((line as Record<string, unknown>).quantity as number | string) ?? line.order_quantity,
+    due_date:
+      ((line as Record<string, unknown>).due_date as string) ?? line.delivery_date ?? undefined,
+    allocated_qty:
+      ((line as Record<string, unknown>).allocated_qty as number | string) ?? undefined,
     next_div: S((line as Record<string, unknown>).next_div as string | undefined),
   };
 }

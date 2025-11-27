@@ -49,8 +49,6 @@ export function OrderLinesPane({
 }: OrderLinesPaneProps) {
   const [expandedLineId, setExpandedLineId] = useState<number | null>(null);
 
-
-
   const getDeliveryPlaceLabel = (line: OrderLine) => {
     const lineCode = line.delivery_place_code ?? null;
     const lineName = line.delivery_place_name ?? null;
