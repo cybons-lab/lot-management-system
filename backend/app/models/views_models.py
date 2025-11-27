@@ -220,7 +220,7 @@ class LotWithMaster(Base):
 
     # Metadata
     expected_lot_id: Mapped[int | None] = mapped_column(BigInteger)
-    version_id: Mapped[int] = mapped_column(Integer)
+    version: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
 
