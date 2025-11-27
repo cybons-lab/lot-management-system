@@ -1,9 +1,9 @@
+import type { LineStatus } from "../../../hooks/useLotAllocation";
 import * as styles from "../LineBasedAllocationList.styles";
 
 import { OrderGroupHeader } from "./OrderGroupHeader";
 import { OrderGroupLineItem } from "./OrderGroupLineItem";
 import type { GroupedOrder } from "./types";
-import type { LineStatus } from "../../../hooks/useLotAllocation";
 
 export function OrderGroup({
   group,

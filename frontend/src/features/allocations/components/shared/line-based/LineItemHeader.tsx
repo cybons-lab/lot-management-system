@@ -1,6 +1,7 @@
 import { Building2, Calendar, CheckCircle } from "lucide-react";
 
 import * as styles from "../LineBasedAllocationList.styles";
+
 import { type LineWithOrderInfo } from "./types";
 
 interface LineItemHeaderProps {

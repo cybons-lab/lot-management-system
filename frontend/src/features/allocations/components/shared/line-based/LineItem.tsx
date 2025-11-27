@@ -1,13 +1,13 @@
 import { CheckCircle } from "lucide-react";
 import type { RefObject } from "react";
 
+import type { LineStatus } from "../../../hooks/useLotAllocation";
 import { AllocationRowContainer } from "../../lots/AllocationRowContainer";
 import * as styles from "../LineBasedAllocationList.styles";
 
-import { LineItemHeader } from "./LineItemHeader";
 import { getDeliveryPlaceName, getProductName } from "./helpers";
+import { LineItemHeader } from "./LineItemHeader";
 import type { LineWithOrderInfo } from "./types";
-import type { LineStatus } from "../../../hooks/useLotAllocation";
 
 export function LineItem({
   item,

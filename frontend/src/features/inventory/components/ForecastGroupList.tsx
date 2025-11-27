@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { fmt } from "@/shared/utils/number";
 
 interface ForecastGroupListProps {

@@ -1,5 +1,6 @@
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import type { LotFilters } from "../state";
+
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 
 interface LotAdvancedFiltersProps {
     filters: LotFilters;

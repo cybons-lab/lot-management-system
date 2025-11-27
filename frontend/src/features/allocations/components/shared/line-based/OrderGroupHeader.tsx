@@ -1,6 +1,7 @@
 import { Building2, Calendar } from "lucide-react";
 
 import * as styles from "../LineBasedAllocationList.styles";
+
 import { type GroupedOrder } from "./types";
 
 interface OrderGroupHeaderProps {

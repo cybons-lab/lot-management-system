@@ -2,6 +2,8 @@
 import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
+import { InboundReceiveLotForm } from './InboundReceiveLotForm';
+
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -12,7 +14,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import type { components } from '@/shared/types/openapi';
-import { InboundReceiveLotForm } from './InboundReceiveLotForm';
 
 type InboundPlan = components['schemas']['InboundPlanDetailResponse'];
 
@@ -32,7 +33,9 @@ export function InboundReceiveDialog({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     // 各expected_lotごとのロット番号フォーム
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const lotForms = inboundPlan.lines?.flatMap((line: any) =>
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         line.expected_lots?.map((lot: any) => ({
             expected_lot_id: lot.expected_lot_id || lot.id,
             product_name: line.product_name || "Unknown Product",

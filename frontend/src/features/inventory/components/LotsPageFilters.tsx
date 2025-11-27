@@ -2,8 +2,9 @@ import { ChevronDown, ChevronRight, Search } from "lucide-react";
 
 import type { LotFilters } from "../state";
 
-import { Button, Input } from "@/components/ui";
 import { LotAdvancedFilters } from "./LotAdvancedFilters";
+
+import { Button, Input } from "@/components/ui";
 
 interface LotsPageFiltersProps {
   filters: LotFilters;

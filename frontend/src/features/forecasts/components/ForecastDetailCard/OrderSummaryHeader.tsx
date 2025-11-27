@@ -5,10 +5,10 @@ import { Badge, Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/shared/libs/utils";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
+import { type OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
-import { type OrderLine } from "@/shared/types/aliases";
 
 interface OrderSummaryHeaderProps {
     order: OrderWithLinesResponse;

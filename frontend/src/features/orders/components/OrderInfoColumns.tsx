@@ -13,6 +13,7 @@ interface OrderInfoColumnsProps {
     allocationRate: number;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function OrderInfoColumns({ order, lines, allocationRate }: OrderInfoColumnsProps) {
     return (
         <div className="flex flex-1 items-center gap-6">
@@ -52,10 +53,10 @@ export function OrderInfoColumns({ order, lines, allocationRate }: OrderInfoColu
                     <div className="h-2.5 w-32 overflow-hidden rounded-full bg-slate-200">
                         <div
                             className={`h-full rounded-full transition-all ${allocationRate === 100
-                                    ? "bg-green-500"
-                                    : allocationRate > 0
-                                        ? "bg-blue-500"
-                                        : "bg-slate-300"
+                                ? "bg-green-500"
+                                : allocationRate > 0
+                                    ? "bg-blue-500"
+                                    : "bg-slate-300"
                                 }`}
                             style={{ width: `${allocationRate}%` }}
                         />

@@ -2,6 +2,7 @@ import { useWindowVirtualizer, type VirtualItem } from "@tanstack/react-virtual"
 import { useState, useRef } from "react";
 
 import type { CandidateLotItem } from "../../api";
+import type { LineStatus } from "../../hooks/useLotAllocation";
 
 import { BulkActionsHeader } from "./line-based/BulkActionsHeader";
 import { FilterBar } from "./line-based/FilterBar";
@@ -13,7 +14,6 @@ import { useLineData } from "./line-based/useLineData";
 import * as styles from "./LineBasedAllocationList.styles";
 
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
-import type { LineStatus } from "../../hooks/useLotAllocation";
 
 /**
  * LineBasedAllocationList - 明細単位でフラットに表示するコンポーネント

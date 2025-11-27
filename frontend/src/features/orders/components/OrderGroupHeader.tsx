@@ -5,10 +5,11 @@
 
 import { ChevronDown, ChevronRight } from "lucide-react";
 
+import { OrderInfoColumns } from "./OrderInfoColumns";
+
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
 import type { OrderUI } from "@/shared/libs/normalize";
 import type { OrderLine } from "@/shared/types/aliases";
-import { OrderInfoColumns } from "./OrderInfoColumns";
 
 interface OrderGroupHeaderProps {
   order: OrderUI;

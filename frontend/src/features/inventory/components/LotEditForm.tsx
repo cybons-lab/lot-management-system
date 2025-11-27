@@ -4,9 +4,10 @@
  * ロット編集フォームコンポーネント
  */
 
+import { LotEditFields } from "./LotEditFields";
+
 import { Button } from "@/components/ui";
 import type { LotUI } from "@/shared/libs/normalize";
-import { LotEditFields } from "./LotEditFields";
 
 /**
  * ロット更新データの型定義

@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
+import { ForecastGroupList } from "./ForecastGroupList";
+import { ForecastSummaryCards } from "./ForecastSummaryCards";
+
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-import { ForecastSummaryCards } from "./ForecastSummaryCards";
-import { ForecastGroupList } from "./ForecastGroupList";
 
 interface ForecastsTabProps {
   productId: number;

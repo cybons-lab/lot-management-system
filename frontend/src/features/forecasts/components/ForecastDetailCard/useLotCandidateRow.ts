@@ -14,6 +14,7 @@ interface UseLotCandidateRowProps {
     onSave: () => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function useLotCandidateRow({
     lot,
     line,

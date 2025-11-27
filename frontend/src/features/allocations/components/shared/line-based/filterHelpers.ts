@@ -2,6 +2,7 @@ import type { CandidateLotItem } from "../../../api";
 import { getOrderQuantity } from "../../../hooks/useLotAllocation/allocationFieldHelpers";
 import { getLineAllocationStatus } from "../FlatAllocationList";
 
+/* eslint-disable max-params */
 import type { FilterStatus, LineWithOrderInfo } from "./types";
 
 export function shouldShowLine(

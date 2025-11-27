@@ -2,8 +2,8 @@ import { useMemo } from "react";
 
 import type { CandidateLotItem } from "../../../api";
 
-import { getCustomerName } from "./helpers";
 import { shouldShowLine } from "./filterHelpers";
+import { getCustomerName } from "./helpers";
 import type { FilterStatus, GroupedOrder, LineWithOrderInfo } from "./types";
 
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";

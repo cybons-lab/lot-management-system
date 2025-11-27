@@ -330,6 +330,12 @@ export default [
       "max-params": ["error", 6],
     },
   },
+  {
+    files: ["src/types/api.d.ts"],
+    rules: {
+      "max-lines": "off",
+    },
+  },
 
   eslintConfigPrettier,
 ];

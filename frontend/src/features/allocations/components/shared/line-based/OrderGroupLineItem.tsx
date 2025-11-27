@@ -1,11 +1,11 @@
 import { CheckCircle } from "lucide-react";
 
+import type { LineStatus } from "../../../hooks/useLotAllocation";
 import { AllocationRowContainer } from "../../lots/AllocationRowContainer";
 import * as styles from "../LineBasedAllocationList.styles";
 
 import { getDeliveryPlaceName, getProductName } from "./helpers";
 import { type LineWithOrderInfo } from "./types";
-import type { LineStatus } from "../../../hooks/useLotAllocation";
 
 interface OrderGroupLineItemProps {
     lineItem: LineWithOrderInfo;

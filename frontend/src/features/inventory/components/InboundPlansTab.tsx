@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+
+import { InboundPlanTable } from "./InboundPlanTable";
+
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-import { InboundPlanTable } from "./InboundPlanTable";
 
 interface InboundPlansTabProps {
   productId: number;

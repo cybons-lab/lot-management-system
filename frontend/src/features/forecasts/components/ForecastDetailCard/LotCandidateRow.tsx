@@ -1,10 +1,11 @@
+import { LotActionSection } from "./LotActionSection";
+import { LotInfoSection } from "./LotInfoSection";
+import { useLotCandidateRow } from "./useLotCandidateRow";
+
 import { type CandidateLotItem } from "@/features/allocations/api";
 import { cn } from "@/shared/libs/utils";
 import { type OrderLine } from "@/shared/types/aliases";
 
-import { LotActionSection } from "./LotActionSection";
-import { LotInfoSection } from "./LotInfoSection";
-import { useLotCandidateRow } from "./useLotCandidateRow";
 
 interface LotCandidateRowProps {
   lot: CandidateLotItem;

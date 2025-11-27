@@ -4,8 +4,8 @@
 
 import { Link } from "react-router-dom";
 
-import * as styles from "./WarehouseInfoCard.styles";
 import { useWarehouseData } from "./useWarehouseData";
+import * as styles from "./WarehouseInfoCard.styles";
 import { WarehouseItem } from "./WarehouseItem";
 
 import { Card, CardContent, Button } from "@/components/ui";

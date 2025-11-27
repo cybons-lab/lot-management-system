@@ -1,5 +1,5 @@
-import * as styles from "./WarehouseInfoCard.styles";
 import { type WarehouseData } from "./useWarehouseData";
+import * as styles from "./WarehouseInfoCard.styles";
 
 interface WarehouseItemProps {
     warehouse: WarehouseData;
