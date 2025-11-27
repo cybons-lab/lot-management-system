@@ -1,40 +1,63 @@
 /**
- * InboundPlanDetailPage (v2.2 - Phase C-3)
+ * InboundPlanDetailPage (v2.2 - Phase C-3 + Phase 3)
  * Inbound plan detail page with receive functionality
  */
 
-import { FileBarChart, MoreHorizontal, Package } from "lucide-react";
-import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { FileBarChart, MoreHorizontal, Package } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 
-import { ReceiveModal } from "../components/ReceiveModal";
-import { useInboundPlan } from "../hooks";
+import { InboundReceiveDialog } from '../components/InboundReceiveDialog';
 
-import { Button } from "@/components/ui";
+import { Button } from '@/components/ui';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui";
-import { ROUTES } from "@/constants/routes";
+} from '@/components/ui';
+import { ROUTES } from '@/constants/routes';
+import { useInboundPlan, useReceiveInboundPlan } from '@/shared/hooks/useInboundPlans';
 
 export function InboundPlanDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const planId = Number(id);
-  const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
+  const [isReceiveDialogOpen, setIsReceiveDialogOpen] = useState(false);
 
   // Fetch inbound plan with lines
   const { data: plan, isLoading, isError, refetch } = useInboundPlan(planId);
+  const receiveMutation = useReceiveInboundPlan();
 
   const handleBack = () => {
     navigate(ROUTES.INBOUND_PLANS.LIST);
   };
 
-  const handleReceiveSuccess = () => {
-    setIsReceiveModalOpen(false);
-    refetch();
+  const handleReceive = async (data: { lots: Array<{ expected_lot_id: number; lot_number: string }> }) => {
+    try {
+      // Convert to backend format
+      const lot_numbers: Record<number, string> = {};
+      data.lots.forEach((lot) => {
+        lot_numbers[lot.expected_lot_id] = lot.lot_number;
+      });
+
+      await receiveMutation.mutateAsync({
+        planId,
+        data: {
+          received_at: new Date().toISOString(),
+          lot_numbers,
+        },
+      });
+
+      toast.success('入庫確定しました');
+      setIsReceiveDialogOpen(false);
+      refetch();
+    } catch (error) {
+      console.error('Failed to receive inbound plan:', error);
+      toast.error('入庫確定に失敗しました');
+      throw error;
+    }
   };
 
   if (isLoading) {
@@ -60,7 +83,7 @@ export function InboundPlanDetailPage() {
     );
   }
 
-  const canReceive = plan.status === "pending";
+  const canReceive = plan.status === 'planned';
 
   return (
     <div className="space-y-6 p-6">
@@ -74,7 +97,9 @@ export function InboundPlanDetailPage() {
           <Button variant="outline" onClick={handleBack}>
             一覧に戻る
           </Button>
-          {canReceive && <Button onClick={() => setIsReceiveModalOpen(true)}>入荷実績登録</Button>}
+          {canReceive && (
+            <Button onClick={() => setIsReceiveDialogOpen(true)}>入庫確定</Button>
+          )}
         </div>
       </div>
 
@@ -90,13 +115,12 @@ export function InboundPlanDetailPage() {
             <div className="text-sm font-medium text-gray-500">ステータス</div>
             <div className="mt-1">
               <span
-                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                  plan.status === "pending"
-                    ? "bg-yellow-100 text-yellow-800"
-                    : plan.status === "received"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
-                }`}
+                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === 'planned'
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : plan.status === 'received'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
               >
                 {plan.status}
               </span>
@@ -109,7 +133,7 @@ export function InboundPlanDetailPage() {
           <div>
             <div className="text-sm font-medium text-gray-500">入荷予定日</div>
             <div className="mt-1 text-base">
-              {new Date(plan.planned_arrival_date).toLocaleDateString("ja-JP")}
+              {new Date(plan.planned_arrival_date).toLocaleDateString('ja-JP')}
             </div>
           </div>
           {plan.notes && (
@@ -121,13 +145,13 @@ export function InboundPlanDetailPage() {
           <div>
             <div className="text-sm font-medium text-gray-500">作成日</div>
             <div className="mt-1 text-base">
-              {new Date(plan.created_at).toLocaleString("ja-JP")}
+              {new Date(plan.created_at).toLocaleString('ja-JP')}
             </div>
           </div>
           <div>
             <div className="text-sm font-medium text-gray-500">更新日</div>
             <div className="mt-1 text-base">
-              {new Date(plan.updated_at).toLocaleString("ja-JP")}
+              {new Date(plan.updated_at).toLocaleString('ja-JP')}
             </div>
           </div>
         </div>
@@ -164,11 +188,11 @@ export function InboundPlanDetailPage() {
                     <td className="px-4 py-3 text-sm">
                       {line.product_name || line.product_code || `ID: ${line.product_id}`}
                     </td>
-                    <td className="px-4 py-3 text-sm font-medium">{line.quantity}</td>
+                    <td className="px-4 py-3 text-sm font-medium">{line.planned_quantity}</td>
                     <td className="px-4 py-3 text-sm">
                       {line.warehouse_name || `ID: ${line.warehouse_id}`}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{line.notes || "-"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{line.notes || '-'}</td>
                     <td className="px-4 py-3 text-right text-sm">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -207,15 +231,13 @@ export function InboundPlanDetailPage() {
         )}
       </div>
 
-      {/* Receive Modal */}
-      {isReceiveModalOpen && plan.lines && plan.lines.length > 0 && (
-        <ReceiveModal
-          planId={plan.id}
-          lines={plan.lines}
-          onClose={() => setIsReceiveModalOpen(false)}
-          onSuccess={handleReceiveSuccess}
-        />
-      )}
+      {/* Receive Dialog */}
+      <InboundReceiveDialog
+        inboundPlan={plan}
+        open={isReceiveDialogOpen}
+        onOpenChange={setIsReceiveDialogOpen}
+        onReceive={handleReceive}
+      />
     </div>
   );
 }

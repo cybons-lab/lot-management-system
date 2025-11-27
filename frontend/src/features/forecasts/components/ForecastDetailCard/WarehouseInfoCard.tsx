@@ -4,11 +4,13 @@
 
 import { Link } from "react-router-dom";
 
-import { useInboundPlans } from "@/features/inbound-plans/hooks";
+import * as styles from "./WarehouseInfoCard.styles";
+
 import { Card, CardContent, Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { useInboundPlans } from "@/features/inbound-plans/hooks";
 import { useLotsQuery } from "@/hooks/api";
-import * as styles from "./WarehouseInfoCard.styles";
+
 
 interface WarehouseInfoCardProps {
   productId: number;

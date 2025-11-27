@@ -8,6 +8,8 @@
  */
 
 import { useState } from "react";
+import { toast } from "sonner";
+
 import { ForecastAggregations } from "./ForecastAggregations";
 import { ForecastCardHeader } from "./ForecastCardHeader";
 import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
@@ -21,7 +23,6 @@ import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
 import { Card, CardContent } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
-import { toast } from "sonner";
 
 export function ForecastDetailCard({
   group,

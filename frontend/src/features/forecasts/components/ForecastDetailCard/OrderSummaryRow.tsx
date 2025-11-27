@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { OrderAllocationInline } from "./OrderAllocationInline";
+import { formatDateKey } from "./utils/date-utils";
 
 import { Button } from "@/components/ui";
 import { Badge } from "@/components/ui";
@@ -13,7 +14,6 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
-import { formatDateKey } from "./utils/date-utils";
 
 interface OrderSummaryRowProps {
   order: OrderWithLinesResponse;
