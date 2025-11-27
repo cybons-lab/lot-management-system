@@ -16,6 +16,7 @@ export interface OrderLineRow extends OrderLine {
   delivery_place_id: number;
   delivery_place_name: string;
   order_status: string;
+  [key: string]: unknown;
 }
 
 export function useOrderLines(params?: { customer_code?: string; status?: string }) {
@@ -46,11 +47,11 @@ export function useOrderLines(params?: { customer_code?: string; status?: string
             order_number: normalizedOrder.order_number,
             customer_id: normalizedOrder.customer_id,
             customer_name: normalizedOrder.customer_name,
-            customer_code: normalizedOrder.customer_code,
+            customer_code: normalizedOrder.customer_code ?? "",
             order_date: normalizedOrder.order_date,
-            due_date: normalizedOrder.due_date,
-            delivery_place_id: normalizedOrder.delivery_place_id,
-            delivery_place_name: normalizedOrder.delivery_place_name,
+            due_date: normalizedOrder.due_date ?? "",
+            delivery_place_id: Number(normalizedOrder.delivery_place_id ?? 0),
+            delivery_place_name: String(normalizedOrder.delivery_place_name ?? ""),
             order_status: normalizedOrder.status,
           });
         });

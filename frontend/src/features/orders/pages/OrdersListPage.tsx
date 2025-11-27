@@ -16,11 +16,13 @@ import { Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
 import { orderLineColumns } from "@/features/orders/components/OrderLineColumns";
+import { useOrderLines, type OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import { useCreateOrder } from "@/hooks/mutations";
 import { useDialog, useTable, useFilters } from "@/hooks/ui";
 import { DataTable } from "@/shared/components/data/DataTable";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
+import { coerceAllocatedLots } from "@/shared/libs/allocations";
 
 /**
  * メインコンポーネント
@@ -67,7 +69,7 @@ export function OrdersListPage() {
 
   // データの加工 (フィルタリング & ソート)
   // useFiltersのsearchは受注番号や顧客名での検索を想定
-  const filteredLines = allOrderLines.filter((line) => {
+  const filteredLines = allOrderLines.filter((line: OrderLineRow) => {
     if (filters.values.search) {
       const searchLower = filters.values.search.toLowerCase();
       const matchOrderNo = line.order_number.toLowerCase().includes(searchLower);
@@ -86,7 +88,7 @@ export function OrdersListPage() {
       const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
       const lots = coerceAllocatedLots(line.allocated_lots);
       const allocatedQty = lots.reduce(
-        (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+        (acc: number, alloc: any) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,
       );
       if (orderQty > 0 && allocatedQty >= orderQty) return false;
