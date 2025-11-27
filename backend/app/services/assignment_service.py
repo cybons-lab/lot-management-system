@@ -38,9 +38,7 @@ class AssignmentService:
         result = self.db.execute(stmt)
         return list(result.scalars().all())
 
-    def create_assignment(
-        self, data: UserSupplierAssignmentCreate
-    ) -> UserSupplierAssignment:
+    def create_assignment(self, data: UserSupplierAssignmentCreate) -> UserSupplierAssignment:
         """Create a new user-supplier assignment."""
         assignment = UserSupplierAssignment(**data.model_dump())
         self.db.add(assignment)
@@ -72,35 +70,27 @@ class AssignmentService:
         self.db.delete(assignment)
         self.db.commit()
 
-    def set_primary_assignment(
-        self, user_id: int, supplier_id: int
-    ) -> UserSupplierAssignment:
+    def set_primary_assignment(self, user_id: int, supplier_id: int) -> UserSupplierAssignment:
         """Set a user as the primary contact for a supplier.
-        
+
         This will:
         1. Remove primary flag from any existing primary user for this supplier
         2. Create or update the assignment for this user to be primary
         """
         # Remove existing primary for this supplier
-        stmt = (
-            select(UserSupplierAssignment)
-            .where(
-                UserSupplierAssignment.supplier_id == supplier_id,
-                UserSupplierAssignment.is_primary == True  # noqa: E712
-            )
+        stmt = select(UserSupplierAssignment).where(
+            UserSupplierAssignment.supplier_id == supplier_id,
+            UserSupplierAssignment.is_primary == True,  # noqa: E712
         )
         existing_primary = self.db.execute(stmt).scalar_one_or_none()
-        
+
         if existing_primary:
             existing_primary.is_primary = False
 
         # Find or create assignment for this user
-        stmt = (
-            select(UserSupplierAssignment)
-            .where(
-                UserSupplierAssignment.user_id == user_id,
-                UserSupplierAssignment.supplier_id == supplier_id,
-            )
+        stmt = select(UserSupplierAssignment).where(
+            UserSupplierAssignment.user_id == user_id,
+            UserSupplierAssignment.supplier_id == supplier_id,
         )
         assignment = self.db.execute(stmt).scalar_one_or_none()
 

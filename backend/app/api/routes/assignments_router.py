@@ -23,7 +23,7 @@ def get_user_suppliers(
     """ユーザーの担当仕入先一覧を取得."""
     service = AssignmentService(db)
     assignments = service.get_user_suppliers(user_id)
-    
+
     # Expand supplier information
     return [
         UserSupplierAssignmentResponse(
@@ -49,7 +49,7 @@ def get_supplier_users(
     """仕入先の担当者一覧を取得."""
     service = AssignmentService(db)
     assignments = service.get_supplier_users(supplier_id)
-    
+
     # Expand user information
     return [
         UserSupplierAssignmentResponse(
@@ -130,7 +130,9 @@ def delete_assignment(
         raise HTTPException(status_code=400, detail=str(e)) from e
 
 
-@router.post("/supplier/{supplier_id}/set-primary/{user_id}", response_model=UserSupplierAssignmentResponse)
+@router.post(
+    "/supplier/{supplier_id}/set-primary/{user_id}", response_model=UserSupplierAssignmentResponse
+)
 def set_primary_user(
     supplier_id: int,
     user_id: int,

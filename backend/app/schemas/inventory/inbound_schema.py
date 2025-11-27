@@ -149,4 +149,3 @@ class SAPSyncResponse(BaseSchema):
     message: str
     created_plans: list[InboundPlanDetailResponse] = Field(default_factory=list)
     skipped_count: int = 0
-

@@ -151,10 +151,10 @@ class Allocation(Base):
 
     DDL: allocations
     Primary key: id (BIGSERIAL)
-    Foreign keys: order_line_id -> order_lines(id), lot_id -> lots(id), 
+    Foreign keys: order_line_id -> order_lines(id), lot_id -> lots(id),
                   inbound_plan_line_id -> inbound_plan_lines(id)
-    
-    Supports both regular allocations (with lot_id) and provisional allocations 
+
+    Supports both regular allocations (with lot_id) and provisional allocations
     (with inbound_plan_line_id for planned inbound stock).
     """
 

@@ -103,9 +103,7 @@ class Supplier(Base):
         "CustomerItem", back_populates="supplier"
     )
     user_assignments: Mapped[list[UserSupplierAssignment]] = relationship(
-        "UserSupplierAssignment",
-        back_populates="supplier",
-        cascade="all, delete-orphan"
+        "UserSupplierAssignment", back_populates="supplier", cascade="all, delete-orphan"
     )
 
 

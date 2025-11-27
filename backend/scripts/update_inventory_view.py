@@ -9,6 +9,7 @@ import sys
 
 from sqlalchemy import create_engine, text
 
+
 # Add parent directory to path to import app modules
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

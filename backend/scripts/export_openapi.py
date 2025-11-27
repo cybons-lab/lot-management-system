@@ -1,8 +1,8 @@
 import json
+import os
 import sys
 from pathlib import Path
 
-import os
 
 # プロジェクトルートをパスに追加
 sys.path.append(str(Path(__file__).parent.parent))
@@ -12,8 +12,9 @@ os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
 from app.main import app
 
+
 def export_openapi():
-    """FastAPIアプリケーションからOpenAPIスキーマを出力する。"""
+    """Export OpenAPI schema from FastAPI application."""
     openapi_data = app.openapi()
     
     # 出力先: backend/openapi.json

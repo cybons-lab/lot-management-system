@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 
 class UserSupplierAssignmentBase(BaseModel):
     """Base schema for user-supplier assignments."""
-    
+
     user_id: int
     supplier_id: int
     is_primary: bool = False
@@ -15,20 +15,21 @@ class UserSupplierAssignmentBase(BaseModel):
 
 class UserSupplierAssignmentCreate(UserSupplierAssignmentBase):
     """Schema for creating a user-supplier assignment."""
+
     pass
 
 
 class UserSupplierAssignmentUpdate(BaseModel):
     """Schema for updating a user-supplier assignment."""
-    
+
     is_primary: bool | None = None
 
 
 class UserSupplierAssignmentResponse(UserSupplierAssignmentBase):
     """Schema for user-supplier assignment responses."""
-    
+
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     assigned_at: datetime
     created_at: datetime
