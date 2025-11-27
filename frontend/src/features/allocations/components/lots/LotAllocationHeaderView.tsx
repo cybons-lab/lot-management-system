@@ -71,69 +71,85 @@ export function LotAllocationHeaderView({
   // Determine status and styles
   const isPartial = totalAllocated > 0 && remainingQty > 0;
 
-  // Main Status Badge Logic
-  let mainStatusBadge = null;
-  let statusColorClass = "bg-gray-100 text-gray-600 border-gray-200"; // Default: Unallocated
+  // Composite Status Badges Logic
+  interface StatusBadge {
+    icon: React.ReactNode;
+    label: string;
+    color: string;
+  }
 
+  const statusBadges: StatusBadge[] = [];
+
+  // 1. エラー系（最優先）
+  if (hasExpiredError) {
+    statusBadges.push({
+      icon: <span className="i-lucide-alert-octagon h-4 w-4" />,
+      label: "期限切れロット",
+      color: "bg-red-100 text-red-800 border-red-200",
+    });
+  }
+
+  // 2. 警告系
   if (isOverAllocated) {
-    statusColorClass = "bg-orange-100 text-orange-800 border-orange-200";
-    mainStatusBadge = (
-      <div
-        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
-      >
-        <AlertTriangle className="h-4 w-4" />
-        <span className="text-sm font-bold">在庫過剰</span>
-      </div>
-    );
-  } else if (isComplete) {
+    statusBadges.push({
+      icon: <AlertTriangle className="h-4 w-4" />,
+      label: "在庫過剰",
+      color: "bg-orange-100 text-orange-800 border-orange-200",
+    });
+  }
+
+  if (hasExpiryWarning) {
+    statusBadges.push({
+      icon: <AlertTriangle className="h-4 w-4" />,
+      label: "期限切迫",
+      color: "bg-amber-100 text-amber-800 border-amber-200",
+    });
+  }
+
+  // 3. 正常系（引当状態）
+  if (isComplete) {
     // Check for confirmed status based on backend data OR immediate save success
     const isConfirmed =
       lineStatus === "allocated" || lineStatus === "completed" || (justSaved && canSave === false);
 
     if (isConfirmed) {
       // Complete and Saved (Confirmed)
-      statusColorClass = "bg-emerald-100 text-emerald-800 border-emerald-200";
-      mainStatusBadge = (
-        <div
-          className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
-        >
-          <CheckCircle className="h-4 w-4" />
-          <span className="text-sm font-bold">引当確定</span>
-        </div>
-      );
+      statusBadges.push({
+        icon: <CheckCircle className="h-4 w-4" />,
+        label: "引当確定",
+        color: "bg-emerald-100 text-emerald-800 border-emerald-200",
+      });
     } else {
       // Complete but Unsaved (Draft)
-      statusColorClass = "bg-indigo-100 text-indigo-800 border-indigo-200";
-      mainStatusBadge = (
-        <div
-          className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
-        >
-          <span className="i-lucide-pencil h-4 w-4" />
-          <span className="text-sm font-bold">仮引当完了</span>
-        </div>
-      );
+      statusBadges.push({
+        icon: <span className="i-lucide-pencil h-4 w-4" />,
+        label: "仮引当完了",
+        color: "bg-indigo-100 text-indigo-800 border-indigo-200",
+      });
     }
   } else if (isPartial) {
-    statusColorClass = "bg-amber-100 text-amber-800 border-amber-200";
-    mainStatusBadge = (
-      <div
-        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
-      >
-        <AlertCircle className="h-4 w-4" />
-        <span className="text-sm font-bold">一部引当</span>
-      </div>
-    );
-  } else {
-    // Unallocated
-    mainStatusBadge = (
-      <div
-        className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", statusColorClass)}
-      >
-        <span className="i-lucide-circle-dashed h-4 w-4" />
-        <span className="text-sm font-bold">未引当</span>
-      </div>
-    );
+    statusBadges.push({
+      icon: <AlertCircle className="h-4 w-4" />,
+      label: "一部引当",
+      color: "bg-amber-100 text-amber-800 border-amber-200",
+    });
+  } else if (totalAllocated === 0) {
+    statusBadges.push({
+      icon: <span className="i-lucide-circle-dashed h-4 w-4" />,
+      label: "未引当",
+      color: "bg-gray-100 text-gray-600 border-gray-200",
+    });
   }
+
+  // 4. 情報系
+  if (!hasCandidates) {
+    statusBadges.push({
+      icon: <AlertCircle className="h-4 w-4" />,
+      label: "候補なし",
+      color: "bg-red-100 text-red-600 border-red-200",
+    });
+  }
+
 
   return (
     <div className="flex flex-col bg-white transition-colors duration-300">
@@ -300,39 +316,26 @@ export function LotAllocationHeaderView({
 
           {/* 右カラム: ステータス (約30%) */}
           <div className="col-span-3 flex flex-col gap-4 pl-2">
-            {/* Main Status Badge */}
-            <div>{mainStatusBadge}</div>
-
-            {/* Info Tags (将来的に増える想定) */}
+            {/* 複数バッジ表示 */}
             <div className="flex flex-col gap-2">
-              {allocationCount > 1 && (
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <span className="i-lucide-layers h-3.5 w-3.5 text-gray-400" />
-                  <span>複数ロット引当 ({allocationCount})</span>
+              {statusBadges.map((badge, idx) => (
+                <div
+                  key={idx}
+                  className={cn("flex items-center gap-2 rounded-lg border px-3 py-1.5", badge.color)}
+                >
+                  {badge.icon}
+                  <span className="text-sm font-bold">{badge.label}</span>
                 </div>
-              )}
-
-              {hasExpiredError && (
-                <div className="flex items-center gap-2 text-xs font-medium text-red-600">
-                  <span className="i-lucide-alert-octagon h-3.5 w-3.5" />
-                  <span>期限切れロットあり</span>
-                </div>
-              )}
-
-              {hasExpiryWarning && (
-                <div className="flex items-center gap-2 text-xs font-medium text-amber-600">
-                  <span className="i-lucide-alert-triangle h-3.5 w-3.5" />
-                  <span>期限切迫ロットあり</span>
-                </div>
-              )}
-
-              {!hasCandidates && (
-                <div className="flex items-center gap-2 text-xs font-medium text-red-600">
-                  <span className="i-lucide-alert-circle h-3.5 w-3.5" />
-                  <span>引当候補なし</span>
-                </div>
-              )}
+              ))}
             </div>
+
+            {/* 補足情報 */}
+            {allocationCount > 1 && (
+              <div className="flex items-center gap-2 text-xs text-gray-600">
+                <span className="i-lucide-layers h-3.5 w-3.5 text-gray-400" />
+                <span>複数ロット引当 ({allocationCount})</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
