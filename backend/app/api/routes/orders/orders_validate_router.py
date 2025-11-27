@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_db():
-    from app.db.session import SessionLocal
+    from app.core.database import SessionLocal
 
     db = SessionLocal()
     try:
