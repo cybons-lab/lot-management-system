@@ -88,7 +88,8 @@ export function OrdersListPage() {
       const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
       const lots = coerceAllocatedLots(line.allocated_lots);
       const allocatedQty = lots.reduce(
-        (acc: number, alloc: any) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+        (acc: number, alloc: any) =>
+          acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,
       );
       if (orderQty > 0 && allocatedQty >= orderQty) return false;
