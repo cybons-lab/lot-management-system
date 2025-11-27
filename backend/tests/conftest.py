@@ -4,6 +4,7 @@ import logging
 import os
 
 import pytest
+from pathlib import Path
 from sqlalchemy.orm import Session, sessionmaker
 
 
@@ -35,29 +36,13 @@ def setup_database():
 
     from app.models import Base
 
-    # Drop views first (they depend on tables)
-    view_names = [
-        "v_candidate_lots_by_order_line",
-        "v_lot_details",
-        "v_product_code_to_id",
-        "v_forecast_order_pairs",
-        "v_delivery_place_code_to_id",
-        "v_customer_code_to_id",
-        "v_order_line_context",
-        "v_lot_available_qty",
-        "v_customer_daily_products",
-        "v_lot_current_stock",
-        "lot_current_stock",
-    ]
-
     with engine.connect() as conn:
-        for view_name in view_names:
-            conn.execute(text(f"DROP VIEW IF EXISTS {view_name} CASCADE"))
-        conn.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        # Use DROP SCHEMA CASCADE to ensure everything is removed including views and dependent tables
+        conn.execute(text("DROP SCHEMA public CASCADE"))
+        conn.execute(text("CREATE SCHEMA public"))
         conn.commit()
 
-    # Drop all tables
-    Base.metadata.drop_all(bind=engine)
+    # Create only actual tables (exclude view models)
     # Create only actual tables (exclude view models)
     from app.models import (
         Adjustment,
@@ -127,17 +112,18 @@ def setup_database():
 
         from alembic import command
 
-        alembic_cfg = Config("/app/alembic.ini")
-        alembic_cfg.set_main_option("script_location", "/app/alembic")
+        # Use relative paths for local execution
+        base_dir = Path(__file__).resolve().parent.parent
+        alembic_ini_path = base_dir / "alembic.ini"
+        alembic_cfg = Config(str(alembic_ini_path))
+        alembic_cfg.set_main_option("script_location", str(base_dir / "alembic"))
 
         # Stamp head (since create_all created the latest schema)
         command.stamp(alembic_cfg, "head")
         logger.info("✅ Alembic head をスタンプしました")
 
         # Apply views manually (since they are not in alembic migrations)
-        from pathlib import Path
-
-        view_sql_path = Path("/app/sql/views/create_views.sql")
+        view_sql_path = base_dir / "sql" / "views" / "create_views.sql"
         if view_sql_path.exists():
             sql_content = view_sql_path.read_text(encoding="utf-8")
             with engine.connect() as conn:

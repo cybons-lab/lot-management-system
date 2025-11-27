@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum as PyEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import (
     BigInteger,
@@ -145,19 +145,19 @@ class Lot(Base):
     __mapper_args__ = {"version_id_col": version}
 
     # Relationships
-    product: Mapped[Product] = relationship("Product", back_populates="lots")
-    warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="lots")
-    supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lots")
-    expected_lot: Mapped[ExpectedLot | None] = relationship(
+    product: Mapped["Product"] = relationship("Product", back_populates="lots")
+    warehouse: Mapped["Warehouse"] = relationship("Warehouse", back_populates="lots")
+    supplier: Mapped[Optional["Supplier"]] = relationship("Supplier", back_populates="lots")
+    expected_lot: Mapped[Optional["ExpectedLot"]] = relationship(
         "ExpectedLot", back_populates="lot", uselist=False
     )
-    allocations: Mapped[list[Allocation]] = relationship(
+    allocations: Mapped[list["Allocation"]] = relationship(
         "Allocation", back_populates="lot", cascade="all, delete-orphan"
     )
-    stock_history: Mapped[list[StockHistory]] = relationship(
+    stock_history: Mapped[list["StockHistory"]] = relationship(
         "StockHistory", back_populates="lot", cascade="all, delete-orphan"
     )
-    adjustments: Mapped[list[Adjustment]] = relationship(
+    adjustments: Mapped[list["Adjustment"]] = relationship(
         "Adjustment", back_populates="lot", cascade="all, delete-orphan"
     )
 
@@ -201,7 +201,8 @@ class StockHistory(Base):
     )
 
     # Relationships
-    lot: Mapped[Lot] = relationship("Lot", back_populates="stock_history")
+    # Relationships
+    lot: Mapped["Lot"] = relationship("Lot", back_populates="stock_history")
 
 
 class AdjustmentType(str, PyEnum):
@@ -252,7 +253,8 @@ class Adjustment(Base):
     )
 
     # Relationships
-    lot: Mapped[Lot] = relationship("Lot", back_populates="adjustments")
+    # Relationships
+    lot: Mapped["Lot"] = relationship("Lot", back_populates="adjustments")
 
 
 class AllocationSuggestion(Base):
@@ -311,10 +313,10 @@ class AllocationSuggestion(Base):
         Index("idx_allocation_suggestions_lot", "lot_id"),
     )
     # Relationships
-    customer: Mapped[Customer] = relationship("Customer")
-    delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
-    product: Mapped[Product] = relationship("Product")
-    lot: Mapped[Lot] = relationship("Lot")
+    customer: Mapped["Customer"] = relationship("Customer")
+    delivery_place: Mapped["DeliveryPlace"] = relationship("DeliveryPlace")
+    product: Mapped["Product"] = relationship("Product")
+    lot: Mapped["Lot"] = relationship("Lot")
 
 
 class AllocationTrace(Base):

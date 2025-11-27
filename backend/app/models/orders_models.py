@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlalchemy import (
     BigInteger,
@@ -70,8 +70,8 @@ class Order(Base):
     )
 
     # Relationships
-    customer: Mapped[Customer] = relationship("Customer", back_populates="orders")
-    order_lines: Mapped[list[OrderLine]] = relationship(
+    customer: Mapped["Customer"] = relationship("Customer", back_populates="orders")
+    order_lines: Mapped[list["OrderLine"]] = relationship(
         "OrderLine", back_populates="order", cascade="all, delete-orphan"
     )
 
@@ -134,9 +134,9 @@ class OrderLine(Base):
     __mapper_args__ = {"version_id_col": version}
 
     # Relationships
-    order: Mapped[Order] = relationship("Order", back_populates="order_lines")
-    product: Mapped[Product] = relationship("Product", back_populates="order_lines")
-    allocations: Mapped[list[Allocation]] = relationship(
+    order: Mapped["Order"] = relationship("Order", back_populates="order_lines")
+    product: Mapped["Product"] = relationship("Product", back_populates="order_lines")
+    allocations: Mapped[list["Allocation"]] = relationship(
         "Allocation", back_populates="order_line", cascade="all, delete-orphan"
     )
 
@@ -199,5 +199,5 @@ class Allocation(Base):
     )
 
     # Relationships
-    order_line: Mapped[OrderLine] = relationship("OrderLine", back_populates="allocations")
-    lot: Mapped[Lot | None] = relationship("Lot", back_populates="allocations")
+    order_line: Mapped["OrderLine"] = relationship("OrderLine", back_populates="allocations")
+    lot: Mapped[Optional["Lot"]] = relationship("Lot", back_populates="allocations")
