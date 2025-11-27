@@ -67,18 +67,19 @@ export function OrderSummaryRow({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="text-right text-sm">
-            <div className="mb-1 text-xs text-gray-500">明細: {targetLines.length}件</div>
-            <span className="text-gray-500">必要 </span>
-            <span className="font-medium">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="text-xs text-gray-500">明細: {targetLines.length}件</span>
+            <span className="text-xs text-gray-400">|</span>
+            <span className="text-xs text-gray-500">必要</span>
+            <span className="text-sm font-medium">
               {formatQuantity(totalRequired, targetLines[0]?.unit || "")}
             </span>
-            <span className="mx-1 text-gray-300">/</span>
-            <span className="text-gray-500">引当 </span>
-            <span className={cn("font-medium", totalAllocated > 0 ? "text-blue-600" : "")}>
+            <span className="text-xs text-gray-300">/</span>
+            <span className="text-xs text-gray-500">引当</span>
+            <span className={cn("text-sm font-medium", totalAllocated > 0 ? "text-blue-600" : "")}>
               {formatQuantity(totalAllocated, targetLines[0]?.unit || "")}
             </span>
-            <span className="ml-1 text-xs text-gray-400">{targetLines[0]?.unit}</span>
+            <span className="text-xs text-gray-400">{targetLines[0]?.unit}</span>
           </div>
 
           <Badge className={cn("h-5 px-1.5 text-[10px] font-normal", statusColor)}>
