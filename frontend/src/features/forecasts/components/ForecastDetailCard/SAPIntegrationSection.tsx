@@ -7,27 +7,18 @@ import { useState } from "react";
 import { SAPOrderItem } from "./SAPOrderItem";
 
 import { Badge, Button, Card, CardContent, CardHeader } from "@/components/ui";
-
-interface OrderItem {
-  id: number;
-  order_number?: string;
-  quantity: number | string;
-  unit?: string;
-  delivery_date: string;
-  allocation_status?: string;
-  sap_order_number?: string | null;
-}
+import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface SAPIntegrationSectionProps {
-  relatedOrders?: OrderItem[];
+  relatedOrders?: OrderWithLinesResponse[];
 }
 
 export function SAPIntegrationSection({ relatedOrders }: SAPIntegrationSectionProps) {
   const [selectedOrders, setSelectedOrders] = useState<number[]>([]);
   const [isRegistering, setIsRegistering] = useState(false);
 
-  // SAP未登録の受注のみフィルタ
-  const unregisteredOrders = (relatedOrders || []).filter((order) => !order.sap_order_number);
+  // すべての受注を表示（SAP登録機能はダミー実装のためフィルタなし）
+  const orders = relatedOrders || [];
 
   const handleRegisterToSAP = async () => {
     setIsRegistering(true);
@@ -42,7 +33,7 @@ export function SAPIntegrationSection({ relatedOrders }: SAPIntegrationSectionPr
     }
   };
 
-  if (unregisteredOrders.length === 0) {
+  if (orders.length === 0) {
     return null;
   }
 
@@ -62,10 +53,10 @@ export function SAPIntegrationSection({ relatedOrders }: SAPIntegrationSectionPr
         </p>
 
         <div className="space-y-2">
-          {unregisteredOrders.map((order) => (
+          {orders.map((order) => (
             <SAPOrderItem
               key={order.id}
-              order={order}
+              order={order as any}
               isSelected={selectedOrders.includes(order.id)}
               onToggle={(checked) => {
                 if (checked) {

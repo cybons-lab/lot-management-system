@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.forecast_models import ForecastCurrent, ForecastHistory
 from app.models.masters_models import Customer, DeliveryPlace, Product
+from app.models.orders_models import Allocation, Order, OrderLine
 from app.schemas.forecasts.forecast_schema import (
     ForecastBulkImportItem,
     ForecastBulkImportSummary,
@@ -107,11 +108,47 @@ class ForecastService:
                 for f in forecast_list
             ]
 
+            # Fetch related orders for this group
+            related_orders_query = (
+                self.db.query(Order)
+                .join(OrderLine)
+                .filter(
+                    and_(
+                        Order.customer_id == cust_id,
+                        OrderLine.product_id == prod_id,
+                        OrderLine.delivery_place_id == dp_id,
+                    )
+                )
+                .options(
+                    joinedload(Order.order_lines).selectinload(OrderLine.product),
+                    joinedload(Order.order_lines)
+                    .selectinload(OrderLine.allocations)
+                    .joinedload(Allocation.lot),
+                    joinedload(Order.customer),
+                )
+                .distinct()
+            )
+            related_orders = related_orders_query.all()
+
+            # Convert to OrderWithLinesResponse
+            from app.schemas.orders.orders_schema import OrderWithLinesResponse
+
+            related_orders_responses = [
+                OrderWithLinesResponse.model_validate(order) for order in related_orders
+            ]
+
+            # Populate additional info using OrderService
+            from app.services.orders.order_service import OrderService
+
+            order_service = OrderService(self.db)
+            order_service._populate_additional_info(related_orders_responses)
+
             items.append(
                 ForecastGroupResponse(
                     group_key=group_key,
                     forecasts=forecast_responses,
                     snapshot_at=first.snapshot_at,
+                    related_orders=related_orders_responses,
                 )
             )
 

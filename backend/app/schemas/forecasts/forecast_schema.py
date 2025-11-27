@@ -8,6 +8,7 @@ from decimal import Decimal
 from pydantic import Field
 
 from app.schemas.common.base import BaseSchema, TimestampMixin
+from app.schemas.orders.orders_schema import OrderWithLinesResponse
 
 
 class ForecastBase(BaseSchema):
@@ -88,6 +89,7 @@ class ForecastGroupResponse(BaseSchema):
     group_key: ForecastGroupKey
     forecasts: list[ForecastResponse] = Field(default_factory=list)
     snapshot_at: datetime | None = None
+    related_orders: list[OrderWithLinesResponse] = Field(default_factory=list)
 
 
 class ForecastListResponse(BaseSchema):
@@ -126,3 +128,8 @@ class ForecastBulkImportSummary(BaseSchema):
     archived_count: int
     skipped_count: int = 0
     errors: list[str] = Field(default_factory=list)
+
+
+# Rebuild models to resolve forward references
+ForecastGroupResponse.model_rebuild()
+ForecastListResponse.model_rebuild()

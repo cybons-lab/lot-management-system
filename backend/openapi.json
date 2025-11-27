@@ -6016,6 +6016,26 @@
         }
       }
     },
+    "/api/batch-jobs/inventory-sync/execute": {
+      "post": {
+        "tags": [
+          "batch-jobs"
+        ],
+        "summary": "Execute Inventory Sync Direct",
+        "description": "SAP在庫同期を即座に実行する（バッチジョブ経由なし）.\n\n管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。\nバッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。\n\nArgs:\n    db: データベースセッション\n\nReturns:\n    dict: 実行結果の詳細\n        - checked_products: チェックした商品数\n        - discrepancies_found: 発見された差異数\n        - alerts_created: 作成されたアラート数\n        - details: 差異の詳細リスト",
+        "operationId": "execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -8458,6 +8478,13 @@
               }
             ],
             "title": "Snapshot At"
+          },
+          "related_orders": {
+            "items": {
+              "$ref": "#/components/schemas/OrderWithLinesResponse"
+            },
+            "type": "array",
+            "title": "Related Orders"
           }
         },
         "type": "object",
