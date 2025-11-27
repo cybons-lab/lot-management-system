@@ -24,6 +24,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
 
+
 # For type checking only
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .assignment_models import UserSupplierAssignment
@@ -65,10 +66,10 @@ class User(Base):
     )
 
     # Relationships
-    roles: Mapped[list["UserRole"]] = relationship(
+    roles: Mapped[list[UserRole]] = relationship(
         "UserRole", back_populates="user", cascade="all, delete-orphan"
     )
-    supplier_assignments: Mapped[list["UserSupplierAssignment"]] = relationship(
+    supplier_assignments: Mapped[list[UserSupplierAssignment]] = relationship(
         "UserSupplierAssignment",
         back_populates="user",
         cascade="all, delete-orphan"
