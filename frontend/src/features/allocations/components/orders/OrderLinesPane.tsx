@@ -49,7 +49,7 @@ export function OrderLinesPane({
 }: OrderLinesPaneProps) {
   const [expandedLineId, setExpandedLineId] = useState<number | null>(null);
 
-  const stockStatusMap = lineStockStatus ?? {};
+
 
   const getDeliveryPlaceLabel = (line: OrderLine) => {
     const lineCode = line.delivery_place_code ?? null;
@@ -67,41 +67,39 @@ export function OrderLinesPane({
     return "未設定";
   };
 
-  const displayLines: OrderLineDisplay[] = useMemo(
-    () =>
-      orderLines.map((line) => {
-        const isSelected = line.id === selectedOrderLineId;
-        const isExpanded = renderInlineLots && expandedLineId === line.id;
-        const showLowStockBadge = Boolean(line.id && stockStatusMap[line.id]?.hasShortage);
-        const status = line.id ? stockStatusMap[line.id] : undefined;
-        const requiredQty =
-          status?.requiredQty ?? Number(line.order_quantity ?? line.quantity ?? 0);
-        const dbAllocated =
-          status?.dbAllocated ?? Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
-        const uiAllocated = status?.uiAllocated ?? 0;
-        const allocatedQty = dbAllocated + uiAllocated;
-        const remainingQty = status?.remainingQty ?? Math.max(0, requiredQty - allocatedQty);
-        const progressPercent =
-          status?.progress ??
-          (requiredQty > 0 ? Math.min(100, (allocatedQty / requiredQty) * 100) : 0);
-        const deliveryPlaceDisplay = getDeliveryPlaceLabel(line);
+  const displayLines: OrderLineDisplay[] = useMemo(() => {
+    const stockStatusMap = lineStockStatus ?? {};
+    return orderLines.map((line) => {
+      const isSelected = line.id === selectedOrderLineId;
+      const isExpanded = renderInlineLots && expandedLineId === line.id;
+      const showLowStockBadge = Boolean(line.id && stockStatusMap[line.id]?.hasShortage);
+      const status = line.id ? stockStatusMap[line.id] : undefined;
+      const requiredQty = status?.requiredQty ?? Number(line.order_quantity ?? line.quantity ?? 0);
+      const dbAllocated =
+        status?.dbAllocated ?? Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
+      const uiAllocated = status?.uiAllocated ?? 0;
+      const allocatedQty = dbAllocated + uiAllocated;
+      const remainingQty = status?.remainingQty ?? Math.max(0, requiredQty - allocatedQty);
+      const progressPercent =
+        status?.progress ??
+        (requiredQty > 0 ? Math.min(100, (allocatedQty / requiredQty) * 100) : 0);
+      const deliveryPlaceDisplay = getDeliveryPlaceLabel(line);
 
-        return {
-          line,
-          isSelected,
-          isExpanded,
-          showLowStockBadge,
-          deliveryPlaceDisplay,
-          requiredQty,
-          dbAllocated,
-          uiAllocated,
-          allocatedQty,
-          remainingQty,
-          progressPercent,
-        };
-      }),
-    [expandedLineId, orderLines, renderInlineLots, selectedOrderLineId, stockStatusMap],
-  );
+      return {
+        line,
+        isSelected,
+        isExpanded,
+        showLowStockBadge,
+        deliveryPlaceDisplay,
+        requiredQty,
+        dbAllocated,
+        uiAllocated,
+        allocatedQty,
+        remainingQty,
+        progressPercent,
+      };
+    });
+  }, [expandedLineId, orderLines, renderInlineLots, selectedOrderLineId, lineStockStatus]);
 
   const handleLineClick = (line: OrderLine) => {
     if (!line.id) return;
