@@ -1,8 +1,7 @@
-import { Loader2, PackageSearch, Wand2 } from "lucide-react";
+import { PackageSearch, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useLotAllocationForOrder } from "../../hooks/useLotAllocationForOrder";
-import { useOrdersForForecast } from "../../hooks/useOrdersForForecast";
 
 import { OrderSummaryRow } from "./OrderSummaryRow";
 
@@ -22,28 +21,13 @@ export function RelatedOrdersSection({
   onDateHover,
 }: RelatedOrdersSectionProps) {
   const { group_key } = group;
-
-  // 関連受注の取得
-  const { data: orders, isLoading } = useOrdersForForecast({
-    customer_id: group_key.customer_id,
-    delivery_place_id: group_key.delivery_place_id,
-    product_id: group_key.product_id,
-  });
+  const orders = group.related_orders || [];
 
   // 自動引当（未実装）
   const handleAutoAllocate = () => {
     console.log("TODO: Implement auto-allocation for all orders");
     toast.info("一括自動引当機能は現在開発中です。各行を展開して個別に引当を行ってください。");
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-4 text-gray-500">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        関連受注を検索中...
-      </div>
-    );
-  }
 
   if (!orders || orders.length === 0) {
     return (

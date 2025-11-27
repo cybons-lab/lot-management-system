@@ -2362,6 +2362,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/batch-jobs/inventory-sync/execute": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Inventory Sync Direct
+     * @description SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
+     *
+     *     管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。
+     *     バッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。
+     *
+     *     Args:
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         dict: 実行結果の詳細
+     *             - checked_products: チェックした商品数
+     *             - discrepancies_found: 発見された差異数
+     *             - alerts_created: 作成されたアラート数
+     *             - details: 差異の詳細リスト
+     */
+    post: operations["execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/": {
     parameters: {
       query?: never;
@@ -3579,6 +3612,8 @@ export interface components {
       forecasts?: components["schemas"]["ForecastResponse"][];
       /** Snapshot At */
       snapshot_at?: string | null;
+      /** Related Orders */
+      related_orders?: components["schemas"]["OrderWithLinesResponse"][];
     };
     /**
      * ForecastHistoryResponse
@@ -8609,6 +8644,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
     };
