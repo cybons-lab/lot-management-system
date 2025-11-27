@@ -173,3 +173,42 @@ def delete_batch_job(job_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Batch job not found")
 
     return None
+
+
+@router.post("/inventory-sync/execute")
+def execute_inventory_sync_direct(db: Session = Depends(get_db)):
+    """
+    SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
+
+    管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。
+    バッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。
+
+    Args:
+        db: データベースセッション
+
+    Returns:
+        dict: 実行結果の詳細
+            - checked_products: チェックした商品数
+            - discrepancies_found: 発見された差異数
+            - alerts_created: 作成されたアラート数
+            - details: 差異の詳細リスト
+    """
+    from app.services.batch.inventory_sync_service import InventorySyncService
+
+    try:
+        sync_service = InventorySyncService(db)
+        result = sync_service.check_inventory_totals()
+        return {
+            "success": True,
+            "message": (
+                f"SAP在庫チェック完了: {result['checked_products']}商品をチェック、"
+                f"{result['discrepancies_found']}件の差異を検出、"
+                f"{result['alerts_created']}件のアラートを作成"
+            ),
+            "data": result,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"SAP在庫チェック実行中にエラーが発生しました: {str(e)}",
+        )
