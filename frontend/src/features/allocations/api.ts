@@ -5,6 +5,19 @@
 
 import { fetchApi } from "@/shared/libs/http";
 import type { LotCandidate } from "@/shared/types/aliases";
+import type {
+  AllocationCommitRequest,
+  AllocationCommitResponse,
+  CandidateLotItem,
+  CandidateLotsResponse,
+  FefoLineAllocation,
+  FefoLotAllocation,
+  FefoPreviewRequest,
+  FefoPreviewResponse,
+  ManualAllocationRequest,
+  ManualAllocationResponse,
+  ManualAllocationSavePayload,
+} from "@/shared/types/schema";
 
 // ===== Legacy Types (for backward compatibility) =====
 
@@ -27,20 +40,6 @@ export type AllocationResult = {
 };
 
 // ===== New API Types (v2.2.1) =====
-
-import type {
-  CandidateLotItem,
-  CandidateLotsResponse,
-  ManualAllocationRequest,
-  ManualAllocationResponse,
-  FefoPreviewRequest,
-  FefoPreviewResponse,
-  FefoLineAllocation,
-  FefoLotAllocation,
-  AllocationCommitRequest,
-  AllocationCommitResponse,
-  ManualAllocationSavePayload,
-} from "@/shared/types/schema";
 
 export type {
   CandidateLotItem,

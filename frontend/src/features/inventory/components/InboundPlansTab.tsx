@@ -10,7 +10,7 @@ interface InboundPlansTabProps {
   warehouseId: number;
 }
 
-export function InboundPlansTab({}: InboundPlansTabProps) {
+export function InboundPlansTab(_props: InboundPlansTabProps) {
   const { data: allPlans, isLoading } = useQuery({
     queryKey: ["inbound-plans"],
     queryFn: async () => {
@@ -67,13 +67,12 @@ export function InboundPlansTab({}: InboundPlansTabProps) {
                   </td>
                   <td className="p-3">
                     <span
-                      className={`rounded px-2 py-1 text-xs font-medium ${
-                        plan.status === "received"
+                      className={`rounded px-2 py-1 text-xs font-medium ${plan.status === "received"
                           ? "bg-green-100 text-green-700"
                           : plan.status === "pending"
                             ? "bg-blue-100 text-blue-700"
                             : "bg-gray-100 text-gray-700"
-                      }`}
+                        }`}
                     >
                       {plan.status === "received"
                         ? "入荷済"
