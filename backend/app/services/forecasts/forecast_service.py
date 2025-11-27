@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.forecast_models import ForecastCurrent, ForecastHistory
 from app.models.masters_models import Customer, DeliveryPlace, Product
-from app.models.orders_models import Order, OrderLine
+from app.models.orders_models import Allocation, Order, OrderLine
 from app.schemas.forecasts.forecast_schema import (
     ForecastBulkImportItem,
     ForecastBulkImportSummary,
