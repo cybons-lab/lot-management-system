@@ -7,18 +7,18 @@ Alembicマイグレーションとモデル定義、実際のDBスキーマの�
 import sys
 from pathlib import Path
 
+
 # Add backend to path
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
 from sqlalchemy import create_engine, inspect, text
-from sqlalchemy.orm import sessionmaker
 
 from app.core.config import settings
-from app.models import Base
 
 # Import all models to ensure they're registered
 from app.models import (  # noqa: F401
+    Base,
     assignment_models,
     inventory_models,
     logs_models,
