@@ -201,6 +201,7 @@ class StockHistory(Base):
     )
 
     # Relationships
+    # Relationships
     lot: Mapped[Lot] = relationship("Lot", back_populates="stock_history")
 
 
@@ -251,6 +252,7 @@ class Adjustment(Base):
         Index("idx_adjustments_date", "adjusted_at"),
     )
 
+    # Relationships
     # Relationships
     lot: Mapped[Lot] = relationship("Lot", back_populates="adjustments")
 
