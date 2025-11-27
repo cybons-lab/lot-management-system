@@ -119,18 +119,29 @@ class ForecastService:
                         OrderLine.delivery_place_id == dp_id,
                     )
                 )
-                .options(joinedload(Order.order_lines))
+                .options(
+                    joinedload(Order.order_lines).selectinload(OrderLine.product),
+                    joinedload(Order.order_lines)
+                    .selectinload(OrderLine.allocations)
+                    .joinedload(Allocation.lot),
+                    joinedload(Order.customer),
+                )
                 .distinct()
             )
             related_orders = related_orders_query.all()
 
             # Convert to OrderWithLinesResponse
+            from app.schemas.orders.orders_schema import OrderWithLinesResponse
+
+            related_orders_responses = [
+                OrderWithLinesResponse.model_validate(order) for order in related_orders
+            ]
+
+            # Populate additional info using OrderService
             from app.services.orders.order_service import OrderService
 
             order_service = OrderService(self.db)
-            related_orders_responses = [
-                order_service._build_order_response(order) for order in related_orders
-            ]
+            order_service._populate_additional_info(related_orders_responses)
 
             items.append(
                 ForecastGroupResponse(
