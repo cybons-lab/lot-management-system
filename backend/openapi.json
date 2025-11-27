@@ -2062,6 +2062,48 @@
         }
       }
     },
+    "/api/inbound-plans/sync-from-sap": {
+      "post": {
+        "tags": [
+          "inbound-plans"
+        ],
+        "summary": "Sync From Sap",
+        "description": "SAP から発注データを取得して入荷予定を作成.\n\nSAP の発注データ（モック）を取得し、入荷予定（InboundPlan）として\nシステムに登録します。既に存在する発注番号はスキップされます。\n\nArgs:\n    request: SAP同期リクエスト（現在パラメータなし）\n    db: データベースセッション\n\nReturns:\n    SAP同期結果（作成された入荷予定リスト、スキップ数）\n\nNote:\n    現在はモック実装です。本番環境では実際のSAP RFC/APIに接続します。",
+        "operationId": "sync_from_sap_api_inbound_plans_sync_from_sap_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SAPSyncRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SAPSyncResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/inbound-plans/{plan_id}/lines": {
       "get": {
         "tags": [
@@ -4258,6 +4300,289 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignments/user/{user_id}/suppliers": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Get User Suppliers",
+        "description": "ユーザーの担当仕入先一覧を取得.",
+        "operationId": "get_user_suppliers_api_assignments_user__user_id__suppliers_get",
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserSupplierAssignmentResponse"
+                  },
+                  "title": "Response Get User Suppliers Api Assignments User  User Id  Suppliers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignments/supplier/{supplier_id}/users": {
+      "get": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Get Supplier Users",
+        "description": "仕入先の担当者一覧を取得.",
+        "operationId": "get_supplier_users_api_assignments_supplier__supplier_id__users_get",
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Supplier Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserSupplierAssignmentResponse"
+                  },
+                  "title": "Response Get Supplier Users Api Assignments Supplier  Supplier Id  Users Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignments/": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Create Assignment",
+        "description": "担当割り当てを作成.",
+        "operationId": "create_assignment_api_assignments__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserSupplierAssignmentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSupplierAssignmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignments/{assignment_id}": {
+      "put": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Update Assignment",
+        "description": "担当割り当てを更新（主担当の変更など）.",
+        "operationId": "update_assignment_api_assignments__assignment_id__put",
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Assignment Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserSupplierAssignmentUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSupplierAssignmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Delete Assignment",
+        "description": "担当割り当てを削除.",
+        "operationId": "delete_assignment_api_assignments__assignment_id__delete",
+        "parameters": [
+          {
+            "name": "assignment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Assignment Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "title": "Response Delete Assignment Api Assignments  Assignment Id  Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/assignments/supplier/{supplier_id}/set-primary/{user_id}": {
+      "post": {
+        "tags": [
+          "assignments"
+        ],
+        "summary": "Set Primary User",
+        "description": "仕入先の主担当者を設定.",
+        "operationId": "set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post",
+        "parameters": [
+          {
+            "name": "supplier_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Supplier Id"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSupplierAssignmentResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -8758,19 +9083,19 @@
             "format": "date-time",
             "title": "Received At"
           },
-          "lot_ids": {
+          "lot_numbers": {
             "anyOf": [
               {
-                "items": {
-                  "type": "integer"
+                "additionalProperties": {
+                  "type": "string"
                 },
-                "type": "array"
+                "type": "object"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Lot Ids"
+            "title": "Lot Numbers"
           }
         },
         "type": "object",
@@ -10470,6 +10795,43 @@
         "title": "RoleUpdate",
         "description": "Schema for updating a role."
       },
+      "SAPSyncRequest": {
+        "properties": {},
+        "type": "object",
+        "title": "SAPSyncRequest",
+        "description": "Payload for SAP purchase order synchronization."
+      },
+      "SAPSyncResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "created_plans": {
+            "items": {
+              "$ref": "#/components/schemas/InboundPlanDetailResponse"
+            },
+            "type": "array",
+            "title": "Created Plans"
+          },
+          "skipped_count": {
+            "type": "integer",
+            "title": "Skipped Count",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "SAPSyncResponse",
+        "description": "Response model for SAP synchronization."
+      },
       "StockHistoryCreate": {
         "properties": {
           "lot_id": {
@@ -10833,6 +11195,139 @@
         ],
         "title": "UserRoleAssignment",
         "description": "Schema for assigning roles to a user."
+      },
+      "UserSupplierAssignmentCreate": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "title": "Supplier Id"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "supplier_id"
+        ],
+        "title": "UserSupplierAssignmentCreate",
+        "description": "Schema for creating a user-supplier assignment."
+      },
+      "UserSupplierAssignmentResponse": {
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "title": "User Id"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "title": "Supplier Id"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "default": false
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "assigned_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Assigned At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          },
+          "user_display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Display Name"
+          },
+          "supplier_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Code"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "supplier_id",
+          "id",
+          "assigned_at",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UserSupplierAssignmentResponse",
+        "description": "Schema for user-supplier assignment responses."
+      },
+      "UserSupplierAssignmentUpdate": {
+        "properties": {
+          "is_primary": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Primary"
+          }
+        },
+        "type": "object",
+        "title": "UserSupplierAssignmentUpdate",
+        "description": "Schema for updating a user-supplier assignment."
       },
       "UserUpdate": {
         "properties": {
