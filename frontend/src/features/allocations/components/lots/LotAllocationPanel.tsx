@@ -144,6 +144,13 @@ export function LotAllocationPanel({
     <div
       className={cn(styles.panelWrapper, isLoading ? "pointer-events-none" : "")}
       onClick={handleInteraction}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          handleInteraction();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       onFocus={handleInteraction}
       onMouseEnter={handleInteraction}
     >

@@ -34,6 +34,13 @@ export function ProductGroupHeader({
     <div
       className="flex cursor-pointer items-center gap-4 border-b-2 border-slate-200 bg-white px-6 py-4 hover:bg-slate-50"
       onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          onToggle();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <div className="flex items-center">
         {isExpanded ? (
