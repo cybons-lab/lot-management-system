@@ -156,6 +156,14 @@
                 <li><a href="#flow-standard">通常フロー</a></li>
                 <li><a href="#flow-kanban">かんばんフロー</a></li>
                 <li><a href="#sequence">システム間連携</a></li>
+                <li><a href="#lot-policy">ロット管理方針</a></li>
+                <li><a href="#shijishin">指示品フロー</a></li>
+                <li><a href="#kanban-detail">かんばん詳細</a></li>
+                <li><a href="#ai-ocr">AI-OCRフロー</a></li>
+                <li><a href="#lot-system">ロット管理システム</a></li>
+                <li><a href="#delivery">素材納品書発行</a></li>
+                <li><a href="#portal-automation">ポータル自動化</a></li>
+                <li><a href="#order-planning">発注計画</a></li>
             </ul>
         </nav>
 
@@ -326,6 +334,840 @@
                         L->>L: 受注番号書き戻し
                         L->>L: 履歴保存
                         end
+                    </div>
+                </div>
+            </section>
+
+            <section id="lot-policy">
+                <h2>📋 ロット管理方針</h2>
+                <p>材料業務の自動化におけるロットNo管理の方針を示します。</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph TB
+                        subgraph 手入力
+                        A[DX未対応注文書]
+                        end
+
+                        subgraph それ以外
+                        B[素材納品書原紙<br />デンソー0.5]
+                        C[サプライヤーポータル<br />デンソー0.5]
+                        end
+
+                        A -->|手入力| D[(ロット管理DB)]
+                        B --> D
+                        C -->|自動反映| D
+
+                        E[ロット台帳不使用]
+
+                        style D fill:#a8d5e2
+                        style E fill:#4a90a4,color:#fff
+                        style A fill:#fff,stroke:#333
+                        style B fill:#fff,stroke:#333
+                        style C fill:#fff,stroke:#333
+                    </div>
+                </div>
+            </section>
+
+            <section id="shijishin">
+                <h2>🔄 材料ビジネス業務フロー - 指示品パターン①</h2>
+                <p>納入先種別:デンソー製作所向け、注文形態:指示品の業務フローです。</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph TB
+                        subgraph 得意先
+                        A1[オリジナル配信]
+                        end
+
+                        subgraph セールスサポート
+                        B1[オリジナル取込]
+                        B2{エラー<br />チェック}
+                        B3[マスタ修正等対処]
+                        B4[オリジナル更新]
+                        B5[オリジナル出力]
+                        B6[発注計画書]
+                        B7{発注確認}
+                        end
+
+                        subgraph 仕入元
+                        end
+
+                        subgraph 倉庫
+                        end
+
+                        subgraph SAP
+                        E1[(SAP)]
+                        E2[在庫一覧<br />発注残]
+                        E3[(SAP<br />発注入力、承認)]
+                        E4[ロット帳更新]
+                        end
+
+                        subgraph 備考
+                        F1[オリジナルデータ<br />当月、翌月の内示情報]
+                        F2[発注計画には下記反映し数量決める<br />SAP在庫数<br />SAP入庫予定<br />オリジナル内示情報]
+                        F3[ロット帳に発注情報記載<br />数量と入庫時期]
+                        end
+
+                        subgraph サプライヤーポータル
+                        G1[(サプライヤーポータル)]
+                        end
+
+                        A1 --> E1
+                        B1 <--> E1
+                            B1 --> B2
+                            B2 -->|なし| B3
+                            B2 -->|あり| B3
+                            B3 --> B4
+                            B4 --> B1
+
+                            E1 --> E2
+                            E2 --> B5
+                            B5 --> B6
+                            B6 --> B7
+
+                            B7 --> E3
+                            E3 --> E4
+
+                            G1 --> B5
+
+                            style E1 fill:#a8d5e2
+                            style E3 fill:#a8d5e2
+                            style G1 fill:#d3d3d3
+                    </div>
+                </div>
+            </section>
+
+            <section id="kanban-detail">
+                <h2>⚡ 材料ビジネス業務フロー - かんばんパターン⑤</h2>
+                <p>納入先種別:デンソー製作所向け、注文形態:かんばん在庫品の業務フローです。</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph TB
+                        subgraph 得意先
+                        A1[オリジナル配信]
+                        A2[ロット取得]
+                        K1[かんばん]
+                        K2[かんばん<br />原紙またはコピー]
+                        end
+
+                        subgraph セールスサポート
+                        B1[オリジナル取込]
+                        B2{エラー<br />チェック}
+                        B3[マスタ修正等対処]
+                        B4[オリジナル更新]
+                        B5[オリジナル出力]
+                        B6[発注計画書]
+                        B7{発注確認}
+                        B8[ロット帳<br />ロット取得]
+                        B9{ロット指定<br />有無}
+                        B10[かんばん<br />コピー]
+                        end
+
+                        subgraph 仕入元
+                        end
+
+                        subgraph 倉庫
+                        W1[出荷票]
+                        W2[かんばん<br />原紙またはコピー]
+                        end
+
+                        subgraph SAP
+                        E1[(SAP)]
+                        E2[在庫一覧<br />発注残]
+                        E3[(SAP<br />発注入力、承認)]
+                        E4[ロット帳更新]
+                        E5[(SAP<br />受注登録)]
+                        E6{●出荷票<br />・出荷計算<br />・個別出荷<br />・出荷票FAX}
+                        E7[(SAP<br />個別出荷)]
+                        E8[(SAP<br />個別出荷)]
+                        end
+
+                        %% オリジナル配信からSAP登録まで
+                        A1 --> E1
+                        B1 <--> E1
+                            B1 --> B2
+                            B2 -->|なし| B3
+                            B2 -->|あり| B3
+                            B3 --> B4
+                            B4 --> B1
+
+                            %% 発注計画
+                            E1 --> E2
+                            E2 --> B5
+                            B5 --> B6
+                            B6 --> B7
+
+                            %% SAP発注とロット処理
+                            B7 --> E3
+                            E3 --> E4
+
+                            %% かんばん処理フロー
+                            K1 --> K2
+                            K2 --> B10
+                            B10 --> B9
+                            B9 -->|あり| B8
+                            B9 -->|なし| A2
+                            B8 --> A2
+
+                            %% 受注登録と出荷
+                            A2 --> E5
+                            E5 --> E6
+
+                            %% 出荷先の分岐
+                            E6 -->|出荷票<br />出荷計算<br />個別出荷<br />出荷票FAX| E7
+                            E6 -->|個別出荷| E7
+
+                            %% 外部倉庫への出荷
+                            E7 -->|出荷計算:外部倉庫| W1
+                            E6 -->|出荷計算:中部LC等| W1
+                            E7 -->|個別出荷:中部LC等| W1
+
+                            %% 個別出荷
+                            E8 -->|個別出荷| W2
+                            E8 -->|外部倉庫へ<br />出荷票FAX| End1[終了]
+
+                            style E1 fill:#a8d5e2
+                            style E3 fill:#a8d5e2
+                            style E5 fill:#a8d5e2
+                            style E6 fill:#a8d5e2
+                            style E7 fill:#a8d5e2
+                            style E8 fill:#a8d5e2
+                            style K1 fill:#d3d3d3
+                            style K2 fill:#d3d3d3
+                            style W1 fill:#f0e68c
+                            style W2 fill:#f0e68c
+                    </div>
+                </div>
+            </section>
+
+            <section id="ai-ocr">
+                <h2>🤖 AI-OCR業務フロー</h2>
+                <p>AI-OCRを活用した業務自動化フローを3つのパターンで示します。</p>
+
+                <h3>ロット引当前のフロー</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph TB
+                        subgraph fax["FAX受信・印刷"]
+                        A["FAX受信<br />中部LC<br />外部倉庫"]
+                        B["印刷<br />FAX依頼分"]
+                        C["ロット番号引当<br />案材納品書に記入"]
+                        end
+
+                        subgraph multifunction["複合機・ユーザー"]
+                        D["複合機・ユーザー"]
+                        end
+
+                        subgraph ocr["AI-OCR処理"]
+                        E["Smart Read取込み<br />AIによる自動仕分け(0.2円/枚)"]
+                        F["AI-OCR解析<br />SmartRead → csv作成<br />ロット番号有"]
+                        G["AI-OCR(RPA)"]
+                        end
+
+                        subgraph csv["CSV解析"]
+                        H["CSV解析<br />・単位・次区チェック<br />・データ整形"]
+                        I["RPA<br />(Power Automate)"]
+                        end
+
+                        subgraph manual["手動登録"]
+                        J["SAP手動登録"]
+                        K["完了"]
+                        L["ユーザー"]
+                        end
+
+                        subgraph sap["SAP登録処理"]
+                        M["SAP受注登録マクロ実行<br />・エラーチェック<br />・SAPに自動登録"]
+                        N{"成功?"}
+                        O["エラー通知<br />(Teams)"]
+                        P["RPA<br />(Power Automate)"]
+                        end
+
+                        A --> B
+                        B --> C
+                        C --> D
+                        D --> E
+                        E --> F
+                        F --> G
+                        G --> H
+                        H --> I
+                        H --> M
+                        M --> N
+                        N -->|Yes| J
+                        N -->|No| O
+                        J --> K
+                        K --> L
+                        O --> P
+
+                        style A fill:#6b8e23
+                        style B fill:#6b8e23
+                        style C fill:#6b8e23
+                        style D fill:#4a4a4a
+                        style E fill:#2c5f7c
+                        style F fill:#d77228
+                        style G fill:#b8621b
+                        style H fill:#b8621b
+                        style I fill:#2c5f7c
+                        style J fill:#2c7f8e
+                        style K fill:#8b4a8b
+                        style L fill:#6b2f8b
+                        style M fill:#b8621b
+                        style N fill:#2c5f7c
+                        style O fill:#2c7f8e
+                        style P fill:#2c5f7c
+                    </div>
+                </div>
+
+                <h3>ロット引当後のフロー</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph TB
+                        subgraph fax["FAX受信処理"]
+                        A["FAX受信<br />中部LC<br />外部倉庫<br />対谷→PDF"]
+                        end
+
+                        subgraph multifunction["複合機"]
+                        B["複合機"]
+                        end
+
+                        subgraph ocr["AI-OCR処理"]
+                        C["Smart Read取込み<br />AIによる自動仕分け(0.2円/枚)"]
+                        D["AI-OCR解析<br />SmartRead → csv作成<br />ロット番号なし"]
+                        E["AI-OCR(RPA)"]
+                        end
+
+                        subgraph csv["CSV解析・通知"]
+                        F["CSV解析<br />・単位・次区チェック<br />・データ整形"]
+                        G["Excel一覧書き出し<br />ロット番号欄:空欄"]
+                        H["SS全員に通知<br />ロットNo入力依頼"]
+                        I["RPA<br />(Power Automate)"]
+                        end
+
+                        subgraph manual["手動入力"]
+                        J["ロット番号入力(手動)<br />→Excel一覧"]
+                        K["SAP手動登録"]
+                        L["完了"]
+                        M["ユーザー"]
+                        end
+
+                        subgraph sap["SAP登録処理"]
+                        N["SAP受注登録マクロ実行<br />・エラーチェック<br />・SAPに自動登録"]
+                        O{"成功?"}
+                        P["エラー通知<br />(Teams)"]
+                        Q["RPA<br />(Power Automate)"]
+                        end
+
+                        A --> B
+                        B --> C
+                        C --> D
+                        D --> E
+                        E --> F
+                        F --> G
+                        G --> H
+                        H --> I
+                        I --> J
+                        J --> K
+                        K --> L
+                        L --> M
+                        F --> N
+                        N --> O
+                        O -->|Yes| K
+                        O -->|No| P
+                        P --> Q
+
+                        style A fill:#6b8e23
+                        style B fill:#4a4a4a
+                        style C fill:#2c5f7c
+                        style D fill:#d77228
+                        style E fill:#b8621b
+                        style F fill:#b8621b
+                        style G fill:#2c5f7c
+                        style H fill:#2c7f8e
+                        style I fill:#2c5f7c
+                        style J fill:#2c5f7c
+                        style K fill:#2c7f8e
+                        style L fill:#8b4a8b
+                        style M fill:#6b2f8b
+                        style N fill:#b8621b
+                        style O fill:#2c5f7c
+                        style P fill:#2c7f8e
+                        style Q fill:#2c5f7c
+                    </div>
+                </div>
+
+                <h3>現行プロセスと改善案の比較</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph TB
+                        subgraph current["現行プロセス"]
+                        A1["FAX受信(現行)"]
+                        B1["仕分け処理(手動)"]
+                        C1["SmartRead仕分け<br />AIによる自動仕分け(0.2円/枚)"]
+                        A1 --> B1
+                        A1 -.-> C1
+                        end
+
+                        subgraph improvement["改善案プロセス"]
+                        D1["スキャンPDF化<br />中部LCでスキャン→共有フォルダ<br />に自動保存"]
+                        E1["AI-OCR解析<br />SmartRead → csv作成"]
+                        F1["CSV解析<br />Power Automate → 単位・次区チェック"]
+                        G1["SAP受注登録マクロ<br />実行"]
+
+                        D1 --> E1
+                        E1 --> F1
+                        F1 --> G1
+                        end
+
+                        subgraph combined["統合フロー"]
+                        A2["FAX受信(現行)"]
+                        B2["仕分け処理(手動)"]
+                        C2["SmartRead仕分け<br />AIによる自動仕分け(0.2円/枚)"]
+                        D2["AI-OCR解析<br />SmartRead → csv作成"]
+                        E2["CSV解析<br />Power Automate → 単位・次区チェック"]
+                        F2["SAP受注登録マクロ<br />実行"]
+
+                        A2 --> B2
+                        A2 -.-> C2
+                        B2 --> D2
+                        C2 --> D2
+                        D2 --> E2
+                        E2 --> F2
+                        end
+
+                        style A1 fill:#6b8e23
+                        style A2 fill:#6b8e23
+                        style D1 fill:#6b8e23
+                        style B1 fill:#2c5f7c
+                        style B2 fill:#2c5f7c
+                        style C1 fill:#2c5f7c
+                        style C2 fill:#2c5f7c
+                        style E1 fill:#2c5f7c
+                        style D2 fill:#2c5f7c
+                        style E2 fill:#2c5f7c
+                        style F1 fill:#2c5f7c
+                        style G1 fill:#b8621b
+                        style F2 fill:#b8621b
+                    </div>
+                </div>
+            </section>
+
+            <section id="lot-system">
+                <h2>🔧 材料ロット管理システム構成図</h2>
+                <p>材料ロット管理システムの全体構成と各フェーズの連携を示します。</p>
+
+                <h3>改修(材料ロット管理)</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        flowchart LR
+                        EDI1["EDI<br />Originel/<br />Change"]
+                        EDI2["EDI(Calendar)<br />Originel/<br />Change"]
+                        FC[("フォーキャスト<br /><br />※既存仕様のまま<br />(SAP/ECCデータ)")]
+                        OrderData[("受発注残/仕訳データ<br />(SAP/ECCデータ)")]
+
+                        NewMacro["新規開発 エクセルマクロ<br /><br />発注計画<br />(予定在庫)"]
+
+                        OrderPlan[("発注一括登録")]
+                        OrderTool["発注登録ツール<br /><br />※既存を採用"]
+                        OrderSlip[("発注伝票")]
+
+                        EDI1 --> FC
+                        EDI2 --> FC
+                        FC --> NewMacro
+                        OrderData --> NewMacro
+                        NewMacro --> OrderPlan
+                        OrderPlan --> OrderTool
+                        OrderTool --> OrderSlip
+
+                        style NewMacro fill:#90EE90
+                        style NewMacro stroke:#FF0000,stroke-width:3px
+                    </div>
+                </div>
+
+                <h3>発注・仕入(SAP) → ロット管理システム統合</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        flowchart LR
+                        OrderSlip[("発注・仕入伝票")]
+                        OriginalData["オリジナル・変更データ"]
+
+                        NewMacro["新規開発 エクセルマクロ<br /><br />ロット管理システム"]
+
+                        LotDB[("ロット在庫データ")]
+                        NewDB[("New 共通データベース")]
+
+                        OrderSlip --> NewMacro
+                        OriginalData --> NewDB
+                        NewMacro --> LotDB
+
+                        Note["・オリジナル・変更データのロット在庫引当可とする"]
+
+                        style NewMacro fill:#90EE90
+                        style NewMacro stroke:#FF0000,stroke-width:3px
+                        style NewDB fill:#ADD8E6
+                        style NewDB stroke:#FF0000,stroke-width:3px
+                        style Note fill:#FFFACD
+                    </div>
+                </div>
+
+                <h3>出荷予定(SP) → 納品書(SP) → 受注登録(SAP)</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        flowchart LR
+                        LotMaster[("ロット管理システム")]
+                        SupplierPortal["サプライヤーポータル"]
+                        DeliveryNote["納品書"]
+
+                        LotMaster --> SupplierPortal
+                        SupplierPortal --> DeliveryNote
+
+                        style SupplierPortal fill:#FFE4B5
+                    </div>
+                </div>
+            </section>
+
+            <section id="delivery">
+                <h2>📦 素材納品書発行業務フロー</h2>
+                <p>素材納品書発行業務の8つのパターンを統合的に示します。</p>
+
+                <h3>全体構造図</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        graph TB
+                        Root[サプライヤーポータル]
+
+                        Root --> Type1[指示品]
+                        Root --> Type2[かんばん]
+
+                        Type1 --> Dest1A[製作所向け<br />大安、幸田、西尾、高棚など]
+                        Type1 --> Dest1B[直送支給先<br />勝山、北海道、トリムなど]
+
+                        Type2 --> Dest2A[製作所向け<br />大安、幸田、西尾、高棚など]
+                        Type2 --> Dest2B[直送支給先<br />勝山、北海道、トリムなど]
+
+                        Dest1A --> P1[在庫品<br />パターン①]
+                        Dest1A --> P2[直送品<br />パターン②]
+
+                        Dest1B --> P3[在庫品<br />パターン③]
+                        Dest1B --> P4[直送品<br />パターン④]
+
+                        Dest2A --> P5[在庫品<br />パターン⑤]
+                        Dest2A --> P6[直送品<br />パターン⑥]
+
+                        Dest2B --> P7[在庫品<br />パターン⑦]
+                        Dest2B --> P8[直送品<br />パターン⑧]
+
+                        style Type1 fill:#90EE90
+                        style Type2 fill:#87CEEB
+                        style P1 fill:#FFB6C1
+                        style P2 fill:#FFD700
+                        style P3 fill:#DDA0DD
+                        style P4 fill:#F0E68C
+                        style P5 fill:#98FB98
+                        style P6 fill:#87CEFA
+                        style P7 fill:#FFB6C1
+                        style P8 fill:#FFDAB9
+                    </div>
+                </div>
+
+                <h3>統合業務フロー図</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        flowchart TB
+                        subgraph トリガー段階
+                        T1[素材納品書原紙受領]
+                        T2[オリジナル確認]
+                        T3[FAX/メール<br />SSGへ送付]
+                        T4[支給先独自の<br />フォーマット]
+                        end
+
+                        subgraph ロット引き当て段階
+                        L1[ロット管理台帳<br />ロット引当]
+                        L2[ロット引き当て<br />★向け先別<br />素材納品書にロット記入]
+                        L3[ロット帳]
+                        end
+
+                        subgraph サプライヤーポータル段階
+                        SP1[サプライヤーポータルへ入力<br />ロット、数量、日付入力]
+                        SP2[かんばん確定]
+                        SP3[素材伝票発行]
+                        end
+
+                        subgraph SAP受注登録段階
+                        SAP1[SAP受注入力<br />出荷票テキスト<br />ロット指定]
+                        SAP2[受注登録<br />★単位・納入場所・テキスト欄<br />素材納品書に受注NO.記入]
+                        SAP3[SAP受発注登録<br />納品先指定]
+                        end
+
+                        subgraph 素材伝票作成段階
+                        SD1[素材伝票<br />ロットNO・数量・A注番記載<br />手書き]
+                        SD2[素材伝票へ<br />A注番記載<br />手書きorPDFへ入力]
+                        SD3[素材伝票<br />コピー]
+                        end
+
+                        subgraph 素材伝票原紙段階
+                        SG1[素材伝票原紙<br />・LC センター便<br />・外部倉庫 センター便経由]
+                        SG2[素材伝票原紙<br />得意先へPDF送付<br />仕入元契約倉庫へ郵送]
+                        end
+
+                        subgraph 出荷票出力段階
+                        OUT1[出荷票出力<br />・出荷計算<br />・個別出荷]
+                        end
+
+                        subgraph 出荷計算段階
+                        CALC1[出荷計算<br />・LC管轄<br />・外部倉庫]
+                        CALC2[個別出荷<br />・LC管轄<br />・外部倉庫]
+                        end
+
+                        subgraph 出力段階
+                        O1[LC出力]
+                        O2[FAX/メール]
+                        end
+
+                        subgraph 終了段階
+                        END1[出荷 終了]
+                        END2[リファックス]
+                        END3[素材伝票原紙<br />出荷票の情報を記載<br />ロット、数量]
+                        END4[SAP直送計上処理]
+                        end
+
+                        %% パターン1: 指示品・製作所向け・在庫品
+                        T1 -->|パターン①| L1
+                        L1 --> SAP2
+                        SAP2 --> SD1
+                        SD1 --> SG1
+                        SD1 --> OUT1
+                        OUT1 --> CALC1
+                        OUT1 --> CALC2
+                        CALC1 --> O1
+                        CALC2 --> O1
+                        CALC1 --> O2
+                        CALC2 --> O2
+                        O1 --> END1
+                        O2 --> END1
+
+                        %% パターン2: 指示品・製作所向け・直送品
+                        T1 -->|パターン②| L2
+                        L2 --> SAP2
+                        SD1 --> SG2
+                        SD1 --> END4
+
+                        %% パターン3: 指示品・直送支給先向け・在庫品
+                        T2 -->|パターン③| L2
+                        L2 --> SP1
+                        SP1 --> SP3
+                        SP3 --> SAP1
+                        SAP1 --> SD2
+                        SD2 --> SG1
+                        SD2 --> OUT1
+
+                        %% パターン4: 指示品・直送支給先向け・直送品
+                        T2 -->|パターン④| SP1
+                        SP3 --> SAP3
+                        SAP3 --> SG2
+                        SAP3 --> END4
+
+                        %% パターン5: かんばん・製作所向け・在庫品
+                        T3 -->|パターン⑤| SD3
+                        SD3 --> L1
+                        L1 --> SAP1
+                        SAP1 --> OUT1
+
+                        %% パターン6: かんばん・製作所向け・直送品
+                        T3 -->|パターン⑥| L2
+                        SAP1 --> END2
+
+                        %% パターン7: かんばん・直送支給先向け・在庫品
+                        T4 -->|パターン⑦| L2
+
+                        %% パターン8: かんばん・直送支給先向け・直送品
+                        T4 -->|パターン⑧| SP1
+                        SAP3 --> END3
+
+                        %% スタイル定義
+                        classDef pattern1 fill:#FFB6C1,stroke:#333,stroke-width:2px
+                        classDef pattern2 fill:#FFD700,stroke:#333,stroke-width:2px
+                        classDef pattern3 fill:#DDA0DD,stroke:#333,stroke-width:2px
+                        classDef pattern4 fill:#F0E68C,stroke:#333,stroke-width:2px
+                        classDef pattern5 fill:#98FB98,stroke:#333,stroke-width:2px
+                        classDef pattern6 fill:#87CEFA,stroke:#333,stroke-width:2px
+                        classDef pattern7 fill:#FFB6C1,stroke:#333,stroke-width:2px
+                        classDef pattern8 fill:#FFDAB9,stroke:#333,stroke-width:2px
+
+                        class T1 pattern1,pattern2
+                        class T2 pattern3,pattern4
+                        class T3 pattern5,pattern6
+                        class T4 pattern7,pattern8
+                    </div>
+                </div>
+
+                <h3>パターン選択フローチャート</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        flowchart TD
+                        Start([素材納品書発行<br />パターン判定開始])
+
+                        Q1{受注形態は?}
+                        Q2A{向け先は?}
+                        Q2B{向け先は?}
+                        Q3A{納入形態は?}
+                        Q3B{納入形態は?}
+                        Q3C{納入形態は?}
+                        Q3D{納入形態は?}
+
+                        P1([パターン①<br />指示・製作所・在庫])
+                        P2([パターン②<br />指示・製作所・直送])
+                        P3([パターン③<br />指示・支給先・在庫])
+                        P4([パターン④<br />指示・支給先・直送])
+                        P5([パターン⑤<br />かんばん・製作所・在庫])
+                        P6([パターン⑥<br />かんばん・製作所・直送])
+                        P7([パターン⑦<br />かんばん・支給先・在庫])
+                        P8([パターン⑧<br />かんばん・支給先・直送])
+
+                        Start --> Q1
+                        Q1 -->|指示| Q2A
+                        Q1 -->|かんばん| Q2B
+
+                        Q2A -->|製作所向け| Q3A
+                        Q2A -->|直送支給先向け| Q3B
+
+                        Q2B -->|製作所向け| Q3C
+                        Q2B -->|直送支給先向け| Q3D
+
+                        Q3A -->|在庫品| P1
+                        Q3A -->|直送品| P2
+
+                        Q3B -->|在庫品| P3
+                        Q3B -->|直送品| P4
+
+                        Q3C -->|在庫品| P5
+                        Q3C -->|直送品| P6
+
+                        Q3D -->|在庫品| P7
+                        Q3D -->|直送品| P8
+
+                        style P1 fill:#FFB6C1
+                        style P2 fill:#FFD700
+                        style P3 fill:#DDA0DD
+                        style P4 fill:#F0E68C
+                        style P5 fill:#98FB98
+                        style P6 fill:#87CEFA
+                        style P7 fill:#FFB6C1
+                        style P8 fill:#FFDAB9
+                    </div>
+                </div>
+            </section>
+
+            <section id="portal-automation">
+                <h2>🚀 サプライヤーポータル自動化フロー</h2>
+                <p>サプライヤーポータル自動化のロット簡略化による開発環境の変化を示します。</p>
+
+                <h3>業務フロー(上部・下部経路)</h3>
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        flowchart TB
+                        subgraph upper["上部フロー"]
+                        A[ロット管理台帳<br />※ロット管理台帳をINとする<br />が、検討必要※<br />別マクロがよいかも] --> B[(SP用出荷予<br />定)]
+                        B --> C[サプライヤーポー<br />タル取込]
+                        B --> D[RPA開発]
+                        D --> C
+                        C --> E[納品書<br />案材納品書]
+                        E --> F["OCR承<br />認・仕分"]
+                        E --> G["※AI-OCR 機能実装※"]
+                        G --> F
+                        end
+
+                        subgraph lower["下部フロー"]
+                        H[納品書<br />案材納品書] --> I["OCRデータ確<br />認・仕分け"]
+                        I --> J[SAP受注登録]
+                        J --> K[(受注伝票)]
+                        J --> L[(ロット在庫データ)]
+                        I --> M["※AI-OCR 機能実装※"]
+                        M --> J
+                        end
+
+                        style D fill:#E8A87C
+                        style G fill:#9CC5E0
+                        style M fill:#9CC5E0
+                        style B fill:#E8E8E8
+                        style K fill:#E8E8E8
+                        style L fill:#6B9BD1
+
+                        classDef redBox stroke:#D00000,stroke-width:3px
+                        class C,D,E,G redBox
+                        class H,I,J,M redBox
+                    </div>
+                </div>
+            </section>
+
+            <section id="order-planning">
+                <h2>📊 発注計画フロー</h2>
+                <p>SAPシステムと連携する発注計画の全体フローを示します。</p>
+
+                <div class="diagram-container">
+                    <div class="mermaid">
+                        flowchart TB
+                        %% 入力データ群
+                        DGSP["DGSP<br />オリジナルDL"]
+                        FCT["その他FCT情報<br />メール、エクセル"]
+                        PLAN["年計・実績"]
+                        SAFETY["安全在庫基準<br />リードタイム"]
+
+                        %% SAP連携(左側)
+                        EDI["SAP<br />EDI取込み"]
+                        DAILY["SAP<br />日別指示"]
+                        STOCK["SAP<br />在庫情報"]
+
+                        %% 中央処理
+                        LOT["ロット管理台帳"]
+                        ORDER["発注計画"]
+
+                        %% 下部処理
+                        MONTH["月末在庫予想"]
+                        DISPOSAL["仕入元廃棄用FCT"]
+
+                        %% SAP出力(右側)
+                        PO["SAP<br />発注"]
+                        GR["SAP<br />仕入"]
+
+                        %% 課題管理
+                        ISSUES["課題<br />有効期限、検査成績書、工程変"]
+
+                        %% フロー定義
+                        DGSP -->|フォーキャスト反映| EDI
+                        EDI --> LOT
+                        DAILY --> LOT
+
+                        FCT -->|入庫予定| LOT
+                        PLAN --> ORDER
+                        SAFETY --> ORDER
+
+                        LOT -->|ロット NO.| ORDER
+                        LOT -.->|在庫数各性能チェック| STOCK
+
+                        ORDER --> MONTH
+                        ORDER --> DISPOSAL
+                        ORDER -->|UPLOAD| PO
+
+                        PO --> GR
+                        GR -.->|適分性、実数ロット対応| ISSUES
+
+                        %% 注釈
+                        NOTE1["当在庫の場合生産者などで反映するか?"]
+                        LOT -.-> NOTE1
+
+                        %% スタイル定義
+                        classDef input fill:#fff,stroke:#333,stroke-width:2px
+                        classDef sap fill:#000,color:#fff,stroke:#333,stroke-width:2px
+                        classDef process fill:#b4d8e7,stroke:#333,stroke-width:2px
+                        classDef subProcess fill:#dda0dd,stroke:#333,stroke-width:2px
+                        classDef issue fill:#b4d8e7,stroke:#333,stroke-width:2px
+
+                        class DGSP,FCT,PLAN,SAFETY input
+                        class EDI,DAILY,STOCK,PO,GR sap
+                        class LOT process
+                        class ORDER,MONTH,DISPOSAL subProcess
+                        class ISSUES issue
                     </div>
                 </div>
             </section>
