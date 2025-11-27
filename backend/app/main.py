@@ -17,6 +17,7 @@ from app.api.routes import (
     allocation_candidates_router,
     allocation_suggestions_router,
     allocations_router,
+    assignments_router,
     batch_jobs_router,
     business_rules_router,
     customer_items_router,
@@ -118,6 +119,7 @@ app.include_router(customer_items_router, prefix=settings.API_PREFIX)
 # User & Role management
 app.include_router(users_router, prefix=settings.API_PREFIX)
 app.include_router(roles_router, prefix=settings.API_PREFIX)
+app.include_router(assignments_router, prefix=settings.API_PREFIX)
 
 # Admin & system endpoints
 app.include_router(admin_router, prefix=settings.API_PREFIX)

@@ -7,6 +7,7 @@ All models strictly follow the DDL v2.2 (lot_management_ddl_v2_2_id.sql).
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
