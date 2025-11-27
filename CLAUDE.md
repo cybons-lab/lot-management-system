@@ -132,13 +132,13 @@ Lot-management-system/
 ├── backend/
 │   ├── app/
 │   │   ├── api/routes/           # API routes (feature-based subpackages)
-│   │   │   ├── masters/          # Master data routers (11 files)
+│   │   │   ├── masters/          # Master data routers (5 files)
 │   │   │   ├── orders/           # Order routers (2 files)
 │   │   │   ├── allocations/      # Allocation routers (4 files)
 │   │   │   ├── inventory/        # Inventory routers (4 files)
 │   │   │   ├── forecasts/        # Forecast routers (2 files)
-│   │   │   ├── admin/            # Admin routers (9 files)
-│   │   │   ├── integration/      # Integration routers (2 files)
+│   │   │   ├── admin/            # Admin routers (10 files)
+│   │   │   ├── alerts/           # Alert routers
 │   │   │   └── __init__.py       # Unified router exports
 │   │   ├── services/             # Business logic layer (feature-based subpackages)
 │   │   │   ├── allocation/       # Allocation services (4 files)
@@ -152,15 +152,17 @@ Lot-management-system/
 │   │   │   ├── admin/            # Admin services (3 files)
 │   │   │   └── common/           # Common utilities (4 files)
 │   │   ├── repositories/         # Data access layer
-│   │   ├── models/               # SQLAlchemy models (11 files)
-│   │   │   ├── base_model.py
-│   │   │   ├── masters_models.py
-│   │   │   ├── inventory_models.py
-│   │   │   ├── orders_models.py
+│   │   ├── models/               # SQLAlchemy models (13 files)
+│   │   │   ├── __init__.py
+│   │   │   ├── assignment_models.py
 │   │   │   ├── auth_models.py
+│   │   │   ├── base_model.py
 │   │   │   ├── forecast_models.py
 │   │   │   ├── inbound_models.py
+│   │   │   ├── inventory_models.py
 │   │   │   ├── logs_models.py
+│   │   │   ├── masters_models.py
+│   │   │   ├── orders_models.py
 │   │   │   ├── seed_snapshot_model.py
 │   │   │   ├── system_config_model.py
 │   │   │   └── views_models.py

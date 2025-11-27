@@ -233,3 +233,156 @@
 * `backend/app/services/orders/order_service.py` - JOIN処理実装箇所
 * `frontend/src/features/allocations/components/shared/LineBasedAllocationList.tsx` - ライン単位表示実装
 * `frontend/src/features/orders/pages/OrdersListPage.tsx` - 受注管理ページ
+
+== プロジェクト構造改善 (2025-11-27 分析実施)
+
+**最終更新**: 2025-11-27 +
+**分析対象**: プロジェクト全体のディレクトリ構造とファイル配置
+
+=== 検出された問題点
+
+プロジェクト構造の包括的分析を実施し、**16件の改善項目**を優先度別に検出。
+
+==== Phase 1: 即座対応（1-2日）【高優先度】
+
+===== 1. view_models.py と views_models.py の重複 🔴
+
+**問題**:
+[source,text]
+----
+backend/app/models/
+├── view_models.py (60行) ← LotWithMaster 1つのみ
+└── views_models.py (254行) ← 10個以上のビューモデル
+----
+
+**影響**: ファイル名が混乱を招く（単数 vs 複数）
+
+**対応**: ✅ 実装完了 (2025-11-27)
+
+* `LotWithMaster` クラスを `views_models.py` に移動
+* `view_models.py` ファイルを削除
+* `lots_router.py` の import文を `views_models` に変更
+* **変更ファイル**:
+  ** `backend/app/models/views_models.py` - LotWithMaster追加
+  ** `backend/app/api/routes/inventory/lots_router.py` - import修正
+  ** `backend/app/models/view_models.py` - 削除
+
+===== 2. app/db/session.py レガシー互換レイヤー 🔴
+
+**問題**: 実装は `app/core/database` から全て re-export するだけの互換レイヤー
+
+**使用箇所**: わずか3ファイルのみ
+[source,text]
+----
+- tests/api/test_inventory_sync_api.py
+- tests/api/test_lots.py
+- routes/orders/orders_validate_router.py
+----
+
+**対応**: ✅ 実装完了 (2025-11-27)
+
+* 3ファイルの import を `app.core.database` に変更
+* `app/db/session.py` を削除
+* `app/db/__init__.py` を削除
+* `app/db/` ディレクトリ全体を削除
+* **変更ファイル**:
+  ** `backend/tests/api/test_inventory_sync_api.py` - import修正
+  ** `backend/tests/api/test_lots.py` - import修正
+  ** `backend/app/api/routes/orders/orders_validate_router.py` - import修正
+  ** `backend/app/db/` - ディレクトリ削除
+
+===== 3. CLAUDE.md とコードベースの乖離 🔴
+
+**検出された差異**:
+[cols="1,1,1,1"]
+|===
+| 項目 | CLAUDE.md 記載 | 実態 | 状態
+
+| routes/masters | 11 files | 5 files | ❌ 古い
+| routes/admin | 9 files | 10 files | ❌ 古い
+| routes/integration | 2 files | 存在しない | ❌ 削除済み
+| models ファイル数 | 11 files | 14 files | ❌ 古い
+|===
+
+**対応**: ✅ 実装完了 (2025-11-27)
+
+* CLAUDE.md を最新の構造で更新
+* **更新内容**:
+  ** routes/masters: 11 files → 5 files
+  ** routes/admin: 9 files → 10 files
+  ** routes/integration: 削除（ディレクトリが存在しない）
+  ** routes/alerts: 追加
+  ** models: 11 files → 13 files（実際のファイル数に修正）
+* **変更ファイル**:
+  ** `CLAUDE.md` - Directory Structure セクション更新
+
+==== Phase 2: 短期改善（1週間）【中優先度】
+
+===== 4. assignments モジュールの非対称配置 🟡
+
+**問題**: 他のモジュールはディレクトリ配下なのに assignments だけが直下配置
+
+**対応**: ⏳ 未実施
+
+* `routes/assignments/`, `services/assignments/`, `schemas/assignments/` に移動
+
+===== 5. frontend: forecast と forecasts の重複 🟡
+
+**問題**: `forecast/` に1ファイルのみ、`forecasts/` が本体実装
+
+**対応**: ⏳ 未実施
+
+* `ForecastFileUploadCard.tsx` を `forecasts/components/` に移動
+* `forecast/` ディレクトリを削除
+
+===== 6. tools/ と backend/tools/ の分散 🟡
+
+**問題**: ツールが2箇所に散在
+
+**対応**: ⏳ 未実施
+
+* backend/tools/ のファイルを tools/ に統合
+* schema_consistency_check.py と v2 を統合
+* generate-types.py を削除（実装がない）
+
+===== 7. admin router に health 関連が2つ存在 🟡
+
+**問題**: `health_router.py` と `admin_healthcheck_router.py` の重複可能性
+
+**対応**: ⏳ 調査中
+
+* 両ファイルの内容を確認して統合可能か判断
+
+===== 8. allocation サービスの過度な細分化 🟡
+
+**問題**: `services/allocation/` に11ファイル（合計1692行）
+
+**対応**: ⏳ 未実施（大規模リファクタリング）
+
+* ファイル数を 11 → 5-6 程度に削減を検討
+
+==== Phase 3: 中長期改善（2-4週間）【低優先度】
+
+===== 9. allocations feature の複雑さ 🔵
+
+**問題**: `features/allocations/` に83ファイル、`useLotAllocation/` だけで11ファイル
+
+**対応**: ⏳ 未実施
+
+===== 10. backups/ ディレクトリの運用方針 🔵
+
+**対応**: ⏳ 未実施
+
+=== 実施ステータス
+
+**Phase 1 完了状況**: ✅ 3/3 完了 (2025-11-27)
+
+* ✅ view_models.py と views_models.py を統合
+* ✅ app/db/session.py を削除
+* ✅ CLAUDE.md を最新構造で更新
+
+**Phase 2 完了状況**: ⏳ 0/5 未実施
+
+**Phase 3 完了状況**: ⏳ 0/2 未実施
+
+**総計**: ✅ 3/10 完了 (30%)

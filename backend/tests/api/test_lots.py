@@ -11,7 +11,7 @@ from app.models import Lot, LotCurrentStock, Product, StockMovementReason, Suppl
 
 # ---- テスト用DBセッションを使う（トランザクションは外側のpytest設定に依存）
 def override_get_db():
-    from app.db.session import SessionLocal
+    from app.core.database import SessionLocal
 
     db: Session = SessionLocal()
     try:
