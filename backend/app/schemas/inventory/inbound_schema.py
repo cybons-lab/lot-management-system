@@ -125,7 +125,7 @@ class InboundPlanReceiveRequest(BaseSchema):
     """Payload for confirming inbound receipt."""
 
     received_at: datetime
-    lot_ids: list[int] | None = None
+    lot_numbers: dict[int, str] | None = None
 
 
 class InboundPlanReceiveResponse(BaseSchema):
@@ -134,3 +134,18 @@ class InboundPlanReceiveResponse(BaseSchema):
     success: bool
     message: str | None = None
     created_lot_ids: list[int] = Field(default_factory=list)
+
+
+class SAPSyncRequest(BaseSchema):
+    """Payload for SAP purchase order synchronization."""
+
+    pass  # No parameters needed for mock implementation
+
+
+class SAPSyncResponse(BaseSchema):
+    """Response model for SAP synchronization."""
+
+    success: bool
+    message: str
+    created_plans: list[InboundPlanDetailResponse] = Field(default_factory=list)
+    skipped_count: int = 0

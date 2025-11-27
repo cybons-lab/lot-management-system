@@ -3,11 +3,11 @@ import type { LineStatus } from "../../hooks/useLotAllocation";
 
 import { LotAllocationPanel } from "./LotAllocationPanel";
 
-import type { OrderWithLinesResponse } from "@/shared/types/aliases";
+import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface AllocationRowContainerProps {
   order: OrderWithLinesResponse;
-  line: any; // OrderLine
+  line: OrderLine;
   getLineAllocations: (lineId: number) => Record<number, number>;
   onLotAllocationChange: (lineId: number, lotId: number, quantity: number) => void;
   onAutoAllocate: (lineId: number) => void;

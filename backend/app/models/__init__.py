@@ -4,6 +4,7 @@ All models strictly follow the DDL v2.2 (lot_management_ddl_v2_2_id.sql).
 Legacy models have been removed.
 """
 
+from .assignment_models import UserSupplierAssignment
 from .auth_models import Role, User, UserRole
 from .base_model import Base
 from .forecast_models import Forecast, ForecastCurrent, ForecastHistory
@@ -84,6 +85,7 @@ __all__ = [
     "User",
     "Role",
     "UserRole",
+    "UserSupplierAssignment",
     # Logs
     "OperationLog",
     "MasterChangeLog",

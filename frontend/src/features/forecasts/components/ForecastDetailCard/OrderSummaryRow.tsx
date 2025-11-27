@@ -1,19 +1,11 @@
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
 
 import { OrderAllocationInline } from "./OrderAllocationInline";
-
-import { Button } from "@/components/ui";
-import { Badge } from "@/components/ui";
-import { ROUTES } from "@/constants/routes";
-import type { useLotAllocationForOrder } from "@/features/forecasts/hooks/useLotAllocationForOrder";
-import { cn } from "@/shared/libs/utils";
-import type { OrderWithLinesResponse } from "@/shared/types/aliases";
-import { formatDate } from "@/shared/utils/date";
-import { formatQuantity } from "@/shared/utils/formatQuantity";
-
+import { OrderSummaryHeader } from "./OrderSummaryHeader";
 import { formatDateKey } from "./utils/date-utils";
+
+import type { useLotAllocationForOrder } from "@/features/forecasts/hooks/useLotAllocationForOrder";
+import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface OrderSummaryRowProps {
   order: OrderWithLinesResponse;
@@ -47,7 +39,7 @@ export function OrderSummaryRow({
     ? new Date(targetLines[0].delivery_date)
     : null;
   const dateKey = deliveryDate ? formatDateKey(deliveryDate) : null;
-  const isHovered = dateKey && hoveredDate === dateKey;
+  const isHovered = Boolean(dateKey && hoveredDate === dateKey);
 
   const handleMouseEnter = () => {
     if (dateKey) {
@@ -61,70 +53,19 @@ export function OrderSummaryRow({
 
   return (
     <div className="border-b border-slate-100 last:border-0">
-      {/* 概要行 */}
-      <div
-        className={cn(
-          "flex items-center gap-4 py-2 transition-colors",
-          isHovered ? "bg-yellow-50" : "hover:bg-slate-50",
-        )}
+      <OrderSummaryHeader
+        order={order}
+        targetLines={targetLines}
+        isExpanded={isExpanded}
+        isHovered={isHovered}
+        totalRequired={totalRequired}
+        totalAllocated={totalAllocated}
+        statusLabel={statusLabel}
+        statusColor={statusColor}
+        onToggleExpand={() => setIsExpanded(!isExpanded)}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-      >
-        <div className="flex items-center gap-3 overflow-hidden">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-          </Button>
-
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-mono font-medium text-gray-700">
-              {order.order_number || `ORD-${order.id}`}
-            </span>
-            <span className="hidden text-xs text-gray-500 sm:inline">{order.customer_name}</span>
-            <span className="text-xs text-gray-400">|</span>
-            <span className={cn("text-xs text-gray-600", isHovered && "font-bold text-gray-900")}>
-              納期: {targetLines[0]?.delivery_date ? formatDate(targetLines[0].delivery_date) : "-"}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-xs text-gray-500">明細: {targetLines.length}件</span>
-            <span className="text-xs text-gray-400">|</span>
-            <span className="text-xs text-gray-500">必要</span>
-            <span className="text-sm font-medium">
-              {formatQuantity(totalRequired, targetLines[0]?.unit || "")}
-            </span>
-            <span className="text-xs text-gray-300">/</span>
-            <span className="text-xs text-gray-500">引当</span>
-            <span className={cn("text-sm font-medium", totalAllocated > 0 ? "text-blue-600" : "")}>
-              {formatQuantity(totalAllocated, targetLines[0]?.unit || "")}
-            </span>
-            <span className="text-xs text-gray-400">{targetLines[0]?.unit}</span>
-          </div>
-
-          <Badge className={cn("h-5 px-1.5 text-[10px] font-normal", statusColor)}>
-            {statusLabel}
-          </Badge>
-
-          <Link
-            to={ROUTES.ORDERS.DETAIL(order.id.toString())}
-            className="text-gray-400 hover:text-blue-600"
-            title="受注詳細ページへ"
-          >
-            <ExternalLink className="h-4 w-4" />
-          </Link>
-        </div>
-      </div>
+      />
 
       {/* 展開ビュー */}
       {isExpanded && (

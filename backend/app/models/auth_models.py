@@ -7,6 +7,7 @@ All models strictly follow the DDL v2.2 (lot_management_ddl_v2_2_id.sql).
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
@@ -23,6 +24,11 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
+
+
+# For type checking only
+if TYPE_CHECKING:  # pragma: no cover - for type checkers only
+    from .assignment_models import UserSupplierAssignment
 
 
 class User(Base):
@@ -61,8 +67,11 @@ class User(Base):
     )
 
     # Relationships
-    user_roles: Mapped[list[UserRole]] = relationship(
+    roles: Mapped[list[UserRole]] = relationship(
         "UserRole", back_populates="user", cascade="all, delete-orphan"
+    )
+    supplier_assignments: Mapped[list[UserSupplierAssignment]] = relationship(
+        "UserSupplierAssignment", back_populates="user", cascade="all, delete-orphan"
     )
 
 

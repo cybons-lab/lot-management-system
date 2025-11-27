@@ -1,0 +1,155 @@
+"""Assignment management API routes."""
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.schemas.assignment_schema import (
+    UserSupplierAssignmentCreate,
+    UserSupplierAssignmentResponse,
+    UserSupplierAssignmentUpdate,
+)
+from app.services.assignment_service import AssignmentService
+
+
+router = APIRouter(prefix="/assignments", tags=["assignments"])
+
+
+@router.get("/user/{user_id}/suppliers", response_model=list[UserSupplierAssignmentResponse])
+def get_user_suppliers(
+    user_id: int,
+    db: Session = Depends(get_db),
+) -> list[UserSupplierAssignmentResponse]:
+    """ユーザーの担当仕入先一覧を取得."""
+    service = AssignmentService(db)
+    assignments = service.get_user_suppliers(user_id)
+
+    # Expand supplier information
+    return [
+        UserSupplierAssignmentResponse(
+            id=a.id,
+            user_id=a.user_id,
+            supplier_id=a.supplier_id,
+            is_primary=a.is_primary,
+            assigned_at=a.assigned_at,
+            created_at=a.created_at,
+            updated_at=a.updated_at,
+            supplier_code=a.supplier.supplier_code,
+            supplier_name=a.supplier.supplier_name,
+        )
+        for a in assignments
+    ]
+
+
+@router.get("/supplier/{supplier_id}/users", response_model=list[UserSupplierAssignmentResponse])
+def get_supplier_users(
+    supplier_id: int,
+    db: Session = Depends(get_db),
+) -> list[UserSupplierAssignmentResponse]:
+    """仕入先の担当者一覧を取得."""
+    service = AssignmentService(db)
+    assignments = service.get_supplier_users(supplier_id)
+
+    # Expand user information
+    return [
+        UserSupplierAssignmentResponse(
+            id=a.id,
+            user_id=a.user_id,
+            supplier_id=a.supplier_id,
+            is_primary=a.is_primary,
+            assigned_at=a.assigned_at,
+            created_at=a.created_at,
+            updated_at=a.updated_at,
+            username=a.user.username,
+            user_display_name=a.user.display_name,
+        )
+        for a in assignments
+    ]
+
+
+@router.post("/", response_model=UserSupplierAssignmentResponse)
+def create_assignment(
+    data: UserSupplierAssignmentCreate,
+    db: Session = Depends(get_db),
+) -> UserSupplierAssignmentResponse:
+    """担当割り当てを作成."""
+    service = AssignmentService(db)
+    try:
+        assignment = service.create_assignment(data)
+        return UserSupplierAssignmentResponse(
+            id=assignment.id,
+            user_id=assignment.user_id,
+            supplier_id=assignment.supplier_id,
+            is_primary=assignment.is_primary,
+            assigned_at=assignment.assigned_at,
+            created_at=assignment.created_at,
+            updated_at=assignment.updated_at,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.put("/{assignment_id}", response_model=UserSupplierAssignmentResponse)
+def update_assignment(
+    assignment_id: int,
+    data: UserSupplierAssignmentUpdate,
+    db: Session = Depends(get_db),
+) -> UserSupplierAssignmentResponse:
+    """担当割り当てを更新（主担当の変更など）."""
+    service = AssignmentService(db)
+    try:
+        assignment = service.update_assignment(assignment_id, data)
+        return UserSupplierAssignmentResponse(
+            id=assignment.id,
+            user_id=assignment.user_id,
+            supplier_id=assignment.supplier_id,
+            is_primary=assignment.is_primary,
+            assigned_at=assignment.assigned_at,
+            created_at=assignment.created_at,
+            updated_at=assignment.updated_at,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.delete("/{assignment_id}")
+def delete_assignment(
+    assignment_id: int,
+    db: Session = Depends(get_db),
+) -> dict:
+    """担当割り当てを削除."""
+    service = AssignmentService(db)
+    try:
+        service.delete_assignment(assignment_id)
+        return {"message": "Assignment deleted successfully"}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+
+
+@router.post(
+    "/supplier/{supplier_id}/set-primary/{user_id}", response_model=UserSupplierAssignmentResponse
+)
+def set_primary_user(
+    supplier_id: int,
+    user_id: int,
+    db: Session = Depends(get_db),
+) -> UserSupplierAssignmentResponse:
+    """仕入先の主担当者を設定."""
+    service = AssignmentService(db)
+    try:
+        assignment = service.set_primary_assignment(user_id, supplier_id)
+        return UserSupplierAssignmentResponse(
+            id=assignment.id,
+            user_id=assignment.user_id,
+            supplier_id=assignment.supplier_id,
+            is_primary=assignment.is_primary,
+            assigned_at=assignment.assigned_at,
+            created_at=assignment.created_at,
+            updated_at=assignment.updated_at,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e

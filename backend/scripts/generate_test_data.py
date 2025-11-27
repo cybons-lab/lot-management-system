@@ -535,7 +535,10 @@ def generate_test_data():
                     order_qty = forecast_qty
 
                     # Convert to external unit if necessary
-                    if unit == product.external_unit and product.external_unit != product.internal_unit:
+                    if (
+                        unit == product.external_unit
+                        and product.external_unit != product.internal_unit
+                    ):
                         factor = Decimal(str(product.qty_per_internal_unit))
                         order_qty = forecast_qty * factor
 

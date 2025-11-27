@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 
 import type { CandidateLotItem } from "../../../api";
-import { getOrderQuantity } from "../../../hooks/useLotAllocation/allocationFieldHelpers";
-import { getLineAllocationStatus } from "../FlatAllocationList";
 
+import { shouldShowLine } from "./filterHelpers";
 import { getCustomerName } from "./helpers";
 import type { FilterStatus, GroupedOrder, LineWithOrderInfo } from "./types";
 
@@ -51,32 +50,9 @@ export function useLineData({
 
   // 2. フィルタリング
   const filteredLines = useMemo(() => {
-    return allFlatLines.filter((item) => {
-      if (filterStatus === "all") return true;
-
-      const line = item.line;
-      const allocations = getLineAllocations(line.id);
-      const required = getOrderQuantity(line);
-      const candidates = getCandidateLots(line.id);
-      const hasCandidates = candidates.length > 0;
-      const isOver = isOverAllocated(line.id);
-      const status = getLineAllocationStatus(line, allocations, required, isOver);
-
-      switch (filterStatus) {
-        case "complete":
-          return status === "completed";
-        case "shortage":
-          // ユーザー要望: 候補なしも在庫不足として扱う
-          return (status === "shortage" || (status as string) === "no-candidates") && required > 0;
-        case "over":
-          return status === "over";
-        case "unallocated":
-          // 未引当かつ候補あり（純粋な未着手）
-          return status === "unallocated" && hasCandidates;
-        default:
-          return true;
-      }
-    });
+    return allFlatLines.filter((item) =>
+      shouldShowLine(item, filterStatus, getLineAllocations, getCandidateLots, isOverAllocated),
+    );
   }, [allFlatLines, filterStatus, getLineAllocations, getCandidateLots, isOverAllocated]);
 
   // 3. ソート（チェック済みを下に）

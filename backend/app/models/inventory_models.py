@@ -98,7 +98,7 @@ class Lot(Base):
     inspection_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     inspection_cert_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
-    version_id: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
+    version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -142,7 +142,7 @@ class Lot(Base):
         ),
     )
 
-    __mapper_args__ = {"version_id_col": version_id}
+    __mapper_args__ = {"version_id_col": version}
 
     # Relationships
     product: Mapped[Product] = relationship("Product", back_populates="lots")

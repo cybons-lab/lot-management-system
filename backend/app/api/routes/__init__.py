@@ -30,6 +30,7 @@ from app.api.routes.allocations import (
     allocations_router,
     warehouse_alloc_router,
 )
+from app.api.routes.assignments_router import router as assignments_router
 from app.api.routes.forecasts import forecasts_router
 from app.api.routes.inventory import (
     adjustments_router,
@@ -78,6 +79,7 @@ __all__ = [
     # Admin (8)
     "admin_healthcheck_router",
     "admin_router",
+    "assignments_router",
     "batch_jobs_router",
     "business_rules_router",
     "health_router",

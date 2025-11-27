@@ -3,10 +3,9 @@
  */
 
 import type { DayCellProps } from "./types";
+import { formatDateKey } from "./utils/date-utils";
 
 import { cn } from "@/shared/libs/utils";
-
-import { formatDateKey } from "./utils/date-utils";
 
 /**
  * Render a single day cell for the grid

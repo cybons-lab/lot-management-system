@@ -789,6 +789,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/inbound-plans/sync-from-sap": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sync From Sap
+     * @description SAP から発注データを取得して入荷予定を作成.
+     *
+     *     SAP の発注データ（モック）を取得し、入荷予定（InboundPlan）として
+     *     システムに登録します。既に存在する発注番号はスキップされます。
+     *
+     *     Args:
+     *         request: SAP同期リクエスト（現在パラメータなし）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SAP同期結果（作成された入荷予定リスト、スキップ数）
+     *
+     *     Note:
+     *         現在はモック実装です。本番環境では実際のSAP RFC/APIに接続します。
+     */
+    post: operations["sync_from_sap_api_inbound_plans_sync_from_sap_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/inbound-plans/{plan_id}/lines": {
     parameters: {
       query?: never;
@@ -1544,6 +1577,110 @@ export interface paths {
      *         HTTPException: ロールが存在しない場合、またはロールが使用中の場合
      */
     delete: operations["delete_role_api_roles__role_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/user/{user_id}/suppliers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get User Suppliers
+     * @description ユーザーの担当仕入先一覧を取得.
+     */
+    get: operations["get_user_suppliers_api_assignments_user__user_id__suppliers_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/supplier/{supplier_id}/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Supplier Users
+     * @description 仕入先の担当者一覧を取得.
+     */
+    get: operations["get_supplier_users_api_assignments_supplier__supplier_id__users_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Assignment
+     * @description 担当割り当てを作成.
+     */
+    post: operations["create_assignment_api_assignments__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/{assignment_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Assignment
+     * @description 担当割り当てを更新（主担当の変更など）.
+     */
+    put: operations["update_assignment_api_assignments__assignment_id__put"];
+    post?: never;
+    /**
+     * Delete Assignment
+     * @description 担当割り当てを削除.
+     */
+    delete: operations["delete_assignment_api_assignments__assignment_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/supplier/{supplier_id}/set-primary/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Set Primary User
+     * @description 仕入先の主担当者を設定.
+     */
+    post: operations["set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -3684,8 +3821,10 @@ export interface components {
        * Format: date-time
        */
       received_at: string;
-      /** Lot Ids */
-      lot_ids?: number[] | null;
+      /** Lot Numbers */
+      lot_numbers?: {
+        [key: string]: string;
+      } | null;
     };
     /**
      * InboundPlanReceiveResponse
@@ -4378,6 +4517,28 @@ export interface components {
       description?: string | null;
     };
     /**
+     * SAPSyncRequest
+     * @description Payload for SAP purchase order synchronization.
+     */
+    SAPSyncRequest: Record<string, never>;
+    /**
+     * SAPSyncResponse
+     * @description Response model for SAP synchronization.
+     */
+    SAPSyncResponse: {
+      /** Success */
+      success: boolean;
+      /** Message */
+      message: string;
+      /** Created Plans */
+      created_plans?: components["schemas"]["InboundPlanDetailResponse"][];
+      /**
+       * Skipped Count
+       * @default 0
+       */
+      skipped_count: number;
+    };
+    /**
      * StockHistoryCreate
      * @description Payload for creating stock history records.
      */
@@ -4551,6 +4712,69 @@ export interface components {
        * @description 割り当てるロールIDリスト
        */
       role_ids: number[];
+    };
+    /**
+     * UserSupplierAssignmentCreate
+     * @description Schema for creating a user-supplier assignment.
+     */
+    UserSupplierAssignmentCreate: {
+      /** User Id */
+      user_id: number;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Is Primary
+       * @default false
+       */
+      is_primary: boolean;
+    };
+    /**
+     * UserSupplierAssignmentResponse
+     * @description Schema for user-supplier assignment responses.
+     */
+    UserSupplierAssignmentResponse: {
+      /** User Id */
+      user_id: number;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Is Primary
+       * @default false
+       */
+      is_primary: boolean;
+      /** Id */
+      id: number;
+      /**
+       * Assigned At
+       * Format: date-time
+       */
+      assigned_at: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Username */
+      username?: string | null;
+      /** User Display Name */
+      user_display_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      /** Supplier Name */
+      supplier_name?: string | null;
+    };
+    /**
+     * UserSupplierAssignmentUpdate
+     * @description Schema for updating a user-supplier assignment.
+     */
+    UserSupplierAssignmentUpdate: {
+      /** Is Primary */
+      is_primary?: boolean | null;
     };
     /**
      * UserUpdate
@@ -5885,6 +6109,39 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  sync_from_sap_api_inbound_plans_sync_from_sap_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SAPSyncRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SAPSyncResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -7314,6 +7571,199 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_user_suppliers_api_assignments_user__user_id__suppliers_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_supplier_users_api_assignments_supplier__supplier_id__users_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_assignment_api_assignments__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserSupplierAssignmentCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_assignment_api_assignments__assignment_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        assignment_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserSupplierAssignmentUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_assignment_api_assignments__assignment_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        assignment_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": Record<string, never>;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_id: number;
+        user_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
+        };
       };
       /** @description Validation Error */
       422: {

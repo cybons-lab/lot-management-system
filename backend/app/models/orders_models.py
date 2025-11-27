@@ -117,7 +117,7 @@ class OrderLine(Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'pending'")
     )
-    version_id: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
+    version: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("1"))
 
     __table_args__ = (
         Index("idx_order_lines_order", "order_id"),
@@ -131,7 +131,7 @@ class OrderLine(Base):
         ),
     )
 
-    __mapper_args__ = {"version_id_col": version_id}
+    __mapper_args__ = {"version_id_col": version}
 
     # Relationships
     order: Mapped[Order] = relationship("Order", back_populates="order_lines")
@@ -151,7 +151,11 @@ class Allocation(Base):
 
     DDL: allocations
     Primary key: id (BIGSERIAL)
-    Foreign keys: order_line_id -> order_lines(id), lot_id -> lots(id)
+    Foreign keys: order_line_id -> order_lines(id), lot_id -> lots(id),
+                  inbound_plan_line_id -> inbound_plan_lines(id)
+
+    Supports both regular allocations (with lot_id) and provisional allocations
+    (with inbound_plan_line_id for planned inbound stock).
     """
 
     __tablename__ = "allocations"
@@ -162,10 +166,15 @@ class Allocation(Base):
         ForeignKey("order_lines.id", ondelete="CASCADE"),
         nullable=False,
     )
-    lot_id: Mapped[int] = mapped_column(
+    lot_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("lots.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,  # Nullable for provisional allocations
+    )
+    inbound_plan_line_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("inbound_plan_lines.id", ondelete="CASCADE"),
+        nullable=True,  # Used for provisional allocations
     )
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     status: Mapped[str] = mapped_column(
@@ -180,14 +189,15 @@ class Allocation(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('allocated', 'shipped', 'cancelled')",
+            "status IN ('allocated', 'provisional', 'shipped', 'cancelled')",
             name="chk_allocations_status",
         ),
         Index("idx_allocations_order_line", "order_line_id"),
         Index("idx_allocations_lot", "lot_id"),
+        Index("idx_allocations_inbound_plan_line", "inbound_plan_line_id"),
         Index("idx_allocations_status", "status"),
     )
 
     # Relationships
     order_line: Mapped[OrderLine] = relationship("OrderLine", back_populates="allocations")
-    lot: Mapped[Lot] = relationship("Lot", back_populates="allocations")
+    lot: Mapped[Lot | None] = relationship("Lot", back_populates="allocations")
