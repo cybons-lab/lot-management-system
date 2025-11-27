@@ -7,6 +7,7 @@
  * - Section 3: Dekad (left) and Monthly (right) aggregations beneath the grid
  */
 
+import { useState } from "react";
 import { ForecastAggregations } from "./ForecastAggregations";
 import { ForecastCardHeader } from "./ForecastCardHeader";
 import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
@@ -32,6 +33,7 @@ export function ForecastDetailCard({
   onToggle,
 }: ForecastDetailCardProps) {
   const { group_key, forecasts = [] } = group;
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
 
   // Calculate all forecast data using custom hook
   const { dailyData, unit, targetMonthStartDate, dates, dekadData, monthlyData, targetMonthTotal } =
@@ -109,6 +111,8 @@ export function ForecastDetailCard({
                 targetMonthLabel={targetMonthLabel}
                 todayKey={todayKey}
                 todayStart={todayStart}
+                hoveredDate={hoveredDate}
+                onDateHover={setHoveredDate}
               />
 
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />
@@ -121,7 +125,11 @@ export function ForecastDetailCard({
           </div>
 
           {/* 関連受注セクション */}
-          <RelatedOrdersSection group={group} />
+          <RelatedOrdersSection
+            group={group}
+            hoveredDate={hoveredDate}
+            onDateHover={setHoveredDate}
+          />
 
           {/* SAP連携セクション (ダミー実装) */}
           <SAPIntegrationSection relatedOrders={undefined} />

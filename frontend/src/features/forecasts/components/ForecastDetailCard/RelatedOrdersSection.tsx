@@ -12,9 +12,11 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface RelatedOrdersSectionProps {
   group: ForecastGroup;
+  hoveredDate?: string | null;
+  onDateHover?: (date: string | null) => void;
 }
 
-export function RelatedOrdersSection({ group }: RelatedOrdersSectionProps) {
+export function RelatedOrdersSection({ group, hoveredDate, onDateHover }: RelatedOrdersSectionProps) {
   const { group_key } = group;
 
   // 関連受注の取得
@@ -74,6 +76,8 @@ export function RelatedOrdersSection({ group }: RelatedOrdersSectionProps) {
             order={order}
             targetProductId={group_key.product_id}
             targetDeliveryPlaceId={group_key.delivery_place_id}
+            hoveredDate={hoveredDate}
+            onDateHover={onDateHover}
           />
         ))}
       </div>
@@ -86,10 +90,14 @@ function OrderSummaryRowWrapper({
   order,
   targetProductId,
   targetDeliveryPlaceId,
+  hoveredDate,
+  onDateHover,
 }: {
   order: OrderWithLinesResponse;
   targetProductId: number;
   targetDeliveryPlaceId: number;
+  hoveredDate?: string | null;
+  onDateHover?: (date: string | null) => void;
 }) {
   const logic = useLotAllocationForOrder(order);
 
@@ -99,6 +107,8 @@ function OrderSummaryRowWrapper({
       targetProductId={targetProductId}
       targetDeliveryPlaceId={targetDeliveryPlaceId}
       logic={logic}
+      hoveredDate={hoveredDate}
+      onDateHover={onDateHover}
     />
   );
 }

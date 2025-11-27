@@ -16,6 +16,8 @@ export function ForecastDailyGrid({
   targetMonthLabel,
   todayKey,
   todayStart,
+  hoveredDate,
+  onDateHover,
 }: ForecastDailyGridProps) {
   return (
     <div className="space-y-2">
@@ -35,6 +37,8 @@ export function ForecastDailyGrid({
               quantity={dailyData.get(dateKey)}
               isToday={todayKey === dateKey}
               isPast={isPast}
+              hoveredDate={hoveredDate}
+              onDateHover={onDateHover}
             />
           );
         })}

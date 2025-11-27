@@ -13,11 +13,15 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
+import { formatDateKey } from "./utils/date-utils";
+
 interface OrderSummaryRowProps {
   order: OrderWithLinesResponse;
   targetProductId: number; // フィルタリング対象の製品ID
   targetDeliveryPlaceId: number; // フィルタリング対象の納入先ID
   logic: ReturnType<typeof useLotAllocationForOrder>;
+  hoveredDate?: string | null;
+  onDateHover?: (date: string | null) => void;
 }
 
 export function OrderSummaryRow({
@@ -25,6 +29,8 @@ export function OrderSummaryRow({
   targetProductId,
   targetDeliveryPlaceId,
   logic,
+  hoveredDate,
+  onDateHover,
 }: OrderSummaryRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { targetLines, totalRequired, totalAllocated, statusLabel, statusColor } = useOrderSummary(
@@ -36,10 +42,32 @@ export function OrderSummaryRow({
 
   if (targetLines.length === 0) return null;
 
+  // 納期の取得とハイライト判定
+  const deliveryDate = targetLines[0]?.delivery_date ? new Date(targetLines[0].delivery_date) : null;
+  const dateKey = deliveryDate ? formatDateKey(deliveryDate) : null;
+  const isHovered = dateKey && hoveredDate === dateKey;
+
+  const handleMouseEnter = () => {
+    if (dateKey) {
+      onDateHover?.(dateKey);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    onDateHover?.(null);
+  };
+
   return (
     <div className="border-b border-slate-100 last:border-0">
       {/* 概要行 */}
-      <div className="flex items-center gap-4 py-2 hover:bg-slate-50">
+      <div
+        className={cn(
+          "flex items-center gap-4 py-2 transition-colors",
+          isHovered ? "bg-yellow-50" : "hover:bg-slate-50",
+        )}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
         <div className="flex items-center gap-3 overflow-hidden">
           <Button
             variant="ghost"
@@ -60,7 +88,7 @@ export function OrderSummaryRow({
             </span>
             <span className="hidden text-xs text-gray-500 sm:inline">{order.customer_name}</span>
             <span className="text-xs text-gray-400">|</span>
-            <span className="text-xs text-gray-600">
+            <span className={cn("text-xs text-gray-600", isHovered && "font-bold text-gray-900")}>
               納期: {targetLines[0]?.delivery_date ? formatDate(targetLines[0].delivery_date) : "-"}
             </span>
           </div>

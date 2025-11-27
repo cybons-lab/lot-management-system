@@ -34,6 +34,8 @@ export interface DayCellProps {
   quantity: number | undefined;
   isToday: boolean;
   isPast: boolean;
+  hoveredDate?: string | null;
+  onDateHover?: (date: string | null) => void;
 }
 
 export interface ForecastCardHeaderProps {
@@ -58,6 +60,8 @@ export interface ForecastDailyGridProps {
   targetMonthLabel: string;
   todayKey: string;
   todayStart: Date;
+  hoveredDate?: string | null;
+  onDateHover?: (date: string | null) => void;
 }
 
 export interface ForecastAggregationsProps {
