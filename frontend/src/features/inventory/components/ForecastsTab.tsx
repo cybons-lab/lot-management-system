@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-import { fmt } from "@/shared/utils/number";
+import { ForecastSummaryCards } from "./ForecastSummaryCards";
+import { ForecastGroupList } from "./ForecastGroupList";
 
 interface ForecastsTabProps {
   productId: number;
@@ -44,57 +45,8 @@ export function ForecastsTab({ productId }: ForecastsTabProps) {
 
       {forecastData && forecastData.items.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-sm font-medium text-gray-600">予測グループ数</div>
-              <div className="mt-2 text-2xl font-bold text-gray-900">
-                {forecastData.items.length}
-              </div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-sm font-medium text-gray-600">総予測数量</div>
-              <div className="mt-2 text-2xl font-bold text-blue-600">{fmt(totalQuantity)}</div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="text-sm font-medium text-gray-600">予測エントリ数</div>
-              <div className="mt-2 text-2xl font-bold text-gray-900">
-                {forecastData.items.reduce((sum, g) => sum + (g.forecasts ?? []).length, 0)}
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <h4 className="mb-3 font-semibold">予測グループ一覧</h4>
-            <div className="space-y-2">
-              {forecastData.items.slice(0, 5).map((group, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between border-b border-gray-100 pb-2"
-                >
-                  <div className="text-sm">
-                    <span className="font-medium">
-                      {group.group_key.customer_name || `顧客${group.group_key.customer_id}`}
-                    </span>
-                    {" → "}
-                    <span>
-                      {group.group_key.delivery_place_name ||
-                        `納入先${group.group_key.delivery_place_id}`}
-                    </span>
-                  </div>
-                  <div className="text-sm font-semibold text-blue-600">
-                    {fmt(
-                      (group.forecasts ?? []).reduce((s, f) => s + Number(f.forecast_quantity), 0),
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-            {forecastData.items.length > 5 && (
-              <p className="mt-3 text-sm text-gray-500">
-                他 {forecastData.items.length - 5} グループ
-              </p>
-            )}
-          </div>
+          <ForecastSummaryCards forecastData={forecastData} totalQuantity={totalQuantity} />
+          <ForecastGroupList forecastData={forecastData} />
         </>
       ) : (
         <div className="rounded-lg border border-slate-200 bg-white p-8 text-center shadow-sm">
