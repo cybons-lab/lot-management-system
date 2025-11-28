@@ -2,8 +2,8 @@ import { ChevronDown, ChevronRight, ExternalLink, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge, Button } from "@/components/ui";
-import { useSAPRegistration } from "@/features/forecasts/hooks/useSAPRegistration";
 import { ROUTES } from "@/constants/routes";
+import { useSAPRegistration } from "@/features/forecasts/hooks/useSAPRegistration";
 import { cn } from "@/shared/libs/utils";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 import { type OrderLine } from "@/shared/types/aliases";

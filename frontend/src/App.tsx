@@ -1,6 +1,7 @@
 import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 
+import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
 // Pages - all imported from features (Phase A cleanup)
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
@@ -38,12 +39,11 @@ import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
 import { ProductsListPage, ProductDetailPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
+import { SystemStatus } from "@/features/system/SystemStatus";
 import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
-import { SystemStatus } from "@/features/system/SystemStatus";
-import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
 
 // eslint-disable-next-line max-lines-per-function
 function App() {

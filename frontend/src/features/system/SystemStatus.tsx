@@ -41,9 +41,9 @@ export function SystemStatus() {
     if (error instanceof Error) {
         // Check for specific error types if possible, e.g. 500 vs Network Error
         // Axios error handling
-        const axiosError = error as any;
-        if (axiosError.response) {
-            if (axiosError.response.status === 500) {
+        const axiosError = error as unknown;
+        if ((axiosError as any).response) {
+            if ((axiosError as any).response.status === 500) {
                 errorMessage = "データベース接続エラー";
                 detailMessage = "データベースへの接続が失われました。システム管理者に連絡してください。";
             } else if (axiosError.response.status === 502 || axiosError.response.status === 503) {

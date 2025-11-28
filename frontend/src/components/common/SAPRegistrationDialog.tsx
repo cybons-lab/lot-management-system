@@ -20,6 +20,7 @@ interface SAPRegistrationDialogProps {
     confirmedLines: ConfirmedOrderLine[];
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function SAPRegistrationDialog({
     isOpen,
     onClose,
@@ -75,9 +76,11 @@ export function SAPRegistrationDialog({
                     {confirmedLines.map((line) => (
                         <label
                             key={line.line_id}
+                            htmlFor={`line-${line.line_id}`}
                             className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50"
                         >
                             <input
+                                id={`line-${line.line_id}`}
                                 type="checkbox"
                                 checked={selectedIds.includes(line.line_id)}
                                 onChange={() => handleToggle(line.line_id)}
