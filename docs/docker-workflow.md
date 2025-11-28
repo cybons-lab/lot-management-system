@@ -57,6 +57,18 @@ ENV PATH="/venv/bin:$PATH"
 
 ### コンテナが起動しない
 
+### 4. 開発ツールのセットアップ（重要）
+
+Dockerイメージは軽量化のため、デフォルトでは開発用依存パッケージ（`ruff`, `pytest`など）が含まれていません。
+開発を行う場合（Lint実行やテスト実行時）は、コンテナ内で以下のコマンドを実行して開発用パッケージをインストールしてください：
+
+```bash
+docker compose exec backend uv sync
+```
+
+これを実行しないと、`ruff`コマンドが見つからないなどのエラーが発生します。
+
+### 5. ログの確認
 ```bash
 # ログを確認
 docker compose logs backend
