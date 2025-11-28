@@ -41,6 +41,7 @@ export function SystemStatus() {
     if (error instanceof Error) {
         // Check for specific error types if possible, e.g. 500 vs Network Error
         // Use the HttpError type for better type checking
+        type HttpError = { response?: { status?: number }; code?: string };
         const httpError = error as HttpError;
         if (httpError.response) {
             if (httpError.response.status === 500) {
