@@ -142,7 +142,7 @@ export function LotsPage() {
   const handleUnlock = useCallback(
     async (lot: LotUI) => {
       if (confirm(`ロット ${lot.lot_number} のロックを解除しますか？`)) {
-        await unlockLotMutation.mutateAsync(lot.id);
+        await unlockLotMutation.mutateAsync({ id: lot.id });
       }
     },
     [unlockLotMutation],
