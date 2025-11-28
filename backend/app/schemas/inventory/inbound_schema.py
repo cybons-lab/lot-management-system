@@ -8,7 +8,7 @@ from enum import Enum
 
 from pydantic import Field
 
-from app.schemas.common.base import BaseSchema, TimestampMixin
+from app.schemas.common.base import BaseSchema, ListResponse, TimestampMixin
 
 
 class InboundPlanStatus(str, Enum):
@@ -114,11 +114,8 @@ class InboundPlanDetailResponse(InboundPlanResponse):
     lines: list[InboundPlanLineResponse] = Field(default_factory=list)
 
 
-class InboundPlanListResponse(BaseSchema):
-    """Response wrapper for inbound plan listings."""
-
-    items: list[InboundPlanResponse]
-    total: int
+# Use generic ListResponse instead of custom class
+InboundPlanListResponse = ListResponse[InboundPlanResponse]
 
 
 class InboundPlanReceiveRequest(BaseSchema):

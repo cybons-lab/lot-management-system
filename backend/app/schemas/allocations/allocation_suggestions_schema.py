@@ -117,6 +117,8 @@ class AllocationSuggestionRequest(BaseModel):
     options: AllocationOptions = Field(default_factory=AllocationOptions)
 
 
+# Note: Field name is "suggestions" instead of "items" - keeping custom class for now
+# TODO: Consider standardizing to "items" field name in next major version
 class AllocationSuggestionListResponse(BaseModel):
     """引当推奨一覧レスポンス."""
 

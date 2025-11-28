@@ -10,7 +10,7 @@ from datetime import datetime
 
 from pydantic import Field
 
-from app.schemas.common.base import BaseSchema
+from app.schemas.common.base import BaseSchema, ListResponse
 from app.schemas.masters.products_schema import ProductCreate, ProductOut
 
 
@@ -179,25 +179,8 @@ class MasterBulkLoadResponse(BaseSchema):
 # ============================================================
 
 
-class CustomerListResponse(BaseSchema):
-    """Customer list response."""
-
-    items: list[CustomerResponse]
-
-
-class ProductListResponse(BaseSchema):
-    """Product list response."""
-
-    items: list[ProductOut]
-
-
-class SupplierListResponse(BaseSchema):
-    """Supplier list response."""
-
-    items: list[SupplierResponse]
-
-
-class DeliveryPlaceListResponse(BaseSchema):
-    """Delivery place list response."""
-
-    items: list[DeliveryPlaceResponse]
+# Use generic ListResponse instead of custom classes
+CustomerListResponse = ListResponse[CustomerResponse]
+ProductListResponse = ListResponse[ProductOut]
+SupplierListResponse = ListResponse[SupplierResponse]
+DeliveryPlaceListResponse = ListResponse[DeliveryPlaceResponse]

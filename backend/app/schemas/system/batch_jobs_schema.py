@@ -35,6 +35,8 @@ class BatchJobResponse(BatchJobBase):
     model_config = {"from_attributes": True}
 
 
+# Note: Field name is "jobs" instead of "items" - keeping custom class for now
+# TODO: Consider standardizing to "items" field name in next major version
 class BatchJobListResponse(BaseModel):
     """バッチジョブ一覧レスポンス."""
 

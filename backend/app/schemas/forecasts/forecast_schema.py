@@ -7,7 +7,7 @@ from decimal import Decimal
 
 from pydantic import Field
 
-from app.schemas.common.base import BaseSchema, TimestampMixin
+from app.schemas.common.base import BaseSchema, ListResponse, TimestampMixin
 from app.schemas.orders.orders_schema import OrderWithLinesResponse
 
 
@@ -92,11 +92,8 @@ class ForecastGroupResponse(BaseSchema):
     related_orders: list[OrderWithLinesResponse] = Field(default_factory=list)
 
 
-class ForecastListResponse(BaseSchema):
-    """List response with grouped forecasts."""
-
-    items: list[ForecastGroupResponse]
-    total: int
+# Use generic ListResponse instead of custom class
+ForecastListResponse = ListResponse[ForecastGroupResponse]
 
 
 class ForecastBulkImportItem(BaseSchema):

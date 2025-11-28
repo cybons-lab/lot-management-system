@@ -2,14 +2,15 @@
  * Bulk Operation Types for Products
  */
 
+// Import base types from shared location
 import type {
   BulkOperationType,
   BulkRowBase,
-  BulkResultRow,
   BulkUpsertResponse,
-} from "@/features/customers/types/bulk-operation";
+  BulkUpsertRequest,
+} from "@/shared/types/bulk-operations";
 
-export type { BulkOperationType, BulkRowBase, BulkResultRow, BulkUpsertResponse };
+export type { BulkOperationType, BulkRowBase, BulkUpsertResponse };
 
 /**
  * Product用の一括処理行データ

@@ -11,7 +11,7 @@ from decimal import Decimal
 
 from pydantic import Field
 
-from app.schemas.common.base import BaseSchema
+from app.schemas.common.base import BaseSchema, ListResponse
 
 
 # ============================================================
@@ -162,11 +162,8 @@ class AllocationDetail(BaseSchema):
     status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
 
 
-class AllocationListResponse(BaseSchema):
-    """Allocation list response."""
-
-    items: list[AllocationDetail] = Field(default_factory=list)
-    total: int = 0
+# Use generic ListResponse instead of custom class
+AllocationListResponse = ListResponse[AllocationDetail]
 
 
 # ============================================================

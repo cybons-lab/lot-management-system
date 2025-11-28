@@ -3,11 +3,13 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
+from app.schemas.common.base import ListResponse
+
 
 class WarehouseOut(BaseModel):
     warehouse_id: int
     warehouse_name: str
 
 
-class WarehouseListResponse(BaseModel):
-    items: list[WarehouseOut]
+# Use generic ListResponse instead of custom class
+WarehouseListResponse = ListResponse[WarehouseOut]

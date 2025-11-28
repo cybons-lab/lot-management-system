@@ -22,6 +22,8 @@ class OperationLogResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# Note: Field name is "logs" instead of "items" - keeping custom class for now
+# TODO: Consider standardizing to "items" field name in next major version
 class OperationLogListResponse(BaseModel):
     """操作ログ一覧レスポンス."""
 
@@ -46,6 +48,8 @@ class MasterChangeLogResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# Note: Field name is "logs" instead of "items" - keeping custom class for now
+# TODO: Consider standardizing to "items" field name in next major version
 class MasterChangeLogListResponse(BaseModel):
     """マスタ変更履歴一覧レスポンス."""
 
