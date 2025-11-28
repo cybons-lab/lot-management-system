@@ -12,9 +12,11 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     Numeric,
@@ -270,6 +272,8 @@ class CustomerItem(Base):
     pack_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
     pack_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)
     special_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    shipping_document_template: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sap_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -319,3 +323,48 @@ class ProductUomConversion(Base):
 
     # Relationships
     product: Mapped[Product] = relationship("Product", back_populates="uom_conversions")
+
+
+class CustomerItemJikuMapping(Base):
+    """Customer item - Jiku code mapping (顧客商品-次区マッピング).
+
+    DDL: customer_item_jiku_mappings
+    Primary key: id (BIGSERIAL)
+    Foreign keys: 
+        (customer_id, external_product_code) -> customer_items(customer_id, external_product_code)
+        delivery_place_id -> delivery_places(id)
+    """
+
+    __tablename__ = "customer_item_jiku_mappings"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    external_product_code: Mapped[str] = mapped_column(String(100), nullable=False)
+    jiku_code: Mapped[str] = mapped_column(String(50), nullable=False)
+    delivery_place_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("delivery_places.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    is_default: Mapped[bool | None] = mapped_column(Boolean, server_default="FALSE", nullable=True)
+    created_at: Mapped[datetime | None] = mapped_column(
+        DateTime, server_default=func.current_timestamp(), nullable=True
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["customer_id", "external_product_code"],
+            ["customer_items.customer_id", "customer_items.external_product_code"],
+            ondelete="CASCADE",
+            name="fk_customer_item_jiku_customer_item",
+        ),
+        UniqueConstraint(
+            "customer_id",
+            "external_product_code",
+            "jiku_code",
+            name="uq_customer_item_jiku",
+        ),
+    )
+
+    # Relationships
+    delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")

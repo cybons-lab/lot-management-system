@@ -119,6 +119,9 @@ class OrderLine(Base):
     sap_order_no: Mapped[str | None] = mapped_column(
         String(100), nullable=True, comment="SAP受注番号（登録済みの場合）"
     )
+    shipping_document_text: Mapped[str | None] = mapped_column(
+        Text, nullable=True, comment="出荷表テキスト"
+    )
 
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'pending'")
@@ -131,6 +134,11 @@ class OrderLine(Base):
         Index("idx_order_lines_date", "delivery_date"),
         Index("idx_order_lines_delivery_place", "delivery_place_id"),
         Index("idx_order_lines_status", "status"),
+        Index(
+            "idx_order_lines_sap_order_no",
+            "sap_order_no",
+            postgresql_where=text("sap_order_no IS NOT NULL"),
+        ),
         CheckConstraint(
             "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled')",
             name="chk_order_lines_status",
