@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.models import Allocation, Customer, Order, OrderLine, Product
 
-router = APIRouter(tags=["orders"])
+router = APIRouter(prefix="/orders", tags=["orders"])
 
 
 class ConfirmedOrderLineResponse(BaseModel):
@@ -31,7 +31,7 @@ class ConfirmedOrderLineResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-@router.get("/orders/confirmed-lines", response_model=list[ConfirmedOrderLineResponse])
+@router.get("/confirmed-order-lines", response_model=list[ConfirmedOrderLineResponse])
 def get_confirmed_order_lines(db: Session = Depends(get_db)):
     """
     Get all order lines that are fully allocated and not yet registered in SAP.

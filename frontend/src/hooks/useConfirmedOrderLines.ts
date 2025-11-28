@@ -20,7 +20,7 @@ export function useConfirmedOrderLines() {
     return useQuery<ConfirmedOrderLine[]>({
         queryKey: ["confirmed-order-lines"],
         queryFn: async () => {
-            const response = await fetch("/api/orders/confirmed-lines");
+            const response = await fetch("/api/orders/confirmed-order-lines");
             if (!response.ok) throw new Error("Failed to fetch confirmed lines");
             return response.json();
         },
