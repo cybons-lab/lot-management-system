@@ -6,7 +6,6 @@ import type { Column } from "@/shared/components/data/DataTable";
 import { OrderStatusBadge } from "@/shared/components/data/StatusBadge";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
 import type { OrderUI } from "@/shared/libs/normalize";
-import type { OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 
 export const columns: Column<OrderUI>[] = [
@@ -61,10 +60,10 @@ export const columns: Column<OrderUI>[] = [
       const lines = order.lines || [];
       // DDL v2.2: prefer order_quantity, fallback to quantity
       const totalQty = lines.reduce<number>(
-        (sum, line: OrderLine) => sum + Number(line.order_quantity ?? line.quantity ?? 0),
+        (sum, line) => sum + Number(line.order_quantity ?? line.quantity ?? 0),
         0,
       );
-      const allocatedQty = lines.reduce<number>((sum, line: OrderLine) => {
+      const allocatedQty = lines.reduce<number>((sum, line) => {
         const lots = coerceAllocatedLots(line.allocated_lots);
         // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
         const allocated = lots.reduce(
@@ -80,9 +79,8 @@ export const columns: Column<OrderUI>[] = [
         <div className="flex items-center gap-3">
           <div className="h-2.5 w-32 overflow-hidden rounded-full bg-slate-200">
             <div
-              className={`h-full rounded-full transition-all ${
-                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
-              }`}
+              className={`h-full rounded-full transition-all ${rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
+                }`}
               style={{ width: `${rate}%` }}
             />
           </div>

@@ -10,6 +10,7 @@ import type {
   OrderLineResponse as OrderLine,
   OrderResponse as OrderResponseAlias,
 } from "@/shared/types/schema";
+import type { AllocatedLot } from "@/shared/types/aliases";
 
 // ヘルパー関数
 export const S = (v: string | null | undefined, fallback = "-"): string => v ?? fallback;
@@ -35,9 +36,13 @@ export interface OrderLineUI extends Record<string, unknown> {
   unit: string;
   delivery_date: string; // DDL v2.2: changed from due_date
   delivery_place_id: number; // DDL v2.2: required field
+  status: string; // Order line status
+  created_at: string; // Creation timestamp
+  updated_at: string; // Update timestamp
+  allocated_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
   warehouse_allocations: unknown[];
   related_lots: unknown[];
-  allocated_lots: unknown[];
+  allocated_lots: AllocatedLot[];
   // Legacy fields (deprecated, for backward compatibility)
   line_no?: number;
   product_code?: string;
@@ -238,10 +243,14 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
     unit: S(line.unit, "EA"),
     delivery_date: S(line.delivery_date),
     delivery_place_id: N(line.delivery_place_id),
+    status: S((line as Record<string, unknown>).status as string, "pending"),
+    created_at: S(line.created_at),
+    updated_at: S(line.updated_at),
+    allocated_quantity: String(line.allocated_quantity ?? "0"),
     warehouse_allocations:
       ((line as Record<string, unknown>).warehouse_allocations as unknown[]) ?? [],
     related_lots: ((line as Record<string, unknown>).related_lots as unknown[]) ?? [],
-    allocated_lots: ((line as Record<string, unknown>).allocated_lots as unknown[]) ?? [],
+    allocated_lots: ((line as Record<string, unknown>).allocated_lots as AllocatedLot[]) ?? [],
     // Legacy fields (for backward compatibility)
     line_no: ((line as Record<string, unknown>).line_no as number) ?? undefined,
     product_code: S((line as Record<string, unknown>).product_code as string),
