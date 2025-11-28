@@ -96,105 +96,91 @@ app.add_middleware(
 # Core endpoints
 # Core endpoints
 app.include_router(
-    lots_router, prefix=settings.API_PREFIX, dependencies=[Depends(AuthService.get_current_user)]
+    lots_router, prefix=settings.API_PREFIX
 )
 app.include_router(
-    orders_router, prefix=settings.API_PREFIX, dependencies=[Depends(AuthService.get_current_user)]
+    orders_router, prefix=settings.API_PREFIX
 )
 app.include_router(
     allocations_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     allocation_candidates_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     allocation_suggestions_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     warehouse_alloc_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 
 # Forecast endpoints
 app.include_router(
     forecasts_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 
 # Alert endpoints
 app.include_router(
-    alerts_router, prefix=settings.API_PREFIX, dependencies=[Depends(AuthService.get_current_user)]
+    alerts_router, prefix=settings.API_PREFIX
 )
 
 # Inventory endpoints
 app.include_router(
     inbound_plans_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     adjustments_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     inventory_items_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 
 # Master data endpoints (direct access)
 app.include_router(
     warehouses_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     suppliers_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     customers_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     products_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     customer_items_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 
 # User & Role management
 app.include_router(auth_router, prefix=settings.API_PREFIX)
 app.include_router(
-    users_router, prefix=settings.API_PREFIX, dependencies=[Depends(AuthService.get_current_user)]
+    users_router, prefix=settings.API_PREFIX
 )
 app.include_router(
-    roles_router, prefix=settings.API_PREFIX, dependencies=[Depends(AuthService.get_current_user)]
+    roles_router, prefix=settings.API_PREFIX
 )
 app.include_router(
     assignment_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 
 # Admin & system endpoints
 app.include_router(
-    admin_router, prefix=settings.API_PREFIX, dependencies=[Depends(AuthService.get_current_user)]
+    admin_router, prefix=settings.API_PREFIX
 )
 app.include_router(admin_healthcheck_router, prefix=settings.API_PREFIX)
 app.include_router(test_data_router, prefix=settings.API_PREFIX + "/admin/test-data")
@@ -204,22 +190,19 @@ app.include_router(health_router, prefix=settings.API_PREFIX)
 app.include_router(
     operation_logs_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     business_rules_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 app.include_router(
     batch_jobs_router,
     prefix=settings.API_PREFIX,
-    dependencies=[Depends(AuthService.get_current_user)],
 )
 
 # Integration endpoints
 app.include_router(
-    sap_router, prefix=settings.API_PREFIX, dependencies=[Depends(AuthService.get_current_user)]
+    sap_router, prefix=settings.API_PREFIX
 )
 
 
