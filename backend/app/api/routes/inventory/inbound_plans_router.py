@@ -17,6 +17,7 @@ from app.schemas.inventory.inbound_schema import (
     SAPSyncRequest,
     SAPSyncResponse,
 )
+from app.services.inventory.inbound_receiving_service import InboundReceivingService
 from app.services.inventory.inbound_service import InboundService
 from app.services.sap.sap_service import SAPService
 
@@ -311,7 +312,7 @@ def receive_inbound_plan(
     Raises:
         HTTPException: 入荷予定が見つからない場合は404
     """
-    service = InboundService(db)
+    service = InboundReceivingService(db)
     try:
         result = service.receive_inbound_plan(plan_id, request)
         return result
