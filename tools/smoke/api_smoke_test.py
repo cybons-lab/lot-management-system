@@ -29,6 +29,7 @@ import requests
 @dataclass
 class TestResult:
     """テスト結果を保持するデータクラス"""
+
     name: str
     url: str
     ok: bool = False
@@ -50,11 +51,11 @@ def invoke_test(
     method: str = "GET",
     headers: Optional[dict] = None,
     body: Optional[dict] = None,
-    timeout: int = 10
+    timeout: int = 10,
 ) -> TestResult:
     """
     APIエンドポイントにリクエストを送信してテストを実行
-    
+
     Args:
         name: テスト名
         url: リクエストURL
@@ -62,48 +63,42 @@ def invoke_test(
         headers: リクエストヘッダー
         body: リクエストボディ(JSON)
         timeout: タイムアウト秒数
-    
+
     Returns:
         TestResult: テスト結果
     """
     result = TestResult(name=name, url=url)
     headers = headers or {}
-    
+
     start_time = time.perf_counter()
     try:
         response = requests.request(
-            method=method,
-            url=url,
-            headers=headers,
-            json=body,
-            timeout=timeout
+            method=method, url=url, headers=headers, json=body, timeout=timeout
         )
         elapsed_ms = int((time.perf_counter() - start_time) * 1000)
         result.ms = elapsed_ms
-        
+
         # JSONレスポンスを取得
         try:
             data = response.json()
         except ValueError:
             data = {}
-        
+
         # error/detailフィールドの有無で成否判定
         has_error = "error" in data or "detail" in data
         result.ok = response.ok and not has_error
-        
+
         # 表示用ノート(title/status/messageの最初にあるもの)
         result.note = get_first_non_empty(
-            data.get("title"),
-            data.get("status"),
-            data.get("message")
+            data.get("title"), data.get("status"), data.get("message")
         )
-        
+
     except Exception as e:
         elapsed_ms = int((time.perf_counter() - start_time) * 1000)
         result.ms = elapsed_ms
         result.ok = False
         result.note = str(e)
-    
+
     return result
 
 
@@ -112,22 +107,19 @@ def main():
     parser.add_argument(
         "--base-url",
         default="http://localhost:8000",
-        help="ベースURL (デフォルト: http://localhost:8000)"
+        help="ベースURL (デフォルト: http://localhost:8000)",
     )
     parser.add_argument(
-        "--timeout",
-        type=int,
-        default=10,
-        help="タイムアウト秒数 (デフォルト: 10)"
+        "--timeout", type=int, default=10, help="タイムアウト秒数 (デフォルト: 10)"
     )
     args = parser.parse_args()
-    
+
     base_url = args.base_url
     timeout = args.timeout
-    
+
     print("== API Smoke Test start ==")
     print(f"BaseUrl = {base_url}\n")
-    
+
     # テストケース定義
     results = []
     test_cases = [
@@ -141,26 +133,28 @@ def main():
         ("allocations list", f"{base_url}/api/allocations"),
         ("forecasts list", f"{base_url}/api/forecast"),
     ]
-    
+
     # テスト実行
     for name, url in test_cases:
         result = invoke_test(name, url, timeout=timeout)
         results.append(result)
-    
+
     # サマリー表示
     ok_count = sum(1 for r in results if r.ok)
     ng_count = sum(1 for r in results if not r.ok)
     total_ms = sum(r.ms for r in results)
-    
+
     print("\n== Summary ==")
     for r in results:
         status = "OK " if r.ok else "NG "
         print(f"[{status}] {r.name:30s}  {r.ms:4d}ms  -> {r.url}")
         if r.note:
             print(f"     note: {r.note}")
-    
-    print(f"\nTotal: {len(results)}  OK: {ok_count}  NG: {ng_count}  Time: {total_ms}ms")
-    
+
+    print(
+        f"\nTotal: {len(results)}  OK: {ok_count}  NG: {ng_count}  Time: {total_ms}ms"
+    )
+
     if ng_count > 0:
         print("== API Smoke Test: FAILED ==")
         sys.exit(1)

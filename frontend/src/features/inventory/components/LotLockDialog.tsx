@@ -4,6 +4,7 @@
  * ロットロック確認ダイアログ
  */
 
+/* eslint-disable max-lines-per-function */
 import { useState } from "react";
 
 import {
@@ -120,7 +121,7 @@ export function LotLockDialog({
           </div>
 
           {isPartialLock && (
-            <div className="pl-6 pt-2">
+            <div className="pt-2 pl-6">
               <Label htmlFor="lock_quantity">ロックする数量 (有効在庫: {availableQuantity})</Label>
               <Input
                 id="lock_quantity"
@@ -136,7 +137,7 @@ export function LotLockDialog({
             </div>
           )}
           {!isPartialLock && (
-            <p className="pl-6 text-sm text-muted-foreground">
+            <p className="text-muted-foreground pl-6 text-sm">
               チェックを外すと、現在の有効在庫 ({availableQuantity}) 全てをロックします。
             </p>
           )}

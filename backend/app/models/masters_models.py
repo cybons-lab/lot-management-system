@@ -330,7 +330,7 @@ class CustomerItemJikuMapping(Base):
 
     DDL: customer_item_jiku_mappings
     Primary key: id (BIGSERIAL)
-    Foreign keys: 
+    Foreign keys:
         (customer_id, external_product_code) -> customer_items(customer_id, external_product_code)
         delivery_place_id -> delivery_places(id)
     """

@@ -58,7 +58,7 @@ def main() -> None:
     step(
         "vulture install/probe (backend)",
         "backend",
-        'pip show vulture >/dev/null 2>&1 || pip install --quiet vulture',
+        "pip show vulture >/dev/null 2>&1 || pip install --quiet vulture",
     )
     step("vulture (backend)", "backend", "vulture app || true")
 

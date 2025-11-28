@@ -24,7 +24,7 @@ TABCOLOR_FOREIGN_KEYS = "00B0F0"  # 青
 
 def sanitize_sheet_name(name: str) -> str:
     # 禁止文字 \ / * ? : [ ] を除去
-    name = re.sub(r'[\\/*?:\[\]]', "_", name)
+    name = re.sub(r"[\\/*?:\[\]]", "_", name)
     # 31文字に切り捨て
     return name[:31] if len(name) > 31 else name
 
@@ -139,13 +139,15 @@ def get_constraints_df(conn, schema: str) -> pd.DataFrame:
     ORDER BY table_name, constraint_type, constraint_name
     """)
     df = pd.read_sql(sql, conn, params={"schema": schema})
-    return df.rename(columns={
-        "schema": "スキーマ",
-        "table_name": "テーブル名",
-        "constraint_name": "制約名",
-        "constraint_type": "制約種別",
-        "definition": "定義"
-    })[["スキーマ", "テーブル名", "制約名", "制約種別", "定義"]]
+    return df.rename(
+        columns={
+            "schema": "スキーマ",
+            "table_name": "テーブル名",
+            "constraint_name": "制約名",
+            "constraint_type": "制約種別",
+            "definition": "定義",
+        }
+    )[["スキーマ", "テーブル名", "制約名", "制約種別", "定義"]]
 
 
 def get_foreign_keys_df(conn, schema: str) -> pd.DataFrame:
@@ -169,15 +171,17 @@ def get_foreign_keys_df(conn, schema: str) -> pd.DataFrame:
     ORDER BY src_table, fk_name, kcu.ordinal_position
     """)
     df = pd.read_sql(sql, conn, params={"schema": schema})
-    return df.rename(columns={
-        "fk_name": "FK名",
-        "src_table": "参照元テーブル",
-        "src_column": "参照元列",
-        "dst_table": "参照先テーブル",
-        "dst_column": "参照先列",
-        "update_rule": "更新時",
-        "delete_rule": "削除時",
-    })
+    return df.rename(
+        columns={
+            "fk_name": "FK名",
+            "src_table": "参照元テーブル",
+            "src_column": "参照元列",
+            "dst_table": "参照先テーブル",
+            "dst_column": "参照先列",
+            "update_rule": "更新時",
+            "delete_rule": "削除時",
+        }
+    )
 
 
 def add_table_style(ws, df: pd.DataFrame, table_name: str, start_row=1, start_col=1):
@@ -206,7 +210,9 @@ def add_table_style(ws, df: pd.DataFrame, table_name: str, start_row=1, start_co
         ws.column_dimensions[get_column_letter(i)].width = min(max(12, max_len + 2), 60)
 
     # ヘッダー行は太字・折返し・中央寄せ
-    header_row = ws[f"{get_column_letter(start_col)}{start_row}":f"{get_column_letter(end_col)}{start_row}"][0]
+    header_row = ws[
+        f"{get_column_letter(start_col)}{start_row}" : f"{get_column_letter(end_col)}{start_row}"
+    ][0]
     for cell in header_row:
         cell.font = Font(bold=True)
         cell.alignment = Alignment(vertical="center", wrap_text=True)
@@ -223,7 +229,7 @@ def build_index_sheet(xw, sheet_order: List[str]):
     row = 4
     for name in sheet_order:
         # =HYPERLINK("#'name'!A1","name")
-        ws.cell(row=row, column=1).value = f"=HYPERLINK(\"#'{name}'!A1\",\"{name}\")"
+        ws.cell(row=row, column=1).value = f'=HYPERLINK("#\'{name}\'!A1","{name}")'
         row += 1
 
     ws.freeze_panes = ws["A4"]
@@ -257,28 +263,50 @@ def main():
             ordered_sheet_names.append(sheet_name)
 
             # メタ行（テーブル名・コメント）
-            meta_df = pd.DataFrame([{
-                "テーブル名": tbl,
-                "テーブルコメント": get_table_comment(conn, args.schema, tbl)
-            }])
+            meta_df = pd.DataFrame(
+                [
+                    {
+                        "テーブル名": tbl,
+                        "テーブルコメント": get_table_comment(conn, args.schema, tbl),
+                    }
+                ]
+            )
 
             meta_df.to_excel(xw, sheet_name=sheet_name, index=False, startrow=0)
             df.to_excel(xw, sheet_name=sheet_name, index=False, startrow=2)
 
             ws = xw.book[sheet_name]
             # Excelテーブル化（薄グリーン）
-            add_table_style(ws, df, table_name=f"T_{re.sub('[^A-Za-z0-9_]', '_', tbl)}", start_row=3, start_col=1)
+            add_table_style(
+                ws,
+                df,
+                table_name=f"T_{re.sub('[^A-Za-z0-9_]', '_', tbl)}",
+                start_row=3,
+                start_col=1,
+            )
 
         # 制約一覧
         constraints_df = get_constraints_df(conn, args.schema)
         constraints_df.to_excel(xw, sheet_name="CONSTRAINTS", index=False)
-        add_table_style(xw.book["CONSTRAINTS"], constraints_df, table_name="T_CONSTRAINTS", start_row=1, start_col=1)
+        add_table_style(
+            xw.book["CONSTRAINTS"],
+            constraints_df,
+            table_name="T_CONSTRAINTS",
+            start_row=1,
+            start_col=1,
+        )
         xw.book["CONSTRAINTS"].sheet_properties.tabColor = TABCOLOR_CONSTRAINTS
 
         # 外部キー一覧
         fks_df = get_foreign_keys_df(conn, args.schema)
         fks_df.to_excel(xw, sheet_name="FOREIGN_KEYS", index=False)
-        add_table_style(xw.book["FOREIGN_KEYS"], fks_df, table_name="T_FOREIGN_KEYS", start_row=1, start_col=1)
+        add_table_style(
+            xw.book["FOREIGN_KEYS"],
+            fks_df,
+            table_name="T_FOREIGN_KEYS",
+            start_row=1,
+            start_col=1,
+        )
         xw.book["FOREIGN_KEYS"].sheet_properties.tabColor = TABCOLOR_FOREIGN_KEYS
 
         # 目次（先頭）

@@ -12,11 +12,11 @@ import * as styles from "./styles";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
-import { useRoles } from "@/features/roles/hooks";
 import {
   UserSupplierAssignmentDialog,
   UserSupplierAssignmentList,
 } from "@/features/assignments/components";
+import { useRoles } from "@/features/roles/hooks";
 
 // eslint-disable-next-line max-lines-per-function
 export function UserDetailPage() {
