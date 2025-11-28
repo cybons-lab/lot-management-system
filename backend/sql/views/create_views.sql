@@ -40,7 +40,7 @@ SELECT
     l.id AS lot_id,
     l.product_id,
     l.warehouse_id,
-    (l.current_quantity - l.allocated_quantity) AS available_qty,
+    GREATEST(l.current_quantity - l.allocated_quantity - l.locked_quantity, 0) AS available_qty,
     l.received_date AS receipt_date,
     l.expiry_date,
     l.status AS lot_status
@@ -48,7 +48,7 @@ FROM public.lots l
 WHERE 
     l.status = 'active'
     AND (l.expiry_date IS NULL OR l.expiry_date >= CURRENT_DATE)
-    AND (l.current_quantity - l.allocated_quantity) > 0;
+    AND (l.current_quantity - l.allocated_quantity - l.locked_quantity) > 0;
 
 CREATE VIEW public.v_order_line_context AS
 SELECT 
@@ -169,9 +169,10 @@ SELECT
     l.warehouse_id,
     SUM(l.current_quantity) AS total_quantity,
     SUM(l.allocated_quantity) AS allocated_quantity,
-    (SUM(l.current_quantity) - SUM(l.allocated_quantity)) AS available_quantity,
+    SUM(l.locked_quantity) AS locked_quantity,
+    GREATEST(SUM(l.current_quantity) - SUM(l.allocated_quantity) - SUM(l.locked_quantity), 0) AS available_quantity,
     COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
-    (SUM(l.current_quantity) - SUM(l.allocated_quantity) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
+    GREATEST(SUM(l.current_quantity) - SUM(l.allocated_quantity) - SUM(l.locked_quantity) + COALESCE(SUM(ipl.planned_quantity), 0), 0) AS available_with_provisional,
     MAX(l.updated_at) AS last_updated
 FROM public.lots l
 LEFT JOIN public.inbound_plan_lines ipl ON l.product_id = ipl.product_id
@@ -198,9 +199,11 @@ SELECT
     l.expiry_date,
     l.current_quantity,
     l.allocated_quantity,
-    (l.current_quantity - l.allocated_quantity) AS available_quantity,
+    l.locked_quantity,
+    GREATEST(l.current_quantity - l.allocated_quantity - l.locked_quantity, 0) AS available_quantity,
     l.unit,
     l.status,
+    l.lock_reason,
     CASE WHEN l.expiry_date IS NOT NULL THEN CAST((l.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
     -- 担当者情報を追加
     usa_primary.user_id AS primary_user_id,

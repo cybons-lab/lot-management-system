@@ -349,16 +349,52 @@ def delete_lot(lot_id: int, db: Session = Depends(get_db)):
 
 @router.post("/{lot_id}/lock", response_model=LotResponse)
 def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
-    """ロットをロックする."""
+    """ロットをロックする（数量指定可）."""
     db_lot = db.query(Lot).filter(Lot.id == lot_id).first()
     if not db_lot:
         raise HTTPException(status_code=404, detail="ロットが見つかりません")
 
-    db_lot.status = "locked"
-    db_lot.lock_reason = lock_data.reason
+    # 数量指定がない場合は、残り全量をロック
+    quantity_to_lock = lock_data.quantity
+    
+    current_qty = db_lot.current_quantity or Decimal(0)
+    allocated_qty = db_lot.allocated_quantity or Decimal(0)
+    locked_qty = db_lot.locked_quantity or Decimal(0)
+    
+    available_qty = current_qty - allocated_qty - locked_qty
+    
+    if quantity_to_lock is None:
+        # 残り全量をロックに追加
+        quantity_to_lock = available_qty
+    
+    if quantity_to_lock < 0:
+        raise HTTPException(status_code=400, detail="ロック数量は0以上である必要があります")
+        
+    if quantity_to_lock > available_qty:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"ロック数量({quantity_to_lock})が有効在庫({available_qty})を超えています"
+        )
+
+    # ロック数量を加算
+    db_lot.locked_quantity = locked_qty + quantity_to_lock
+    
+    # 理由があれば更新（上書き）
+    if lock_data.reason:
+        db_lot.lock_reason = lock_data.reason
+        
+    # 全量がロックされた場合でも、statusはactiveのままにする（部分ロック仕様）
+    # ただし、明示的にstatus=lockedにするAPIも別途あるかもしれないが、
+    # 今回の要件では locked_quantity で制御する。
+    # 既存の status='locked' との整合性のため、もし status='locked' ならそのまま。
+    
     db_lot.updated_at = datetime.now()
 
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
 
     # v2.2: Fetch from view to ensure all required fields (product_name, etc.) are present
     lot_view = db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
@@ -370,14 +406,35 @@ def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
 
 
 @router.post("/{lot_id}/unlock", response_model=LotResponse)
-def unlock_lot(lot_id: int, db: Session = Depends(get_db)):
-    """ロットのロックを解除する."""
+def unlock_lot(lot_id: int, unlock_data: LotLock | None = None, db: Session = Depends(get_db)):
+    """ロットのロックを解除する（数量指定可）."""
     db_lot = db.query(Lot).filter(Lot.id == lot_id).first()
     if not db_lot:
         raise HTTPException(status_code=404, detail="ロットが見つかりません")
 
-    db_lot.status = "active"
-    db_lot.lock_reason = None
+    quantity_to_unlock = unlock_data.quantity if unlock_data else None
+    locked_qty = db_lot.locked_quantity or Decimal(0)
+
+    if quantity_to_unlock is None:
+        # 全解除
+        db_lot.locked_quantity = Decimal(0)
+        db_lot.lock_reason = None # 全解除時のみ理由もクリア
+        # statusがlockedだった場合、activeに戻す（全解除なので）
+        if db_lot.status == 'locked':
+            db_lot.status = 'active'
+    else:
+        if quantity_to_unlock < 0:
+             raise HTTPException(status_code=400, detail="解除数量は0以上である必要があります")
+        
+        if quantity_to_unlock > locked_qty:
+            raise HTTPException(
+                status_code=400,
+                detail=f"解除数量({quantity_to_unlock})がロック済み数量({locked_qty})を超えています"
+            )
+            
+        db_lot.locked_quantity = locked_qty - quantity_to_unlock
+        # 部分解除の場合は理由は残す、statusもそのまま
+
     db_lot.updated_at = datetime.now()
 
     db.commit()
