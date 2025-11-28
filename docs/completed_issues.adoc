@@ -1,0 +1,463 @@
+= 完了済み課題アーカイブ
+:toc: left
+:toc-title: 目次
+:sectnums:
+
+**最終更新:** 2025-11-28 +
+**目的:** 実装完了した課題の履歴記録
+
+== サマリー
+
+=== 完了統計
+
+[cols="1,1,1"]
+|===
+| カテゴリ | 完了数 | 完了日
+
+| プロジェクト構造改善 Phase 1
+| 3件
+| 2025-11-27
+
+| プロジェクト構造改善 Phase 2
+| 5件
+| 2025-11-28
+
+| プロジェクト構造改善 Phase 3
+| 4件
+| 2025-11-28
+
+| 機能実装（主要）
+| 12件+
+| 2025-11-24〜28
+
+| ロット引当UI改善
+| Phase 1-5
+| 2025-11-27
+|===
+
+**総完了件数: 24件以上**
+
+---
+
+== プロジェクト構造改善
+
+=== Phase 1: 即座対応（2025-11-27）✅ 3/3 完了
+
+==== 1. view_models.py と views_models.py の統合 ✅
+
+**問題点:**
+[source,text]
+----
+backend/app/models/
+├── view_models.py (60行) ← LotWithMaster 1つのみ
+└── views_models.py (254行) ← 10個以上のビューモデル
+----
+
+**影響:** ファイル名が混乱を招く（単数 vs 複数）
+
+**解決策:**
+
+* `LotWithMaster` クラスを `views_models.py` に移動
+* `view_models.py` ファイルを削除
+* `lots_router.py` の import文を `views_models` に変更
+
+**変更ファイル:**
+
+* `backend/app/models/views_models.py` - LotWithMaster追加
+* `backend/app/api/routes/inventory/lots_router.py` - import修正
+* `backend/app/models/view_models.py` - 削除
+
+---
+
+==== 2. app/db/session.py レガシー互換レイヤー削除 ✅
+
+**問題点:** 実装は `app/core/database` から全て re-export するだけの互換レイヤー
+
+**使用箇所:** わずか3ファイルのみ
+
+* `tests/api/test_inventory_sync_api.py`
+* `tests/api/test_lots.py`
+* `routes/orders/orders_validate_router.py`
+
+**解決策:**
+
+* 3ファイルの import を `app.core.database` に変更
+* `app/db/` ディレクトリ全体を削除
+
+**変更ファイル:**
+
+* `backend/tests/api/test_inventory_sync_api.py` - import修正
+* `backend/tests/api/test_lots.py` - import修正
+* `backend/app/api/routes/orders/orders_validate_router.py` - import修正
+* `backend/app/db/` - ディレクトリ削除
+
+---
+
+==== 3. CLAUDE.md とコードベースの乖離修正 ✅
+
+**検出された差異:**
+
+[cols="1,1,1"]
+|===
+| 項目 | CLAUDE.md 記載 | 実態
+
+| routes/masters
+| 11 files
+| 5 files
+
+| routes/admin
+| 9 files
+| 10 files
+
+| routes/integration
+| 2 files
+| 存在しない
+
+| models
+| 11 files
+| 14 files
+|===
+
+**解決策:** CLAUDE.md を最新の構造で更新
+
+---
+
+=== Phase 2: 短期改善（2025-11-28）✅ 5/5 完了
+
+==== 4. assignments モジュール統合 ✅
+
+**問題点:** 他のモジュールはディレクトリ配下なのに assignments だけが直下配置
+
+**解決策:** `routes/assignments/`, `services/assignments/`, `schemas/assignments/` に移動
+
+---
+
+==== 5. frontend: forecast と forecasts の重複解消 ✅
+
+**問題点:** `forecast/` に1ファイルのみ、`forecasts/` が本体実装
+
+**解決策:**
+
+* `ForecastFileUploadCard.tsx` を `forecasts/components/` に移動
+* `forecast/` ディレクトリを削除
+
+---
+
+==== 6. tools/ と backend/tools/ の統合 ✅
+
+**問題点:** ツールが2箇所に散在
+
+**解決策:**
+
+* backend/tools/ のファイルを tools/ に統合
+* schema_consistency_check.py と v2 を統合
+* generate-types.py を削除（実装がない）
+
+---
+
+==== 7. admin router の health 関連調査 ✅
+
+**問題点:** `health_router.py` と `admin_healthcheck_router.py` の重複可能性
+
+**調査結果:** 異なる目的（K8sプローブ vs 管理画面詳細）であるため**統合不要**と判断
+
+---
+
+==== 8. allocation サービスのリファクタリング ✅
+
+**問題点:** `services/allocation/` に11ファイル（合計1692行）
+
+**解決策:**
+
+* `services/allocations/` (複数形) に移行
+* 5つの主要モジュールに再編:
+** `core.py` - コア機能
+** `search.py` - 検索機能
+** `fefo.py` - FEFOロジック
+** `actions.py` - アクション
+** `suggestion.py` - 提案機能
+
+---
+
+=== Phase 3: 中長期改善（2025-11-28）✅ 4/5 完了
+
+==== 9. allocations feature の複雑さ解消 ✅
+
+**問題点:** `features/allocations/` に83ファイル、`useLotAllocation/` だけで11ファイル
+
+**解決策:**
+
+* `useLotAllocation` フックを統合・再編
+* `components/allocation-list/` に移動しコロケーションを改善
+
+---
+
+==== 10. backups/ ディレクトリ運用方針 ✅
+
+**問題点:** バックアップファイルの管理方針が未定義
+
+**解決策:**
+
+* 運用方針を `docs/operations/backup_policy.adoc` に策定
+* 管理スクリプト `scripts/backup_manager.py` を実装
+
+---
+
+==== 11. InboundService の責務分離 ✅
+
+**問題点:** `inbound_service.py` (約550行) に入荷予定管理(CRUD)と入荷受入処理(Logic)が混在
+
+**解決策:** 入荷受入ロジックを `InboundReceivingService` に分離
+
+---
+
+==== 12. ForecastService の責務分離 ✅
+
+**問題点:** `forecast_service.py` (約420行) に通常CRUDと一括インポート処理が混在
+
+**解決策:** インポート処理を `ForecastImportService` に分離
+
+---
+
+==== 13. ForecastDetailCard の肥大化 ⏳
+
+**問題点:** `ForecastDetailCard/` に26ファイル
+
+**対応:** 監視継続（将来対応として記録）
+
+---
+
+== 機能実装
+
+=== SAP連携
+
+==== SAP在庫トータルチェック ✅
+
+**完了日:** 2025-11-27 +
+**コミット:** `75061f6` - feat(admin): SAP在庫トータルチェック機能の追加
+
+**実装内容:**
+
+* `SAPMockClient` - SAP APIのモック実装
+* `InventorySyncService` - 在庫同期サービス
+* 差異検出ロジック（許容差異率1%）
+* `BusinessRule` テーブルへのアラート記録
+* フロントエンド: 管理画面にチェックボタン追加
+
+**関連ファイル:**
+
+* `backend/app/external/sap_mock_client.py`
+* `backend/app/services/batch/inventory_sync_service.py`
+* `frontend/src/features/admin/pages/AdminPage.tsx`
+
+---
+
+==== SAP受注登録（モック）✅
+
+**完了日:** 2025-11-28 +
+**ブランチ:** `feature/sap-mock-api`
+
+**実装内容:**
+
+* バックエンド: `POST /api/integration/sap/sales-orders` (Mock)
+* フロントエンド: `SAPIntegrationSection` からAPIコール
+
+---
+
+=== パフォーマンス・UI改善
+
+==== パフォーマンス改善（ビュー導入）✅
+
+**完了日:** 2025-11-27
+
+**問題点:** `OrderService._populate_additional_info` でアプリケーション層でのJOINを多用
+
+**解決策:**
+
+* データベースビュー `v_order_line_details` を作成
+* 1クエリで必要な全情報を取得可能に
+
+**効果:**
+
+* アプリケーション側でのJOIN処理を削減
+* レスポンスタイムの大幅改善
+
+---
+
+==== ステータス複合表示 ✅
+
+**完了日:** 2025-11-27
+
+**問題点:** ステータスラベルが単独表示のため、複数ステータス該当時に情報欠落
+
+**解決策:**
+
+* 複数のステータスを同時に表示できるバッジ形式に変更
+* 優先度を考慮した表示順を実装（エラー系 → 警告系 → 正常系）
+
+---
+
+==== オーダー集約表示 ✅
+
+**完了日:** 2025-11-27
+
+**問題点:** 同じ受注に属する複数明細が個別パネルで表示され、受注全体の把握が困難
+
+**解決策:**
+
+* オプションスイッチで「オーダー単位表示」に切り替え可能
+* 受注IDでグループ化して階層表示
+
+---
+
+==== 受注管理ページ明細単位化 ✅
+
+**完了日:** 2025-11-28
+
+**解決策:**
+
+* 明細単位（ライン単位）でのリスト表示に変更
+* フィルタリング・ソート機能を明細レベルで提供
+
+---
+
+=== ロット引当UI改善
+
+==== Phase 1: 倉庫・ロット表示 ✅
+
+**完了日:** 2025-11-27
+
+* 倉庫名の表示
+* ロット番号を太字で強調
+* 在庫量の明確な表記（「残量 XX / 総量 XX」）
+* APIが `v_lot_details` を参照
+
+---
+
+==== Phase 2: 状態ラベル表示 ✅
+
+**完了日:** 2025-11-27
+
+* FEFO順位ラベル (#1, #2, #3)
+* 状態ラベル（自動引当/手動引当/過少/過剰）
+* アクティブロットの背景色強調
+* OrderCard状態別色分け
+
+---
+
+==== Phase 3: UI階層・異常系表示 ✅
+
+**完了日:** 2025-11-27
+
+* 異常系（候補なし等）の赤帯警告
+* UI階層（OrderCard/LotList）の明確化
+* 操作エリアの視覚的分離
+
+---
+
+==== Phase 4: 操作性改善 ✅
+
+**完了日:** 2025-11-27
+
+* 全量ボタンの改善（ワンクリック全量確保）
+* チェックボックス一括操作
+* チェック済み項目の折りたたみと下部移動
+* ナビゲーションボタン（TOP/CHK）
+* フォーキャスト情報ツールチップ
+* ステータスフィルタリング機能
+* 「上へ戻る」ボタンの常時表示
+
+---
+
+==== Phase 5: 単位取扱い再構築 ✅
+
+**完了日:** 2025-11-27
+
+* DBスキーマ更新（Product/OrderLineに単位カラム追加）
+* 受注時の単位換算
+* 内部単位での引当計算
+* 内部/外部単位の併記
+* 入力時のリアルタイム換算表示
+
+---
+
+=== その他機能
+
+==== フォーキャスト予測データ生成リファクタリング ✅
+
+**完了日:** 2025-11-24
+
+**実装内容:**
+
+* 共通モジュール `forecast_generator.py` 作成
+* DemandKeyごとにセットで生成（日次・旬次・月次）
+* ランダムな日のみ生成（60-80%カバレッジ）
+* 旬次予測に揺らぎを追加（±15-25%）
+
+**効果:** 合計299行の重複コードを削減
+
+---
+
+==== 単位換算システム実装 ✅
+
+**完了日:** 2025-11-24
+
+**実装内容:**
+
+* データベース駆動の単位換算システム
+* `product_uom_conversions` テーブル作成
+* 自動引当・ステータス計算のバグ修正
+
+**変更ファイル:**
+
+* `backend/app/models/masters_models.py` - ProductUomConversion追加
+* `backend/app/services/common/quantity_service.py` - to_internal_qty実装
+* `frontend/src/shared/types/aliases.ts` - converted_quantity追加
+
+---
+
+==== ユーザー管理機能（バックエンド）✅
+
+**完了日:** 2025-11-27
+
+**実装内容:**
+
+* ユーザーCRUD API (`/api/admin/users`)
+* ロール管理
+* パスワードハッシュ（SHA256 - 本番はbcrypt推奨）
+
+**関連ファイル:**
+
+* `backend/app/api/routes/admin/users_router.py`
+* `backend/app/services/auth/user_service.py`
+* `backend/app/models/auth_models.py`
+
+---
+
+== 変更履歴
+
+[cols="1,1,2"]
+|===
+| 日付 | バージョン | 内容
+
+| 2025-11-28
+| v1.0
+| 初版作成、全完了項目を記録
+
+| 2025-11-28
+| v1.1
+| Phase 2-3完了項目を追加
+
+| 2025-11-27
+| -
+| Phase 1完了
+|===
+
+---
+
+== 関連ドキュメント
+
+* link:remaining_issues.adoc[残課題・TODO] - 未完了課題
+* link:allocation.adoc[ロット引当仕様] - 引当機能の詳細
+* link:forecast.adoc[フォーキャスト仕様] - 予測機能の詳細
+* link:../CLAUDE.md[CLAUDE.md] - プロジェクト全体ガイド

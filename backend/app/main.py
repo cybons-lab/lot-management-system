@@ -39,6 +39,7 @@ from app.api.routes import (
     warehouses_router,
 )
 from app.api.routes.assignments.assignment_router import router as assignment_router
+from app.api.routes.auth_router import router as auth_router
 from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
@@ -118,6 +119,7 @@ app.include_router(products_router, prefix=settings.API_PREFIX)
 app.include_router(customer_items_router, prefix=settings.API_PREFIX)
 
 # User & Role management
+app.include_router(auth_router, prefix=settings.API_PREFIX)
 app.include_router(users_router, prefix=settings.API_PREFIX)
 app.include_router(roles_router, prefix=settings.API_PREFIX)
 app.include_router(assignment_router, prefix=settings.API_PREFIX)
