@@ -1,23 +1,6 @@
 # UI改善課題
 
-## 予測詳細ページ
-
-### 1. 倉庫表示が「不明」になる問題 ✅ 解決済
-
-**原因**: 
-- `/api/lots` エンドポイントが `v_lots_with_master` ビューを使用
-- このビューに `warehouse_code` / `warehouse_name` フィールドが欠落
-- フロントエンドのフォールバック値「不明」が表示された
-
-**修正内容**:
-- `v_lots_with_master` ビューに `warehouses` テーブルをJOIN
-- `warehouse_code` と `warehouse_name` フィールドを追加
-
-**修正ファイル**: `backend/sql/views/create_views.sql`
-
----
-
-### 2. SAP受注登録UIの改善 🔄 仕様見直し中
+## SAP受注登録UIの改善 🔄 仕様見直し中
 
 #### 暫定実装（保留中）
 
