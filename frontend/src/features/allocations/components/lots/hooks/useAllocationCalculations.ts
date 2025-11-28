@@ -1,4 +1,8 @@
-import { getOrderQuantity } from "../../../hooks/useLotAllocation/allocationFieldHelpers";
+import {
+  calculateTotalUiAllocated,
+  getAllocatedQuantity,
+  getOrderQuantity,
+} from "../../../utils/allocationCalculations";
 
 import type { OrderLine } from "@/shared/types/aliases";
 
@@ -32,12 +36,10 @@ export function useAllocationCalculations({
   const requiredQty = orderLine ? getOrderQuantity(orderLine) : 0;
 
   // レガシーフィールド対応: allocated_qty または allocated_quantity
-  const dbAllocated = orderLine
-    ? Number(orderLine.allocated_qty ?? orderLine.allocated_quantity ?? 0)
-    : 0;
+  const dbAllocated = orderLine ? getAllocatedQuantity(orderLine) : 0;
 
   // UI上で新規に引き当てた数量の合計
-  const uiAllocatedTotal = Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
+  const uiAllocatedTotal = calculateTotalUiAllocated(lotAllocations);
 
   // DB既存 + UI新規の合計
   const totalAllocated = dbAllocated + uiAllocatedTotal;

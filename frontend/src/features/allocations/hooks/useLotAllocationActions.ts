@@ -6,30 +6,28 @@
 import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { saveManualAllocations, type ManualAllocationSaveResponse } from "../../api";
-import { allocationCandidatesKeys } from "../api/useAllocationCandidates";
-
+import { saveManualAllocations, type ManualAllocationSaveResponse } from "../api";
+import { ALLOCATION_CONSTANTS } from "../constants";
 import type {
   AllocationsByLine,
   AllocationToastState,
+  CandidateLotFetcher,
   LineAllocations,
   LineStatusMap,
-} from "./allocationActionTypes";
+} from "../types";
 import {
   calculateAutoAllocation,
   calculateTotalUiAllocated,
   checkOverAllocation,
   clampAllocationQuantity,
   convertAllocationsToPayload,
-} from "./allocationCalculations";
-import { ALLOCATION_CONSTANTS } from "./allocationConstants";
-import {
   getAllocatedQuantity,
   getFreeQuantity,
   getOrderId,
   getOrderQuantity,
-} from "./allocationFieldHelpers";
-import type { CandidateLotFetcher } from "./lotAllocationTypes";
+} from "../utils/allocationCalculations";
+
+import { allocationCandidatesKeys } from "./api/useAllocationCandidates";
 
 import type { OrderLine } from "@/shared/types/aliases";
 
@@ -302,12 +300,6 @@ function useAllocationSaver({
 
       // Mark line as committed
       setLineStatusToCommitted(variables.orderLineId, setLineStatuses);
-
-      // NOTE: We intentionally do NOT remove the line allocations from UI state here.
-      // Previously, this caused the display to reset to 0 before the refetch completed.
-      // The refetch (triggered by invalidateQueries below) will update the UI with fresh DB data.
-      // Keeping the UI state allows users to see their allocations while the refetch completes.
-      // removeLineAllocations(variables.orderLineId, setAllocationsByLine);
 
       // Invalidate related queries to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ["orders", "for-allocation"] });

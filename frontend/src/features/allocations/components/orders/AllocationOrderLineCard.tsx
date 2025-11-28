@@ -2,8 +2,8 @@
  * AllocationOrderLineCard component - displays an order line in the detail pane
  */
 
-import { getOrderQuantity } from "../../hooks/useLotAllocation/allocationFieldHelpers";
 import type { OrderLine } from "../../types";
+import { getOrderQuantity } from "../../utils/allocationCalculations";
 
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";

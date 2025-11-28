@@ -1,5 +1,5 @@
 import type { CandidateLotItem } from "../../../api";
-import { getOrderQuantity } from "../../../hooks/useLotAllocation/allocationFieldHelpers";
+import { getOrderQuantity } from "../../../utils/allocationCalculations";
 import { getLineAllocationStatus } from "../FlatAllocationList";
 
 /* eslint-disable max-params */

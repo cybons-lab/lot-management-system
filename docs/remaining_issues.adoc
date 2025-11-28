@@ -374,9 +374,10 @@ backend/app/models/
 
 **問題**: `services/allocation/` に11ファイル（合計1692行）
 
-**対応**: ⏳ 未実施（大規模リファクタリング）
+**対応**: ✅ 実装完了 (2025-11-28)
 
-* ファイル数を 11 → 5-6 程度に削減を検討
+* `services/allocations/` (複数形) に移行し、5つの主要モジュールに再編
+* `core.py`, `search.py`, `fefo.py`, `actions.py`, `suggestion.py`
 
 ==== Phase 3: 中長期改善（2-4週間）【低優先度】
 
@@ -384,11 +385,36 @@ backend/app/models/
 
 **問題**: `features/allocations/` に83ファイル、`useLotAllocation/` だけで11ファイル
 
-**対応**: ⏳ 未実施
+**対応**: ✅ 実装完了 (2025-11-28)
+
+* `useLotAllocation` フックを `useLotAllocationLogic.ts`, `useLotAllocationActions.ts` 等に統合・再編
+* `components/shared/LineBasedAllocationList` を `components/allocation-list/` に移動しコロケーションを改善
 
 ===== 10. backups/ ディレクトリの運用方針 🔵
 
 **対応**: ⏳ 未実施
+
+===== 11. InboundService の責務分離 🔵
+
+**問題**: `backend/app/services/inventory/inbound_service.py` (約550行) に、入荷予定管理(CRUD)と入荷受入処理(Logic)が混在している。特に `receive_inbound_plan` はロット生成などのロジックを含み肥大化の傾向がある。
+
+**対応**: ⏳ 未実施
+
+* 入荷受入ロジックを `InboundReceivingService` (仮) などに分離することを検討
+
+===== 12. ForecastService の責務分離 🔵
+
+**問題**: `backend/app/services/forecasts/forecast_service.py` (約420行) に、通常CRUDと一括インポート処理(`bulk_import`)が混在している。`bulk_import` は履歴管理なども含み複雑。
+
+**対応**: ⏳ 未実施
+
+* インポート処理を `ForecastImportService` (仮) などに分離することを検討
+
+===== 13. ForecastDetailCard の肥大化 🔵
+
+**問題**: `frontend/src/features/forecasts/components/ForecastDetailCard/` に26ファイルが存在し、機能が集中している。現在はコロケーションされているため管理可能だが、今後さらに機能追加される場合は分割を検討すべき。
+
+**対応**: ⏳ 監視継続
 
 === 実施ステータス
 
@@ -398,14 +424,20 @@ backend/app/models/
 * ✅ app/db/session.py を削除
 * ✅ CLAUDE.md を最新構造で更新
 
-**Phase 2 完了状況**: ✅ 4/5 完了 (2025-11-28)
+**Phase 2 完了状況**: ✅ 5/5 完了 (2025-11-28)
 
 * ✅ assignments モジュール統合
 * ✅ forecast ディレクトリ統合
 * ✅ tools ディレクトリ統合
 * ✅ health router 調査（対応不要）
-* ⏳ allocation サービスリファクタリング（未実施）
+* ✅ allocation サービスリファクタリング
 
-**Phase 3 完了状況**: ⏳ 0/2 未実施
+**Phase 3 完了状況**: ✅ 1/5 進行中
 
-**総計**: ✅ 7/10 完了 (70%)
+* ✅ allocations feature の複雑さ解消
+* ⏳ backups 運用方針
+* ⏳ InboundService 責務分離
+* ⏳ ForecastService 責務分離
+* ⏳ ForecastDetailCard 監視
+
+**総計**: ✅ 9/13 完了 (69%)
