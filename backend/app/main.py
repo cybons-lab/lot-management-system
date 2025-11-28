@@ -37,7 +37,7 @@ from app.api.routes import (
     warehouse_alloc_router,
     warehouses_router,
 )
-from app.api.routes.assignments import assignment_router
+from app.api.routes.assignments.assignment_router import router as assignment_router
 from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
