@@ -398,17 +398,17 @@ backend/app/models/
 
 **問題**: `backend/app/services/inventory/inbound_service.py` (約550行) に、入荷予定管理(CRUD)と入荷受入処理(Logic)が混在している。特に `receive_inbound_plan` はロット生成などのロジックを含み肥大化の傾向がある。
 
-**対応**: ⏳ 未実施
+**対応**: ✅ 実装完了 (2025-11-28)
 
-* 入荷受入ロジックを `InboundReceivingService` (仮) などに分離することを検討
+* 入荷受入ロジックを `InboundReceivingService` に分離
 
 ===== 12. ForecastService の責務分離 🔵
 
 **問題**: `backend/app/services/forecasts/forecast_service.py` (約420行) に、通常CRUDと一括インポート処理(`bulk_import`)が混在している。`bulk_import` は履歴管理なども含み複雑。
 
-**対応**: ⏳ 未実施
+**対応**: ✅ 実装完了 (2025-11-28)
 
-* インポート処理を `ForecastImportService` (仮) などに分離することを検討
+* インポート処理を `ForecastImportService` に分離
 
 ===== 13. ForecastDetailCard の肥大化 🔵
 
@@ -432,12 +432,12 @@ backend/app/models/
 * ✅ health router 調査（対応不要）
 * ✅ allocation サービスリファクタリング
 
-**Phase 3 完了状況**: ✅ 1/5 進行中
+**Phase 3 完了状況**: ✅ 3/5 進行中
 
 * ✅ allocations feature の複雑さ解消
 * ⏳ backups 運用方針
-* ⏳ InboundService 責務分離
-* ⏳ ForecastService 責務分離
+* ✅ InboundService 責務分離
+* ✅ ForecastService 責務分離
 * ⏳ ForecastDetailCard 監視
 
-**総計**: ✅ 9/13 完了 (69%)
+**総計**: ✅ 11/13 完了 (85%)
