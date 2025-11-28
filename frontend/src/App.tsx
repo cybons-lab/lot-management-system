@@ -1,8 +1,11 @@
+import { useEffect } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 
 import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
+import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
+import { logError } from "@/services/error-logger";
 // Pages - all imported from features (Phase A cleanup)
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
 import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
@@ -47,8 +50,33 @@ import { TopNavLayout } from "@/layouts/TopNavLayout";
 
 // eslint-disable-next-line max-lines-per-function
 function App() {
+  // Global error handlers
+  useEffect(() => {
+    // Handle uncaught errors
+    const handleError = (event: ErrorEvent) => {
+      logError("Global", event.error || event.message, {
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+      });
+    };
+
+    // Handle unhandled promise rejections
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      logError("UnhandledRejection", event.reason);
+    };
+
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+    };
+  }, []);
+
   return (
-    <>
+    <ErrorBoundary>
       <SAPRegistrationButton />
       <SystemStatus />
       <Routes>
@@ -145,7 +173,7 @@ function App() {
           }
         />
       </Routes>
-    </>
+    </ErrorBoundary>
   );
 }
 
