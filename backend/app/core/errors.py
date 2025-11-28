@@ -69,36 +69,52 @@ async def domain_exception_handler(request: Request, exc: DomainError) -> JSONRe
     # ドメイン例外のマッピングをチェック
     status_code = DOMAIN_EXCEPTION_MAP.get(type(exc))
     detail = getattr(exc, "message", str(exc))
+    error_code = getattr(exc, "code", type(exc).__name__)
 
     if status_code is None:
         logger.warning(
             "Unhandled domain exception type; delegating to generic handler",
             extra={
                 "exception_type": type(exc).__name__,
+                "error_code": error_code,
                 "detail": detail,
                 "path": request.url.path,
+                "method": request.method,
+                "query_params": dict(request.query_params),
             },
         )
         return await generic_exception_handler(request, exc)
 
+    # ドメイン例外の詳細ログ
     logger.warning(
         f"Domain exception: {type(exc).__name__}",
         extra={
             "exception_type": type(exc).__name__,
+            "error_code": error_code,
             "detail": detail,
             "path": request.url.path,
+            "method": request.method,
+            "query_params": dict(request.query_params),
+            "exception_details": getattr(exc, "details", None),
         },
     )
 
-    return JSONResponse(
+    # Problem+JSONレスポンスを構築
+    problem = _problem_json(
+        title=type(exc).__name__,
         status_code=status_code,
-        content=_problem_json(
-            title=type(exc).__name__,
-            status_code=status_code,
-            detail=detail,
-            instance=str(request.url.path),
-        ),
+        detail=detail,
+        instance=str(request.url.path),
     )
+
+    # エラーコードを追加
+    problem["error_code"] = error_code
+
+    # 詳細情報がある場合は追加
+    if hasattr(exc, "details") and exc.details:
+        problem["details"] = exc.details
+
+    return JSONResponse(status_code=status_code, content=problem)
 
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
@@ -112,6 +128,20 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
     Returns:
         JSONResponse（Problem+JSON形式）
     """
+    # HTTPエラーのログ記録
+    log_level = logging.ERROR if exc.status_code >= 500 else logging.WARNING
+    logger.log(
+        log_level,
+        f"HTTP exception: {exc.status_code}",
+        extra={
+            "status_code": exc.status_code,
+            "detail": exc.detail,
+            "path": request.url.path,
+            "method": request.method,
+            "query_params": dict(request.query_params),
+        },
+    )
+
     return JSONResponse(
         status_code=exc.status_code,
         content=_problem_json(
@@ -151,6 +181,17 @@ async def validation_exception_handler(
             error_dict["ctx"] = ctx
         errors.append(error_dict)
 
+    # バリデーションエラーの詳細ログ
+    logger.warning(
+        "Validation error",
+        extra={
+            "path": request.url.path,
+            "method": request.method,
+            "query_params": dict(request.query_params),
+            "validation_errors": errors,
+        },
+    )
+
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=_problem_json(
@@ -159,6 +200,7 @@ async def validation_exception_handler(
             detail="リクエストの検証に失敗しました",
             instance=str(request.url.path),
             errors=errors,
+            error_code="VALIDATION_ERROR",
         ),
     )
 
@@ -174,14 +216,32 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     Returns:
         JSONResponse（Problem+JSON形式）
     """
+    # リクエストボディを取得（可能な場合）
+    request_body = None
+    try:
+        body_bytes = await request.body()
+        if body_bytes:
+            try:
+                request_body = body_bytes.decode("utf-8")[:1000]  # 最初の1000文字のみ
+            except UnicodeDecodeError:
+                request_body = "<binary data>"
+    except Exception:
+        pass  # ボディ取得に失敗しても続行
+
+    # 詳細なエラーログ
     logger.error(
         f"Unhandled exception: {type(exc).__name__}",
         extra={
             "exception_type": type(exc).__name__,
             "exception_message": str(exc),
             "path": request.url.path,
+            "method": request.method,
+            "query_params": dict(request.query_params),
+            "headers": dict(request.headers),
+            "request_body": request_body,
             "traceback": traceback.format_exc(),
         },
+        exc_info=True,
     )
 
     return JSONResponse(
@@ -191,5 +251,6 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="サーバー内部でエラーが発生しました",
             instance=str(request.url.path),
+            error_code="INTERNAL_SERVER_ERROR",
         ),
     )

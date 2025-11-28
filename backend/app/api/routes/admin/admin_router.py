@@ -330,3 +330,37 @@ def get_allocatable_lots(
         logger.error(f"診断API実行エラー: {e}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"診断API実行エラー: {str(e)}")
+
+
+@router.get("/metrics")
+def get_metrics():
+    """
+    パフォーマンスメトリクスを取得.
+
+    APIエンドポイントごとのリクエスト数、エラー率、レスポンスタイムなどを返す。
+    """
+    from app.middleware.metrics import MetricsCollector
+
+    collector = MetricsCollector()
+    return collector.get_summary()
+
+
+@router.post("/metrics/reset")
+def reset_metrics():
+    """
+    パフォーマンスメトリクスをリセット.
+
+    開発環境でのテスト用。
+    """
+    if settings.ENVIRONMENT == "production":
+        raise HTTPException(
+            status_code=403,
+            detail="メトリクスのリセットは本番環境では実行できません",
+        )
+
+    from app.middleware.metrics import MetricsCollector
+
+    collector = MetricsCollector()
+    collector.reset_metrics()
+
+    return {"message": "メトリクスをリセットしました"}

@@ -87,9 +87,29 @@ class Settings(BaseSettings):
     UPLOAD_DIR: Path = Path(__file__).parent.parent.parent / "uploads"
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
 
+    # ログ設定
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
+    LOG_DIR: Path = Path(__file__).parent.parent.parent / "logs"
+    LOG_FILE_ENABLED: bool = os.getenv("LOG_FILE_ENABLED", "true").lower() == "true"
+    LOG_JSON_FORMAT: bool = os.getenv("LOG_JSON_FORMAT", "true").lower() == "true"
+    LOG_ROTATION_SIZE: int = int(os.getenv("LOG_ROTATION_SIZE", str(100 * 1024 * 1024)))  # 100MB
+    LOG_RETENTION_DAYS: int = int(os.getenv("LOG_RETENTION_DAYS", "30"))
+    LOG_BACKUP_COUNT: int = int(os.getenv("LOG_BACKUP_COUNT", "10"))
+
+    # センシティブフィールドのマスキング設定
+    LOG_SENSITIVE_FIELDS: list[str] = [
+        "password",
+        "token",
+        "secret",
+        "api_key",
+        "authorization",
+        "cookie",
+    ]
+
 
 # グローバル設定インスタンス
 settings = Settings()
 
-# アップロードディレクトリの作成
+# ディレクトリの作成
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+settings.LOG_DIR.mkdir(parents=True, exist_ok=True)

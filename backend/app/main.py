@@ -44,13 +44,15 @@ from app.api.routes.auth_router import router as auth_router
 from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
-from app.core.logging import setup_json_logging
+from app.core.logging import setup_logging
 from app.domain.errors import DomainError
+from app.middleware.logging import RequestLoggingMiddleware
+from app.middleware.metrics import MetricsMiddleware
 from app.middleware.request_id import RequestIdMiddleware
 
 
 logger = logging.getLogger(__name__)
-setup_json_logging()
+setup_logging()
 
 
 @asynccontextmanager
@@ -83,7 +85,8 @@ app.add_exception_handler(DomainError, errors.domain_exception_handler)
 app.add_exception_handler(Exception, errors.generic_exception_handler)
 
 # ミドルウェア登録
-app.add_middleware(RequestIdMiddleware)
+# 注: add_middlewareは逆順で実行される
+# 実行順: CORS → Metrics → RequestLogging → RequestID
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -91,6 +94,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(MetricsMiddleware)  # メトリクス収集
+app.add_middleware(
+    RequestLoggingMiddleware,
+    sensitive_headers=settings.LOG_SENSITIVE_FIELDS,
+    log_request_body=settings.ENVIRONMENT != "production",  # 本番環境ではボディログを無効化
+)
+app.add_middleware(RequestIdMiddleware)
 
 # ルーター登録
 # Core endpoints
