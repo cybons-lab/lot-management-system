@@ -10,6 +10,7 @@ import type {
   OrderLineResponse as OrderLine,
   OrderResponse as OrderResponseAlias,
 } from "@/shared/types/schema";
+import type { AllocatedLot } from "@/shared/types/aliases";
 
 // ヘルパー関数
 export const S = (v: string | null | undefined, fallback = "-"): string => v ?? fallback;
@@ -24,6 +25,34 @@ type LotResponse = components["schemas"]["LotResponse"] & {
   delivery_place_name?: string | null;
 };
 type ProductResponse = components["schemas"]["ProductOut"];
+
+// Forward declare OrderLineUI for OrderUI
+export interface OrderLineUI extends Record<string, unknown> {
+  id: number;
+  order_id: number;
+  product_id: number;
+  product_name: string; // Join field (not in DDL)
+  order_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
+  unit: string;
+  delivery_date: string; // DDL v2.2: changed from due_date
+  delivery_place_id: number; // DDL v2.2: required field
+  status: string; // Order line status
+  created_at: string; // Creation timestamp
+  updated_at: string; // Update timestamp
+  allocated_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
+  warehouse_allocations: unknown[];
+  related_lots: unknown[];
+  allocated_lots: AllocatedLot[];
+  // Legacy fields (deprecated, for backward compatibility)
+  line_no?: number;
+  product_code?: string;
+  customer_code?: string;
+  supplier_code?: string;
+  quantity?: number | string;
+  due_date?: string;
+  allocated_qty?: number | string;
+  next_div?: string;
+}
 
 // UI用の型定義（すべてnon-nullable）
 export interface OrderUI extends Record<string, unknown> {
@@ -40,7 +69,7 @@ export interface OrderUI extends Record<string, unknown> {
   order_no?: string;
   customer_code?: string;
   due_date?: string | null;
-  lines?: OrderLine[];
+  lines?: OrderLineUI[];
 }
 
 export interface LotUI extends Record<string, unknown> {
@@ -106,33 +135,14 @@ export interface ProductUI extends Record<string, unknown> {
   shipping_warehouse_name?: string;
 }
 
-export interface OrderLineUI extends Record<string, unknown> {
-  id: number;
-  order_id: number;
-  product_id: number;
-  product_name: string; // Join field (not in DDL)
-  order_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
-  unit: string;
-  delivery_date: string; // DDL v2.2: changed from due_date
-  delivery_place_id: number; // DDL v2.2: required field
-  warehouse_allocations: unknown[];
-  related_lots: unknown[];
-  allocated_lots: unknown[];
-  // Legacy fields (deprecated, for backward compatibility)
-  line_no?: number;
-  product_code?: string;
-  customer_code?: string;
-  supplier_code?: string;
-  quantity?: number | string;
-  due_date?: string;
-  allocated_qty?: number | string;
-  next_div?: string;
-}
-
 /**
  * OrderResponse → OrderUI
  */
 export function normalizeOrder(order: OrderResponse): OrderUI {
+  // Extract lines from order if they exist
+  const rawLines = ((order as Record<string, unknown>).lines as OrderLine[] | undefined) ?? [];
+  const normalizedLines = rawLines.map((line) => normalizeOrderLine(line));
+
   return {
     id: order.id,
     order_number: S(order.order_number),
@@ -151,7 +161,7 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
     delivery_place_code: (order as Record<string, unknown>).delivery_place_code ?? null,
     delivery_place_name: (order as Record<string, unknown>).delivery_place_name ?? null,
     total_quantity: ((order as Record<string, unknown>).total_quantity as number | null) ?? null,
-    lines: [], // OrderResponse no longer has lines
+    lines: normalizedLines,
   };
 }
 
@@ -233,10 +243,14 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
     unit: S(line.unit, "EA"),
     delivery_date: S(line.delivery_date),
     delivery_place_id: N(line.delivery_place_id),
+    status: S((line as Record<string, unknown>).status as string, "pending"),
+    created_at: S(line.created_at),
+    updated_at: S(line.updated_at),
+    allocated_quantity: String(line.allocated_quantity ?? "0"),
     warehouse_allocations:
       ((line as Record<string, unknown>).warehouse_allocations as unknown[]) ?? [],
     related_lots: ((line as Record<string, unknown>).related_lots as unknown[]) ?? [],
-    allocated_lots: ((line as Record<string, unknown>).allocated_lots as unknown[]) ?? [],
+    allocated_lots: ((line as Record<string, unknown>).allocated_lots as AllocatedLot[]) ?? [],
     // Legacy fields (for backward compatibility)
     line_no: ((line as Record<string, unknown>).line_no as number) ?? undefined,
     product_code: S((line as Record<string, unknown>).product_code as string),

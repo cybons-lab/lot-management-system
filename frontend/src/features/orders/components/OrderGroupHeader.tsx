@@ -9,7 +9,6 @@ import { OrderInfoColumns } from "./OrderInfoColumns";
 
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
 import type { OrderUI } from "@/shared/libs/normalize";
-import type { OrderLine } from "@/shared/types/aliases";
 
 interface OrderGroupHeaderProps {
   order: OrderUI;
@@ -21,10 +20,10 @@ export function OrderGroupHeader({ order, isExpanded, onToggle }: OrderGroupHead
   // 全体の引当率を計算
   const lines = order.lines || [];
   const totalQty = lines.reduce<number>(
-    (sum, line: OrderLine) => sum + Number(line.order_quantity ?? line.quantity ?? 0),
+    (sum, line) => sum + Number(line.order_quantity ?? line.quantity ?? 0),
     0,
   );
-  const allocatedQty = lines.reduce<number>((sum, line: OrderLine) => {
+  const allocatedQty = lines.reduce<number>((sum, line) => {
     const lots = coerceAllocatedLots(line.allocated_lots);
     const allocated = lots.reduce(
       (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
