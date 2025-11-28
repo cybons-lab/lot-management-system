@@ -390,9 +390,14 @@ backend/app/models/
 * `useLotAllocation` フックを `useLotAllocationLogic.ts`, `useLotAllocationActions.ts` 等に統合・再編
 * `components/shared/LineBasedAllocationList` を `components/allocation-list/` に移動しコロケーションを改善
 
-===== 10. backups/ ディレクトリの運用方針 🔵
+===== 10. `backups/` ディレクトリの運用方針 🔵
 
-**対応**: ⏳ 未実施
+**問題**: `backups/` ディレクトリに手動バックアップが散在している。自動化や保存期間（リテンションポリシー）が未定義。
+
+**対応**: ✅ 実装完了 (2025-11-28)
+
+* 運用方針を `docs/operations/backup_policy.adoc` に策定
+* 管理スクリプト `scripts/backup_manager.py` を実装（作成・自動削除）
 
 ===== 11. InboundService の責務分離 🔵
 
@@ -432,12 +437,12 @@ backend/app/models/
 * ✅ health router 調査（対応不要）
 * ✅ allocation サービスリファクタリング
 
-**Phase 3 完了状況**: ✅ 3/5 進行中
+**Phase 3 完了状況**: ✅ 4/5 進行中
 
 * ✅ allocations feature の複雑さ解消
-* ⏳ backups 運用方針
+* ✅ backups 運用方針
 * ✅ InboundService 責務分離
 * ✅ ForecastService 責務分離
 * ⏳ ForecastDetailCard 監視
 
-**総計**: ✅ 11/13 完了 (85%)
+**総計**: ✅ 12/13 完了 (92%)
