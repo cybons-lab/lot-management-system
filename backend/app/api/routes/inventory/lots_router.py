@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.models.inventory_models import Lot, StockMovement, StockMovementReason
 from app.models.masters_models import Product, Supplier, Warehouse
-from app.models.views_models import VVLotDetailss
+from app.models.views_models import VLotDetails
 from app.schemas.inventory.inventory_schema import (
     LotCreate,
     LotLock,
