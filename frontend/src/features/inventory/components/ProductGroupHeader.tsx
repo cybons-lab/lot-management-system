@@ -56,14 +56,14 @@ export function ProductGroupHeader({
           <div className="font-semibold text-slate-900">{productCode}</div>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="text-xs font-medium text-slate-500">製品名</div>
           <div className="truncate font-semibold text-slate-900" title={productName}>
             {productName}
           </div>
         </div>
 
-        <div className="w-[150px]">
+        <div className="w-[150px] min-w-0">
           <div className="text-xs font-medium text-slate-500">仕入先</div>
           <div className="truncate font-semibold text-slate-900" title={supplierName}>
             {supplierName}
