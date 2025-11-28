@@ -13,6 +13,7 @@ from app.schemas.forecasts.forecast_schema import (
     ForecastResponse,
     ForecastUpdate,
 )
+from app.services.forecasts.forecast_import_service import ForecastImportService
 from app.services.forecasts.forecast_service import ForecastService
 
 
@@ -217,7 +218,7 @@ def bulk_import_forecasts(
     Returns:
         インポート結果サマリ
     """
-    service = ForecastService(db)
+    service = ForecastImportService(db)
     return service.bulk_import(
         items=request.items,
         replace_existing=request.replace_existing,
