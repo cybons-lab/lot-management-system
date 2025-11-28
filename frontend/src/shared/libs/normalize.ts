@@ -133,6 +133,10 @@ export interface OrderLineUI extends Record<string, unknown> {
  * OrderResponse → OrderUI
  */
 export function normalizeOrder(order: OrderResponse): OrderUI {
+  // Extract lines from order if they exist
+  const rawLines = ((order as Record<string, unknown>).lines as OrderLine[] | undefined) ?? [];
+  const normalizedLines = rawLines.map((line) => normalizeOrderLine(line));
+
   return {
     id: order.id,
     order_number: S(order.order_number),
@@ -151,7 +155,7 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
     delivery_place_code: (order as Record<string, unknown>).delivery_place_code ?? null,
     delivery_place_name: (order as Record<string, unknown>).delivery_place_name ?? null,
     total_quantity: ((order as Record<string, unknown>).total_quantity as number | null) ?? null,
-    lines: [], // OrderResponse no longer has lines
+    lines: normalizedLines,
   };
 }
 

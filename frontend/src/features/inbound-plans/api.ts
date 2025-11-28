@@ -15,7 +15,7 @@ export interface InboundPlan {
   plan_number: string;
   supplier_id: number;
   planned_arrival_date: string;
-  status: "pending" | "received" | "cancelled";
+  status: "planned" | "partially_received" | "received" | "cancelled";
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -56,7 +56,7 @@ export interface CreateInboundPlanRequest {
   plan_number: string;
   supplier_id: number;
   planned_arrival_date: string;
-  status?: "pending" | "received" | "cancelled";
+  status?: "planned" | "partially_received" | "received" | "cancelled";
   notes?: string;
   lines?: CreateInboundPlanLineRequest[];
 }
@@ -65,7 +65,7 @@ export interface UpdateInboundPlanRequest {
   plan_number?: string;
   supplier_id?: number;
   planned_arrival_date?: string;
-  status?: "pending" | "received" | "cancelled";
+  status?: "planned" | "partially_received" | "received" | "cancelled";
   notes?: string;
 }
 
@@ -113,7 +113,7 @@ export interface InboundPlansListParams {
   limit?: number;
   supplier_id?: number;
   product_id?: number;
-  status?: "pending" | "received" | "cancelled";
+  status?: "planned" | "partially_received" | "received" | "cancelled";
   date_from?: string;
   date_to?: string;
 }
