@@ -17,7 +17,7 @@ from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderWithLinesResponse,
 )
-from app.services.allocation.allocations_service import allocate_manually, cancel_allocation  # 追加
+from app.services.allocations.actions import allocate_manually, cancel_allocation  # 追加
 from app.services.common.uow_service import UnitOfWork
 from app.services.orders.order_service import OrderService
 
@@ -132,7 +132,7 @@ def refresh_all_order_line_statuses(db: Session = Depends(get_db)):
     既存の allocations データに基づいて OrderLine.status と Order.status を正しい値に更新します。
     """
     try:
-        from app.services.allocation.allocations_service import (
+        from app.services.allocations.utils import (
             update_order_allocation_status,
             update_order_line_status,
         )

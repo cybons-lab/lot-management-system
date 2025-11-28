@@ -61,7 +61,7 @@ def get_allocation_candidates(
         db.execute(text("SET LOCAL statement_timeout = '5s'"))
 
         # ✅ v2.5: allocation_candidates_service を使用
-        from app.services.allocation.allocation_candidates_service import (
+        from app.services.allocations.search import (
             execute_candidate_lot_query,
         )
 

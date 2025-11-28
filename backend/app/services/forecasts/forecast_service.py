@@ -405,7 +405,7 @@ class ForecastService:
         # Trigger allocation suggestion regeneration
         if imported_count > 0:
             # Import here to avoid circular dependency
-            from app.services.allocation.allocation_suggestions_service import (
+            from app.services.allocations.suggestion import (
                 AllocationSuggestionService,
             )
 

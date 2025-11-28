@@ -17,13 +17,15 @@ from app.schemas.allocations.allocations_schema import (
     FefoPreviewRequest,
     FefoPreviewResponse,
 )
-from app.services.allocation.allocations_service import (
-    AllocationCommitError,
-    AllocationNotFoundError,
+from app.services.allocations.actions import (
     allocate_manually,
     cancel_allocation,
     commit_fefo_allocation,
-    preview_fefo_allocation,
+)
+from app.services.allocations.fefo import preview_fefo_allocation
+from app.services.allocations.schemas import (
+    AllocationCommitError,
+    AllocationNotFoundError,
 )
 
 
