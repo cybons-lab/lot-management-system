@@ -102,9 +102,7 @@ app.include_router(
 app.include_router(
     orders_router, prefix=settings.API_PREFIX
 )
-app.include_router(
-    confirmed_lines_router, prefix=settings.API_PREFIX
-)
+app.include_router(confirmed_lines_router)  # No prefix - router defines full path
 app.include_router(
     allocations_router,
     prefix=settings.API_PREFIX,
