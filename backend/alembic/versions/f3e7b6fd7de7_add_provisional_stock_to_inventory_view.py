@@ -5,14 +5,15 @@ Revises: 000000000000
 Create Date: 2025-11-27 17:05:44.252257
 
 """
+
 import sqlalchemy as sa
 
 from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision = 'f3e7b6fd7de7'
-down_revision = '000000000000'  # Correct baseline
+revision = "f3e7b6fd7de7"
+down_revision = "000000000000"  # Correct baseline
 branch_labels = None
 depends_on = None
 
@@ -65,4 +66,3 @@ def downgrade() -> None:
     """)
 
     op.execute("COMMENT ON VIEW v_inventory_summary IS '在庫集計ビュー'")
-

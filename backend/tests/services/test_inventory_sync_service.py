@@ -15,9 +15,7 @@ from app.services.batch.inventory_sync_service import InventorySyncService
 def setup_inventory_sync_test_data(db_session: Session):
     """SAP在庫同期テスト用の基本データをセットアップ."""
     # 既存データをクリア
-    db_session.query(BusinessRule).filter(
-        BusinessRule.rule_type == "inventory_sync_alert"
-    ).delete()
+    db_session.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
     db_session.query(Lot).delete()
     db_session.query(Product).delete()
     db_session.query(Warehouse).delete()
@@ -117,9 +115,7 @@ def test_find_discrepancies_no_diff(db_session: Session, setup_inventory_sync_te
     assert len(discrepancies) == 0
 
 
-def test_find_discrepancies_within_tolerance(
-    db_session: Session, setup_inventory_sync_test_data
-):
+def test_find_discrepancies_within_tolerance(db_session: Session, setup_inventory_sync_test_data):
     """許容差異率内のケースのテスト."""
     data = setup_inventory_sync_test_data
     products = data["products"]
@@ -141,9 +137,7 @@ def test_find_discrepancies_within_tolerance(
     assert len(discrepancies) == 0
 
 
-def test_find_discrepancies_exceeds_tolerance(
-    db_session: Session, setup_inventory_sync_test_data
-):
+def test_find_discrepancies_exceeds_tolerance(db_session: Session, setup_inventory_sync_test_data):
     """許容差異率を超えるケースのテスト."""
     data = setup_inventory_sync_test_data
     products = data["products"]
@@ -215,9 +209,7 @@ def test_create_alerts(db_session: Session, setup_inventory_sync_test_data):
     assert alert1.rule_parameters["sap_qty"] == 110.0
 
 
-def test_create_alerts_deactivates_old_alerts(
-    db_session: Session, setup_inventory_sync_test_data
-):
+def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_inventory_sync_test_data):
     """既存アラートが無効化されるテスト."""
     data = setup_inventory_sync_test_data
     products = data["products"]

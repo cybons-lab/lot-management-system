@@ -6036,6 +6036,48 @@
         }
       }
     },
+    "/api/integration/sap/sales-orders": {
+      "post": {
+        "tags": [
+          "integration"
+        ],
+        "summary": "Register Sales Orders",
+        "description": "Register sales orders to SAP (Mock implementation).\n\nThis endpoint simulates the registration of sales orders to SAP ERP.\nIt returns dummy SAP order numbers for the provided order IDs.",
+        "operationId": "register_sales_orders_api_integration_sap_sales_orders_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SAPOrderRegistrationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SAPOrderRegistrationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -10821,6 +10863,75 @@
         "type": "object",
         "title": "RoleUpdate",
         "description": "Schema for updating a role."
+      },
+      "SAPOrderRegistrationRequest": {
+        "properties": {
+          "order_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Order Ids",
+            "description": "List of Order IDs to register"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_ids"
+        ],
+        "title": "SAPOrderRegistrationRequest",
+        "description": "Request schema for SAP order registration."
+      },
+      "SAPOrderRegistrationResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "registered_count": {
+            "type": "integer",
+            "title": "Registered Count"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SAPOrderRegistrationResult"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "registered_count",
+          "results"
+        ],
+        "title": "SAPOrderRegistrationResponse",
+        "description": "Response schema for SAP order registration."
+      },
+      "SAPOrderRegistrationResult": {
+        "properties": {
+          "order_id": {
+            "type": "integer",
+            "title": "Order Id"
+          },
+          "sap_order_no": {
+            "type": "string",
+            "title": "Sap Order No"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_id",
+          "sap_order_no",
+          "status"
+        ],
+        "title": "SAPOrderRegistrationResult",
+        "description": "Result for a single order registration."
       },
       "SAPSyncRequest": {
         "properties": {},

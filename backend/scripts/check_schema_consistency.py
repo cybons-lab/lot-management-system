@@ -12,12 +12,12 @@ from pathlib import Path
 backend_path = Path(__file__).parent.parent
 sys.path.insert(0, str(backend_path))
 
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import create_engine, inspect, text  # noqa: E402
 
-from app.core.config import settings
+from app.core.config import settings  # noqa: E402
 
 # Import all models to ensure they're registered
-from app.models import (  # noqa: F401
+from app.models import (  # noqa: F401, E402
     Base,
     assignment_models,
     inventory_models,

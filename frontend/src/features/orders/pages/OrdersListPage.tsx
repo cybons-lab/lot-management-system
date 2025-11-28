@@ -23,6 +23,7 @@ import { DataTable } from "@/shared/components/data/DataTable";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
+import type { AllocatedLot } from "@/shared/types/aliases";
 
 /**
  * メインコンポーネント
@@ -88,7 +89,7 @@ export function OrdersListPage() {
       const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
       const lots = coerceAllocatedLots(line.allocated_lots);
       const allocatedQty = lots.reduce(
-        (acc: number, alloc: any) =>
+        (acc: number, alloc: AllocatedLot) =>
           acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,
       );

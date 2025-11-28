@@ -32,6 +32,7 @@ from app.api.routes.allocations import (
 )
 from app.api.routes.assignments.assignment_router import router as assignments_router
 from app.api.routes.forecasts import forecasts_router
+from app.api.routes.integration.sap_router import router as sap_router
 from app.api.routes.inventory import (
     adjustments_router,
     inbound_plans_router,
@@ -87,4 +88,6 @@ __all__ = [
     "roles_router",
     "users_router",
     "test_data_router",
+    # Integration (1)
+    "sap_router",
 ]

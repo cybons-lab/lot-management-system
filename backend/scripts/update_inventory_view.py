@@ -50,9 +50,7 @@ def main():
         conn.commit()
 
         # Add comment
-        conn.execute(
-            text("COMMENT ON VIEW v_inventory_summary IS '在庫集計ビュー（仮在庫含む）'")
-        )
+        conn.execute(text("COMMENT ON VIEW v_inventory_summary IS '在庫集計ビュー（仮在庫含む）'"))
         conn.commit()
 
         print("✅ v_inventory_summary view updated successfully!")

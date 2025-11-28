@@ -3,10 +3,12 @@
  */
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { SAPOrderItem } from "./SAPOrderItem";
 
 import { Badge, Button, Card, CardContent, CardHeader } from "@/components/ui";
+import { integrationApi } from "@/shared/api/integration";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface SAPIntegrationSectionProps {
@@ -23,11 +25,23 @@ export function SAPIntegrationSection({ relatedOrders }: SAPIntegrationSectionPr
   const handleRegisterToSAP = async () => {
     setIsRegistering(true);
     try {
-      // TODO: SAP登録APIの実装（現在はダミー）
-      console.log("SAP登録:", selectedOrders);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert(`SAP登録（ダミー実装）\n登録対象: ${selectedOrders.length}件`);
-      setSelectedOrders([]);
+      const response = await integrationApi.registerSalesOrders({
+        order_ids: selectedOrders,
+      });
+
+      if (response.status === "success") {
+        const message = response.results
+          .map((res) => `Order #${res.order_id} → ${res.sap_order_no}`)
+          .join("\n");
+
+        toast.success(`SAP登録完了: ${response.registered_count}件`, {
+          description: <pre className="mt-2 max-h-32 overflow-y-auto text-xs">{message}</pre>,
+        });
+        setSelectedOrders([]);
+      }
+    } catch (error) {
+      console.error("SAP registration failed:", error);
+      toast.error("SAP登録に失敗しました");
     } finally {
       setIsRegistering(false);
     }
@@ -43,7 +57,7 @@ export function SAPIntegrationSection({ relatedOrders }: SAPIntegrationSectionPr
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-semibold text-orange-800">💼 SAP受注登録</h4>
           <Badge variant="outline" className="bg-orange-100 text-orange-700">
-            ダミー実装
+            Mock
           </Badge>
         </div>
       </CardHeader>
@@ -56,7 +70,14 @@ export function SAPIntegrationSection({ relatedOrders }: SAPIntegrationSectionPr
           {orders.map((order) => (
             <SAPOrderItem
               key={order.id}
-              order={order as any}
+              order={{
+                id: order.id,
+                order_number: order.order_number,
+                quantity: order.lines?.[0]?.order_quantity || 0,
+                unit: order.lines?.[0]?.unit || "EA",
+                delivery_date: String(order.order_date),
+                allocation_status: order.status === "completed" ? "ALLOCATED" : "PENDING",
+              }}
               isSelected={selectedOrders.includes(order.id)}
               onToggle={(checked) => {
                 if (checked) {
