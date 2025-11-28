@@ -17,7 +17,17 @@
 
 ---
 
-### 2. SAP受注登録UIが過剰に目立つ 🟡 中
+### 2. SAP受注登録UIが過剰に目立つ ✅ 解決済
+
+**実装内容**:
+- 各受注行にSAPステータスバッジを統合（未登録/登録済み）
+- インライン「SAP登録」ボタン追加（未登録のみ表示）
+- SAP受注番号の表示（登録済み）
+- 独立したオレンジ色のSAPセクションを削除
+
+**削減コード**: 約156行（`SAPIntegrationSection.tsx`, `SAPOrderItem.tsx`）
+
+**詳細**: [walkthrough.md](file:///Users/kazuya/.gemini/antigravity/brain/8adad362-a210-4d75-ad23-7af5b1acacbe/walkthrough.md)
 
 **現状の問題**:
 - 「🔥 SAP受注登録」セクションが「📋 関連受注」より目立ちすぎる
