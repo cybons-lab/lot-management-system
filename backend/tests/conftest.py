@@ -158,3 +158,31 @@ def db_session() -> Session:
         session.close()
         transaction.rollback()
         connection.close()
+
+
+@pytest.fixture
+def client(db_session: Session):
+    """Test client with overridden dependencies."""
+    from app.core.database import get_db
+    from app.main import app
+    from app.models.auth_models import User
+    from app.services.auth.auth_service import AuthService
+
+    # Mock user for tests
+    mock_user = User(
+        id=1,
+        username="testuser",
+        email="test@example.com",
+        password_hash="hashed",
+        display_name="Test User",
+        is_active=True,
+    )
+
+    app.dependency_overrides[get_db] = lambda: db_session
+    app.dependency_overrides[AuthService.get_current_user] = lambda: mock_user
+
+    from fastapi.testclient import TestClient
+
+    yield TestClient(app)
+
+    app.dependency_overrides.clear()

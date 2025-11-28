@@ -168,6 +168,8 @@ class OrderService:
                 )
             line.status = "cancelled"
 
+        order.status = "cancelled"
+
         self.db.flush()
         self.db.flush()
 

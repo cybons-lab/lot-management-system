@@ -36,7 +36,20 @@ def client(db_session):
         finally:
             pass  # conftest.pyが管理するのでcloseしない
 
+    from app.models.auth_models import User
+    from app.services.auth.auth_service import AuthService
+
+    mock_user = User(
+        id=1,
+        username="test",
+        email="test@example.com",
+        password_hash="hash",
+        display_name="Test",
+        is_active=True,
+    )
+
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[AuthService.get_current_user] = lambda: mock_user
     yield TestClient(app)
     app.dependency_overrides.clear()
 

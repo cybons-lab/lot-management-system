@@ -1,11 +1,11 @@
 from datetime import date, timedelta
 
 from app.api.routes.allocations.allocations_router import commit_allocation, preview_allocations
-from app.api.routes.masters_customers import create_customer
-from app.api.routes.masters_products import create_product
-from app.api.routes.masters_suppliers import create_supplier
-from app.api.routes.masters_warehouses import create_warehouse
-from app.api.routes.orders import create_order
+from app.api.routes.masters.customers_router import create_customer
+from app.api.routes.masters.products_router import create_product
+from app.api.routes.masters.suppliers_router import create_supplier
+from app.api.routes.masters.warehouses_router import create_warehouse
+from app.api.routes.orders.orders_router import create_order
 from app.models import Lot, LotCurrentStock, Order, Warehouse
 from app.schemas.allocations.allocations_schema import AllocationCommitRequest, FefoPreviewRequest
 from app.schemas.masters.masters_schema import (
@@ -18,7 +18,7 @@ from app.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
 
 
 def test_order_to_fefo_allocation_flow(db_session):
-    create_product(
+    prod_a = create_product(
         ProductCreate(
             product_code="PROD-A",
             product_name="製品A",
@@ -31,7 +31,7 @@ def test_order_to_fefo_allocation_flow(db_session):
         ),
         db=db_session,
     )
-    create_product(
+    prod_b = create_product(
         ProductCreate(
             product_code="PROD-B",
             product_name="製品B",
@@ -43,7 +43,7 @@ def test_order_to_fefo_allocation_flow(db_session):
         ),
         db=db_session,
     )
-    create_customer(
+    customer = create_customer(
         CustomerCreate(customer_code="CUS-A", customer_name="得意先A"),
         db=db_session,
     )
@@ -51,40 +51,68 @@ def test_order_to_fefo_allocation_flow(db_session):
         SupplierCreate(supplier_code="SUP-A", supplier_name="仕入先A"),
         db=db_session,
     )
-    create_warehouse(
-        WarehouseCreate(warehouse_code="WH-A", warehouse_name="倉庫A", is_active=1),
-        db=db_session,
-    )
+    # Create delivery place for customer
+    from app.models import DeliveryPlace
 
-    order = create_order(
-        OrderCreate(
-            order_no="ORD-1001",
-            customer_code="CUS-A",
-            order_date=date.today(),
-            delivery_mode="SHIP-1",
-            customer_order_no="PO-2024001234",
-            lines=[
-                OrderLineCreate(
-                    line_no=1,
-                    product_code="PROD-A",
-                    quantity=5,
-                    external_unit="EA",
-                    due_date=date.today() + timedelta(days=7),
-                ),
-                OrderLineCreate(
-                    line_no=2,
-                    product_code="PROD-B",
-                    quantity=3,
-                    external_unit="EA",
-                    due_date=date.today() + timedelta(days=10),
-                ),
-            ],
+    delivery_place = DeliveryPlace(
+        customer_id=customer.id,
+        delivery_place_code="DP-A",
+        delivery_place_name="納入先A",
+    )
+    db_session.add(delivery_place)
+    db_session.flush()
+
+    create_warehouse(
+        WarehouseCreate(
+            warehouse_code="WH-A", warehouse_name="倉庫A", is_active=1, warehouse_type="internal"
         ),
         db=db_session,
     )
+
+    # Mock UOW
+    class MockUOW:
+        def __init__(self, session):
+            self.session = session
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def commit(self):
+            self.session.commit()
+
+        def rollback(self):
+            self.session.rollback()
+
+    order = create_order(
+        OrderCreate(
+            order_number="ORD-1001",
+            customer_id=customer.id,
+            order_date=date.today(),
+            lines=[
+                OrderLineCreate(
+                    product_id=prod_a.id,
+                    order_quantity=5,
+                    unit="EA",
+                    delivery_date=date.today() + timedelta(days=7),
+                    delivery_place_id=delivery_place.id,
+                ),
+                OrderLineCreate(
+                    product_id=prod_b.id,
+                    order_quantity=3,
+                    unit="EA",
+                    delivery_date=date.today() + timedelta(days=10),
+                    delivery_place_id=delivery_place.id,
+                ),
+            ],
+        ),
+        uow=MockUOW(db_session),
+    )
     order_id = order.id
     order = db_session.get(Order, order_id)
-    assert order.customer_order_no_last6 == "001234"
+    # assert order.customer_order_no_last6 == "001234" # Removed in DDL v2.2
 
     warehouse = db_session.query(Warehouse).filter(Warehouse.warehouse_code == "WH-A").first()
 

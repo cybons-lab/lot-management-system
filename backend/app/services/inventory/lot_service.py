@@ -45,7 +45,7 @@ class LotRepository:
         # product_codeからproduct_idに変換
         from app.models import Product
 
-        product = self.db.query(Product).filter(Product.product_code == product_code).first()
+        product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
         if not product:
             return []
 
@@ -56,7 +56,15 @@ class LotRepository:
         )
 
         if warehouse_code:
-            stmt = stmt.where(Lot.warehouse_code == warehouse_code)
+            from app.models import Warehouse
+
+            warehouse = (
+                self.db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
+            )
+            if warehouse:
+                stmt = stmt.where(Lot.warehouse_id == warehouse.id)
+            else:
+                return []
 
         return self.db.execute(stmt).scalars().all()
 
@@ -77,14 +85,14 @@ class LotRepository:
             stmt = select(Supplier).where(Supplier.supplier_code == supplier_code)
             supplier = self.db.execute(stmt).scalar_one_or_none()
         if product_code:
-            stmt = select(Product).where(Product.product_code == product_code)
+            stmt = select(Product).where(Product.maker_part_code == product_code)
             product = self.db.execute(stmt).scalar_one_or_none()
 
         lot = Lot(
             supplier_id=supplier.id if supplier else None,
             supplier_code=supplier.supplier_code if supplier else supplier_code,
             product_id=product.id if product else None,
-            product_code=product.product_code if product else product_code,
+            product_code=product.maker_part_code if product else product_code,
             lot_number=lot_number,
             warehouse_id=warehouse_id,
             warehouse_code=warehouse.warehouse_code if warehouse else None,
@@ -130,9 +138,8 @@ class LotService:
                 lot_id=lot.id,
                 lot_code=lot.lot_number,
                 lot_number=lot.lot_number,
-                product_code=lot.product.product_code if lot.product else product_code,
-                warehouse_code=lot.warehouse_code
-                or (lot.warehouse.warehouse_code if lot.warehouse else ""),
+                product_code=lot.product.maker_part_code if lot.product else product_code,
+                warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
                 available_qty=float((lot.current_quantity - lot.allocated_quantity) or 0.0),
                 expiry_date=lot.expiry_date,
                 receipt_date=lot.received_date,
