@@ -16,7 +16,6 @@ import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
 import { ForecastDailyGrid } from "./ForecastDailyGrid";
 import { useForecastCalculations } from "./hooks/use-forecast-calculations";
 import { RelatedOrdersSection } from "./RelatedOrdersSection";
-import { SAPIntegrationSection } from "./SAPIntegrationSection";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
 import { WarehouseInfoCard } from "./WarehouseInfoCard";
@@ -55,9 +54,8 @@ export function ForecastDetailCard({
   const now = new Date();
   const todayKey = formatDateKey(now);
   const todayStart = getTodayStart();
-  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
-    targetMonthStartDate.getMonth() + 1
-  }月`;
+  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${targetMonthStartDate.getMonth() + 1
+    }月`;
 
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =
@@ -132,9 +130,6 @@ export function ForecastDetailCard({
             hoveredDate={hoveredDate}
             onDateHover={setHoveredDate}
           />
-
-          {/* SAP連携セクション (ダミー実装) */}
-          <SAPIntegrationSection relatedOrders={group.related_orders} />
         </CardContent>
       ) : (
         <ForecastCollapsedSummary
