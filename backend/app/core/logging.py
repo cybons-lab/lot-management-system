@@ -263,7 +263,9 @@ def setup_logging(
     )
 
 
-def set_request_context(request_id: str | None = None, user_id: int | None = None, username: str | None = None):
+def set_request_context(
+    request_id: str | None = None, user_id: int | None = None, username: str | None = None
+):
     """リクエストコンテキストを設定.
 
     Args:

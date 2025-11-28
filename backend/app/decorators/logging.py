@@ -50,9 +50,7 @@ def log_operation(
             )
 
             if not db:
-                logger.warning(
-                    f"No DB session found for {func.__name__}, skipping operation log"
-                )
+                logger.warning(f"No DB session found for {func.__name__}, skipping operation log")
                 return func(*args, **kwargs)
 
             # リクエストオブジェクトを取得（IPアドレス取得のため）
