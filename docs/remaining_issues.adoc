@@ -322,7 +322,7 @@ backend/app/models/
 
 **問題**: 他のモジュールはディレクトリ配下なのに assignments だけが直下配置
 
-**対応**: ⏳ 未実施
+**対応**: ✅ 実装完了 (2025-11-28)
 
 * `routes/assignments/`, `services/assignments/`, `schemas/assignments/` に移動
 
@@ -330,7 +330,7 @@ backend/app/models/
 
 **問題**: `forecast/` に1ファイルのみ、`forecasts/` が本体実装
 
-**対応**: ⏳ 未実施
+**対応**: ✅ 実装完了 (2025-11-28)
 
 * `ForecastFileUploadCard.tsx` を `forecasts/components/` に移動
 * `forecast/` ディレクトリを削除
@@ -339,7 +339,7 @@ backend/app/models/
 
 **問題**: ツールが2箇所に散在
 
-**対応**: ⏳ 未実施
+**対応**: ✅ 実装完了 (2025-11-28)
 
 * backend/tools/ のファイルを tools/ に統合
 * schema_consistency_check.py と v2 を統合
@@ -349,9 +349,9 @@ backend/app/models/
 
 **問題**: `health_router.py` と `admin_healthcheck_router.py` の重複可能性
 
-**対応**: ⏳ 調査中
+**対応**: ✅ 調査完了 (2025-11-28)
 
-* 両ファイルの内容を確認して統合可能か判断
+* 両ファイルの内容を確認し、異なる目的（K8sプローブ vs 管理画面詳細）であるため**統合不要**と判断
 
 ===== 8. allocation サービスの過度な細分化 🟡
 
@@ -381,8 +381,14 @@ backend/app/models/
 * ✅ app/db/session.py を削除
 * ✅ CLAUDE.md を最新構造で更新
 
-**Phase 2 完了状況**: ⏳ 0/5 未実施
+**Phase 2 完了状況**: ✅ 4/5 完了 (2025-11-28)
+
+* ✅ assignments モジュール統合
+* ✅ forecast ディレクトリ統合
+* ✅ tools ディレクトリ統合
+* ✅ health router 調査（対応不要）
+* ⏳ allocation サービスリファクタリング（未実施）
 
 **Phase 3 完了状況**: ⏳ 0/2 未実施
 
-**総計**: ✅ 3/10 完了 (30%)
+**総計**: ✅ 7/10 完了 (70%)
