@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
-import { api } from "@/shared/libs/api";
 import { cn } from "@/shared/libs/utils";
 
 interface HealthResponse {
@@ -12,14 +11,15 @@ interface HealthResponse {
 export function SystemStatus() {
     const [isDismissed, setIsDismissed] = useState(false);
 
-    const { data, isError, error, refetch, isFetching } = useQuery({
+    const { isError, error, refetch, isFetching } = useQuery({
         queryKey: ["system-health"],
         queryFn: async () => {
-            // Use fetch directly or api client, but we want to avoid global error handling for this specific check
-            // if we want to handle it silently.
-            // However, api client is fine if we handle the error here.
-            const res = await api.get<HealthResponse>("/readyz");
-            return res.data;
+            // Use fetch directly to bypass authentication interceptor
+            const res = await fetch("/api/readyz");
+            if (!res.ok) {
+                throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+            return res.json() as Promise<HealthResponse>;
         },
         refetchInterval: 30000, // Check every 30 seconds
         retry: 0, // Fail immediately so we can show error
