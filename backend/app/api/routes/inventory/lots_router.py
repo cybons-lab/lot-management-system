@@ -98,9 +98,29 @@ def list_lots(
     # Map view results to LotResponse
     responses: list[LotResponse] = []
     for lot_view in lot_views:
-        response = LotResponse.model_validate(lot_view)
-        # All fields are already populated from the view
-        # No need for manual JOIN population
+        # Manual mapping required because VLotDetails uses different field names
+        response = LotResponse(
+            id=lot_view.lot_id,
+            lot_number=lot_view.lot_number,
+            product_id=lot_view.product_id,
+            product_code=lot_view.maker_part_code,
+            product_name=lot_view.product_name,
+            supplier_id=lot_view.supplier_id,
+            supplier_code=lot_view.supplier_code,
+            supplier_name=lot_view.supplier_name,
+            warehouse_id=lot_view.warehouse_id,
+            warehouse_code=lot_view.warehouse_code,
+            warehouse_name=lot_view.warehouse_name,
+            current_quantity=float(lot_view.current_quantity),
+            allocated_quantity=float(lot_view.allocated_quantity),
+            unit=lot_view.unit,
+            received_date=lot_view.received_date,
+            expiry_date=lot_view.expiry_date,
+            status=lot_view.status,
+            created_at=lot_view.created_at,
+            updated_at=lot_view.updated_at,
+            last_updated=lot_view.updated_at,
+        )
         responses.append(response)
 
     return responses

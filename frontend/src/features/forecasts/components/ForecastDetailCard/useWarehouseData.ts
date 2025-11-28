@@ -26,7 +26,7 @@ export function useWarehouseData(productId: number) {
   const warehouseMap = new Map<string, WarehouseData>();
 
   lots.forEach((lot) => {
-    const warehouseName = String(lot.delivery_place_name || lot.delivery_place_code || "不明");
+    const warehouseName = String(lot.warehouse_name || lot.warehouse_code || "不明");
     const quantity = Number(lot.current_quantity || 0);
     const unit = String(lot.unit || "EA");
 
