@@ -3,13 +3,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
-from app.schemas.assignment_schema import (
+from app.api.deps import get_db
+from app.schemas.assignments.assignment_schema import (
     UserSupplierAssignmentCreate,
     UserSupplierAssignmentResponse,
     UserSupplierAssignmentUpdate,
 )
-from app.services.assignment_service import AssignmentService
+from app.services.assignments.assignment_service import AssignmentService
 
 
 router = APIRouter(prefix="/assignments", tags=["assignments"])

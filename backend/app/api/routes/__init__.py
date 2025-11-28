@@ -30,7 +30,7 @@ from app.api.routes.allocations import (
     allocations_router,
     warehouse_alloc_router,
 )
-from app.api.routes.assignments_router import router as assignments_router
+from app.api.routes.assignments.assignment_router import router as assignments_router
 from app.api.routes.forecasts import forecasts_router
 from app.api.routes.inventory import (
     adjustments_router,
