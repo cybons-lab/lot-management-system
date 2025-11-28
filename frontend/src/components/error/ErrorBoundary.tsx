@@ -5,7 +5,8 @@
  * Logs errors using the error logger service.
  */
 
-import { Component, ErrorInfo, ReactNode } from "react";
+import { Component, type ErrorInfo, type ReactNode } from "react";
+
 import { logError } from "@/services/error-logger";
 
 interface Props {

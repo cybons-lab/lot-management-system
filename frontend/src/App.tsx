@@ -5,7 +5,6 @@ import { Toaster } from "sonner";
 import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
-import { logError } from "@/services/error-logger";
 // Pages - all imported from features (Phase A cleanup)
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
 import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
@@ -47,6 +46,7 @@ import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
+import { logError } from "@/services/error-logger";
 
 // eslint-disable-next-line max-lines-per-function
 function App() {

@@ -27,7 +27,7 @@ class ErrorLogger {
     level: ErrorLogEntry["level"],
     source: string,
     error: Error | string,
-    context?: Record<string, unknown>
+    context?: Record<string, unknown>,
   ): void {
     const entry: ErrorLogEntry = {
       timestamp: new Date().toISOString(),
@@ -49,14 +49,19 @@ class ErrorLogger {
 
     // Console output in development
     if (import.meta.env.DEV) {
-      const logMethod = level === "error" ? console.error : level === "warning" ? console.warn : console.log;
+      const logMethod =
+        level === "error" ? console.error : level === "warning" ? console.warn : console.log;
       logMethod(`[${level.toUpperCase()}] ${source}:`, error, context);
     }
 
     // Optional: Send to backend (disabled by default)
-    // Uncomment to enable backend logging
+    // To enable backend logging, uncomment the following code:
     // if (level === "error") {
-    //   this.sendToBackend(entry);
+    //   fetch("/api/frontend-errors", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(entry),
+    //   }).catch(err => console.warn("Failed to send error to backend:", err));
     // }
   }
 
@@ -94,34 +99,25 @@ class ErrorLogger {
   clearLogs(): void {
     this.logs = [];
   }
-
-  /**
-   * Send error to backend (optional feature)
-   * @private
-   */
-  private async sendToBackend(entry: ErrorLogEntry): Promise<void> {
-    try {
-      await fetch("/api/frontend-errors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(entry),
-      });
-    } catch (err) {
-      // Silently fail to prevent infinite loop
-      console.warn("Failed to send error to backend:", err);
-    }
-  }
 }
 
 // Singleton instance
 export const errorLogger = new ErrorLogger();
 
 // Convenience functions
-export const logError = (source: string, error: Error | string, context?: Record<string, unknown>) => {
+export const logError = (
+  source: string,
+  error: Error | string,
+  context?: Record<string, unknown>,
+) => {
   errorLogger.error(source, error, context);
 };
 
-export const logWarning = (source: string, error: Error | string, context?: Record<string, unknown>) => {
+export const logWarning = (
+  source: string,
+  error: Error | string,
+  context?: Record<string, unknown>,
+) => {
   errorLogger.warning(source, error, context);
 };
 

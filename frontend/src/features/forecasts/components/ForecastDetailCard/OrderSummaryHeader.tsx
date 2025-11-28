@@ -130,9 +130,41 @@ function HeaderRightSection({
   isRegistering: boolean;
   onRegisterToSAP: () => void;
 }) {
-  const isSAPRegistered = Boolean(sapOrderNo);
   return (
     <div className="flex items-center gap-3">
+      <QuantityAndStatusSection
+        targetLines={targetLines}
+        totalRequired={totalRequired}
+        totalAllocated={totalAllocated}
+        statusLabel={statusLabel}
+        statusColor={statusColor}
+      />
+
+      <SAPActionsSection
+        order={order}
+        sapOrderNo={sapOrderNo}
+        isRegistering={isRegistering}
+        onRegisterToSAP={onRegisterToSAP}
+      />
+    </div>
+  );
+}
+
+function QuantityAndStatusSection({
+  targetLines,
+  totalRequired,
+  totalAllocated,
+  statusLabel,
+  statusColor,
+}: {
+  targetLines: OrderLine[];
+  totalRequired: number;
+  totalAllocated: number;
+  statusLabel: string;
+  statusColor: string;
+}) {
+  return (
+    <>
       <div className="flex items-center gap-2 text-sm">
         <span className="text-xs text-gray-500">明細: {targetLines.length}件</span>
         <span className="text-xs text-gray-400">|</span>
@@ -149,7 +181,25 @@ function HeaderRightSection({
       </div>
 
       <Badge className={cn("h-5 px-1.5 text-[10px] font-normal", statusColor)}>{statusLabel}</Badge>
+    </>
+  );
+}
 
+function SAPActionsSection({
+  order,
+  sapOrderNo,
+  isRegistering,
+  onRegisterToSAP,
+}: {
+  order: OrderWithLinesResponse;
+  sapOrderNo: string | null;
+  isRegistering: boolean;
+  onRegisterToSAP: () => void;
+}) {
+  const isSAPRegistered = Boolean(sapOrderNo);
+
+  return (
+    <>
       {/* SAP Status Badge */}
       {isSAPRegistered ? (
         <Badge
@@ -191,6 +241,7 @@ function HeaderRightSection({
       >
         <ExternalLink className="h-4 w-4" />
       </Link>
-    </div>
+    </>
   );
 }
+
