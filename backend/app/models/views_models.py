@@ -179,7 +179,8 @@ class VLotDetails(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime)
 
 
-
+# Backward compatibility alias
+LotDetails = VLotDetails
 
 
 class VOrderLineDetails(Base):
