@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.core.database import get_db
 from app.models.inventory_models import Lot, StockMovement, StockMovementReason
 from app.models.masters_models import Product, Supplier, Warehouse
-from app.models.views_models import LotWithMaster
+from app.models.views_models import VVLotDetailss
 from app.schemas.inventory.inventory_schema import (
     LotCreate,
     LotLock,
@@ -58,41 +58,39 @@ def list_lots(
     FEFO (先入先出) 順に並べて返す.
     """
     # Use the view instead of Lot model with JOINs
-    query = db.query(LotWithMaster)
+    query = db.query(VLotDetails)
 
     # フィルタ適用
     if product_id is not None:
-        query = query.filter(LotWithMaster.product_id == product_id)
+        query = query.filter(VLotDetails.product_id == product_id)
     elif product_code:
-        query = query.filter(LotWithMaster.product_code == product_code)
+        query = query.filter(VLotDetails.maker_part_code == product_code)
 
     if supplier_code:
         # View already has supplier_name, just filter by joining suppliers table
         supplier = db.query(Supplier).filter(Supplier.supplier_code == supplier_code).first()
         if supplier:
-            query = query.filter(LotWithMaster.supplier_id == supplier.id)
+            query = query.filter(VLotDetails.supplier_id == supplier.id)
 
     if warehouse_code:
         warehouse = db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
         if warehouse:
-            query = query.filter(LotWithMaster.warehouse_id == warehouse.id)
+            query = query.filter(VLotDetails.warehouse_id == warehouse.id)
 
     if expiry_from:
-        query = query.filter(LotWithMaster.expiry_date >= expiry_from)
+        query = query.filter(VLotDetails.expiry_date >= expiry_from)
     if expiry_to:
-        query = query.filter(LotWithMaster.expiry_date <= expiry_to)
+        query = query.filter(VLotDetails.expiry_date <= expiry_to)
 
     # 在庫ありのみ
     if with_stock:
-        query = query.filter(
-            (LotWithMaster.current_quantity - LotWithMaster.allocated_quantity) > 0
-        )
+        query = query.filter(VLotDetails.available_quantity > 0)
 
     # Default sort: product_code -> supplier_name -> expiry_date (FEFO)
     query = query.order_by(
-        LotWithMaster.product_code.asc(),
-        LotWithMaster.supplier_name.asc(),
-        LotWithMaster.expiry_date.asc().nullslast(),
+        VLotDetails.maker_part_code.asc(),
+        VLotDetails.supplier_name.asc(),
+        VLotDetails.expiry_date.asc().nullslast(),
     )
 
     lot_views = query.offset(skip).limit(limit).all()
@@ -343,7 +341,7 @@ def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
     db.commit()
 
     # v2.2: Fetch from view to ensure all required fields (product_name, etc.) are present
-    lot_view = db.query(LotWithMaster).filter(LotWithMaster.id == lot_id).first()
+    lot_view = db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
     if not lot_view:
         # Should not happen if db_lot exists, but for safety
         raise HTTPException(status_code=404, detail="ロットが見つかりません")
@@ -365,7 +363,7 @@ def unlock_lot(lot_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     # v2.2: Fetch from view to ensure all required fields are present
-    lot_view = db.query(LotWithMaster).filter(LotWithMaster.id == lot_id).first()
+    lot_view = db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
     if not lot_view:
         raise HTTPException(status_code=404, detail="ロットが見つかりません")
 

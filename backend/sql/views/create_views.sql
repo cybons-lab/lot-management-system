@@ -3,7 +3,6 @@
 -- ============================================================
 
 -- 1. 既存ビューの削除（CASCADEで依存関係もまとめて削除）
-DROP VIEW IF EXISTS public.v_lots_with_master CASCADE;
 DROP VIEW IF EXISTS public.v_candidate_lots_by_order_line CASCADE;
 DROP VIEW IF EXISTS public.v_forecast_order_pairs CASCADE;
 DROP VIEW IF EXISTS public.v_delivery_place_code_to_id CASCADE;
@@ -210,36 +209,3 @@ LEFT JOIN public.warehouses w ON l.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON l.supplier_id = s.id;
 
 COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー';
-
-CREATE VIEW public.v_lots_with_master AS
-SELECT 
-    l.id,
-    l.lot_number,
-    l.product_id,
-    p.maker_part_code AS product_code,
-    p.product_name,
-    l.supplier_id,
-    s.supplier_name,
-    l.warehouse_id,
-    w.warehouse_code,
-    w.warehouse_name,
-    l.current_quantity,
-    l.allocated_quantity,
-    l.unit,
-    l.received_date,
-    l.expiry_date,
-    l.status,
-    l.lock_reason,
-    l.inspection_status,
-    l.inspection_date,
-    l.inspection_cert_number,
-    l.expected_lot_id,
-    l.version,
-    l.created_at,
-    l.updated_at
-FROM public.lots l
-JOIN public.products p ON p.id = l.product_id
-LEFT JOIN public.suppliers s ON s.id = l.supplier_id
-LEFT JOIN public.warehouses w ON w.id = l.warehouse_id;
-
-COMMENT ON VIEW public.v_lots_with_master IS 'ロットとマスタデータの結合ビュー';
