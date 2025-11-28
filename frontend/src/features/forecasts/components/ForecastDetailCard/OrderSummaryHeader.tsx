@@ -152,18 +152,21 @@ function HeaderRightSection({
 
       {/* SAP Status Badge */}
       {isSAPRegistered ? (
-        <Badge variant="outline" className="h-5 px-1.5 text-[10px] bg-green-50 text-green-700 border-green-200">
+        <Badge
+          variant="outline"
+          className="h-5 border-green-200 bg-green-50 px-1.5 text-[10px] text-green-700"
+        >
           SAP登録済み
         </Badge>
       ) : (
         <>
-          <Badge variant="outline" className="h-5 px-1.5 text-[10px] bg-gray-50 text-gray-600">
+          <Badge variant="outline" className="h-5 bg-gray-50 px-1.5 text-[10px] text-gray-600">
             SAP未登録
           </Badge>
           <Button
             size="sm"
             variant="outline"
-            className="h-6 gap-1 px-2 text-xs hover:bg-orange-50 hover:text-orange-700 hover:border-orange-300"
+            className="h-6 gap-1 px-2 text-xs hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
             onClick={(e) => {
               e.stopPropagation();
               onRegisterToSAP();
@@ -178,7 +181,7 @@ function HeaderRightSection({
 
       {/* SAP Order Number if registered */}
       {isSAPRegistered && sapOrderNo && (
-        <span className="text-xs text-green-700 font-mono">SAP: {sapOrderNo}</span>
+        <span className="font-mono text-xs text-green-700">SAP: {sapOrderNo}</span>
       )}
 
       <Link
