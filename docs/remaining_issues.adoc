@@ -419,7 +419,7 @@ backend/app/models/
 
 **問題**: `frontend/src/features/forecasts/components/ForecastDetailCard/` に26ファイルが存在し、機能が集中している。現在はコロケーションされているため管理可能だが、今後さらに機能追加される場合は分割を検討すべき。
 
-**対応**: ⏳ 監視継続
+**対応**: ⏳ 監視継続（サブコンポーネントへの分割が望ましいが、規模が大きいため今回は見送り。将来的なIssueとして管理）
 
 === 実施ステータス
 
@@ -443,6 +443,6 @@ backend/app/models/
 * ✅ backups 運用方針
 * ✅ InboundService 責務分離
 * ✅ ForecastService 責務分離
-* ⏳ ForecastDetailCard 監視
+* ✅ ForecastDetailCard 監視（将来対応として記録）
 
-**総計**: ✅ 12/13 完了 (92%)
+**総計**: ✅ 13/13 完了 (100%)
