@@ -221,6 +221,8 @@ SELECT
     l.supplier_id,
     s.supplier_name,
     l.warehouse_id,
+    w.warehouse_code,
+    w.warehouse_name,
     l.current_quantity,
     l.allocated_quantity,
     l.unit,
@@ -237,7 +239,7 @@ SELECT
     l.updated_at
 FROM public.lots l
 JOIN public.products p ON p.id = l.product_id
-LEFT JOIN public.suppliers s ON s.id = l.supplier_id;
+LEFT JOIN public.suppliers s ON s.id = l.supplier_id
+LEFT JOIN public.warehouses w ON w.id = l.warehouse_id;
 
 COMMENT ON VIEW public.v_lots_with_master IS 'ロットとマスタデータの結合ビュー';
-
