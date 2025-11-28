@@ -259,11 +259,11 @@ def cancel_allocation(db: Session, allocation_id: int) -> None:
     lot.updated_at = datetime.utcnow()
 
     db.delete(allocation)
-    
+
     # 注文ステータス更新
     db.flush()
     if allocation.order_line:
         update_order_allocation_status(db, allocation.order_line.order_id)
         update_order_line_status(db, allocation.order_line.id)
-    
+
     db.commit()
