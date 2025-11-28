@@ -13,6 +13,10 @@ import * as styles from "./styles";
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { useRoles } from "@/features/roles/hooks";
+import {
+  UserSupplierAssignmentDialog,
+  UserSupplierAssignmentList,
+} from "@/features/assignments/components";
 
 // eslint-disable-next-line max-lines-per-function
 export function UserDetailPage() {
@@ -190,6 +194,15 @@ export function UserDetailPage() {
             </Button>
           </div>
         )}
+      </div>
+
+      {/* Assigned Suppliers */}
+      <div className={styles.card.root}>
+        <div className={styles.card.header}>
+          <h3 className="text-lg font-semibold">担当仕入先</h3>
+          <UserSupplierAssignmentDialog userId={userId} />
+        </div>
+        <UserSupplierAssignmentList userId={userId} />
       </div>
     </div>
   );
