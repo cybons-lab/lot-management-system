@@ -40,17 +40,20 @@ export function SystemStatus() {
 
     if (error instanceof Error) {
         // Check for specific error types if possible, e.g. 500 vs Network Error
-        // Axios error handling
-        const axiosError = error as unknown;
-        if ((axiosError as any).response) {
-            if ((axiosError as any).response.status === 500) {
+        // Use the HttpError type for better type checking
+        const httpError = error as HttpError;
+        if (httpError.response) {
+            if (httpError.response.status === 500) {
                 errorMessage = "データベース接続エラー";
                 detailMessage = "データベースへの接続が失われました。システム管理者に連絡してください。";
-            } else if (axiosError.response.status === 502 || axiosError.response.status === 503) {
+            } else if (
+                httpError.response.status === 502 ||
+                httpError.response.status === 503
+            ) {
                 errorMessage = "サービス利用不可";
                 detailMessage = "サーバーがメンテナンス中か、過負荷状態です。";
             }
-        } else if (axiosError.code === "ERR_NETWORK") {
+        } else if (httpError.code === "ERR_NETWORK") {
             errorMessage = "ネットワークエラー";
             detailMessage = "サーバーに到達できません。インターネット接続を確認してください。";
         }

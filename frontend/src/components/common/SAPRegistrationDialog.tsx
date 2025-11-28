@@ -77,6 +77,7 @@ export function SAPRegistrationDialog({
                         <label
                             key={line.line_id}
                             htmlFor={`line-${line.line_id}`}
+                            aria-label={`Select ${line.customer_name} - ${line.product_code}`}
                             className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50"
                         >
                             <input
