@@ -74,15 +74,15 @@ export async function listLotsBySupplier(supplierCode: string): Promise<LotRespo
 /**
  * ロットをロック
  */
-export async function lockLot(id: number, reason: string): Promise<LotResponse> {
-  const response = await http.post<LotResponse>(`${BASE_PATH}/${id}/lock`, { reason });
+export async function lockLot(id: number, reason: string, quantity?: number): Promise<LotResponse> {
+  const response = await http.post<LotResponse>(`${BASE_PATH}/${id}/lock`, { reason, quantity });
   return response.data;
 }
 
 /**
  * ロットのロックを解除
  */
-export async function unlockLot(id: number): Promise<LotResponse> {
-  const response = await http.post<LotResponse>(`${BASE_PATH}/${id}/unlock`);
+export async function unlockLot(id: number, quantity?: number): Promise<LotResponse> {
+  const response = await http.post<LotResponse>(`${BASE_PATH}/${id}/unlock`, { quantity });
   return response.data;
 }

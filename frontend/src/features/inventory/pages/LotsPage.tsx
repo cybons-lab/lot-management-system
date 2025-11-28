@@ -411,11 +411,16 @@ export function LotsPage() {
             lockDialog.close();
             setSelectedLot(null);
           }}
-          onConfirm={async (reason) => {
-            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason });
+          onConfirm={async (reason, quantity) => {
+            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, quantity });
           }}
           isSubmitting={lockLotMutation.isPending}
           lotNumber={selectedLot.lot_number}
+          availableQuantity={
+            Number(selectedLot.current_quantity) -
+            Number(selectedLot.allocated_quantity) -
+            Number(selectedLot.locked_quantity || 0)
+          }
         />
       )}
     </div>
