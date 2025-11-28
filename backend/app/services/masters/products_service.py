@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.db_error_parser import parse_db_error
 from app.models import Product
 from app.repositories.products_repository import ProductRepository
 from app.schemas.masters.products_schema import ProductCreate, ProductUpdate
@@ -34,11 +35,13 @@ class ProductService:
         product = Product(**payload.model_dump())
         try:
             return self.repository.create(product)
-        except IntegrityError as exc:  # TODO: inspect constraint name for precise messaging
+        except IntegrityError as exc:
             self.session.rollback()
+            # Parse database error into user-friendly message
+            user_message = parse_db_error(exc, payload.model_dump())
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Product code already exists",
+                detail=user_message,
             ) from exc
 
     def update_product(self, product_id: int, payload: ProductUpdate) -> Product:
@@ -49,11 +52,13 @@ class ProductService:
 
         try:
             return self.repository.update(product)
-        except IntegrityError as exc:  # TODO: inspect constraint name for precise messaging
+        except IntegrityError as exc:
             self.session.rollback()
+            # Parse database error into user-friendly message
+            user_message = parse_db_error(exc, payload.model_dump())
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Product code already exists",
+                detail=user_message,
             ) from exc
 
     def delete_product(self, product_id: int) -> None:

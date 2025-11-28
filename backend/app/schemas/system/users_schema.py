@@ -53,3 +53,20 @@ class UserRoleAssignment(BaseSchema):
     """Schema for assigning roles to a user."""
 
     role_ids: list[int] = Field(..., description="割り当てるロールIDリスト")
+
+
+class SupplierAssignmentInfo(BaseSchema):
+    """Schema for supplier assignment information."""
+
+    supplier_id: int = Field(..., description="仕入先ID")
+    supplier_code: str = Field(..., description="仕入先コード")
+    supplier_name: str = Field(..., description="仕入先名")
+    is_primary: bool = Field(..., description="主担当フラグ")
+
+
+class UserWithSuppliers(UserResponse):
+    """Schema for user with assigned suppliers (for authentication context)."""
+
+    supplier_assignments: list[SupplierAssignmentInfo] = Field(
+        default_factory=list, description="担当仕入先リスト"
+    )
