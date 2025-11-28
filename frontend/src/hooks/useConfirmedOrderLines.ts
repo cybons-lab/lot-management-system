@@ -1,7 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { api } from "@/shared/api/client";
-
 export interface ConfirmedOrderLine {
     line_id: number;
     order_id: number;
@@ -22,9 +20,12 @@ export function useConfirmedOrderLines() {
     return useQuery<ConfirmedOrderLine[]>({
         queryKey: ["confirmed-order-lines"],
         queryFn: async () => {
-            const response = await api.get("/api/orders/confirmed-lines");
-            return response.data;
+            const response = await fetch("/api/orders/confirmed-lines");
+            if (!response.ok) throw new Error("Failed to fetch confirmed lines");
+            return response.json();
         },
         refetchInterval: 30000, // 30秒ごとに更新
     });
 }
+
+```
