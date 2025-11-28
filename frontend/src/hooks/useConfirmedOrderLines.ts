@@ -24,8 +24,6 @@ export function useConfirmedOrderLines() {
             if (!response.ok) throw new Error("Failed to fetch confirmed lines");
             return response.json();
         },
-        refetchInterval: 30000, // 30秒ごとに更新
+        refetchInterval: 30000,
     });
 }
-
-```
