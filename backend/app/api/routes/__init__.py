@@ -38,6 +38,7 @@ from app.api.routes.inventory import (
     inventory_items_router,
     lots_router,
 )
+from app.api.routes.integration.sap_router import router as sap_router
 from app.api.routes.masters import (
     customer_items_router,
     customers_router,
@@ -87,4 +88,6 @@ __all__ = [
     "roles_router",
     "users_router",
     "test_data_router",
+    # Integration (1)
+    "sap_router",
 ]

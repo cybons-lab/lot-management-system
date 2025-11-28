@@ -2395,6 +2395,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/integration/sap/sales-orders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Register Sales Orders
+     * @description Register sales orders to SAP (Mock implementation).
+     *
+     *     This endpoint simulates the registration of sales orders to SAP ERP.
+     *     It returns dummy SAP order numbers for the provided order IDs.
+     */
+    post: operations["register_sales_orders_api_integration_sap_sales_orders_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/": {
     parameters: {
       query?: never;
@@ -4550,6 +4573,41 @@ export interface components {
        * @description 説明
        */
       description?: string | null;
+    };
+    /**
+     * SAPOrderRegistrationRequest
+     * @description Request schema for SAP order registration.
+     */
+    SAPOrderRegistrationRequest: {
+      /**
+       * Order Ids
+       * @description List of Order IDs to register
+       */
+      order_ids: number[];
+    };
+    /**
+     * SAPOrderRegistrationResponse
+     * @description Response schema for SAP order registration.
+     */
+    SAPOrderRegistrationResponse: {
+      /** Status */
+      status: string;
+      /** Registered Count */
+      registered_count: number;
+      /** Results */
+      results: components["schemas"]["SAPOrderRegistrationResult"][];
+    };
+    /**
+     * SAPOrderRegistrationResult
+     * @description Result for a single order registration.
+     */
+    SAPOrderRegistrationResult: {
+      /** Order Id */
+      order_id: number;
+      /** Sap Order No */
+      sap_order_no: string;
+      /** Status */
+      status: string;
     };
     /**
      * SAPSyncRequest
@@ -8664,6 +8722,39 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+    };
+  };
+  register_sales_orders_api_integration_sap_sales_orders_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SAPOrderRegistrationRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SAPOrderRegistrationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
