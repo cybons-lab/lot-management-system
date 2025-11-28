@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -10,6 +10,7 @@ from app.core.database import get_db
 from app.models.auth_models import User
 from app.schemas.auth.token_schema import TokenData
 from app.services.auth.user_service import UserService
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/login")
 
@@ -35,15 +36,17 @@ class AuthService:
         """Create a JWT access token."""
         to_encode = data.copy()
         if expires_delta:
-            expire = datetime.now(timezone.utc) + expires_delta
+            expire = datetime.now(UTC) + expires_delta
         else:
-            expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+            expire = datetime.now(UTC) + timedelta(minutes=15)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
         return encoded_jwt
 
     @staticmethod
-    def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    def get_current_user(
+        token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    ) -> User:
         """Get the current authenticated user from the token."""
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

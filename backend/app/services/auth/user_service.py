@@ -1,6 +1,5 @@
 """User service (ユーザー管理サービス)."""
 
-import hashlib
 from datetime import datetime
 
 from passlib.context import CryptContext

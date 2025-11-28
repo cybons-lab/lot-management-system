@@ -63,7 +63,10 @@ function App() {
 
               {/* Allocations */}
               <Route path={ROUTES.ALLOCATIONS.INDEX} element={<LotAllocationPage />} />
-              <Route path={ROUTES.ALLOCATIONS.SUGGESTIONS} element={<AllocationSuggestionsPage />} />
+              <Route
+                path={ROUTES.ALLOCATIONS.SUGGESTIONS}
+                element={<AllocationSuggestionsPage />}
+              />
 
               {/* Forecasts - New structure (v2.2 - Phase B) */}
               <Route path={ROUTES.FORECASTS.LIST} element={<ForecastListPage />} />

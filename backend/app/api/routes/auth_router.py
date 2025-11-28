@@ -10,6 +10,7 @@ from app.core.database import get_db
 from app.schemas.auth.token_schema import Token
 from app.services.auth.auth_service import AuthService
 
+
 router = APIRouter(tags=["auth"])
 
 
@@ -31,8 +32,8 @@ async def login_for_access_token(
     access_token = auth_service.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    
+
     # Update last login
     auth_service.user_service.update_last_login(user.id)
-    
+
     return Token(access_token=access_token, token_type="bearer")
