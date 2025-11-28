@@ -110,7 +110,11 @@ export function useLotColumns({ viewMode, onEdit, onLock, onUnlock }: UseLotColu
       {
         id: "product_name",
         header: "製品名",
-        cell: (lot) => lot.product_name ?? "–",
+        cell: (lot) => (
+          <div className="max-w-[300px] truncate" title={lot.product_name ?? ""}>
+            {lot.product_name ?? "–"}
+          </div>
+        ),
       },
       {
         id: "supplier_name",

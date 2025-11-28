@@ -38,17 +38,35 @@
 ### 計画中のタスク
 
 #### `schema-improvements.md`
-データベーススキーマの改善計画。
+データベーススキーマの改善計画（`user-supplier-assignments.md`と統合して実装中）。
 
 **主要タスク:**
-- `version_id` → `version` 変更
-- `customer_items` 拡張（出荷表テキスト対応）
-- `customer_item_jiku_mappings` テーブル追加
-- `order_lines` 拡張（shipping_document_text）
-- 7つのビュー修正
+- ✅ `version_id` → `version` 変更
+- ✅ `customer_items` 拡張（出荷表テキスト対応）
+- ✅ `customer_item_jiku_mappings` テーブル追加
+- ✅ `order_lines` 拡張（shipping_document_text）
+- ✅ 7つのビュー修正
+- ✅ バックエンドAPI実装
+- ✅ フロントエンド実装（担当割り当て管理画面）
+- ✅ 検証（ブラウザテスト完了）
 
 **優先度:** High
-**見積もり作業時間:** 14時間（2日）
+**優先度:** High
+**見積もり作業時間:** 完了
+
+---
+
+#### `partial-lock-implementation.md`
+ロット在庫の部分ロック機能（個数指定ロック）の実装。
+
+**主要タスク:**
+- ✅ `lots` テーブルへの `locked_quantity` 追加
+- ✅ ロック/解除APIの数量指定対応
+- ✅ 有効在庫計算ロジックの更新
+- ✅ フロントエンドのロックダイアログ改修
+
+**優先度:** High
+**見積もり作業時間:** 完了
 
 ---
 
@@ -58,7 +76,7 @@
 **主要タスク:**
 1. フロントエンドエラーロギングの実装
 2. データベースエラーのユーザーフレンドリー化
-3. JWT認証のオプショナル認証実装
+3. ✅ JWT認証のオプショナル認証実装（完了）
 
 **優先度:** Medium
 **ステータス:** 計画中
@@ -66,16 +84,16 @@
 ---
 
 #### `user-supplier-assignments.md`
-ユーザー-仕入先担当割り当て機能の実装計画。
+ユーザー-仕入先担当割り当て機能の実装計画（`schema-improvements.md`に統合済み）。
 
 **主要タスク:**
-- `user_supplier_assignments` テーブル追加
-- AssignmentService 実装
-- API エンドポイント実装
-- フロントエンド UI 実装
+- ✅ `user_supplier_assignments` テーブル追加
+- ✅ AssignmentService 実装
+- ✅ API エンドポイント実装
+- 🔄 フロントエンド UI 実装（未着手）
 
 **優先度:** Medium
-**見積もり作業時間:** 9時間（1-2日）
+**見積もり作業時間:** 残りUI実装のみ
 
 ---
 
@@ -151,11 +169,10 @@
 
 | ファイル | 優先度 | ステータス | 作業時間 |
 |---------|--------|-----------|---------|
-| handoff.md | High | 次回対応 | - |
-| schema-improvements.md | High | 計画中 | 14h |
+| schema-improvements.md | High | 実装中 (Phase D完了) | 残8h |
 | error-logging-improvement.md | Medium | 計画中 | - |
 | ui-improvements.md | Medium | 仕様見直し中 | - |
-| user-supplier-assignments.md | Medium | 計画中 | 9h |
+| user-supplier-assignments.md | Medium | 実装中 (API完了) | 残UIのみ |
 
 ---
 

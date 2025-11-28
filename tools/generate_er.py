@@ -137,7 +137,9 @@ def build_graphviz_svg(metadata: MetaData, out_stem: Path) -> None:
         for fk in table.foreign_keys:
             src = table.name
             dst = fk.column.table.name
-            g.edge(src, dst, label=f"{fk.parent.name}→{fk.column.name}", arrowsize="0.7")
+            g.edge(
+                src, dst, label=f"{fk.parent.name}→{fk.column.name}", arrowsize="0.7"
+            )
 
     g.render(out_stem.with_suffix(""), cleanup=True)
 

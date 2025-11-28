@@ -22,5 +22,5 @@ export const useLotsQuery = (params?: LotsQuery) =>
     staleTime: 30_000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    select: (data) => (data ?? []).map(normalizeLot),
+    select: (data) => (data ?? []).map((item) => normalizeLot(item as any)),
   });

@@ -215,11 +215,12 @@ export function useUpdateLotStatus(
 export function useLockLot(options?: {
   onSuccess?: (data: LotResponse) => void;
   onError?: (error: Error) => void;
-}): UseMutationResult<LotResponse, Error, { id: number; reason: string }> {
+}): UseMutationResult<LotResponse, Error, { id: number; reason: string; quantity?: number }> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, reason }: { id: number; reason: string }) => lockLot(id, reason),
+    mutationFn: ({ id, reason, quantity }: { id: number; reason: string; quantity?: number }) =>
+      lockLot(id, reason, quantity),
     onSuccess: (data: LotResponse) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.detail(data.id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.all });
@@ -235,11 +236,11 @@ export function useLockLot(options?: {
 export function useUnlockLot(options?: {
   onSuccess?: (data: LotResponse) => void;
   onError?: (error: Error) => void;
-}): UseMutationResult<LotResponse, Error, number> {
+}): UseMutationResult<LotResponse, Error, { id: number; quantity?: number }> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: number) => unlockLot(id),
+    mutationFn: ({ id, quantity }: { id: number; quantity?: number }) => unlockLot(id, quantity),
     onSuccess: (data: LotResponse) => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.detail(data.id) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.lots.all });

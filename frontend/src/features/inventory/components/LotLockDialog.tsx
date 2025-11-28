@@ -4,6 +4,7 @@
  * ロットロック確認ダイアログ
  */
 
+/* eslint-disable max-lines-per-function */
 import { useState } from "react";
 
 import {
@@ -15,15 +16,18 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Input,
+  Checkbox,
 } from "@/components/ui";
 import { FormDialog } from "@/shared/components/form";
 
 interface LotLockDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: (reason: string) => Promise<void>;
+  onConfirm: (reason: string, quantity?: number) => Promise<void>;
   isSubmitting: boolean;
   lotNumber?: string;
+  availableQuantity: number;
 }
 
 const LOCK_REASON_TEMPLATES = [
@@ -41,9 +45,12 @@ export function LotLockDialog({
   onConfirm,
   isSubmitting,
   lotNumber,
+  availableQuantity,
 }: LotLockDialogProps) {
   const [template, setTemplate] = useState("custom");
   const [reason, setReason] = useState("");
+  const [isPartialLock, setIsPartialLock] = useState(false);
+  const [quantity, setQuantity] = useState<string>("");
 
   const handleTemplateChange = (value: string) => {
     setTemplate(value);
@@ -59,7 +66,8 @@ export function LotLockDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onConfirm(reason);
+    const qty = isPartialLock && quantity ? Number(quantity) : undefined;
+    await onConfirm(reason, qty);
   };
 
   return (
@@ -98,6 +106,41 @@ export function LotLockDialog({
             disabled={template !== "custom"}
             className="min-h-[100px]"
           />
+        </div>
+
+        <div className="space-y-2 rounded-md border p-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="partial_lock"
+              checked={isPartialLock}
+              onCheckedChange={(checked) => setIsPartialLock(checked as boolean)}
+            />
+            <Label htmlFor="partial_lock" className="cursor-pointer font-medium">
+              数量を指定してロックする（部分ロック）
+            </Label>
+          </div>
+
+          {isPartialLock && (
+            <div className="pt-2 pl-6">
+              <Label htmlFor="lock_quantity">ロックする数量 (有効在庫: {availableQuantity})</Label>
+              <Input
+                id="lock_quantity"
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                min="0.001"
+                max={availableQuantity}
+                step="0.001"
+                required={isPartialLock}
+                placeholder="数量を入力"
+              />
+            </div>
+          )}
+          {!isPartialLock && (
+            <p className="text-muted-foreground pl-6 text-sm">
+              チェックを外すと、現在の有効在庫 ({availableQuantity}) 全てをロックします。
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end space-x-2 pt-4">

@@ -90,6 +90,9 @@ class Lot(Base):
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
     lock_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    locked_quantity: Mapped[Decimal] = mapped_column(
+        Numeric(15, 3), nullable=False, server_default=text("0")
+    )
 
     # Inspection certificate fields
     inspection_status: Mapped[str] = mapped_column(
@@ -112,8 +115,9 @@ class Lot(Base):
     __table_args__ = (
         CheckConstraint("current_quantity >= 0", name="chk_lots_current_quantity"),
         CheckConstraint("allocated_quantity >= 0", name="chk_lots_allocated_quantity"),
+        CheckConstraint("locked_quantity >= 0", name="chk_lots_locked_quantity"),
         CheckConstraint(
-            "allocated_quantity <= current_quantity",
+            "allocated_quantity + locked_quantity <= current_quantity",
             name="chk_lots_allocation_limit",
         ),
         CheckConstraint(

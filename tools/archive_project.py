@@ -12,7 +12,6 @@
 import zipfile
 from pathlib import Path
 from datetime import datetime
-import sys
 
 # 除外パターン（生成AI投入のため軽量化）
 EXCLUDE_PATTERNS = [
@@ -63,10 +62,10 @@ def archive_project() -> None:
     output_name = f"lot-management-{timestamp}.zip"
     output_path = project_root / output_name
 
-    print(f"📦 プロジェクト圧縮開始")
+    print("📦 プロジェクト圧縮開始")
     print(f"   ルート: {project_root}")
     print(f"   出力先: {output_path.name}")
-    print(f"\n除外対象:")
+    print("\n除外対象:")
     for pattern in EXCLUDE_PATTERNS:
         print(f"   - {pattern}")
     print()
@@ -82,7 +81,7 @@ def archive_project() -> None:
             else:
                 files_to_archive.append(path)
 
-    print(f"📊 収集完了:")
+    print("📊 収集完了:")
     print(f"   対象ファイル: {len(files_to_archive):,} 件")
     print(f"   除外ファイル: {skipped_count:,} 件")
     print()
@@ -98,7 +97,10 @@ def archive_project() -> None:
                 # プログレス表示（100件ごと）
                 if i % 100 == 0 or i == len(files_to_archive):
                     percent = (i / len(files_to_archive)) * 100
-                    print(f"\r   圧縮中... {i}/{len(files_to_archive)} ({percent:.1f}%)", end="")
+                    print(
+                        f"\r   圧縮中... {i}/{len(files_to_archive)} ({percent:.1f}%)",
+                        end="",
+                    )
 
             except PermissionError:
                 print(f"\n   ⚠️  スキップ（ロック中）: {file_path.name}")
@@ -108,7 +110,7 @@ def archive_project() -> None:
 
     # 結果サマリー
     size_mb = output_path.stat().st_size / (1024 * 1024)
-    print(f"\n✅ 圧縮完了!")
+    print("\n✅ 圧縮完了!")
     print(f"   ファイル: {output_path.name}")
     print(f"   サイズ: {size_mb:.2f} MB")
     if error_count > 0:

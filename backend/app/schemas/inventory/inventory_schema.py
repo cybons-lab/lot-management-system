@@ -24,7 +24,8 @@ class LotStatus(str, Enum):
 class LotLock(BaseSchema):
     """Payload for locking a lot."""
 
-    reason: str
+    reason: str | None = None
+    quantity: Decimal | None = None
 
 
 class LotBase(BaseSchema):
@@ -39,8 +40,10 @@ class LotBase(BaseSchema):
     expiry_date: date | None = None
     current_quantity: Decimal = Decimal("0")
     allocated_quantity: Decimal = Decimal("0")
+    locked_quantity: Decimal = Decimal("0")
     unit: str
     status: LotStatus = LotStatus.ACTIVE
+    lock_reason: str | None = None
 
     # Inspection certificate fields
     inspection_status: str = "not_required"

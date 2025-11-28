@@ -53,17 +53,19 @@ export function ProductGroupHeader({
       <div className="flex flex-1 items-center gap-8">
         <div className="w-[200px]">
           <div className="text-xs font-medium text-slate-500">製品コード</div>
-          <div className="font-semibold text-slate-900">{productCode}</div>
+          <div className="truncate font-semibold text-slate-900" title={productCode}>
+            {productCode}
+          </div>
         </div>
 
-        <div className="flex-1">
+        <div className="max-w-[400px] min-w-0 flex-1">
           <div className="text-xs font-medium text-slate-500">製品名</div>
           <div className="truncate font-semibold text-slate-900" title={productName}>
             {productName}
           </div>
         </div>
 
-        <div className="w-[150px]">
+        <div className="w-[150px] min-w-0">
           <div className="text-xs font-medium text-slate-500">仕入先</div>
           <div className="truncate font-semibold text-slate-900" title={supplierName}>
             {supplierName}

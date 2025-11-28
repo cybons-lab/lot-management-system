@@ -33,7 +33,9 @@ def run_psql(
     ]
     print("$ " + " ".join(cmd))
     if quiet:
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
+        subprocess.run(
+            cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT
+        )
     else:
         subprocess.run(cmd, check=True)
 

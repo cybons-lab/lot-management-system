@@ -77,7 +77,9 @@ def parse_schema_sql(path: Path) -> list[ColumnDef]:
                 continue
 
             upper = line_stripped.upper()
-            if upper.startswith(("CONSTRAINT", "PRIMARY KEY", "UNIQUE", "FOREIGN KEY", "CHECK")):
+            if upper.startswith(
+                ("CONSTRAINT", "PRIMARY KEY", "UNIQUE", "FOREIGN KEY", "CHECK")
+            ):
                 # 制約行は別で処理
                 continue
 
@@ -109,7 +111,9 @@ def parse_schema_sql(path: Path) -> list[ColumnDef]:
 
             upper = line_stripped.upper()
             if "PRIMARY KEY" in upper:
-                m_pk = re.search(r"PRIMARY\s+KEY\s*\((?P<cols>[^)]+)\)", line_stripped, re.IGNORECASE)
+                m_pk = re.search(
+                    r"PRIMARY\s+KEY\s*\((?P<cols>[^)]+)\)", line_stripped, re.IGNORECASE
+                )
                 if m_pk:
                     cols = [c.strip().strip('"') for c in m_pk.group("cols").split(",")]
                     for col in cols:
@@ -123,16 +127,22 @@ def parse_schema_sql(path: Path) -> list[ColumnDef]:
                     re.IGNORECASE,
                 )
                 if m_fk:
-                    local_cols = [c.strip().strip('"') for c in m_fk.group("cols").split(",")]
+                    local_cols = [
+                        c.strip().strip('"') for c in m_fk.group("cols").split(",")
+                    ]
                     ref_table = m_fk.group("reftable").split(".")[-1]
-                    ref_cols = [c.strip().strip('"') for c in m_fk.group("refcols").split(",")]
+                    ref_cols = [
+                        c.strip().strip('"') for c in m_fk.group("refcols").split(",")
+                    ]
 
                     # 単一 or 同数列対応（それ以上は雑に1:1対応）
                     for idx, local_col in enumerate(local_cols):
                         if local_col not in columns_by_name:
                             continue
                         ref_col = ref_cols[min(idx, len(ref_cols) - 1)]
-                        columns_by_name[local_col].foreign_key = f"{ref_table}.{ref_col}"
+                        columns_by_name[
+                            local_col
+                        ].foreign_key = f"{ref_table}.{ref_col}"
 
         # カラム順で results に追加
         for col_name in column_order:
@@ -186,11 +196,7 @@ def build_table_api_matrix(
 
     for table in table_names:
         keyword = f"/{table}"
-        related = [
-            f"{ep.method} {ep.path}"
-            for ep in endpoints
-            if keyword in ep.path
-        ]
+        related = [f"{ep.method} {ep.path}" for ep in endpoints if keyword in ep.path]
         rows.append(
             {
                 "table_name": table,
@@ -239,8 +245,6 @@ def add_excel_table(ws, style_name: str) -> None:
     )
     table.tableStyleInfo = style
     ws.add_table(table)
-
-
 
 
 def main() -> None:

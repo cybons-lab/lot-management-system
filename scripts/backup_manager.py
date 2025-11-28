@@ -5,7 +5,6 @@ Handles database backups and cleanup based on retention policy.
 """
 
 import argparse
-import os
 import subprocess
 import sys
 from datetime import datetime, timedelta
@@ -36,9 +35,9 @@ def create_backup(db_name: str, db_user: str, dry_run: bool = False):
     filepath = BACKUP_DIR / filename
 
     print(f"Creating backup: {filepath}")
-    
+
     cmd = ["pg_dump", "-U", db_user, "-f", str(filepath), db_name]
-    
+
     if dry_run:
         print(f"[DRY-RUN] Would execute: {' '.join(cmd)}")
         return
@@ -50,7 +49,10 @@ def create_backup(db_name: str, db_user: str, dry_run: bool = False):
         print(f"Error creating backup: {e}", file=sys.stderr)
         sys.exit(1)
     except FileNotFoundError:
-        print("Error: pg_dump not found. Please ensure PostgreSQL client tools are installed.", file=sys.stderr)
+        print(
+            "Error: pg_dump not found. Please ensure PostgreSQL client tools are installed.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
 
@@ -58,9 +60,10 @@ def get_backup_files() -> List[Path]:
     """Get list of backup files sorted by modification time (newest first)."""
     if not BACKUP_DIR.exists():
         return []
-    
+
     files = [
-        f for f in BACKUP_DIR.glob(f"{FILENAME_PREFIX}*{FILENAME_EXTENSION}")
+        f
+        for f in BACKUP_DIR.glob(f"{FILENAME_PREFIX}*{FILENAME_EXTENSION}")
         if f.is_file()
     ]
     # Sort by timestamp in filename, assuming format backup_YYYYMMDD_HHMMSS.sql
@@ -72,7 +75,7 @@ def get_backup_files() -> List[Path]:
 def parse_date_from_filename(filename: str) -> datetime:
     """Extract date from filename."""
     # Remove prefix and extension
-    core = filename[len(FILENAME_PREFIX):-len(FILENAME_EXTENSION)]
+    core = filename[len(FILENAME_PREFIX) : -len(FILENAME_EXTENSION)]
     try:
         return datetime.strptime(core, DATE_FORMAT)
     except ValueError:
@@ -110,7 +113,7 @@ def cleanup_backups(dry_run: bool = False):
             continue
 
         age = now - file_date
-        
+
         # Rule 1: Keep daily backups for 7 days
         if age <= daily_retention:
             keep_files.add(file)
@@ -157,7 +160,9 @@ def list_backups():
     print("-" * 60)
     for file in files:
         size_mb = file.stat().st_size / (1024 * 1024)
-        created = datetime.fromtimestamp(file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+        created = datetime.fromtimestamp(file.stat().st_mtime).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
         print(f"{file.name:<35} {size_mb:<10.2f} {created}")
 
 
@@ -169,11 +174,15 @@ def main():
     create_parser = subparsers.add_parser("create", help="Create a new backup")
     create_parser.add_argument("--db-name", default=DB_NAME, help="Database name")
     create_parser.add_argument("--db-user", default=DB_USER, help="Database user")
-    create_parser.add_argument("--dry-run", action="store_true", help="Simulate execution")
+    create_parser.add_argument(
+        "--dry-run", action="store_true", help="Simulate execution"
+    )
 
     # Cleanup command
     cleanup_parser = subparsers.add_parser("cleanup", help="Clean up old backups")
-    cleanup_parser.add_argument("--dry-run", action="store_true", help="Simulate execution")
+    cleanup_parser.add_argument(
+        "--dry-run", action="store_true", help="Simulate execution"
+    )
 
     # List command
     subparsers.add_parser("list", help="List available backups")

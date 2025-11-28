@@ -12,7 +12,7 @@ This script:
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict
 
 # Add backend to path
 backend_path = Path(__file__).parent.parent / "backend"
@@ -31,18 +31,18 @@ def parse_ddl(ddl_path: Path) -> Dict[str, Dict[str, str]]:
     current_columns = {}
     in_table_definition = False
 
-    with open(ddl_path, 'r', encoding='utf-8') as f:
+    with open(ddl_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    lines = content.split('\n')
+    lines = content.split("\n")
     i = 0
 
     while i < len(lines):
         line = lines[i].strip()
 
         # Detect CREATE TABLE
-        if line.startswith('CREATE TABLE'):
-            match = re.match(r'CREATE TABLE (?:public\.)?(\w+)', line)
+        if line.startswith("CREATE TABLE"):
+            match = re.match(r"CREATE TABLE (?:public\.)?(\w+)", line)
             if match:
                 if current_table and current_columns:
                     tables[current_table] = current_columns
@@ -54,7 +54,11 @@ def parse_ddl(ddl_path: Path) -> Dict[str, Dict[str, str]]:
         # Parse column definitions
         elif in_table_definition and current_table:
             # End of table definition
-            if line.startswith(');') or line.startswith('CONSTRAINT') or line.startswith('CHECK'):
+            if (
+                line.startswith(");")
+                or line.startswith("CONSTRAINT")
+                or line.startswith("CHECK")
+            ):
                 if current_table and current_columns:
                     tables[current_table] = current_columns
                 in_table_definition = False
@@ -63,7 +67,7 @@ def parse_ddl(ddl_path: Path) -> Dict[str, Dict[str, str]]:
             else:
                 # Column definition line
                 # Format: column_name TYPE [constraints],
-                col_match = re.match(r'(\w+)\s+(\w+(?:\([^)]+\))?)', line)
+                col_match = re.match(r"(\w+)\s+(\w+(?:\([^)]+\))?)", line)
                 if col_match:
                     col_name = col_match.group(1)
                     col_type = col_match.group(2)
@@ -118,19 +122,21 @@ def extract_model_definitions() -> Dict[str, Dict[str, str]]:
             attr = getattr(module, attr_name)
 
             # Check if it's a SQLAlchemy model
-            if hasattr(attr, '__tablename__') and hasattr(attr, '__table__'):
+            if hasattr(attr, "__tablename__") and hasattr(attr, "__table__"):
                 table_name = attr.__tablename__
 
                 # Skip views
-                if hasattr(attr, '__table_args__'):
+                if hasattr(attr, "__table_args__"):
                     table_args = attr.__table_args__
-                    if isinstance(table_args, dict) and table_args.get('info', {}).get('is_view'):
+                    if isinstance(table_args, dict) and table_args.get("info", {}).get(
+                        "is_view"
+                    ):
                         continue
 
                 columns = {}
 
                 # Extract columns
-                if hasattr(attr, '__table__'):
+                if hasattr(attr, "__table__"):
                     for col in attr.__table__.columns:
                         col_name = col.name
                         col_type = str(col.type)
@@ -172,14 +178,14 @@ def compare_schemas(ddl_tables: Dict[str, Dict], model_tables: Dict[str, Dict]) 
 
         if cols_only_in_ddl or cols_only_in_models:
             column_diffs[table] = {
-                'ddl_only': sorted(cols_only_in_ddl),
-                'model_only': sorted(cols_only_in_models),
+                "ddl_only": sorted(cols_only_in_ddl),
+                "model_only": sorted(cols_only_in_models),
             }
 
     return {
-        'tables_only_in_ddl': tables_only_in_ddl,
-        'tables_only_in_models': tables_only_in_models,
-        'column_diffs': column_diffs,
+        "tables_only_in_ddl": tables_only_in_ddl,
+        "tables_only_in_models": tables_only_in_models,
+        "column_diffs": column_diffs,
     }
 
 
@@ -203,16 +209,16 @@ def generate_report(diff: Dict, ddl_tables: Dict, model_tables: Dict) -> str:
     report.append("## 1. Table-Level Differences\n")
 
     report.append("### (A) Tables in DDL but not in Models\n")
-    if diff['tables_only_in_ddl']:
-        for table in diff['tables_only_in_ddl']:
+    if diff["tables_only_in_ddl"]:
+        for table in diff["tables_only_in_ddl"]:
             report.append(f"- `{table}`")
     else:
         report.append("*(None)*")
     report.append("")
 
     report.append("### (B) Tables in Models but not in DDL\n")
-    if diff['tables_only_in_models']:
-        for table in diff['tables_only_in_models']:
+    if diff["tables_only_in_models"]:
+        for table in diff["tables_only_in_models"]:
             report.append(f"- `{table}` ⚠️")
     else:
         report.append("*(None)*")
@@ -221,21 +227,23 @@ def generate_report(diff: Dict, ddl_tables: Dict, model_tables: Dict) -> str:
     # Column-level diffs
     report.append("## 2. Column-Level Differences\n")
 
-    if diff['column_diffs']:
-        for table, cols in diff['column_diffs'].items():
+    if diff["column_diffs"]:
+        for table, cols in diff["column_diffs"].items():
             report.append(f"### Table: `{table}`\n")
 
-            if cols['ddl_only']:
+            if cols["ddl_only"]:
                 report.append("**Columns in DDL only (not in model):**")
-                for col in cols['ddl_only']:
-                    col_def = ddl_tables[table].get(col, '(unknown)')
+                for col in cols["ddl_only"]:
+                    col_def = ddl_tables[table].get(col, "(unknown)")
                     report.append(f"- `{col}` — {col_def}")
                 report.append("")
 
-            if cols['model_only']:
-                report.append("**Columns in Model only (not in DDL):** ⚠️ **HIGH PRIORITY**")
-                for col in cols['model_only']:
-                    col_type = model_tables[table].get(col, '(unknown)')
+            if cols["model_only"]:
+                report.append(
+                    "**Columns in Model only (not in DDL):** ⚠️ **HIGH PRIORITY**"
+                )
+                for col in cols["model_only"]:
+                    col_type = model_tables[table].get(col, "(unknown)")
                     report.append(f"- `{col}` — Type: `{col_type}`")
                 report.append("")
     else:
@@ -247,16 +255,27 @@ def generate_report(diff: Dict, ddl_tables: Dict, model_tables: Dict) -> str:
     problematic = []
 
     # Check for deleted_at
-    for table, cols in diff['column_diffs'].items():
-        if 'deleted_at' in cols.get('model_only', []):
-            problematic.append(f"- `{table}.deleted_at` (P0) — Model references deleted_at but DDL doesn't have it")
+    for table, cols in diff["column_diffs"].items():
+        if "deleted_at" in cols.get("model_only", []):
+            problematic.append(
+                f"- `{table}.deleted_at` (P0) — Model references deleted_at but DDL doesn't have it"
+            )
 
     # Check for *_code columns in wrong places
     suspicious_codes = []
-    for table, cols in diff['column_diffs'].items():
-        for col in cols.get('model_only', []):
-            if col.endswith('_code') and table not in ['products', 'warehouses', 'customers', 'suppliers', 'delivery_places', 'roles']:
-                suspicious_codes.append(f"- `{table}.{col}` (P1) — Possible legacy code column")
+    for table, cols in diff["column_diffs"].items():
+        for col in cols.get("model_only", []):
+            if col.endswith("_code") and table not in [
+                "products",
+                "warehouses",
+                "customers",
+                "suppliers",
+                "delivery_places",
+                "roles",
+            ]:
+                suspicious_codes.append(
+                    f"- `{table}.{col}` (P1) — Possible legacy code column"
+                )
 
     if problematic:
         report.append("### P0: Critical (Will cause runtime errors)\n")
@@ -301,7 +320,7 @@ def main():
 
     # Write report
     report_path = repo_root / "schema_consistency_report.md"
-    with open(report_path, 'w', encoding='utf-8') as f:
+    with open(report_path, "w", encoding="utf-8") as f:
         f.write(report)
 
     print(f"\n✅ Report written to: {report_path}")

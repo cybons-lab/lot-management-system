@@ -13,7 +13,9 @@ from sqlalchemy.exc import SQLAlchemyError
 def get_engine():
     database_url = os.getenv("DATABASE_URL")
     if not database_url:
-        raise RuntimeError("DATABASE_URL が設定されていません。環境変数を確認してください。")
+        raise RuntimeError(
+            "DATABASE_URL が設定されていません。環境変数を確認してください。"
+        )
     return create_engine(database_url)
 
 
@@ -49,7 +51,9 @@ def collect_table_info(inspector: Inspector, schema: str = "public"):
 
 
 def collect_fk_mismatches(
-    inspector: Inspector, column_types: dict[tuple[str, str], str], schema: str = "public"
+    inspector: Inspector,
+    column_types: dict[tuple[str, str], str],
+    schema: str = "public",
 ):
     tables = inspector.get_table_names(schema=schema)
     mismatches: list[dict[str, str]] = []
