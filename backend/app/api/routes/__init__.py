@@ -32,13 +32,13 @@ from app.api.routes.allocations import (
 )
 from app.api.routes.assignments.assignment_router import router as assignments_router
 from app.api.routes.forecasts import forecasts_router
+from app.api.routes.integration.sap_router import router as sap_router
 from app.api.routes.inventory import (
     adjustments_router,
     inbound_plans_router,
     inventory_items_router,
     lots_router,
 )
-from app.api.routes.integration.sap_router import router as sap_router
 from app.api.routes.masters import (
     customer_items_router,
     customers_router,

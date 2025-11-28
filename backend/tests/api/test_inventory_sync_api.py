@@ -26,9 +26,7 @@ app.dependency_overrides[get_db] = override_get_db
 
 def _truncate_all(db: Session):
     """テスト用にデータをクリア."""
-    db.query(BusinessRule).filter(
-        BusinessRule.rule_type == "inventory_sync_alert"
-    ).delete()
+    db.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
     db.query(Lot).delete()
     db.query(Product).delete()
     db.query(Warehouse).delete()
@@ -175,11 +173,7 @@ def test_inventory_sync_execute_with_discrepancies(mock_sap_client_class):
     assert abs(disc["diff_pct"] - 10.0) < 0.01
 
     # BusinessRuleにアラートが記録されているか確認
-    alerts = (
-        db.query(BusinessRule)
-        .filter(BusinessRule.rule_type == "inventory_sync_alert")
-        .all()
-    )
+    alerts = db.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").all()
     assert len(alerts) == 1
     assert alerts[0].rule_code == f"inv_sync_alert_{products[1].id}"
     assert alerts[0].is_active is True

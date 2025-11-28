@@ -5,9 +5,9 @@ type SAPOrderRegistrationRequest = components["schemas"]["SAPOrderRegistrationRe
 type SAPOrderRegistrationResponse = components["schemas"]["SAPOrderRegistrationResponse"];
 
 export const integrationApi = {
-    registerSalesOrders: async (
-        data: SAPOrderRegistrationRequest
-    ): Promise<SAPOrderRegistrationResponse> => {
-        return fetchApi.post<SAPOrderRegistrationResponse>("/integration/sap/sales-orders", data);
-    },
+  registerSalesOrders: async (
+    data: SAPOrderRegistrationRequest,
+  ): Promise<SAPOrderRegistrationResponse> => {
+    return fetchApi.post<SAPOrderRegistrationResponse>("/integration/sap/sales-orders", data);
+  },
 };

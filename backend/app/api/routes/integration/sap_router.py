@@ -3,14 +3,14 @@
 import random
 import time
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from app.api.deps import get_db
 from app.schemas.integration.sap_schema import (
     SAPOrderRegistrationRequest,
     SAPOrderRegistrationResponse,
     SAPOrderRegistrationResult,
 )
+
 
 router = APIRouter(prefix="/integration/sap", tags=["integration"])
 
@@ -31,7 +31,7 @@ async def register_sales_orders(
     for order_id in request.order_ids:
         # Generate dummy SAP Order No (e.g., SAP-000123)
         dummy_sap_no = f"SAP-{random.randint(100000, 999999)}"
-        
+
         results.append(
             SAPOrderRegistrationResult(
                 order_id=order_id,
