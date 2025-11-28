@@ -17,32 +17,32 @@ import type { OrderLine } from "@/shared/types/aliases";
  */
 // eslint-disable-next-line complexity
 export function getOrderQuantity(line: OrderLine): number {
-    const converted = Number(line.converted_quantity);
-    if (Number.isFinite(converted)) {
-        return converted;
-    }
+  const converted = Number(line.converted_quantity);
+  if (Number.isFinite(converted)) {
+    return converted;
+  }
 
-    const baseQuantity = Number(line.order_quantity ?? line.quantity ?? 0);
-    const internalUnit = line.product_internal_unit ?? line.unit ?? null;
-    const externalUnit = line.product_external_unit ?? null;
-    const orderUnit = line.unit ?? externalUnit ?? internalUnit ?? null;
-    const qtyPerInternalUnit = Number(line.product_qty_per_internal_unit ?? 0);
+  const baseQuantity = Number(line.order_quantity ?? line.quantity ?? 0);
+  const internalUnit = line.product_internal_unit ?? line.unit ?? null;
+  const externalUnit = line.product_external_unit ?? null;
+  const orderUnit = line.unit ?? externalUnit ?? internalUnit ?? null;
+  const qtyPerInternalUnit = Number(line.product_qty_per_internal_unit ?? 0);
 
-    if (!internalUnit || !Number.isFinite(qtyPerInternalUnit) || qtyPerInternalUnit <= 0) {
-        return baseQuantity;
-    }
-
-    // Already in the internal (inventory) unit
-    if (orderUnit === internalUnit) {
-        return baseQuantity;
-    }
-
-    // Convert external order units to internal units when possible
-    if (externalUnit && orderUnit === externalUnit) {
-        return baseQuantity / qtyPerInternalUnit;
-    }
-
+  if (!internalUnit || !Number.isFinite(qtyPerInternalUnit) || qtyPerInternalUnit <= 0) {
     return baseQuantity;
+  }
+
+  // Already in the internal (inventory) unit
+  if (orderUnit === internalUnit) {
+    return baseQuantity;
+  }
+
+  // Convert external order units to internal units when possible
+  if (externalUnit && orderUnit === externalUnit) {
+    return baseQuantity / qtyPerInternalUnit;
+  }
+
+  return baseQuantity;
 }
 
 /**
@@ -51,7 +51,7 @@ export function getOrderQuantity(line: OrderLine): number {
  * @returns Allocated quantity as number
  */
 export function getAllocatedQuantity(line: OrderLine): number {
-    return Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
+  return Number(line.allocated_qty ?? line.allocated_quantity ?? 0);
 }
 
 /**
@@ -60,7 +60,7 @@ export function getAllocatedQuantity(line: OrderLine): number {
  * @returns Free quantity as number
  */
 export function getFreeQuantity(lot: CandidateLotItem): number {
-    return Number(lot.available_quantity ?? 0);
+  return Number(lot.available_quantity ?? 0);
 }
 
 /**
@@ -69,7 +69,7 @@ export function getFreeQuantity(lot: CandidateLotItem): number {
  * @returns Order ID or null
  */
 export function getOrderId(line: OrderLine): number | null {
-    return line.order_id ?? null;
+  return line.order_id ?? null;
 }
 
 // ===== From allocationCalculations.ts =====
@@ -84,43 +84,43 @@ export function getOrderId(line: OrderLine): number | null {
  * @pure No side effects
  */
 export function calculateAutoAllocation(params: {
-    requiredQty: number;
-    dbAllocatedQty: number;
-    candidateLots: CandidateLotItem[];
+  requiredQty: number;
+  dbAllocatedQty: number;
+  candidateLots: CandidateLotItem[];
 }): LineAllocations {
-    const { requiredQty, dbAllocatedQty, candidateLots } = params;
+  const { requiredQty, dbAllocatedQty, candidateLots } = params;
 
-    // Calculate remaining quantity to allocate
-    let remaining = requiredQty - dbAllocatedQty;
+  // Calculate remaining quantity to allocate
+  let remaining = requiredQty - dbAllocatedQty;
 
-    const newLineAllocations: LineAllocations = {};
+  const newLineAllocations: LineAllocations = {};
 
-    // Iterate through candidate lots (assumed to be sorted by FEFO)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  // Iterate through candidate lots (assumed to be sorted by FEFO)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    for (const lot of candidateLots) {
-        if (remaining <= 0) break;
+  for (const lot of candidateLots) {
+    if (remaining <= 0) break;
 
-        // Skip expired lots
-        if (lot.expiry_date) {
-            const expiry = new Date(lot.expiry_date);
-            if (expiry < today) continue;
-        }
-
-        const lotId = lot.lot_id;
-        const freeQty = getFreeQuantity(lot);
-
-        // Allocate as much as possible from this lot
-        const allocateQty = Math.min(remaining, freeQty);
-
-        if (allocateQty > 0) {
-            newLineAllocations[lotId] = allocateQty;
-            remaining -= allocateQty;
-        }
+    // Skip expired lots
+    if (lot.expiry_date) {
+      const expiry = new Date(lot.expiry_date);
+      if (expiry < today) continue;
     }
 
-    return newLineAllocations;
+    const lotId = lot.lot_id;
+    const freeQty = getFreeQuantity(lot);
+
+    // Allocate as much as possible from this lot
+    const allocateQty = Math.min(remaining, freeQty);
+
+    if (allocateQty > 0) {
+      newLineAllocations[lotId] = allocateQty;
+      remaining -= allocateQty;
+    }
+  }
+
+  return newLineAllocations;
 }
 
 /**
@@ -132,13 +132,13 @@ export function calculateAutoAllocation(params: {
  * @pure No side effects
  */
 export function clampAllocationQuantity(params: { value: number; maxAllowed: number }): number {
-    const { value, maxAllowed } = params;
+  const { value, maxAllowed } = params;
 
-    // Ensure value is finite
-    const safeValue = Number.isFinite(value) ? value : 0;
+  // Ensure value is finite
+  const safeValue = Number.isFinite(value) ? value : 0;
 
-    // Clamp between 0 and maxAllowed
-    return Math.max(0, Math.min(maxAllowed, safeValue));
+  // Clamp between 0 and maxAllowed
+  return Math.max(0, Math.min(maxAllowed, safeValue));
 }
 
 /**
@@ -151,12 +151,12 @@ export function clampAllocationQuantity(params: { value: number; maxAllowed: num
  * @pure No side effects
  */
 export function checkOverAllocation(params: {
-    requiredQty: number;
-    dbAllocated: number;
-    uiAllocated: number;
+  requiredQty: number;
+  dbAllocated: number;
+  uiAllocated: number;
 }): boolean {
-    const { requiredQty, dbAllocated, uiAllocated } = params;
-    return dbAllocated + uiAllocated > requiredQty;
+  const { requiredQty, dbAllocated, uiAllocated } = params;
+  return dbAllocated + uiAllocated > requiredQty;
 }
 
 /**
@@ -166,7 +166,7 @@ export function checkOverAllocation(params: {
  * @pure No side effects
  */
 export function calculateTotalUiAllocated(allocations: LineAllocations): number {
-    return Object.values(allocations).reduce((sum, quantity) => sum + quantity, 0);
+  return Object.values(allocations).reduce((sum, quantity) => sum + quantity, 0);
 }
 
 /**
@@ -176,15 +176,15 @@ export function calculateTotalUiAllocated(allocations: LineAllocations): number 
  * @pure No side effects
  */
 export function removeZeroAllocations(allocations: LineAllocations): LineAllocations {
-    const cleaned: LineAllocations = {};
+  const cleaned: LineAllocations = {};
 
-    for (const [lotIdStr, quantity] of Object.entries(allocations)) {
-        if (quantity > 0) {
-            cleaned[Number(lotIdStr)] = quantity;
-        }
+  for (const [lotIdStr, quantity] of Object.entries(allocations)) {
+    if (quantity > 0) {
+      cleaned[Number(lotIdStr)] = quantity;
     }
+  }
 
-    return cleaned;
+  return cleaned;
 }
 
 /**
@@ -194,12 +194,12 @@ export function removeZeroAllocations(allocations: LineAllocations): LineAllocat
  * @pure No side effects
  */
 export function convertAllocationsToPayload(
-    allocations: LineAllocations,
+  allocations: LineAllocations,
 ): Array<{ lot_id: number; quantity: number }> {
-    return Object.entries(allocations)
-        .map(([lotIdStr, qty]) => ({
-            lot_id: Number(lotIdStr),
-            quantity: Number(qty),
-        }))
-        .filter((item) => item.quantity > 0);
+  return Object.entries(allocations)
+    .map(([lotIdStr, qty]) => ({
+      lot_id: Number(lotIdStr),
+      quantity: Number(qty),
+    }))
+    .filter((item) => item.quantity > 0);
 }

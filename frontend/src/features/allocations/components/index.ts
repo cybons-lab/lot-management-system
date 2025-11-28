@@ -23,14 +23,7 @@ export {
 } from "./lots";
 
 // Shared components
-export {
-  AllocationInput,
-  AllocationProgress,
-  WarehouseAllocationModal,
-} from "./shared";
+export { AllocationInput, AllocationProgress, WarehouseAllocationModal } from "./shared";
 
 // Allocation List components
-export {
-  FlatAllocationList,
-  LineBasedAllocationList,
-} from "./allocation-list";
+export { FlatAllocationList, LineBasedAllocationList } from "./allocation-list";

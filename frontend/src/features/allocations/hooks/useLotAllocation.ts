@@ -9,69 +9,69 @@ import { useLotAllocationLogic } from "./useLotAllocationLogic";
 export type { LineStatus, LineStockStatus };
 
 export function useLotAllocation() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-    const {
-        allocationsByLine,
-        setAllocationsByLine,
-        lineStatuses,
-        setLineStatuses,
-        toast,
-        setToast,
-        ordersQuery,
-        orders,
-        allLines,
-        isCandidatesLoading,
-        customerMap,
-        productMap,
-    } = useLotAllocationLogic();
+  const {
+    allocationsByLine,
+    setAllocationsByLine,
+    lineStatuses,
+    setLineStatuses,
+    toast,
+    setToast,
+    ordersQuery,
+    orders,
+    allLines,
+    isCandidatesLoading,
+    customerMap,
+    productMap,
+  } = useLotAllocationLogic();
 
-    const {
-        getCandidateLots,
-        getAllocationsForLine,
-        changeAllocation,
-        autoAllocate,
-        clearAllocations,
-        saveAllocations,
-        isOverAllocated,
-        saveAllocationsMutation,
-    } = useLotAllocationActions({
-        queryClient,
-        allLines,
-        allocationsByLine,
-        setAllocationsByLine,
-        setLineStatuses,
-        setToast,
-    });
+  const {
+    getCandidateLots,
+    getAllocationsForLine,
+    changeAllocation,
+    autoAllocate,
+    clearAllocations,
+    saveAllocations,
+    isOverAllocated,
+    saveAllocationsMutation,
+  } = useLotAllocationActions({
+    queryClient,
+    allLines,
+    allocationsByLine,
+    setAllocationsByLine,
+    setLineStatuses,
+    setToast,
+  });
 
-    // Auto-allocate on mount (once orders are loaded and candidates are ready)
-    const hasAutoAllocatedRef = useRef(false);
+  // Auto-allocate on mount (once orders are loaded and candidates are ready)
+  const hasAutoAllocatedRef = useRef(false);
 
-    useEffect(() => {
-        if (
-            ordersQuery.isLoading ||
-            isCandidatesLoading ||
-            !allLines.length ||
-            hasAutoAllocatedRef.current
-        ) {
-            return;
-        }
+  useEffect(() => {
+    if (
+      ordersQuery.isLoading ||
+      isCandidatesLoading ||
+      !allLines.length ||
+      hasAutoAllocatedRef.current
+    ) {
+      return;
+    }
 
-        // Trigger auto-allocate for all lines that don't have allocations yet
-        // We use a timeout to ensure candidate lots are fetched/available (or let the action handle it)
-        // Note: autoAllocate relies on candidateFetcher which uses queryClient.getQueryData.
-        // If data isn't in cache, it returns empty.
-        // We might need to wait for candidates?
-        // Actually, useLotAllocationData prefetches candidates!
-        // But prefetching might take time.
+    // Trigger auto-allocate for all lines that don't have allocations yet
+    // We use a timeout to ensure candidate lots are fetched/available (or let the action handle it)
+    // Note: autoAllocate relies on candidateFetcher which uses queryClient.getQueryData.
+    // If data isn't in cache, it returns empty.
+    // We might need to wait for candidates?
+    // Actually, useLotAllocationData prefetches candidates!
+    // But prefetching might take time.
 
-        // For now, let's try running it. If candidates aren't ready, it might fail to allocate.
-        // A better approach might be to let the user click "Auto Allocate All" or similar,
-        // but the user asked for "values buried".
+    // For now, let's try running it. If candidates aren't ready, it might fail to allocate.
+    // A better approach might be to let the user click "Auto Allocate All" or similar,
+    // but the user asked for "values buried".
 
-        // Let's try to run it.
-        // ★以下の自動引当ループをコメントアウトして無効化★
-        /*
+    // Let's try to run it.
+    // ★以下の自動引当ループをコメントアウトして無効化★
+    /*
         allLines.forEach((line) => {
           // Check if already allocated (in DB or UI)
           // If DB has allocations, we might not want to overwrite?
@@ -89,29 +89,29 @@ export function useLotAllocation() {
         });
         */
 
-        hasAutoAllocatedRef.current = true;
-    }, [ordersQuery.isLoading, isCandidatesLoading, allLines, autoAllocate, allocationsByLine]);
+    hasAutoAllocatedRef.current = true;
+  }, [ordersQuery.isLoading, isCandidatesLoading, allLines, autoAllocate, allocationsByLine]);
 
-    return {
-        orders,
-        customerMap,
-        productMap,
-        allocationsByLine,
-        lineStatuses,
-        toast,
+  return {
+    orders,
+    customerMap,
+    productMap,
+    allocationsByLine,
+    lineStatuses,
+    toast,
 
-        isLoadingOrders: ordersQuery.isLoading,
-        isSavingAllocations: saveAllocationsMutation.isPending,
+    isLoadingOrders: ordersQuery.isLoading,
+    isSavingAllocations: saveAllocationsMutation.isPending,
 
-        getCandidateLots,
-        getAllocationsForLine,
-        changeAllocation,
-        autoAllocate,
-        clearAllocations,
-        saveAllocations,
-        isOverAllocated,
+    getCandidateLots,
+    getAllocationsForLine,
+    changeAllocation,
+    autoAllocate,
+    clearAllocations,
+    saveAllocations,
+    isOverAllocated,
 
-        selectedOrderId: null,
-        selectedOrderLineId: null,
-    };
+    selectedOrderId: null,
+    selectedOrderLineId: null,
+  };
 }
