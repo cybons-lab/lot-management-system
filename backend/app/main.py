@@ -19,6 +19,7 @@ from app.api.routes import (
     allocations_router,
     batch_jobs_router,
     business_rules_router,
+    confirmed_lines_router,
     customer_items_router,
     customers_router,
     forecasts_router,
