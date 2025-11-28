@@ -25,14 +25,12 @@ def setup_lot_test_data(db_session: Session):
     db_session.commit()
 
     # テストデータを作成
-    wh1 = Warehouse(warehouse_code="W1", warehouse_name="Main")
-    wh2 = Warehouse(warehouse_code="W2", warehouse_name="Sub")
+    wh1 = Warehouse(warehouse_code="W1", warehouse_name="Main", warehouse_type="internal")
+    wh2 = Warehouse(warehouse_code="W2", warehouse_name="Sub", warehouse_type="internal")
     sup = Supplier(supplier_code="S1", supplier_name="Supplier")
     prod = Product(
-        product_code="P1",
+        maker_part_code="P1",
         product_name="Product 1",
-        packaging_qty=1.0,
-        packaging_unit="EA",
         internal_unit="EA",
         base_unit="EA",
     )
@@ -52,43 +50,42 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
     data = setup_lot_test_data
     wh1 = data["wh1"]
     wh2 = data["wh2"]
+    sup = data["supplier"]
+    prod = data["product"]
 
     # 期限が違うロットを2つ（W1に2つ置く）
     lot_a = Lot(
-        supplier_code="S1",
-        product_code="P1",
+        supplier_id=sup.id,
+        product_id=prod.id,
         lot_number="A",
         warehouse_id=wh1.id,
-        receipt_date=date.today(),
+        received_date=date.today(),
         expiry_date=date.today() + timedelta(days=10),
+        unit="EA",
+        current_quantity=3,
     )
     lot_b = Lot(
-        supplier_code="S1",
-        product_code="P1",
+        supplier_id=sup.id,
+        product_id=prod.id,
         lot_number="B",
         warehouse_id=wh1.id,
-        receipt_date=date.today(),
+        received_date=date.today(),
         expiry_date=date.today() + timedelta(days=20),
+        unit="EA",
+        current_quantity=2,
     )
     # W2にも1つ（フィルタで除外される想定）
     lot_c = Lot(
-        supplier_code="S1",
-        product_code="P1",
+        supplier_id=sup.id,
+        product_id=prod.id,
         lot_number="C",
         warehouse_id=wh2.id,
-        receipt_date=date.today(),
+        received_date=date.today(),
         expiry_date=date.today() + timedelta(days=5),
+        unit="EA",
+        current_quantity=9,
     )
     db_session.add_all([lot_a, lot_b, lot_c])
-    db_session.flush()
-
-    db_session.add_all(
-        [
-            LotCurrentStock(lot_id=lot_a.id, current_quantity=3),
-            LotCurrentStock(lot_id=lot_b.id, current_quantity=2),
-            LotCurrentStock(lot_id=lot_c.id, current_quantity=9),
-        ]
-    )
     db_session.commit()
 
     svc = LotService(db_session)

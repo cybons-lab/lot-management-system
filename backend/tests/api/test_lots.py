@@ -40,14 +40,14 @@ def test_list_lots_filters_by_warehouse_code():
     _truncate_all(db)
 
     # マスタ
-    wh1 = Warehouse(warehouse_code="W1", warehouse_name="Main")
-    wh2 = Warehouse(warehouse_code="W2", warehouse_name="Sub")
+    wh1 = Warehouse(warehouse_code="W1", warehouse_name="Main", warehouse_type="internal")
+    wh2 = Warehouse(warehouse_code="W2", warehouse_name="Sub", warehouse_type="internal")
     db.add_all([wh1, wh2])
 
     sup = Supplier(supplier_code="S1", supplier_name="Supplier")
     db.add(sup)
 
-    prod = Product(product_code="P1", product_name="Product 1")
+    prod = Product(maker_part_code="P1", product_name="Product 1", base_unit="EA")
     db.add(prod)
     db.flush()
 
@@ -100,10 +100,10 @@ def test_list_lots_filters_by_product_id():
 
     _truncate_all(db)
 
-    wh = Warehouse(warehouse_code="W1", warehouse_name="Main")
+    wh = Warehouse(warehouse_code="W1", warehouse_name="Main", warehouse_type="internal")
     sup = Supplier(supplier_code="S1", supplier_name="Supplier")
-    product_a = Product(product_code="PA", product_name="Product A")
-    product_b = Product(product_code="PB", product_name="Product B")
+    product_a = Product(maker_part_code="PA", product_name="Product A", base_unit="EA")
+    product_b = Product(maker_part_code="PB", product_name="Product B", base_unit="EA")
     db.add_all([wh, sup, product_a, product_b])
     db.flush()
 
@@ -147,9 +147,9 @@ def test_create_stock_movement_updates_current_stock():
 
     _truncate_all(db)
 
-    wh = Warehouse(warehouse_code="W1", warehouse_name="Main")
+    wh = Warehouse(warehouse_code="W1", warehouse_name="Main", warehouse_type="internal")
     sup = Supplier(supplier_code="S1", supplier_name="Supplier")
-    prod = Product(product_code="P1", product_name="Product 1")
+    prod = Product(maker_part_code="P1", product_name="Product 1", base_unit="EA")
     db.add_all([wh, sup, prod])
     db.flush()
 

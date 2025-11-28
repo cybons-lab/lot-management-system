@@ -49,13 +49,36 @@ client.interceptors.request.use((cfg) => {
   }
   cfg.headers.Accept = cfg.headers.Accept ?? "application/json";
   cfg.headers["Content-Type"] = cfg.headers["Content-Type"] ?? "application/json";
+
+  // Auth token injection (from atomWithStorage "auth")
+  try {
+    const authStorage = localStorage.getItem("auth");
+    if (authStorage) {
+      const parsed = JSON.parse(authStorage);
+      if (parsed?.token) {
+        cfg.headers.Authorization = `Bearer ${parsed.token}`;
+      }
+    }
+  } catch (e) {
+    console.warn("Failed to parse auth token from localStorage", e);
+  }
+
   return cfg;
 });
 
 /** レスポンスは data をそのまま返し、エラーは握りつぶさず投げる */
 client.interceptors.response.use(
   (res: AxiosResponse) => res,
-  (err) => Promise.reject(err),
+  (err) => {
+    // Handle 401 Unauthorized
+    if (err.response?.status === 401) {
+      // Redirect to login if not already there
+      if (!window.location.pathname.includes("/login")) {
+        window.location.href = "/login";
+      }
+    }
+    return Promise.reject(err);
+  },
 );
 
 /** 呼び出し側が使う薄いラッパ。既存の http.post("admin/seeds") と互換 */

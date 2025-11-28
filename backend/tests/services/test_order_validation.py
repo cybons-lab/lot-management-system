@@ -8,18 +8,20 @@ from datetime import date, timedelta
 import pytest
 
 from app.domain.errors import InsufficientStockError
-from app.models import Lot, LotCurrentStock, Product, Supplier, Warehouse
+from app.models import Lot, Product, Supplier, Warehouse
 from app.services.orders.validation_service import OrderLineDemand, OrderValidationService
 
 
 @pytest.fixture()
 def fifo_inventory(db_session):
     supplier = Supplier(supplier_code="SUP1", supplier_name="Supplier One")
-    warehouse = Warehouse(warehouse_code="W01", warehouse_name="Main Warehouse")
+    warehouse = Warehouse(
+        warehouse_code="W01", warehouse_name="Main Warehouse", warehouse_type="internal"
+    )
     product = Product(
-        product_code="P001",
+        maker_part_code="P001",
         product_name="Sample Product",
-        supplier_code="SUP1",  # 関連よりコード直指定の方が壊れにくい
+        base_unit="EA",
     )
 
     db_session.add_all([supplier, warehouse, product])
@@ -31,24 +33,20 @@ def fifo_inventory(db_session):
     expiries = [date(2025, 12, 31), date(2024, 12, 31), None]
 
     for idx, (qty, expiry) in enumerate(zip(quantities, expiries, strict=False), start=1):
+        print(f"DEBUG: Creating lot {idx} with number LOT{idx:03d}")
         lot = Lot(
-            supplier_code=supplier.supplier_code,
-            product_code=product.product_code,
+            supplier_id=supplier.id,
+            product_id=product.id,
             lot_number=f"LOT{idx:03d}",
             expiry_date=expiry,
             warehouse_id=warehouse.id,
+            received_date=base_date,
+            unit="EA",
+            current_quantity=qty,
         )
-        # 受入日カラムの名前差に対応
-        recv = base_date + timedelta(days=idx - 1)
-        if hasattr(lot, "received_at"):
-            lot.received_at = recv
-        elif hasattr(lot, "receipt_date"):
-            lot.receipt_date = recv
+        # 受入日
+        lot.received_date = base_date + timedelta(days=idx - 1)
         db_session.add(lot)
-        db_session.flush()
-
-        stock = LotCurrentStock(lot_id=lot.id, current_quantity=qty)
-        db_session.add(stock)
         lots.append(lot)
 
     db_session.flush()
@@ -64,7 +62,7 @@ def test_validate_lines_success(db_session, fifo_inventory):
     service = OrderValidationService(db_session)
 
     demand = OrderLineDemand(
-        product_code=fifo_inventory["product"].product_code,
+        product_code=fifo_inventory["product"].maker_part_code,
         warehouse_code=fifo_inventory["warehouse"].warehouse_code,
         quantity=70,
     )
@@ -79,7 +77,7 @@ def test_validate_lines_insufficient_stock(db_session, fifo_inventory):
     service = OrderValidationService(db_session)
 
     demand = OrderLineDemand(
-        product_code=fifo_inventory["product"].product_code,
+        product_code=fifo_inventory["product"].maker_part_code,
         warehouse_code=fifo_inventory["warehouse"].warehouse_code,
         quantity=90,
     )
@@ -90,7 +88,7 @@ def test_validate_lines_insufficient_stock(db_session, fifo_inventory):
         service.validate_lines([demand], ship_date=ship_date, lock=False)
 
     error = exc_info.value
-    assert error.product_code == fifo_inventory["product"].product_code
+    assert error.product_code == fifo_inventory["product"].maker_part_code
     assert error.required == 90
     assert error.available == 70
     assert error.details["warehouse_code"] == fifo_inventory["warehouse"].warehouse_code

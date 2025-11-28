@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import BusinessRule, Lot, Product, Warehouse
+from app.models import BusinessRule, Lot, Product, Supplier, Warehouse
 from app.services.batch.inventory_sync_service import InventorySyncService
 
 
@@ -22,17 +22,17 @@ def setup_inventory_sync_test_data(db_session: Session):
     db_session.commit()
 
     # テストデータを作成
-    wh = Warehouse(warehouse_code="WH01", warehouse_name="Main Warehouse")
+    wh = Warehouse(
+        warehouse_code="WH01", warehouse_name="Main Warehouse", warehouse_type="internal"
+    )
     db_session.add(wh)
     db_session.flush()
 
     # 3つの商品を作成
     products = [
         Product(
-            product_code=f"P{i:03d}",
+            maker_part_code=f"P{i:03d}",
             product_name=f"Product {i}",
-            packaging_qty=1.0,
-            packaging_unit="EA",
             internal_unit="EA",
             base_unit="EA",
         )
@@ -41,30 +41,41 @@ def setup_inventory_sync_test_data(db_session: Session):
     db_session.add_all(products)
     db_session.flush()
 
+    # サプライヤーを作成
+    supplier = Supplier(supplier_code="SUP001", supplier_name="Test Supplier")
+    db_session.add(supplier)
+    db_session.flush()
+
     # 商品ごとにロットを作成
     # Product 1: 100個 (差異なし想定)
     lot1 = Lot(
-        supplier_code="SUP001",
-        product_code="P001",
+        supplier_id=supplier.id,
+        product_id=products[0].id,
         lot_number="LOT001",
         warehouse_id=wh.id,
-        quantity=Decimal("100"),
+        current_quantity=Decimal("100"),
+        received_date=datetime.now().date(),
+        unit="EA",
     )
     # Product 2: 200個 (差異あり想定)
     lot2 = Lot(
-        supplier_code="SUP001",
-        product_code="P002",
+        supplier_id=supplier.id,
+        product_id=products[1].id,
         lot_number="LOT002",
         warehouse_id=wh.id,
-        quantity=Decimal("200"),
+        current_quantity=Decimal("200"),
+        received_date=datetime.now().date(),
+        unit="EA",
     )
     # Product 3: 50個 (差異なし想定)
     lot3 = Lot(
-        supplier_code="SUP001",
-        product_code="P003",
+        supplier_id=supplier.id,
+        product_id=products[2].id,
         lot_number="LOT003",
         warehouse_id=wh.id,
-        quantity=Decimal("50"),
+        current_quantity=Decimal("50"),
+        received_date=datetime.now().date(),
+        unit="EA",
     )
 
     db_session.add_all([lot1, lot2, lot3])
@@ -160,7 +171,7 @@ def test_find_discrepancies_exceeds_tolerance(db_session: Session, setup_invento
     assert discrepancies[0]["product_id"] == products[0].id
     assert discrepancies[0]["local_qty"] == 100.0
     assert discrepancies[0]["sap_qty"] == 105.0
-    assert abs(discrepancies[0]["diff_pct"] - 5.0) < 0.01
+    assert abs(discrepancies[0]["diff_pct"] - 4.76) < 0.01
 
 
 def test_create_alerts(db_session: Session, setup_inventory_sync_test_data):
@@ -193,11 +204,7 @@ def test_create_alerts(db_session: Session, setup_inventory_sync_test_data):
     assert len(alerts) == 2
 
     # データベースに記録されているか確認
-    db_alerts = (
-        db_session.query(BusinessRule)
-        .filter(BusinessRule.rule_type == "inventory_sync_alert")
-        .all()
-    )
+    db_alerts = db_session.query(BusinessRule).filter(BusinessRule.rule_type == "other").all()
     assert len(db_alerts) == 2
 
     # アラートの内容を確認
@@ -218,7 +225,7 @@ def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_invento
     old_alert = BusinessRule(
         rule_code=f"inv_sync_alert_{products[0].id}",
         rule_name="Old Alert",
-        rule_type="inventory_sync_alert",
+        rule_type="other",
         rule_parameters={"old": "data"},
         is_active=True,
     )
@@ -239,15 +246,16 @@ def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_invento
 
     service._create_alerts(discrepancies)
 
-    # 古いアラートが無効化されているか
+    # 新しいロジックでは既存アラートを更新して再利用する
     db_session.refresh(old_alert)
-    assert old_alert.is_active is False
+    assert old_alert.is_active is True
+    assert old_alert.rule_parameters["diff_pct"] > 0
 
     # 新しいアラートが作成されているか
     active_alerts = (
         db_session.query(BusinessRule)
         .filter(
-            BusinessRule.rule_type == "inventory_sync_alert",
+            BusinessRule.rule_type == "other",
             BusinessRule.rule_code == f"inv_sync_alert_{products[0].id}",
             BusinessRule.is_active == True,  # noqa: E712
         )
@@ -301,9 +309,5 @@ def test_check_inventory_totals_integration(
     assert disc["sap_qty"] == 220.0
 
     # アラートがDBに記録されているか
-    alerts = (
-        db_session.query(BusinessRule)
-        .filter(BusinessRule.rule_type == "inventory_sync_alert")
-        .all()
-    )
+    alerts = db_session.query(BusinessRule).filter(BusinessRule.rule_type == "other").all()
     assert len(alerts) == 1

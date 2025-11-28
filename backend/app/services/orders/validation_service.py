@@ -92,10 +92,33 @@ class OrderValidationService:
         lock: bool = True,
     ) -> None:
         """Validate that all demanded lines can be fulfilled by inventory."""
+        from sqlalchemy import select
+
+        from app.models import Product, Warehouse
+
         for line in lines:
+            # Resolve IDs from codes
+            product_id = self._db.execute(
+                select(Product.id).where(Product.maker_part_code == line.product_code)
+            ).scalar_one_or_none()
+
+            warehouse_id = self._db.execute(
+                select(Warehouse.id).where(Warehouse.warehouse_code == line.warehouse_code)
+            ).scalar_one_or_none()
+
+            if not product_id or not warehouse_id:
+                # If product or warehouse not found, treat as insufficient stock (or raise specific error)
+                # For now, let's assume they exist or handle gracefully
+                raise InsufficientStockError(
+                    product_code=line.product_code,
+                    required=line.quantity,
+                    available=0,
+                    details={"reason": "Product or Warehouse not found"},
+                )
+
             lots = self._stock_repo.find_fifo_lots_for_allocation(
-                product_code=line.product_code,
-                warehouse_code=line.warehouse_code,
+                product_id=product_id,
+                warehouse_id=warehouse_id,
                 ship_date=ship_date,
                 for_update=lock,
             )

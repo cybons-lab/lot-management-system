@@ -66,9 +66,9 @@ class InventorySyncService:
             """
             SELECT 
                 product_id,
-                SUM(quantity) as total_quantity
+                SUM(current_quantity) as total_quantity
             FROM lots
-            WHERE is_deleted = false
+            WHERE status != 'deleted'
             GROUP BY product_id
         """
         )
@@ -135,38 +135,48 @@ class InventorySyncService:
         created_alerts = []
 
         for disc in discrepancies:
-            # 既存の同一商品のアラートを非アクティブ化
-            existing = (
+            # 既存の同一商品のアラートを検索
+            existing_alert = (
                 self.db.query(BusinessRule)
                 .filter(
-                    BusinessRule.rule_type == "inventory_sync_alert",
                     BusinessRule.rule_code == f"inv_sync_alert_{disc['product_id']}",
-                    BusinessRule.is_active == True,  # noqa: E712
                 )
-                .all()
+                .first()
             )
 
-            for old_alert in existing:
-                old_alert.is_active = False
-
-            # 新しいアラート作成
-            alert = BusinessRule(
-                rule_code=f"inv_sync_alert_{disc['product_id']}",
-                rule_name=f"在庫差異アラート: Product {disc['product_id']}",
-                rule_type="inventory_sync_alert",
-                rule_parameters={
+            if existing_alert:
+                # 既存アラートを更新
+                existing_alert.rule_name = f"在庫差異アラート: Product {disc['product_id']}"
+                existing_alert.rule_type = "other"
+                existing_alert.rule_parameters = {
                     "product_id": disc["product_id"],
                     "local_qty": disc["local_qty"],
                     "sap_qty": disc["sap_qty"],
                     "diff_pct": disc["diff_pct"],
                     "diff_amount": disc["diff_amount"],
                     "checked_at": datetime.now().isoformat(),
-                },
-                is_active=True,
-            )
-
-            self.db.add(alert)
-            created_alerts.append(alert)
+                }
+                existing_alert.is_active = True
+                existing_alert.updated_at = datetime.now()
+                created_alerts.append(existing_alert)
+            else:
+                # 新しいアラート作成
+                alert = BusinessRule(
+                    rule_code=f"inv_sync_alert_{disc['product_id']}",
+                    rule_name=f"在庫差異アラート: Product {disc['product_id']}",
+                    rule_type="other",
+                    rule_parameters={
+                        "product_id": disc["product_id"],
+                        "local_qty": disc["local_qty"],
+                        "sap_qty": disc["sap_qty"],
+                        "diff_pct": disc["diff_pct"],
+                        "diff_amount": disc["diff_amount"],
+                        "checked_at": datetime.now().isoformat(),
+                    },
+                    is_active=True,
+                )
+                self.db.add(alert)
+                created_alerts.append(alert)
 
         if created_alerts:
             self.db.commit()
