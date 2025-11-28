@@ -13,6 +13,10 @@ from app.services.auth.user_service import UserService
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_PREFIX}/login")
+# Optional authentication scheme (does not raise error if token is missing)
+optional_oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_PREFIX}/login", auto_error=False
+)
 
 
 class AuthService:
@@ -66,4 +70,41 @@ class AuthService:
         user = user_service.get_by_username(username=token_data.username)
         if user is None:
             raise credentials_exception
+        return user
+
+    @staticmethod
+    def get_current_user_optional(
+        token: str | None = Depends(optional_oauth2_scheme), db: Session = Depends(get_db)
+    ) -> User | None:
+        """Get the current user if authenticated, otherwise return None.
+
+        This allows optional authentication - endpoints can work both
+        for authenticated and unauthenticated users.
+
+        Use case:
+        - Display personalized content for logged-in users
+        - Prioritize user's assigned suppliers in list views
+        - Allow access to all users but enhance experience for authenticated ones
+
+        Args:
+            token: JWT token from Authorization header (optional)
+            db: Database session
+
+        Returns:
+            User object if authenticated and valid, None otherwise
+        """
+        if not token:
+            return None
+
+        try:
+            payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+            username: str = payload.get("sub")
+            if username is None:
+                return None
+            token_data = TokenData(username=username)
+        except JWTError:
+            return None
+
+        user_service = UserService(db)
+        user = user_service.get_by_username(username=token_data.username)
         return user

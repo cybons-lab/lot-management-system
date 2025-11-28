@@ -5,6 +5,7 @@
 
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from "axios";
 
+import { logError } from "@/services/error-logger";
 import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
 
 /**
@@ -40,13 +41,31 @@ const createHttpClient = (): AxiosInstance => {
     (error) => {
       // ネットワークエラー
       if (!error.response) {
-        throw new NetworkError("ネットワークエラーが発生しました");
+        const networkError = new NetworkError("ネットワークエラーが発生しました");
+
+        // Log network error
+        logError("HTTP", networkError, {
+          url: error.config?.url,
+          method: error.config?.method,
+        });
+
+        throw networkError;
       }
 
       // APIエラー
       const { status, data } = error.response;
       const message = data?.detail || data?.message || "エラーが発生しました";
-      throw createApiError(status, message, data);
+      const apiError = createApiError(status, message, data);
+
+      // Log API error
+      logError("HTTP", apiError, {
+        url: error.config?.url,
+        method: error.config?.method,
+        status,
+        response: data,
+      });
+
+      throw apiError;
     },
   );
 
