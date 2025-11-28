@@ -12,14 +12,14 @@ export interface InboundPlan {
   supplier_id: number;
   supplier_name?: string;
   planned_arrival_date: string;
-  status: "pending" | "received" | "cancelled";
+  status: "planned" | "partially_received" | "received" | "cancelled";
   created_at: string;
 }
 
 export interface InboundPlansFilters {
   supplier_id: string;
   product_id?: string;
-  status: "" | "pending" | "received" | "cancelled";
+  status: "" | "planned" | "partially_received" | "received" | "cancelled";
   date_from: string;
   date_to: string;
 }
@@ -87,13 +87,19 @@ export function InboundPlansList({
               onChange={(e) =>
                 onFilterChange({
                   ...filters,
-                  status: e.target.value as "" | "pending" | "received" | "cancelled",
+                  status: e.target.value as
+                    | ""
+                    | "planned"
+                    | "partially_received"
+                    | "received"
+                    | "cancelled",
                 })
               }
               className="w-full rounded-md border px-3 py-2 text-sm"
             >
               <option value="">すべて</option>
-              <option value="pending">Pending（予定）</option>
+              <option value="planned">Planned（予定）</option>
+              <option value="partially_received">Partially Received（一部入荷）</option>
               <option value="received">Received（入荷済）</option>
               <option value="cancelled">Cancelled（キャンセル）</option>
             </select>
@@ -173,11 +179,13 @@ export function InboundPlansList({
                     <td className="px-4 py-3 text-sm">
                       <span
                         className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          plan.status === "pending"
+                          plan.status === "planned"
                             ? "bg-yellow-100 text-yellow-800"
-                            : plan.status === "received"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-gray-100 text-gray-800"
+                            : plan.status === "partially_received"
+                              ? "bg-blue-100 text-blue-800"
+                              : plan.status === "received"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {plan.status}

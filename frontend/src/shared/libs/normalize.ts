@@ -25,6 +25,30 @@ type LotResponse = components["schemas"]["LotResponse"] & {
 };
 type ProductResponse = components["schemas"]["ProductOut"];
 
+// Forward declare OrderLineUI for OrderUI
+export interface OrderLineUI extends Record<string, unknown> {
+  id: number;
+  order_id: number;
+  product_id: number;
+  product_name: string; // Join field (not in DDL)
+  order_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
+  unit: string;
+  delivery_date: string; // DDL v2.2: changed from due_date
+  delivery_place_id: number; // DDL v2.2: required field
+  warehouse_allocations: unknown[];
+  related_lots: unknown[];
+  allocated_lots: unknown[];
+  // Legacy fields (deprecated, for backward compatibility)
+  line_no?: number;
+  product_code?: string;
+  customer_code?: string;
+  supplier_code?: string;
+  quantity?: number | string;
+  due_date?: string;
+  allocated_qty?: number | string;
+  next_div?: string;
+}
+
 // UI用の型定義（すべてnon-nullable）
 export interface OrderUI extends Record<string, unknown> {
   id: number;
@@ -40,7 +64,7 @@ export interface OrderUI extends Record<string, unknown> {
   order_no?: string;
   customer_code?: string;
   due_date?: string | null;
-  lines?: OrderLine[];
+  lines?: OrderLineUI[];
 }
 
 export interface LotUI extends Record<string, unknown> {
@@ -106,33 +130,14 @@ export interface ProductUI extends Record<string, unknown> {
   shipping_warehouse_name?: string;
 }
 
-export interface OrderLineUI extends Record<string, unknown> {
-  id: number;
-  order_id: number;
-  product_id: number;
-  product_name: string; // Join field (not in DDL)
-  order_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
-  unit: string;
-  delivery_date: string; // DDL v2.2: changed from due_date
-  delivery_place_id: number; // DDL v2.2: required field
-  warehouse_allocations: unknown[];
-  related_lots: unknown[];
-  allocated_lots: unknown[];
-  // Legacy fields (deprecated, for backward compatibility)
-  line_no?: number;
-  product_code?: string;
-  customer_code?: string;
-  supplier_code?: string;
-  quantity?: number | string;
-  due_date?: string;
-  allocated_qty?: number | string;
-  next_div?: string;
-}
-
 /**
  * OrderResponse → OrderUI
  */
 export function normalizeOrder(order: OrderResponse): OrderUI {
+  // Extract lines from order if they exist
+  const rawLines = ((order as Record<string, unknown>).lines as OrderLine[] | undefined) ?? [];
+  const normalizedLines = rawLines.map((line) => normalizeOrderLine(line));
+
   return {
     id: order.id,
     order_number: S(order.order_number),
@@ -151,7 +156,7 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
     delivery_place_code: (order as Record<string, unknown>).delivery_place_code ?? null,
     delivery_place_name: (order as Record<string, unknown>).delivery_place_name ?? null,
     total_quantity: ((order as Record<string, unknown>).total_quantity as number | null) ?? null,
-    lines: [], // OrderResponse no longer has lines
+    lines: normalizedLines,
   };
 }
 
