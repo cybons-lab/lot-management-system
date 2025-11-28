@@ -132,6 +132,7 @@ SELECT
     ol.unit,
     ol.delivery_place_id,
     ol.status AS line_status,
+    ol.shipping_document_text,
     p.maker_part_code AS product_code,
     p.product_name,
     p.internal_unit AS product_internal_unit,
@@ -154,7 +155,7 @@ LEFT JOIN public.allocations a ON a.order_line_id = ol.id
 GROUP BY
     o.id, o.order_number, o.order_date, o.customer_id,
     c.customer_code, c.customer_name,
-    ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status,
+    ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status, ol.shipping_document_text,
     p.maker_part_code, p.product_name, p.internal_unit, p.external_unit, p.qty_per_internal_unit,
     dp.delivery_place_code, dp.delivery_place_name, dp.jiku_code,
     ci.external_product_code,
@@ -201,11 +202,21 @@ SELECT
     l.unit,
     l.status,
     CASE WHEN l.expiry_date IS NOT NULL THEN CAST((l.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
+    -- 担当者情報を追加
+    usa_primary.user_id AS primary_user_id,
+    u_primary.username AS primary_username,
+    u_primary.display_name AS primary_user_display_name,
     l.created_at,
     l.updated_at
 FROM public.lots l
 LEFT JOIN public.products p ON l.product_id = p.id
 LEFT JOIN public.warehouses w ON l.warehouse_id = w.id
-LEFT JOIN public.suppliers s ON l.supplier_id = s.id;
+LEFT JOIN public.suppliers s ON l.supplier_id = s.id
+-- 主担当者を結合
+LEFT JOIN public.user_supplier_assignments usa_primary 
+    ON usa_primary.supplier_id = l.supplier_id 
+    AND usa_primary.is_primary = TRUE
+LEFT JOIN public.users u_primary 
+    ON u_primary.id = usa_primary.user_id;
 
-COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー';
+COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む）';
