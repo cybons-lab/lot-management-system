@@ -10,9 +10,22 @@ class DomainError(Exception):
 
     default_code = "DOMAIN_ERROR"
 
-    def __init__(self, message: str, code: str | None = None):
+    def __init__(
+        self,
+        message: str,
+        code: str | None = None,
+        details: dict | None = None,
+    ):
+        """ドメインエラーの初期化.
+
+        Args:
+            message: エラーメッセージ
+            code: エラーコード（省略時はdefault_codeを使用）
+            details: 詳細情報（任意のメタデータ）
+        """
         self.message = message
         self.code = code or self.default_code
+        self.details = details or {}
         super().__init__(self.message)
 
 
