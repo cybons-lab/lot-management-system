@@ -114,6 +114,12 @@ class OrderLine(Base):
         ForeignKey("delivery_places.id", ondelete="RESTRICT"),
         nullable=False,
     )
+
+    # SAP integration
+    sap_order_no: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="SAP受注番号（登録済みの場合）"
+    )
+
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'pending'")
     )

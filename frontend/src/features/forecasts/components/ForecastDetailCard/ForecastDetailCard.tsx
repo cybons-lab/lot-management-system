@@ -16,7 +16,6 @@ import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
 import { ForecastDailyGrid } from "./ForecastDailyGrid";
 import { useForecastCalculations } from "./hooks/use-forecast-calculations";
 import { RelatedOrdersSection } from "./RelatedOrdersSection";
-import { SAPIntegrationSection } from "./SAPIntegrationSection";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
 import { WarehouseInfoCard } from "./WarehouseInfoCard";
@@ -132,9 +131,6 @@ export function ForecastDetailCard({
             hoveredDate={hoveredDate}
             onDateHover={setHoveredDate}
           />
-
-          {/* SAP連携セクション (ダミー実装) */}
-          <SAPIntegrationSection relatedOrders={group.related_orders} />
         </CardContent>
       ) : (
         <ForecastCollapsedSummary

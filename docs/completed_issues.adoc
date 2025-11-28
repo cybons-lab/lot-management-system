@@ -434,6 +434,32 @@ backend/app/models/
 
 ---
 
+=== 認証・セキュリティ
+
+==== 認証機能の本格実装（JWT/bcrypt）✅
+
+**完了日:** 2025-11-28 +
+**コミット:** `fafb342` - feat(auth): implement JWT authentication and fix backend tests for v2.2 schema
+
+**実装内容:**
+
+* **パスワードハッシュ化**: `bcrypt` (passlib) への移行完了
+* **JWT認証**: `python-jose` によるトークン生成・検証
+* **ルート保護**: `Depends(get_current_user)` によるAPI保護
+* **フロントエンド**:
+** ログイン画面 (`LoginPage.tsx`) 実装
+** `authAtom` (Jotai) によるトークン管理
+** Axios Interceptor による自動ヘッダー付与と401リダイレクト
+* **テスト修正**: 実DBスキーマ(v2.2)に合わせたバックエンドテストの全面修正
+
+**関連ファイル:**
+
+* `backend/app/services/auth/auth_service.py`
+* `backend/app/api/routes/auth_router.py`
+* `frontend/src/features/auth/`
+
+---
+
 == 変更履歴
 
 [cols="1,1,2"]

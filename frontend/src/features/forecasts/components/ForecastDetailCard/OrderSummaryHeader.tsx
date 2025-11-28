@@ -1,8 +1,9 @@
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
+import { ChevronDown, ChevronRight, ExternalLink, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Badge, Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { useSAPRegistration } from "@/features/forecasts/hooks/useSAPRegistration";
 import { cn } from "@/shared/libs/utils";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 import { type OrderLine } from "@/shared/types/aliases";
@@ -36,6 +37,8 @@ export function OrderSummaryHeader({
   onMouseEnter,
   onMouseLeave,
 }: OrderSummaryHeaderProps) {
+  const { sapOrderNo, registerToSAP, isRegistering } = useSAPRegistration(order.id);
+
   return (
     <div
       className={cn(
@@ -60,6 +63,9 @@ export function OrderSummaryHeader({
         totalAllocated={totalAllocated}
         statusLabel={statusLabel}
         statusColor={statusColor}
+        sapOrderNo={sapOrderNo}
+        isRegistering={isRegistering}
+        onRegisterToSAP={registerToSAP}
       />
     </div>
   );
@@ -110,6 +116,9 @@ function HeaderRightSection({
   totalAllocated,
   statusLabel,
   statusColor,
+  sapOrderNo,
+  isRegistering,
+  onRegisterToSAP,
 }: {
   order: OrderWithLinesResponse;
   targetLines: OrderLine[];
@@ -117,7 +126,11 @@ function HeaderRightSection({
   totalAllocated: number;
   statusLabel: string;
   statusColor: string;
+  sapOrderNo: string | null;
+  isRegistering: boolean;
+  onRegisterToSAP: () => void;
 }) {
+  const isSAPRegistered = Boolean(sapOrderNo);
   return (
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-2 text-sm">
@@ -136,6 +149,40 @@ function HeaderRightSection({
       </div>
 
       <Badge className={cn("h-5 px-1.5 text-[10px] font-normal", statusColor)}>{statusLabel}</Badge>
+
+      {/* SAP Status Badge */}
+      {isSAPRegistered ? (
+        <Badge
+          variant="outline"
+          className="h-5 border-green-200 bg-green-50 px-1.5 text-[10px] text-green-700"
+        >
+          SAP登録済み
+        </Badge>
+      ) : (
+        <>
+          <Badge variant="outline" className="h-5 bg-gray-50 px-1.5 text-[10px] text-gray-600">
+            SAP未登録
+          </Badge>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 gap-1 px-2 text-xs hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRegisterToSAP();
+            }}
+            disabled={isRegistering}
+          >
+            <Send className="h-3 w-3" />
+            {isRegistering ? "登録中..." : "SAP登録"}
+          </Button>
+        </>
+      )}
+
+      {/* SAP Order Number if registered */}
+      {isSAPRegistered && sapOrderNo && (
+        <span className="font-mono text-xs text-green-700">SAP: {sapOrderNo}</span>
+      )}
 
       <Link
         to={ROUTES.ORDERS.DETAIL(order.id.toString())}

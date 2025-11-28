@@ -415,6 +415,7 @@ dependencies = [
     { name = "anyio" },
     { name = "bcrypt" },
     { name = "email-validator" },
+    { name = "faker" },
     { name = "fastapi" },
     { name = "passlib", extra = ["bcrypt"] },
     { name = "psycopg2-binary" },
@@ -430,7 +431,6 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "faker" },
     { name = "httpx" },
     { name = "hypothesis" },
     { name = "pytest" },
@@ -444,6 +444,7 @@ requires-dist = [
     { name = "anyio", specifier = ">=4.11.0" },
     { name = "bcrypt", specifier = "==4.0.1" },
     { name = "email-validator", specifier = ">=2.3.0" },
+    { name = "faker", specifier = ">=38.2.0" },
     { name = "fastapi", specifier = ">=0.122.0" },
     { name = "passlib", extras = ["bcrypt"], specifier = ">=1.7.4" },
     { name = "psycopg2-binary", specifier = ">=2.9.11" },
@@ -459,7 +460,6 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "faker", specifier = ">=38.2.0" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "hypothesis", specifier = ">=6.148.2" },
     { name = "pytest", specifier = ">=9.0.1" },
