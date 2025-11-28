@@ -385,7 +385,10 @@ backend/app/models/
 
 **問題**: `features/allocations/` に83ファイル、`useLotAllocation/` だけで11ファイル
 
-**対応**: ⏳ 未実施
+**対応**: ✅ 実装完了 (2025-11-28)
+
+* `useLotAllocation` フックを `useLotAllocationLogic.ts`, `useLotAllocationActions.ts` 等に統合・再編
+* `components/shared/LineBasedAllocationList` を `components/allocation-list/` に移動しコロケーションを改善
 
 ===== 10. backups/ ディレクトリの運用方針 🔵
 
@@ -407,6 +410,12 @@ backend/app/models/
 
 * インポート処理を `ForecastImportService` (仮) などに分離することを検討
 
+===== 13. ForecastDetailCard の肥大化 🔵
+
+**問題**: `frontend/src/features/forecasts/components/ForecastDetailCard/` に26ファイルが存在し、機能が集中している。現在はコロケーションされているため管理可能だが、今後さらに機能追加される場合は分割を検討すべき。
+
+**対応**: ⏳ 監視継続
+
 === 実施ステータス
 
 **Phase 1 完了状況**: ✅ 3/3 完了 (2025-11-27)
@@ -423,6 +432,12 @@ backend/app/models/
 * ✅ health router 調査（対応不要）
 * ✅ allocation サービスリファクタリング
 
-**Phase 3 完了状況**: ⏳ 0/4 未実施
+**Phase 3 完了状況**: ✅ 1/5 進行中
 
-**総計**: ✅ 8/12 完了 (66%)
+* ✅ allocations feature の複雑さ解消
+* ⏳ backups 運用方針
+* ⏳ InboundService 責務分離
+* ⏳ ForecastService 責務分離
+* ⏳ ForecastDetailCard 監視
+
+**総計**: ✅ 9/13 完了 (69%)
