@@ -2,10 +2,15 @@
  * Shared CSV parsing and generation utilities
  *
  * These utilities eliminate duplication in CSV handling across features.
+ * Using PapaParse library for RFC 4180 compliant CSV processing.
  */
+
+import Papa from "papaparse";
 
 /**
  * Parse CSV line handling quoted values correctly
+ *
+ * @deprecated Use PapaParse directly or CsvParser class instead
  *
  * Properly handles:
  * - Quoted fields with commas: "Tokyo, Japan"
@@ -25,35 +30,12 @@
  * ```
  */
 export function parseCSVLine(line: string): string[] {
-  const result: string[] = [];
-  let current = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-    const nextChar = line[i + 1];
-
-    if (char === '"') {
-      if (inQuotes && nextChar === '"') {
-        // Escaped quote: "" → "
-        current += '"';
-        i++; // Skip next quote
-      } else {
-        // Toggle quote mode
-        inQuotes = !inQuotes;
-      }
-    } else if (char === "," && !inQuotes) {
-      // Field separator (not inside quotes)
-      result.push(current);
-      current = "";
-    } else {
-      current += char;
-    }
-  }
-
-  // Push final field
-  result.push(current);
-  return result;
+  // Use PapaParse for single line parsing
+  const result = Papa.parse<string[]>(line, {
+    header: false,
+    skipEmptyLines: false,
+  });
+  return result.data[0] || [];
 }
 
 /**
@@ -110,9 +92,10 @@ export interface CsvParseResult<TRow> {
 }
 
 /**
- * Generic CSV parser class
+ * Generic CSV parser class using PapaParse
  *
  * Provides reusable CSV parsing logic with custom row parsing.
+ * RFC 4180 compliant with robust error handling.
  *
  * @example
  * ```ts
@@ -144,14 +127,76 @@ export class CsvParser<TRow> {
   constructor(private config: CsvParserConfig<TRow>) {}
 
   /**
-   * Parse CSV file
+   * Parse CSV file using PapaParse
    *
    * @param file - File object from file input
    * @returns Promise resolving to parse result with rows and errors
    */
   async parseFile(file: File): Promise<CsvParseResult<TRow>> {
-    const text = await file.text();
-    return this.parseText(text);
+    return new Promise((resolve) => {
+      Papa.parse<Record<string, string>>(file, {
+        header: true,
+        skipEmptyLines: true,
+        transformHeader: (header) => header.trim(),
+        transform: (value) => value.trim(),
+        complete: (results) => {
+          const rows: TRow[] = [];
+          const errors: string[] = [];
+
+          // Check for parsing errors
+          if (results.errors.length > 0) {
+            results.errors.forEach((error) => {
+              errors.push(`行${error.row}: ${error.message}`);
+            });
+          }
+
+          // Validate headers
+          const headers = results.meta.fields || [];
+          const missingHeaders = this.config.headers.filter((h) => !headers.includes(h));
+          if (missingHeaders.length > 0) {
+            errors.push(`必須ヘッダが不足: ${missingHeaders.join(", ")}`);
+            resolve({ rows, errors });
+            return;
+          }
+
+          // Parse and validate each row
+          results.data.forEach((data, index) => {
+            const lineNumber = index + 2; // +2 for header and 0-index
+
+            try {
+              // Validate required fields
+              const missingFields = this.config.requiredFields.filter(
+                (field) => !data[field] || data[field].trim() === ""
+              );
+
+              if (missingFields.length > 0) {
+                errors.push(`行${lineNumber}: 必須項目が空: ${missingFields.join(", ")}`);
+                return;
+              }
+
+              // Parse row using custom parser
+              const row = this.config.parseRow(data, lineNumber);
+
+              if (row === null) {
+                errors.push(`行${lineNumber}: データ検証エラー`);
+                return;
+              }
+
+              rows.push(row);
+            } catch (error) {
+              errors.push(
+                `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`
+              );
+            }
+          });
+
+          resolve({ rows, errors });
+        },
+        error: (error) => {
+          resolve({ rows: [], errors: [error.message] });
+        },
+      });
+    });
   }
 
   /**
@@ -164,37 +209,33 @@ export class CsvParser<TRow> {
     const rows: TRow[] = [];
     const errors: string[] = [];
 
-    const lines = text.split("\n").filter((line) => line.trim() !== "");
+    const results = Papa.parse<Record<string, string>>(text, {
+      header: true,
+      skipEmptyLines: true,
+      transformHeader: (header) => header.trim(),
+      transform: (value) => value.trim(),
+    });
 
-    if (lines.length === 0) {
-      errors.push("CSVファイルが空です");
-      return { rows, errors };
+    // Check for parsing errors
+    if (results.errors.length > 0) {
+      results.errors.forEach((error) => {
+        errors.push(`行${error.row}: ${error.message}`);
+      });
     }
 
-    // Validate header
-    const headerLine = lines[0];
-    const headers = parseCSVLine(headerLine);
-
+    // Validate headers
+    const headers = results.meta.fields || [];
     const missingHeaders = this.config.headers.filter((h) => !headers.includes(h));
     if (missingHeaders.length > 0) {
       errors.push(`必須ヘッダが不足: ${missingHeaders.join(", ")}`);
       return { rows, errors };
     }
 
-    // Parse data rows
-    for (let i = 1; i < lines.length; i++) {
-      const lineNumber = i + 1;
-      const line = lines[i];
+    // Parse and validate each row
+    results.data.forEach((data, index) => {
+      const lineNumber = index + 2; // +2 for header and 0-index
 
       try {
-        const fields = parseCSVLine(line);
-
-        // Build field map
-        const data: Record<string, string> = {};
-        headers.forEach((header, index) => {
-          data[header] = fields[index]?.trim() || "";
-        });
-
         // Validate required fields
         const missingFields = this.config.requiredFields.filter(
           (field) => !data[field] || data[field].trim() === ""
@@ -202,7 +243,7 @@ export class CsvParser<TRow> {
 
         if (missingFields.length > 0) {
           errors.push(`行${lineNumber}: 必須項目が空: ${missingFields.join(", ")}`);
-          continue;
+          return;
         }
 
         // Parse row using custom parser
@@ -210,7 +251,7 @@ export class CsvParser<TRow> {
 
         if (row === null) {
           errors.push(`行${lineNumber}: データ検証エラー`);
-          continue;
+          return;
         }
 
         rows.push(row);
@@ -219,34 +260,27 @@ export class CsvParser<TRow> {
           `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`
         );
       }
-    }
+    });
 
     return { rows, errors };
   }
 
   /**
-   * Generate CSV content from entities
+   * Generate CSV content from entities using PapaParse
    *
    * @param entities - Array of entities to convert to CSV
-   * @param mapEntity - Function to convert entity to CSV fields
+   * @param mapEntity - Function to convert entity to record object
    * @returns CSV text content
    */
-  generateCSV<TEntity>(entities: TEntity[], mapEntity: (e: TEntity) => string[]): string {
-    const headerLine = this.config.headers.join(",");
-    const dataLines = entities.map((entity) => {
-      const fields = mapEntity(entity);
-      // Quote fields that contain commas or quotes
-      const quotedFields = fields.map((field) => {
-        const str = String(field);
-        if (str.includes(",") || str.includes('"')) {
-          return `"${str.replace(/"/g, '""')}"`;
-        }
-        return str;
-      });
-      return quotedFields.join(",");
+  generateCSV<TEntity>(
+    entities: TEntity[],
+    mapEntity: (e: TEntity) => Record<string, unknown>
+  ): string {
+    const data = entities.map(mapEntity);
+    return Papa.unparse(data, {
+      header: true,
+      columns: this.config.headers as string[],
     });
-
-    return [headerLine, ...dataLines].join("\n");
   }
 
   /**
@@ -255,6 +289,30 @@ export class CsvParser<TRow> {
    * @returns CSV text with header row
    */
   generateTemplate(): string {
-    return this.config.headers.join(",") + "\n";
+    return Papa.unparse([], {
+      header: true,
+      columns: this.config.headers as string[],
+    });
   }
+}
+
+/**
+ * Simple CSV generation helper
+ *
+ * For quick CSV generation without CsvParser class.
+ *
+ * @example
+ * ```ts
+ * const csv = generateSimpleCSV(customers, ["customer_code", "customer_name"]);
+ * downloadCSV(csv, "customers.csv");
+ * ```
+ */
+export function generateSimpleCSV<T extends Record<string, unknown>>(
+  data: T[],
+  columns?: string[]
+): string {
+  return Papa.unparse(data, {
+    header: true,
+    columns,
+  });
 }

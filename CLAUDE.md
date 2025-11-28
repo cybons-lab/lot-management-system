@@ -39,12 +39,13 @@ A full-stack inventory management system for tracking materials by lot, with aut
 - **Build Tool:** Vite 7.2.0
 - **CSS:** Tailwind CSS 4.1.16
 - **UI Components:** shadcn/ui (Radix UI primitives)
-- **State Management:** Jotai 2.15.1 (global), TanStack Query 5.90.7 (server state)
+- **State Management:** Jotai 2.15.1 (global), TanStack Query 5.90.7 (server state), use-immer (complex state updates)
 - **Forms:** react-hook-form 7.66.0 with Zod 4.1.12 validation
 - **Tables:** TanStack React Table 8.21.3
 - **Routing:** React Router 7.9.5
-- **HTTP Client:** Axios 1.13.2
-- **Testing:** MSW 2.12.0 (API mocking)
+- **HTTP Client:** ky 1.x (replacing Axios), Axios 1.13.2 (legacy)
+- **Data Utilities:** qs (query strings), PapaParse (CSV), zod-to-json-schema (schema conversion)
+- **Testing:** MSW 2.12.0 (API mocking), vitest (planned)
 - **Linting:** ESLint 9.39.1, Prettier 3.6.2
 - **Type Generation:** openapi-typescript 7.10.1
 

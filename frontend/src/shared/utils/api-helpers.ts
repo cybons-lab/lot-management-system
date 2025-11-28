@@ -2,12 +2,16 @@
  * Shared API utility functions
  *
  * These utilities eliminate common duplication patterns in API calls.
+ * Using 'qs' library for robust query string handling.
  */
 
+import qs from "qs";
+
 /**
- * Build URL search params from object
+ * Build URL search params from object using qs library
  *
- * Automatically filters out undefined/null values and converts all values to strings.
+ * Automatically filters out undefined/null values and handles complex structures.
+ * Supports nested objects, arrays, and special characters.
  *
  * @example
  * ```ts
@@ -17,7 +21,10 @@
  * const params2 = buildSearchParams({ skip: undefined, limit: 100 });
  * // Returns: "?limit=100"
  *
- * const params3 = buildSearchParams({});
+ * const params3 = buildSearchParams({ filters: { status: ["active", "pending"] } });
+ * // Returns: "?filters[status][0]=active&filters[status][1]=pending"
+ *
+ * const params4 = buildSearchParams({});
  * // Returns: ""
  * ```
  *
@@ -27,17 +34,23 @@
 export function buildSearchParams(params?: Record<string, unknown>): string {
   if (!params) return "";
 
-  const searchParams = new URLSearchParams();
+  // Filter out undefined and null values
+  const filtered = Object.entries(params).reduce(
+    (acc, [key, value]) => {
+      if (value !== undefined && value !== null) {
+        acc[key] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, unknown>
+  );
 
-  Object.entries(params).forEach(([key, value]) => {
-    // Skip undefined and null values
-    if (value !== undefined && value !== null) {
-      // Convert booleans and numbers to strings
-      searchParams.append(key, String(value));
-    }
+  const queryString = qs.stringify(filtered, {
+    skipNulls: true, // Skip null values
+    arrayFormat: "brackets", // Use brackets for arrays: foo[0]=bar&foo[1]=baz
+    encode: true, // URL encode
   });
 
-  const queryString = searchParams.toString();
   return queryString ? `?${queryString}` : "";
 }
 
@@ -56,4 +69,20 @@ export function buildSearchParams(params?: Record<string, unknown>): string {
 export function toQueryString(params?: Record<string, unknown>): string {
   const result = buildSearchParams(params);
   return result.startsWith("?") ? result.slice(1) : result;
+}
+
+/**
+ * Parse query string to object
+ *
+ * Useful for reading URL parameters.
+ *
+ * @example
+ * ```ts
+ * const params = parseQueryString("?skip=0&limit=100&filter=active");
+ * // Returns: { skip: "0", limit: "100", filter: "active" }
+ * ```
+ */
+export function parseQueryString(queryString: string): Record<string, unknown> {
+  const cleanString = queryString.startsWith("?") ? queryString.slice(1) : queryString;
+  return qs.parse(cleanString) as Record<string, unknown>;
 }
