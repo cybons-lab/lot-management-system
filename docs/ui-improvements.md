@@ -2,18 +2,18 @@
 
 ## 予測詳細ページ
 
-### 1. 倉庫表示が「不明」になる問題 🔴 高
+### 1. 倉庫表示が「不明」になる問題 ✅ 解決済
 
-**現象**: 
-- 予測詳細ページの「倉庫・入荷情報」パネルで倉庫が「不明」と表示される
-- データには必ず倉庫が紐付いているはず
+**原因**: 
+- `/api/lots` エンドポイントが `v_lots_with_master` ビューを使用
+- このビューに `warehouse_code` / `warehouse_name` フィールドが欠落
+- フロントエンドのフォールバック値「不明」が表示された
 
-**調査ポイント**:
-- API レスポンスに `warehouse_name` / `warehouse_code` が含まれているか
-- フロントエンドで正しくデータをマッピングしているか
-- 予測データに `warehouse_id` は存在するが、warehouse情報がexpandされていない可能性
+**修正内容**:
+- `v_lots_with_master` ビューに `warehouses` テーブルをJOIN
+- `warehouse_code` と `warehouse_name` フィールドを追加
 
-**場所**: `frontend/src/features/forecasts/pages/ForecastDetailPage.tsx`
+**修正ファイル**: `backend/sql/views/create_views.sql`
 
 ---
 
