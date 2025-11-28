@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.models import Allocation, Customer, Order, OrderLine, Product
 
-router = APIRouter(prefix="/orders", tags=["orders"])
+router = APIRouter(tags=["orders"])
 
 
 class ConfirmedOrderLineResponse(BaseModel):
@@ -31,7 +31,7 @@ class ConfirmedOrderLineResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-@router.get("/confirmed-lines", response_model=list[ConfirmedOrderLineResponse])
+@router.get("/orders/confirmed-lines", response_model=list[ConfirmedOrderLineResponse])
 def get_confirmed_order_lines(db: Session = Depends(get_db)):
     """
     Get all order lines that are fully allocated and not yet registered in SAP.
@@ -48,7 +48,7 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
         .subquery()
     )
     
-    # Main query
+    # Main query - filter in WHERE clause instead of HAVING
     query = (
         select(
             OrderLine.id.label("line_id"),
@@ -70,7 +70,7 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
         .join(Product, OrderLine.product_id == Product.id)
         .outerjoin(alloc_subq, OrderLine.id == alloc_subq.c.order_line_id)
         .where(OrderLine.sap_order_no.is_(None))  # SAP未登録
-        .having(func.coalesce(alloc_subq.c.allocated_qty, 0) >= OrderLine.order_quantity)  # 引当確定済み
+        .where(func.coalesce(alloc_subq.c.allocated_qty, 0) >= OrderLine.order_quantity)  # 引当確定済み
         .order_by(OrderLine.delivery_date.asc())
     )
     
