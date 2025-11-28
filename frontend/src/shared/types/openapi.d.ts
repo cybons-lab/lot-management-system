@@ -159,6 +159,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/orders/confirmed-order-lines": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Confirmed Order Lines
+     * @description Get all order lines that are fully allocated and not yet registered in SAP.
+     *
+     *     Returns lines where allocated_quantity >= order_quantity and sap_order_no is NULL.
+     */
+    get: operations["get_confirmed_order_lines_api_orders_confirmed_order_lines_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/orders": {
     parameters: {
       query?: never;
@@ -1354,6 +1376,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Login For Access Token
+     * @description OAuth2 compatible token login, get an access token for future requests.
+     */
+    post: operations["login_for_access_token_api_login_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Current User Info
+     * @description Get current authenticated user information with assigned suppliers (optional authentication).
+     *
+     *     Returns:
+     *         User information with supplier assignments if authenticated, None if not authenticated
+     *
+     *     Use case:
+     *         - Frontend can check if user is logged in
+     *         - Display user name and assigned suppliers
+     *         - Prioritize user's assigned suppliers in list views
+     */
+    get: operations["get_current_user_info_api_me_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/users": {
     parameters: {
       query?: never;
@@ -1763,6 +1833,50 @@ export interface paths {
     get: operations["get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/metrics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Metrics
+     * @description パフォーマンスメトリクスを取得.
+     *
+     *     APIエンドポイントごとのリクエスト数、エラー率、レスポンスタイムなどを返す。
+     */
+    get: operations["get_metrics_api_admin_metrics_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/metrics/reset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset Metrics
+     * @description パフォーマンスメトリクスをリセット.
+     *
+     *     開発環境でのテスト用。
+     */
+    post: operations["reset_metrics_api_admin_metrics_reset_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2939,7 +3053,9 @@ export interface components {
        * Parameters
        * @description ジョブパラメータ（JSON）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * BatchJobExecuteRequest
@@ -2950,7 +3066,9 @@ export interface components {
        * Parameters
        * @description 実行時パラメータ（上書き）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * BatchJobExecuteResponse
@@ -2997,7 +3115,9 @@ export interface components {
        * Parameters
        * @description ジョブパラメータ（JSON）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
       /** Job Id */
       job_id: number;
       /**
@@ -3027,6 +3147,30 @@ export interface components {
        */
       created_at: string;
     };
+    /** Body_login_for_access_token_api_login_post */
+    Body_login_for_access_token_api_login_post: {
+      /** Grant Type */
+      grant_type?: string | null;
+      /** Username */
+      username: string;
+      /**
+       * Password
+       * Format: password
+       */
+      password: string;
+      /**
+       * Scope
+       * @default
+       */
+      scope: string;
+      /** Client Id */
+      client_id?: string | null;
+      /**
+       * Client Secret
+       * Format: password
+       */
+      client_secret?: string | null;
+    };
     /**
      * BusinessRuleCreate
      * @description 業務ルール作成スキーマ.
@@ -3051,7 +3195,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -3093,7 +3239,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -3132,7 +3280,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: Record<string, never> | null;
+      rule_parameters?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -3199,6 +3349,38 @@ export interface components {
        * @default 0
        */
       total: number;
+    };
+    /**
+     * ConfirmedOrderLineResponse
+     * @description Confirmed order line for SAP registration.
+     */
+    ConfirmedOrderLineResponse: {
+      /** Line Id */
+      line_id: number;
+      /** Order Id */
+      order_id: number;
+      /** Order Number */
+      order_number: string;
+      /** Customer Id */
+      customer_id: number;
+      /** Customer Name */
+      customer_name: string;
+      /** Product Id */
+      product_id: number;
+      /** Product Code */
+      product_code: string;
+      /** Product Name */
+      product_name: string;
+      /** Order Quantity */
+      order_quantity: number;
+      /** Allocated Quantity */
+      allocated_quantity: number;
+      /** Unit */
+      unit: string;
+      /** Delivery Date */
+      delivery_date: string;
+      /** Sap Order No */
+      sap_order_no?: string | null;
     };
     /**
      * CustomerCreate
@@ -4183,12 +4365,16 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: Record<string, never> | null;
+      old_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: Record<string, never> | null;
+      new_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -4243,7 +4429,9 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: Record<string, never> | null;
+      changes?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -4502,7 +4690,9 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: Record<string, never> | null;
+      data?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * RoleCreate
@@ -4681,6 +4871,32 @@ export interface components {
      */
     StockTransactionType: "inbound" | "allocation" | "shipment" | "adjustment" | "return";
     /**
+     * SupplierAssignmentInfo
+     * @description Schema for supplier assignment information.
+     */
+    SupplierAssignmentInfo: {
+      /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
+      supplier_id: number;
+      /**
+       * Supplier Code
+       * @description 仕入先コード
+       */
+      supplier_code: string;
+      /**
+       * Supplier Name
+       * @description 仕入先名
+       */
+      supplier_name: string;
+      /**
+       * Is Primary
+       * @description 主担当フラグ
+       */
+      is_primary: boolean;
+    };
+    /**
      * SupplierCreate
      * @description Create supplier request.
      */
@@ -4719,6 +4935,16 @@ export interface components {
     SupplierUpdate: {
       /** Supplier Name */
       supplier_name?: string | null;
+    };
+    /**
+     * Token
+     * @description JWT Token schema.
+     */
+    Token: {
+      /** Access Token */
+      access_token: string;
+      /** Token Type */
+      token_type: string;
     };
     /**
      * UserCreate
@@ -4941,6 +5167,53 @@ export interface components {
        * @description 割り当てられたロールコード
        */
       role_codes?: string[];
+    };
+    /**
+     * UserWithSuppliers
+     * @description Schema for user with assigned suppliers (for authentication context).
+     */
+    UserWithSuppliers: {
+      /**
+       * Username
+       * @description ユーザー名
+       */
+      username: string;
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name: string;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** Id */
+      id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /**
+       * Supplier Assignments
+       * @description 担当仕入先リスト
+       */
+      supplier_assignments?: components["schemas"]["SupplierAssignmentInfo"][];
     };
     /** ValidationError */
     ValidationError: {
@@ -5320,6 +5593,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_confirmed_order_lines_api_orders_confirmed_order_lines_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConfirmedOrderLineResponse"][];
         };
       };
     };
@@ -7319,6 +7612,59 @@ export interface operations {
       };
     };
   };
+  login_for_access_token_api_login_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/x-www-form-urlencoded": components["schemas"]["Body_login_for_access_token_api_login_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Token"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_current_user_info_api_me_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserWithSuppliers"] | null;
+        };
+      };
+    };
+  };
   list_users_api_users_get: {
     parameters: {
       query?: {
@@ -7823,7 +8169,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
@@ -7938,6 +8286,46 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_metrics_api_admin_metrics_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  reset_metrics_api_admin_metrics_reset_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
     };
