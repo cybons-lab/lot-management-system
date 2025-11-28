@@ -281,4 +281,3 @@ class ForecastService:
             )
             for h in history
         ]
-

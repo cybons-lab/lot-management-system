@@ -397,4 +397,3 @@ class InboundService:
                 for lot in created_expected_lots
             ],
         )
-
