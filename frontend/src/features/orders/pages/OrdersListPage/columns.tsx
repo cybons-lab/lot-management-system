@@ -79,8 +79,9 @@ export const columns: Column<OrderUI>[] = [
         <div className="flex items-center gap-3">
           <div className="h-2.5 w-32 overflow-hidden rounded-full bg-slate-200">
             <div
-              className={`h-full rounded-full transition-all ${rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
-                }`}
+              className={`h-full rounded-full transition-all ${
+                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
+              }`}
               style={{ width: `${rate}%` }}
             />
           </div>
