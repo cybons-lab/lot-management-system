@@ -43,11 +43,13 @@ import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
 import { SystemStatus } from "@/features/system/SystemStatus";
+import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
 
 // eslint-disable-next-line max-lines-per-function
 function App() {
   return (
     <>
+      <SAPRegistrationButton />
       <SystemStatus />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
