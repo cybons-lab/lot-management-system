@@ -1,4 +1,4 @@
-import { LineBasedAllocationList } from "../components/shared/LineBasedAllocationList";
+import { LineBasedAllocationList } from "../components/allocation-list/LineBasedAllocationList";
 import { useLotAllocation } from "../hooks/useLotAllocation";
 
 import * as styles from "./LotAllocationPage.styles";

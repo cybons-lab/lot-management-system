@@ -26,6 +26,11 @@ export {
 export {
   AllocationInput,
   AllocationProgress,
-  FlatAllocationList,
   WarehouseAllocationModal,
 } from "./shared";
+
+// Allocation List components
+export {
+  FlatAllocationList,
+  LineBasedAllocationList,
+} from "./allocation-list";
