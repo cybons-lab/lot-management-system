@@ -20,6 +20,7 @@ dependencies = [
     "python-jose[cryptography]>=3.3.0",
     "passlib[bcrypt]>=1.7.4",
     "bcrypt==4.0.1",
+    "faker>=38.2.0",
 ]
 
 [tool.ruff]
@@ -75,7 +76,6 @@ blank = true
 
 [dependency-groups]
 dev = [
-    "faker>=38.2.0",
     "httpx>=0.28.1",
     "hypothesis>=6.148.2",
     "pytest>=9.0.1",

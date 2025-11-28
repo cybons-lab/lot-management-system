@@ -22,10 +22,12 @@ COPY pyproject.toml uv.lock ./
 # 依存関係インストール
 # --frozen: lockファイルを使用
 # --no-dev: 開発依存を除外
+# Bind mountによる上書きを防ぐため、venvを/app外に作成
+ENV UV_PROJECT_ENVIRONMENT="/venv"
 RUN uv sync --frozen --no-dev
 
-# PATHを通す（.venv内のコマンドを使えるようにする）
-ENV PATH="/app/.venv/bin:$PATH"
+# PATHを通す
+ENV PATH="/venv/bin:$PATH"
 
 # アプリケーションコードをコピー
 COPY . .
