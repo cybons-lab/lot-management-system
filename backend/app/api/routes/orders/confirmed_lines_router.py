@@ -8,12 +8,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_db
 from app.models import Allocation, Customer, Order, OrderLine, Product
 
+
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 
 class ConfirmedOrderLineResponse(BaseModel):
     """Confirmed order line for SAP registration."""
-    
+
     line_id: int
     order_id: int
     order_number: str
@@ -27,7 +28,7 @@ class ConfirmedOrderLineResponse(BaseModel):
     unit: str
     delivery_date: str
     sap_order_no: str | None = None
-    
+
     model_config = {"from_attributes": True}
 
 
@@ -35,19 +36,19 @@ class ConfirmedOrderLineResponse(BaseModel):
 def get_confirmed_order_lines(db: Session = Depends(get_db)):
     """
     Get all order lines that are fully allocated and not yet registered in SAP.
-    
+
     Returns lines where allocated_quantity >= order_quantity and sap_order_no is NULL.
     """
     # Subquery to calculate allocated quantity per line
     alloc_subq = (
         select(
             Allocation.order_line_id,
-            func.coalesce(func.sum(Allocation.allocated_quantity), 0).label("allocated_qty")
+            func.coalesce(func.sum(Allocation.allocated_quantity), 0).label("allocated_qty"),
         )
         .group_by(Allocation.order_line_id)
         .subquery()
     )
-    
+
     # Main query - filter in WHERE clause instead of HAVING
     query = (
         select(
@@ -70,12 +71,14 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
         .join(Product, OrderLine.product_id == Product.id)
         .outerjoin(alloc_subq, OrderLine.id == alloc_subq.c.order_line_id)
         .where(OrderLine.sap_order_no.is_(None))  # SAP未登録
-        .where(func.coalesce(alloc_subq.c.allocated_qty, 0) >= OrderLine.order_quantity)  # 引当確定済み
+        .where(
+            func.coalesce(alloc_subq.c.allocated_qty, 0) >= OrderLine.order_quantity
+        )  # 引当確定済み
         .order_by(OrderLine.delivery_date.asc())
     )
-    
+
     results = db.execute(query).all()
-    
+
     return [
         ConfirmedOrderLineResponse(
             line_id=r.line_id,
