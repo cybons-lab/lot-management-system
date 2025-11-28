@@ -3,13 +3,14 @@
  */
 
 // Main orchestrator hook
+// Main orchestrator hook
 export { useLotAllocation } from "./useLotAllocation";
 export type {
   LineStatus,
   LineStockStatus,
   AllocationToastState,
   CandidateLotFetcher,
-} from "./useLotAllocation";
+} from "../types";
 
 // API/Data fetching hooks
 export * from "./api";

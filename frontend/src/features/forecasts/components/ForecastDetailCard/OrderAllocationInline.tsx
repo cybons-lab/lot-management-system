@@ -2,8 +2,8 @@ import { Loader2 } from "lucide-react";
 
 import { LotCandidateRow } from "./LotCandidateRow";
 
+import { ALLOCATION_CONSTANTS } from "@/features/allocations/constants";
 import { useAllocationCandidates } from "@/features/allocations/hooks/api/useAllocationCandidates";
-import { ALLOCATION_CONSTANTS } from "@/features/allocations/hooks/useLotAllocation/allocationConstants";
 import type { useLotAllocationForOrder } from "@/features/forecasts/hooks/useLotAllocationForOrder";
 import { cn } from "@/shared/libs/utils";
 import type { OrderLine } from "@/shared/types/aliases";
