@@ -12,7 +12,7 @@ from app.schemas.allocations.allocation_suggestions_schema import (
     AllocationSuggestionRequest,
     AllocationSuggestionResponse,
 )
-from app.services.allocation.allocation_suggestions_service import AllocationSuggestionService
+from app.services.allocations.suggestion import AllocationSuggestionService
 
 
 logger = logging.getLogger(__name__)

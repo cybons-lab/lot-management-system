@@ -179,8 +179,6 @@ def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
     """
     FEFO引当プレビュー（状態: draft|open|part_allocated|allocated 許容）.
 
-    Refactored: Split into smaller functions for clarity.
-
     Args:
         db: データベースセッション
         order_id: 注文ID
