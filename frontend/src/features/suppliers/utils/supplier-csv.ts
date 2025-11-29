@@ -20,7 +20,13 @@ export function parseSupplierCsv(csvText: string): { rows: SupplierBulkRow[]; er
     return { rows, errors };
   }
 
-  const header = lines[0]!.split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+  const headerLine = lines[0];
+  if (!headerLine) {
+    errors.push("ヘッダー行が見つかりません");
+    return { rows, errors };
+  }
+
+  const header = headerLine.split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
   const headerIndices = CSV_HEADERS.map((h) => header.indexOf(h));
 
   for (let i = 0; i < CSV_HEADERS.length; i++) {
@@ -31,18 +37,27 @@ export function parseSupplierCsv(csvText: string): { rows: SupplierBulkRow[]; er
   if (errors.length > 0) return { rows, errors };
 
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i]!.trim();
-    if (!line) continue;
+    const line = lines[i];
+    if (!line || !line.trim()) continue;
 
-    const values = parseCsvLine(line);
-    const operation = values[headerIndices[0]!]?.toUpperCase() as BulkOperationType | undefined;
+    const values = parseCsvLine(line.trim());
+    const operationIndex = headerIndices[0];
+    const codeIndex = headerIndices[1];
+    const nameIndex = headerIndices[2];
+
+    // These indices are guaranteed to be valid (not -1) by the check above
+    if (operationIndex === undefined || codeIndex === undefined || nameIndex === undefined) {
+      continue;
+    }
+
+    const operation = values[operationIndex]?.toUpperCase() as BulkOperationType | undefined;
 
     if (!operation || !["ADD", "UPD", "DEL"].includes(operation)) {
       errors.push(`行${i + 1}: OPERATIONは ADD/UPD/DEL のいずれかを指定してください`);
       continue;
     }
 
-    const supplierCode = values[headerIndices[1]!] ?? "";
+    const supplierCode = values[codeIndex] ?? "";
     if (!supplierCode) {
       errors.push(`行${i + 1}: supplier_codeは必須です`);
       continue;
@@ -52,7 +67,7 @@ export function parseSupplierCsv(csvText: string): { rows: SupplierBulkRow[]; er
       _rowNumber: i + 1,
       OPERATION: operation,
       supplier_code: supplierCode,
-      supplier_name: values[headerIndices[2]!] ?? "",
+      supplier_name: values[nameIndex] ?? "",
     });
   }
 
