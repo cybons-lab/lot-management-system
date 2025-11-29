@@ -16,27 +16,27 @@ from sqlalchemy.orm import Session
 ModelType = TypeVar("ModelType")
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
+IDType = TypeVar("IDType", int, str)
 
 
-class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):  # noqa: UP046
+class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]):  # noqa: UP046
     """Generic base service with common CRUD operations.
 
     This class provides:
     - Standard CRUD operations (get_by_id, create, update, delete)
     - Automatic transaction management (commit/rollback)
     - Consistent error handling (404, 409 with user-friendly messages)
-    - Type safety through generics
+    - Type safety through generics (including ID type)
 
     Example:
         ```python
-        class ProductService(BaseService[Product, ProductCreate, ProductUpdate]):
-            def __init__(self, session: Session):
-                super().__init__(db=session, model=Product)
-                self.repository = ProductRepository(session)
+        # For integer ID
+        class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
+            ...
 
-            # Add custom business logic here
-            def list_products(self, **kwargs):
-                return self.repository.list(**kwargs)
+        # For string ID
+        class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]):
+            ...
         ```
     """
 
@@ -50,7 +50,16 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):  # no
         self.db = db
         self.model = model
 
-    def get_by_id(self, id: int, *, raise_404: bool = True) -> ModelType | None:
+    def get_all(self) -> list[ModelType]:
+        """Get all entities.
+
+        Returns:
+            List of all entities
+        """
+        return self.db.query(self.model).all()
+
+
+    def get_by_id(self, id: IDType, *, raise_404: bool = True) -> ModelType | None:
         """Get entity by ID.
 
         Args:
@@ -97,7 +106,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):  # no
             user_message = parse_db_error(exc, payload.model_dump())
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=user_message) from exc
 
-    def update(self, id: int, payload: UpdateSchemaType) -> ModelType:
+    def update(self, id: IDType, payload: UpdateSchemaType) -> ModelType:
         """Update existing entity.
 
         Args:
@@ -125,7 +134,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):  # no
             user_message = parse_db_error(exc, payload.model_dump())
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=user_message) from exc
 
-    def delete(self, id: int) -> None:
+    def delete(self, id: IDType) -> None:
         """Delete entity.
 
         Args:
