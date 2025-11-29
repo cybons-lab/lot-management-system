@@ -170,7 +170,9 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
 /**
  * LotResponse → LotUI
  */
-export function normalizeLot(lot: Partial<LotResponse> & { lot_id: number; product_id: number; warehouse_id: number }): LotUI {
+export function normalizeLot(
+  lot: Partial<LotResponse> & { lot_id: number; product_id: number; warehouse_id: number },
+): LotUI {
   return {
     lot_id: lot.lot_id,
     lot_number: S(lot.lot_number),

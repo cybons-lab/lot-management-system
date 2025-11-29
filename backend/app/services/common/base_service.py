@@ -18,7 +18,7 @@ CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 
-class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
+class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):  # noqa: UP046
     """Generic base service with common CRUD operations.
 
     This class provides:
