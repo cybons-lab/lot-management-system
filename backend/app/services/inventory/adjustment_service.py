@@ -10,7 +10,7 @@ from app.schemas.inventory.inventory_schema import AdjustmentCreate, AdjustmentR
 from app.services.common.base_service import BaseService
 
 
-class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResponse]):
+class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResponse, int]):
     """Business logic for inventory adjustments.
 
     Note: This service uses AdjustmentResponse instead of a separate UpdateSchema

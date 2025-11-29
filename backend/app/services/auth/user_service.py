@@ -10,7 +10,7 @@ from app.schemas.system.users_schema import UserCreate, UserRoleAssignment, User
 from app.services.common.base_service import BaseService
 
 
-class UserService(BaseService[User, UserCreate, UserUpdate]):
+class UserService(BaseService[User, UserCreate, UserUpdate, int]):
     """Service for managing users.
 
     Inherits common CRUD operations from BaseService:

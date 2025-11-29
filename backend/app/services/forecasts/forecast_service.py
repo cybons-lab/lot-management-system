@@ -20,7 +20,7 @@ from app.schemas.forecasts.forecast_schema import (
 from app.services.common.base_service import BaseService
 
 
-class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdate]):
+class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdate, int]):
     """Business logic for forecast_current and forecast_history.
 
     Inherits common CRUD operations from BaseService:

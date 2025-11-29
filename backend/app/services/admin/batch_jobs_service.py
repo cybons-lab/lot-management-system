@@ -9,7 +9,7 @@ from app.schemas.system.batch_jobs_schema import BatchJobCreate, BatchJobUpdate
 from app.services.common.base_service import BaseService
 
 
-class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate]):
+class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate, int]):
     """Service for batch jobs (バッチジョブ).
 
     Inherits common CRUD operations from BaseService:
