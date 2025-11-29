@@ -8,7 +8,7 @@ from app.schemas.masters.products_schema import ProductCreate, ProductUpdate
 from app.services.common.base_service import BaseService
 
 
-class ProductService(BaseService[Product, ProductCreate, ProductUpdate]):
+class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
     """Service layer orchestrating product use cases.
 
     Inherits common CRUD operations from BaseService:
