@@ -6,7 +6,7 @@ Column names: allocated_qty → allocated_quantity
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import Field
@@ -159,6 +159,11 @@ class AllocationDetail(BaseSchema):
     lot_id: int
     allocated_quantity: Decimal = Field(..., decimal_places=3)
     status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+    # Flattened Lot Info
+    lot_number: str | None = None
 
 
 # Using generic ListResponse[T] for consistency
