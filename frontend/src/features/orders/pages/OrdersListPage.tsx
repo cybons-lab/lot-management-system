@@ -31,6 +31,16 @@ import { FormDialog } from "@/shared/components/form";
  */
 type ViewMode = "delivery" | "flat" | "order";
 
+type GroupedOrderLine = {
+  deliveryPlaceCode?: string;
+  deliveryPlaceName?: string;
+  orderNumber?: string;
+  customerName?: string;
+  orderDate?: string;
+  status?: string;
+  lines: OrderLineRow[];
+};
+
 /**
  * メインコンポーネント
  */
@@ -271,155 +281,144 @@ export function OrdersListPage() {
 
       {/* テーブル (Delivery Grouped / Flat / Order Grouped) */}
       <div className="space-y-4">
-        type GroupedOrderLine = {
-          deliveryPlaceCode ?: string;
-        deliveryPlaceName?: string;
-        orderNumber?: string;
-        customerName?: string;
-        orderDate?: string;
-        status?: string;
-        lines: OrderLineRow[];
-};
-
-        // ...
-
-        // 納入先単位表示
-        <div className="space-y-6">
-          {Object.values(
-            paginatedLines.reduce<Record<string, GroupedOrderLine>>(
-              (acc, line) => {
-                const key = line.delivery_place_code || "unknown";
-                if (!acc[key]) {
-                  acc[key] = {
-                    deliveryPlaceCode: line.delivery_place_code || undefined,
-                    deliveryPlaceName: line.delivery_place_name || undefined,
-                    lines: [],
-                  };
-                }
-                acc[key].lines.push(line);
-                return acc;
-              },
-              {},
-            ),
-          ).map((group) => (
-            <div
-              key={group.deliveryPlaceCode || "unknown"}
-              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-            >
-              <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-green-50 to-slate-50 px-6 py-3">
-                <div className="flex items-center gap-4">
-                  <span className="font-bold text-slate-900">{group.deliveryPlaceCode}</span>
-                  <span className="text-sm text-slate-600">{group.deliveryPlaceName}</span>
-                  <span className="text-xs text-slate-500">明細数: {group.lines.length}</span>
+        {viewMode === "delivery" ? (
+          {
+            Object.values(
+              paginatedLines.reduce<Record<string, GroupedOrderLine>>(
+                (acc, line) => {
+                  const key = line.delivery_place_code || "unknown";
+                  if (!acc[key]) {
+                    acc[key] = {
+                      deliveryPlaceCode: line.delivery_place_code || undefined,
+                      deliveryPlaceName: line.delivery_place_name || undefined,
+                      lines: [],
+                    };
+                  }
+                  acc[key].lines.push(line);
+                  return acc;
+                },
+                {},
+              ),
+            ).map((group) => (
+              <div
+                key={group.deliveryPlaceCode || "unknown"}
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+              >
+                <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-green-50 to-slate-50 px-6 py-3">
+                  <div className="flex items-center gap-4">
+                    <span className="font-bold text-slate-900">{group.deliveryPlaceCode}</span>
+                    <span className="text-sm text-slate-600">{group.deliveryPlaceName}</span>
+                    <span className="text-xs text-slate-500">明細数: {group.lines.length}</span>
+                  </div>
+                </div>
+                <div className="p-0">
+                  <DataTable
+                    data={group.lines}
+                    columns={orderLineColumns}
+                    isLoading={false}
+                    emptyMessage="明細がありません"
+                  />
                 </div>
               </div>
-              <div className="p-0">
-                <DataTable
-                  data={group.lines}
-                  columns={orderLineColumns}
-                  isLoading={false}
-                  emptyMessage="明細がありません"
-                />
-              </div>
-            </div>
-          ))}
+            ))
+          }
         </div>
-        ) : viewMode === "order" ? (
-        // 受注単位表示
-        <div className="space-y-6">
-          {Object.values(
-            paginatedLines.reduce<Record<string, GroupedOrderLine>>(
-              (acc, line) => {
-                const key = line.order_number || "unknown";
-                if (!acc[key]) {
-                  acc[key] = {
-                    orderNumber: line.order_number || undefined,
-                    customerName: line.customer_name || undefined,
-                    orderDate: line.order_date || undefined,
-                    status: line.order_status || undefined,
-                    lines: [],
-                  };
-                }
-                acc[key].lines.push(line);
-                return acc;
-              },
-              {},
-            ),
-          ).map((group) => (
-            <div
-              key={group.orderNumber || "unknown"}
-              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-            >
-              <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-slate-50 px-6 py-3">
-                <div className="flex items-center gap-4">
-                  <span className="font-bold text-slate-900">{group.orderNumber}</span>
-                  <span className="text-sm text-slate-600">{group.customerName}</span>
-                  <span className="text-xs text-slate-500">受注日: {group.orderDate}</span>
-                </div>
-                <span
-                  className={`rounded-full px-2 py-1 text-xs font-semibold ${group.status === "allocated"
-                      ? "bg-blue-100 text-blue-800"
-                      : group.status === "shipped"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                >
-                  {group.status}
-                </span>
+      ) : viewMode === "order" ? (
+      // 受注単位表示
+      <div className="space-y-6">
+        {Object.values(
+          paginatedLines.reduce<Record<string, GroupedOrderLine>>(
+            (acc, line) => {
+              const key = line.order_number || "unknown";
+              if (!acc[key]) {
+                acc[key] = {
+                  orderNumber: line.order_number || undefined,
+                  customerName: line.customer_name || undefined,
+                  orderDate: line.order_date || undefined,
+                  status: line.order_status || undefined,
+                  lines: [],
+                };
+              }
+              acc[key].lines.push(line);
+              return acc;
+            },
+            {},
+          ),
+        ).map((group) => (
+          <div
+            key={group.orderNumber || "unknown"}
+            className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+          >
+            <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-slate-50 px-6 py-3">
+              <div className="flex items-center gap-4">
+                <span className="font-bold text-slate-900">{group.orderNumber}</span>
+                <span className="text-sm text-slate-600">{group.customerName}</span>
+                <span className="text-xs text-slate-500">受注日: {group.orderDate}</span>
               </div>
-              <div className="p-0">
-                <DataTable
-                  data={group.lines}
-                  columns={orderLineColumns}
-                  isLoading={false}
-                  emptyMessage="明細がありません"
-                />
-              </div>
+              <span
+                className={`rounded-full px-2 py-1 text-xs font-semibold ${group.status === "allocated"
+                  ? "bg-blue-100 text-blue-800"
+                  : group.status === "shipped"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-800"
+                  }`}
+              >
+                {group.status}
+              </span>
             </div>
-          ))}
-        </div>
-        ) : (
-        // 1行単位表示 (Flat)
-        <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-          <DataTable
-            data={paginatedLines}
-            columns={orderLineColumns}
-            isLoading={isLoading}
-            emptyMessage="明細がありません"
+            <div className="p-0">
+              <DataTable
+                data={group.lines}
+                columns={orderLineColumns}
+                isLoading={false}
+                emptyMessage="明細がありません"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      ) : (
+      // 1行単位表示 (Flat)
+      <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <DataTable
+          data={paginatedLines}
+          columns={orderLineColumns}
+          isLoading={isLoading}
+          emptyMessage="明細がありません"
+        />
+      </div>
+        )}
+
+      {/* ページネーション */}
+      {!error && sortedLines.length > 0 && (
+        <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
+          <TablePagination
+            currentPage={pagination.page ?? 1}
+            pageSize={pagination.pageSize ?? 25}
+            totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
+            onPageChange={table.setPage}
+            onPageSizeChange={table.setPageSize}
           />
         </div>
-        )}
-
-        {/* ページネーション */}
-        {!error && sortedLines.length > 0 && (
-          <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
-            <TablePagination
-              currentPage={pagination.page ?? 1}
-              pageSize={pagination.pageSize ?? 25}
-              totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
-              onPageChange={table.setPage}
-              onPageSizeChange={table.setPageSize}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* 新規登録ダイアログ */}
-      <FormDialog
-        open={createDialog.isOpen}
-        onClose={createDialog.close}
-        title="受注新規登録"
-        description="新しい受注を登録します"
-        size="lg"
-      >
-        <OrderCreateForm
-          onSubmit={async (data) => {
-            await createOrderMutation.mutateAsync(data);
-          }}
-          onCancel={createDialog.close}
-          isSubmitting={createOrderMutation.isPending}
-        />
-      </FormDialog>
+      )}
     </div>
+
+      {/* 新規登録ダイアログ */ }
+  <FormDialog
+    open={createDialog.isOpen}
+    onClose={createDialog.close}
+    title="受注新規登録"
+    description="新しい受注を登録します"
+    size="lg"
+  >
+    <OrderCreateForm
+      onSubmit={async (data) => {
+        await createOrderMutation.mutateAsync(data);
+      }}
+      onCancel={createDialog.close}
+      isSubmitting={createOrderMutation.isPending}
+    />
+  </FormDialog>
+    </div >
   );
 }
