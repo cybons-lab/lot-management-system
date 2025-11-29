@@ -144,7 +144,7 @@ export const getInboundPlans = async (params?: InboundPlansListParams) => {
 
   const queryString = searchParams.toString();
   const response = await http.get<InboundPlanListResponse>(
-    `/inbound-plans${queryString ? "?" + queryString : ""}`
+    `inbound-plans${queryString ? "?" + queryString : ""}`
   );
   // Return items array for compatibility with existing hooks
   return response.items;
@@ -155,7 +155,7 @@ export const getInboundPlans = async (params?: InboundPlansListParams) => {
  * @endpoint GET /inbound-plans/{id}
  */
 export const getInboundPlan = (id: number) => {
-  return http.get<InboundPlanWithLines>(`/inbound-plans/${id}`);
+  return http.get<InboundPlanWithLines>(`inbound-plans/${id}`);
 };
 
 /**
@@ -163,7 +163,7 @@ export const getInboundPlan = (id: number) => {
  * @endpoint POST /inbound-plans
  */
 export const createInboundPlan = (data: CreateInboundPlanRequest) => {
-  return http.post<InboundPlan>("/inbound-plans", data);
+  return http.post<InboundPlan>("inbound-plans", data);
 };
 
 /**
@@ -171,7 +171,7 @@ export const createInboundPlan = (data: CreateInboundPlanRequest) => {
  * @endpoint PUT /inbound-plans/{id}
  */
 export const updateInboundPlan = (id: number, data: UpdateInboundPlanRequest) => {
-  return http.put<InboundPlan>(`/inbound-plans/${id}`, data);
+  return http.put<InboundPlan>(`inbound-plans/${id}`, data);
 };
 
 /**
@@ -179,7 +179,7 @@ export const updateInboundPlan = (id: number, data: UpdateInboundPlanRequest) =>
  * @endpoint DELETE /inbound-plans/{id}
  */
 export const deleteInboundPlan = (id: number) => {
-  return http.delete<void>(`/inbound-plans/${id}`);
+  return http.delete<void>(`inbound-plans/${id}`);
 };
 
 /**
@@ -187,7 +187,7 @@ export const deleteInboundPlan = (id: number) => {
  * @endpoint GET /inbound-plans/{id}/lines
  */
 export const getInboundPlanLines = (planId: number) => {
-  return http.get<InboundPlanLine[]>(`/inbound-plans/${planId}/lines`);
+  return http.get<InboundPlanLine[]>(`inbound-plans/${planId}/lines`);
 };
 
 /**
@@ -195,7 +195,7 @@ export const getInboundPlanLines = (planId: number) => {
  * @endpoint POST /inbound-plans/{id}/lines
  */
 export const createInboundPlanLine = (planId: number, data: CreateInboundPlanLineRequest) => {
-  return http.post<InboundPlanLine>(`/inbound-plans/${planId}/lines`, data);
+  return http.post<InboundPlanLine>(`inbound-plans/${planId}/lines`, data);
 };
 
 /**
@@ -204,7 +204,7 @@ export const createInboundPlanLine = (planId: number, data: CreateInboundPlanLin
  * @important This endpoint automatically generates lots based on received quantities
  */
 export const receiveInbound = (planId: number, data: ReceiveInboundRequest) => {
-  return http.post<ReceiveInboundResponse>(`/inbound-plans/${planId}/receive`, data);
+  return http.post<ReceiveInboundResponse>(`inbound-plans/${planId}/receive`, data);
 };
 
 /**
@@ -223,5 +223,5 @@ export interface SAPSyncResponse {
  * @note Currently uses mock data. Will be replaced with actual SAP integration.
  */
 export const syncFromSAP = () => {
-  return http.post<SAPSyncResponse>("/inbound-plans/sync-from-sap", {});
+  return http.post<SAPSyncResponse>("inbound-plans/sync-from-sap", {});
 };
