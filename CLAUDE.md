@@ -43,7 +43,7 @@ A full-stack inventory management system for tracking materials by lot, with aut
 - **Forms:** react-hook-form 7.66.0 with Zod 4.1.12 validation
 - **Tables:** TanStack React Table 8.21.3
 - **Routing:** React Router 7.9.5
-- **HTTP Client:** Axios 1.13.2
+- **HTTP Client:** Axios 1.13.2 (wrapped in `services/http.ts` for error handling)
 - **Testing:** MSW 2.12.0 (API mocking)
 - **Linting:** ESLint 9.39.1, Prettier 3.6.2
 - **Type Generation:** openapi-typescript 7.10.1
@@ -779,12 +779,15 @@ npm run typecheck  # Must pass with 0 errors
 
    ```typescript
    import { useQuery } from "@tanstack/react-query";
-   import { getMyFeatures } from "../api";
+   import { http } from "@/services/http";
 
    export const useMyFeatures = () => {
      return useQuery({
        queryKey: ["myFeatures"],
-       queryFn: getMyFeatures,
+       queryFn: async () => {
+         const response = await http.get("/my-feature");
+         return response.data;
+       },
      });
    };
    ```
