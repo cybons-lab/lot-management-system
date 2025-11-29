@@ -1,4 +1,4 @@
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
 import { getAllocationCandidates } from "../api";
@@ -7,7 +7,7 @@ import type { AllocationToastState, LineStatus } from "../types";
 import { allocationCandidatesKeys } from "./api/useAllocationCandidates";
 import { useOrdersForAllocation } from "./api/useOrdersForAllocation";
 
-import { listCustomers, listProducts } from "@/services/api/master-service";
+import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
 
 /**
  * Hook to manage the state and data for the Lot Allocation page.
@@ -61,15 +61,11 @@ export function useLotAllocationLogic() {
 
   const isCandidatesLoading = candidateQueries.some((q) => q.isLoading);
 
-  const customersQuery = useQuery({
-    queryKey: ["masters", "customers"],
-    queryFn: listCustomers,
+  const customersQuery = useCustomersQuery({
     staleTime: 1000 * 60 * 5,
   });
 
-  const productsQuery = useQuery({
-    queryKey: ["masters", "products"],
-    queryFn: listProducts,
+  const productsQuery = useProductsQuery({
     staleTime: 1000 * 60 * 5,
   });
 

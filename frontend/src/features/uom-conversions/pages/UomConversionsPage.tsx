@@ -1,16 +1,9 @@
 import { Package } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-
-import { http } from "@/shared/api/http-client";
+import { useUomConversions } from "../hooks/useUomConversions";
 
 export function UomConversionsPage() {
-  const { data: conversions = [], isLoading } = useQuery({
-    queryKey: ["uom-conversions"],
-    queryFn: async () => {
-      const response = await http.get<any[]>("masters/uom-conversions");
-      return response;
-    },
-  });
+  const { useList } = useUomConversions();
+  const { data: conversions = [], isLoading } = useList();
 
   if (isLoading) {
     return <div className="p-6">読み込み中...</div>;
@@ -47,7 +40,7 @@ export function UomConversionsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
-            {conversions.map((conversion: any) => (
+            {conversions.map((conversion) => (
               <tr key={conversion.conversion_id} className="hover:bg-slate-50">
                 <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
                   <div className="flex items-center gap-2">

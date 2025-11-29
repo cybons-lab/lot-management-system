@@ -6,7 +6,9 @@
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useState, useId, useCallback } from "react";
 
-import { useBulkUpsertCustomers } from "../hooks/useCustomerMutations";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
+import { bulkUpsertCustomers } from "../api";
 import { bulkImport as styles } from "../pages/styles";
 import type { BulkUpsertResponse, CustomerBulkRow } from "../types/bulk-operation";
 import { parseCustomerCsv, generateEmptyTemplate, downloadCSV } from "../utils/customer-csv";
@@ -42,7 +44,33 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
   const [parsedRows, setParsedRows] = useState<CustomerBulkRow[]>([]);
   const [importResult, setImportResult] = useState<BulkUpsertResponse | null>(null);
 
-  const { mutate: bulkUpsert, isPending } = useBulkUpsertCustomers();
+  const queryClient = useQueryClient();
+  const { mutate: bulkUpsert, isPending } = useMutation({
+    mutationFn: (rows: CustomerBulkRow[]) => bulkUpsertCustomers(rows),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+      setImportResult(result);
+    },
+    onError: (error) => {
+      setImportResult({
+        status: "failed",
+        summary: {
+          total: parsedRows.length,
+          added: 0,
+          updated: 0,
+          deleted: 0,
+          failed: parsedRows.length,
+        },
+        results: [
+          {
+            rowNumber: 0,
+            success: false,
+            errorMessage: error.message,
+          },
+        ],
+      });
+    },
+  });
 
   // ファイル選択ハンドラ
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,30 +103,7 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
   const handleImport = useCallback(() => {
     if (parsedRows.length === 0) return;
 
-    bulkUpsert(parsedRows, {
-      onSuccess: (result) => {
-        setImportResult(result);
-      },
-      onError: (error) => {
-        setImportResult({
-          status: "failed",
-          summary: {
-            total: parsedRows.length,
-            added: 0,
-            updated: 0,
-            deleted: 0,
-            failed: parsedRows.length,
-          },
-          results: [
-            {
-              rowNumber: 0,
-              success: false,
-              errorMessage: error.message,
-            },
-          ],
-        });
-      },
-    });
+    bulkUpsert(parsedRows);
   }, [parsedRows, bulkUpsert]);
 
   // ダイアログを閉じる
