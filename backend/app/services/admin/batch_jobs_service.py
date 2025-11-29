@@ -5,15 +5,25 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.logs_models import BatchJob
-from app.schemas.system.batch_jobs_schema import BatchJobCreate
+from app.schemas.system.batch_jobs_schema import BatchJobCreate, BatchJobUpdate
+from app.services.common.base_service import BaseService
 
 
-class BatchJobService:
-    """Service for batch jobs (バッチジョブ)."""
+class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate]):
+    """Service for batch jobs (バッチジョブ).
+    
+    Inherits common CRUD operations from BaseService:
+    - get_by_id(job_id) -> BatchJob
+    - create(payload) -> BatchJob
+    - update(job_id, payload) -> BatchJob
+    - delete(job_id) -> None
+    
+    Custom business logic is implemented below.
+    """
 
     def __init__(self, db: Session):
         """Initialize service with database session."""
-        self.db = db
+        super().__init__(db=db, model=BatchJob)
 
     def get_all(
         self,
@@ -45,18 +55,6 @@ class BatchJobService:
 
         return jobs, total
 
-    def get_by_id(self, job_id: int) -> BatchJob | None:
-        """Get batch job by ID."""
-        return self.db.query(BatchJob).filter(BatchJob.job_id == job_id).first()
-
-    def create(self, job: BatchJobCreate) -> BatchJob:
-        """Create a new batch job."""
-        db_job = BatchJob(**job.model_dump(), status="pending")
-        self.db.add(db_job)
-        self.db.commit()
-        self.db.refresh(db_job)
-        return db_job
-
     def update_status(
         self,
         job_id: int,
@@ -64,7 +62,7 @@ class BatchJobService:
         result_message: str | None = None,
     ) -> BatchJob | None:
         """Update batch job status."""
-        db_job = self.get_by_id(job_id)
+        db_job = self.get_by_id(job_id, raise_404=False)
         if not db_job:
             return None
 
@@ -94,7 +92,7 @@ class BatchJobService:
         Returns:
             Updated batch job or None if not found
         """
-        db_job = self.get_by_id(job_id)
+        db_job = self.get_by_id(job_id, raise_404=False)
         if not db_job:
             return None
 
@@ -139,19 +137,9 @@ class BatchJobService:
 
         return db_job
 
-    def delete(self, job_id: int) -> bool:
-        """Delete a batch job (hard delete)."""
-        db_job = self.get_by_id(job_id)
-        if not db_job:
-            return False
-
-        self.db.delete(db_job)
-        self.db.commit()
-        return True
-
     def cancel(self, job_id: int) -> BatchJob | None:
         """Cancel a running batch job."""
-        db_job = self.get_by_id(job_id)
+        db_job = self.get_by_id(job_id, raise_404=False)
         if not db_job:
             return None
 
