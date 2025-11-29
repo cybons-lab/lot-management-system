@@ -1,16 +1,9 @@
 import { Package, Building2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-
-import { http } from "@/shared/api/http-client";
+import { useSupplierProducts } from "../hooks/useSupplierProducts";
 
 export function SupplierProductsPage() {
-  const { data: products = [], isLoading } = useQuery({
-    queryKey: ["supplier-products"],
-    queryFn: async () => {
-      const response = await http.get<any[]>("masters/supplier-products");
-      return response;
-    },
-  });
+  const { useList } = useSupplierProducts();
+  const { data: products = [], isLoading } = useList();
 
   if (isLoading) {
     return <div className="p-6">読み込み中...</div>;
@@ -50,7 +43,7 @@ export function SupplierProductsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 bg-white">
-            {products.map((product: any, index: number) => (
+            {products.map((product, index) => (
               <tr key={index} className="hover:bg-slate-50">
                 <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
                   <div className="flex items-center gap-2">

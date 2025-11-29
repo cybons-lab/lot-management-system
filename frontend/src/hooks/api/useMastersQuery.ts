@@ -9,7 +9,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import type { Customer } from "@/features/customers/validators/customer-schema";
 import type { Product } from "@/features/products/validators/product-schema";
 import type { Warehouse } from "@/features/warehouses/validators/warehouse-schema";
-import { listProducts, listCustomers, listWarehouses } from "@/services/api/master-service";
+import { http } from "@/shared/api/http-client";
 import { QUERY_KEYS } from "@/services/api/query-keys";
 
 /**
@@ -29,7 +29,7 @@ export function useProductsQuery(options?: {
 }): UseQueryResult<Product[], Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.products(),
-    queryFn: listProducts,
+    queryFn: () => http.get<Product[]>("masters/products"),
     staleTime: options?.staleTime ?? 300000, // 5分（マスタは変更頻度が低い）
     enabled: options?.enabled ?? true,
   });
@@ -52,7 +52,7 @@ export function useCustomersQuery(options?: {
 }): UseQueryResult<Customer[], Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.customers(),
-    queryFn: listCustomers,
+    queryFn: () => http.get<Customer[]>("masters/customers"),
     staleTime: options?.staleTime ?? 300000, // 5分
     enabled: options?.enabled ?? true,
   });
@@ -75,7 +75,7 @@ export function useWarehousesQuery(options?: {
 }): UseQueryResult<Warehouse[], Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.warehouses(),
-    queryFn: listWarehouses,
+    queryFn: () => http.get<Warehouse[]>("masters/warehouses"),
     staleTime: options?.staleTime ?? 300000, // 5分
     enabled: options?.enabled ?? true,
   });
@@ -92,10 +92,7 @@ export function useProductQuery(
 ): UseQueryResult<Product | undefined, Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.product(productCode!),
-    queryFn: async (): Promise<Product | undefined> => {
-      const products = await listProducts();
-      return products.find((p: Product) => p.product_code === productCode);
-    },
+    queryFn: () => http.get<Product>(`masters/products/${productCode}`),
     enabled: !!productCode,
     staleTime: 300000,
   });
@@ -112,10 +109,7 @@ export function useCustomerQuery(
 ): UseQueryResult<Customer | undefined, Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.customer(customerCode!),
-    queryFn: async (): Promise<Customer | undefined> => {
-      const customers = await listCustomers();
-      return customers.find((c: Customer) => c.customer_code === customerCode);
-    },
+    queryFn: () => http.get<Customer>(`masters/customers/${customerCode}`),
     enabled: !!customerCode,
     staleTime: 300000,
   });
@@ -132,11 +126,7 @@ export function useWarehouseQuery(
 ): UseQueryResult<Warehouse | undefined, Error> {
   return useQuery({
     queryKey: QUERY_KEYS.masters.warehouse(warehouseCode!),
-    queryFn: async (): Promise<Warehouse | undefined> => {
-      const warehouses = await listWarehouses();
-
-      return warehouses.find((w: Warehouse) => w.warehouse_code === warehouseCode);
-    },
+    queryFn: () => http.get<Warehouse>(`masters/warehouses/${warehouseCode}`),
     enabled: !!warehouseCode,
     staleTime: 300000,
   });

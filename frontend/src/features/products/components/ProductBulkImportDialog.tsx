@@ -4,7 +4,10 @@
 import { Upload, Download, AlertCircle, CheckCircle } from "lucide-react";
 import { useState, useCallback } from "react";
 
-import { useBulkUpsertProducts } from "../hooks/useProductMutations";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { bulkUpsertProducts } from "../api";
 import type { ProductBulkRow, BulkUpsertResponse } from "../types/bulk-operation";
 import { parseProductCsv, generateProductTemplateCsv } from "../utils/product-csv";
 
@@ -28,7 +31,22 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
   const [parsedRows, setParsedRows] = useState<ProductBulkRow[]>([]);
   const [result, setResult] = useState<BulkUpsertResponse | null>(null);
 
-  const { mutate: bulkUpsert, isPending } = useBulkUpsertProducts();
+  const queryClient = useQueryClient();
+  const { mutate: bulkUpsert, isPending } = useMutation({
+    mutationFn: (rows: ProductBulkRow[]) => bulkUpsertProducts(rows),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      const { summary } = result;
+      if (result.status === "success") {
+        toast.success(`${summary.total}件の処理が完了しました`);
+      } else if (result.status === "partial") {
+        toast.warning(`${summary.total}件中${summary.failed}件が失敗しました`);
+      } else {
+        toast.error("すべての処理が失敗しました");
+      }
+    },
+    onError: () => toast.error("一括処理に失敗しました"),
+  });
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];

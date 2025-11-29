@@ -35,12 +35,12 @@
 
 今回の対応でシステムは正常に動作するようになりましたが、以下の技術的負債が残っています。これらは別途タスクとして解消することを推奨します。
 
-1.  **`master-service.ts` の完全廃止**:
-    *   現在も `AllocationPage` など一部の機能で `src/services/api/master-service.ts` が使われています。これを `useProducts` などの新しいフックに置き換え、ファイルを削除する必要があります。
-2.  **`useXXXMutations.ts` のリファクタリング**:
-    *   一時的に復元したミューテーションフックを廃止し、コンポーネントから直接 `useMutation` (または `useMasterApi` の `useCreate` 等) を使用するように書き換える必要があります。
-3.  **型定義の厳密化**:
-    *   一部のファイル（`UomConversionsPage.tsx` 等）で、APIレスポンスの型推論が効かず `any` や `unknown` になっている箇所があります。これらに適切な型定義を適用する必要があります。
+1.  **[解消済み] `master-service.ts` の完全廃止**:
+    *   `src/services/api/master-service.ts` は削除され、`useMastersQuery.ts` や `useLotAllocationLogic.ts` は新しい `ky` クライアントを使用するようにリファクタリングされました。
+2.  **[解消済み] `useXXXMutations.ts` のリファクタリング**:
+    *   `useProductMutations.ts` および `useCustomerMutations.ts` は削除され、コンポーネントは直接 `useMutation` を使用するように修正されました。
+3.  **[解消済み] 型定義の厳密化**:
+    *   `SupplierProductResponse` や `UomConversionResponse` などの型定義を追加し、`any` 型の使用を排除しました。
 
 ## 5. 結論
 本PRにより、フロントエンドとバックエンドの基本的な連携エラーは解消され、主要な機能（受注管理、在庫管理、マスター管理、需要予測、ロット引当）は正常に動作する状態になりました。アーキテクチャの移行は道半ばですが、基盤となる部分は整備されました。
