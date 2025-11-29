@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import { formatDate } from "@/shared/utils/date";
 
 // ============================================
 // 型定義
@@ -174,25 +175,24 @@ export function InboundPlansList({
                       {plan.supplier_name || `ID: ${plan.supplier_id}`}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      {new Date(plan.planned_arrival_date).toLocaleDateString("ja-JP")}
+                      {formatDate(plan.planned_arrival_date)}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                          plan.status === "planned"
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === "planned"
                             ? "bg-yellow-100 text-yellow-800"
                             : plan.status === "partially_received"
                               ? "bg-blue-100 text-blue-800"
                               : plan.status === "received"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-gray-100 text-gray-800"
-                        }`}
+                          }`}
                       >
                         {plan.status}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(plan.created_at).toLocaleDateString("ja-JP")}
+                      {formatDate(plan.created_at)}
                     </td>
                     <td className="px-4 py-3 text-right text-sm">
                       <div className="flex justify-end gap-2">

@@ -4,6 +4,7 @@
 import type { Supplier } from "../api/suppliers-api";
 
 import type { Column } from "@/shared/components/data/DataTable";
+import { formatDate } from "@/shared/utils/date";
 
 export const supplierColumns: Column<Supplier>[] = [
   {
@@ -26,7 +27,7 @@ export const supplierColumns: Column<Supplier>[] = [
     header: "更新日時",
     cell: (row) => (
       <span className="text-sm text-gray-500">
-        {new Date(row.updated_at).toLocaleDateString("ja-JP")}
+        {formatDate(row.updated_at)}
       </span>
     ),
     sortable: true,

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import * as React from "react";
 
 import { getForecasts, type ForecastListResponse, type Forecast } from "@/features/forecasts/api";
+import { formatDate } from "@/shared/utils/date";
 
 type Props = {
   productId?: number;
@@ -70,11 +71,7 @@ export function ForecastSection({ productId, customerId, fullWidth = false }: Pr
                 {sortedForecasts.map((f) => (
                   <div key={f.id} className="rounded border bg-white p-3 shadow-sm">
                     <div className="text-[11px] text-gray-400 uppercase">
-                      {new Date(f.forecast_date).toLocaleDateString("ja-JP", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {formatDate(f.forecast_date)}
                     </div>
                     <div className="text-sm font-semibold text-gray-800">
                       {Number(f.forecast_quantity).toLocaleString()} {f.unit ?? "EA"}

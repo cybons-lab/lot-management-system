@@ -6,11 +6,12 @@
 import type { Customer } from "../api/customers-api";
 
 import type { Column } from "@/shared/components/data/DataTable";
+import { formatDate } from "@/shared/utils/date";
 
 /**
  * 得意先一覧テーブルのカラム定義
  */
-export const customerColumns: Column<Customer>[] = [
+export const columns: Column<Customer>[] = [
   {
     id: "customer_code",
     header: "得意先コード",
@@ -31,7 +32,7 @@ export const customerColumns: Column<Customer>[] = [
     header: "作成日時",
     cell: (row) => (
       <span className="text-sm text-gray-500">
-        {new Date(row.created_at).toLocaleDateString("ja-JP")}
+        {formatDate(row.created_at)}
       </span>
     ),
     sortable: true,
@@ -42,7 +43,7 @@ export const customerColumns: Column<Customer>[] = [
     header: "更新日時",
     cell: (row) => (
       <span className="text-sm text-gray-500">
-        {new Date(row.updated_at).toLocaleDateString("ja-JP")}
+        {formatDate(row.updated_at)}
       </span>
     ),
     sortable: true,

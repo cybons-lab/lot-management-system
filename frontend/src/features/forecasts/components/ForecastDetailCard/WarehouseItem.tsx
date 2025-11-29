@@ -1,3 +1,5 @@
+import { formatDate } from "@/shared/utils/date";
+
 import { type WarehouseData } from "./useWarehouseData";
 import * as styles from "./WarehouseInfoCard.styles";
 
@@ -35,10 +37,7 @@ export function WarehouseItem({ warehouse }: WarehouseItemProps) {
               {warehouse.upcomingInbounds.map((inbound, idx) => (
                 <div key={idx} className={styles.inboundItem}>
                   <span className={styles.inboundDate}>
-                    {new Date(inbound.date).toLocaleDateString("ja-JP", {
-                      month: "numeric",
-                      day: "numeric",
-                    })}
+                    {formatDate(inbound.date, "M/d")}
                   </span>
                   <span className={styles.inboundQuantity}>予定あり</span>
                 </div>

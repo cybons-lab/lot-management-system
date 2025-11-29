@@ -10,6 +10,7 @@ import { useForecast } from "../hooks";
 import { Button } from "@/components/ui";
 import { Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { formatDate, formatDateTime } from "@/shared/utils/date";
 
 export function ForecastDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -65,7 +66,7 @@ export function ForecastDetailPage() {
             <div>
               <div className="text-sm font-medium text-gray-500">日付</div>
               <div className="text-lg">
-                {new Date(forecast.forecast_date).toLocaleDateString("ja-JP")}
+                {formatDate(forecast.forecast_date)}
               </div>
             </div>
             <div>
@@ -98,7 +99,7 @@ export function ForecastDetailPage() {
             <div>
               <div className="text-sm font-medium text-gray-500">スナップショット日時</div>
               <div className="text-lg">
-                {new Date(forecast.snapshot_at).toLocaleString("ja-JP")}
+                {formatDateTime(forecast.snapshot_at)}
               </div>
             </div>
           </div>
@@ -107,7 +108,7 @@ export function ForecastDetailPage() {
 
       {/* Meta Info */}
       <div className="text-sm text-gray-500">
-        更新日: {forecast.updated_at ? new Date(forecast.updated_at).toLocaleString("ja-JP") : "-"}
+        更新日: {forecast.updated_at ? formatDateTime(forecast.updated_at) : "-"}
       </div>
     </div>
   );

@@ -22,6 +22,7 @@ import { ROUTES } from "@/constants/routes";
 import { useInboundPlan, useUpdateInboundPlan } from "@/features/inbound-plans/hooks";
 import { useReceiveInboundPlan } from "@/shared/hooks/useInboundPlans";
 import type { components } from "@/shared/types/openapi";
+import { formatDate, formatDateTime } from "@/shared/utils/date";
 
 type InboundPlanDetailResponse = components["schemas"]["InboundPlanDetailResponse"];
 type InboundPlanLineResponse = components["schemas"]["InboundPlanLineResponse"];
@@ -166,13 +167,12 @@ export function InboundPlanDetailPage() {
             <div className="text-sm font-medium text-gray-500">ステータス</div>
             <div className="mt-1">
               <span
-                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
-                  plan.status === "planned"
+                className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${plan.status === "planned"
                     ? "bg-yellow-100 text-yellow-800"
                     : plan.status === "received"
                       ? "bg-green-100 text-green-800"
                       : "bg-gray-100 text-gray-800"
-                }`}
+                  }`}
               >
                 {plan.status}
               </span>
@@ -185,7 +185,7 @@ export function InboundPlanDetailPage() {
           <div>
             <div className="text-sm font-medium text-gray-500">入荷予定日</div>
             <div className="mt-1 text-base">
-              {new Date(plan.planned_arrival_date).toLocaleDateString("ja-JP")}
+              {formatDate(plan.planned_arrival_date)}
             </div>
           </div>
           {plan.notes && (
@@ -197,13 +197,13 @@ export function InboundPlanDetailPage() {
           <div>
             <div className="text-sm font-medium text-gray-500">作成日</div>
             <div className="mt-1 text-base">
-              {new Date(plan.created_at).toLocaleString("ja-JP")}
+              {formatDateTime(plan.created_at)}
             </div>
           </div>
           <div>
             <div className="text-sm font-medium text-gray-500">更新日</div>
             <div className="mt-1 text-base">
-              {plan.updated_at ? new Date(plan.updated_at).toLocaleString("ja-JP") : "-"}
+              {plan.updated_at ? formatDateTime(plan.updated_at) : "-"}
             </div>
           </div>
         </div>

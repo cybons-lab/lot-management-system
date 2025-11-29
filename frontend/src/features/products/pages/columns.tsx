@@ -4,6 +4,7 @@
 import type { Product } from "../api/products-api";
 
 import type { Column } from "@/shared/components/data/DataTable";
+import { formatDate } from "@/shared/utils/date";
 
 export const productColumns: Column<Product>[] = [
   {
@@ -46,9 +47,9 @@ export const productColumns: Column<Product>[] = [
     id: "updated_at",
     header: "更新日時",
     cell: (row) => (
-      <span className="text-sm text-gray-500">
-        {new Date(row.updated_at).toLocaleDateString("ja-JP")}
-      </span>
+      <div className="text-center font-medium">
+        {formatDate(row.updated_at)}
+      </div>
     ),
     sortable: true,
     width: "150px",
