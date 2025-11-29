@@ -25,11 +25,7 @@ export const supplierColumns: Column<Supplier>[] = [
   {
     id: "updated_at",
     header: "更新日時",
-    cell: (row) => (
-      <span className="text-sm text-gray-500">
-        {formatDate(row.updated_at)}
-      </span>
-    ),
+    cell: (row) => <span className="text-sm text-gray-500">{formatDate(row.updated_at)}</span>,
     sortable: true,
     width: "150px",
   },

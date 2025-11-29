@@ -36,9 +36,7 @@ export function WarehouseItem({ warehouse }: WarehouseItemProps) {
             <div className={styles.inboundList}>
               {warehouse.upcomingInbounds.map((inbound, idx) => (
                 <div key={idx} className={styles.inboundItem}>
-                  <span className={styles.inboundDate}>
-                    {formatDate(inbound.date, "M/d")}
-                  </span>
+                  <span className={styles.inboundDate}>{formatDate(inbound.date, "M/d")}</span>
                   <span className={styles.inboundQuantity}>予定あり</span>
                 </div>
               ))}

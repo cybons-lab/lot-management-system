@@ -46,11 +46,7 @@ export const productColumns: Column<Product>[] = [
   {
     id: "updated_at",
     header: "更新日時",
-    cell: (row) => (
-      <div className="text-center font-medium">
-        {formatDate(row.updated_at)}
-      </div>
-    ),
+    cell: (row) => <div className="text-center font-medium">{formatDate(row.updated_at)}</div>,
     sortable: true,
     width: "150px",
   },

@@ -13,9 +13,12 @@ export type FormatDateOptions = {
 
 export function formatDate(
   date: string | Date | null | undefined,
-  optionsOrFormat: string | FormatDateOptions = "yyyy/MM/dd"
+  optionsOrFormat: string | FormatDateOptions = "yyyy/MM/dd",
 ): string {
-  const formatStr = typeof optionsOrFormat === "string" ? optionsOrFormat : (optionsOrFormat.format ?? "yyyy/MM/dd");
+  const formatStr =
+    typeof optionsOrFormat === "string"
+      ? optionsOrFormat
+      : (optionsOrFormat.format ?? "yyyy/MM/dd");
   const fallback = typeof optionsOrFormat === "object" ? (optionsOrFormat.fallback ?? "") : "";
 
   if (!date) return fallback;

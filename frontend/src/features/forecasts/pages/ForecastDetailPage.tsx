@@ -65,9 +65,7 @@ export function ForecastDetailPage() {
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <div className="text-sm font-medium text-gray-500">日付</div>
-              <div className="text-lg">
-                {formatDate(forecast.forecast_date)}
-              </div>
+              <div className="text-lg">{formatDate(forecast.forecast_date)}</div>
             </div>
             <div>
               <div className="text-sm font-medium text-gray-500">予測数量</div>
@@ -98,9 +96,7 @@ export function ForecastDetailPage() {
             </div>
             <div>
               <div className="text-sm font-medium text-gray-500">スナップショット日時</div>
-              <div className="text-lg">
-                {formatDateTime(forecast.snapshot_at)}
-              </div>
+              <div className="text-lg">{formatDateTime(forecast.snapshot_at)}</div>
             </div>
           </div>
         </CardContent>
