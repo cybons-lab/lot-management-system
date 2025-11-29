@@ -102,3 +102,33 @@ export const getInventoryItems = (params?: InventoryItemsListParams) => {
 export const getInventoryItem = (productId: number, warehouseId: number) => {
   return fetchApi.get<InventoryItem>(`/inventory-items/${productId}/${warehouseId}`);
 };
+
+/**
+ * Get inventory aggregated by supplier
+ * @endpoint GET /inventory-items/by-supplier
+ */
+import type {
+  InventoryByProductResponse,
+  InventoryBySupplierResponse,
+  InventoryByWarehouseResponse,
+} from "./types/InventoryAggregationTypes";
+
+export const getInventoryBySupplier = () => {
+  return fetchApi.get<InventoryBySupplierResponse[]>("/inventory-items/by-supplier");
+};
+
+/**
+ * Get inventory aggregated by warehouse
+ * @endpoint GET /inventory-items/by-warehouse
+ */
+export const getInventoryByWarehouse = () => {
+  return fetchApi.get<InventoryByWarehouseResponse[]>("/inventory-items/by-warehouse");
+};
+
+/**
+ * Get inventory aggregated by product
+ * @endpoint GET /inventory-items/by-product
+ */
+export const getInventoryByProduct = () => {
+  return fetchApi.get<InventoryByProductResponse[]>("/inventory-items/by-product");
+};

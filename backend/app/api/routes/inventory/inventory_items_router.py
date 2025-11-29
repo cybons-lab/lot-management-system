@@ -4,7 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.schemas.inventory.inventory_schema import InventoryItemResponse
+from app.schemas.inventory.inventory_schema import (
+    InventoryByProductResponse,
+    InventoryBySupplierResponse,
+    InventoryByWarehouseResponse,
+    InventoryItemResponse,
+)
 from app.services.inventory.inventory_service import InventoryService
 
 
@@ -72,3 +77,39 @@ def get_inventory_item(
             detail=f"Inventory item for product_id={product_id} and warehouse_id={warehouse_id} not found",
         )
     return item
+
+
+@router.get("/by-supplier", response_model=list[InventoryBySupplierResponse])
+def list_inventory_by_supplier(db: Session = Depends(get_db)):
+    """
+    在庫サマリ（仕入先別集計）取得.
+
+    Returns:
+        仕入先ごとの在庫集計リスト
+    """
+    service = InventoryService(db)
+    return service.get_inventory_by_supplier()
+
+
+@router.get("/by-warehouse", response_model=list[InventoryByWarehouseResponse])
+def list_inventory_by_warehouse(db: Session = Depends(get_db)):
+    """
+    在庫サマリ（倉庫別集計）取得.
+
+    Returns:
+        倉庫ごとの在庫集計リスト
+    """
+    service = InventoryService(db)
+    return service.get_inventory_by_warehouse()
+
+
+@router.get("/by-product", response_model=list[InventoryByProductResponse])
+def list_inventory_by_product(db: Session = Depends(get_db)):
+    """
+    在庫サマリ（製品別集計）取得.
+
+    Returns:
+        製品ごとの在庫集計リスト（全倉庫合計）
+    """
+    service = InventoryService(db)
+    return service.get_inventory_by_product()

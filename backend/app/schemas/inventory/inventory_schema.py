@@ -189,3 +189,38 @@ StockMovementResponse = StockHistoryResponse
 # LotCurrentStockResponse was an alias for InventoryItemResponse.
 # This alias is deprecated and will be removed in a future version.
 LotCurrentStockResponse = InventoryItemResponse
+
+
+class InventoryBySupplierResponse(BaseSchema):
+    """Inventory aggregated by supplier."""
+
+    supplier_id: int
+    supplier_name: str
+    supplier_code: str
+    total_quantity: Decimal
+    lot_count: int
+    product_count: int
+
+
+class InventoryByWarehouseResponse(BaseSchema):
+    """Inventory aggregated by warehouse."""
+
+    warehouse_id: int
+    warehouse_name: str
+    warehouse_code: str
+    total_quantity: Decimal
+    lot_count: int
+    product_count: int
+
+
+class InventoryByProductResponse(BaseSchema):
+    """Inventory aggregated by product (across all warehouses)."""
+
+    product_id: int
+    product_name: str
+    product_code: str
+    total_quantity: Decimal
+    allocated_quantity: Decimal
+    available_quantity: Decimal
+    lot_count: int
+    warehouse_count: int

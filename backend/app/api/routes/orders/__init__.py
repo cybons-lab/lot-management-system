@@ -1,6 +1,7 @@
 """Orders API routes module."""
 
 from app.api.routes.orders.confirmed_lines_router import router as confirmed_lines_router
+from app.api.routes.orders.order_lines_router import router as order_lines_router
 from app.api.routes.orders.orders_router import router as orders_router
 
 
@@ -10,6 +11,7 @@ from app.api.routes.orders.orders_router import router as orders_router
 
 __all__ = [
     "orders_router",
+    "order_lines_router",
     "confirmed_lines_router",
     # "orders_validate_router",  # Disabled: requires OrderValidation* schemas
 ]

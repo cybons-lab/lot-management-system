@@ -73,13 +73,13 @@ export function OrdersListPage() {
   const filteredLines = allOrderLines.filter((line: OrderLineRow) => {
     if (filters.values.search) {
       const searchLower = filters.values.search.toLowerCase();
-      const matchOrderNo = line.order_number.toLowerCase().includes(searchLower);
+      const matchOrderNo = (line.order_number || "").toLowerCase().includes(searchLower);
       const matchCustomer =
-        line.customer_name.toLowerCase().includes(searchLower) ||
-        line.customer_code.toLowerCase().includes(searchLower);
+        (line.customer_name || "").toLowerCase().includes(searchLower) ||
+        (line.customer_code || "").toLowerCase().includes(searchLower);
       const matchProduct =
-        line.product_name?.toLowerCase().includes(searchLower) ||
-        line.product_code?.toLowerCase().includes(searchLower);
+        (line.product_name || "").toLowerCase().includes(searchLower) ||
+        (line.product_code || "").toLowerCase().includes(searchLower);
 
       if (!matchOrderNo && !matchCustomer && !matchProduct) return false;
     }
@@ -87,8 +87,9 @@ export function OrdersListPage() {
     if (filters.values.unallocatedOnly) {
       // 簡易的な未引当判定: 引当率 < 100
       const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
-      const lots = coerceAllocatedLots(line.allocated_lots);
-      const allocatedQty = lots.reduce(
+      // Use allocations from new API if available, otherwise fallback to allocated_lots
+      const allocations = line.allocations || line.allocated_lots || [];
+      const allocatedQty = allocations.reduce(
         (acc: number, alloc: AllocatedLot) =>
           acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,

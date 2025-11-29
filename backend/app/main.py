@@ -28,6 +28,7 @@ from app.api.routes import (
     inventory_items_router,
     lots_router,
     operation_logs_router,
+    order_lines_router,
     orders_router,
     # orders_validate_router,  # Disabled: requires OrderValidation* schemas not in DDL v2.2
     products_router,
@@ -109,6 +110,7 @@ app.include_router(lots_router, prefix=settings.API_PREFIX)
 app.include_router(
     confirmed_lines_router, prefix=settings.API_PREFIX
 )  # Must be before orders_router
+app.include_router(order_lines_router, prefix=settings.API_PREFIX)
 app.include_router(orders_router, prefix=settings.API_PREFIX)
 app.include_router(
     allocations_router,

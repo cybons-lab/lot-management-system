@@ -121,8 +121,8 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
         closed: { label: "完了", color: "bg-slate-100 text-slate-800" },
         cancelled: { label: "キャンセル", color: "bg-red-100 text-red-800" },
       };
-      const status = statusMap[row.order_status] || {
-        label: row.order_status,
+      const status = statusMap[row.order_status || "draft"] || {
+        label: row.order_status || "不明",
         color: "bg-gray-100 text-gray-800",
       };
       return (

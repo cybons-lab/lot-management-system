@@ -12,6 +12,7 @@
 import { useAtom } from "jotai";
 import { Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
@@ -43,6 +44,7 @@ export function LotsPage() {
   // Jotai状態管理
   const [filters, setFilters] = useAtom(lotFiltersAtom);
   const [tableSettings, setTableSettings] = useAtom(lotTableSettingsAtom);
+  const [searchParams] = useSearchParams();
 
   // UI状態管理
   const createDialog = useDialog();
@@ -57,6 +59,15 @@ export function LotsPage() {
   // 検索・フィルター状態
   const [searchTerm, setSearchTerm] = useState(filters.search ?? "");
   const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
+
+  // URLクエリパラメータから検索条件を初期化
+  useEffect(() => {
+    const searchParam = searchParams.get("search");
+    if (searchParam && searchParam !== filters.search) {
+      setFilters((prev) => ({ ...prev, search: searchParam }));
+      setSearchTerm(searchParam);
+    }
+  }, [searchParams, setFilters]);
 
   // 検索語のデバウンス
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
