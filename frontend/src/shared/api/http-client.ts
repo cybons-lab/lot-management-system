@@ -105,6 +105,22 @@ export const http = {
   async deleteVoid(url: string, options?: Options): Promise<void> {
     await apiClient.delete(url, options);
   },
+
+  /**
+   * Download file
+   */
+  async download(url: string, filename: string, options?: Options): Promise<void> {
+    const response = await apiClient.get(url, options);
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  },
 };
 
 /**

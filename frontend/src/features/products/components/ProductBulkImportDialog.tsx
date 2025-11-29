@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 import { bulkUpsertProducts } from "../api";
 import type { ProductBulkRow, BulkUpsertResponse } from "../types/bulk-operation";
-import { parseProductCsv, generateProductTemplateCsv } from "../utils/product-csv";
+// import { parseProductCsv, generateProductTemplateCsv } from "../utils/product-csv";
 
 import { Button } from "@/components/ui";
 import {
@@ -54,6 +54,9 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
     setFile(f);
     setResult(null);
 
+    // TODO: Backend import implementation
+    alert("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
+    /*
     const reader = new FileReader();
     reader.onload = (ev) => {
       const text = ev.target?.result as string;
@@ -62,6 +65,7 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
       setParsedRows(rows);
     };
     reader.readAsText(f);
+    */
   }, []);
 
   const handleImport = useCallback(() => {
@@ -77,6 +81,9 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
   }, [parsedRows, bulkUpsert, onOpenChange]);
 
   const handleDownloadTemplate = useCallback(() => {
+    // TODO: Backend template download
+    alert("現在バックエンドインポート機能へ移行中です。");
+    /*
     const csv = generateProductTemplateCsv();
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -85,6 +92,7 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
     a.download = "products_template.csv";
     a.click();
     URL.revokeObjectURL(url);
+    */
   }, []);
 
   const handleClose = useCallback(() => {

@@ -11,7 +11,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { bulkUpsertCustomers } from "../api";
 import { bulkImport as styles } from "../pages/styles";
 import type { BulkUpsertResponse, CustomerBulkRow } from "../types/bulk-operation";
-import { parseCustomerCsv, generateEmptyTemplate, downloadCSV } from "../utils/customer-csv";
+// import { parseCustomerCsv, generateEmptyTemplate, downloadCSV } from "../utils/customer-csv";
 
 import { Button, Input, Label } from "@/components/ui";
 import {
@@ -80,9 +80,13 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
     setFile(selectedFile);
     setImportResult(null);
 
+    // TODO: Backend import implementation
+    alert("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
+    /*
     const { rows, errors } = await parseCustomerCsv(selectedFile);
     setParsedRows(rows);
     setParseErrors(errors);
+    */
   }, []);
 
   // ファイルクリア
@@ -95,8 +99,12 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
 
   // テンプレートダウンロード
   const handleDownloadTemplate = useCallback(() => {
+    // TODO: Backend template download
+    alert("現在バックエンドインポート機能へ移行中です。");
+    /*
     const template = generateEmptyTemplate();
     downloadCSV(template, "customers_import_template.csv");
+    */
   }, []);
 
   // インポート実行

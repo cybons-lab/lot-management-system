@@ -1,58 +1,56 @@
 /**
- * CustomerExportButton
- * 得意先エクスポートボタン
+ * CustomerExportButton - 得意先エクスポート (Backend API)
  */
+import { FileSpreadsheet, FileText } from "lucide-react";
+import { useState } from "react";
 
-import { Download } from "lucide-react";
-import { useCallback, useState } from "react";
+import { http } from "@/shared/api/http-client";
+import {
+  Button,
+} from "@/components/ui";
 
-import type { Customer } from "../api";
-import { customersToCSV, downloadCSV } from "../utils/customer-csv";
-
-import { Button } from "@/components/ui";
-
-// ============================================
-// Props
-// ============================================
-
-export interface CustomerExportButtonProps {
-  /** エクスポート対象の得意先データ */
-  customers: Customer[];
-  /** ボタンのサイズ */
-  size?: "default" | "sm" | "lg";
+interface Props {
+  size?: "sm" | "default";
 }
 
-// ============================================
-// Component
-// ============================================
-
-export function CustomerExportButton({ customers, size = "default" }: CustomerExportButtonProps) {
+export function CustomerExportButton({ size = "default" }: Props) {
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = useCallback(() => {
-    if (customers.length === 0) return;
-
-    setIsExporting(true);
-
+  const handleExport = async (format: "csv" | "xlsx") => {
     try {
-      // OPERATION列を含めてエクスポート（インポートテンプレートとして再利用可能）
-      const csv = customersToCSV(customers, true);
-      const timestamp = new Date().toISOString().slice(0, 10);
-      downloadCSV(csv, `customers_export_${timestamp}.csv`);
+      setIsExporting(true);
+      const filename = `customers_${new Date().toISOString().slice(0, 10)}.${format}`;
+      await http.download(`/masters/customers/export/download?format=${format}`, filename);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("エクスポートに失敗しました");
     } finally {
       setIsExporting(false);
     }
-  }, [customers]);
+  };
 
   return (
-    <Button
-      variant="outline"
-      size={size}
-      onClick={handleExport}
-      disabled={isExporting || customers.length === 0}
-    >
-      <Download className="mr-2 h-4 w-4" />
-      {isExporting ? "エクスポート中..." : "エクスポート"}
-    </Button>
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size={size}
+        onClick={() => handleExport("csv")}
+        disabled={isExporting}
+        title="CSV形式でダウンロード"
+      >
+        <FileText className="mr-2 h-4 w-4" />
+        CSV
+      </Button>
+      <Button
+        variant="outline"
+        size={size}
+        onClick={() => handleExport("xlsx")}
+        disabled={isExporting}
+        title="Excel形式でダウンロード"
+      >
+        <FileSpreadsheet className="mr-2 h-4 w-4" />
+        Excel
+      </Button>
+    </div>
   );
 }

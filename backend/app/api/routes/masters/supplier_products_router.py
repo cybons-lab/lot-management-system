@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.masters_models import CustomerItem, Product, Supplier
+from app.services.common.export_service import ExportService
 
 
 router = APIRouter(prefix="/supplier-products", tags=["masters"])
@@ -31,8 +32,8 @@ def list_supplier_products(
             CustomerItem.external_product_code,
             CustomerItem.product_id,
             CustomerItem.supplier_id,
-            CustomerItem.order_unit,
-            CustomerItem.order_lot_size,
+            CustomerItem.pack_unit,
+            CustomerItem.pack_quantity,
             Product.maker_part_code,
             Product.product_name,
             Supplier.supplier_code,
@@ -55,8 +56,8 @@ def list_supplier_products(
             "external_product_code": r.external_product_code,
             "product_id": r.product_id,
             "supplier_id": r.supplier_id,
-            "order_unit": r.order_unit,
-            "order_lot_size": float(r.order_lot_size) if r.order_lot_size else None,
+            "order_unit": r.pack_unit,
+            "order_lot_size": float(r.pack_quantity) if r.pack_quantity else None,
             "product_code": r.maker_part_code,
             "product_name": r.product_name,
             "supplier_code": r.supplier_code,
@@ -64,3 +65,46 @@ def list_supplier_products(
         }
         for r in results
     ]
+
+
+@router.get("/export/download")
+def export_supplier_products(format: str = "csv", db: Session = Depends(get_db)):
+    """Export supplier products."""
+    query = (
+        select(
+            CustomerItem.customer_id,
+            CustomerItem.external_product_code,
+            CustomerItem.product_id,
+            CustomerItem.supplier_id,
+            CustomerItem.pack_unit,
+            CustomerItem.pack_quantity,
+            Product.maker_part_code,
+            Product.product_name,
+            Supplier.supplier_code,
+            Supplier.supplier_name,
+        )
+        .join(Product, CustomerItem.product_id == Product.id)
+        .join(Supplier, CustomerItem.supplier_id == Supplier.id)
+        .where(CustomerItem.supplier_id.isnot(None))
+    )
+    results = db.execute(query).all()
+
+    data = [
+        {
+            "customer_id": r.customer_id,
+            "external_product_code": r.external_product_code,
+            "product_id": r.product_id,
+            "supplier_id": r.supplier_id,
+            "order_unit": r.pack_unit,
+            "order_lot_size": float(r.pack_quantity) if r.pack_quantity else None,
+            "product_code": r.maker_part_code,
+            "product_name": r.product_name,
+            "supplier_code": r.supplier_code,
+            "supplier_name": r.supplier_name,
+        }
+        for r in results
+    ]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "supplier_products")
+    return ExportService.export_to_csv(data, "supplier_products")

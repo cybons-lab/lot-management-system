@@ -75,7 +75,7 @@ export function CustomerItemsListPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">得意先品番マッピング</h2>
+          <h2 className="text-3xl font-bold tracking-tight">得意先品番マッピング (改修中)</h2>
           <p className="mt-1 text-gray-600">得意先品番と製品の紐付け管理</p>
         </div>
         {!showForm && <Button onClick={handleCreateNew}>新規登録</Button>}

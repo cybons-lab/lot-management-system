@@ -32,6 +32,10 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
 
         return query.order_by(Product.maker_part_code).offset(skip).limit(limit).all()
 
+    def get_all(self) -> "list[Product]":
+        """Get all products."""
+        return self.db.query(Product).order_by(Product.maker_part_code).all()
+
     def create(self, schema: ProductCreate) -> Product:
         """Create a new product with field mapping."""
         exists = self.get_by_code(schema.product_code, raise_404=False)

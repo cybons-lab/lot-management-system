@@ -1,35 +1,56 @@
 /**
- * ProductExportButton - 商品CSVエクスポート
+ * ProductExportButton - 商品エクスポート (Backend API)
  */
-import { Download } from "lucide-react";
-import { useCallback } from "react";
+import { FileSpreadsheet, FileText } from "lucide-react";
+import { useState } from "react";
 
-import type { Product } from "../api";
-import { generateProductCsv } from "../utils/product-csv";
-
-import { Button } from "@/components/ui";
+import { http } from "@/shared/api/http-client";
+import {
+  Button,
+} from "@/components/ui";
 
 interface Props {
-  products: Product[];
   size?: "sm" | "default";
 }
 
-export function ProductExportButton({ products, size = "default" }: Props) {
-  const handleExport = useCallback(() => {
-    const csv = generateProductCsv(products);
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `products_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [products]);
+export function ProductExportButton({ size = "default" }: Props) {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async (format: "csv" | "xlsx") => {
+    try {
+      setIsExporting(true);
+      const filename = `products_${new Date().toISOString().slice(0, 10)}.${format}`;
+      await http.download(`/masters/products/export/download?format=${format}`, filename);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("エクスポートに失敗しました");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
-    <Button variant="outline" size={size} onClick={handleExport} disabled={products.length === 0}>
-      <Download className="mr-2 h-4 w-4" />
-      エクスポート
-    </Button>
+    <div className="flex gap-2">
+      <Button
+        variant="outline"
+        size={size}
+        onClick={() => handleExport("csv")}
+        disabled={isExporting}
+        title="CSV形式でダウンロード"
+      >
+        <FileText className="mr-2 h-4 w-4" />
+        CSV
+      </Button>
+      <Button
+        variant="outline"
+        size={size}
+        onClick={() => handleExport("xlsx")}
+        disabled={isExporting}
+        title="Excel形式でダウンロード"
+      >
+        <FileSpreadsheet className="mr-2 h-4 w-4" />
+        Excel
+      </Button>
+    </div>
   );
 }
