@@ -27,6 +27,22 @@ export type CustomerUpdate = components["schemas"]["CustomerUpdate"];
 const BASE_PATH = "/customers";
 
 // ============================================
+// Individual CRUD Operations (for legacy hooks)
+// ============================================
+
+export async function createCustomer(data: CustomerCreate): Promise<Customer> {
+    return http.post<Customer>(BASE_PATH, data).json();
+}
+
+export async function updateCustomer(code: string, data: CustomerUpdate): Promise<Customer> {
+    return http.put<Customer>(`${BASE_PATH}/${code}`, data).json();
+}
+
+export async function deleteCustomer(code: string): Promise<void> {
+    return http.delete(`${BASE_PATH}/${code}`).json();
+}
+
+// ============================================
 // Bulk Operations
 // ============================================
 

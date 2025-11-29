@@ -12,6 +12,26 @@ export type SupplierUpdate = components["schemas"]["SupplierUpdate"];
 
 const BASE_PATH = "/suppliers";
 
+// ============================================
+// Individual CRUD Operations (for legacy hooks)
+// ============================================
+
+export async function createSupplier(data: SupplierCreate): Promise<Supplier> {
+    return http.post<Supplier>(BASE_PATH, data).json();
+}
+
+export async function updateSupplier(code: string, data: SupplierUpdate): Promise<Supplier> {
+    return http.put<Supplier>(`${BASE_PATH}/${code}`, data).json();
+}
+
+export async function deleteSupplier(code: string): Promise<void> {
+    return http.delete(`${BASE_PATH}/${code}`).json();
+}
+
+// ============================================
+// Bulk Operations
+// ============================================
+
 async function upsertSupplierRow(
     row: SupplierBulkRow,
 ): Promise<{ success: boolean; errorMessage?: string }> {

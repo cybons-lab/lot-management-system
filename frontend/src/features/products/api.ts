@@ -22,6 +22,22 @@ export type ProductUpdate = components["schemas"]["ProductUpdate"];
 const BASE_PATH = "/products";
 
 // ============================================
+// Individual CRUD Operations (for legacy hooks)
+// ============================================
+
+export async function createProduct(data: ProductCreate): Promise<Product> {
+    return http.post<Product>(BASE_PATH, data).json();
+}
+
+export async function updateProduct(code: string, data: ProductUpdate): Promise<Product> {
+    return http.put<Product>(`${BASE_PATH}/${code}`, data).json();
+}
+
+export async function deleteProduct(code: string): Promise<void> {
+    return http.delete(`${BASE_PATH}/${code}`).json();
+}
+
+// ============================================
 // Bulk Operations
 // ============================================
 

@@ -12,6 +12,25 @@ export type WarehouseUpdate = components["schemas"]["WarehouseUpdate"];
 
 const BASE_PATH = "/warehouses";
 
+// ============================================
+// Individual CRUD Operations (for legacy hooks)
+// ============================================
+
+export async function createWarehouse(data: WarehouseCreate): Promise<Warehouse> {
+    return http.post<Warehouse>(BASE_PATH, data).json();
+}
+
+export async function updateWarehouse(code: string, data: WarehouseUpdate): Promise<Warehouse> {
+    return http.put<Warehouse>(`${BASE_PATH}/${code}`, data).json();
+}
+
+export async function deleteWarehouse(code: string): Promise<void> {
+    return http.delete(`${BASE_PATH}/${code}`).json();
+}
+
+// ============================================
+// Bulk Operations
+// ============================================
 async function upsertWarehouseRow(
     row: WarehouseBulkRow,
 ): Promise<{ success: boolean; errorMessage?: string }> {
