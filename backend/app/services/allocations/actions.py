@@ -151,7 +151,12 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
 
 
 def allocate_manually(
-    db: Session, order_line_id: int, lot_id: int, quantity: float | Decimal
+    db: Session,
+    order_line_id: int,
+    lot_id: int,
+    quantity: float | Decimal,
+    *,
+    commit_db: bool = True,
 ) -> Allocation:
     """
     手動引当実行 (Drag & Assign).
@@ -161,6 +166,7 @@ def allocate_manually(
         order_line_id: 受注明細ID
         lot_id: ロットID
         quantity: 引当数量
+        commit_db: Trueの場合、処理完了後にcommitを実行（デフォルト: True）
 
     Returns:
         Allocation: 作成された引当オブジェクト
@@ -222,18 +228,21 @@ def allocate_manually(
     # 受注明細のステータス更新
     update_order_line_status(db, line.id)
 
-    db.commit()
-    db.refresh(allocation)
+    if commit_db:
+        db.commit()
+        db.refresh(allocation)
+
     return allocation
 
 
-def cancel_allocation(db: Session, allocation_id: int) -> None:
+def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True) -> None:
     """
     引当をキャンセル.
 
     Args:
         db: データベースセッション
         allocation_id: 引当ID
+        commit_db: Trueの場合、処理完了後にcommitを実行（デフォルト: True）
 
     Raises:
         AllocationNotFoundError: 引当が見つからない場合
@@ -266,4 +275,5 @@ def cancel_allocation(db: Session, allocation_id: int) -> None:
         update_order_allocation_status(db, allocation.order_line.order_id)
         update_order_line_status(db, allocation.order_line.id)
 
-    db.commit()
+    if commit_db:
+        db.commit()

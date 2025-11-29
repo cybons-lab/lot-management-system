@@ -84,29 +84,38 @@ def save_manual_allocations(
     order_line_id: int, payload: ManualAllocationSavePayload, db: Session = Depends(get_db)
 ):
     """
-    手動引当保存 (確定).
+    手動引当保存 (確定) - トランザクション保護版.
 
     既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。
-    これにより、DB上の在庫数(allocated_quantity)とステータスが更新される。
+    全ての操作を1つのトランザクションで実行し、エラー時はロールバックします。
     """
     try:
-        # 1. 既存の引当を全てキャンセル（在庫を解放）
+        # 1. 既存の引当を全てキャンセル（在庫を解放、commit無し）
         existing_allocations = (
             db.query(Allocation).filter(Allocation.order_line_id == order_line_id).all()
         )
         for alloc in existing_allocations:
-            cancel_allocation(db, alloc.id)
+            cancel_allocation(db, alloc.id, commit_db=False)
 
-        # 2. 新しい引当を作成（在庫を引き当てる）
+        # 2. 新しい引当を作成（在庫を引き当てる、commit無し）
         created_ids = []
         for item in payload.allocations:
             if item.quantity <= 0:
                 continue
 
-            # allocate_manuallyはcommitを含むため、一時的に使用
-            # TODO: トランザクション全体を1つにまとめるためにリファクタリングが必要
-            allocation = allocate_manually(db, order_line_id, item.lot_id, item.quantity)
+            allocation = allocate_manually(
+                db, order_line_id, item.lot_id, item.quantity, commit_db=False
+            )
             created_ids.append(allocation.id)
+
+        # 3. 全て成功してから一括commit
+        db.commit()
+
+        # 4. 作成された引当をrefresh
+        for alloc_id in created_ids:
+            alloc = db.query(Allocation).filter(Allocation.id == alloc_id).first()
+            if alloc:
+                db.refresh(alloc)
 
         logger.info(f"Saved allocations for line {order_line_id}: {len(created_ids)} items")
 
@@ -118,9 +127,11 @@ def save_manual_allocations(
 
     except ValueError as e:
         logger.error(f"Validation error during allocation save: {e}")
+        db.rollback()
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"System error during allocation save: {e}")
+        db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to save allocations: {str(e)}")
 
 
