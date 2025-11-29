@@ -46,6 +46,8 @@ import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { MastersPage } from "@/features/masters/pages/MastersPage";
+import { SupplierProductsPage } from "@/features/masters/pages/SupplierProductsPage";
+import { UomConversionsPage } from "@/features/masters/pages/UomConversionsPage";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
 import { logError } from "@/services/error-logger";
 
@@ -145,6 +147,8 @@ function App() {
 
                 {/* Masters - Phase G-1 */}
                 <Route path="/masters" element={<MastersPage />} />
+                <Route path="/masters/supplier-products" element={<SupplierProductsPage />} />
+                <Route path="/masters/uom-conversions" element={<UomConversionsPage />} />
                 <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
                 <Route path="/warehouses/:warehouseCode" element={<WarehouseDetailPage />} />
                 <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />

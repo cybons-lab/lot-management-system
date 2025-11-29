@@ -43,7 +43,9 @@ from app.api.routes.masters import (
     customer_items_router,
     customers_router,
     products_router,
+    supplier_products_router,
     suppliers_router,
+    uom_conversions_router,
     warehouses_router,
 )
 from app.api.routes.orders import confirmed_lines_router, order_lines_router, orders_router
@@ -54,11 +56,13 @@ from app.api.routes.orders import confirmed_lines_router, order_lines_router, or
 
 
 __all__ = [
-    # Masters (5)
+    # Masters (7)
     "customer_items_router",
     "customers_router",
     "products_router",
+    "supplier_products_router",
     "suppliers_router",
+    "uom_conversions_router",
     "warehouses_router",
     # Orders (2 - validate router disabled)
     "orders_router",
