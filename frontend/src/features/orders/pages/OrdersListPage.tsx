@@ -212,12 +212,12 @@ export function OrdersListPage() {
                 未引当のみ表示
               </label>
             </div>
-            <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-white p-1">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant={viewMode === "delivery" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("delivery")}
-                className="flex-1"
+                className="min-w-[120px]"
               >
                 納入先単位
               </Button>
@@ -225,7 +225,7 @@ export function OrdersListPage() {
                 variant={viewMode === "flat" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("flat")}
-                className="flex-1"
+                className="min-w-[120px]"
               >
                 1行単位
               </Button>
@@ -233,7 +233,7 @@ export function OrdersListPage() {
                 variant={viewMode === "order" ? "default" : "ghost"}
                 size="sm"
                 onClick={() => setViewMode("order")}
-                className="flex-1"
+                className="min-w-[120px]"
               >
                 受注単位
               </Button>
