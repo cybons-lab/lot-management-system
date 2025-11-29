@@ -31,7 +31,7 @@ export const api = {
    * ダッシュボード統計を取得
    * @returns ダッシュボード統計情報
    */
-  getDashboardStats: () => http.get<DashboardStats>("/admin/stats"),
+  getDashboardStats: () => http.get<DashboardStats>("/api/admin/stats"),
 
   // ===== 受注 =====
   /**
@@ -82,13 +82,6 @@ export type DashboardStats = {
   unallocated_orders: number;
   allocation_rate: number;
 };
-export async function getStats(): Promise<DashboardStats> {
-  return await http.get<DashboardStats>("/api/admin/stats");
-}
-interface OrdersResponse {
-  items?: unknown[];
-}
-
 export async function getOrdersWithAllocations() {
   const data = await http.get<OrdersResponse>("/api/orders");
   return Array.isArray(data?.items) ? data : { items: data ?? [] };
@@ -97,8 +90,4 @@ export async function reMatchOrder(orderId: number) {
   return await http.post(`/api/orders/${orderId}/re-match`, {});
 }
 // Attach to api object if present
-Object.assign(api, { getStats, getOrdersWithAllocations, reMatchOrder });
-
-// === Compat helpers added by patch ===
-// Attach to api object if present
-Object.assign(api, { getStats, getOrdersWithAllocations, reMatchOrder });
+Object.assign(api, { getOrdersWithAllocations, reMatchOrder });

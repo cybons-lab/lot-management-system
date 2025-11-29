@@ -8,6 +8,7 @@ import { StatCard } from "@/components/ui";
 import { getStats } from "@/services/api";
 
 export function DashboardStats() {
+  console.log("[Dashboard] Rendering DashboardStats");
   const {
     data: stats,
     isLoading,

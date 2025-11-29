@@ -19,6 +19,7 @@ const API_TIMEOUT = 30000; // 30 seconds
 /**
  * Default ky instance with common configuration
  */
+console.log("[HTTP] Initializing API Client", { API_BASE_URL });
 export const apiClient: KyInstance = ky.create({
   prefixUrl: API_BASE_URL,
   timeout: API_TIMEOUT,
