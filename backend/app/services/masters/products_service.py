@@ -30,13 +30,12 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate]):
         # Map schema fields to model fields
         if "product_code" in data:
             data["maker_part_code"] = data.pop("product_code")
-        
-        
+
         # Remove fields not in model
         data.pop("customer_part_no", None)
         data.pop("maker_item_code", None)
         data.pop("is_active", None)
-        
+
         # Set default base_unit if not present (Model requires it)
         if "base_unit" not in data:
             data["base_unit"] = data.get("internal_unit", "CAN")
@@ -55,10 +54,10 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate]):
         """Update product with field mapping."""
         instance = self.get_by_id(id)
         data = payload.model_dump(exclude_unset=True)
-        
+
         if "product_code" in data:
             data["maker_part_code"] = data.pop("product_code")
-            
+
         # Remove fields not in model
         data.pop("customer_part_no", None)
         data.pop("maker_item_code", None)
@@ -66,7 +65,7 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate]):
 
         for field, value in data.items():
             setattr(instance, field, value)
-            
+
         try:
             self.db.commit()
             self.db.refresh(instance)

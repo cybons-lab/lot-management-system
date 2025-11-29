@@ -32,7 +32,6 @@ class BatchJobUpdate(BaseModel):
     result_message: str | None = Field(None, description="実行結果メッセージ")
 
 
-
 class BatchJobResponse(BatchJobBase):
     """バッチジョブレスポンス."""
 
