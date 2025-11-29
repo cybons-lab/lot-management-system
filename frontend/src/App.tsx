@@ -37,6 +37,7 @@ import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPag
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
+import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { ProductsListPage, ProductDetailPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
@@ -92,6 +93,7 @@ function App() {
                 {/* Orders */}
                 <Route path={ROUTES.ORDERS.LIST} element={<OrdersListPage />} />
                 <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+                <Route path="/confirmed-lines" element={<ConfirmedLinesPage />} />
 
                 {/* Allocations */}
                 <Route path={ROUTES.ALLOCATIONS.INDEX} element={<LotAllocationPage />} />

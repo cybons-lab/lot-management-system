@@ -10,12 +10,12 @@
 
 import { Plus, RefreshCw, Search, Send } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Badge, Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
-import { SAPRegistrationDialog } from "@/components/common/SAPRegistrationDialog";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
 import { orderLineColumns } from "@/features/orders/components/OrderLineColumns";
 import { useOrderLines, type OrderLineRow } from "@/features/orders/hooks/useOrderLines";
@@ -35,9 +35,10 @@ type ViewMode = "delivery" | "flat" | "order";
  * メインコンポーネント
  */
 export function OrdersListPage() {
+  const navigate = useNavigate();
+
   // UI状態管理
   const createDialog = useDialog();
-  const [sapDialogOpen, setSapDialogOpen] = useState(false);
 
   const table = useTable({
     initialPageSize: 25,
@@ -132,7 +133,7 @@ export function OrdersListPage() {
         </div>
         <div className="flex items-center gap-2">
           {confirmedLines.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => setSapDialogOpen(true)}>
+            <Button variant="outline" size="sm" onClick={() => navigate("/confirmed-lines")}>
               <Send className="mr-2 h-4 w-4" />
               SAP登録
               <Badge variant="secondary" className="ml-2">
@@ -406,13 +407,6 @@ export function OrdersListPage() {
           isSubmitting={createOrderMutation.isPending}
         />
       </FormDialog>
-
-      {/* SAP登録ダイアログ */}
-      <SAPRegistrationDialog
-        isOpen={sapDialogOpen}
-        onClose={() => setSapDialogOpen(false)}
-        confirmedLines={confirmedLines}
-      />
     </div>
   );
 }

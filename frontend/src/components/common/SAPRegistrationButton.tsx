@@ -1,36 +1,31 @@
 import { Send } from "lucide-react";
-import { useState } from "react";
-
-import { SAPRegistrationDialog } from "./SAPRegistrationDialog";
+import { useNavigate } from "react-router-dom";
 
 import { Badge, Button } from "@/components/ui";
 import { useConfirmedOrderLines } from "@/hooks/useConfirmedOrderLines";
 
 export function SAPRegistrationButton() {
-  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
   const { data: confirmedLines = [], isLoading } = useConfirmedOrderLines();
 
   const count = confirmedLines.length;
 
-  if (isLoading || count === 0) {
+  if (isLoading) {
     return null;
   }
 
   return (
-    <>
-      <Button className="fixed top-20 right-4 z-50 gap-2 shadow-lg" onClick={() => setIsOpen(true)}>
-        <Send className="h-4 w-4" />
-        SAP受注登録
+    <Button
+      className="fixed top-20 right-4 z-50 gap-2 shadow-lg"
+      onClick={() => navigate("/confirmed-lines")}
+    >
+      <Send className="h-4 w-4" />
+      SAP受注登録
+      {count > 0 && (
         <Badge variant="secondary" className="ml-1">
           {count}
         </Badge>
-      </Button>
-
-      <SAPRegistrationDialog
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        confirmedLines={confirmedLines}
-      />
-    </>
+      )}
+    </Button>
   );
 }
