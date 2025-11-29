@@ -41,11 +41,32 @@ const masterLinks: MasterLink[] = [
         color: "bg-orange-50 text-orange-600 hover:bg-orange-100",
     },
     {
-        title: "得意先商品マスタ",
+        title: "得意先商品",
         description: "顧客別製品情報を管理",
         href: ROUTES.MASTERS.CUSTOMER_ITEMS,
         icon: Database,
         color: "bg-teal-50 text-teal-600 hover:bg-teal-100",
+    },
+    {
+        title: "仕入先商品",
+        description: "仕入先別製品情報を管理",
+        href: "/masters/supplier-products",
+        icon: Database,
+        color: "bg-cyan-50 text-cyan-600 hover:bg-cyan-100",
+    },
+    {
+        title: "単位換算",
+        description: "製品単位の換算情報を管理",
+        href: "/masters/uom-conversions",
+        icon: Package,
+        color: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
+    },
+    {
+        title: "主担当者",
+        description: "ユーザー情報を管理",
+        href: ROUTES.SETTINGS.USERS,
+        icon: Users,
+        color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
     },
 ];
 
