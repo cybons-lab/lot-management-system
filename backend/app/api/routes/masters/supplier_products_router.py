@@ -4,11 +4,12 @@ CustomerItem テーブルから supplier_id が NOT NULL のレコードを仕�
 """
 
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.masters_models import CustomerItem, Product, Supplier
-from sqlalchemy import select
+
 
 router = APIRouter(prefix="/supplier-products", tags=["masters"])
 

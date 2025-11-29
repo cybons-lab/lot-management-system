@@ -1,10 +1,9 @@
 """Customer master CRUD endpoints (standalone)."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.masters_models import Customer
 from app.schemas.masters.masters_schema import CustomerCreate, CustomerResponse, CustomerUpdate
 from app.services.masters.customer_service import CustomerService
 

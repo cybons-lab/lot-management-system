@@ -1,10 +1,9 @@
 """Supplier master CRUD endpoints (standalone)."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.masters_models import Supplier
 from app.schemas.masters.masters_schema import SupplierCreate, SupplierResponse, SupplierUpdate
 from app.services.masters.supplier_service import SupplierService
 
