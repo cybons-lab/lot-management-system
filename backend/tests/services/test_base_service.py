@@ -38,9 +38,9 @@ def service(db: Session):
     # However, since we use the shared Base, it should be picked up if we create tables *after* defining this class.
     # But conftest creates tables at session start.
     # So we need to create this specific table here.
-    TestModel.__table__.create(db.get_bind())
+    TestModel.__table__.create(db.get_bind(), checkfirst=True)
     yield TestService(db, TestModel)
-    TestModel.__table__.drop(db.get_bind())
+    TestModel.__table__.drop(db.get_bind(), checkfirst=True)
 
 def test_create(service: TestService):
     data = TestModelCreate(name="test", description="desc")

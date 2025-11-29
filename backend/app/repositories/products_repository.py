@@ -21,7 +21,7 @@ class ProductRepository:
             pattern = f"%{q}%"
             filters.append(
                 or_(
-                    Product.product_code.ilike(pattern),
+                    Product.maker_part_code.ilike(pattern),
                     Product.product_name.ilike(pattern),
                 )
             )

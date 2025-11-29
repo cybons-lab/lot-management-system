@@ -20,7 +20,7 @@ def test_create_product(product_service: ProductService):
     )
     product = product_service.create(data)
     assert product.id is not None
-    assert product.product_code == "TEST-001"
+    assert product.maker_part_code == "TEST-001"
 
 def test_list_products(product_service: ProductService):
     # Create sample products
@@ -42,4 +42,4 @@ def test_list_products(product_service: ProductService):
     # Test search
     products, total = product_service.list_products(page=1, per_page=10, q="TEST-1")
     assert total == 1
-    assert products[0].product_code == "TEST-1"
+    assert products[0].maker_part_code == "TEST-1"

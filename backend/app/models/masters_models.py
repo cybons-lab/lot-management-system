@@ -194,7 +194,11 @@ class Product(Base):
 
     __tablename__ = "products"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    id: Mapped[int] = mapped_column(
+        BigInteger().with_variant(Integer, "sqlite"),
+        primary_key=True,
+        autoincrement=True,
+    )
     maker_part_code: Mapped[str] = mapped_column(String(100), nullable=False)
     product_name: Mapped[str] = mapped_column(String(200), nullable=False)
     base_unit: Mapped[str] = mapped_column(String(20), nullable=False)

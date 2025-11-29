@@ -24,6 +24,57 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate]):
         super().__init__(db=session, model=Product)
         self.repository = ProductRepository(session)
 
+    def create(self, payload: ProductCreate) -> Product:
+        """Create new product with field mapping."""
+        data = payload.model_dump()
+        # Map schema fields to model fields
+        if "product_code" in data:
+            data["maker_part_code"] = data.pop("product_code")
+        
+        
+        # Remove fields not in model
+        data.pop("customer_part_no", None)
+        data.pop("maker_item_code", None)
+        data.pop("is_active", None)
+        
+        # Set default base_unit if not present (Model requires it)
+        if "base_unit" not in data:
+            data["base_unit"] = data.get("internal_unit", "CAN")
+
+        instance = self.model(**data)
+        self.db.add(instance)
+        try:
+            self.db.commit()
+            self.db.refresh(instance)
+            return instance
+        except Exception as exc:
+            self.db.rollback()
+            raise exc
+
+    def update(self, id: int, payload: ProductUpdate) -> Product:
+        """Update product with field mapping."""
+        instance = self.get_by_id(id)
+        data = payload.model_dump(exclude_unset=True)
+        
+        if "product_code" in data:
+            data["maker_part_code"] = data.pop("product_code")
+            
+        # Remove fields not in model
+        data.pop("customer_part_no", None)
+        data.pop("maker_item_code", None)
+        data.pop("is_active", None)
+
+        for field, value in data.items():
+            setattr(instance, field, value)
+            
+        try:
+            self.db.commit()
+            self.db.refresh(instance)
+            return instance
+        except Exception as exc:
+            self.db.rollback()
+            raise exc
+
     def list_products(
         self, *, page: int, per_page: int, q: str | None
     ) -> tuple[list[Product], int]:
