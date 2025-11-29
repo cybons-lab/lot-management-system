@@ -5,7 +5,7 @@ import { Plus, Upload, Package } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Product } from "../api/products-api";
+import type { Product } from "../api";
 import { ProductBulkImportDialog } from "../components/ProductBulkImportDialog";
 import { ProductExportButton } from "../components/ProductExportButton";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";

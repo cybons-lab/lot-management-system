@@ -1,7 +1,7 @@
 /**
  * Products Table Columns
  */
-import type { Product } from "../api/products-api";
+import type { Product } from "../api";
 
 import type { Column } from "@/shared/components/data/DataTable";
 import { formatDate } from "@/shared/utils/date";
