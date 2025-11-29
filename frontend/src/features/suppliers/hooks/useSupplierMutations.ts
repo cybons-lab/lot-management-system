@@ -4,13 +4,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
-import type { SupplierCreate, SupplierUpdate } from "../api/suppliers-api";
+import type { SupplierCreate, SupplierUpdate } from "../api";
 import {
   createSupplier,
   updateSupplier,
   deleteSupplier,
   bulkUpsertSuppliers,
-} from "../api/suppliers-api";
+} from "../api";
 import type { SupplierBulkRow } from "../types/bulk-operation";
 
 import { suppliersQueryKey } from "./useSuppliersQuery";

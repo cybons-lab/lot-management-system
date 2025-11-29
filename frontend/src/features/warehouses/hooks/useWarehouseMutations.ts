@@ -10,7 +10,7 @@ import {
   bulkUpsertWarehouses,
   type WarehouseCreate,
   type WarehouseUpdate,
-} from "../api/warehouses-api";
+} from "../api";
 import type { WarehouseBulkRow } from "../types/bulk-operation";
 
 import { WAREHOUSES_QUERY_KEY } from "./useWarehousesQuery";
