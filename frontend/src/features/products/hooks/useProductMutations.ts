@@ -13,7 +13,8 @@ import {
 } from "../api";
 import type { ProductBulkRow } from "../types/bulk-operation";
 
-import { productsQueryKey } from "./useProductsQuery";
+// Query key for cache invalidation
+const productsQueryKey = ["products"] as const;
 
 export function useCreateProduct() {
   const queryClient = useQueryClient();

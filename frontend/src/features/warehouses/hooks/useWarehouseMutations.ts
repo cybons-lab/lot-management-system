@@ -13,13 +13,14 @@ import {
 } from "../api";
 import type { WarehouseBulkRow } from "../types/bulk-operation";
 
-import { WAREHOUSES_QUERY_KEY } from "./useWarehousesQuery";
+// Query key for cache invalidation
+const warehousesQueryKey = ["warehouses"] as const;
 
 export function useCreateWarehouse() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: WarehouseCreate) => createWarehouse(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
   });
 }
 
