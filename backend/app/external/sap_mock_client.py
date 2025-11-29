@@ -5,7 +5,7 @@ In production, replace with actual SAP API client.
 """
 
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 
@@ -56,3 +56,79 @@ class SAPMockClient:
             }
 
         return mock_data
+
+    def get_inbound_orders(self) -> list[dict]:
+        """入荷予定（発注残）のモックデータを返す.
+
+        Returns:
+            list[dict]: 入荷予定の一覧
+
+        Notes:
+            - UI確認のため、日付は現在日からの相対値で生成
+            - 数量はDecimalで返し、単位も併せて提供
+        """
+
+        today = datetime.now().date()
+
+        return [
+            {
+                "po_number": "PO-2025-0001",
+                "supplier_code": "SUP-001",
+                "supplier_name": "北海物産",
+                "warehouse_code": "TOKYO",
+                "warehouse_name": "東京第1倉庫",
+                "expected_date": (today + timedelta(days=3)).isoformat(),
+                "items": [
+                    {
+                        "external_product_code": "EXT-1001",
+                        "product_name": "サーモン切り身 10kg",
+                        "quantity": Decimal("1200"),
+                        "unit": "KG",
+                    },
+                    {
+                        "external_product_code": "EXT-1002",
+                        "product_name": "冷凍ホタテ M",
+                        "quantity": Decimal("850"),
+                        "unit": "KG",
+                    },
+                ],
+            },
+            {
+                "po_number": "PO-2025-0002",
+                "supplier_code": "SUP-004",
+                "supplier_name": "南洋商事",
+                "warehouse_code": "OSAKA",
+                "warehouse_name": "大阪南港センター",
+                "expected_date": (today + timedelta(days=7)).isoformat(),
+                "items": [
+                    {
+                        "external_product_code": "EXT-2005",
+                        "product_name": "ココナッツウォーター 500ml",
+                        "quantity": Decimal("3600"),
+                        "unit": "EA",
+                    }
+                ],
+            },
+            {
+                "po_number": "PO-2025-0003",
+                "supplier_code": "SUP-002",
+                "supplier_name": "東亜水産",
+                "warehouse_code": "FUKUOKA",
+                "warehouse_name": "福岡空港DC",
+                "expected_date": (today + timedelta(days=12)).isoformat(),
+                "items": [
+                    {
+                        "external_product_code": "EXT-3007",
+                        "product_name": "エビ（L/26-30）",
+                        "quantity": Decimal("540"),
+                        "unit": "CASE",
+                    },
+                    {
+                        "external_product_code": "EXT-3010",
+                        "product_name": "蟹ミソパック",
+                        "quantity": Decimal("120"),
+                        "unit": "CASE",
+                    },
+                ],
+            },
+        ]

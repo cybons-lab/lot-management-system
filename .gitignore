@@ -47,6 +47,7 @@ pnpm-lock.yaml
 frontend/dist/
 frontend/build/
 .vite/
+frontend/screenshots/
 
 # ============================================
 # IDE / Editor
