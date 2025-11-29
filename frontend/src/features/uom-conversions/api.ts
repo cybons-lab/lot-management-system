@@ -2,8 +2,17 @@
  * UOM Conversions API Types
  */
 
-import type { components } from "@/types/api";
+/**
+ * Unit of measure conversion record.
+ */
+export interface UomConversion {
+  conversion_id: number;
+  product_code: string;
+  product_name: string;
+  external_unit: string;
+  conversion_factor: number;
+  remarks?: string | null;
+}
 
-export type UomConversion = components["schemas"]["UomConversionResponse"];
-export type UomConversionCreate = components["schemas"]["UomConversionCreate"];
-export type UomConversionUpdate = components["schemas"]["UomConversionUpdate"];
+export type UomConversionCreate = Omit<UomConversion, "conversion_id">;
+export type UomConversionUpdate = Partial<UomConversionCreate>;

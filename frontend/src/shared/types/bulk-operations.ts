@@ -65,7 +65,7 @@ export interface BulkUpsertResponse<TRow extends BulkRowBase = BulkRowBase> {
   /** Operation summary statistics */
   summary: BulkOperationSummary;
   /** Per-row results */
-  results: BulkResultRow[];
+  results: Array<BulkResultRow & { row?: TRow }>;
 }
 
 /**

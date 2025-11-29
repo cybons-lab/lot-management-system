@@ -5,7 +5,7 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import type { WarehouseUpdate } from "../api";
+import type { Warehouse } from "../api";
 import { WarehouseForm } from "../components/WarehouseForm";
 import { useWarehouses } from "../hooks";
 
@@ -46,7 +46,7 @@ export function WarehouseDetailPage() {
   const handleUpdate = useCallback(
     (data: { warehouse_code: string; warehouse_name: string; warehouse_type: string }) => {
       if (!warehouseCode) return;
-      const updateData: WarehouseUpdate = {
+      const updateData: Partial<Warehouse> = {
         warehouse_name: data.warehouse_name,
         warehouse_type: data.warehouse_type,
       };

@@ -2,8 +2,20 @@
  * Supplier Products API Types
  */
 
-import type { components } from "@/types/api";
+/**
+ * Supplier product mapping.
+ *
+ * The current OpenAPI specification does not expose this schema, so we define
+ * a lightweight interface that matches the fields used in the UI.
+ */
+export interface SupplierProduct {
+  supplier_code: string;
+  supplier_name: string;
+  product_code: string;
+  product_name: string;
+  order_unit?: string | null;
+  order_lot_size?: number | null;
+}
 
-export type SupplierProduct = components["schemas"]["SupplierProductResponse"];
-export type SupplierProductCreate = components["schemas"]["SupplierProductCreate"];
-export type SupplierProductUpdate = components["schemas"]["SupplierProductUpdate"];
+export type SupplierProductCreate = SupplierProduct;
+export type SupplierProductUpdate = Partial<SupplierProduct>;

@@ -7,7 +7,7 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import type { CustomerUpdate } from "../api";
+import type { Customer } from "../api";
 import { CustomerForm } from "../components/CustomerForm";
 import { useCustomers } from "../hooks";
 
@@ -54,7 +54,7 @@ export function CustomerDetailPage() {
     (data: { customer_code: string; customer_name: string }) => {
       if (!customerCode) return;
 
-      const updateData: CustomerUpdate = {
+      const updateData: Partial<Customer> = {
         customer_name: data.customer_name,
       };
 
