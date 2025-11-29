@@ -9,8 +9,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import type { CustomerUpdate } from "../api";
 import { CustomerForm } from "../components/CustomerForm";
-import { useUpdateCustomer, useDeleteCustomer } from "../hooks/useCustomerMutations";
-import { useCustomerQuery } from "../hooks/useCustomerQuery";
+import { useCustomers } from "../hooks";
 
 import * as styles from "./styles";
 
@@ -40,9 +39,10 @@ export function CustomerDetailPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // Data
-  const { data: customer, isLoading, error } = useCustomerQuery(customerCode);
-  const { mutate: updateCustomer, isPending: isUpdating } = useUpdateCustomer();
-  const { mutate: deleteCustomer, isPending: isDeleting } = useDeleteCustomer();
+  const { useGet, useUpdate, useDelete } = useCustomers();
+  const { data: customer, isLoading, error } = useGet(customerCode!);
+  const { mutate: updateCustomer, isPending: isUpdating } = useUpdate();
+  const { mutate: deleteCustomer, isPending: isDeleting } = useDelete();
 
   // 戻る
   const handleBack = useCallback(() => {
@@ -59,7 +59,7 @@ export function CustomerDetailPage() {
       };
 
       updateCustomer(
-        { customerCode, data: updateData },
+        { id: customerCode, data: updateData },
         {
           onSuccess: () => {
             setIsEditing(false);

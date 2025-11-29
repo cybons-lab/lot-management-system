@@ -7,8 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import type { WarehouseUpdate } from "../api";
 import { WarehouseForm } from "../components/WarehouseForm";
-import { useUpdateWarehouse, useDeleteWarehouse } from "../hooks/useWarehouseMutations";
-import { useWarehouseQuery } from "../hooks/useWarehouseQuery";
+import { useWarehouses } from "../hooks";
 
 import * as styles from "./styles";
 
@@ -37,9 +36,10 @@ export function WarehouseDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data: warehouse, isLoading, error } = useWarehouseQuery(warehouseCode);
-  const { mutate: updateWarehouse, isPending: isUpdating } = useUpdateWarehouse();
-  const { mutate: deleteWarehouse, isPending: isDeleting } = useDeleteWarehouse();
+  const { useGet, useUpdate, useDelete } = useWarehouses();
+  const { data: warehouse, isLoading, error } = useGet(warehouseCode!);
+  const { mutate: updateWarehouse, isPending: isUpdating } = useUpdate();
+  const { mutate: deleteWarehouse, isPending: isDeleting } = useDelete();
 
   const handleBack = useCallback(() => navigate("/warehouses"), [navigate]);
 
@@ -51,8 +51,8 @@ export function WarehouseDetailPage() {
         warehouse_type: data.warehouse_type,
       };
       updateWarehouse(
-        { warehouseCode, data: updateData },
-        { onSuccess: () => setIsEditing(false) },
+        { id: warehouseCode, data: updateData },
+        { onSuccess: () => setIsEd iting(false) },
       );
     },
     [warehouseCode, updateWarehouse],
