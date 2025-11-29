@@ -19,6 +19,7 @@ from sqlalchemy import (
     Text,
     func,
     text,
+    JSON,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -43,7 +44,7 @@ class OperationLog(Base):
     operation_type: Mapped[str] = mapped_column(String(50), nullable=False)
     target_table: Mapped[str] = mapped_column(String(50), nullable=False)
     target_id: Mapped[int | None] = mapped_column(BigInteger)
-    changes: Mapped[dict | None] = mapped_column(JSONB)
+    changes: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
     ip_address: Mapped[str | None] = mapped_column(String(50))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
@@ -75,8 +76,8 @@ class MasterChangeLog(Base):
     table_name: Mapped[str] = mapped_column(String(50), nullable=False)
     record_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     change_type: Mapped[str] = mapped_column(String(20), nullable=False)
-    old_values: Mapped[dict | None] = mapped_column(JSONB)
-    new_values: Mapped[dict | None] = mapped_column(JSONB)
+    old_values: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
+    new_values: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
     changed_by: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
     )
@@ -109,7 +110,9 @@ class BusinessRule(Base):
     rule_code: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     rule_name: Mapped[str] = mapped_column(String(100), nullable=False)
     rule_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    rule_parameters: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    rule_parameters: Mapped[dict] = mapped_column(
+        JSON().with_variant(JSONB, "postgresql"), nullable=False
+    )
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
@@ -148,7 +151,7 @@ class BatchJob(Base):
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'pending'")
     )
-    parameters: Mapped[dict | None] = mapped_column(JSONB)
+    parameters: Mapped[dict | None] = mapped_column(JSON().with_variant(JSONB, "postgresql"))
     result_message: Mapped[str | None] = mapped_column(Text)
     started_at: Mapped[datetime | None] = mapped_column(DateTime)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime)
