@@ -9,7 +9,7 @@ from app.schemas.assignments.assignment_schema import (
     UserSupplierAssignmentResponse,
     UserSupplierAssignmentUpdate,
 )
-from app.services.assignments.assignment_service import AssignmentService
+from app.services.assignments.assignment_service import UserSupplierAssignmentService
 
 
 router = APIRouter(prefix="/assignments", tags=["assignments"])
@@ -21,7 +21,7 @@ def get_user_suppliers(
     db: Session = Depends(get_db),
 ) -> list[UserSupplierAssignmentResponse]:
     """ユーザーの担当仕入先一覧を取得."""
-    service = AssignmentService(db)
+    service = UserSupplierAssignmentService(db)
     assignments = service.get_user_suppliers(user_id)
 
     # Expand supplier information
@@ -47,7 +47,7 @@ def get_supplier_users(
     db: Session = Depends(get_db),
 ) -> list[UserSupplierAssignmentResponse]:
     """仕入先の担当者一覧を取得."""
-    service = AssignmentService(db)
+    service = UserSupplierAssignmentService(db)
     assignments = service.get_supplier_users(supplier_id)
 
     # Expand user information
@@ -73,7 +73,7 @@ def create_assignment(
     db: Session = Depends(get_db),
 ) -> UserSupplierAssignmentResponse:
     """担当割り当てを作成."""
-    service = AssignmentService(db)
+    service = UserSupplierAssignmentService(db)
     try:
         assignment = service.create_assignment(data)
         return UserSupplierAssignmentResponse(
@@ -96,7 +96,7 @@ def update_assignment(
     db: Session = Depends(get_db),
 ) -> UserSupplierAssignmentResponse:
     """担当割り当てを更新（主担当の変更など）."""
-    service = AssignmentService(db)
+    service = UserSupplierAssignmentService(db)
     try:
         assignment = service.update_assignment(assignment_id, data)
         return UserSupplierAssignmentResponse(
@@ -120,7 +120,7 @@ def delete_assignment(
     db: Session = Depends(get_db),
 ) -> dict:
     """担当割り当てを削除."""
-    service = AssignmentService(db)
+    service = UserSupplierAssignmentService(db)
     try:
         service.delete_assignment(assignment_id)
         return {"message": "Assignment deleted successfully"}
@@ -139,7 +139,7 @@ def set_primary_user(
     db: Session = Depends(get_db),
 ) -> UserSupplierAssignmentResponse:
     """仕入先の主担当者を設定."""
-    service = AssignmentService(db)
+    service = UserSupplierAssignmentService(db)
     try:
         assignment = service.set_primary_assignment(user_id, supplier_id)
         return UserSupplierAssignmentResponse(

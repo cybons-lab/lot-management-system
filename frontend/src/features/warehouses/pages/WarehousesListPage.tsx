@@ -5,12 +5,11 @@ import { Plus, Upload, Warehouse as WarehouseIcon } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Warehouse, WarehouseCreate } from "../api/warehouses-api";
+import type { Warehouse, WarehouseCreate } from "../api";
 import { WarehouseBulkImportDialog } from "../components/WarehouseBulkImportDialog";
 import { WarehouseExportButton } from "../components/WarehouseExportButton";
 import { WarehouseForm } from "../components/WarehouseForm";
-import { useCreateWarehouse } from "../hooks/useWarehouseMutations";
-import { useWarehousesQuery } from "../hooks/useWarehousesQuery";
+import { useWarehouses } from "../hooks";
 
 import { warehouseColumns } from "./columns";
 import * as styles from "./styles";
@@ -27,8 +26,9 @@ export function WarehousesListPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  const { data: warehouses = [], isLoading } = useWarehousesQuery();
-  const { mutate: createWarehouse, isPending: isCreating } = useCreateWarehouse();
+  const { useList, useCreate } = useWarehouses();
+  const { data: warehouses = [], isLoading } = useList();
+  const { mutate: createWarehouse, isPending: isCreating } = useCreate();
 
   const filteredWarehouses = useMemo(() => {
     if (!searchQuery.trim()) return warehouses;

@@ -10,16 +10,17 @@ import {
   bulkUpsertWarehouses,
   type WarehouseCreate,
   type WarehouseUpdate,
-} from "../api/warehouses-api";
+} from "../api";
 import type { WarehouseBulkRow } from "../types/bulk-operation";
 
-import { WAREHOUSES_QUERY_KEY } from "./useWarehousesQuery";
+// Query key for cache invalidation
+const warehousesQueryKey = ["warehouses"] as const;
 
 export function useCreateWarehouse() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: WarehouseCreate) => createWarehouse(data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
   });
 }
 
@@ -28,7 +29,7 @@ export function useUpdateWarehouse() {
   return useMutation({
     mutationFn: ({ warehouseCode, data }: { warehouseCode: string; data: WarehouseUpdate }) =>
       updateWarehouse(warehouseCode, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
   });
 }
 
@@ -36,7 +37,7 @@ export function useDeleteWarehouse() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (warehouseCode: string) => deleteWarehouse(warehouseCode),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
   });
 }
 
@@ -44,6 +45,6 @@ export function useBulkUpsertWarehouses() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (rows: WarehouseBulkRow[]) => bulkUpsertWarehouses(rows),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
   });
 }

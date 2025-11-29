@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { Supplier } from "../api/suppliers-api";
+import type { Supplier } from "../api";
 import { form as formStyles } from "../pages/styles";
 
 import { Button, Input, Label } from "@/components/ui";

@@ -5,10 +5,9 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import type { ProductUpdate } from "../api/products-api";
+import type { ProductUpdate } from "../api";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
-import { useUpdateProduct, useDeleteProduct } from "../hooks/useProductMutations";
-import { useProductQuery } from "../hooks/useProductQuery";
+import { useProducts } from "../hooks/useProducts";
 
 import * as styles from "./styles";
 
@@ -31,9 +30,10 @@ export function ProductDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data: product, isLoading, error } = useProductQuery(productCode);
-  const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
-  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+  const { useGet, useUpdate, useDelete } = useProducts();
+  const { data: product, isLoading, error } = useGet(productCode!);
+  const { mutate: updateProduct, isPending: isUpdating } = useUpdate();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDelete();
 
   const handleBack = useCallback(() => navigate("/products"), [navigate]);
 
@@ -41,16 +41,14 @@ export function ProductDetailPage() {
     (data: ProductFormOutput) => {
       if (!productCode) return;
       const updateData: ProductUpdate = {
-        product_code: data.product_code,
-        product_name: data.product_name,
-        internal_unit: data.internal_unit,
-        external_unit: data.external_unit,
-        qty_per_internal_unit: data.qty_per_internal_unit,
-        customer_part_no: data.customer_part_no,
-        maker_item_code: data.maker_item_code,
-        is_active: data.is_active,
+        ...data,
+        customer_part_no: data.customer_part_no ?? undefined,
+        maker_item_code: data.maker_item_code ?? undefined,
       };
-      updateProduct({ productCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
+      updateProduct(
+        { id: productCode, data: updateData },
+        { onSuccess: () => setIsEditing(false) },
+      );
     },
     [productCode, updateProduct],
   );

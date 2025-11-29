@@ -37,6 +37,7 @@ import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPag
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
+import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { ProductsListPage, ProductDetailPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
@@ -44,6 +45,9 @@ import { SystemStatus } from "@/features/system/SystemStatus";
 import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
+import { MastersPage } from "@/features/masters/pages/MastersPage";
+import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
+import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversionsPage";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
 import { logError } from "@/services/error-logger";
 
@@ -92,6 +96,7 @@ function App() {
                 {/* Orders */}
                 <Route path={ROUTES.ORDERS.LIST} element={<OrdersListPage />} />
                 <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+                <Route path="/confirmed-lines" element={<ConfirmedLinesPage />} />
 
                 {/* Allocations */}
                 <Route path={ROUTES.ALLOCATIONS.INDEX} element={<LotAllocationPage />} />
@@ -141,6 +146,9 @@ function App() {
                 <Route path="/inventory/lots/:lotId" element={<LotDetailPage />} />
 
                 {/* Masters - Phase G-1 */}
+                <Route path="/masters" element={<MastersPage />} />
+                <Route path="/masters/supplier-products" element={<SupplierProductsPage />} />
+                <Route path="/masters/uom-conversions" element={<UomConversionsPage />} />
                 <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
                 <Route path="/warehouses/:warehouseCode" element={<WarehouseDetailPage />} />
                 <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />

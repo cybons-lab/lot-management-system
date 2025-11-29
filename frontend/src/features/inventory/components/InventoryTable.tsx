@@ -1,12 +1,19 @@
 import { format } from "date-fns";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { Fragment, useState } from "react";
+import { ChevronDown, ChevronRight, Edit, Lock, Unlock } from "lucide-react";
+import { Fragment, useCallback, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
+import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
 import { useLotsQuery } from "@/hooks/api";
+import { useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
+import { useDialog } from "@/hooks/ui";
+import { FormDialog } from "@/shared/components/form";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
+import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 import { getLotStatuses } from "@/shared/utils/status";
 import * as styles from "@/features/inventory/pages/styles";
@@ -21,12 +28,72 @@ interface InventoryTableProps {
 export function InventoryTable({ data, isLoading, onRowClick }: InventoryTableProps) {
   const navigate = useNavigate();
 
+  // Dialog states
+  const editDialog = useDialog();
+  const lockDialog = useDialog();
+  const [selectedLot, setSelectedLot] = useState<LotUI | null>(null);
+
   // 展開状態管理（製品ID-倉庫IDのキー）
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   // 全ロット取得（展開行のフィルタリング用）
   // Note: This fetches all lots. For large datasets, this should be optimized to fetch only needed lots or use a better API.
-  const { data: allLots = [] } = useLotsQuery({});
+  const { data: allLots = [], refetch: refetchLots } = useLotsQuery({});
+
+  // Lot mutations
+  const updateLotMutation = useUpdateLot(selectedLot?.id ?? 0, {
+    onSuccess: () => {
+      toast.success("ロットを更新しました");
+      editDialog.close();
+      setSelectedLot(null);
+      refetchLots();
+    },
+    onError: (error) => toast.error(`更新に失敗しました: ${error.message}`),
+  });
+
+  const lockLotMutation = useLockLot({
+    onSuccess: () => {
+      toast.success("ロットをロックしました");
+      lockDialog.close();
+      setSelectedLot(null);
+      refetchLots();
+    },
+    onError: (error) => toast.error(`ロックに失敗しました: ${error.message}`),
+  });
+
+  const unlockLotMutation = useUnlockLot({
+    onSuccess: () => {
+      toast.success("ロットのロックを解除しました");
+      refetchLots();
+    },
+    onError: (error) => toast.error(`ロック解除に失敗しました: ${error.message}`),
+  });
+
+  // Lot action handlers
+  const handleEditLot = useCallback(
+    (lot: LotUI) => {
+      setSelectedLot(lot);
+      editDialog.open();
+    },
+    [editDialog],
+  );
+
+  const handleLockLot = useCallback(
+    (lot: LotUI) => {
+      setSelectedLot(lot);
+      lockDialog.open();
+    },
+    [lockDialog],
+  );
+
+  const handleUnlockLot = useCallback(
+    async (lot: LotUI) => {
+      if (confirm(`ロット ${lot.lot_number} のロックを解除しますか?`)) {
+        await unlockLotMutation.mutateAsync({ id: lot.id });
+      }
+    },
+    [unlockLotMutation],
+  );
 
   const toggleRow = (productId: number, warehouseId: number) => {
     const key = `${productId}-${warehouseId}`;
@@ -148,7 +215,7 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
                   </tr>
                   {expanded && (
                     <tr>
-                      <td colSpan={8} className="bg-gray-50 p-0">
+                      <td colSpan={9} className="bg-gray-50 p-0">
                         <div className="px-12 py-4">
                           <h4 className="mb-3 text-sm font-semibold text-gray-700">
                             ロット一覧 ({lots.length}件)
@@ -173,15 +240,19 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
                                   <th className="pb-2 text-left font-medium text-gray-600">
                                     ステータス
                                   </th>
+                                  <th className="pb-2 text-right font-medium text-gray-600">
+                                    操作
+                                  </th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {lots.map((lot) => {
                                   const statuses = getLotStatuses(lot);
+                                  const isLocked = statuses.includes("locked");
                                   return (
                                     <tr
                                       key={lot.id}
-                                      className="border-b border-gray-100 hover:bg-gray-100"
+                                      className={`border-b border-gray-100 hover:bg-gray-100 ${isLocked ? "opacity-60" : ""}`}
                                     >
                                       <td className="py-2 font-medium text-gray-900">
                                         {lot.lot_number}
@@ -210,6 +281,46 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
                                           ))}
                                         </div>
                                       </td>
+                                      <td className="py-2">
+                                        <div className="flex items-center justify-end gap-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleEditLot(lot as LotUI);
+                                            }}
+                                            title="編集"
+                                          >
+                                            <Edit className="h-4 w-4" />
+                                          </Button>
+                                          {isLocked ? (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleUnlockLot(lot as LotUI);
+                                              }}
+                                              title="ロック解除"
+                                            >
+                                              <Unlock className="h-4 w-4" />
+                                            </Button>
+                                          ) : (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleLockLot(lot as LotUI);
+                                              }}
+                                              title="ロック"
+                                            >
+                                              <Lock className="h-4 w-4" />
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </td>
                                     </tr>
                                   );
                                 })}
@@ -228,6 +339,53 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
           </tbody>
         </table>
       </div>
+
+      {/* Edit Lot Dialog */}
+      {selectedLot && (
+        <FormDialog
+          open={editDialog.isOpen}
+          onClose={() => {
+            editDialog.close();
+            setSelectedLot(null);
+          }}
+          title="ロット編集"
+          description={`ロット ${selectedLot.lot_number} を編集します`}
+          size="lg"
+        >
+          <LotEditForm
+            initialData={selectedLot}
+            onSubmit={async (data: LotUpdateData) => {
+              await updateLotMutation.mutateAsync(data);
+            }}
+            onCancel={() => {
+              editDialog.close();
+              setSelectedLot(null);
+            }}
+            isSubmitting={updateLotMutation.isPending}
+          />
+        </FormDialog>
+      )}
+
+      {/* Lock Lot Dialog */}
+      {selectedLot && (
+        <LotLockDialog
+          open={lockDialog.isOpen}
+          onClose={() => {
+            lockDialog.close();
+            setSelectedLot(null);
+          }}
+          onConfirm={async (reason, quantity) => {
+            await lockLotMutation.mutateAsync({ id: selectedLot.id, reason, quantity });
+          }}
+          isSubmitting={lockLotMutation.isPending}
+          lotNumber={selectedLot.lot_number}
+          availableQuantity={
+            Number(selectedLot.current_quantity) -
+            Number(selectedLot.allocated_quantity) -
+            Number(selectedLot.locked_quantity || 0)
+          }
+        />
+      )}
     </div>
   );
 }

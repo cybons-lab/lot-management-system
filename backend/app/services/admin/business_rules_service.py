@@ -9,7 +9,7 @@ from app.schemas.system.business_rules_schema import BusinessRuleCreate, Busines
 from app.services.common.base_service import BaseService
 
 
-class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, BusinessRuleUpdate]):
+class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, BusinessRuleUpdate, int]):
     """Service for business rules (業務ルール).
 
     Inherits common CRUD operations from BaseService:

@@ -7,7 +7,7 @@ import type {
   BulkRowBase,
   BulkResultRow,
   BulkUpsertResponse,
-} from "@/features/customers/types/bulk-operation";
+} from "@/shared/types/bulk-operations";
 
 export type { BulkOperationType, BulkRowBase, BulkResultRow, BulkUpsertResponse };
 

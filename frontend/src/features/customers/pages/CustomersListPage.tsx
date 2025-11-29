@@ -7,12 +7,11 @@ import { Plus, Upload, Users } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Customer, CustomerCreate } from "../api/customers-api";
+import type { Customer, CustomerCreate } from "../api";
 import { CustomerBulkImportDialog } from "../components/CustomerBulkImportDialog";
 import { CustomerExportButton } from "../components/CustomerExportButton";
 import { CustomerForm } from "../components/CustomerForm";
-import { useCreateCustomer } from "../hooks/useCustomerMutations";
-import { useCustomersQuery } from "../hooks/useCustomersQuery";
+import { useCustomers } from "../hooks";
 
 import { customerColumns } from "./columns";
 import * as styles from "./styles";
@@ -36,8 +35,9 @@ export function CustomersListPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   // Data
-  const { data: customers = [], isLoading } = useCustomersQuery();
-  const { mutate: createCustomer, isPending: isCreating } = useCreateCustomer();
+  const { useList, useCreate } = useCustomers();
+  const { data: customers = [], isLoading } = useList();
+  const { mutate: createCustomer, isPending: isCreating } = useCreate();
 
   // フィルタリング
   const filteredCustomers = useMemo(() => {

@@ -5,10 +5,9 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import type { SupplierUpdate } from "../api/suppliers-api";
+import type { SupplierUpdate } from "../api";
 import { SupplierForm } from "../components/SupplierForm";
-import { useUpdateSupplier, useDeleteSupplier } from "../hooks/useSupplierMutations";
-import { useSupplierQuery } from "../hooks/useSupplierQuery";
+import { useSuppliers } from "../hooks";
 
 import * as styles from "./styles";
 
@@ -31,17 +30,23 @@ export function SupplierDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data: supplier, isLoading, error } = useSupplierQuery(supplierCode);
-  const { mutate: updateSupplier, isPending: isUpdating } = useUpdateSupplier();
-  const { mutate: deleteSupplier, isPending: isDeleting } = useDeleteSupplier();
+  const { useGet, useUpdate, useDelete } = useSuppliers();
+  const { data: supplier, isLoading, error } = useGet(supplierCode!);
+  const { mutate: updateSupplier, isPending: isUpdating } = useUpdate();
+  const { mutate: deleteSupplier, isPending: isDeleting } = useDelete();
 
   const handleBack = useCallback(() => navigate("/suppliers"), [navigate]);
 
   const handleUpdate = useCallback(
     (data: { supplier_code: string; supplier_name: string }) => {
       if (!supplierCode) return;
-      const updateData: SupplierUpdate = { supplier_name: data.supplier_name };
-      updateSupplier({ supplierCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
+      const updateData: SupplierUpdate = {
+        supplier_name: data.supplier_name,
+      };
+      updateSupplier(
+        { id: supplierCode, data: updateData },
+        { onSuccess: () => setIsEditing(false) },
+      );
     },
     [supplierCode, updateSupplier],
   );

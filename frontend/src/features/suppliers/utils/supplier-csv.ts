@@ -2,7 +2,7 @@
  * Supplier CSV Utilities
  */
 
-import type { Supplier } from "../api/suppliers-api";
+import type { Supplier } from "../api";
 import type { SupplierBulkRow, BulkOperationType } from "../types/bulk-operation";
 
 const CSV_HEADERS = ["OPERATION", "supplier_code", "supplier_name"] as const;

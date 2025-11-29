@@ -6,7 +6,7 @@
  * 流用できるパターンとして設計されています。
  */
 
-import type { Customer } from "../api/customers-api";
+import type { Customer } from "../api";
 import type { BulkOperationType, CustomerBulkRow } from "../types/bulk-operation";
 
 /**

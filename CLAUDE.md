@@ -43,7 +43,10 @@ A full-stack inventory management system for tracking materials by lot, with aut
 - **Forms:** react-hook-form 7.66.0 with Zod 4.1.12 validation
 - **Tables:** TanStack React Table 8.21.3
 - **Routing:** React Router 7.9.5
-- **HTTP Client:** Axios 1.13.2
+- **HTTP Client:** ky 1.14.0 (modern, fetch-based) + axios 1.13.2 (legacy, being migrated)
+- **Data Processing:** PapaParse 5.5.3 (CSV), qs 6.14.0 (query strings)
+- **State Utilities:** use-immer 0.11.0 (immutable updates)
+- **Schema Tools:** zod-to-json-schema 3.25.0
 - **Testing:** MSW 2.12.0 (API mocking)
 - **Linting:** ESLint 9.39.1, Prettier 3.6.2
 - **Type Generation:** openapi-typescript 7.10.1
@@ -101,7 +104,17 @@ src/
 │   ├── api/          # API hooks (TanStack Query)
 │   ├── mutations/    # Mutation hooks
 │   └── ui/           # UI state hooks
-├── services/         # API client layer (Axios)
+├── services/         # Legacy API client layer (axios-based, being migrated)
+│   ├── http.ts       # Axios wrapper (legacy)
+│   └── api.ts        # Convenience methods
+├── shared/           # Modern shared utilities
+│   ├── api/          # New HTTP client (ky-based)
+│   │   └── http-client.ts  # Modern fetch-based client
+│   ├── types/        # Shared type definitions
+│   │   └── bulk-operations.ts
+│   └── utils/        # Shared utilities
+│       ├── api-helpers.ts   # API helpers (qs-based)
+│       └── csv-parser.ts    # CSV processing (PapaParse)
 ├── types/            # OpenAPI-generated types
 └── utils/            # Utility functions
 ```
@@ -779,12 +792,15 @@ npm run typecheck  # Must pass with 0 errors
 
    ```typescript
    import { useQuery } from "@tanstack/react-query";
-   import { getMyFeatures } from "../api";
+   import { http } from "@/services/http";
 
    export const useMyFeatures = () => {
      return useQuery({
        queryKey: ["myFeatures"],
-       queryFn: getMyFeatures,
+       queryFn: async () => {
+         const response = await http.get("/my-feature");
+         return response.data;
+       },
      });
    };
    ```

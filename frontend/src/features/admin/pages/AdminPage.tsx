@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui";
-import { http } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 interface InventorySyncResult {
   success: boolean;
@@ -35,7 +35,7 @@ export function AdminPage() {
   const handleGenerateTestData = async () => {
     setIsGenerating(true);
     try {
-      await http.post("/admin/test-data/generate");
+      await http.post("admin/test-data/generate");
       toast.success("テストデータを生成しました");
     } catch (e) {
       toast.error("テストデータ生成に失敗しました");

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type Resolver } from "react-hook-form";
 import { z } from "zod";
 
-import type { Product, ProductCreate } from "../api/products-api";
+import type { Product, ProductCreate } from "../api";
 import { form as formStyles } from "../pages/styles";
 
 import { Button, Input, Label } from "@/components/ui";

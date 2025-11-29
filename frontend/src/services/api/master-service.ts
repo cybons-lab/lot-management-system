@@ -9,7 +9,7 @@ import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 import type { Warehouse } from "@/features/warehouses/validators/warehouse-schema";
 import { http } from "@/services/http";
 
-const BASE_PATH = "";
+const BASE_PATH = "/masters";
 
 /**
  * 製品マスタ一覧を取得
@@ -39,7 +39,7 @@ export async function listWarehouses(): Promise<Warehouse[]> {
  * 得意先マスタ一覧を取得
  */
 export async function listCustomers(): Promise<Customer[]> {
-  const response = await http.get<Customer[]>("/customers");
+  const response = await http.get<Customer[]>(`${BASE_PATH}/customers`);
   return response.data;
 }
 

@@ -1,7 +1,7 @@
 /**
  * Warehouses Table Columns
  */
-import type { Warehouse } from "../api/warehouses-api";
+import type { Warehouse } from "../api";
 
 import type { Column } from "@/shared/components/data/DataTable";
 import { formatDate } from "@/shared/utils/date";

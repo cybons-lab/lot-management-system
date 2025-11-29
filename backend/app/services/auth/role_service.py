@@ -7,7 +7,7 @@ from app.schemas.system.roles_schema import RoleCreate, RoleUpdate
 from app.services.common.base_service import BaseService
 
 
-class RoleService(BaseService[Role, RoleCreate, RoleUpdate]):
+class RoleService(BaseService[Role, RoleCreate, RoleUpdate, int]):
     """Service for managing roles.
 
     Inherits common CRUD operations from BaseService:

@@ -3,7 +3,7 @@
  * New API endpoints for allocation candidates, suggestions, and commit
  */
 
-import { fetchApi } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 import type { LotCandidate } from "@/shared/types/aliases";
 import type {
   AllocationCommitRequest,
@@ -85,8 +85,8 @@ export const getAllocationCandidates = (params: {
   if (params.limit) searchParams.append("limit", params.limit.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<CandidateLotsResponse>(
-    `/allocation-candidates${queryString ? "?" + queryString : ""}`,
+  return http.get<CandidateLotsResponse>(
+    `allocation-candidates${queryString ? "?" + queryString : ""}`,
   );
 };
 
@@ -96,7 +96,7 @@ export const getAllocationCandidates = (params: {
  */
 // TODO: Use generated types once available
 export const createManualAllocationSuggestion = (data: ManualAllocationRequest) => {
-  return fetchApi.post<ManualAllocationResponse>("/allocation-suggestions/manual", data);
+  return http.post<ManualAllocationResponse>("allocation-suggestions/manual", data);
 };
 
 /**
@@ -104,7 +104,7 @@ export const createManualAllocationSuggestion = (data: ManualAllocationRequest) 
  * @endpoint POST /allocation-suggestions/fefo
  */
 export const createFefoAllocationSuggestion = (data: FefoPreviewRequest) => {
-  return fetchApi.post<FefoPreviewResponse>("/allocation-suggestions/fefo", data);
+  return http.post<FefoPreviewResponse>("allocation-suggestions/fefo", data);
 };
 
 /**
@@ -112,7 +112,7 @@ export const createFefoAllocationSuggestion = (data: FefoPreviewRequest) => {
  * @endpoint POST /allocations/commit
  */
 export const commitAllocation = (data: AllocationCommitRequest) => {
-  return fetchApi.post<AllocationCommitResponse>("/allocations/commit", data);
+  return http.post<AllocationCommitResponse>("allocations/commit", data);
 };
 
 /**
@@ -120,7 +120,7 @@ export const commitAllocation = (data: AllocationCommitRequest) => {
  * @endpoint POST /orders/{order_line_id}/allocations
  */
 export const saveManualAllocations = (data: ManualAllocationSavePayloadExtended) => {
-  return fetchApi.post<ManualAllocationSaveResponse>(`/orders/${data.order_line_id}/allocations`, {
+  return http.post<ManualAllocationSaveResponse>(`orders/${data.order_line_id}/allocations`, {
     allocations: data.allocations,
   });
 };
@@ -130,7 +130,7 @@ export const saveManualAllocations = (data: ManualAllocationSavePayloadExtended)
  * @endpoint DELETE /allocations/{id}
  */
 export const cancelAllocation = (allocationId: number) => {
-  return fetchApi.delete<void>(`/allocations/${allocationId}`);
+  return http.delete<void>(`allocations/${allocationId}`);
 };
 
 /**
@@ -155,7 +155,7 @@ export interface DragAssignResponse {
 }
 
 export const dragAssignAllocation = (data: DragAssignRequest) => {
-  return fetchApi.post<DragAssignResponse>("/allocation-suggestions/manual", data);
+  return http.post<DragAssignResponse>("allocation-suggestions/manual", data);
 };
 
 // ===== Legacy API Functions (for backward compatibility) =====
@@ -176,8 +176,8 @@ export const getCandidateLots = (params: {
   if (params.limit) searchParams.append("limit", params.limit.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<CandidateLotsResponse>(
-    `/allocations/candidate-lots${queryString ? "?" + queryString : ""}`,
+  return http.get<CandidateLotsResponse>(
+    `allocations/candidate-lots${queryString ? "?" + queryString : ""}`,
   );
 };
 
@@ -188,7 +188,7 @@ export async function createAllocations(
   payload: CreateAllocationPayload,
 ): Promise<AllocationResult> {
   try {
-    await fetchApi.post("/allocations", payload);
+    await http.post("allocations", payload);
   } catch (e) {
     console.warn("[allocations/api] createAllocations fallback:", e);
   }
@@ -256,10 +256,7 @@ export interface AllocationSuggestionPreviewResponse {
  * @endpoint POST /allocation-suggestions/preview
  */
 export const generateAllocationSuggestions = (data: AllocationSuggestionRequest) => {
-  return fetchApi.post<AllocationSuggestionPreviewResponse>(
-    "/allocation-suggestions/preview",
-    data,
-  );
+  return http.post<AllocationSuggestionPreviewResponse>("allocation-suggestions/preview", data);
 };
 
 /**
@@ -281,7 +278,7 @@ export const getAllocationSuggestions = (params: {
   if (params.customer_id) searchParams.append("customer_id", params.customer_id.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<AllocationSuggestionListResponse>(
-    `/allocation-suggestions${queryString ? "?" + queryString : ""}`,
+  return http.get<AllocationSuggestionListResponse>(
+    `allocation-suggestions${queryString ? "?" + queryString : ""}`,
   );
 };

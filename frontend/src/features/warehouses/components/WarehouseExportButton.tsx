@@ -4,7 +4,7 @@
 import { Download } from "lucide-react";
 import { useCallback, useState } from "react";
 
-import type { Warehouse } from "../api/warehouses-api";
+import type { Warehouse } from "../api";
 import { warehousesToCSV, downloadCSV } from "../utils/warehouse-csv";
 
 import { Button } from "@/components/ui";

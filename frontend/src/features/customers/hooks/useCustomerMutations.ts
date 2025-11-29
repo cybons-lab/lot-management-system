@@ -12,10 +12,11 @@ import {
   bulkUpsertCustomers,
   type CustomerCreate,
   type CustomerUpdate,
-} from "../api/customers-api";
+} from "../api";
 import type { CustomerBulkRow } from "../types/bulk-operation";
 
-import { CUSTOMERS_QUERY_KEY } from "./useCustomersQuery";
+// Query key for cache invalidation
+const CUSTOMERS_QUERY_KEY = ["customers"] as const;
 
 /**
  * 得意先作成Mutation

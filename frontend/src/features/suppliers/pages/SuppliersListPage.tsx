@@ -5,12 +5,11 @@ import { Plus, Upload, Truck } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Supplier, SupplierCreate } from "../api/suppliers-api";
+import type { Supplier, SupplierCreate } from "../api";
 import { SupplierBulkImportDialog } from "../components/SupplierBulkImportDialog";
 import { SupplierExportButton } from "../components/SupplierExportButton";
 import { SupplierForm } from "../components/SupplierForm";
-import { useCreateSupplier } from "../hooks/useSupplierMutations";
-import { useSuppliersQuery } from "../hooks/useSuppliersQuery";
+import { useSuppliers } from "../hooks";
 
 import { supplierColumns } from "./columns";
 import * as styles from "./styles";
@@ -27,8 +26,9 @@ export function SuppliersListPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  const { data: suppliers = [], isLoading } = useSuppliersQuery();
-  const { mutate: createSupplier, isPending: isCreating } = useCreateSupplier();
+  const { useList, useCreate } = useSuppliers();
+  const { data: suppliers = [], isLoading } = useList();
+  const { mutate: createSupplier, isPending: isCreating } = useCreate();
 
   const filteredSuppliers = useMemo(() => {
     if (!searchQuery.trim()) return suppliers;

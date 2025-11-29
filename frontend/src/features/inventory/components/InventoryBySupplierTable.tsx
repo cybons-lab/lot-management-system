@@ -12,7 +12,7 @@ import { fmt } from "@/shared/utils/number";
 
 interface InventoryBySupplierTableProps {
   data: InventoryBySupplierResponse[];
-  onRowClick: (supplierCode: string) => void;
+  onRowClick?: (supplierCode: string) => void;
 }
 
 export function InventoryBySupplierTable({ data, onRowClick }: InventoryBySupplierTableProps) {
@@ -32,8 +32,8 @@ export function InventoryBySupplierTable({ data, onRowClick }: InventoryBySuppli
           {data.map((row) => (
             <TableRow
               key={row.supplier_id}
-              className="hover:bg-muted/50 cursor-pointer"
-              onClick={() => onRowClick(row.supplier_code)}
+              className={onRowClick ? "hover:bg-muted/50 cursor-pointer" : ""}
+              onClick={onRowClick ? () => onRowClick(row.supplier_code) : undefined}
             >
               <TableCell className="font-medium">{row.supplier_code}</TableCell>
               <TableCell>{row.supplier_name}</TableCell>

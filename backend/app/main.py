@@ -20,8 +20,6 @@ from app.api.routes import (
     batch_jobs_router,
     business_rules_router,
     confirmed_lines_router,
-    customer_items_router,
-    customers_router,
     forecasts_router,
     health_router,
     inbound_plans_router,
@@ -31,17 +29,23 @@ from app.api.routes import (
     order_lines_router,
     orders_router,
     # orders_validate_router,  # Disabled: requires OrderValidation* schemas not in DDL v2.2
-    products_router,
     roles_router,
     sap_router,
-    suppliers_router,
     test_data_router,
     users_router,
     warehouse_alloc_router,
-    warehouses_router,
 )
 from app.api.routes.assignments.assignment_router import router as assignment_router
 from app.api.routes.auth_router import router as auth_router
+from app.api.routes.masters import (
+    customer_items_router,
+    customers_router,
+    products_router,
+    supplier_products_router,
+    suppliers_router,
+    uom_conversions_router,
+    warehouses_router,
+)
 from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
@@ -154,24 +158,32 @@ app.include_router(
 
 # Master data endpoints (direct access)
 app.include_router(
-    warehouses_router,
-    prefix=settings.API_PREFIX,
-)
-app.include_router(
-    suppliers_router,
-    prefix=settings.API_PREFIX,
-)
-app.include_router(
     customers_router,
-    prefix=settings.API_PREFIX,
+    prefix=settings.API_PREFIX + "/masters",
 )
 app.include_router(
     products_router,
-    prefix=settings.API_PREFIX,
+    prefix=settings.API_PREFIX + "/masters",
+)
+app.include_router(
+    suppliers_router,
+    prefix=settings.API_PREFIX + "/masters",
+)
+app.include_router(
+    supplier_products_router,
+    prefix=settings.API_PREFIX + "/masters",
+)
+app.include_router(
+    uom_conversions_router,
+    prefix=settings.API_PREFIX + "/masters",
+)
+app.include_router(
+    warehouses_router,
+    prefix=settings.API_PREFIX + "/masters",
 )
 app.include_router(
     customer_items_router,
-    prefix=settings.API_PREFIX,
+    prefix=settings.API_PREFIX + "/masters",
 )
 
 # User & Role management

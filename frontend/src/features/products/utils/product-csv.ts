@@ -2,7 +2,7 @@
  * Product CSV Utilities
  */
 
-import type { Product } from "../api/products-api";
+import type { Product } from "../api";
 import type { ProductBulkRow, BulkOperationType } from "../types/bulk-operation";
 
 const CSV_HEADERS = [

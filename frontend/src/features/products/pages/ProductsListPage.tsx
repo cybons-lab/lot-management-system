@@ -5,12 +5,11 @@ import { Plus, Upload, Package } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Product } from "../api/products-api";
+import type { Product } from "../api";
 import { ProductBulkImportDialog } from "../components/ProductBulkImportDialog";
 import { ProductExportButton } from "../components/ProductExportButton";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
-import { useCreateProduct } from "../hooks/useProductMutations";
-import { useProductsQuery } from "../hooks/useProductsQuery";
+import { useProducts } from "../hooks/useProducts";
 
 import { productColumns } from "./columns";
 import * as styles from "./styles";
@@ -27,8 +26,9 @@ export function ProductsListPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  const { data: products = [], isLoading } = useProductsQuery();
-  const { mutate: createProduct, isPending: isCreating } = useCreateProduct();
+  const { useList, useCreate } = useProducts();
+  const { data: products = [], isLoading } = useList();
+  const { mutate: createProduct, isPending: isCreating } = useCreate();
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;

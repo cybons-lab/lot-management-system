@@ -9,7 +9,7 @@ from app.schemas.masters.customer_items_schema import CustomerItemCreate, Custom
 from app.services.common.base_service import BaseService
 
 
-class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, CustomerItemUpdate]):
+class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, CustomerItemUpdate, int]):
     """Service for managing customer item mappings.
 
     Inherits common CRUD operations from BaseService:

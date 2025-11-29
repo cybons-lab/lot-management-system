@@ -3,7 +3,7 @@
  * 操作ログ管理
  */
 
-import { fetchApi } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 // ===== Types =====
 
@@ -61,7 +61,7 @@ export const getOperationLogs = (params?: OperationLogsListParams) => {
   if (params?.end_date) searchParams.append("end_date", params.end_date);
 
   const queryString = searchParams.toString();
-  return fetchApi.get<OperationLogListResponse>(
+  return http.get<OperationLogListResponse>(
     `/operation-logs${queryString ? "?" + queryString : ""}`,
   );
 };
@@ -71,5 +71,5 @@ export const getOperationLogs = (params?: OperationLogsListParams) => {
  * @endpoint GET /operation-logs/{log_id}
  */
 export const getOperationLog = (logId: number) => {
-  return fetchApi.get<OperationLog>(`/operation-logs/${logId}`);
+  return http.get<OperationLog>(`/operation-logs/${logId}`);
 };
