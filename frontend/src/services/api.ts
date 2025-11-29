@@ -83,7 +83,7 @@ export type DashboardStats = {
   allocation_rate: number;
 };
 export async function getStats(): Promise<DashboardStats> {
-  return await http.get<DashboardStats>("admin/stats");
+  return await http.get<DashboardStats>("/api/admin/stats");
 }
 interface OrdersResponse {
   items?: unknown[];
