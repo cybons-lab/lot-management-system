@@ -31,7 +31,7 @@ export const api = {
    * ダッシュボード統計を取得
    * @returns ダッシュボード統計情報
    */
-  getDashboardStats: () => http.get<DashboardStats>("/api/admin/stats"),
+  getDashboardStats: () => http.get<DashboardStats>("/admin/stats"),
 
   // ===== 受注 =====
   /**
@@ -86,11 +86,11 @@ interface OrdersResponse {
 }
 
 export async function getOrdersWithAllocations() {
-  const data = await http.get<OrdersResponse>("/api/orders");
+  const data = await http.get<OrdersResponse>("/orders");
   return Array.isArray(data?.items) ? data : { items: data ?? [] };
 }
 export async function reMatchOrder(orderId: number) {
-  return await http.post(`/api/orders/${orderId}/re-match`, {});
+  return await http.post(`/orders/${orderId}/re-match`, {});
 }
 // Attach to api object if present
 Object.assign(api, { getOrdersWithAllocations, reMatchOrder });

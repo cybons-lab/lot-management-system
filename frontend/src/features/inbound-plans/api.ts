@@ -50,6 +50,14 @@ export interface InboundPlanWithLines extends InboundPlan {
 }
 
 /**
+ * Inbound Plans List Response (matches backend ListResponse)
+ */
+export interface InboundPlanListResponse {
+  items: InboundPlan[];
+  total: number;
+}
+
+/**
  * Request types
  */
 export interface CreateInboundPlanRequest {
@@ -124,7 +132,7 @@ export interface InboundPlansListParams {
  * Get inbound plans list
  * @endpoint GET /inbound-plans
  */
-export const getInboundPlans = (params?: InboundPlansListParams) => {
+export const getInboundPlans = async (params?: InboundPlansListParams) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
@@ -135,7 +143,11 @@ export const getInboundPlans = (params?: InboundPlansListParams) => {
   if (params?.date_to) searchParams.append("date_to", params.date_to);
 
   const queryString = searchParams.toString();
-  return http.get<InboundPlan[]>(`/inbound-plans${queryString ? "?" + queryString : ""}`);
+  const response = await http.get<InboundPlanListResponse>(
+    `/inbound-plans${queryString ? "?" + queryString : ""}`
+  );
+  // Return items array for compatibility with existing hooks
+  return response.items;
 };
 
 /**
