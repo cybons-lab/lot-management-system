@@ -59,6 +59,7 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
 
         Args:
             id: Can be product_code (str) or id (int). Here we expect product_code.
+            schema: Update data schema.
         """
         # Note: The router passes product_code as id
         if isinstance(id, str):
