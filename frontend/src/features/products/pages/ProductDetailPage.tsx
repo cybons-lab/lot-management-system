@@ -7,8 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import type { ProductUpdate } from "../api/products-api";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
-import { useUpdateProduct, useDeleteProduct } from "../hooks/useProductMutations";
-import { useProductQuery } from "../hooks/useProductQuery";
+import { useProducts } from "../hooks/useProducts";
 
 import * as styles from "./styles";
 
@@ -31,9 +30,10 @@ export function ProductDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data: product, isLoading, error } = useProductQuery(productCode);
-  const { mutate: updateProduct, isPending: isUpdating } = useUpdateProduct();
-  const { mutate: deleteProduct, isPending: isDeleting } = useDeleteProduct();
+  const { useGet, useUpdate, useDelete } = useProducts();
+  const { data: product, isLoading, error } = useGet(productCode!);
+  const { mutate: updateProduct, isPending: isUpdating } = useUpdate();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDelete();
 
   const handleBack = useCallback(() => navigate("/products"), [navigate]);
 
@@ -50,7 +50,7 @@ export function ProductDetailPage() {
         maker_item_code: data.maker_item_code,
         is_active: data.is_active,
       };
-      updateProduct({ productCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
+      updateProduct({ id: productCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
     },
     [productCode, updateProduct],
   );
