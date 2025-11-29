@@ -56,7 +56,8 @@ def run_test(title: str, method: str, endpoint: str, payload: dict | None = None
             data = response.json()
             print(" Response JSON:")
             print(json.dumps(data, indent=2, ensure_ascii=False))
-        except Exception:
+        except (json.JSONDecodeError, ValueError):
+            # Response is not JSON, display as text
             data = None
             print(" Response (Not JSON):")
             print(response.text)
@@ -67,7 +68,7 @@ def run_test(title: str, method: str, endpoint: str, payload: dict | None = None
             print_error("リクエスト失敗")
 
         return data
-    except Exception as e:
+    except (requests.RequestException, requests.ConnectionError, requests.Timeout) as e:
         print_error(f"HTTP通信中に例外が発生: {e}")
         return None
 

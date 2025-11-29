@@ -1,7 +1,7 @@
 // src/hooks/useOrders.ts
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchApi } from "@/shared/libs/http";
+import { http as fetchApi } from "@/shared/api/http-client";
 import type { paths } from "@/types/api";
 
 type OrdersList = paths["/api/orders"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -12,7 +12,7 @@ type OrderDetail =
 export function useOrders(params?: OrdersQuery) {
   return useQuery({
     queryKey: ["orders", params],
-    queryFn: () => fetchApi.get<OrdersList>("/orders", { params }),
+    queryFn: () => fetchApi.get<OrdersList>("/orders", { searchParams: params as any }),
   });
 }
 export function useOrder(orderId: number | string) {

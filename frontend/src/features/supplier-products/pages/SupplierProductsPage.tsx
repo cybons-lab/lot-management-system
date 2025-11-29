@@ -1,9 +1,10 @@
 import { Package, Building2, Upload } from "lucide-react";
 import { useState } from "react";
+
+import { SupplierProductBulkImportDialog } from "../components/SupplierProductBulkImportDialog";
+import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
 import { useSupplierProducts } from "../hooks/useSupplierProducts";
 
-import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
-import { SupplierProductBulkImportDialog } from "../components/SupplierProductBulkImportDialog";
 import { Button } from "@/components/ui";
 
 export function SupplierProductsPage() {

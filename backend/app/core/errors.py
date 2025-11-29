@@ -225,8 +225,10 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
                 request_body = body_bytes.decode("utf-8")[:1000]  # 最初の1000文字のみ
             except UnicodeDecodeError:
                 request_body = "<binary data>"
-    except Exception:
-        pass  # ボディ取得に失敗しても続行
+    except (RuntimeError, ValueError) as e:
+        # Body already consumed or stream closed
+        logger.debug(f"Failed to read request body: {e}")
+        request_body = "<unavailable>"
 
     # 詳細なエラーログ
     logger.error(

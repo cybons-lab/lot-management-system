@@ -1,4 +1,4 @@
-import { fetchApi } from "@/shared/libs/http";
+import { http as fetchApi } from "@/shared/api/http-client";
 import type { components } from "@/shared/types/openapi";
 
 type SAPOrderRegistrationRequest = components["schemas"]["SAPOrderRegistrationRequest"];

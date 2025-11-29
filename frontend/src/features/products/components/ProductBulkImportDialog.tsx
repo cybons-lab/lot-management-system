@@ -1,10 +1,9 @@
 /**
  * ProductBulkImportDialog - 商品一括インポート
  */
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Upload, Download, AlertCircle, CheckCircle } from "lucide-react";
 import { useState, useCallback } from "react";
-
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { bulkUpsertProducts } from "../api";
@@ -55,7 +54,7 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
     setResult(null);
 
     // TODO: Backend import implementation
-    alert("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
+    toast.info("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
     /*
     const reader = new FileReader();
     reader.onload = (ev) => {
@@ -82,7 +81,7 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
 
   const handleDownloadTemplate = useCallback(() => {
     // TODO: Backend template download
-    alert("現在バックエンドインポート機能へ移行中です。");
+    toast.info("現在バックエンドインポート機能へ移行中です。");
     /*
     const csv = generateProductTemplateCsv();
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });

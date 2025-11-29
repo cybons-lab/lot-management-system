@@ -3,8 +3,10 @@
  * 単位換算一括インポートダイアログ
  */
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Upload, AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 
 import { bulkUpsertUomConversions } from "../api";
 import type { UomConversionBulkRow } from "../types/bulk-operation";
@@ -20,8 +22,6 @@ import {
   DialogTitle,
 } from "@/components/ui/layout/dialog";
 import type { BulkUpsertResponse } from "@/shared/types/bulk-operations";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -63,7 +63,7 @@ export function UomConversionBulkImportDialog({ open, onOpenChange }: Props) {
     setImportResult(null);
 
     // TODO: Backend import implementation
-    alert("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
+    toast.info("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
     /*
         try {
             const text = await selectedFile.text();

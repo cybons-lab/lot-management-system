@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import type { CreateRoleRequest } from "../api";
 import { RoleForm } from "../components/RoleForm";
@@ -35,10 +36,10 @@ export function RolesListPage() {
     try {
       await createMutation.mutateAsync(data);
       setShowForm(false);
-      alert("ロールを作成しました");
+      toast.success("ロールを作成しました");
     } catch (error) {
       console.error("Failed to create role:", error);
-      alert("作成に失敗しました。ロールコードが既に存在する可能性があります。");
+      toast.error("作成に失敗しました。ロールコードが既に存在する可能性があります。");
     }
   };
 
@@ -49,10 +50,10 @@ export function RolesListPage() {
 
     try {
       await deleteMutation.mutateAsync(roleId);
-      alert("ロールを削除しました");
+      toast.success("ロールを削除しました");
     } catch (error) {
       console.error("Failed to delete role:", error);
-      alert("削除に失敗しました。ロールが使用中の可能性があります。");
+      toast.error("削除に失敗しました。ロールが使用中の可能性があります。");
     }
   };
 

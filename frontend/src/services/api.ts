@@ -1,10 +1,9 @@
 /**
  * API Client
  * フロントエンドからバックエンドAPIへのリクエストを管理
- * 全てのメソッドは http.get/post(...).then(r => r.data) で統一
  */
 
-import { http } from "./http";
+import { http } from "@/shared/api/http-client";
 
 import type { ForecastListResponse } from "@/features/forecasts/api";
 import type {
@@ -32,7 +31,7 @@ export const api = {
    * ダッシュボード統計を取得
    * @returns ダッシュボード統計情報
    */
-  getDashboardStats: () => http.get<DashboardStats>("/admin/stats").then((r) => r.data),
+  getDashboardStats: () => http.get<DashboardStats>("/api/admin/stats"),
 
   // ===== 受注 =====
   /**
@@ -41,15 +40,14 @@ export const api = {
    * @returns 受注リスト
    */
   getOrders: (params?: Record<string, unknown>) =>
-    http.get<Order[]>("/orders", { params }).then((r) => r.data),
+    http.get<Order[]>("/orders", { searchParams: params as any }),
 
   /**
    * 受注詳細を取得
    * @param orderId 受注ID
    * @returns 受注詳細（明細行を含む）
    */
-  getOrderDetail: (orderId: number) =>
-    http.get<OrderDetail>(`/orders/${orderId}`).then((r) => r.data),
+  getOrderDetail: (orderId: number) => http.get<OrderDetail>(`/orders/${orderId}`),
 
   // ===== ロット =====
   /**
@@ -58,7 +56,7 @@ export const api = {
    * @returns ロットリスト
    */
   listLots: (params?: Record<string, unknown>) =>
-    http.get<Lot[]>("/lots", { params }).then((r) => r.data),
+    http.get<Lot[]>("/lots", { searchParams: params as any }),
 
   // ===== Forecast =====
   /**
@@ -67,7 +65,7 @@ export const api = {
    * @returns Forecastグループリスト
    */
   listForecasts: (params?: Record<string, unknown>) =>
-    http.get<ForecastListResponse>("/forecasts", { params }).then((r) => r.data),
+    http.get<ForecastListResponse>("/forecasts", { searchParams: params as any }),
 };
 
 // ========================================
@@ -83,25 +81,16 @@ export type DashboardStats = {
   unallocated_orders: number;
   allocation_rate: number;
 };
-export async function getStats(): Promise<DashboardStats> {
-  // TODO: replace with backend endpoint when available
-  return { total_stock: 0, total_orders: 0, unallocated_orders: 0, allocation_rate: 0 };
-}
 interface OrdersResponse {
   items?: unknown[];
 }
 
 export async function getOrdersWithAllocations() {
-  const res = await http.get<OrdersResponse>("/api/orders");
-  const data = res.data;
+  const data = await http.get<OrdersResponse>("/api/orders");
   return Array.isArray(data?.items) ? data : { items: data ?? [] };
 }
 export async function reMatchOrder(orderId: number) {
   return await http.post(`/api/orders/${orderId}/re-match`, {});
 }
 // Attach to api object if present
-Object.assign(api, { getStats, getOrdersWithAllocations, reMatchOrder });
-
-// === Compat helpers added by patch ===
-// Attach to api object if present
-Object.assign(api, { getStats, getOrdersWithAllocations, reMatchOrder });
+Object.assign(api, { getOrdersWithAllocations, reMatchOrder });

@@ -5,16 +5,18 @@ import { Archive, Library, AlertCircle } from "lucide-react";
 import * as styles from "./styles";
 
 import { StatCard } from "@/components/ui";
-import { getStats } from "@/services/api";
+import { api } from "@/services/api";
 
 export function DashboardStats() {
+  console.log("[Dashboard] Rendering DashboardStats");
   const {
     data: stats,
     isLoading,
     isError,
-  } = useQuery({
+    error,
+  } = useQuery<DashboardStats>({
     queryKey: ["dashboardStats"],
-    queryFn: getStats,
+    queryFn: api.getDashboardStats,
   });
 
   // ローディング中のスケルトン表示
@@ -30,9 +32,15 @@ export function DashboardStats() {
 
   // エラー表示
   if (isError || !stats) {
+    console.error("[Dashboard] Stats fetch error:", error);
     return (
       <div className={styles.errorState.root + " text-center"}>
         統計データの読み込みに失敗しました。
+        {import.meta.env.DEV && error && (
+          <div className="mt-2 text-xs text-red-500">
+            {error instanceof Error ? error.message : String(error)}
+          </div>
+        )}
       </div>
     );
   }

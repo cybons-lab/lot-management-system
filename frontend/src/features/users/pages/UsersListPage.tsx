@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import type { CreateUserRequest } from "../api";
 import { UserForm } from "../components/UserForm";
@@ -42,10 +43,12 @@ export function UsersListPage() {
     try {
       await createMutation.mutateAsync(data);
       setShowForm(false);
-      alert("ユーザーを作成しました");
+      toast.success("ユーザーを作成しました");
     } catch (error) {
       console.error("Failed to create user:", error);
-      alert("作成に失敗しました。ユーザー名またはメールアドレスが既に存在する可能性があります。");
+      toast.error(
+        "作成に失敗しました。ユーザー名またはメールアドレスが既に存在する可能性があります。",
+      );
     }
   };
 
@@ -56,10 +59,10 @@ export function UsersListPage() {
 
     try {
       await deleteMutation.mutateAsync(userId);
-      alert("ユーザーを削除しました");
+      toast.success("ユーザーを削除しました");
     } catch (error) {
       console.error("Failed to delete user:", error);
-      alert("削除に失敗しました");
+      toast.error("削除に失敗しました");
     }
   };
 

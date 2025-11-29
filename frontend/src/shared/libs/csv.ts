@@ -11,7 +11,15 @@ export function exportToCSV(data: Record<string, unknown>[], filename: string): 
     console.warn("No data to export");
     return;
   }
-  const headers = Object.keys(data[0]);
+
+  // TypeScript strict mode: Ensure data[0] exists
+  const firstRow = data[0];
+  if (!firstRow) {
+    console.warn("No data to export");
+    return;
+  }
+
+  const headers = Object.keys(firstRow);
   const csvContent = [
     headers.join(","),
     data

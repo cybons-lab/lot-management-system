@@ -3,9 +3,10 @@
  */
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
-import { http } from "@/shared/api/http-client";
 import { Button } from "@/components/ui";
+import { http } from "@/shared/api/http-client";
 
 interface Props {
   size?: "sm" | "default";
@@ -21,7 +22,7 @@ export function UomConversionExportButton({ size = "default" }: Props) {
       await http.download(`/masters/uom-conversions/export/download?format=${format}`, filename);
     } catch (error) {
       console.error("Export failed:", error);
-      alert("エクスポートに失敗しました");
+      toast.error("エクスポートに失敗しました");
     } finally {
       setIsExporting(false);
     }

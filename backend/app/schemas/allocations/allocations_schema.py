@@ -12,6 +12,7 @@ from decimal import Decimal
 from pydantic import Field
 
 from app.schemas.common.base import BaseSchema
+from app.schemas.common.common_schema import ListResponse
 
 
 # ============================================================
@@ -140,11 +141,9 @@ class CandidateLotItem(BaseSchema):
     lock_reason: str | None = None
 
 
-class CandidateLotsResponse(BaseSchema):
-    """Candidate lots list response."""
-
-    items: list[CandidateLotItem] = Field(default_factory=list)
-    total: int = 0
+# Using generic ListResponse[T] for consistency
+CandidateLotsResponse = ListResponse[CandidateLotItem]
+"""Candidate lots list response."""
 
 
 # ============================================================
@@ -162,11 +161,9 @@ class AllocationDetail(BaseSchema):
     status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
 
 
-class AllocationListResponse(BaseSchema):
-    """Allocation list response."""
-
-    items: list[AllocationDetail] = Field(default_factory=list)
-    total: int = 0
+# Using generic ListResponse[T] for consistency
+AllocationListResponse = ListResponse[AllocationDetail]
+"""Allocation list response."""
 
 
 # ============================================================

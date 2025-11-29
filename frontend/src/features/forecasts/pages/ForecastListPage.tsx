@@ -6,6 +6,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import type { ForecastGroup } from "../api";
 import { ForecastListCard } from "../components";
@@ -37,11 +38,11 @@ export function ForecastListPage() {
   const generateMutation = useMutation({
     mutationFn: generateAllocationSuggestions,
     onSuccess: (data) => {
-      alert(`引当推奨を生成しました。\n生成数: ${data.suggestions.length}件`);
+      toast.success(`引当推奨を生成しました。\n生成数: ${data.suggestions.length}件`);
     },
     onError: (error) => {
       console.error("Generation failed:", error);
-      alert("引当推奨の生成に失敗しました");
+      toast.error("引当推奨の生成に失敗しました");
     },
   });
 
@@ -156,7 +157,7 @@ export function ForecastListPage() {
       refetch();
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("削除に失敗しました");
+      toast.error("削除に失敗しました");
     }
   };
 

@@ -1,7 +1,7 @@
 // src/hooks/useLots.ts
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchApi } from "@/shared/libs/http";
+import { http as fetchApi } from "@/shared/api/http-client";
 import type { paths } from "@/types/api";
 
 type LotsList = paths["/api/lots"]["get"]["responses"]["200"]["content"]["application/json"];
@@ -12,7 +12,7 @@ type LotDetail =
 export function useLots(params?: LotsQuery) {
   return useQuery({
     queryKey: ["lots", params],
-    queryFn: () => fetchApi.get<LotsList>("/lots", { params }),
+    queryFn: () => fetchApi.get<LotsList>("/lots", { searchParams: params as any }),
   });
 }
 export function useLot(lotId: number | string) {

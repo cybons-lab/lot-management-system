@@ -11,6 +11,7 @@ import { InventoryByWarehouseTable } from "@/features/inventory/components/Inven
 import { InventoryTable } from "@/features/inventory/components/InventoryTable";
 import { LotCreateForm } from "@/features/inventory/components/LotCreateForm";
 import { StatCard } from "@/features/inventory/components/StatCard";
+import { useInventoryItems } from "@/features/inventory/hooks";
 import { useInventoryStats } from "@/features/inventory/hooks/useInventoryStats";
 import * as styles from "@/features/inventory/pages/styles";
 import {
@@ -18,11 +19,10 @@ import {
   useInventoryBySupplier,
   useInventoryByWarehouse,
 } from "@/hooks/api";
-import { useInventoryItems } from "@/features/inventory/hooks";
 import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
-import { Section } from "@/shared/components/layout";
 import { FormDialog } from "@/shared/components/form";
+import { Section } from "@/shared/components/layout";
 import { fmt } from "@/shared/utils/number";
 
 type OverviewMode = "items" | "product" | "supplier" | "warehouse";

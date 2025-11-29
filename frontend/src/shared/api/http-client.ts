@@ -7,6 +7,9 @@
 
 import ky, { type KyInstance, type Options } from "ky";
 
+import { logError } from "@/services/error-logger";
+import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
+
 /**
  * Base API configuration
  */
@@ -16,6 +19,7 @@ const API_TIMEOUT = 30000; // 30 seconds
 /**
  * Default ky instance with common configuration
  */
+console.log("[HTTP] Initializing API Client", { API_BASE_URL });
 export const apiClient: KyInstance = ky.create({
   prefixUrl: API_BASE_URL,
   timeout: API_TIMEOUT,
@@ -35,22 +39,92 @@ export const apiClient: KyInstance = ky.create({
         if (token) {
           request.headers.set("Authorization", `Bearer ${token}`);
         }
+
+        // Log request in development
+        if (import.meta.env.DEV) {
+          console.groupCollapsed(`[HTTP] Request: ${request.method} ${request.url}`);
+          console.log("URL:", request.url);
+          console.log("Method:", request.method);
+          console.log("Headers:", Object.fromEntries(request.headers.entries()));
+          console.groupEnd();
+        }
+      },
+    ],
+    afterResponse: [
+      async (_request, _options, response) => {
+        // Log response in development
+        if (import.meta.env.DEV) {
+          const contentType = response.headers.get("content-type");
+          const isJson = contentType && contentType.includes("application/json");
+
+          console.groupCollapsed(`[HTTP] Response: ${response.status} ${response.url}`);
+          console.log("Status:", response.status);
+          console.log("URL:", response.url);
+
+          if (isJson) {
+            // Clone response to read body without consuming it
+            const clone = response.clone();
+            try {
+              const body = await clone.json();
+              console.log("Body:", body);
+            } catch (e) {
+              console.log("Body: (failed to parse JSON)", e);
+            }
+          }
+          console.groupEnd();
+        }
+        return response;
       },
     ],
     beforeError: [
       async (error) => {
-        const { response } = error;
+        const { response, request } = error;
 
-        if (response) {
-          // Try to parse error response
-          try {
-            const body = (await response.json()) as any;
-            error.message = body.message || body.detail || error.message;
-          } catch {
-            // If not JSON, use status text
-            error.message = response.statusText || error.message;
+        // ネットワークエラー（responseがない場合）
+        if (!response) {
+          const networkError = new NetworkError("ネットワークエラーが発生しました");
+
+          if (import.meta.env.DEV) {
+            console.error(`[HTTP] Network Error: ${request?.method} ${request?.url}`, error);
           }
+
+          logError("HTTP", networkError, {
+            url: request?.url,
+            method: request?.method,
+          });
+          error.message = networkError.message;
+          return error;
         }
+
+        // APIエラー（responseがある場合）
+        const { status } = response;
+        let body: any;
+
+        // Try to parse error response
+        try {
+          body = await response.json();
+          error.message = body.message || body.detail || error.message;
+        } catch {
+          // If not JSON, use status text
+          error.message = response.statusText || error.message;
+        }
+
+        if (import.meta.env.DEV) {
+          console.groupCollapsed(`[HTTP] Error: ${status} ${request?.url}`);
+          console.error("Message:", error.message);
+          console.error("Status:", status);
+          console.error("Body:", body);
+          console.groupEnd();
+        }
+
+        // Create typed error and log
+        const apiError = createApiError(status, error.message, body);
+        logError("HTTP", apiError, {
+          url: request?.url,
+          method: request?.method,
+          status,
+          response: body,
+        });
 
         return error;
       },

@@ -1,6 +1,7 @@
+import type { SupplierProductBulkRow } from "./types/bulk-operation";
+
 import { http } from "@/shared/api/http-client";
 import type { BulkUpsertResponse } from "@/shared/types/bulk-operations";
-import type { SupplierProductBulkRow } from "./types/bulk-operation";
 
 export interface SupplierProductResponse {
   supplier_code: string;

@@ -1,4 +1,5 @@
 import { http } from "@/shared/api/http-client";
+import type { OrderLine } from "@/shared/types/aliases";
 import type { operations } from "@/shared/types/openapi";
 import type {
   CandidateLotsResponse,
@@ -7,7 +8,6 @@ import type {
   WarehouseListResponse,
   ManualAllocationSavePayload,
 } from "@/shared/types/schema";
-import type { OrderLine } from "@/shared/types/aliases";
 
 // api.d.ts から型を抽出
 export type OrdersListParams = operations["list_orders_api_orders_get"]["parameters"]["query"];

@@ -1,5 +1,8 @@
 """Business logic for product operations."""
 
+from __future__ import annotations
+
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models import Product
@@ -20,9 +23,62 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
     Custom business logic is implemented below.
     """
 
-    def __init__(self, session: Session) -> None:
-        super().__init__(db=session, model=Product)
-        self.repository = ProductRepository(session)
+    def __init__(self, db: Session) -> None:
+        """Initialize ProductService.
+
+        Args:
+            db: Database session (parameter name changed from 'session' to 'db' for Router compatibility)
+        """
+        super().__init__(db=db, model=Product)
+        self.repository = ProductRepository(db)
+
+    def get_by_code(self, code: str, *, raise_404: bool = True) -> Product | None:
+        """Get product by product code (maker_part_code).
+
+        Args:
+            code: Product code (maker_part_code)
+            raise_404: Whether to raise 404 error if not found
+
+        Returns:
+            Product if found, None otherwise (if raise_404=False)
+
+        Raises:
+            HTTPException: 404 if product not found and raise_404=True
+        """
+        product = self.db.query(Product).filter(Product.maker_part_code == code).first()
+        if not product and raise_404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="製品が見つかりません"
+            )
+        return product
+
+    def list(self, skip: int = 0, limit: int = 100, search: str | None = None) -> list[Product]:
+        """List products with optional search.
+
+        Args:
+            skip: Number of records to skip
+            limit: Maximum number of records to return
+            search: Optional search query for product_code or product_name
+
+        Returns:
+            List of products
+        """
+        query = self.db.query(Product)
+
+        if search:
+            query = query.filter(
+                (Product.maker_part_code.contains(search)) | (Product.product_name.contains(search))
+            )
+
+        return query.order_by(Product.maker_part_code).offset(skip).limit(limit).all()
+
+    def get_all(self) -> list[Product]:
+        """Get all products.
+
+        Returns:
+            List of all products ordered by product code
+        """
+        return self.db.query(Product).order_by(Product.maker_part_code).all()
 
     def create(self, payload: ProductCreate) -> Product:
         """Create new product with field mapping."""

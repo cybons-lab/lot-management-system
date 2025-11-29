@@ -126,7 +126,8 @@ const buildOrderCardMetrics = (
   primaryDeliveryPlace: string | null;
   normalizedDueDate: string | null;
 } => {
-  const primaryLine = lines[0];
+  // Get first line, which may be undefined for empty arrays
+  const primaryLine = lines.length > 0 ? lines[0] : undefined;
 
   return {
     primaryLine,

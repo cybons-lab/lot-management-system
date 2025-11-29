@@ -1,5 +1,5 @@
 // frontend/src/lib/admin-api.ts
-import { fetchApi } from "@/shared/libs/http";
+import { http as fetchApi } from "@/shared/api/http-client";
 
 export type DashboardStats = {
   total_stock: number;
