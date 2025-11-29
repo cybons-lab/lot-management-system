@@ -1,18 +1,6 @@
-/**
- * LotsPage.tsx (Jotaiリファクタリング版)
- *
- * ロット一覧ページ
- * - Jotai + sessionStorage で状態管理
- * - URLにクエリパラメータは出さない
- * - with_stock=true でAPI呼び出し
- */
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
-
 import { useAtom } from "jotai";
 import { Plus, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
@@ -36,15 +24,10 @@ import { FormDialog } from "@/shared/components/form";
 import type { LotUI } from "@/shared/libs/normalize";
 import { getLotStatuses } from "@/shared/utils/status";
 
-// ============================================
-// メインコンポーネント
-// ============================================
-
-export function LotsPage() {
+export function LotListPanel() {
   // Jotai状態管理
   const [filters, setFilters] = useAtom(lotFiltersAtom);
   const [tableSettings, setTableSettings] = useAtom(lotTableSettingsAtom);
-  const [searchParams] = useSearchParams();
 
   // UI状態管理
   const createDialog = useDialog();
@@ -59,15 +42,6 @@ export function LotsPage() {
   // 検索・フィルター状態
   const [searchTerm, setSearchTerm] = useState(filters.search ?? "");
   const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
-
-  // URLクエリパラメータから検索条件を初期化
-  useEffect(() => {
-    const searchParam = searchParams.get("search");
-    if (searchParam && searchParam !== filters.search) {
-      setFilters((prev) => ({ ...prev, search: searchParam }));
-      setSearchTerm(searchParam);
-    }
-  }, [searchParams, setFilters]);
 
   // 検索語のデバウンス
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -249,7 +223,7 @@ export function LotsPage() {
   const groupedLots = useMemo(() => groupLotsByProduct(paginatedLots), [paginatedLots]);
 
   return (
-    <div className="space-y-6 px-6 py-6 md:px-8">
+    <div className="space-y-6">
       {/* アクションバー */}
       <div className="flex items-center justify-end gap-2">
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
