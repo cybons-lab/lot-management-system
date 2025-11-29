@@ -1,7 +1,7 @@
 import { Package, Building2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
-import { http } from "@/services/http";
+import { http } from "@/shared/api/http-client";
 
 export function SupplierProductsPage() {
     const { data: products = [], isLoading } = useQuery({

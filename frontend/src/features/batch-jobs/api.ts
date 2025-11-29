@@ -3,7 +3,7 @@
  * バッチジョブ管理
  */
 
-import { fetchApi } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 // ===== Types =====
 
@@ -75,7 +75,7 @@ export const getBatchJobs = (params?: BatchJobsListParams) => {
   if (params?.status) searchParams.append("status", params.status);
 
   const queryString = searchParams.toString();
-  return fetchApi.get<BatchJobListResponse>(`/batch-jobs${queryString ? "?" + queryString : ""}`);
+  return http.get<BatchJobListResponse>(`/batch-jobs${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -83,7 +83,7 @@ export const getBatchJobs = (params?: BatchJobsListParams) => {
  * @endpoint GET /batch-jobs/{job_id}
  */
 export const getBatchJob = (jobId: number) => {
-  return fetchApi.get<BatchJob>(`/batch-jobs/${jobId}`);
+  return http.get<BatchJob>(`/batch-jobs/${jobId}`);
 };
 
 /**
@@ -91,7 +91,7 @@ export const getBatchJob = (jobId: number) => {
  * @endpoint POST /batch-jobs
  */
 export const createBatchJob = (data: CreateBatchJobRequest) => {
-  return fetchApi.post<BatchJob>("/batch-jobs", data);
+  return http.post<BatchJob>("/batch-jobs", data);
 };
 
 /**
@@ -99,7 +99,7 @@ export const createBatchJob = (data: CreateBatchJobRequest) => {
  * @endpoint POST /batch-jobs/{job_id}/execute
  */
 export const executeBatchJob = (jobId: number, data?: BatchJobExecuteRequest) => {
-  return fetchApi.post<BatchJobExecuteResponse>(`/batch-jobs/${jobId}/execute`, data ?? {});
+  return http.post<BatchJobExecuteResponse>(`/batch-jobs/${jobId}/execute`, data ?? {});
 };
 
 /**
@@ -107,7 +107,7 @@ export const executeBatchJob = (jobId: number, data?: BatchJobExecuteRequest) =>
  * @endpoint POST /batch-jobs/{job_id}/cancel
  */
 export const cancelBatchJob = (jobId: number) => {
-  return fetchApi.post<BatchJob>(`/batch-jobs/${jobId}/cancel`, {});
+  return http.post<BatchJob>(`/batch-jobs/${jobId}/cancel`, {});
 };
 
 /**
@@ -115,5 +115,5 @@ export const cancelBatchJob = (jobId: number) => {
  * @endpoint DELETE /batch-jobs/{job_id}
  */
 export const deleteBatchJob = (jobId: number) => {
-  return fetchApi.delete(`/batch-jobs/${jobId}`);
+  return http.delete(`/batch-jobs/${jobId}`);
 };

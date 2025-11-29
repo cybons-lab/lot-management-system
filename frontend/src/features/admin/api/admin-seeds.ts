@@ -1,5 +1,5 @@
 // frontend/src/features/admin/api/admin-seeds.ts
-import { http } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 export type SeedRequest = {
   seed?: number;
   dry_run?: boolean;

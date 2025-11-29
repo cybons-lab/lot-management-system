@@ -3,7 +3,7 @@
  * 入荷予定管理（ロット自動生成対応）
  */
 
-import { fetchApi } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 // ===== Types =====
 
@@ -135,7 +135,7 @@ export const getInboundPlans = (params?: InboundPlansListParams) => {
   if (params?.date_to) searchParams.append("date_to", params.date_to);
 
   const queryString = searchParams.toString();
-  return fetchApi.get<InboundPlan[]>(`/inbound-plans${queryString ? "?" + queryString : ""}`);
+  return http.get<InboundPlan[]>(`/inbound-plans${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -143,7 +143,7 @@ export const getInboundPlans = (params?: InboundPlansListParams) => {
  * @endpoint GET /inbound-plans/{id}
  */
 export const getInboundPlan = (id: number) => {
-  return fetchApi.get<InboundPlanWithLines>(`/inbound-plans/${id}`);
+  return http.get<InboundPlanWithLines>(`/inbound-plans/${id}`);
 };
 
 /**
@@ -151,7 +151,7 @@ export const getInboundPlan = (id: number) => {
  * @endpoint POST /inbound-plans
  */
 export const createInboundPlan = (data: CreateInboundPlanRequest) => {
-  return fetchApi.post<InboundPlan>("/inbound-plans", data);
+  return http.post<InboundPlan>("/inbound-plans", data);
 };
 
 /**
@@ -159,7 +159,7 @@ export const createInboundPlan = (data: CreateInboundPlanRequest) => {
  * @endpoint PUT /inbound-plans/{id}
  */
 export const updateInboundPlan = (id: number, data: UpdateInboundPlanRequest) => {
-  return fetchApi.put<InboundPlan>(`/inbound-plans/${id}`, data);
+  return http.put<InboundPlan>(`/inbound-plans/${id}`, data);
 };
 
 /**
@@ -167,7 +167,7 @@ export const updateInboundPlan = (id: number, data: UpdateInboundPlanRequest) =>
  * @endpoint DELETE /inbound-plans/{id}
  */
 export const deleteInboundPlan = (id: number) => {
-  return fetchApi.delete<void>(`/inbound-plans/${id}`);
+  return http.delete<void>(`/inbound-plans/${id}`);
 };
 
 /**
@@ -175,7 +175,7 @@ export const deleteInboundPlan = (id: number) => {
  * @endpoint GET /inbound-plans/{id}/lines
  */
 export const getInboundPlanLines = (planId: number) => {
-  return fetchApi.get<InboundPlanLine[]>(`/inbound-plans/${planId}/lines`);
+  return http.get<InboundPlanLine[]>(`/inbound-plans/${planId}/lines`);
 };
 
 /**
@@ -183,7 +183,7 @@ export const getInboundPlanLines = (planId: number) => {
  * @endpoint POST /inbound-plans/{id}/lines
  */
 export const createInboundPlanLine = (planId: number, data: CreateInboundPlanLineRequest) => {
-  return fetchApi.post<InboundPlanLine>(`/inbound-plans/${planId}/lines`, data);
+  return http.post<InboundPlanLine>(`/inbound-plans/${planId}/lines`, data);
 };
 
 /**
@@ -192,7 +192,7 @@ export const createInboundPlanLine = (planId: number, data: CreateInboundPlanLin
  * @important This endpoint automatically generates lots based on received quantities
  */
 export const receiveInbound = (planId: number, data: ReceiveInboundRequest) => {
-  return fetchApi.post<ReceiveInboundResponse>(`/inbound-plans/${planId}/receive`, data);
+  return http.post<ReceiveInboundResponse>(`/inbound-plans/${planId}/receive`, data);
 };
 
 /**
@@ -211,5 +211,5 @@ export interface SAPSyncResponse {
  * @note Currently uses mock data. Will be replaced with actual SAP integration.
  */
 export const syncFromSAP = () => {
-  return fetchApi.post<SAPSyncResponse>("/inbound-plans/sync-from-sap", {});
+  return http.post<SAPSyncResponse>("/inbound-plans/sync-from-sap", {});
 };

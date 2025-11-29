@@ -1,5 +1,5 @@
 // frontend/src/features/admin/api/admin-simulate.ts
-import { http } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 // リクエスト型
 export type SimulateSeedRequest = {

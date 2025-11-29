@@ -3,7 +3,7 @@
  * 得意先品番マッピング管理
  */
 
-import { fetchApi } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 // ===== Types =====
 
@@ -67,7 +67,7 @@ export const getCustomerItems = (params?: CustomerItemsListParams) => {
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<CustomerItem[]>(`/customer-items${queryString ? "?" + queryString : ""}`);
+  return http.get<CustomerItem[]>(`/customer-items${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -75,7 +75,7 @@ export const getCustomerItems = (params?: CustomerItemsListParams) => {
  * @endpoint GET /customer-items/{customer_id}
  */
 export const getCustomerItemsByCustomer = (customerId: number) => {
-  return fetchApi.get<CustomerItem[]>(`/customer-items/${customerId}`);
+  return http.get<CustomerItem[]>(`/customer-items/${customerId}`);
 };
 
 /**
@@ -83,7 +83,7 @@ export const getCustomerItemsByCustomer = (customerId: number) => {
  * @endpoint POST /customer-items
  */
 export const createCustomerItem = (data: CreateCustomerItemRequest) => {
-  return fetchApi.post<CustomerItem>("/customer-items", data);
+  return http.post<CustomerItem>("/customer-items", data);
 };
 
 /**
@@ -95,7 +95,7 @@ export const updateCustomerItem = (
   externalProductCode: string,
   data: UpdateCustomerItemRequest,
 ) => {
-  return fetchApi.put<CustomerItem>(
+  return http.put<CustomerItem>(
     `/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
     data,
   );
@@ -106,7 +106,7 @@ export const updateCustomerItem = (
  * @endpoint DELETE /customer-items/{customer_id}/{external_product_code}
  */
 export const deleteCustomerItem = (customerId: number, externalProductCode: string) => {
-  return fetchApi.delete(
+  return http.delete(
     `/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
   );
 };

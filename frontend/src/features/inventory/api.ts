@@ -1,4 +1,4 @@
-import { fetchApi } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 import type { paths } from "@/types/api";
 
 // ===== Lots Types =====
@@ -64,19 +64,19 @@ export const getLots = (params?: LotsGetParams) => {
     searchParams.append("with_stock", params.with_stock.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<LotsGetResponse>(`/lots${queryString ? "?" + queryString : ""}`);
+  return http.get<LotsGetResponse>(`/lots${queryString ? "?" + queryString : ""}`);
 };
 
 /**
  * ロット詳細取得
  */
-export const getLot = (id: number) => fetchApi.get<LotGetResponse>(`/lots/${id}`);
+export const getLot = (id: number) => http.get<LotGetResponse>(`/lots/${id}`);
 
 /**
  * ロット新規作成
  */
 export const createLot = (data: LotCreateRequest) =>
-  fetchApi.post<LotCreateResponse>("/lots", data);
+  http.post<LotCreateResponse>("/lots", data);
 
 // ===== Inventory Items API Functions =====
 
@@ -92,7 +92,7 @@ export const getInventoryItems = (params?: InventoryItemsListParams) => {
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<InventoryItem[]>(`/inventory-items${queryString ? "?" + queryString : ""}`);
+  return http.get<InventoryItem[]>(`/inventory-items${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -100,7 +100,7 @@ export const getInventoryItems = (params?: InventoryItemsListParams) => {
  * @endpoint GET /inventory-items/{product_id}/{warehouse_id}
  */
 export const getInventoryItem = (productId: number, warehouseId: number) => {
-  return fetchApi.get<InventoryItem>(`/inventory-items/${productId}/${warehouseId}`);
+  return http.get<InventoryItem>(`/inventory-items/${productId}/${warehouseId}`);
 };
 
 /**
@@ -114,7 +114,7 @@ import type {
 } from "./types/InventoryAggregationTypes";
 
 export const getInventoryBySupplier = () => {
-  return fetchApi.get<InventoryBySupplierResponse[]>("/inventory-items/by-supplier");
+  return http.get<InventoryBySupplierResponse[]>("/inventory-items/by-supplier");
 };
 
 /**
@@ -122,7 +122,7 @@ export const getInventoryBySupplier = () => {
  * @endpoint GET /inventory-items/by-warehouse
  */
 export const getInventoryByWarehouse = () => {
-  return fetchApi.get<InventoryByWarehouseResponse[]>("/inventory-items/by-warehouse");
+  return http.get<InventoryByWarehouseResponse[]>("/inventory-items/by-warehouse");
 };
 
 /**
@@ -130,5 +130,5 @@ export const getInventoryByWarehouse = () => {
  * @endpoint GET /inventory-items/by-product
  */
 export const getInventoryByProduct = () => {
-  return fetchApi.get<InventoryByProductResponse[]>("/inventory-items/by-product");
+  return http.get<InventoryByProductResponse[]>("/inventory-items/by-product");
 };

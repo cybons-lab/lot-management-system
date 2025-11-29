@@ -3,7 +3,7 @@
  * ロール管理
  */
 
-import { fetchApi } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 // ===== Types =====
 
@@ -50,7 +50,7 @@ export const getRoles = (params?: RolesListParams) => {
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<Role[]>(`/roles${queryString ? "?" + queryString : ""}`);
+  return http.get<Role[]>(`/roles${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -58,7 +58,7 @@ export const getRoles = (params?: RolesListParams) => {
  * @endpoint GET /roles/{role_id}
  */
 export const getRole = (roleId: number) => {
-  return fetchApi.get<Role>(`/roles/${roleId}`);
+  return http.get<Role>(`/roles/${roleId}`);
 };
 
 /**
@@ -66,7 +66,7 @@ export const getRole = (roleId: number) => {
  * @endpoint POST /roles
  */
 export const createRole = (data: CreateRoleRequest) => {
-  return fetchApi.post<Role>("/roles", data);
+  return http.post<Role>("/roles", data);
 };
 
 /**
@@ -74,7 +74,7 @@ export const createRole = (data: CreateRoleRequest) => {
  * @endpoint PUT /roles/{role_id}
  */
 export const updateRole = (roleId: number, data: UpdateRoleRequest) => {
-  return fetchApi.put<Role>(`/roles/${roleId}`, data);
+  return http.put<Role>(`/roles/${roleId}`, data);
 };
 
 /**
@@ -82,5 +82,5 @@ export const updateRole = (roleId: number, data: UpdateRoleRequest) => {
  * @endpoint DELETE /roles/{role_id}
  */
 export const deleteRole = (roleId: number) => {
-  return fetchApi.delete(`/roles/${roleId}`);
+  return http.delete(`/roles/${roleId}`);
 };

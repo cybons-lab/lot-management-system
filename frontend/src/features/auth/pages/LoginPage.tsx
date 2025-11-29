@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { authAtom } from "../store/atoms";
 
 import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { http } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 interface TokenResponse {
   access_token: string;

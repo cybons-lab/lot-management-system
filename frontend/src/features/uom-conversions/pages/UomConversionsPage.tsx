@@ -1,7 +1,7 @@
 import { Package } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 
-import { http } from "@/services/http";
+import { http } from "@/shared/api/http-client";
 
 export function UomConversionsPage() {
     const { data: conversions = [], isLoading } = useQuery({

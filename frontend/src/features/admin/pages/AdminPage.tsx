@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui";
-import { http } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 
 interface InventorySyncResult {
   success: boolean;

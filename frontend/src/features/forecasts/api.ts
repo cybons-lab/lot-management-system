@@ -1,4 +1,4 @@
-import { fetchApi } from "@/shared/libs/http";
+import { http } from "@/shared/api/http-client";
 import type { operations } from "@/shared/types/openapi";
 import type {
   Forecast,
@@ -47,7 +47,7 @@ export const getForecasts = (params?: ForecastListParams) => {
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<ForecastListResponse>(`/forecasts${queryString ? "?" + queryString : ""}`);
+  return http.get<ForecastListResponse>(`/forecasts${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -55,7 +55,7 @@ export const getForecasts = (params?: ForecastListParams) => {
  * @endpoint GET /forecasts/{id}
  */
 export const getForecast = (id: number) => {
-  return fetchApi.get<Forecast>(`/forecasts/${id}`);
+  return http.get<Forecast>(`/forecasts/${id}`);
 };
 
 /**
@@ -63,7 +63,7 @@ export const getForecast = (id: number) => {
  * @endpoint POST /forecasts
  */
 export const createForecast = (data: CreateForecastRequest) => {
-  return fetchApi.post<Forecast>("/forecasts", data);
+  return http.post<Forecast>("/forecasts", data);
 };
 
 /**
@@ -71,7 +71,7 @@ export const createForecast = (data: CreateForecastRequest) => {
  * @endpoint PUT /forecasts/{id}
  */
 export const updateForecast = (id: number, data: UpdateForecastRequest) => {
-  return fetchApi.put<Forecast>(`/forecasts/${id}`, data);
+  return http.put<Forecast>(`/forecasts/${id}`, data);
 };
 
 /**
@@ -79,7 +79,7 @@ export const updateForecast = (id: number, data: UpdateForecastRequest) => {
  * @endpoint DELETE /forecasts/{id}
  */
 export const deleteForecast = (id: number) => {
-  return fetchApi.delete<void>(`/forecasts/${id}`);
+  return http.delete<void>(`/forecasts/${id}`);
 };
 
 /**
@@ -96,7 +96,7 @@ export const getForecastHistory = (params?: ForecastHistoryParams) => {
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
 
   const queryString = searchParams.toString();
-  return fetchApi.get<ForecastHistory[]>(
+  return http.get<ForecastHistory[]>(
     `/forecasts/history${queryString ? "?" + queryString : ""}`,
   );
 };
@@ -106,5 +106,5 @@ export const getForecastHistory = (params?: ForecastHistoryParams) => {
  * @endpoint POST /forecasts/bulk-import
  */
 export const bulkImportForecasts = (data: BulkImportForecastRequest) => {
-  return fetchApi.post<BulkImportForecastSummary>("/forecasts/bulk-import", data);
+  return http.post<BulkImportForecastSummary>("/forecasts/bulk-import", data);
 };

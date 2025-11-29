@@ -3,7 +3,7 @@
  */
 
 import type { BulkUpsertResponse, SupplierBulkRow } from "../types/bulk-operation";
-import { http } from "@/services/http";
+import { http } from "@/shared/api/http-client";
 import type { components } from "@/types/api";
 
 export type Supplier = components["schemas"]["SupplierResponse"];
