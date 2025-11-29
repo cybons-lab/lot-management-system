@@ -8,21 +8,28 @@
  * - 共通コンポーネント: DataTable, etc.
  */
 
-import { Plus, RefreshCw, Search } from "lucide-react";
+import { Plus, RefreshCw, Search, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { SAPRegistrationDialog } from "@/components/common/SAPRegistrationDialog";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
 import { orderLineColumns } from "@/features/orders/components/OrderLineColumns";
 import { useOrderLines, type OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import { useCreateOrder } from "@/hooks/mutations";
+import { useConfirmedOrderLines } from "@/hooks/useConfirmedOrderLines";
 import { useDialog, useTable, useFilters } from "@/hooks/ui";
 import { DataTable } from "@/shared/components/data/DataTable";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
+
+/**
+ * 表示モード型定義
+ */
+type ViewMode = "delivery" | "flat" | "order";
 
 /**
  * メインコンポーネント
@@ -30,6 +37,7 @@ import { FormDialog } from "@/shared/components/form";
 export function OrdersListPage() {
   // UI状態管理
   const createDialog = useDialog();
+  const [sapDialogOpen, setSapDialogOpen] = useState(false);
 
   const table = useTable({
     initialPageSize: 25,
@@ -44,8 +52,8 @@ export function OrdersListPage() {
     unallocatedOnly: false,
   });
 
-  // 表示モード状態
-  const [isGrouped, setIsGrouped] = useState(false);
+  // 表示モード状態 (デフォルトは1行単位)
+  const [viewMode, setViewMode] = useState<ViewMode>("flat");
 
   // データ取得 (Line-based)
   const {
@@ -57,6 +65,9 @@ export function OrdersListPage() {
     customer_code: filters.values.customer_code || undefined,
     status: filters.values.status !== "all" ? filters.values.status : undefined,
   });
+
+  // SAP登録用の引当確定済み明細取得
+  const { data: confirmedLines = [] } = useConfirmedOrderLines();
 
   // 受注作成Mutation
   const createOrderMutation = useCreateOrder({
@@ -120,6 +131,15 @@ export function OrdersListPage() {
           <p className="mt-1 text-sm text-slate-600">受注明細一覧と引当状況を管理します</p>
         </div>
         <div className="flex items-center gap-2">
+          {confirmedLines.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setSapDialogOpen(true)}>
+              <Send className="mr-2 h-4 w-4" />
+              SAP登録
+              <Badge variant="secondary" className="ml-2">
+                {confirmedLines.length}
+              </Badge>
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
             <RefreshCw className="mr-2 h-4 w-4" />
             更新
@@ -192,17 +212,31 @@ export function OrdersListPage() {
                 未引当のみ表示
               </label>
             </div>
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="groupByOrder"
-                checked={isGrouped}
-                onChange={(e) => setIsGrouped(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-              />
-              <label htmlFor="groupByOrder" className="text-sm font-medium text-slate-700">
-                受注単位で表示
-              </label>
+            <div className="flex items-center gap-2 rounded-md border border-slate-300 bg-white p-1">
+              <Button
+                variant={viewMode === "delivery" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("delivery")}
+                className="flex-1"
+              >
+                納入先単位
+              </Button>
+              <Button
+                variant={viewMode === "flat" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("flat")}
+                className="flex-1"
+              >
+                1行単位
+              </Button>
+              <Button
+                variant={viewMode === "order" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("order")}
+                className="flex-1"
+              >
+                受注単位
+              </Button>
             </div>
             <Button
               variant="ghost"
@@ -232,9 +266,52 @@ export function OrdersListPage() {
         </div>
       )}
 
-      {/* テーブル (Flat Line List) or Grouped View */}
+      {/* テーブル (Delivery Grouped / Flat / Order Grouped) */}
       <div className="space-y-4">
-        {isGrouped ? (
+        {viewMode === "delivery" ? (
+          // 納入先単位表示
+          <div className="space-y-6">
+            {Object.values(
+              paginatedLines.reduce(
+                (acc, line) => {
+                  const key = line.delivery_place_code || "unknown";
+                  if (!acc[key]) {
+                    acc[key] = {
+                      deliveryPlaceCode: line.delivery_place_code,
+                      deliveryPlaceName: line.delivery_place_name,
+                      lines: [],
+                    };
+                  }
+                  acc[key].lines.push(line);
+                  return acc;
+                },
+                {} as Record<string, any>,
+              ),
+            ).map((group: any) => (
+              <div
+                key={group.deliveryPlaceCode}
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+              >
+                <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-green-50 to-slate-50 px-6 py-3">
+                  <div className="flex items-center gap-4">
+                    <span className="font-bold text-slate-900">{group.deliveryPlaceCode}</span>
+                    <span className="text-sm text-slate-600">{group.deliveryPlaceName}</span>
+                    <span className="text-xs text-slate-500">明細数: {group.lines.length}</span>
+                  </div>
+                </div>
+                <div className="p-0">
+                  <DataTable
+                    data={group.lines}
+                    columns={orderLineColumns}
+                    isLoading={false}
+                    emptyMessage="明細がありません"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : viewMode === "order" ? (
+          // 受注単位表示
           <div className="space-y-6">
             {Object.values(
               paginatedLines.reduce(
@@ -259,20 +336,19 @@ export function OrdersListPage() {
                 key={group.orderNumber}
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
               >
-                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-3">
+                <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-slate-50 px-6 py-3">
                   <div className="flex items-center gap-4">
                     <span className="font-bold text-slate-900">{group.orderNumber}</span>
                     <span className="text-sm text-slate-600">{group.customerName}</span>
                     <span className="text-xs text-slate-500">受注日: {group.orderDate}</span>
                   </div>
                   <span
-                    className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                      group.status === "allocated"
-                        ? "bg-blue-100 text-blue-800"
-                        : group.status === "shipped"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                    }`}
+                    className={`rounded-full px-2 py-1 text-xs font-semibold ${group.status === "allocated"
+                      ? "bg-blue-100 text-blue-800"
+                      : group.status === "shipped"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
+                      }`}
                   >
                     {group.status}
                   </span>
@@ -289,6 +365,7 @@ export function OrdersListPage() {
             ))}
           </div>
         ) : (
+          // 1行単位表示 (Flat)
           <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
             <DataTable
               data={paginatedLines}
@@ -329,6 +406,13 @@ export function OrdersListPage() {
           isSubmitting={createOrderMutation.isPending}
         />
       </FormDialog>
+
+      {/* SAP登録ダイアログ */}
+      <SAPRegistrationDialog
+        isOpen={sapDialogOpen}
+        onClose={() => setSapDialogOpen(false)}
+        confirmedLines={confirmedLines}
+      />
     </div>
   );
 }
