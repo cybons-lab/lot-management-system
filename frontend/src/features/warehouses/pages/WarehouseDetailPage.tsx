@@ -52,7 +52,7 @@ export function WarehouseDetailPage() {
       };
       updateWarehouse(
         { id: warehouseCode, data: updateData },
-        { onSuccess: () => setIsEd iting(false) },
+        { onSuccess: () => setIsEditing(false) },
       );
     },
     [warehouseCode, updateWarehouse],
