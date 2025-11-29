@@ -37,7 +37,10 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
     """
     Get all order lines that are fully allocated and not yet registered in SAP.
 
-    Returns lines where allocated_quantity >= order_quantity and sap_order_no is NULL.
+    Returns lines where allocated_quantity >= converted_quantity and sap_order_no is NULL.
+    
+    Note: Both allocated_quantity and converted_quantity are in internal management units.
+          Do NOT compare with order_quantity as it uses the original order unit (PCS/ML/etc).
     """
     # Subquery to calculate allocated quantity per line
     alloc_subq = (
@@ -72,8 +75,8 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
         .outerjoin(alloc_subq, OrderLine.id == alloc_subq.c.order_line_id)
         .where(OrderLine.sap_order_no.is_(None))  # SAP未登録
         .where(
-            func.coalesce(alloc_subq.c.allocated_qty, 0) >= OrderLine.order_quantity
-        )  # 引当確定済み
+            func.coalesce(alloc_subq.c.allocated_qty, 0) >= OrderLine.converted_quantity
+        )  # 引当確定済み (内部単位で比較)
         .order_by(OrderLine.delivery_date.asc())
     )
 
