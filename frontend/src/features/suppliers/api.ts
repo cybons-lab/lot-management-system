@@ -17,15 +17,15 @@ const BASE_PATH = "/suppliers";
 // ============================================
 
 export async function createSupplier(data: SupplierCreate): Promise<Supplier> {
-    return http.post<Supplier>(BASE_PATH, data).json();
+    return http.post<Supplier>(BASE_PATH, data);
 }
 
 export async function updateSupplier(code: string, data: SupplierUpdate): Promise<Supplier> {
-    return http.put<Supplier>(`${BASE_PATH}/${code}`, data).json();
+    return http.put<Supplier>(`${BASE_PATH}/${code}`, data);
 }
 
 export async function deleteSupplier(code: string): Promise<void> {
-    return http.delete(`${BASE_PATH}/${code}`).json();
+    return http.delete(`${BASE_PATH}/${code}`);
 }
 
 // ============================================

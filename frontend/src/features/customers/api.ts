@@ -31,15 +31,15 @@ const BASE_PATH = "/customers";
 // ============================================
 
 export async function createCustomer(data: CustomerCreate): Promise<Customer> {
-    return http.post<Customer>(BASE_PATH, data).json();
+    return http.post<Customer>(BASE_PATH, data);
 }
 
 export async function updateCustomer(code: string, data: CustomerUpdate): Promise<Customer> {
-    return http.put<Customer>(`${BASE_PATH}/${code}`, data).json();
+    return http.put<Customer>(`${BASE_PATH}/${code}`, data);
 }
 
 export async function deleteCustomer(code: string): Promise<void> {
-    return http.delete(`${BASE_PATH}/${code}`).json();
+    return http.delete(`${BASE_PATH}/${code}`);
 }
 
 // ============================================

@@ -17,15 +17,15 @@ const BASE_PATH = "/warehouses";
 // ============================================
 
 export async function createWarehouse(data: WarehouseCreate): Promise<Warehouse> {
-    return http.post<Warehouse>(BASE_PATH, data).json();
+    return http.post<Warehouse>(BASE_PATH, data);
 }
 
 export async function updateWarehouse(code: string, data: WarehouseUpdate): Promise<Warehouse> {
-    return http.put<Warehouse>(`${BASE_PATH}/${code}`, data).json();
+    return http.put<Warehouse>(`${BASE_PATH}/${code}`, data);
 }
 
 export async function deleteWarehouse(code: string): Promise<void> {
-    return http.delete(`${BASE_PATH}/${code}`).json();
+    return http.delete(`${BASE_PATH}/${code}`);
 }
 
 // ============================================

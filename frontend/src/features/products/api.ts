@@ -26,15 +26,15 @@ const BASE_PATH = "/products";
 // ============================================
 
 export async function createProduct(data: ProductCreate): Promise<Product> {
-    return http.post<Product>(BASE_PATH, data).json();
+    return http.post<Product>(BASE_PATH, data);
 }
 
 export async function updateProduct(code: string, data: ProductUpdate): Promise<Product> {
-    return http.put<Product>(`${BASE_PATH}/${code}`, data).json();
+    return http.put<Product>(`${BASE_PATH}/${code}`, data);
 }
 
 export async function deleteProduct(code: string): Promise<void> {
-    return http.delete(`${BASE_PATH}/${code}`).json();
+    return http.delete(`${BASE_PATH}/${code}`);
 }
 
 // ============================================
