@@ -11,7 +11,7 @@ type InboundPlanReceiveResponse = components["schemas"]["InboundPlanReceiveRespo
  * 入庫予定詳細を取得
  */
 export async function getInboundPlan(planId: number): Promise<InboundPlanDetailResponse> {
-  return fetchApi.get<InboundPlanDetailResponse>(`/inbound-plans/${planId}`);
+  return fetchApi.get<InboundPlanDetailResponse>(`inbound-plans/${planId}`);
 }
 
 /**
@@ -21,5 +21,5 @@ export async function receiveInboundPlan(
   planId: number,
   data: InboundPlanReceiveRequest,
 ): Promise<InboundPlanReceiveResponse> {
-  return fetchApi.post<InboundPlanReceiveResponse>(`/inbound-plans/${planId}/receive`, data);
+  return fetchApi.post<InboundPlanReceiveResponse>(`inbound-plans/${planId}/receive`, data);
 }
