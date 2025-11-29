@@ -22,8 +22,6 @@ import { useDialog, useTable, useFilters } from "@/hooks/ui";
 import { DataTable } from "@/shared/components/data/DataTable";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
-import { coerceAllocatedLots } from "@/shared/libs/allocations";
-import type { AllocatedLot } from "@/shared/types/aliases";
 
 /**
  * メインコンポーネント
@@ -90,7 +88,7 @@ export function OrdersListPage() {
       // Use allocations from new API if available, otherwise fallback to allocated_lots
       const allocations = line.allocations || line.allocated_lots || [];
       const allocatedQty = allocations.reduce(
-        (acc: number, alloc: AllocatedLot) =>
+        (acc: number, alloc: any) =>
           acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,
       );
