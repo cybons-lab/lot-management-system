@@ -46,7 +46,9 @@ export function UsersListPage() {
       toast.success("ユーザーを作成しました");
     } catch (error) {
       console.error("Failed to create user:", error);
-      toast.error("作成に失敗しました。ユーザー名またはメールアドレスが既に存在する可能性があります。");
+      toast.error(
+        "作成に失敗しました。ユーザー名またはメールアドレスが既に存在する可能性があります。",
+      );
     }
   };
 

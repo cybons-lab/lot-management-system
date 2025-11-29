@@ -47,8 +47,7 @@ export const api = {
    * @param orderId 受注ID
    * @returns 受注詳細（明細行を含む）
    */
-  getOrderDetail: (orderId: number) =>
-    http.get<OrderDetail>(`/orders/${orderId}`),
+  getOrderDetail: (orderId: number) => http.get<OrderDetail>(`/orders/${orderId}`),
 
   // ===== ロット =====
   /**
@@ -82,6 +81,10 @@ export type DashboardStats = {
   unallocated_orders: number;
   allocation_rate: number;
 };
+interface OrdersResponse {
+  items?: unknown[];
+}
+
 export async function getOrdersWithAllocations() {
   const data = await http.get<OrdersResponse>("/api/orders");
   return Array.isArray(data?.items) ? data : { items: data ?? [] };

@@ -74,7 +74,7 @@ export const apiClient: KyInstance = ky.create({
           console.groupEnd();
         }
         return response;
-      }
+      },
     ],
     beforeError: [
       async (error) => {

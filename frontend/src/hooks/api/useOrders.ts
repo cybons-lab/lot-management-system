@@ -26,5 +26,5 @@ export function useOrderDetail(_orderId?: number) {
   return { data: undefined, isLoading: false } as const;
 }
 export function useDragAssign() {
-  return { assign: () => { }, isPending: false } as const;
+  return { assign: () => {}, isPending: false } as const;
 }
