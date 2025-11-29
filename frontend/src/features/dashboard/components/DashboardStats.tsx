@@ -12,6 +12,7 @@ export function DashboardStats() {
     data: stats,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["dashboardStats"],
     queryFn: getStats,
@@ -30,9 +31,15 @@ export function DashboardStats() {
 
   // エラー表示
   if (isError || !stats) {
+    console.error("[Dashboard] Stats fetch error:", error);
     return (
       <div className={styles.errorState.root + " text-center"}>
         統計データの読み込みに失敗しました。
+        {import.meta.env.DEV && error && (
+          <div className="text-xs text-red-500 mt-2">
+            {error instanceof Error ? error.message : String(error)}
+          </div>
+        )}
       </div>
     );
   }

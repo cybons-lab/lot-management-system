@@ -34,7 +34,11 @@ export function InboundPlansListPage() {
   };
 
   // Fetch inbound plans
-  const { data: plans, isLoading, isError, refetch } = useInboundPlans(queryParams);
+  const { data: plans, isLoading, isError, error, refetch } = useInboundPlans(queryParams);
+
+  if (isError) {
+    console.error("[InboundPlans] List fetch error:", error);
+  }
 
   // Delete mutation
   const deleteMutation = useDeleteInboundPlan();
