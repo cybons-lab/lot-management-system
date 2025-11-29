@@ -26,8 +26,6 @@ export type CustomerUpdate = components["schemas"]["CustomerUpdate"];
 
 const BASE_PATH = "/customers";
 
-
-
 // ============================================
 // Bulk Operations
 // ============================================

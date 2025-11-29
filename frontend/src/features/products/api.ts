@@ -21,8 +21,6 @@ export type ProductUpdate = components["schemas"]["ProductUpdate"];
 
 const BASE_PATH = "/products";
 
-
-
 // ============================================
 // Bulk Operations
 // ============================================

@@ -3,12 +3,12 @@
  */
 
 export interface SupplierProductResponse {
-    supplier_code: string;
-    supplier_name: string;
-    product_code: string;
-    product_name: string;
-    order_unit?: string;
-    order_lot_size?: number;
+  supplier_code: string;
+  supplier_name: string;
+  product_code: string;
+  product_name: string;
+  order_unit?: string;
+  order_lot_size?: number;
 }
 
 export type SupplierProductCreate = Partial<SupplierProductResponse>;
