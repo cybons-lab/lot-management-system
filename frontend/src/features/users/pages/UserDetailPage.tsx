@@ -199,7 +199,7 @@ export function UserDetailPage() {
       {/* Assigned Suppliers */}
       <div className={styles.card.root}>
         <div className={styles.card.header}>
-          <h3 className="text-lg font-semibold">担当仕入先</h3>
+          <h3 className="text-lg font-semibold">担当仕入先 (改修中)</h3>
           <UserSupplierAssignmentDialog userId={userId} />
         </div>
         <UserSupplierAssignmentList userId={userId} />

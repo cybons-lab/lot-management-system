@@ -1,5 +1,5 @@
 /**
- * ProductExportButton - 商品エクスポート (Backend API)
+ * UomConversionExportButton - 単位換算エクスポート (Backend API)
  */
 import { FileSpreadsheet, FileText } from "lucide-react";
 import { useState } from "react";
@@ -11,14 +11,14 @@ interface Props {
   size?: "sm" | "default";
 }
 
-export function ProductExportButton({ size = "default" }: Props) {
+export function UomConversionExportButton({ size = "default" }: Props) {
   const [isExporting, setIsExporting] = useState(false);
 
   const handleExport = async (format: "csv" | "xlsx") => {
     try {
       setIsExporting(true);
-      const filename = `products_${new Date().toISOString().slice(0, 10)}.${format}`;
-      await http.download(`/masters/products/export/download?format=${format}`, filename);
+      const filename = `uom_conversions_${new Date().toISOString().slice(0, 10)}.${format}`;
+      await http.download(`/masters/uom-conversions/export/download?format=${format}`, filename);
     } catch (error) {
       console.error("Export failed:", error);
       alert("エクスポートに失敗しました");

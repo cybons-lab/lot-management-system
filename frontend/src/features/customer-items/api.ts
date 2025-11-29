@@ -67,7 +67,7 @@ export const getCustomerItems = (params?: CustomerItemsListParams) => {
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
 
   const queryString = searchParams.toString();
-  return http.get<CustomerItem[]>(`/customer-items${queryString ? "?" + queryString : ""}`);
+  return http.get<CustomerItem[]>(`/masters/customer-items${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -75,7 +75,7 @@ export const getCustomerItems = (params?: CustomerItemsListParams) => {
  * @endpoint GET /customer-items/{customer_id}
  */
 export const getCustomerItemsByCustomer = (customerId: number) => {
-  return http.get<CustomerItem[]>(`/customer-items/${customerId}`);
+  return http.get<CustomerItem[]>(`/masters/customer-items/${customerId}`);
 };
 
 /**
@@ -83,7 +83,7 @@ export const getCustomerItemsByCustomer = (customerId: number) => {
  * @endpoint POST /customer-items
  */
 export const createCustomerItem = (data: CreateCustomerItemRequest) => {
-  return http.post<CustomerItem>("/customer-items", data);
+  return http.post<CustomerItem>("/masters/customer-items", data);
 };
 
 /**
@@ -96,7 +96,7 @@ export const updateCustomerItem = (
   data: UpdateCustomerItemRequest,
 ) => {
   return http.put<CustomerItem>(
-    `/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
+    `/masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
     data,
   );
 };
@@ -106,5 +106,7 @@ export const updateCustomerItem = (
  * @endpoint DELETE /customer-items/{customer_id}/{external_product_code}
  */
 export const deleteCustomerItem = (customerId: number, externalProductCode: string) => {
-  return http.delete(`/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`);
+  return http.delete(
+    `/masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
+  );
 };

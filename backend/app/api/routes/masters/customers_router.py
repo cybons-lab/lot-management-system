@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.schemas.masters.masters_schema import CustomerCreate, CustomerResponse, CustomerUpdate
+from app.services.common.export_service import ExportService
 from app.services.masters.customer_service import CustomerService
 
 
@@ -47,5 +48,19 @@ def update_customer(customer_code: str, customer: CustomerUpdate, db: Session = 
 def delete_customer(customer_code: str, db: Session = Depends(get_db)):
     """Delete a customer."""
     service = CustomerService(db)
+    service = CustomerService(db)
     service.delete(customer_code)
     return None
+
+
+@router.get("/export/download")
+def export_customers(format: str = "csv", db: Session = Depends(get_db)):
+    """Export customers to CSV or Excel."""
+    service = CustomerService(db)
+    customers = service.get_all()
+    # CustomerResponse has from_attributes=True, so we can use it to serialize
+    data = [CustomerResponse.model_validate(c).model_dump() for c in customers]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "customers")
+    return ExportService.export_to_csv(data, "customers")

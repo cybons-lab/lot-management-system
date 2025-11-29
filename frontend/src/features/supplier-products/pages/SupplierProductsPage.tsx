@@ -1,9 +1,15 @@
-import { Package, Building2 } from "lucide-react";
+import { Package, Building2, Upload } from "lucide-react";
+import { useState } from "react";
 import { useSupplierProducts } from "../hooks/useSupplierProducts";
+
+import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
+import { SupplierProductBulkImportDialog } from "../components/SupplierProductBulkImportDialog";
+import { Button } from "@/components/ui";
 
 export function SupplierProductsPage() {
   const { useList } = useSupplierProducts();
   const { data: products = [], isLoading } = useList();
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   if (isLoading) {
     return <div className="p-6">読み込み中...</div>;
@@ -12,9 +18,18 @@ export function SupplierProductsPage() {
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       {/* ヘッダー */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">仕入先商品</h1>
-        <p className="mt-1 text-sm text-slate-600">仕入先別の製品情報を管理します</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">仕入先商品</h1>
+          <p className="mt-1 text-sm text-slate-600">仕入先別の製品情報を管理します</p>
+        </div>
+        <div className="flex gap-2">
+          <SupplierProductExportButton size="sm" />
+          <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            インポート
+          </Button>
+        </div>
       </div>
 
       {/* テーブル */}
@@ -73,6 +88,11 @@ export function SupplierProductsPage() {
 
       {/* 件数表示 */}
       <div className="text-sm text-slate-600">{products.length} 件の仕入先商品</div>
+
+      <SupplierProductBulkImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+      />
     </div>
   );
 }

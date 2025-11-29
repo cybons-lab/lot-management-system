@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.masters_models import Product, ProductUomConversion
+from app.services.common.export_service import ExportService
 
 
 router = APIRouter(prefix="/uom-conversions", tags=["masters"])
@@ -23,8 +24,7 @@ def list_uom_conversions(
         ProductUomConversion.conversion_id,
         ProductUomConversion.product_id,
         ProductUomConversion.external_unit,
-        ProductUomConversion.conversion_factor,
-        ProductUomConversion.remarks,
+        ProductUomConversion.factor,
         Product.maker_part_code,
         Product.product_name,
     ).join(Product, ProductUomConversion.product_id == Product.id)
@@ -40,10 +40,42 @@ def list_uom_conversions(
             "conversion_id": r.conversion_id,
             "product_id": r.product_id,
             "external_unit": r.external_unit,
-            "conversion_factor": float(r.conversion_factor),
-            "remarks": r.remarks,
+            "conversion_factor": float(r.factor),
+            "remarks": None,
             "product_code": r.maker_part_code,
             "product_name": r.product_name,
         }
         for r in results
     ]
+
+
+@router.get("/export/download")
+def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
+    """Export UOM conversions."""
+    query = select(
+        ProductUomConversion.conversion_id,
+        ProductUomConversion.product_id,
+        ProductUomConversion.external_unit,
+        ProductUomConversion.factor,
+        Product.maker_part_code,
+        Product.product_name,
+    ).join(Product, ProductUomConversion.product_id == Product.id)
+
+    results = db.execute(query).all()
+
+    data = [
+        {
+            "conversion_id": r.conversion_id,
+            "product_id": r.product_id,
+            "external_unit": r.external_unit,
+            "conversion_factor": float(r.factor),
+            "remarks": None,
+            "product_code": r.maker_part_code,
+            "product_name": r.product_name,
+        }
+        for r in results
+    ]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "uom_conversions")
+    return ExportService.export_to_csv(data, "uom_conversions")

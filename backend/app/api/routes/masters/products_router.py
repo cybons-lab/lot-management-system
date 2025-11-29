@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.masters_models import Product
 from app.schemas.masters.products_schema import ProductCreate, ProductOut, ProductUpdate
+from app.services.common.export_service import ExportService
 from app.services.masters.product_service import ProductService
 
 
@@ -77,3 +78,15 @@ def delete_product(product_code: str, db: Session = Depends(get_db)):
     service = ProductService(db)
     service.delete(product_code)
     return None
+
+
+@router.get("/export/download")
+def export_products(format: str = "csv", db: Session = Depends(get_db)):
+    """Export products to CSV or Excel."""
+    service = ProductService(db)
+    products = service.get_all()
+    data = [_to_product_out(p) for p in products]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "products")
+    return ExportService.export_to_csv(data, "products")

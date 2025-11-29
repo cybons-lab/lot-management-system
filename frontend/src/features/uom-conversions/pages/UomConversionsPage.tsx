@@ -1,9 +1,15 @@
-import { Package } from "lucide-react";
+import { Package, Upload } from "lucide-react";
+import { useState } from "react";
 import { useUomConversions } from "../hooks/useUomConversions";
+
+import { UomConversionExportButton } from "../components/UomConversionExportButton";
+import { UomConversionBulkImportDialog } from "../components/UomConversionBulkImportDialog";
+import { Button } from "@/components/ui";
 
 export function UomConversionsPage() {
   const { useList } = useUomConversions();
   const { data: conversions = [], isLoading } = useList();
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   if (isLoading) {
     return <div className="p-6">読み込み中...</div>;
@@ -12,9 +18,18 @@ export function UomConversionsPage() {
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       {/* ヘッダー */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">単位換算</h1>
-        <p className="mt-1 text-sm text-slate-600">製品単位の換算情報を管理します</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">単位換算</h1>
+          <p className="mt-1 text-sm text-slate-600">製品単位の換算情報を管理します</p>
+        </div>
+        <div className="flex gap-2">
+          <UomConversionExportButton size="sm" />
+          <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            インポート
+          </Button>
+        </div>
       </div>
 
       {/* テーブル */}
@@ -64,6 +79,11 @@ export function UomConversionsPage() {
 
       {/* 件数表示 */}
       <div className="text-sm text-slate-600">{conversions.length} 件の単位換算</div>
+
+      <UomConversionBulkImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+      />
     </div>
   );
 }
