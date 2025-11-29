@@ -12,7 +12,9 @@ from app.services.common.base_service import BaseService
 
 
 class UserSupplierAssignmentService(
-    BaseService[UserSupplierAssignment, UserSupplierAssignmentCreate, UserSupplierAssignmentUpdate, int]
+    BaseService[
+        UserSupplierAssignment, UserSupplierAssignmentCreate, UserSupplierAssignmentUpdate, int
+    ]
 ):
     """Service for user-supplier assignments.
 

@@ -40,7 +40,15 @@ export function ProductDetailPage() {
   const handleUpdate = useCallback(
     (data: ProductFormOutput) => {
       if (!productCode) return;
-      updateProduct({ id: productCode, data: data as ProductUpdate }, { onSuccess: () => setIsEditing(false) });
+      const updateData: ProductUpdate = {
+        ...data,
+        customer_part_no: data.customer_part_no ?? undefined,
+        maker_item_code: data.maker_item_code ?? undefined,
+      };
+      updateProduct(
+        { id: productCode, data: updateData },
+        { onSuccess: () => setIsEditing(false) },
+      );
     },
     [productCode, updateProduct],
   );

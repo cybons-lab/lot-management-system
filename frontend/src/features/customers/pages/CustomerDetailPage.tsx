@@ -55,9 +55,9 @@ export function CustomerDetailPage() {
       if (!customerCode) return;
 
       const updateData: CustomerUpdate = {
-        customer_name: data.customer_name,
+        customer_name: (data.customer_name || undefined) as string | undefined,
+        // Add other fields if necessary, handling nulls
       };
-
       updateCustomer(
         { id: customerCode, data: updateData },
         {

@@ -73,7 +73,7 @@ export function ProductsListPage() {
   const { useList, useCreate } = useProducts();
   const { data: products = [], isLoading } = useList();
   const { mutate: createProduct } = useCreate();
-  
+
   // ...
 }
 ```

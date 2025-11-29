@@ -42,7 +42,7 @@ export function buildSearchParams(params?: Record<string, unknown>): string {
       }
       return acc;
     },
-    {} as Record<string, unknown>
+    {} as Record<string, unknown>,
   );
 
   const queryString = qs.stringify(filtered, {

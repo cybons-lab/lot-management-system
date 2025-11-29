@@ -47,8 +47,8 @@ export function WarehouseDetailPage() {
     (data: { warehouse_code: string; warehouse_name: string; warehouse_type: string }) => {
       if (!warehouseCode) return;
       const updateData: WarehouseUpdate = {
-        warehouse_name: data.warehouse_name,
-        warehouse_type: data.warehouse_type,
+        warehouse_name: (data.warehouse_name || undefined) as string | undefined,
+        warehouse_type: (data.warehouse_type || undefined) as string | undefined,
       };
       updateWarehouse(
         { id: warehouseCode, data: updateData },

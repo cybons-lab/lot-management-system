@@ -115,26 +115,26 @@ export function generateProductCsv(products: Product[], includeOperation = true)
   for (const p of products) {
     const values = includeOperation
       ? [
-        "UPD",
-        p.product_code,
-        p.product_name,
-        p.internal_unit,
-        p.external_unit,
-        p.qty_per_internal_unit?.toString() ?? "",
-        p.customer_part_no ?? "",
-        p.maker_item_code ?? "",
-        p.is_active ? "true" : "false",
-      ]
+          "UPD",
+          p.product_code,
+          p.product_name,
+          p.internal_unit,
+          p.external_unit,
+          p.qty_per_internal_unit?.toString() ?? "",
+          p.customer_part_no ?? "",
+          p.maker_item_code ?? "",
+          p.is_active ? "true" : "false",
+        ]
       : [
-        p.product_code,
-        p.product_name,
-        p.internal_unit,
-        p.external_unit,
-        p.qty_per_internal_unit?.toString() ?? "",
-        p.customer_part_no ?? "",
-        p.maker_item_code ?? "",
-        p.is_active ? "true" : "false",
-      ];
+          p.product_code,
+          p.product_name,
+          p.internal_unit,
+          p.external_unit,
+          p.qty_per_internal_unit?.toString() ?? "",
+          p.customer_part_no ?? "",
+          p.maker_item_code ?? "",
+          p.is_active ? "true" : "false",
+        ];
     lines.push(values.map((v) => `"${v.replace(/"/g, '""')}"`).join(","));
   }
 

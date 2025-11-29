@@ -18,18 +18,15 @@ def list_uom_conversions(
     db: Session = Depends(get_db),
 ):
     """Get UOM conversions (単位換算一覧)."""
-    query = (
-        select(
-            ProductUomConversion.conversion_id,
-            ProductUomConversion.product_id,
-            ProductUomConversion.external_unit,
-            ProductUomConversion.conversion_factor,
-            ProductUomConversion.remarks,
-            Product.maker_part_code,
-            Product.product_name,
-        )
-        .join(Product, ProductUomConversion.product_id == Product.id)
-    )
+    query = select(
+        ProductUomConversion.conversion_id,
+        ProductUomConversion.product_id,
+        ProductUomConversion.external_unit,
+        ProductUomConversion.conversion_factor,
+        ProductUomConversion.remarks,
+        Product.maker_part_code,
+        Product.product_name,
+    ).join(Product, ProductUomConversion.product_id == Product.id)
 
     if product_id is not None:
         query = query.where(ProductUomConversion.product_id == product_id)

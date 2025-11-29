@@ -106,7 +106,5 @@ export const updateCustomerItem = (
  * @endpoint DELETE /customer-items/{customer_id}/{external_product_code}
  */
 export const deleteCustomerItem = (customerId: number, externalProductCode: string) => {
-  return http.delete(
-    `/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
-  );
+  return http.delete(`/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`);
 };

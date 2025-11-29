@@ -166,7 +166,7 @@ export class CsvParser<TRow> {
             try {
               // Validate required fields
               const missingFields = this.config.requiredFields.filter(
-                (field) => !data[field] || data[field].trim() === ""
+                (field) => !data[field] || data[field].trim() === "",
               );
 
               if (missingFields.length > 0) {
@@ -185,7 +185,7 @@ export class CsvParser<TRow> {
               rows.push(row);
             } catch (error) {
               errors.push(
-                `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`
+                `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`,
               );
             }
           });
@@ -238,7 +238,7 @@ export class CsvParser<TRow> {
       try {
         // Validate required fields
         const missingFields = this.config.requiredFields.filter(
-          (field) => !data[field] || data[field].trim() === ""
+          (field) => !data[field] || data[field].trim() === "",
         );
 
         if (missingFields.length > 0) {
@@ -257,7 +257,7 @@ export class CsvParser<TRow> {
         rows.push(row);
       } catch (error) {
         errors.push(
-          `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`
+          `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     });
@@ -274,7 +274,7 @@ export class CsvParser<TRow> {
    */
   generateCSV<TEntity>(
     entities: TEntity[],
-    mapEntity: (e: TEntity) => Record<string, unknown>
+    mapEntity: (e: TEntity) => Record<string, unknown>,
   ): string {
     const data = entities.map(mapEntity);
     return Papa.unparse(data, {
@@ -309,7 +309,7 @@ export class CsvParser<TRow> {
  */
 export function generateSimpleCSV<T extends Record<string, unknown>>(
   data: T[],
-  columns?: string[]
+  columns?: string[],
 ): string {
   return Papa.unparse(data, {
     header: true,

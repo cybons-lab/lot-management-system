@@ -32,7 +32,6 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
 
         return query.order_by(Product.maker_part_code).offset(skip).limit(limit).all()
 
-
     def create(self, schema: ProductCreate) -> Product:
         """Create a new product with field mapping."""
         exists = self.get_by_code(schema.product_code, raise_404=False)
@@ -57,7 +56,7 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
 
     def update(self, id: int | str, schema: ProductUpdate) -> Product:
         """Update existing product.
-        
+
         Args:
             id: Can be product_code (str) or id (int). Here we expect product_code.
         """
@@ -66,9 +65,9 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             db_product = self.get_by_code(id)
         else:
             db_product = self.get_by_id(id)
-            
+
         if not db_product:
-             raise HTTPException(status_code=404, detail="製品が見つかりません")
+            raise HTTPException(status_code=404, detail="製品が見つかりません")
 
         updates = schema.model_dump(exclude_unset=True)
         if "product_code" in updates:
@@ -93,9 +92,9 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             db_product = self.get_by_code(id)
         else:
             db_product = self.get_by_id(id)
-            
+
         if not db_product:
-             raise HTTPException(status_code=404, detail="製品が見つかりません")
+            raise HTTPException(status_code=404, detail="製品が見つかりません")
 
         self.db.delete(db_product)
         self.db.commit()

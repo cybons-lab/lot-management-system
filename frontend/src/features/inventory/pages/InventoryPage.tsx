@@ -213,9 +213,7 @@ export function InventoryPage() {
           {overviewMode === "warehouse" && (
             <InventoryByWarehouseTable data={warehouseQuery.data || []} />
           )}
-          {overviewMode === "product" && (
-            <InventoryByProductTable data={productQuery.data || []} />
-          )}
+          {overviewMode === "product" && <InventoryByProductTable data={productQuery.data || []} />}
         </div>
       </div>
 

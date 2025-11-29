@@ -256,10 +256,7 @@ export interface AllocationSuggestionPreviewResponse {
  * @endpoint POST /allocation-suggestions/preview
  */
 export const generateAllocationSuggestions = (data: AllocationSuggestionRequest) => {
-  return http.post<AllocationSuggestionPreviewResponse>(
-    "allocation-suggestions/preview",
-    data,
-  );
+  return http.post<AllocationSuggestionPreviewResponse>("allocation-suggestions/preview", data);
 };
 
 /**

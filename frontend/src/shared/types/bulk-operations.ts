@@ -59,7 +59,7 @@ export interface BulkOperationSummary {
  *
  * @template TRow - Type of the row being processed (extends BulkRowBase)
  */
-export interface BulkUpsertResponse<TRow extends BulkRowBase = BulkRowBase> {
+export interface BulkUpsertResponse {
   /** Overall status */
   status: "success" | "partial" | "failed";
   /** Operation summary statistics */

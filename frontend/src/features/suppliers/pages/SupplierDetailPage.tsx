@@ -40,8 +40,14 @@ export function SupplierDetailPage() {
   const handleUpdate = useCallback(
     (data: { supplier_code: string; supplier_name: string }) => {
       if (!supplierCode) return;
-      const updateData: SupplierUpdate = { supplier_name: data.supplier_name };
-      updateSupplier({ id: supplierCode, data: updateData }, { onSuccess: () => setIsEditing(false) });
+      const updateData: SupplierUpdate = {
+        supplier_name: (data.supplier_name || undefined) as string | undefined,
+        // Add other fields if necessary, handling nulls
+      };
+      updateSupplier(
+        { id: supplierCode, data: updateData },
+        { onSuccess: () => setIsEditing(false) },
+      );
     },
     [supplierCode, updateSupplier],
   );

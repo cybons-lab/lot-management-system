@@ -21,7 +21,7 @@ def list_supplier_products(
     db: Session = Depends(get_db),
 ):
     """Get supplier products (仕入先商品一覧).
-    
+
     CustomerItem テーブルから supplier_id が NOT NULL のレコードを取得。
     """
     query = (

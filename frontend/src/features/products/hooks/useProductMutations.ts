@@ -5,12 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import type { ProductCreate, ProductUpdate } from "../api";
-import {
-  createProduct,
-  updateProduct,
-  deleteProduct,
-  bulkUpsertProducts,
-} from "../api";
+import { createProduct, updateProduct, deleteProduct, bulkUpsertProducts } from "../api";
 import type { ProductBulkRow } from "../types/bulk-operation";
 
 // Query key for cache invalidation

@@ -34,7 +34,6 @@ interface NavItem {
   activeColor?: string;
 }
 
-
 const navItems: NavItem[] = [
   {
     title: "ダッシュボード",

@@ -1,6 +1,6 @@
 /**
  * Customers API Types and Bulk Operations
- * 
+ *
  * Note: Basic CRUD operations are handled by useMasterApi hook.
  * This file contains:
  * - Type definitions (Customer, CustomerCreate, CustomerUpdate)
@@ -8,9 +8,9 @@
  */
 
 import type {
-    BulkUpsertResponse,
-    CustomerBulkRow,
-    CustomerBulkUpsertRequest,
+  BulkUpsertResponse,
+  CustomerBulkRow,
+  CustomerBulkUpsertRequest,
 } from "../types/bulk-operation";
 
 import { http } from "@/shared/api/http-client";
@@ -31,15 +31,15 @@ const BASE_PATH = "/customers";
 // ============================================
 
 export async function createCustomer(data: CustomerCreate): Promise<Customer> {
-    return http.post<Customer>(BASE_PATH, data);
+  return http.post<Customer>(BASE_PATH, data);
 }
 
 export async function updateCustomer(code: string, data: CustomerUpdate): Promise<Customer> {
-    return http.put<Customer>(`${BASE_PATH}/${code}`, data);
+  return http.put<Customer>(`${BASE_PATH}/${code}`, data);
 }
 
 export async function deleteCustomer(code: string): Promise<void> {
-    return http.delete(`${BASE_PATH}/${code}`);
+  return http.delete(`${BASE_PATH}/${code}`);
 }
 
 // ============================================
@@ -47,69 +47,69 @@ export async function deleteCustomer(code: string): Promise<void> {
 // ============================================
 
 async function upsertCustomerRow(
-    row: CustomerBulkRow,
+  row: CustomerBulkRow,
 ): Promise<{ success: boolean; errorMessage?: string }> {
-    try {
-        switch (row.OPERATION) {
-            case "ADD":
-                await http.post<Customer>(BASE_PATH, {
-                    customer_code: row.customer_code,
-                    customer_name: row.customer_name,
-                });
-                return { success: true };
+  try {
+    switch (row.OPERATION) {
+      case "ADD":
+        await http.post<Customer>(BASE_PATH, {
+          customer_code: row.customer_code,
+          customer_name: row.customer_name,
+        });
+        return { success: true };
 
-            case "UPD":
-                await http.put<Customer>(`${BASE_PATH}/${row.customer_code}`, {
-                    customer_name: row.customer_name,
-                });
-                return { success: true };
+      case "UPD":
+        await http.put<Customer>(`${BASE_PATH}/${row.customer_code}`, {
+          customer_name: row.customer_name,
+        });
+        return { success: true };
 
-            case "DEL":
-                await http.delete(`${BASE_PATH}/${row.customer_code}`);
-                return { success: true };
+      case "DEL":
+        await http.delete(`${BASE_PATH}/${row.customer_code}`);
+        return { success: true };
 
-            default:
-                return { success: false, errorMessage: `不明な操作: ${row.OPERATION}` };
-        }
-    } catch (error) {
-        const message = error instanceof Error ? error.message : "不明なエラー";
-        return { success: false, errorMessage: message };
+      default:
+        return { success: false, errorMessage: `不明な操作: ${row.OPERATION}` };
     }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "不明なエラー";
+    return { success: false, errorMessage: message };
+  }
 }
 
 export async function bulkUpsertCustomers(rows: CustomerBulkRow[]): Promise<BulkUpsertResponse> {
-    const results = await Promise.all(
-        rows.map(async (row, index) => {
-            const result = await upsertCustomerRow(row);
-            return {
-                rowNumber: row._rowNumber ?? index + 1,
-                success: result.success,
-                code: row.customer_code,
-                errorMessage: result.errorMessage,
-            };
-        }),
-    );
+  const results = await Promise.all(
+    rows.map(async (row, index) => {
+      const result = await upsertCustomerRow(row);
+      return {
+        rowNumber: row._rowNumber ?? index + 1,
+        success: result.success,
+        code: row.customer_code,
+        errorMessage: result.errorMessage,
+      };
+    }),
+  );
 
-    const added = results.filter((r, i) => r.success && rows[i]?.OPERATION === "ADD").length;
-    const updated = results.filter((r, i) => r.success && rows[i]?.OPERATION === "UPD").length;
-    const deleted = results.filter((r, i) => r.success && rows[i]?.OPERATION === "DEL").length;
-    const failed = results.filter((r) => !r.success).length;
+  const added = results.filter((r, i) => r.success && rows[i]?.OPERATION === "ADD").length;
+  const updated = results.filter((r, i) => r.success && rows[i]?.OPERATION === "UPD").length;
+  const deleted = results.filter((r, i) => r.success && rows[i]?.OPERATION === "DEL").length;
+  const failed = results.filter((r) => !r.success).length;
 
-    return {
-        status: failed === 0 ? "success" : failed === rows.length ? "failed" : "partial",
-        summary: {
-            total: rows.length,
-            added,
-            updated,
-            deleted,
-            failed,
-        },
-        results,
-    };
+  return {
+    status: failed === 0 ? "success" : failed === rows.length ? "failed" : "partial",
+    summary: {
+      total: rows.length,
+      added,
+      updated,
+      deleted,
+      failed,
+    },
+    results,
+  };
 }
 
 export async function bulkUpsertCustomersApi(
-    _request: CustomerBulkUpsertRequest,
+  _request: CustomerBulkUpsertRequest,
 ): Promise<BulkUpsertResponse> {
-    throw new Error("bulk-upsert API is not yet implemented");
+  throw new Error("bulk-upsert API is not yet implemented");
 }

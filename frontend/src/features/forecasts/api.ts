@@ -96,9 +96,7 @@ export const getForecastHistory = (params?: ForecastHistoryParams) => {
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
 
   const queryString = searchParams.toString();
-  return http.get<ForecastHistory[]>(
-    `forecasts/history${queryString ? "?" + queryString : ""}`,
-  );
+  return http.get<ForecastHistory[]>(`forecasts/history${queryString ? "?" + queryString : ""}`);
 };
 
 /**

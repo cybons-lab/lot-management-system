@@ -44,7 +44,7 @@ export const apiClient: KyInstance = ky.create({
         if (response) {
           // Try to parse error response
           try {
-            const body = await response.json();
+            const body = (await response.json()) as any;
             error.message = body.message || body.detail || error.message;
           } catch {
             // If not JSON, use status text
@@ -123,7 +123,7 @@ export interface ApiResponse<T> {
  */
 export interface PaginatedResponse<T> {
   items: T[];
-  total: int;
+  total: number;
   page?: number;
   page_size?: number;
 }

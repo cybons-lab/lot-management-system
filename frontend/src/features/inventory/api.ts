@@ -75,8 +75,7 @@ export const getLot = (id: number) => http.get<LotGetResponse>(`lots/${id}`);
 /**
  * ロット新規作成
  */
-export const createLot = (data: LotCreateRequest) =>
-  http.post<LotCreateResponse>("lots", data);
+export const createLot = (data: LotCreateRequest) => http.post<LotCreateResponse>("lots", data);
 
 // ===== Inventory Items API Functions =====
 

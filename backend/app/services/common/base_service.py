@@ -58,7 +58,6 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         """
         return self.db.query(self.model).all()
 
-
     def get_by_id(self, id: IDType, *, raise_404: bool = True) -> ModelType | None:
         """Get entity by ID.
 

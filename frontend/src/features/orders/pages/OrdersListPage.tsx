@@ -344,12 +344,13 @@ export function OrdersListPage() {
                     <span className="text-xs text-slate-500">受注日: {group.orderDate}</span>
                   </div>
                   <span
-                    className={`rounded-full px-2 py-1 text-xs font-semibold ${group.status === "allocated"
-                      ? "bg-blue-100 text-blue-800"
-                      : group.status === "shipped"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                      }`}
+                    className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                      group.status === "allocated"
+                        ? "bg-blue-100 text-blue-800"
+                        : group.status === "shipped"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                    }`}
                   >
                     {group.status}
                   </span>
