@@ -34,7 +34,7 @@ export function OrderCard({ order, isSelected, onClick, lockedBy, lockedAt }: Or
   })();
 
   const dueDateSource = order.due_date ?? primaryLine?.due_date ?? null;
-  const dueDateText = formatDate(dueDateSource, { formatString: "MM/dd", fallback: "―" });
+  const dueDateText = formatDate(dueDateSource, { format: "MM/dd", fallback: "―" });
 
   const isFullyAllocated = order.unallocatedQty === 0;
   const isPartiallyAllocated =

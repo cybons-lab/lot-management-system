@@ -4,6 +4,7 @@
 import type { Warehouse } from "../api/warehouses-api";
 
 import type { Column } from "@/shared/components/data/DataTable";
+import { formatDate } from "@/shared/utils/date";
 
 const warehouseTypeLabels: Record<string, string> = {
   internal: "社内",
@@ -41,11 +42,7 @@ export const warehouseColumns: Column<Warehouse>[] = [
   {
     id: "updated_at",
     header: "更新日時",
-    cell: (row) => (
-      <span className="text-sm text-gray-500">
-        {new Date(row.updated_at).toLocaleDateString("ja-JP")}
-      </span>
-    ),
+    cell: (row) => <span className="text-sm text-gray-500">{formatDate(row.updated_at)}</span>,
     sortable: true,
     width: "120px",
   },

@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
+from sqlalchemy import JSON, Column, DateTime, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB
 
 from app.models.base_model import Base
@@ -30,12 +30,12 @@ class SeedSnapshot(Base):
         comment="作成日時",
     )
     params_json = Column(
-        JSONB,
+        JSON().with_variant(JSONB, "postgresql"),
         nullable=False,
         comment="展開後の最終パラメータ（profile解決後）",
     )
     profile_json = Column(
-        JSONB,
+        JSON().with_variant(JSONB, "postgresql"),
         nullable=True,
         comment="使用したプロファイル設定",
     )
@@ -45,7 +45,7 @@ class SeedSnapshot(Base):
         comment="CSVエクスポートディレクトリ（オプション）",
     )
     summary_json = Column(
-        JSONB,
+        JSON().with_variant(JSONB, "postgresql"),
         nullable=True,
         comment="生成結果のサマリ（件数、検証結果など）",
     )

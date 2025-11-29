@@ -13,6 +13,8 @@ type LotResponse = LotResponseBase & {
   delivery_place_id?: number | null;
   delivery_place_code?: string | null;
   delivery_place_name?: string | null;
+  locked_quantity?: string | null;
+  lock_reason?: string | null;
 };
 
 export const useLotsQuery = (params?: LotsQuery) =>
@@ -22,5 +24,14 @@ export const useLotsQuery = (params?: LotsQuery) =>
     staleTime: 30_000,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
-    select: (data) => (data ?? []).map((item) => normalizeLot(item as any)),
+    select: (data) =>
+      (data ?? []).map((item) =>
+        normalizeLot(
+          item as unknown as Record<string, unknown> & {
+            lot_id: number;
+            product_id: number;
+            warehouse_id: number;
+          },
+        ),
+      ),
   });

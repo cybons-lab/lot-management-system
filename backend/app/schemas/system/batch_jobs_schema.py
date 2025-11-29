@@ -22,6 +22,16 @@ class BatchJobCreate(BatchJobBase):
     pass
 
 
+class BatchJobUpdate(BaseModel):
+    """バッチジョブ更新スキーマ."""
+
+    job_name: str | None = Field(None, description="ジョブ名")
+    job_type: str | None = Field(None, description="ジョブ種別")
+    parameters: dict | None = Field(None, description="ジョブパラメータ（JSON）")
+    status: str | None = Field(None, description="ステータス")
+    result_message: str | None = Field(None, description="実行結果メッセージ")
+
+
 class BatchJobResponse(BatchJobBase):
     """バッチジョブレスポンス."""
 

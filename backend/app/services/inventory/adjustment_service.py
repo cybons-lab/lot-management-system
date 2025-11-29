@@ -7,10 +7,20 @@ from sqlalchemy.orm import Session
 
 from app.models.inventory_models import Adjustment, Lot, StockHistory, StockTransactionType
 from app.schemas.inventory.inventory_schema import AdjustmentCreate, AdjustmentResponse
+from app.services.common.base_service import BaseService
 
 
-class AdjustmentService:
-    """Business logic for inventory adjustments."""
+class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResponse]):
+    """Business logic for inventory adjustments.
+
+    Note: This service uses AdjustmentResponse instead of a separate UpdateSchema
+    since adjustments are typically immutable after creation.
+
+    Inherits basic operations from BaseService:
+    - get_by_id(adjustment_id) -> Adjustment (overridden to return AdjustmentResponse)
+
+    Custom business logic with complex inventory updates is implemented below.
+    """
 
     def __init__(self, db: Session):
         """
@@ -19,7 +29,7 @@ class AdjustmentService:
         Args:
             db: Database session
         """
-        self.db = db
+        super().__init__(db=db, model=Adjustment)
 
     def get_adjustments(
         self,

@@ -144,7 +144,7 @@ export function AllocationOrderLineCard({
           <span className="invisible">-</span>
         )}
         <span className="text-gray-500">
-          納期: {formatDate(line.due_date, { fallback: "—", formatString: "MM/dd" })}
+          納期: {formatDate(line.due_date, { fallback: "—", format: "MM/dd" })}
         </span>
       </div>
 

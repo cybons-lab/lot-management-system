@@ -6,14 +6,24 @@ from sqlalchemy.orm import Session
 
 from app.models.logs_models import BusinessRule
 from app.schemas.system.business_rules_schema import BusinessRuleCreate, BusinessRuleUpdate
+from app.services.common.base_service import BaseService
 
 
-class BusinessRuleService:
-    """Service for business rules (業務ルール)."""
+class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, BusinessRuleUpdate]):
+    """Service for business rules (業務ルール).
+
+    Inherits common CRUD operations from BaseService:
+    - get_by_id(rule_id) -> BusinessRule
+    - create(payload) -> BusinessRule
+    - update(rule_id, payload) -> BusinessRule
+    - delete(rule_id) -> None
+
+    Custom business logic is implemented below.
+    """
 
     def __init__(self, db: Session):
         """Initialize service with database session."""
-        self.db = db
+        super().__init__(db=db, model=BusinessRule)
 
     def get_all(
         self,
@@ -45,37 +55,9 @@ class BusinessRuleService:
 
         return rules, total
 
-    def get_by_id(self, rule_id: int) -> BusinessRule | None:
-        """Get business rule by ID."""
-        return self.db.query(BusinessRule).filter(BusinessRule.rule_id == rule_id).first()
-
     def get_by_code(self, rule_code: str) -> BusinessRule | None:
         """Get business rule by code."""
         return self.db.query(BusinessRule).filter(BusinessRule.rule_code == rule_code).first()
-
-    def create(self, rule: BusinessRuleCreate) -> BusinessRule:
-        """Create a new business rule."""
-        db_rule = BusinessRule(**rule.model_dump())
-        self.db.add(db_rule)
-        self.db.commit()
-        self.db.refresh(db_rule)
-        return db_rule
-
-    def update(self, rule_id: int, rule: BusinessRuleUpdate) -> BusinessRule | None:
-        """Update an existing business rule."""
-        db_rule = self.get_by_id(rule_id)
-        if not db_rule:
-            return None
-
-        update_data = rule.model_dump(exclude_unset=True)
-
-        for key, value in update_data.items():
-            setattr(db_rule, key, value)
-
-        db_rule.updated_at = datetime.now()
-        self.db.commit()
-        self.db.refresh(db_rule)
-        return db_rule
 
     def update_by_code(self, rule_code: str, rule: BusinessRuleUpdate) -> BusinessRule | None:
         """Update an existing business rule by code."""
@@ -93,19 +75,9 @@ class BusinessRuleService:
         self.db.refresh(db_rule)
         return db_rule
 
-    def delete(self, rule_id: int) -> bool:
-        """Delete a business rule (hard delete)."""
-        db_rule = self.get_by_id(rule_id)
-        if not db_rule:
-            return False
-
-        self.db.delete(db_rule)
-        self.db.commit()
-        return True
-
     def toggle_active(self, rule_id: int) -> BusinessRule | None:
         """Toggle the active status of a business rule."""
-        db_rule = self.get_by_id(rule_id)
+        db_rule = self.get_by_id(rule_id, raise_404=False)
         if not db_rule:
             return None
 

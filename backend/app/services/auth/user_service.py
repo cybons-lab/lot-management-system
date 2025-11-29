@@ -7,15 +7,24 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.auth_models import User, UserRole
 from app.schemas.system.users_schema import UserCreate, UserRoleAssignment, UserUpdate
+from app.services.common.base_service import BaseService
 
 
-class UserService:
-    """Service for managing users."""
+class UserService(BaseService[User, UserCreate, UserUpdate]):
+    """Service for managing users.
+
+    Inherits common CRUD operations from BaseService:
+    - get_by_id(user_id) -> User (overridden to include role join)
+    - create(payload) -> User (overridden for password hashing)
+    - update(user_id, payload) -> User (overridden for password hashing)
+    - delete(user_id) -> None
+
+    Custom business logic is implemented below.
+    """
 
     def __init__(self, db: Session):
         """Initialize service with database session."""
-        """Initialize service with database session."""
-        self.db = db
+        super().__init__(db=db, model=User)
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
     def _hash_password(self, password: str) -> str:
@@ -35,14 +44,19 @@ class UserService:
 
         return query.offset(skip).limit(limit).all()
 
-    def get_by_id(self, user_id: int) -> User | None:
-        """Get user by ID."""
-        return (
+    def get_by_id(self, user_id: int, *, raise_404: bool = True) -> User | None:
+        """Get user by ID with roles loaded."""
+        user = (
             self.db.query(User)
             .options(joinedload(User.user_roles))
             .filter(User.id == user_id)
             .first()
         )
+        if user is None and raise_404:
+            from fastapi import HTTPException, status
+
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        return user
 
     def get_by_username(self, username: str) -> User | None:
         """Get user by username."""
@@ -53,7 +67,7 @@ class UserService:
         return self.db.query(User).filter(User.email == email).first()
 
     def create(self, user: UserCreate) -> User:
-        """Create a new user."""
+        """Create a new user with hashed password."""
         db_user = User(
             username=user.username,
             email=user.email,
@@ -66,11 +80,9 @@ class UserService:
         self.db.refresh(db_user)
         return db_user
 
-    def update(self, user_id: int, user: UserUpdate) -> User | None:
-        """Update an existing user."""
+    def update(self, user_id: int, user: UserUpdate) -> User:
+        """Update an existing user with password hashing."""
         db_user = self.get_by_id(user_id)
-        if not db_user:
-            return None
 
         update_data = user.model_dump(exclude_unset=True)
 
@@ -86,19 +98,9 @@ class UserService:
         self.db.refresh(db_user)
         return db_user
 
-    def delete(self, user_id: int) -> bool:
-        """Delete a user (hard delete)."""
-        db_user = self.get_by_id(user_id)
-        if not db_user:
-            return False
-
-        self.db.delete(db_user)
-        self.db.commit()
-        return True
-
     def assign_roles(self, user_id: int, assignment: UserRoleAssignment) -> User | None:
         """Assign roles to a user (replaces existing roles)."""
-        db_user = self.get_by_id(user_id)
+        db_user = self.get_by_id(user_id, raise_404=False)
         if not db_user:
             return None
 
@@ -116,7 +118,7 @@ class UserService:
 
     def get_user_roles(self, user_id: int) -> list[str]:
         """Get role codes assigned to a user."""
-        user = self.get_by_id(user_id)
+        user = self.get_by_id(user_id, raise_404=False)
         if not user:
             return []
 
@@ -124,7 +126,7 @@ class UserService:
 
     def update_last_login(self, user_id: int) -> bool:
         """Update user's last login timestamp."""
-        db_user = self.get_by_id(user_id)
+        db_user = self.get_by_id(user_id, raise_404=False)
         if not db_user:
             return False
 
