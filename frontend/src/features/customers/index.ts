@@ -4,8 +4,7 @@
  */
 
 // Pages
-export { CustomersListPage } from "./pages/CustomersListPage";
-export { CustomerDetailPage } from "./pages/CustomerDetailPage";
+export { CustomersListPage, CustomerDetailPage } from "./pages";
 
 // Components
 export { CustomerForm } from "./components/CustomerForm";
@@ -13,14 +12,7 @@ export { CustomerBulkImportDialog } from "./components/CustomerBulkImportDialog"
 export { CustomerExportButton } from "./components/CustomerExportButton";
 
 // Hooks
-export { useCustomersQuery, CUSTOMERS_QUERY_KEY } from "./hooks/useCustomersQuery";
-export { useCustomerQuery } from "./hooks/useCustomerQuery";
-export {
-  useCreateCustomer,
-  useUpdateCustomer,
-  useDeleteCustomer,
-  useBulkUpsertCustomers,
-} from "./hooks/useCustomerMutations";
+export { useCustomers } from "./hooks";
 
 // API
 export {
