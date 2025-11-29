@@ -7,7 +7,7 @@ from app.core.database import get_db
 from app.models.masters_models import Product
 from app.schemas.masters.products_schema import ProductCreate, ProductOut, ProductUpdate
 from app.services.common.export_service import ExportService
-from app.services.masters.product_service import ProductService
+from app.services.masters.products_service import ProductService
 
 
 router = APIRouter(prefix="/products", tags=["products"])
