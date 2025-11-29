@@ -1,13 +1,15 @@
 import pytest
+from fastapi import HTTPException
+from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from fastapi import HTTPException
 
 from app.models.base_model import Base
 from app.services.common.base_service import BaseService
 
+
 # --- Test Models & Schemas ---
+
 
 class TestModel(Base):
     __tablename__ = "test_models"
@@ -15,20 +17,26 @@ class TestModel(Base):
     name = Column(String, index=True)
     description = Column(String, nullable=True)
 
+
 class TestModelCreate(BaseModel):
     name: str
     description: str | None = None
+
 
 class TestModelUpdate(BaseModel):
     name: str | None = None
     description: str | None = None
 
+
 # --- Test Service ---
+
 
 class TestService(BaseService[TestModel, TestModelCreate, TestModelUpdate]):
     pass
 
+
 # --- Tests ---
+
 
 @pytest.fixture
 def service(db: Session):
@@ -42,6 +50,7 @@ def service(db: Session):
     yield TestService(db, TestModel)
     TestModel.__table__.drop(db.get_bind(), checkfirst=True)
 
+
 def test_create(service: TestService):
     data = TestModelCreate(name="test", description="desc")
     obj = service.create(data)
@@ -49,36 +58,40 @@ def test_create(service: TestService):
     assert obj.name == "test"
     assert obj.description == "desc"
 
+
 def test_get_by_id(service: TestService):
     data = TestModelCreate(name="test")
     created = service.create(data)
-    
+
     fetched = service.get_by_id(created.id)
     assert fetched is not None
     assert fetched.id == created.id
     assert fetched.name == "test"
+
 
 def test_get_by_id_not_found(service: TestService):
     with pytest.raises(HTTPException) as exc:
         service.get_by_id(999)
     assert exc.value.status_code == 404
 
+
 def test_update(service: TestService):
     data = TestModelCreate(name="original")
     created = service.create(data)
-    
+
     update_data = TestModelUpdate(name="updated")
     updated = service.update(created.id, update_data)
-    
+
     assert updated.name == "updated"
     assert updated.id == created.id
+
 
 def test_delete(service: TestService):
     data = TestModelCreate(name="to_delete")
     created = service.create(data)
-    
+
     service.delete(created.id)
-    
+
     with pytest.raises(HTTPException) as exc:
         service.get_by_id(created.id)
     assert exc.value.status_code == 404

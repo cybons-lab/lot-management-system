@@ -16,7 +16,8 @@
     "typegen": "openapi-typescript ../backend/openapi.json -o src/shared/types/openapi.d.ts && prettier --write src/shared/types/openapi.d.ts",
     "doc:api": "widdershins http://localhost:8000/api/openapi.json -o docs/api_reference.md --summary --omitHeader --expandBody --language_tabs 'typescript:TypeScript'",
     "doc:fe": "typedoc --options typedoc.json",
-    "doc": "npm run typegen && npm run doc:api && npm run doc:fe"
+    "doc": "npm run typegen && npm run doc:api && npm run doc:fe",
+    "capture:screens": "node capture-screens.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -70,6 +71,7 @@
     "msw": "^2.12.0",
     "openapi-typescript": "^7.10.1",
     "postcss": "^8.5.6",
+    "playwright": "^1.49.1",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.7.1",
     "tailwindcss": "^4.1.16",

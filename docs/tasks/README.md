@@ -1,179 +1,25 @@
 # Tasks Directory
 
-このディレクトリには、ロット管理システムの**進行中、計画中、または保留中のタスク**をまとめています。
+このディレクトリはタスク計画の**アーカイブ置き場**です。最新の計画は `docs/implementation_plan.md` に集約されました。
 
-## 📋 ディレクトリの目的
+## 現在の運用
+- **唯一のマスター計画書:** `docs/implementation_plan.md`
+- 新しいタスクや優先度の変更は、必ずマスター計画書を更新してください。
+- 旧タスクファイルは `archive/` に移動し、参照のみとします（書き換え不要）。
 
-- 実装予定の機能や改善の計画を一元管理
-- セッション間の引き継ぎ情報を保持
-- タスクの優先順位と進捗状況を明確化
+## アーカイブ済みファイル
+- `handoff.md`
+- `ui-improvements.md`
+- `schema-improvements.md`
+- `partial-lock-implementation.md`
+- `error-logging-improvement.md`
+- `user-supplier-assignments.md`
 
-## 📁 ファイル一覧
+## 新しいタスクを追加する場合
+1. `docs/implementation_plan.md` の該当フェーズに追記する。
+2. 必要に応じて補助資料をこのディレクトリに追加し、完了後は `archive/` に移動する。
 
-### 進行中・次回対応のタスク
-
-#### `handoff.md`
-セッション間の引き継ぎドキュメント。
-
-**内容:**
-- 前回完了した作業
-- 次のセッションで対応すべき事項
-- 優先度別のタスクリスト
-
-**最終更新:** 2025-11-27
-
----
-
-#### `ui-improvements.md`
-フロントエンドのUI改善課題。
-
-**タスク:**
-- ✅ 倉庫表示バグ修正（完了）
-- 🔄 SAP受注登録UI v2（仕様見直し中）
-
-**優先度:** Medium
-
----
-
-### 計画中のタスク
-
-#### `schema-improvements.md`
-データベーススキーマの改善計画（`user-supplier-assignments.md`と統合して実装中）。
-
-**主要タスク:**
-- ✅ `version_id` → `version` 変更
-- ✅ `customer_items` 拡張（出荷表テキスト対応）
-- ✅ `customer_item_jiku_mappings` テーブル追加
-- ✅ `order_lines` 拡張（shipping_document_text）
-- ✅ 7つのビュー修正
-- ✅ バックエンドAPI実装
-- ✅ フロントエンド実装（担当割り当て管理画面）
-- ✅ 検証（ブラウザテスト完了）
-
-**優先度:** High
-**優先度:** High
-**見積もり作業時間:** 完了
-
----
-
-#### `partial-lock-implementation.md`
-ロット在庫の部分ロック機能（個数指定ロック）の実装。
-
-**主要タスク:**
-- ✅ `lots` テーブルへの `locked_quantity` 追加
-- ✅ ロック/解除APIの数量指定対応
-- ✅ 有効在庫計算ロジックの更新
-- ✅ フロントエンドのロックダイアログ改修
-
-**優先度:** High
-**見積もり作業時間:** 完了
-
----
-
-#### `error-logging-improvement.md`
-エラーロギングとハンドリング機能の改善計画。
-
-**主要タスク:**
-1. フロントエンドエラーロギングの実装
-2. データベースエラーのユーザーフレンドリー化
-3. ✅ JWT認証のオプショナル認証実装（完了）
-
-**優先度:** Medium
-**ステータス:** 計画中
-
----
-
-#### `user-supplier-assignments.md`
-ユーザー-仕入先担当割り当て機能の実装計画（`schema-improvements.md`に統合済み）。
-
-**主要タスク:**
-- ✅ `user_supplier_assignments` テーブル追加
-- ✅ AssignmentService 実装
-- ✅ API エンドポイント実装
-- 🔄 フロントエンド UI 実装（未着手）
-
-**優先度:** Medium
-**見積もり作業時間:** 残りUI実装のみ
-
----
-
-## 🔄 タスクのライフサイクル
-
-```
-計画中 → 実装中 → レビュー中 → 完了 → アーカイブ
-```
-
-### 完了したタスクの扱い
-
-タスクが完了したら：
-
-1. **ファイルを更新**
-   - ステータスを「✅ 完了」にマーク
-   - 完了日を記載
-
-2. **適切な場所に移動**
-   - 実装記録 → `docs/implementation/`
-   - 変更履歴 → `docs/CHANGELOG_*.md`
-   - 参考資料 → `docs/architecture/`
-
-3. **このディレクトリから削除**
-   - 完了したタスクはこのディレクトリから削除してOK
-   - 必要に応じて別の場所に記録を保持
-
----
-
-## 📝 新しいタスクの追加方法
-
-新しいタスクを追加する場合：
-
-1. **ファイル作成**
-   ```bash
-   # 例: 新機能の実装計画
-   touch docs/tasks/new-feature-plan.md
-   ```
-
-2. **必須項目を記載**
-   - タスクの概要と背景
-   - 主要な実装内容
-   - 見積もり作業時間
-   - 優先度（High / Medium / Low）
-   - 依存関係
-
-3. **このREADMEを更新**
-   - ファイル一覧に追加
-   - 適切なセクションに分類
-
----
-
-## 🏷️ タスクの優先度
-
-| 優先度 | 説明 | 対応時期 |
-|--------|------|----------|
-| **High** | 重要かつ緊急。次回セッションで優先的に対応 | すぐに |
-| **Medium** | 重要だが緊急ではない。計画的に対応 | 1-2週間以内 |
-| **Low** | 将来的な改善。時間があれば対応 | 長期計画 |
-
----
-
-## 🔗 関連ドキュメント
-
-- [CLAUDE.md](../../CLAUDE.md) - プロジェクト全体のガイド
-- [README.md](../../README.md) - プロジェクト概要
-- [SETUP_GUIDE.md](../../SETUP_GUIDE.md) - セットアップガイド
-- [docs/architecture/](../architecture/) - アーキテクチャドキュメント
-- [docs/implementation/](../implementation/) - 実装記録
-
----
-
-## 📊 現在のタスク概要
-
-| ファイル | 優先度 | ステータス | 作業時間 |
-|---------|--------|-----------|---------|
-| schema-improvements.md | High | 実装中 (Phase D完了) | 残8h |
-| error-logging-improvement.md | Medium | 計画中 | - |
-| ui-improvements.md | Medium | 仕様見直し中 | - |
-| user-supplier-assignments.md | Medium | 実装中 (API完了) | 残UIのみ |
-
----
-
-**最終更新:** 2025-11-28
+## 関連ドキュメント
+- `../implementation_plan.md` — マスター計画書
+- `../frontend.adoc` — フロントエンドのスタイル/実装ガイド
+- `../../README.md` — プロジェクト概要
