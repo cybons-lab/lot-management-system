@@ -6,14 +6,24 @@ from sqlalchemy.orm import Session
 
 from app.models.masters_models import CustomerItem
 from app.schemas.masters.customer_items_schema import CustomerItemCreate, CustomerItemUpdate
+from app.services.common.base_service import BaseService
 
 
-class CustomerItemsService:
-    """Service for managing customer item mappings."""
+class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, CustomerItemUpdate]):
+    """Service for managing customer item mappings.
+    
+    Inherits common CRUD operations from BaseService:
+    - get_by_id(id) -> CustomerItem
+    - create(payload) -> CustomerItem
+    - update(id, payload) -> CustomerItem
+    - delete(id) -> None
+    
+    Custom business logic for composite key operations is implemented below.
+    """
 
     def __init__(self, db: Session):
         """Initialize service with database session."""
-        self.db = db
+        super().__init__(db=db, model=CustomerItem)
 
     def get_all(
         self,
@@ -48,18 +58,10 @@ class CustomerItemsService:
             .first()
         )
 
-    def create(self, item: CustomerItemCreate) -> CustomerItem:
-        """Create a new customer item mapping."""
-        db_item = CustomerItem(**item.model_dump())
-        self.db.add(db_item)
-        self.db.commit()
-        self.db.refresh(db_item)
-        return db_item
-
-    def update(
+    def update_by_key(
         self, customer_id: int, external_product_code: str, item: CustomerItemUpdate
     ) -> CustomerItem | None:
-        """Update an existing customer item mapping."""
+        """Update an existing customer item mapping by composite key."""
         db_item = self.get_by_key(customer_id, external_product_code)
         if not db_item:
             return None
@@ -72,8 +74,8 @@ class CustomerItemsService:
         self.db.refresh(db_item)
         return db_item
 
-    def delete(self, customer_id: int, external_product_code: str) -> bool:
-        """Delete a customer item mapping."""
+    def delete_by_key(self, customer_id: int, external_product_code: str) -> bool:
+        """Delete a customer item mapping by composite key."""
         db_item = self.get_by_key(customer_id, external_product_code)
         if not db_item:
             return False
