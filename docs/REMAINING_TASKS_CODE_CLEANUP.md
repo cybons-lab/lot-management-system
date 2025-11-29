@@ -105,38 +105,52 @@ const headers = Object.keys(firstRow);
 
 ### 3. 広すぎる例外ハンドラ（エラーの隠蔽）
 
-**影響度:** 🔥🔥🔥 デバッグ不可能
-**見積もり:** 1時間
+**ステータス:** ✅ **対応完了（2025-11-29 完了）**
 
-#### 対象ファイルと箇所
+**影響度:** 🔥🔥🔥 デバッグ不可能
+**実績時間:** 1時間
+
+#### 調査結果
+
+5箇所の `except Exception` を調査し、問題のある3箇所を修正、2箇所は適切と判断。
+
+#### 修正済みファイル（2025-11-29 コミット a9f7d7a）
 
 **backend/app/core/errors.py**
-- Line 228: `except Exception: pass` - リクエストボディ読み込みエラーの隠蔽
+- ✅ Line 228: `except Exception: pass` → `except (RuntimeError, ValueError) as e:` + ログ追加
+- リクエストボディ読み込み失敗時に debug ログを出力
 
 **backend/app/middleware/metrics.py**
-- Line 94: `except Exception: return 0.0` - メトリクス計算エラーのマスク
-
-**backend/app/api/deps.py**
-- Line 25: `except Exception:` - 汎用的すぎる例外ハンドラ
-
-**backend/app/services/allocations/actions.py**
-- Line 146: `except Exception:` - 詳細が不明
+- ✅ Line 94: `except Exception: return 0.0` → `except (StatisticsError, ValueError, IndexError) as e:` + ログ追加
+- パーセンタイル計算失敗時に warning ログを出力
 
 **backend/scripts/run_api_smoke.py**
-- Line 59: `except Exception:` - スクリプトエラーの隠蔽
+- ✅ Line 59: `except Exception:` → `except (json.JSONDecodeError, ValueError):`
+- ✅ Line 71: `except Exception as e:` → `except (requests.RequestException, requests.ConnectionError, requests.Timeout) as e:`
+
+#### 検証済み（既に適切）
+
+**backend/app/api/deps.py**
+- ✅ Line 25: `except Exception:` の後に `raise` で再送出 → 問題なし（標準的なロールバックパターン）
+
+**backend/app/services/allocations/actions.py**
+- ✅ Line 146: `except Exception:` の後に `raise` で再送出 → 問題なし（標準的なトランザクションパターン）
 
 #### 修正パターン
 
 ```python
-# ❌ Before
-except Exception:
-    pass  # エラー詳細が完全に失われる
+# ✅ 修正後（errors.py）
+except (RuntimeError, ValueError) as e:
+    logger.debug(f"Failed to read request body: {e}")
+    request_body = "<unavailable>"
 
-# ✅ After
-except (json.JSONDecodeError, UnicodeDecodeError) as e:
-    logger.warning(f"Failed to decode body: {e}")
-    request_body = "<invalid encoding>"
+# ✅ 修正後（metrics.py）
+except (StatisticsError, ValueError, IndexError) as e:
+    logger.warning(f"Failed to calculate percentile: {e}")
+    return 0.0
 ```
+
+**結論:** このタスクは **完了** しました。エラーの隠蔽を防ぎ、デバッグ可能性が向上。
 
 ---
 
@@ -426,14 +440,15 @@ export type OrderLine = OrderLineCurrent & OrderLineLegacy;
 
 | 優先度 | カテゴリ | 完了 | 残り | 見積もり |
 |--------|---------|------|------|---------|
-| 🔴 CRITICAL | エラー処理 | 2 | 1 | 1時間 |
+| 🔴 CRITICAL | エラー処理 | **3** | **0** | **完了** ✅ |
 | 🟠 HIGH | 重複コード・エラー処理 | 0 | 4 | 4-5時間 |
 | 🟡 MEDIUM | コード品質 | 2 | 3 | 4-6時間 |
-| **合計** | | **4** | **8タスク** | **9-12時間** |
+| **合計** | | **5** | **7タスク** | **8-11時間** |
 
 **完了済み:**
 - ✅ `.first()` None チェック確認（既に対応済みと判明）
 - ✅ 配列アクセス長さチェック（3ファイル修正、80+箇所検証完了）
+- ✅ 広すぎる例外ハンドラの修正（3ファイル修正、2箇所は適切と判断）
 - ✅ ListResponse 統合（8箇所完了、残り6箇所は互換性の理由で不可）
 - ✅ 未使用ファイル削除（2ファイル完了）
 
@@ -441,9 +456,9 @@ export type OrderLine = OrderLineCurrent & OrderLineLegacy;
 
 ## 🎯 推奨作業順序（更新: 2025-11-29）
 
-### Day 1: CRITICAL対応（1時間）
+### ✅ CRITICAL対応 - 完了！（2時間）
 ~~1. ✅ 配列アクセスの長さチェック（3ファイル修正、80+箇所検証完了）~~
-2. 🔲 広すぎる例外ハンドラの修正（5箇所、1時間）
+~~2. ✅ 広すぎる例外ハンドラの修正（3ファイル修正、2箇所は適切と判断）~~
 ~~3. ✅ `.first()` の None チェック追加（既に対応済み）~~
 
 ### Day 2: HIGH対応（4-5時間）
