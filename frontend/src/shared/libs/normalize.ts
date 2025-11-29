@@ -5,12 +5,12 @@
  * null/undefinedを安全な値に変換
  */
 
+import type { AllocatedLot } from "@/shared/types/aliases";
 import type { components } from "@/shared/types/openapi";
 import type {
   OrderLineResponse as OrderLine,
   OrderResponse as OrderResponseAlias,
 } from "@/shared/types/schema";
-import type { AllocatedLot } from "@/shared/types/aliases";
 
 // ヘルパー関数
 export const S = (v: string | null | undefined, fallback = "-"): string => v ?? fallback;
@@ -83,8 +83,10 @@ export interface LotUI extends Record<string, unknown> {
   expiry_date: string;
   current_quantity: string; // DDL v2.2: DECIMAL as string
   allocated_quantity: string; // DDL v2.2: DECIMAL as string
+  locked_quantity?: string; // Optional: may not be present in all responses
   unit: string;
   status: "active" | "depleted" | "expired" | "quarantine" | "locked"; // Match API type
+  lock_reason?: string | null; // Optional: only present when locked
   expected_lot_id: number | null; // DDL v2.2
   created_at: string;
   updated_at: string;
@@ -168,7 +170,7 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
 /**
  * LotResponse → LotUI
  */
-export function normalizeLot(lot: LotResponse): LotUI {
+export function normalizeLot(lot: Partial<LotResponse> & { lot_id: number; product_id: number; warehouse_id: number }): LotUI {
   return {
     lot_id: lot.lot_id,
     lot_number: S(lot.lot_number),
@@ -179,9 +181,9 @@ export function normalizeLot(lot: LotResponse): LotUI {
     expiry_date: S(lot.expiry_date),
     current_quantity: S(lot.current_quantity, "0"),
     allocated_quantity: S(lot.allocated_quantity, "0"),
-    locked_quantity: S(lot.locked_quantity, "0"),
+    locked_quantity: lot.locked_quantity ?? undefined,
     unit: S(lot.unit, "EA"),
-    status: lot.status as "active" | "depleted" | "expired" | "quarantine" | "locked",
+    status: (lot.status as "active" | "depleted" | "expired" | "quarantine" | "locked") ?? "active",
     lock_reason: lot.lock_reason ?? null,
     expected_lot_id: lot.expected_lot_id ?? null,
     created_at: S(lot.created_at),

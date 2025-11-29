@@ -12,13 +12,13 @@ from app.services.common.base_service import BaseService
 
 class UserService(BaseService[User, UserCreate, UserUpdate]):
     """Service for managing users.
-    
+
     Inherits common CRUD operations from BaseService:
     - get_by_id(user_id) -> User (overridden to include role join)
     - create(payload) -> User (overridden for password hashing)
     - update(user_id, payload) -> User (overridden for password hashing)
     - delete(user_id) -> None
-    
+
     Custom business logic is implemented below.
     """
 
@@ -54,6 +54,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate]):
         )
         if user is None and raise_404:
             from fastapi import HTTPException, status
+
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
         return user
 

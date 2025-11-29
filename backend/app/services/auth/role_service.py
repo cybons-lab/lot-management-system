@@ -9,13 +9,13 @@ from app.services.common.base_service import BaseService
 
 class RoleService(BaseService[Role, RoleCreate, RoleUpdate]):
     """Service for managing roles.
-    
+
     Inherits common CRUD operations from BaseService:
     - get_by_id(role_id) -> Role
     - create(payload) -> Role
     - update(role_id, payload) -> Role
     - delete(role_id) -> None
-    
+
     Custom business logic is implemented below.
     """
 

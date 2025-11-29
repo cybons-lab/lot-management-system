@@ -11,13 +11,13 @@ from app.services.common.base_service import BaseService
 
 class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, CustomerItemUpdate]):
     """Service for managing customer item mappings.
-    
+
     Inherits common CRUD operations from BaseService:
     - get_by_id(id) -> CustomerItem
     - create(payload) -> CustomerItem
     - update(id, payload) -> CustomerItem
     - delete(id) -> None
-    
+
     Custom business logic for composite key operations is implemented below.
     """
 

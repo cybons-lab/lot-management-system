@@ -10,13 +10,13 @@ from app.services.common.base_service import BaseService
 
 class ProductService(BaseService[Product, ProductCreate, ProductUpdate]):
     """Service layer orchestrating product use cases.
-    
+
     Inherits common CRUD operations from BaseService:
     - get_by_id(product_id) -> Product
     - create(payload) -> Product
     - update(product_id, payload) -> Product
     - delete(product_id) -> None
-    
+
     Custom business logic is implemented below.
     """
 
@@ -28,12 +28,12 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate]):
         self, *, page: int, per_page: int, q: str | None
     ) -> tuple[list[Product], int]:
         """Return paginated products with optional search query.
-        
+
         Args:
             page: Page number (1-indexed)
             per_page: Items per page
             q: Optional search query
-        
+
         Returns:
             Tuple of (products list, total count)
         """

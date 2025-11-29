@@ -11,13 +11,13 @@ from app.services.common.base_service import BaseService
 
 class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate]):
     """Service for batch jobs (バッチジョブ).
-    
+
     Inherits common CRUD operations from BaseService:
     - get_by_id(job_id) -> BatchJob
     - create(payload) -> BatchJob
     - update(job_id, payload) -> BatchJob
     - delete(job_id) -> None
-    
+
     Custom business logic is implemented below.
     """
 

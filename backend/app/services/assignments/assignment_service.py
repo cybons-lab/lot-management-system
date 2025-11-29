@@ -15,13 +15,13 @@ class AssignmentService(
     BaseService[UserSupplierAssignment, UserSupplierAssignmentCreate, UserSupplierAssignmentUpdate]
 ):
     """Service for user-supplier assignments.
-    
+
     Inherits common CRUD operations from BaseService:
     - get_by_id(assignment_id) -> UserSupplierAssignment
     - create(payload) -> UserSupplierAssignment (overridden as create_assignment)
     - update(assignment_id, payload) -> UserSupplierAssignment (overridden as update_assignment)
     - delete(assignment_id) -> None (overridden as delete_assignment)
-    
+
     Custom business logic is implemented below.
     """
 

@@ -11,13 +11,13 @@ from app.services.common.base_service import BaseService
 
 class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, BusinessRuleUpdate]):
     """Service for business rules (業務ルール).
-    
+
     Inherits common CRUD operations from BaseService:
     - get_by_id(rule_id) -> BusinessRule
     - create(payload) -> BusinessRule
     - update(rule_id, payload) -> BusinessRule
     - delete(rule_id) -> None
-    
+
     Custom business logic is implemented below.
     """
 
