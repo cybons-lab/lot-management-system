@@ -8,13 +8,25 @@ from app.schemas.assignments.assignment_schema import (
     UserSupplierAssignmentCreate,
     UserSupplierAssignmentUpdate,
 )
+from app.services.common.base_service import BaseService
 
 
-class AssignmentService:
-    """Service for user-supplier assignments."""
+class AssignmentService(
+    BaseService[UserSupplierAssignment, UserSupplierAssignmentCreate, UserSupplierAssignmentUpdate]
+):
+    """Service for user-supplier assignments.
+    
+    Inherits common CRUD operations from BaseService:
+    - get_by_id(assignment_id) -> UserSupplierAssignment
+    - create(payload) -> UserSupplierAssignment (overridden as create_assignment)
+    - update(assignment_id, payload) -> UserSupplierAssignment (overridden as update_assignment)
+    - delete(assignment_id) -> None (overridden as delete_assignment)
+    
+    Custom business logic is implemented below.
+    """
 
     def __init__(self, db: Session):
-        self.db = db
+        super().__init__(db=db, model=UserSupplierAssignment)
 
     def get_user_suppliers(self, user_id: int) -> list[UserSupplierAssignment]:
         """Get all supplier assignments for a user."""
@@ -40,35 +52,17 @@ class AssignmentService:
 
     def create_assignment(self, data: UserSupplierAssignmentCreate) -> UserSupplierAssignment:
         """Create a new user-supplier assignment."""
-        assignment = UserSupplierAssignment(**data.model_dump())
-        self.db.add(assignment)
-        self.db.commit()
-        self.db.refresh(assignment)
-        return assignment
+        return self.create(data)
 
     def update_assignment(
         self, assignment_id: int, data: UserSupplierAssignmentUpdate
     ) -> UserSupplierAssignment:
         """Update an existing assignment."""
-        assignment = self.db.get(UserSupplierAssignment, assignment_id)
-        if not assignment:
-            raise ValueError(f"Assignment {assignment_id} not found")
-
-        for key, value in data.model_dump(exclude_unset=True).items():
-            setattr(assignment, key, value)
-
-        self.db.commit()
-        self.db.refresh(assignment)
-        return assignment
+        return self.update(assignment_id, data)
 
     def delete_assignment(self, assignment_id: int) -> None:
         """Delete an assignment."""
-        assignment = self.db.get(UserSupplierAssignment, assignment_id)
-        if not assignment:
-            raise ValueError(f"Assignment {assignment_id} not found")
-
-        self.db.delete(assignment)
-        self.db.commit()
+        self.delete(assignment_id)
 
     def set_primary_assignment(self, user_id: int, supplier_id: int) -> UserSupplierAssignment:
         """Set a user as the primary contact for a supplier.
