@@ -2,7 +2,7 @@
  * Suppliers API Types and Bulk Operations
  */
 
-import type { BulkUpsertResponse, SupplierBulkRow } from "../types/bulk-operation";
+import type { BulkUpsertResponse, SupplierBulkRow } from "./types/bulk-operation";
 import { http } from "@/shared/api/http-client";
 import type { components } from "@/types/api";
 

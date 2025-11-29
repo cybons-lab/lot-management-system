@@ -1,6 +1,6 @@
 import { useMasterApi } from "@/shared/hooks/useMasterApi";
-import type { Supplier } from "../api";
+import type { Supplier, SupplierCreate, SupplierUpdate } from "../api";
 
-export const useSuppliers = () => {
-  return useMasterApi<Supplier>("masters/suppliers", "suppliers");
+export function useSuppliers() {
+  return useMasterApi<Supplier, SupplierCreate, SupplierUpdate>("masters/suppliers", "suppliers");
 };

@@ -11,7 +11,7 @@ import type {
   BulkUpsertResponse,
   CustomerBulkRow,
   CustomerBulkUpsertRequest,
-} from "../types/bulk-operation";
+} from "./types/bulk-operation";
 
 import { http } from "@/shared/api/http-client";
 import type { components } from "@/types/api";

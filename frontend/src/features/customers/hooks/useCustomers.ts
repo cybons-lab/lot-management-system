@@ -1,6 +1,6 @@
 import { useMasterApi } from "@/shared/hooks/useMasterApi";
-import type { Customer } from "../api";
+import type { Customer, CustomerCreate, CustomerUpdate } from "../api";
 
-export const useCustomers = () => {
-  return useMasterApi<Customer>("masters/customers", "customers");
-};
+export function useCustomers() {
+  return useMasterApi<Customer, CustomerCreate, CustomerUpdate>("masters/customers", "customers");
+}

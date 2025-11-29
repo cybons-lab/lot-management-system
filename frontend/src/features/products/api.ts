@@ -7,7 +7,7 @@
  * - Bulk import/export operations
  */
 
-import type { BulkUpsertResponse, ProductBulkRow } from "../types/bulk-operation";
+import type { BulkUpsertResponse, ProductBulkRow } from "./types/bulk-operation";
 import { http } from "@/shared/api/http-client";
 import type { components } from "@/types/api";
 

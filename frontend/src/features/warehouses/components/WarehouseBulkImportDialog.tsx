@@ -4,7 +4,7 @@
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useState, useId, useCallback } from "react";
 
-import { bulkUpsertWarehouses } from "../api";
+import { useBulkUpsertWarehouses } from "../hooks/useWarehouseMutations";
 import { bulkImport as styles } from "../pages/styles";
 import type { BulkUpsertResponse, WarehouseBulkRow } from "../types/bulk-operation";
 import { parseWarehouseCsv, generateEmptyTemplate, downloadCSV } from "../utils/warehouse-csv";
