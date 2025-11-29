@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import { useSuppliersQuery } from "@/features/suppliers/hooks/useSuppliersQuery";
+import { useSuppliers } from "@/features/suppliers";
 
 interface UserSupplierAssignmentDialogProps {
   userId: number;
@@ -41,7 +41,8 @@ export function UserSupplierAssignmentDialog({
   trigger,
 }: UserSupplierAssignmentDialogProps) {
   const [open, setOpen] = useState(false);
-  const { data: suppliers } = useSuppliersQuery();
+  const { useList } = useSuppliers();
+  const { data: suppliers = [] } = useList();
   const { createAssignment, isCreating } = useAssignmentMutations();
 
   const form = useForm<FormValues>({
