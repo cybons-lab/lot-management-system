@@ -126,6 +126,8 @@ function App() {
                 {/* Inventory routes */}
                 <Route path={ROUTES.INVENTORY.ROOT} element={<InventoryLayout />}>
                   <Route index element={<InventoryPage />} />
+                  <Route path="summary" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
+                  <Route path="lots" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
                   <Route path="moves" element={<MovesPage />} />
                   <Route path="adjustments" element={<AdjustmentsListPage />} />
                   <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
