@@ -1,4 +1,4 @@
-import type { AllocatedLot } from "../aliases";
+import type { AllocatedLot } from "../allocation-types";
 
 export type OrderLineLegacy = {
   line_no?: number | null;

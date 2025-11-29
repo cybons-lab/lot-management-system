@@ -50,14 +50,10 @@ export type LotCreate = Partial<LotResponse>;
 export type LotWithStock = LotResponse;
 
 // ---- Allocation ----
-export type AllocatedLot = {
-  lot_id: number;
-  allocated_quantity: number | string | null; // DDL v2.2: DECIMAL(15,3)
-  allocated_qty?: number | null; // Deprecated: use allocated_quantity
-  allocation_id?: number; // UI参照あり
-  delivery_place_code: string | null;
-  delivery_place_name: string | null;
-};
+// AllocatedLot is imported from allocation-types.ts to avoid circular dependencies
+// Re-export for backward compatibility
+export type { AllocatedLot } from "./allocation-types";
+
 export type LotCandidate = {
   id?: number;
   lot_id?: number;
