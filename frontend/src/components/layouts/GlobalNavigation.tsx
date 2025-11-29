@@ -1,3 +1,10 @@
+/**
+ * GlobalNavigation.tsx
+ *
+ * グローバルナビゲーションコンポーネント
+ * システム全体のメインメニューを提供
+ */
+
 import {
   LayoutDashboard,
   Package,
@@ -12,7 +19,6 @@ import {
   Warehouse,
   Building2,
   ChevronDown,
-  Barcode,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -75,7 +81,7 @@ const navItems: NavItem[] = [
     activeColor: "text-blue-600 bg-blue-50",
   },
   {
-    title: "需要予測",
+    title: "オリジナル（需要予測）",
     href: ROUTES.FORECASTS.LIST,
     icon: TrendingUp,
     color: "text-gray-600",
@@ -89,18 +95,11 @@ const navItems: NavItem[] = [
     activeColor: "text-indigo-600 bg-indigo-50",
   },
   {
-    title: "在庫管理",
-    href: ROUTES.INVENTORY.SUMMARY,
+    title: "在庫・ロット管理",
+    href: ROUTES.INVENTORY.ROOT,
     icon: Package,
     color: "text-gray-600",
     activeColor: "text-purple-600 bg-purple-50",
-  },
-  {
-    title: "ロット管理",
-    href: ROUTES.INVENTORY.LOTS,
-    icon: Barcode,
-    color: "text-gray-600",
-    activeColor: "text-pink-600 bg-pink-50",
   },
   {
     title: "受注管理",
@@ -136,11 +135,11 @@ const navItems: NavItem[] = [
 // メインコンポーネント
 // ============================================
 
-interface TopNavProps {
+interface GlobalNavigationProps {
   currentPath: string;
 }
 
-export function TopNav({ currentPath }: TopNavProps) {
+export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
   const [isMasterDropdownOpen, setIsMasterDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

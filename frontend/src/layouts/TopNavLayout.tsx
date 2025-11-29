@@ -11,7 +11,7 @@ import { useLocation } from "react-router-dom";
 
 import * as styles from "./TopNavLayout.styles";
 
-import { TopNav } from "@/components/layouts/TopNav";
+import { GlobalNavigation } from "@/components/layouts/GlobalNavigation";
 
 // ============================================
 // メインコンポーネント
@@ -26,7 +26,7 @@ export function TopNavLayout({ children }: TopNavLayoutProps) {
 
   return (
     <div className={styles.root}>
-      <TopNav currentPath={location.pathname} />
+      <GlobalNavigation currentPath={location.pathname} />
 
       {/* メインコンテンツ */}
       <main className={styles.main}>{children}</main>
