@@ -80,7 +80,10 @@ export function UomConversionsPage() {
       {/* 件数表示 */}
       <div className="text-sm text-slate-600">{conversions.length} 件の単位換算</div>
 
-      <UomConversionBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+      <UomConversionBulkImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+      />
     </div>
   );
 }

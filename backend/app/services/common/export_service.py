@@ -14,15 +14,15 @@ class ExportService:
         """Convert Pydantic models to dicts if necessary."""
         if not data:
             return []
-        
+
         # If first item has model_dump, assume all are Pydantic models
         if hasattr(data[0], "model_dump"):
             return [item.model_dump() for item in data]
-        
+
         # If first item has dict, assume all are SQLAlchemy models or similar
         if hasattr(data[0], "_asdict"):
             return [item._asdict() for item in data]
-            
+
         return data
 
     @staticmethod
@@ -35,10 +35,10 @@ class ExportService:
 
         processed_data = ExportService._prepare_data(data)
         df = pd.DataFrame(processed_data)
-        
+
         stream = io.StringIO()
         df.to_csv(stream, index=False, encoding="utf-8-sig")
-        
+
         response = StreamingResponse(
             iter([stream.getvalue()]),
             media_type="text/csv",
@@ -50,20 +50,20 @@ class ExportService:
     def export_to_excel(data: list[Any], filename: str = "export") -> StreamingResponse:
         """Export data to Excel (xlsx)."""
         try:
-            import pandas as pd
             import openpyxl  # noqa: F401
+            import pandas as pd
         except ImportError:
             raise ImportError("pandas and openpyxl are required for export. Please install them.")
 
         processed_data = ExportService._prepare_data(data)
         df = pd.DataFrame(processed_data)
-        
+
         stream = io.BytesIO()
         with pd.ExcelWriter(stream, engine="openpyxl") as writer:
             df.to_excel(writer, index=False, sheet_name="Sheet1")
-            
+
         stream.seek(0)
-        
+
         response = StreamingResponse(
             iter([stream.getvalue()]),
             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

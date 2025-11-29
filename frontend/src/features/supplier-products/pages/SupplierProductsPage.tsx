@@ -89,7 +89,10 @@ export function SupplierProductsPage() {
       {/* 件数表示 */}
       <div className="text-sm text-slate-600">{products.length} 件の仕入先商品</div>
 
-      <SupplierProductBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+      <SupplierProductBulkImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+      />
     </div>
   );
 }

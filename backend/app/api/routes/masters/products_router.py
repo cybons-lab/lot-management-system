@@ -86,7 +86,7 @@ def export_products(format: str = "csv", db: Session = Depends(get_db)):
     service = ProductService(db)
     products = service.get_all()
     data = [_to_product_out(p) for p in products]
-    
+
     if format == "xlsx":
         return ExportService.export_to_excel(data, "products")
     return ExportService.export_to_csv(data, "products")

@@ -5,7 +5,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.database import get_db
 from app.models.masters_models import Product, ProductUomConversion
 from app.services.common.export_service import ExportService
 
@@ -25,7 +24,6 @@ def list_uom_conversions(
         ProductUomConversion.conversion_id,
         ProductUomConversion.product_id,
         ProductUomConversion.external_unit,
-
         ProductUomConversion.factor,
         Product.maker_part_code,
         Product.product_name,

@@ -1,6 +1,8 @@
-import sys
 import os
+import sys
+
 from sqlalchemy import create_engine, inspect
+
 
 # Add backend directory to path
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
@@ -15,6 +17,7 @@ def inspect_table(table_name):
     columns = inspector.get_columns(table_name)
     for column in columns:
         print(f"- {column['name']} ({column['type']})")
+
 
 if __name__ == "__main__":
     inspect_table("product_uom_conversions")

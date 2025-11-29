@@ -60,7 +60,7 @@ def export_customers(format: str = "csv", db: Session = Depends(get_db)):
     customers = service.get_all()
     # CustomerResponse has from_attributes=True, so we can use it to serialize
     data = [CustomerResponse.model_validate(c).model_dump() for c in customers]
-    
+
     if format == "xlsx":
         return ExportService.export_to_excel(data, "customers")
     return ExportService.export_to_csv(data, "customers")
