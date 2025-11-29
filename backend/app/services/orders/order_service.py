@@ -23,6 +23,7 @@ from app.models import (
 )
 from app.schemas.orders.orders_schema import (
     OrderCreate,
+    OrderLineResponse,
     OrderResponse,
     OrderWithLinesResponse,
 )
@@ -69,6 +70,74 @@ class OrderService:
         self._populate_additional_info(response_orders)
 
         return response_orders
+
+    def get_order_lines(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        status: str | None = None,
+        customer_code: str | None = None,
+        product_code: str | None = None,
+        date_from: date | None = None,
+        date_to: date | None = None,
+    ) -> list[OrderLineResponse]:
+        """Get flattened order lines with filtering."""
+        stmt = (
+            select(OrderLine)
+            .join(Order, OrderLine.order_id == Order.id)
+            .options(
+                selectinload(OrderLine.order).selectinload(Order.customer),
+                selectinload(OrderLine.allocations).joinedload(Allocation.lot),
+                selectinload(OrderLine.product),
+            )
+        )
+
+        if customer_code:
+            stmt = stmt.join(Customer, Order.customer_id == Customer.id).where(
+                Customer.customer_code == customer_code
+            )
+
+        if product_code:
+            stmt = stmt.join(Product, OrderLine.product_id == Product.id).where(
+                Product.maker_part_code == product_code
+            )
+
+        if status:
+            stmt = stmt.where(OrderLine.status == status)
+
+        if date_from:
+            stmt = stmt.where(OrderLine.delivery_date >= date_from)
+        if date_to:
+            stmt = stmt.where(OrderLine.delivery_date <= date_to)
+
+        stmt = stmt.order_by(OrderLine.delivery_date.asc()).offset(skip).limit(limit)
+        lines = self.db.execute(stmt).scalars().all()
+
+        # Convert to Pydantic models
+        response_lines = []
+        for line in lines:
+            resp = OrderLineResponse.model_validate(line)
+            # Manually populate flattened fields from relations
+            if line.order:
+                resp.order_number = line.order.order_number
+                resp.customer_id = line.order.customer_id
+                resp.order_date = line.order.order_date
+                if line.order.customer:
+                    resp.customer_name = line.order.customer.customer_name
+                    resp.customer_code = line.order.customer.customer_code
+
+            # Populate lot info in allocations
+            for i, alloc in enumerate(line.allocations):
+                if i < len(resp.allocations):
+                    if alloc.lot:
+                        resp.allocations[i].lot_number = alloc.lot.lot_number
+
+            response_lines.append(resp)
+
+        # Populate additional info (product details, etc.)
+        self._populate_line_additional_info(response_lines)
+
+        return response_lines
 
     def get_order_detail(self, order_id: int) -> OrderWithLinesResponse:
         # Load order with related data (DDL v2.2 compliant)
@@ -214,3 +283,44 @@ class OrderService:
                         detail.product_qty_per_internal_unit or 1.0
                     )
                     line.delivery_place_name = detail.delivery_place_name
+
+    def _populate_line_additional_info(self, lines: list[OrderLineResponse]) -> None:
+        """Populate additional display info for a list of OrderLineResponse."""
+        if not lines:
+            return
+
+        line_ids = [line.id for line in lines]
+        if not line_ids:
+            return
+
+        # Fetch details from view
+        query = """
+            SELECT 
+                line_id, 
+                supplier_name, 
+                product_code, product_name, product_internal_unit, product_external_unit, product_qty_per_internal_unit,
+                delivery_place_name
+            FROM v_order_line_details
+            WHERE line_id IN :line_ids
+        """
+
+        from sqlalchemy import text
+
+        rows = self.db.execute(text(query), {"line_ids": tuple(line_ids)}).fetchall()
+
+        # Map details by line_id
+        details_map = {row.line_id: row for row in rows}
+
+        # Update lines
+        for line in lines:
+            detail = details_map.get(line.id)
+            if detail:
+                line.supplier_name = detail.supplier_name
+                line.product_code = detail.product_code
+                line.product_name = detail.product_name
+                line.product_internal_unit = detail.product_internal_unit
+                line.product_external_unit = detail.product_external_unit
+                line.product_qty_per_internal_unit = float(
+                    detail.product_qty_per_internal_unit or 1.0
+                )
+                line.delivery_place_name = detail.delivery_place_name

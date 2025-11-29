@@ -69,6 +69,9 @@ class AllocationResponse(BaseSchema):
     created_at: datetime
     updated_at: datetime
 
+    # Flattened Lot Info
+    lot_number: str | None = None
+
 
 # ============================================================
 # OrderLine (受注明細)
@@ -115,8 +118,16 @@ class OrderLineResponse(OrderLineBase):
     order_id: int
     created_at: datetime
     updated_at: datetime
-    supplier_name: str | None = None
+
+    # Flattened Order Info
+    order_number: str | None = None
+    customer_id: int | None = None
+    customer_name: str | None = None
+    customer_code: str | None = None
+    order_date: date | None = None
+
     # Product Unit Info (flattened from product relationship)
+    supplier_name: str | None = None
     product_internal_unit: str | None = None
     product_external_unit: str | None = None
     product_qty_per_internal_unit: float | None = None

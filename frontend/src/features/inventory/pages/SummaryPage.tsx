@@ -9,7 +9,7 @@
 /* eslint-disable max-lines-per-function */
 
 import { format } from "date-fns";
-import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import { ChevronDown, ChevronRight, RefreshCw, Box, Truck, Home, List } from "lucide-react";
 import { Fragment, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -17,13 +17,21 @@ import { useInventoryItems } from "../hooks";
 
 import * as styles from "./styles";
 
-import { Button } from "@/components/ui";
+import { Button, Tabs, TabsList, TabsTrigger } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
+import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
+import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
 import { StatCard } from "@/features/inventory/components/StatCard";
 import { useInventoryStats } from "@/features/inventory/hooks/useInventoryStats";
-import { useLotsQuery } from "@/hooks/api";
+import {
+  useInventoryByProduct,
+  useInventoryBySupplier,
+  useInventoryByWarehouse,
+  useLotsQuery,
+} from "@/hooks/api";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
 import { Section } from "@/shared/components/layout";
 import { fmt } from "@/shared/utils/number";
@@ -33,9 +41,13 @@ import { getLotStatuses } from "@/shared/utils/status";
 // メインコンポーネント
 // ============================================
 
+type ViewMode = "items" | "product" | "supplier" | "warehouse";
+
 export function SummaryPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  const [viewMode, setViewMode] = useState<ViewMode>("items");
 
   const [filters, setFilters] = useState({
     product_id: searchParams.get("product_id") || "",
@@ -51,8 +63,18 @@ export function SummaryPage() {
     warehouse_id: filters.warehouse_id ? Number(filters.warehouse_id) : undefined,
   };
 
-  // データ取得
-  const { data: inventoryItems = [], isLoading, error, refetch } = useInventoryItems(queryParams);
+  // データ取得 (Items - Default)
+  const {
+    data: inventoryItems = [],
+    isLoading: isItemsLoading,
+    error: itemsError,
+    refetch: refetchItems,
+  } = useInventoryItems(queryParams);
+
+  // データ取得 (Aggregation)
+  const supplierQuery = useInventoryBySupplier();
+  const warehouseQuery = useInventoryByWarehouse();
+  const productQuery = useInventoryByProduct();
 
   // 全ロット取得（展開行のフィルタリング用）
   const { data: allLots = [] } = useLotsQuery({});
@@ -81,6 +103,56 @@ export function SummaryPage() {
     );
   };
 
+  // Drill-down handlers
+  const handleSupplierClick = (supplierCode: string) => {
+    // Navigate to Lots page with filter
+    // TODO: Implement filter passing via Jotai or URL
+    navigate(`${ROUTES.INVENTORY.LOTS}?search=${supplierCode}`);
+  };
+
+  const handleWarehouseClick = (warehouseCode: string) => {
+    navigate(`${ROUTES.INVENTORY.LOTS}?search=${warehouseCode}`);
+  };
+
+  const handleProductClick = (productCode: string) => {
+    navigate(`${ROUTES.INVENTORY.LOTS}?search=${productCode}`);
+  };
+
+  const handleRefresh = () => {
+    switch (viewMode) {
+      case "items":
+        refetchItems();
+        break;
+      case "supplier":
+        supplierQuery.refetch();
+        break;
+      case "warehouse":
+        warehouseQuery.refetch();
+        break;
+      case "product":
+        productQuery.refetch();
+        break;
+    }
+  };
+
+  const isLoading =
+    viewMode === "items"
+      ? isItemsLoading
+      : viewMode === "supplier"
+        ? supplierQuery.isLoading
+        : viewMode === "warehouse"
+          ? warehouseQuery.isLoading
+          : productQuery.isLoading;
+
+  const error =
+    viewMode === "items"
+      ? itemsError
+      : viewMode === "supplier"
+        ? supplierQuery.error
+        : viewMode === "warehouse"
+          ? warehouseQuery.error
+          : productQuery.error;
+
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -100,7 +172,7 @@ export function SummaryPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetch()}
+            onClick={handleRefresh}
             className={styles.errorState.retryButton}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -165,32 +237,68 @@ export function SummaryPage() {
           />
         </div>
 
-        {/* Filters */}
-        <div className={styles.filterCard}>
-          <div className={styles.detailGrid.root}>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">製品ID</Label>
-              <Input
-                type="number"
-                value={filters.product_id}
-                onChange={(e) => setFilters({ ...filters, product_id: e.target.value })}
-                placeholder="製品IDで絞り込み"
-              />
-            </div>
-            <div>
-              <Label className="mb-2 block text-sm font-medium">倉庫ID</Label>
-              <Input
-                type="number"
-                value={filters.warehouse_id}
-                onChange={(e) => setFilters({ ...filters, warehouse_id: e.target.value })}
-                placeholder="倉庫IDで絞り込み"
-              />
-            </div>
-          </div>
+        {/* View Mode Switcher */}
+        <div className="flex items-center justify-between">
+          <Tabs
+            value={viewMode}
+            onValueChange={(v) => setViewMode(v as ViewMode)}
+            className="w-[500px]"
+          >
+            <TabsList>
+              <TabsTrigger value="items">
+                <List className="mr-2 h-4 w-4" />
+                アイテム一覧
+              </TabsTrigger>
+              <TabsTrigger value="product">
+                <Box className="mr-2 h-4 w-4" />
+                製品別
+              </TabsTrigger>
+              <TabsTrigger value="supplier">
+                <Truck className="mr-2 h-4 w-4" />
+                仕入先別
+              </TabsTrigger>
+              <TabsTrigger value="warehouse">
+                <Home className="mr-2 h-4 w-4" />
+                倉庫別
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* 更新ボタン */}
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            データを更新
+          </Button>
         </div>
 
-        {/* Inventory Items Table */}
-        {inventoryItems.length > 0 && (
+        {/* Filters (Only for Items view) */}
+        {viewMode === "items" && (
+          <div className={styles.filterCard}>
+            <div className={styles.detailGrid.root}>
+              <div>
+                <Label className="mb-2 block text-sm font-medium">製品ID</Label>
+                <Input
+                  type="number"
+                  value={filters.product_id}
+                  onChange={(e) => setFilters({ ...filters, product_id: e.target.value })}
+                  placeholder="製品IDで絞り込み"
+                />
+              </div>
+              <div>
+                <Label className="mb-2 block text-sm font-medium">倉庫ID</Label>
+                <Input
+                  type="number"
+                  value={filters.warehouse_id}
+                  onChange={(e) => setFilters({ ...filters, warehouse_id: e.target.value })}
+                  placeholder="倉庫IDで絞り込み"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Inventory Items Table (Default View) */}
+        {viewMode === "items" && inventoryItems.length > 0 && (
           <div className="space-y-4">
             <div className="text-sm text-gray-600">{inventoryItems.length} 件の在庫アイテム</div>
 
@@ -345,13 +453,22 @@ export function SummaryPage() {
           </div>
         )}
 
-        {/* 更新ボタン */}
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            データを更新
-          </Button>
-        </div>
+        {/* Aggregation Views */}
+        {viewMode === "supplier" && (
+          <InventoryBySupplierTable
+            data={supplierQuery.data || []}
+            onRowClick={handleSupplierClick}
+          />
+        )}
+        {viewMode === "warehouse" && (
+          <InventoryByWarehouseTable
+            data={warehouseQuery.data || []}
+            onRowClick={handleWarehouseClick}
+          />
+        )}
+        {viewMode === "product" && (
+          <InventoryByProductTable data={productQuery.data || []} onRowClick={handleProductClick} />
+        )}
       </div>
     </div>
   );

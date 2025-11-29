@@ -7,6 +7,7 @@ import type {
   WarehouseListResponse,
   ManualAllocationSavePayload,
 } from "@/shared/types/schema";
+import type { OrderLine } from "@/shared/types/aliases";
 
 // api.d.ts から型を抽出
 export type OrdersListParams = operations["list_orders_api_orders_get"]["parameters"]["query"];
@@ -33,6 +34,24 @@ export const getOrders = (params?: OrdersListParams) => {
 
   const queryString = searchParams.toString();
   return fetchApi.get<OrderResponse[]>(`/orders${queryString ? "?" + queryString : ""}`);
+};
+
+/**
+ * 受注明細一覧取得 (Flattened)
+ */
+export const getOrderLines = (params?: OrdersListParams & { product_code?: string }) => {
+  const searchParams = new URLSearchParams();
+  if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
+  if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
+  if (params?.status) searchParams.append("status", params.status);
+  if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
+  if (params?.product_code) searchParams.append("product_code", params.product_code);
+  if (params?.date_from) searchParams.append("date_from", params.date_from);
+  if (params?.date_to) searchParams.append("date_to", params.date_to);
+
+  const queryString = searchParams.toString();
+  // Note: OrderLineResponse[] is returned, but we use OrderLine[] alias in frontend
+  return fetchApi.get<OrderLine[]>(`/orders/lines${queryString ? "?" + queryString : ""}`);
 };
 
 /**

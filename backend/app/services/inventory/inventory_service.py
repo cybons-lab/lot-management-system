@@ -145,3 +145,115 @@ class InventoryService:
             warehouse_name=row.warehouse_name,
             warehouse_code=row.warehouse_code,
         )
+
+    def get_inventory_by_supplier(self) -> list[dict]:
+        """
+        Get inventory aggregated by supplier.
+
+        Returns:
+            List of dictionaries matching InventoryBySupplierResponse
+        """
+        query = """
+            SELECT 
+                l.supplier_id,
+                s.supplier_name,
+                s.supplier_code,
+                SUM(l.current_quantity) as total_quantity,
+                COUNT(l.id) as lot_count,
+                COUNT(DISTINCT l.product_id) as product_count
+            FROM lots l
+            JOIN suppliers s ON l.supplier_id = s.id
+            WHERE l.current_quantity > 0 AND l.status = 'active'
+            GROUP BY l.supplier_id, s.supplier_name, s.supplier_code
+            ORDER BY s.supplier_code
+        """
+        from sqlalchemy import text
+
+        result = self.db.execute(text(query)).fetchall()
+        return [
+            {
+                "supplier_id": row.supplier_id,
+                "supplier_name": row.supplier_name,
+                "supplier_code": row.supplier_code,
+                "total_quantity": row.total_quantity,
+                "lot_count": row.lot_count,
+                "product_count": row.product_count,
+            }
+            for row in result
+        ]
+
+    def get_inventory_by_warehouse(self) -> list[dict]:
+        """
+        Get inventory aggregated by warehouse.
+
+        Returns:
+            List of dictionaries matching InventoryByWarehouseResponse
+        """
+        query = """
+            SELECT 
+                l.warehouse_id,
+                w.warehouse_name,
+                w.warehouse_code,
+                SUM(l.current_quantity) as total_quantity,
+                COUNT(l.id) as lot_count,
+                COUNT(DISTINCT l.product_id) as product_count
+            FROM lots l
+            JOIN warehouses w ON l.warehouse_id = w.id
+            WHERE l.current_quantity > 0 AND l.status = 'active'
+            GROUP BY l.warehouse_id, w.warehouse_name, w.warehouse_code
+            ORDER BY w.warehouse_code
+        """
+        from sqlalchemy import text
+
+        result = self.db.execute(text(query)).fetchall()
+        return [
+            {
+                "warehouse_id": row.warehouse_id,
+                "warehouse_name": row.warehouse_name,
+                "warehouse_code": row.warehouse_code,
+                "total_quantity": row.total_quantity,
+                "lot_count": row.lot_count,
+                "product_count": row.product_count,
+            }
+            for row in result
+        ]
+
+    def get_inventory_by_product(self) -> list[dict]:
+        """
+        Get inventory aggregated by product (across all warehouses).
+
+        Returns:
+            List of dictionaries matching InventoryByProductResponse
+        """
+        query = """
+            SELECT 
+                l.product_id,
+                p.product_name,
+                p.maker_part_code as product_code,
+                SUM(l.current_quantity) as total_quantity,
+                SUM(l.allocated_quantity) as allocated_quantity,
+                SUM(GREATEST(l.current_quantity - l.allocated_quantity - l.locked_quantity, 0)) as available_quantity,
+                COUNT(l.id) as lot_count,
+                COUNT(DISTINCT l.warehouse_id) as warehouse_count
+            FROM lots l
+            JOIN products p ON l.product_id = p.id
+            WHERE l.current_quantity > 0 AND l.status = 'active'
+            GROUP BY l.product_id, p.product_name, p.maker_part_code
+            ORDER BY p.maker_part_code
+        """
+        from sqlalchemy import text
+
+        result = self.db.execute(text(query)).fetchall()
+        return [
+            {
+                "product_id": row.product_id,
+                "product_name": row.product_name,
+                "product_code": row.product_code,
+                "total_quantity": row.total_quantity,
+                "allocated_quantity": row.allocated_quantity,
+                "available_quantity": row.available_quantity,
+                "lot_count": row.lot_count,
+                "warehouse_count": row.warehouse_count,
+            }
+            for row in result
+        ]

@@ -173,6 +173,27 @@ export type OrderLine = ApiOrderLine & {
   product_internal_unit?: string | null;
   product_external_unit?: string | null;
   product_qty_per_internal_unit?: number | null;
+
+  // Flattened Order Info (New)
+  order_number?: string | null;
+  order_date?: string | null;
+  // due_date, customer_code, etc are already defined above as legacy/deprecated.
+  // We should reuse them or remove the old ones if we want to enforce new structure.
+  // For now, I will comment out the duplicates I added and rely on existing ones or remove existing ones if they are in the way.
+  // Actually, existing ones are:
+  // due_date?: string | null;
+  // customer_code?: string | null;
+  // customer_name?: string | null;
+  // delivery_place_name?: string | null;
+  // status?: string | null;
+
+  // So I only need to add order_number, order_date, customer_id, order_status (if status is different).
+  // status is already there. order_status is new alias?
+  // I will remove the duplicates I added.
+
+  customer_id?: number | null;
+  order_status?: string | null;
+  [key: string]: unknown; // Allow extra properties
 };
 
 type ApiOrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
