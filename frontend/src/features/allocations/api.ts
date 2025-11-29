@@ -86,7 +86,7 @@ export const getAllocationCandidates = (params: {
 
   const queryString = searchParams.toString();
   return http.get<CandidateLotsResponse>(
-    `/allocation-candidates${queryString ? "?" + queryString : ""}`,
+    `allocation-candidates${queryString ? "?" + queryString : ""}`,
   );
 };
 
@@ -96,7 +96,7 @@ export const getAllocationCandidates = (params: {
  */
 // TODO: Use generated types once available
 export const createManualAllocationSuggestion = (data: ManualAllocationRequest) => {
-  return http.post<ManualAllocationResponse>("/allocation-suggestions/manual", data);
+  return http.post<ManualAllocationResponse>("allocation-suggestions/manual", data);
 };
 
 /**
@@ -104,7 +104,7 @@ export const createManualAllocationSuggestion = (data: ManualAllocationRequest) 
  * @endpoint POST /allocation-suggestions/fefo
  */
 export const createFefoAllocationSuggestion = (data: FefoPreviewRequest) => {
-  return http.post<FefoPreviewResponse>("/allocation-suggestions/fefo", data);
+  return http.post<FefoPreviewResponse>("allocation-suggestions/fefo", data);
 };
 
 /**
@@ -112,7 +112,7 @@ export const createFefoAllocationSuggestion = (data: FefoPreviewRequest) => {
  * @endpoint POST /allocations/commit
  */
 export const commitAllocation = (data: AllocationCommitRequest) => {
-  return http.post<AllocationCommitResponse>("/allocations/commit", data);
+  return http.post<AllocationCommitResponse>("allocations/commit", data);
 };
 
 /**
@@ -120,7 +120,7 @@ export const commitAllocation = (data: AllocationCommitRequest) => {
  * @endpoint POST /orders/{order_line_id}/allocations
  */
 export const saveManualAllocations = (data: ManualAllocationSavePayloadExtended) => {
-  return http.post<ManualAllocationSaveResponse>(`/orders/${data.order_line_id}/allocations`, {
+  return http.post<ManualAllocationSaveResponse>(`orders/${data.order_line_id}/allocations`, {
     allocations: data.allocations,
   });
 };
@@ -130,7 +130,7 @@ export const saveManualAllocations = (data: ManualAllocationSavePayloadExtended)
  * @endpoint DELETE /allocations/{id}
  */
 export const cancelAllocation = (allocationId: number) => {
-  return http.delete<void>(`/allocations/${allocationId}`);
+  return http.delete<void>(`allocations/${allocationId}`);
 };
 
 /**
@@ -155,7 +155,7 @@ export interface DragAssignResponse {
 }
 
 export const dragAssignAllocation = (data: DragAssignRequest) => {
-  return http.post<DragAssignResponse>("/allocation-suggestions/manual", data);
+  return http.post<DragAssignResponse>("allocation-suggestions/manual", data);
 };
 
 // ===== Legacy API Functions (for backward compatibility) =====
@@ -177,7 +177,7 @@ export const getCandidateLots = (params: {
 
   const queryString = searchParams.toString();
   return http.get<CandidateLotsResponse>(
-    `/allocations/candidate-lots${queryString ? "?" + queryString : ""}`,
+    `allocations/candidate-lots${queryString ? "?" + queryString : ""}`,
   );
 };
 
@@ -188,7 +188,7 @@ export async function createAllocations(
   payload: CreateAllocationPayload,
 ): Promise<AllocationResult> {
   try {
-    await http.post("/allocations", payload);
+    await http.post("allocations", payload);
   } catch (e) {
     console.warn("[allocations/api] createAllocations fallback:", e);
   }
@@ -257,7 +257,7 @@ export interface AllocationSuggestionPreviewResponse {
  */
 export const generateAllocationSuggestions = (data: AllocationSuggestionRequest) => {
   return http.post<AllocationSuggestionPreviewResponse>(
-    "/allocation-suggestions/preview",
+    "allocation-suggestions/preview",
     data,
   );
 };
@@ -282,6 +282,6 @@ export const getAllocationSuggestions = (params: {
 
   const queryString = searchParams.toString();
   return http.get<AllocationSuggestionListResponse>(
-    `/allocation-suggestions${queryString ? "?" + queryString : ""}`,
+    `allocation-suggestions${queryString ? "?" + queryString : ""}`,
   );
 };

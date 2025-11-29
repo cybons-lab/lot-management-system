@@ -7,7 +7,7 @@ export function SupplierProductsPage() {
     const { data: products = [], isLoading } = useQuery({
         queryKey: ["supplier-products"],
         queryFn: async () => {
-            const response = await http.get("/masters/supplier-products");
+            const response = await http.get("masters/supplier-products");
             return response.data;
         },
     });

@@ -7,7 +7,7 @@ export function UomConversionsPage() {
     const { data: conversions = [], isLoading } = useQuery({
         queryKey: ["uom-conversions"],
         queryFn: async () => {
-            const response = await http.get("/masters/uom-conversions");
+            const response = await http.get("masters/uom-conversions");
             return response.data;
         },
     });
