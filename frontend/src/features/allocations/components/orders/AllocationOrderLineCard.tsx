@@ -28,27 +28,27 @@ export function AllocationOrderLineCard({
   // 引当済み数量を計算(allocated_lotsまたはallocationsから)
   const allocatedQty: number = line.allocated_lots
     ? line.allocated_lots.reduce((sum: number, alloc) => {
-        // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
-        const qty =
-          typeof alloc === "object" && alloc !== null
-            ? Number(
-                (
-                  alloc as {
-                    allocated_quantity?: number | string | null;
-                    allocated_qty?: number | null;
-                  }
-                ).allocated_quantity ??
-                  (
-                    alloc as {
-                      allocated_quantity?: number | string | null;
-                      allocated_qty?: number | null;
-                    }
-                  ).allocated_qty ??
-                  0,
-              )
-            : 0;
-        return sum + qty;
-      }, 0)
+      // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
+      const qty =
+        typeof alloc === "object" && alloc !== null
+          ? Number(
+            (
+              alloc as {
+                allocated_quantity?: number | string | null;
+                allocated_qty?: number | null;
+              }
+            ).allocated_quantity ??
+            (
+              alloc as {
+                allocated_quantity?: number | string | null;
+                allocated_qty?: number | null;
+              }
+            ).allocated_qty ??
+            0,
+          )
+          : 0;
+      return sum + qty;
+    }, 0)
     : 0;
 
   // Prefer the original order quantity/unit for display; calculations fall back as needed
@@ -67,11 +67,10 @@ export function AllocationOrderLineCard({
   return (
     <button
       type="button"
-      className={`w-full cursor-pointer rounded-lg border p-3 text-left transition-all ${
-        isSelected
+      className={`w-full cursor-pointer rounded-lg border p-3 text-left transition-all ${isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-      }`}
+        }`}
       onClick={onClick}
     >
       <div className="mb-2 flex items-start justify-between">
@@ -99,9 +98,8 @@ export function AllocationOrderLineCard({
       {/* 進捗バー */}
       <div className="mb-1 h-2 w-full rounded-full bg-gray-200">
         <div
-          className={`h-2 rounded-full transition-all ${
-            progress === 100 ? "bg-green-500" : "bg-blue-500"
-          }`}
+          className={`h-2 rounded-full transition-all ${progress === 100 ? "bg-green-500" : "bg-blue-500"
+            }`}
           style={{ width: `${Math.min(progress, 100)}%` }}
         />
       </div>
@@ -144,7 +142,7 @@ export function AllocationOrderLineCard({
           <span className="invisible">-</span>
         )}
         <span className="text-gray-500">
-          納期: {formatDate(line.due_date, { fallback: "—", formatString: "MM/dd" })}
+          納期: {formatDate(line.due_date, { fallback: "—", format: "MM/dd" })}
         </span>
       </div>
 

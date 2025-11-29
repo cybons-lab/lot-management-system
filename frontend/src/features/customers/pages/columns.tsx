@@ -11,7 +11,7 @@ import { formatDate } from "@/shared/utils/date";
 /**
  * 得意先一覧テーブルのカラム定義
  */
-export const columns: Column<Customer>[] = [
+export const customerColumns: Column<Customer>[] = [
   {
     id: "customer_code",
     header: "得意先コード",

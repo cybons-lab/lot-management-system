@@ -34,7 +34,7 @@ export function OrderCard({ order, isSelected, onClick, lockedBy, lockedAt }: Or
   })();
 
   const dueDateSource = order.due_date ?? primaryLine?.due_date ?? null;
-  const dueDateText = formatDate(dueDateSource, { formatString: "MM/dd", fallback: "―" });
+  const dueDateText = formatDate(dueDateSource, { format: "MM/dd", fallback: "―" });
 
   const isFullyAllocated = order.unallocatedQty === 0;
   const isPartiallyAllocated =
@@ -101,9 +101,8 @@ export function OrderCard({ order, isSelected, onClick, lockedBy, lockedAt }: Or
             {/* 納期残バッジ（有限な数値のときのみ表示、NaN防止） */}
             {typeof order.daysTodue === "number" && isFinite(order.daysTodue) && (
               <span
-                className={`rounded border px-2 py-0.5 text-xs font-medium ${
-                  order.daysTodue < 0 ? "border-red-300 bg-red-100 text-red-700" : badgeColor
-                }`}
+                className={`rounded border px-2 py-0.5 text-xs font-medium ${order.daysTodue < 0 ? "border-red-300 bg-red-100 text-red-700" : badgeColor
+                  }`}
               >
                 {order.daysTodue < 0 ? `D+${Math.abs(order.daysTodue)}` : `D-${order.daysTodue}`}
               </span>
