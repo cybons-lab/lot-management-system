@@ -9,6 +9,7 @@
  */
 
 import { Plus, RefreshCw, Search } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
@@ -42,6 +43,9 @@ export function OrdersListPage() {
     status: "all",
     unallocatedOnly: false,
   });
+
+  // 表示モード状態
+  const [isGrouped, setIsGrouped] = useState(false);
 
   // データ取得 (Line-based)
   const {
@@ -188,6 +192,18 @@ export function OrdersListPage() {
                 未引当のみ表示
               </label>
             </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="groupByOrder"
+                checked={isGrouped}
+                onChange={(e) => setIsGrouped(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="groupByOrder" className="text-sm font-medium text-slate-700">
+                受注単位で表示
+              </label>
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -216,16 +232,72 @@ export function OrdersListPage() {
         </div>
       )}
 
-      {/* テーブル (Flat Line List) */}
+      {/* テーブル (Flat Line List) or Grouped View */}
       <div className="space-y-4">
-        <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-          <DataTable
-            data={paginatedLines}
-            columns={orderLineColumns}
-            isLoading={isLoading}
-            emptyMessage="明細がありません"
-          />
-        </div>
+        {isGrouped ? (
+          <div className="space-y-6">
+            {Object.values(
+              paginatedLines.reduce(
+                (acc, line) => {
+                  const key = line.order_number || "unknown";
+                  if (!acc[key]) {
+                    acc[key] = {
+                      orderNumber: line.order_number,
+                      customerName: line.customer_name,
+                      orderDate: line.order_date,
+                      status: line.order_status,
+                      lines: [],
+                    };
+                  }
+                  acc[key].lines.push(line);
+                  return acc;
+                },
+                {} as Record<string, any>,
+              ),
+            ).map((group: any) => (
+              <div
+                key={group.orderNumber}
+                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+              >
+                <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-3">
+                  <div className="flex items-center gap-4">
+                    <span className="font-bold text-slate-900">{group.orderNumber}</span>
+                    <span className="text-sm text-slate-600">{group.customerName}</span>
+                    <span className="text-xs text-slate-500">受注日: {group.orderDate}</span>
+                  </div>
+                  <span
+                    className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                      group.status === "allocated"
+                        ? "bg-blue-100 text-blue-800"
+                        : group.status === "shipped"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {group.status}
+                  </span>
+                </div>
+                <div className="p-0">
+                  <DataTable
+                    data={group.lines}
+                    columns={orderLineColumns}
+                    isLoading={false}
+                    emptyMessage="明細がありません"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+            <DataTable
+              data={paginatedLines}
+              columns={orderLineColumns}
+              isLoading={isLoading}
+              emptyMessage="明細がありません"
+            />
+          </div>
+        )}
 
         {/* ページネーション */}
         {!error && sortedLines.length > 0 && (

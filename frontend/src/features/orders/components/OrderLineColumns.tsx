@@ -22,7 +22,7 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     header: "得意先",
     cell: (row: OrderLineRow) => (
       <div>
-        <div className="font-medium text-slate-900">{row.customer_name}</div>
+        <div className="font-bold text-slate-900">{row.customer_name}</div>
         <div className="text-xs text-slate-500">{row.customer_code}</div>
       </div>
     ),
@@ -34,7 +34,7 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     cell: (row: OrderLineRow) => (
       <div>
         <div className="font-medium text-slate-900">{row.product_code ?? "–"}</div>
-        {row.product_name && <div className="text-xs text-slate-600">{row.product_name}</div>}
+        {row.product_name && <div className="font-bold text-slate-700">{row.product_name}</div>}
       </div>
     ),
     width: "250px",
@@ -45,7 +45,7 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     cell: (row: OrderLineRow) => {
       const qty = Number(row.order_quantity ?? row.quantity ?? 0);
       return (
-        <div className="text-slate-900">
+        <div className="font-bold text-slate-900">
           {qty.toLocaleString()} {row.unit ?? ""}
         </div>
       );
@@ -105,7 +105,7 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     cell: (row: OrderLineRow) => {
       // OrderLineRow now has due_date from parent order if line doesn't have it
       const dueDate = row.due_date ?? null;
-      return <div className="text-slate-900">{formatDate(dueDate)}</div>;
+      return <div className="font-bold text-slate-900">{formatDate(dueDate)}</div>;
     },
     width: "120px",
   },
