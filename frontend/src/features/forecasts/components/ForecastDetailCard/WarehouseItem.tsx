@@ -1,4 +1,3 @@
-
 import { type WarehouseData } from "./useWarehouseData";
 import * as styles from "./WarehouseInfoCard.styles";
 

@@ -4,10 +4,7 @@ import { fileURLToPath } from "url";
 import { chromium } from "playwright";
 
 const baseUrl = process.env.BASE_URL || "http://localhost:5173";
-const screenshotsDir = path.join(
-  path.dirname(fileURLToPath(import.meta.url)),
-  "screenshots"
-);
+const screenshotsDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "screenshots");
 
 const routes = [
   "/dashboard",
