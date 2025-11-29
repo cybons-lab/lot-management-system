@@ -81,6 +81,7 @@ services:
     working_dir: /app
     environment:
       VITE_API_BASE: "/api"
+      VITE_BACKEND_ORIGIN: "http://backend:8000"
       TZ: Asia/Tokyo
       # 監視をポーリングに切替（Win/Mac安定化）
       CHOKIDAR_USEPOLLING: "1"
