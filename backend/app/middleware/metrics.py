@@ -5,18 +5,22 @@
 APIパフォーマンスメトリクスを収集。
 """
 
+import logging
 import time
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from statistics import median, quantiles
+from statistics import StatisticsError, median, quantiles
 from threading import Lock
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -91,7 +95,8 @@ class EndpointMetrics:
             # percentile番目の値を取得（インデックスは0始まり）
             index = min(percentile - 1, len(qs) - 1)
             return qs[index]
-        except Exception:
+        except (StatisticsError, ValueError, IndexError) as e:
+            logger.warning(f"Failed to calculate percentile: {e}")
             return 0.0
 
     def get_error_rate(self) -> float:
