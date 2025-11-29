@@ -16,16 +16,11 @@ export { useCustomers } from "./hooks";
 
 // API
 export {
-  listCustomers,
-  getCustomer,
-  createCustomer,
-  updateCustomer,
-  deleteCustomer,
   bulkUpsertCustomers,
   type Customer,
   type CustomerCreate,
   type CustomerUpdate,
-} from "./api/customers-api";
+} from "./api";
 
 // Types
 export type {
