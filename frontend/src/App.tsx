@@ -46,8 +46,8 @@ import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { MastersPage } from "@/features/masters/pages/MastersPage";
-import { SupplierProductsPage } from "@/features/masters/pages/SupplierProductsPage";
-import { UomConversionsPage } from "@/features/masters/pages/UomConversionsPage";
+import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
+import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversionsPage";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
 import { logError } from "@/services/error-logger";
 
