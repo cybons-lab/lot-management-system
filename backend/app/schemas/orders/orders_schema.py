@@ -11,6 +11,7 @@ from decimal import Decimal
 
 from pydantic import Field
 
+from app.schemas.allocations.allocations_schema import AllocationDetail
 from app.schemas.common.base import BaseSchema
 
 
@@ -57,8 +58,6 @@ class OrderWithLinesResponse(OrderResponse):
 # Allocation (引当実績) - Simplified for orders_schema
 # ============================================================
 
-
-from app.schemas.allocations.allocations_schema import AllocationDetail
 
 # Alias for backward compatibility and clarity in Order context
 AllocationResponse = AllocationDetail

@@ -103,11 +103,13 @@ export function OrdersListPage() {
       const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
       // Use allocations from new API if available, otherwise fallback to allocated_lots
       const allocations = line.allocations || line.allocated_lots || [];
-      const allocatedQty = allocations.reduce(
-        (acc: number, alloc: any) =>
-          acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
-        0,
-      );
+      const allocatedQty = allocations.reduce((acc: number, alloc: unknown) => {
+        const item = alloc as {
+          allocated_quantity?: number | string;
+          allocated_qty?: number | string;
+        };
+        return acc + Number(item.allocated_quantity ?? item.allocated_qty ?? 0);
+      }, 0);
       if (orderQty > 0 && allocatedQty >= orderQty) return false;
     }
 
@@ -269,113 +271,123 @@ export function OrdersListPage() {
 
       {/* テーブル (Delivery Grouped / Flat / Order Grouped) */}
       <div className="space-y-4">
-        {viewMode === "delivery" ? (
-          // 納入先単位表示
-          <div className="space-y-6">
-            {Object.values(
-              paginatedLines.reduce(
-                (acc, line) => {
-                  const key = line.delivery_place_code || "unknown";
-                  if (!acc[key]) {
-                    acc[key] = {
-                      deliveryPlaceCode: line.delivery_place_code,
-                      deliveryPlaceName: line.delivery_place_name,
-                      lines: [],
-                    };
-                  }
-                  acc[key].lines.push(line);
-                  return acc;
-                },
-                {} as Record<string, any>,
-              ),
-            ).map((group: any) => (
-              <div
-                key={group.deliveryPlaceCode}
-                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-              >
-                <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-green-50 to-slate-50 px-6 py-3">
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-slate-900">{group.deliveryPlaceCode}</span>
-                    <span className="text-sm text-slate-600">{group.deliveryPlaceName}</span>
-                    <span className="text-xs text-slate-500">明細数: {group.lines.length}</span>
-                  </div>
-                </div>
-                <div className="p-0">
-                  <DataTable
-                    data={group.lines}
-                    columns={orderLineColumns}
-                    isLoading={false}
-                    emptyMessage="明細がありません"
-                  />
+        type GroupedOrderLine = {
+          deliveryPlaceCode ?: string;
+        deliveryPlaceName?: string;
+        orderNumber?: string;
+        customerName?: string;
+        orderDate?: string;
+        status?: string;
+        lines: OrderLineRow[];
+};
+
+        // ...
+
+        // 納入先単位表示
+        <div className="space-y-6">
+          {Object.values(
+            paginatedLines.reduce<Record<string, GroupedOrderLine>>(
+              (acc, line) => {
+                const key = line.delivery_place_code || "unknown";
+                if (!acc[key]) {
+                  acc[key] = {
+                    deliveryPlaceCode: line.delivery_place_code || undefined,
+                    deliveryPlaceName: line.delivery_place_name || undefined,
+                    lines: [],
+                  };
+                }
+                acc[key].lines.push(line);
+                return acc;
+              },
+              {},
+            ),
+          ).map((group) => (
+            <div
+              key={group.deliveryPlaceCode || "unknown"}
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-green-50 to-slate-50 px-6 py-3">
+                <div className="flex items-center gap-4">
+                  <span className="font-bold text-slate-900">{group.deliveryPlaceCode}</span>
+                  <span className="text-sm text-slate-600">{group.deliveryPlaceName}</span>
+                  <span className="text-xs text-slate-500">明細数: {group.lines.length}</span>
                 </div>
               </div>
-            ))}
-          </div>
+              <div className="p-0">
+                <DataTable
+                  data={group.lines}
+                  columns={orderLineColumns}
+                  isLoading={false}
+                  emptyMessage="明細がありません"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
         ) : viewMode === "order" ? (
-          // 受注単位表示
-          <div className="space-y-6">
-            {Object.values(
-              paginatedLines.reduce(
-                (acc, line) => {
-                  const key = line.order_number || "unknown";
-                  if (!acc[key]) {
-                    acc[key] = {
-                      orderNumber: line.order_number,
-                      customerName: line.customer_name,
-                      orderDate: line.order_date,
-                      status: line.order_status,
-                      lines: [],
-                    };
-                  }
-                  acc[key].lines.push(line);
-                  return acc;
-                },
-                {} as Record<string, any>,
-              ),
-            ).map((group: any) => (
-              <div
-                key={group.orderNumber}
-                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-              >
-                <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-slate-50 px-6 py-3">
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-slate-900">{group.orderNumber}</span>
-                    <span className="text-sm text-slate-600">{group.customerName}</span>
-                    <span className="text-xs text-slate-500">受注日: {group.orderDate}</span>
-                  </div>
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                      group.status === "allocated"
-                        ? "bg-blue-100 text-blue-800"
-                        : group.status === "shipped"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
+        // 受注単位表示
+        <div className="space-y-6">
+          {Object.values(
+            paginatedLines.reduce<Record<string, GroupedOrderLine>>(
+              (acc, line) => {
+                const key = line.order_number || "unknown";
+                if (!acc[key]) {
+                  acc[key] = {
+                    orderNumber: line.order_number || undefined,
+                    customerName: line.customer_name || undefined,
+                    orderDate: line.order_date || undefined,
+                    status: line.order_status || undefined,
+                    lines: [],
+                  };
+                }
+                acc[key].lines.push(line);
+                return acc;
+              },
+              {},
+            ),
+          ).map((group) => (
+            <div
+              key={group.orderNumber || "unknown"}
+              className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
+            >
+              <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-slate-50 px-6 py-3">
+                <div className="flex items-center gap-4">
+                  <span className="font-bold text-slate-900">{group.orderNumber}</span>
+                  <span className="text-sm text-slate-600">{group.customerName}</span>
+                  <span className="text-xs text-slate-500">受注日: {group.orderDate}</span>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-1 text-xs font-semibold ${group.status === "allocated"
+                      ? "bg-blue-100 text-blue-800"
+                      : group.status === "shipped"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-800"
                     }`}
-                  >
-                    {group.status}
-                  </span>
-                </div>
-                <div className="p-0">
-                  <DataTable
-                    data={group.lines}
-                    columns={orderLineColumns}
-                    isLoading={false}
-                    emptyMessage="明細がありません"
-                  />
-                </div>
+                >
+                  {group.status}
+                </span>
               </div>
-            ))}
-          </div>
+              <div className="p-0">
+                <DataTable
+                  data={group.lines}
+                  columns={orderLineColumns}
+                  isLoading={false}
+                  emptyMessage="明細がありません"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
         ) : (
-          // 1行単位表示 (Flat)
-          <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-            <DataTable
-              data={paginatedLines}
-              columns={orderLineColumns}
-              isLoading={isLoading}
-              emptyMessage="明細がありません"
-            />
-          </div>
+        // 1行単位表示 (Flat)
+        <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+          <DataTable
+            data={paginatedLines}
+            columns={orderLineColumns}
+            isLoading={isLoading}
+            emptyMessage="明細がありません"
+          />
+        </div>
         )}
 
         {/* ページネーション */}

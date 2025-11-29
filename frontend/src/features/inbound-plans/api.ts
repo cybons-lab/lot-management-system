@@ -144,7 +144,7 @@ export const getInboundPlans = async (params?: InboundPlansListParams) => {
 
   const queryString = searchParams.toString();
   const response = await http.get<InboundPlanListResponse>(
-    `inbound-plans${queryString ? "?" + queryString : ""}`
+    `inbound-plans${queryString ? "?" + queryString : ""}`,
   );
   // Return items array for compatibility with existing hooks
   return response.items;

@@ -5,7 +5,7 @@
  * Ky is built on fetch API with TypeScript-first design.
  */
 
-import ky, { type KyInstance, type Options } from "ky";
+import ky, { type KyInstance, type Options, type HTTPError } from "ky";
 
 import { logError } from "@/services/error-logger";
 import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
@@ -15,6 +15,73 @@ import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
  */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 const API_TIMEOUT = 30000; // 30 seconds
+
+/**
+ * Handle network errors (no response)
+ */
+function handleNetworkError(error: HTTPError, request: Request): HTTPError {
+  const networkError = new NetworkError("ネットワークエラーが発生しました");
+
+  if (import.meta.env.DEV) {
+    console.error(`[HTTP] Network Error: ${request?.method} ${request?.url}`, error);
+  }
+
+  logError("HTTP", networkError, {
+    url: request?.url,
+    method: request?.method,
+  });
+
+  error.message = networkError.message;
+  return error;
+}
+
+/**
+ * Extract error message from response body
+ */
+function extractErrorMessage(body: unknown, defaultMessage: string): string {
+  if (body && typeof body === "object") {
+    const errorBody = body as { message?: string; detail?: string };
+    return errorBody.message || errorBody.detail || defaultMessage;
+  }
+  return defaultMessage;
+}
+
+/**
+ * Handle API errors (with response)
+ */
+async function handleApiError(
+  error: HTTPError,
+  request: Request,
+  response: Response,
+): Promise<HTTPError> {
+  const { status } = response;
+  let body: unknown;
+
+  try {
+    body = await response.json();
+    error.message = extractErrorMessage(body, error.message);
+  } catch {
+    error.message = response.statusText || error.message;
+  }
+
+  if (import.meta.env.DEV) {
+    console.groupCollapsed(`[HTTP] Error: ${status} ${request?.url}`);
+    console.error("Message:", error.message);
+    console.error("Status:", status);
+    console.error("Body:", body);
+    console.groupEnd();
+  }
+
+  const apiError = createApiError(status, error.message, body);
+  logError("HTTP", apiError, {
+    url: request?.url,
+    method: request?.method,
+    status,
+    response: body,
+  });
+
+  return error;
+}
 
 /**
  * Default ky instance with common configuration
@@ -80,53 +147,11 @@ export const apiClient: KyInstance = ky.create({
       async (error) => {
         const { response, request } = error;
 
-        // ネットワークエラー（responseがない場合）
         if (!response) {
-          const networkError = new NetworkError("ネットワークエラーが発生しました");
-
-          if (import.meta.env.DEV) {
-            console.error(`[HTTP] Network Error: ${request?.method} ${request?.url}`, error);
-          }
-
-          logError("HTTP", networkError, {
-            url: request?.url,
-            method: request?.method,
-          });
-          error.message = networkError.message;
-          return error;
+          return handleNetworkError(error, request);
         }
 
-        // APIエラー（responseがある場合）
-        const { status } = response;
-        let body: any;
-
-        // Try to parse error response
-        try {
-          body = await response.json();
-          error.message = body.message || body.detail || error.message;
-        } catch {
-          // If not JSON, use status text
-          error.message = response.statusText || error.message;
-        }
-
-        if (import.meta.env.DEV) {
-          console.groupCollapsed(`[HTTP] Error: ${status} ${request?.url}`);
-          console.error("Message:", error.message);
-          console.error("Status:", status);
-          console.error("Body:", body);
-          console.groupEnd();
-        }
-
-        // Create typed error and log
-        const apiError = createApiError(status, error.message, body);
-        logError("HTTP", apiError, {
-          url: request?.url,
-          method: request?.method,
-          status,
-          response: body,
-        });
-
-        return error;
+        return handleApiError(error, request, response);
       },
     ],
   },
