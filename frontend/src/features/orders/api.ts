@@ -33,7 +33,7 @@ export const getOrders = (params?: OrdersListParams) => {
   if (params?.date_to) searchParams.append("date_to", params.date_to);
 
   const queryString = searchParams.toString();
-  return http.get<OrderResponse[]>(`/orders${queryString ? "?" + queryString : ""}`);
+  return http.get<OrderResponse[]>(`orders${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -51,32 +51,32 @@ export const getOrderLines = (params?: OrdersListParams & { product_code?: strin
 
   const queryString = searchParams.toString();
   // Note: OrderLineResponse[] is returned, but we use OrderLine[] alias in frontend
-  return http.get<OrderLine[]>(`/orders/lines${queryString ? "?" + queryString : ""}`);
+  return http.get<OrderLine[]>(`orders/lines${queryString ? "?" + queryString : ""}`);
 };
 
 /**
  * 受注詳細取得
  */
-export const getOrder = (orderId: number) => http.get<OrderGetResponse>(`/orders/${orderId}`);
+export const getOrder = (orderId: number) => http.get<OrderGetResponse>(`orders/${orderId}`);
 
 /**
  * FEFO再マッチング実行
  * @description 新しいAllocationCommitResponseを使用（FefoCommitResponseは非推奨）
  */
 export const reMatchOrder = (orderId: number) =>
-  http.post<AllocationCommitResponse>(`/orders/${orderId}/re-match`);
+  http.post<AllocationCommitResponse>(`orders/${orderId}/re-match`);
 
 /**
  * 引当情報付き受注一覧取得
  */
 export const getOrdersWithAllocations = (): Promise<unknown> =>
-  http.get("/orders/orders-with-allocations");
+  http.get("orders/orders-with-allocations");
 
 /**
  * 倉庫別引当情報取得
  */
 export const getWarehouseAllocList = (): Promise<WarehouseListResponse> =>
-  http.get("/warehouse-alloc/warehouses");
+  http.get("warehouse-alloc/warehouses");
 
 /**
  * 引当候補ロット取得（product_id基準）
@@ -95,7 +95,7 @@ export const getCandidateLots = (params: {
 
   const queryString = searchParams.toString();
   return http.get<CandidateLotsResponse>(
-    `/allocation-candidates${queryString ? "?" + queryString : ""}`,
+    `allocation-candidates${queryString ? "?" + queryString : ""}`,
   );
 };
 
@@ -107,7 +107,7 @@ export const createLotAllocations = (orderLineId: number, request: ManualAllocat
     success?: boolean;
     message?: string;
     allocated_ids?: number[];
-  }>(`/orders/${orderLineId}/allocations`, request);
+  }>(`orders/${orderLineId}/allocations`, request);
 
 /**
  * ロット引当キャンセル
@@ -117,7 +117,7 @@ export const cancelLotAllocations = (
   request: { order_line_id?: number; allocation_ids?: number[] },
 ) =>
   http.post<{ success?: boolean; message?: string }>(
-    `/orders/${orderLineId}/allocations/cancel`,
+    `orders/${orderLineId}/allocations/cancel`,
     request,
   );
 
@@ -137,7 +137,7 @@ export const saveWarehouseAllocations = (
   allocations: WarehouseAllocationItem[],
 ) =>
   http.post<{ success?: boolean; message?: string }>(
-    `/orders/${orderLineId}/warehouse-allocations`,
+    `orders/${orderLineId}/warehouse-allocations`,
     { allocations },
   );
 
@@ -145,7 +145,7 @@ export const saveWarehouseAllocations = (
  * 受注ステータス更新
  */
 export const updateOrderStatus = (orderId: number, newStatus: string) =>
-  http.patch<OrderResponse>(`/orders/${orderId}/status`, { status: newStatus });
+  http.patch<OrderResponse>(`orders/${orderId}/status`, { status: newStatus });
 
 /**
  * 受注明細ステータス更新
@@ -156,4 +156,4 @@ export const updateOrderLineStatus = (orderLineId: number, newStatus: string) =>
     message: string;
     order_line_id: number;
     new_status: string;
-  }>(`/orders/${orderLineId}/status`, { status: newStatus });
+  }>(`orders/${orderLineId}/status`, { status: newStatus });
