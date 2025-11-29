@@ -45,6 +45,7 @@ import { SystemStatus } from "@/features/system/SystemStatus";
 import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
+import { MastersPage } from "@/features/masters/pages/MastersPage";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
 import { logError } from "@/services/error-logger";
 
@@ -143,6 +144,7 @@ function App() {
                 <Route path="/inventory/lots/:lotId" element={<LotDetailPage />} />
 
                 {/* Masters - Phase G-1 */}
+                <Route path="/masters" element={<MastersPage />} />
                 <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
                 <Route path="/warehouses/:warehouseCode" element={<WarehouseDetailPage />} />
                 <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />
