@@ -11,8 +11,8 @@ from app.schemas.assignments.assignment_schema import (
 from app.services.common.base_service import BaseService
 
 
-class AssignmentService(
-    BaseService[UserSupplierAssignment, UserSupplierAssignmentCreate, UserSupplierAssignmentUpdate]
+class UserSupplierAssignmentService(
+    BaseService[UserSupplierAssignment, UserSupplierAssignmentCreate, UserSupplierAssignmentUpdate, int]
 ):
     """Service for user-supplier assignments.
 
