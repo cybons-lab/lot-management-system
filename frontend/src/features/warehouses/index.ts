@@ -6,4 +6,8 @@ export { WarehouseDetailPage } from "./pages/WarehouseDetailPage";
 export { WarehouseForm } from "./components/WarehouseForm";
 export { WarehouseBulkImportDialog } from "./components/WarehouseBulkImportDialog";
 export { WarehouseExportButton } from "./components/WarehouseExportButton";
+
+// Hooks
+export { useWarehouses } from "./hooks";
+
 export type { Warehouse, WarehouseCreate, WarehouseUpdate } from "./api";
