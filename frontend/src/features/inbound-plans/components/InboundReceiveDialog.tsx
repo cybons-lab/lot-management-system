@@ -1,6 +1,7 @@
 // Inbound plan receive dialog component
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { InboundReceiveLotForm } from "./InboundReceiveLotForm";
 
@@ -68,8 +69,7 @@ export function InboundReceiveDialog({
     // 空のロット番号チェック
     const emptyLots = lots.filter((lot) => !lot.lot_number);
     if (emptyLots.length > 0) {
-      // エラー表示（TODO: より良いエラー表示）
-      alert("全てのロット番号を入力してください");
+      toast.error("全てのロット番号を入力してください");
       return;
     }
 

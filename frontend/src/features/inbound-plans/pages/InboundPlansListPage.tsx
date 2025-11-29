@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 
 import { InboundPlansList, type InboundPlansFilters } from "../components/InboundPlansList";
 import { useInboundPlans, useDeleteInboundPlan, useSyncFromSAP } from "../hooks";
@@ -49,7 +50,7 @@ export function InboundPlansListPage() {
       refetch();
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("削除に失敗しました");
+      toast.error("削除に失敗しました");
     }
   };
 
@@ -60,11 +61,11 @@ export function InboundPlansListPage() {
   const handleSyncFromSAP = async () => {
     try {
       const result = await syncMutation.mutateAsync();
-      alert(result.message);
+      toast.success(result.message);
       refetch();
     } catch (error) {
       console.error("SAP sync failed:", error);
-      alert("SAP同期に失敗しました");
+      toast.error("SAP同期に失敗しました");
     }
   };
 

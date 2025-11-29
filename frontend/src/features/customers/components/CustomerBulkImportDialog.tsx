@@ -6,6 +6,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useState, useId, useCallback } from "react";
+import { toast } from "sonner";
 
 import { bulkUpsertCustomers } from "../api";
 import { bulkImport as styles } from "../pages/styles";
@@ -80,7 +81,7 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
     setImportResult(null);
 
     // TODO: Backend import implementation
-    alert("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
+    toast.info("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
     /*
     const { rows, errors } = await parseCustomerCsv(selectedFile);
     setParsedRows(rows);
@@ -99,7 +100,7 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
   // テンプレートダウンロード
   const handleDownloadTemplate = useCallback(() => {
     // TODO: Backend template download
-    alert("現在バックエンドインポート機能へ移行中です。");
+    toast.info("現在バックエンドインポート機能へ移行中です。");
     /*
     const template = generateEmptyTemplate();
     downloadCSV(template, "customers_import_template.csv");

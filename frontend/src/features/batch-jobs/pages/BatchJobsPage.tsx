@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { useBatchJobs, useExecuteBatchJob, useDeleteBatchJob } from "../hooks";
 
@@ -35,10 +36,10 @@ export function BatchJobsPage() {
 
     try {
       await executeMutation.mutateAsync({ jobId });
-      alert("バッチジョブの実行を開始しました");
+      toast.success("バッチジョブの実行を開始しました");
     } catch (error) {
       console.error("Failed to execute batch job:", error);
-      alert("実行に失敗しました");
+      toast.error("実行に失敗しました");
     }
   };
 
@@ -49,10 +50,10 @@ export function BatchJobsPage() {
 
     try {
       await deleteMutation.mutateAsync(jobId);
-      alert("バッチジョブを削除しました");
+      toast.success("バッチジョブを削除しました");
     } catch (error) {
       console.error("Failed to delete batch job:", error);
-      alert("削除に失敗しました");
+      toast.error("削除に失敗しました");
     }
   };
 

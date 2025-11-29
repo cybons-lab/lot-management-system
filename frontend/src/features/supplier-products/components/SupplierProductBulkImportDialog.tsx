@@ -63,7 +63,7 @@ export function SupplierProductBulkImportDialog({ open, onOpenChange }: Props) {
     setImportResult(null);
 
     // TODO: Backend import implementation
-    alert("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
+    toast.info("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
     /*
         try {
             const text = await selectedFile.text();
@@ -214,13 +214,12 @@ export function SupplierProductBulkImportDialog({ open, onOpenChange }: Props) {
           {importResult && (
             <div className="space-y-4">
               <div
-                className={`rounded-md p-4 ${
-                  importResult.status === "success"
+                className={`rounded-md p-4 ${importResult.status === "success"
                     ? "bg-green-50"
                     : importResult.status === "partial"
                       ? "bg-yellow-50"
                       : "bg-red-50"
-                }`}
+                  }`}
               >
                 <div className="flex">
                   <div className="flex-shrink-0">
@@ -234,13 +233,12 @@ export function SupplierProductBulkImportDialog({ open, onOpenChange }: Props) {
                   </div>
                   <div className="ml-3">
                     <h3
-                      className={`text-sm font-medium ${
-                        importResult.status === "success"
+                      className={`text-sm font-medium ${importResult.status === "success"
                           ? "text-green-800"
                           : importResult.status === "partial"
                             ? "text-yellow-800"
                             : "text-red-800"
-                      }`}
+                        }`}
                     >
                       インポート完了
                     </h3>

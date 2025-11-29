@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import { useUser, useAssignUserRoles } from "../hooks";
 
@@ -42,11 +43,11 @@ export function UserDetailPage() {
         userId,
         data: { role_ids: selectedRoleIds },
       });
-      alert("ロールを割り当てました");
+      toast.success("ロールを割り当てました");
       setShowRoleForm(false);
     } catch (error) {
       console.error("Failed to assign roles:", error);
-      alert("ロール割り当てに失敗しました");
+      toast.error("ロール割り当てに失敗しました");
     }
   };
 

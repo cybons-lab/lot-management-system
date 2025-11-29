@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { useBusinessRules, useToggleBusinessRuleActive, useDeleteBusinessRule } from "../hooks";
 
@@ -32,10 +33,10 @@ export function BusinessRulesPage() {
   const handleToggleActive = async (ruleId: number) => {
     try {
       await toggleActiveMutation.mutateAsync(ruleId);
-      alert("業務ルールの有効/無効を切り替えました");
+      toast.success("業務ルールの有効/無効を切り替えました");
     } catch (error) {
       console.error("Failed to toggle business rule:", error);
-      alert("切り替えに失敗しました");
+      toast.error("切り替えに失敗しました");
     }
   };
 
@@ -46,10 +47,10 @@ export function BusinessRulesPage() {
 
     try {
       await deleteMutation.mutateAsync(ruleId);
-      alert("業務ルールを削除しました");
+      toast.success("業務ルールを削除しました");
     } catch (error) {
       console.error("Failed to delete business rule:", error);
-      alert("削除に失敗しました");
+      toast.error("削除に失敗しました");
     }
   };
 

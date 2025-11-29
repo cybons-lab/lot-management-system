@@ -4,6 +4,7 @@
  */
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import type { CreateCustomerItemRequest } from "../api";
 import { CustomerItemForm } from "../components/CustomerItemForm";
@@ -49,10 +50,10 @@ export function CustomerItemsListPage() {
     try {
       await createMutation.mutateAsync(data);
       setShowForm(false);
-      alert("得意先品番マッピングを登録しました");
+      toast.success("得意先品番マッピングを登録しました");
     } catch (error) {
       console.error("Failed to create customer item:", error);
-      alert("登録に失敗しました。既に同じマッピングが存在する可能性があります。");
+      toast.error("登録に失敗しました。既に同じマッピングが存在する可能性があります。");
     }
   };
 
@@ -63,10 +64,10 @@ export function CustomerItemsListPage() {
 
     try {
       await deleteMutation.mutateAsync({ customerId, externalProductCode });
-      alert("得意先品番マッピングを削除しました");
+      toast.success("得意先品番マッピングを削除しました");
     } catch (error) {
       console.error("Failed to delete customer item:", error);
-      alert("削除に失敗しました");
+      toast.error("削除に失敗しました");
     }
   };
 
