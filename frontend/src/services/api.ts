@@ -83,8 +83,7 @@ export type DashboardStats = {
   allocation_rate: number;
 };
 export async function getStats(): Promise<DashboardStats> {
-  // TODO: replace with backend endpoint when available
-  return { total_stock: 0, total_orders: 0, unallocated_orders: 0, allocation_rate: 0 };
+  return await http.get<DashboardStats>("/admin/stats");
 }
 interface OrdersResponse {
   items?: unknown[];
