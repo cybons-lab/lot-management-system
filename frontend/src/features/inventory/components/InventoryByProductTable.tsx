@@ -12,7 +12,7 @@ import { fmt } from "@/shared/utils/number";
 
 interface InventoryByProductTableProps {
   data: InventoryByProductResponse[];
-  onRowClick: (productCode: string) => void;
+  onRowClick?: (productCode: string) => void;
 }
 
 export function InventoryByProductTable({ data, onRowClick }: InventoryByProductTableProps) {
@@ -34,8 +34,8 @@ export function InventoryByProductTable({ data, onRowClick }: InventoryByProduct
           {data.map((row) => (
             <TableRow
               key={row.product_id}
-              className="hover:bg-muted/50 cursor-pointer"
-              onClick={() => onRowClick(row.product_code)}
+              className={onRowClick ? "hover:bg-muted/50 cursor-pointer" : ""}
+              onClick={onRowClick ? () => onRowClick(row.product_code) : undefined}
             >
               <TableCell className="font-medium">{row.product_code}</TableCell>
               <TableCell>{row.product_name}</TableCell>
