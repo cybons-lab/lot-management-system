@@ -1,7 +1,7 @@
 /**
  * Warehouse CSV Utilities
  */
-import type { Warehouse } from "../api/warehouses-api";
+import type { Warehouse } from "../api";
 import type { BulkOperationType, WarehouseBulkRow } from "../types/bulk-operation";
 
 export const CSV_HEADERS = [

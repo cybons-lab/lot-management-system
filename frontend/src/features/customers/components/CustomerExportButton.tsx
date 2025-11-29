@@ -6,7 +6,7 @@
 import { Download } from "lucide-react";
 import { useCallback, useState } from "react";
 
-import type { Customer } from "../api/customers-api";
+import type { Customer } from "../api";
 import { customersToCSV, downloadCSV } from "../utils/customer-csv";
 
 import { Button } from "@/components/ui";

@@ -3,7 +3,7 @@
  * DataTable用のカラム定義
  */
 
-import type { Customer } from "../api/customers-api";
+import type { Customer } from "../api";
 
 import type { Column } from "@/shared/components/data/DataTable";
 import { formatDate } from "@/shared/utils/date";

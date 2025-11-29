@@ -5,7 +5,7 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import type { SupplierUpdate } from "../api/suppliers-api";
+import type { SupplierUpdate } from "../api";
 import { SupplierForm } from "../components/SupplierForm";
 import { useUpdateSupplier, useDeleteSupplier } from "../hooks/useSupplierMutations";
 import { useSupplierQuery } from "../hooks/useSupplierQuery";

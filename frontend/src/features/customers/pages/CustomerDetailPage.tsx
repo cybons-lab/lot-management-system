@@ -7,7 +7,7 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import type { CustomerUpdate } from "../api/customers-api";
+import type { CustomerUpdate } from "../api";
 import { CustomerForm } from "../components/CustomerForm";
 import { useUpdateCustomer, useDeleteCustomer } from "../hooks/useCustomerMutations";
 import { useCustomerQuery } from "../hooks/useCustomerQuery";

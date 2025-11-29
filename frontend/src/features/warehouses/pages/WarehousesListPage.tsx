@@ -5,7 +5,7 @@ import { Plus, Upload, Warehouse as WarehouseIcon } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Warehouse, WarehouseCreate } from "../api/warehouses-api";
+import type { Warehouse, WarehouseCreate } from "../api";
 import { WarehouseBulkImportDialog } from "../components/WarehouseBulkImportDialog";
 import { WarehouseExportButton } from "../components/WarehouseExportButton";
 import { WarehouseForm } from "../components/WarehouseForm";

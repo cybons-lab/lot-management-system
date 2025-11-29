@@ -5,7 +5,7 @@ import { Plus, Upload, Truck } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Supplier, SupplierCreate } from "../api/suppliers-api";
+import type { Supplier, SupplierCreate } from "../api";
 import { SupplierBulkImportDialog } from "../components/SupplierBulkImportDialog";
 import { SupplierExportButton } from "../components/SupplierExportButton";
 import { SupplierForm } from "../components/SupplierForm";

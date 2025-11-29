@@ -7,7 +7,7 @@ import { Plus, Upload, Users } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import type { Customer, CustomerCreate } from "../api/customers-api";
+import type { Customer, CustomerCreate } from "../api";
 import { CustomerBulkImportDialog } from "../components/CustomerBulkImportDialog";
 import { CustomerExportButton } from "../components/CustomerExportButton";
 import { CustomerForm } from "../components/CustomerForm";

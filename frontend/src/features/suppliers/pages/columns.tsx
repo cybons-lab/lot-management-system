@@ -1,7 +1,7 @@
 /**
  * Suppliers Table Columns
  */
-import type { Supplier } from "../api/suppliers-api";
+import type { Supplier } from "../api";
 
 import type { Column } from "@/shared/components/data/DataTable";
 import { formatDate } from "@/shared/utils/date";
