@@ -29,3 +29,10 @@ class Page[T](BaseModel):
     total: int
     page: int
     per_page: int
+
+
+class ListResponse[T](BaseModel):
+    """Generic list response without pagination."""
+
+    items: list[T]
+    total: int = 0

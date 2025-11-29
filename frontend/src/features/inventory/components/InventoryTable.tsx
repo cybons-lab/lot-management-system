@@ -6,18 +6,18 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import type { InventoryItem } from "@/features/inventory/api";
 import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
+import * as styles from "@/features/inventory/pages/styles";
 import { useLotsQuery } from "@/hooks/api";
 import { useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
-import { FormDialog } from "@/shared/components/form";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
+import { FormDialog } from "@/shared/components/form";
 import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 import { getLotStatuses } from "@/shared/utils/status";
-import * as styles from "@/features/inventory/pages/styles";
-import type { InventoryItem } from "@/features/inventory/api";
 
 interface InventoryTableProps {
   data: InventoryItem[];

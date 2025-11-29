@@ -13,7 +13,7 @@ import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery
  * Hook to manage the state and data for the Lot Allocation page.
  * Consolidates logic from previous useLotAllocationState, useLotAllocationData, and useLotAllocationComputed.
  */
-// eslint-disable-next-line max-lines-per-function
+
 export function useLotAllocationLogic() {
   // --- State ---
   const [allocationsByLine, setAllocationsByLine] = useState<

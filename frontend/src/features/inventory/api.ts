@@ -1,3 +1,9 @@
+import type {
+  InventoryByProductResponse,
+  InventoryBySupplierResponse,
+  InventoryByWarehouseResponse,
+} from "./types/InventoryAggregationTypes";
+
 import { http } from "@/shared/api/http-client";
 import type { paths } from "@/types/api";
 
@@ -106,11 +112,6 @@ export const getInventoryItem = (productId: number, warehouseId: number) => {
  * Get inventory aggregated by supplier
  * @endpoint GET /inventory-items/by-supplier
  */
-import type {
-  InventoryByProductResponse,
-  InventoryBySupplierResponse,
-  InventoryByWarehouseResponse,
-} from "./types/InventoryAggregationTypes";
 
 export const getInventoryBySupplier = () => {
   return http.get<InventoryBySupplierResponse[]>("inventory-items/by-supplier");
