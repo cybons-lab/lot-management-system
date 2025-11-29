@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 // Docker Compose environment: backend service name is "backend"
 // Development environment: can override with VITE_BACKEND_ORIGIN
-const target = process.env.VITE_BACKEND_ORIGIN || "http://localhost:8000";
+const target = process.env.VITE_BACKEND_ORIGIN || "http://backend:8000";
 
 // https://vitejs.dev/config/
 export default defineConfig({
