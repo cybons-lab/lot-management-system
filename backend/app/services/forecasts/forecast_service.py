@@ -17,14 +17,24 @@ from app.schemas.forecasts.forecast_schema import (
     ForecastResponse,
     ForecastUpdate,
 )
+from app.services.common.base_service import BaseService
 
 
-class ForecastService:
-    """Business logic for forecast_current and forecast_history."""
+class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdate]):
+    """Business logic for forecast_current and forecast_history.
+    
+    Inherits common CRUD operations from BaseService:
+    - get_by_id(forecast_id) -> ForecastCurrent (overridden as get_forecast_by_id)
+    - create(payload) -> ForecastCurrent (overridden as create_forecast)
+    - update(forecast_id, payload) -> ForecastCurrent (overridden as update_forecast)
+    - delete(forecast_id) -> None (overridden as delete_forecast)
+    
+    Complex business logic (grouping, history management) is implemented below.
+    """
 
     def __init__(self, db: Session):
         """Initialize forecast service."""
-        self.db = db
+        super().__init__(db=db, model=ForecastCurrent)
 
     def get_forecasts(
         self,
