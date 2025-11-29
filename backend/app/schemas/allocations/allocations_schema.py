@@ -141,11 +141,9 @@ class CandidateLotItem(BaseSchema):
     lock_reason: str | None = None
 
 
-class CandidateLotsResponse(BaseSchema):
-    """Candidate lots list response."""
-
-    items: list[CandidateLotItem] = Field(default_factory=list)
-    total: int = 0
+# Using generic ListResponse[T] for consistency
+CandidateLotsResponse = ListResponse[CandidateLotItem]
+"""Candidate lots list response."""
 
 
 # ============================================================
