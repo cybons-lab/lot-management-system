@@ -51,9 +51,7 @@ export const getOrderLines = (params?: OrdersListParams & { product_code?: strin
 
   const queryString = searchParams.toString();
   // Note: OrderLineResponse[] is returned, but we use OrderLine[] alias in frontend
-  return fetchApi.get<OrderLine[]>(
-    `/orders/lines${queryString ? "?" + queryString : ""}`,
-  );
+  return fetchApi.get<OrderLine[]>(`/orders/lines${queryString ? "?" + queryString : ""}`);
 };
 
 /**

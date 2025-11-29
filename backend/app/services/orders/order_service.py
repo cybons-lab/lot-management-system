@@ -82,7 +82,6 @@ class OrderService:
         date_to: date | None = None,
     ) -> list[OrderLineResponse]:
         """Get flattened order lines with filtering."""
-
         stmt = (
             select(OrderLine)
             .join(Order, OrderLine.order_id == Order.id)

@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/table";
 import { fmt } from "@/shared/utils/number";
 
-
 interface InventoryByProductTableProps {
   data: InventoryByProductResponse[];
   onRowClick: (productCode: string) => void;
