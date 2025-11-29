@@ -3,7 +3,7 @@
  * 受注関連のAPI通信関数
  */
 
-import { http } from "@/services/http";
+import { http } from "@/shared/api/http-client";
 import type {
   OrderResponse,
   OrderWithLinesResponse,
@@ -17,24 +17,21 @@ const BASE_PATH = "/orders";
  * 受注一覧を取得
  */
 export async function listOrders(params?: OrdersListParams): Promise<OrderResponse[]> {
-  const response = await http.get<OrderResponse[]>(BASE_PATH, { params });
-  return response.data;
+  return http.get<OrderResponse[]>(BASE_PATH, { searchParams: params as any });
 }
 
 /**
  * 受注詳細を取得（明細含む）
  */
 export async function getOrderById(id: number): Promise<OrderWithLinesResponse> {
-  const response = await http.get<OrderWithLinesResponse>(`${BASE_PATH}/${id}`);
-  return response.data;
+  return http.get<OrderWithLinesResponse>(`${BASE_PATH}/${id}`);
 }
 
 /**
  * 受注を作成
  */
 export async function createOrder(data: OrderCreate): Promise<OrderWithLinesResponse> {
-  const response = await http.post<OrderWithLinesResponse>(BASE_PATH, data);
-  return response.data;
+  return http.post<OrderWithLinesResponse>(BASE_PATH, data);
 }
 
 /**
@@ -44,18 +41,17 @@ export async function updateOrderStatus(
   id: number,
   data: { status: string },
 ): Promise<{ success: boolean; order: OrderWithLinesResponse }> {
-  const response = await http.patch<{ success: boolean; order: OrderWithLinesResponse }>(
+  return http.patch<{ success: boolean; order: OrderWithLinesResponse }>(
     `${BASE_PATH}/${id}/status`,
     data,
   );
-  return response.data;
 }
 
 /**
  * 受注を削除
  */
 export async function deleteOrder(id: number): Promise<void> {
-  await http.delete(`${BASE_PATH}/${id}`);
+  await http.deleteVoid(`${BASE_PATH}/${id}`);
 }
 
 /**
@@ -92,15 +88,14 @@ export async function listShippedOrders(): Promise<OrderResponse[]> {
 export async function listOrdersByCustomer(customerCode: string): Promise<OrderResponse[]> {
   return listOrders({ customer_code: customerCode });
 }
+
 export async function getOrderDetail(orderId: number): Promise<OrderWithLinesResponse> {
-  const response = await http.get<OrderWithLinesResponse>(`/orders/${orderId}`);
-  return response.data;
+  return http.get<OrderWithLinesResponse>(`/orders/${orderId}`);
 }
 
 export async function updateOrder(
   orderId: number,
   data: OrderUpdate,
 ): Promise<OrderWithLinesResponse> {
-  const response = await http.put<OrderWithLinesResponse>(`/orders/${orderId}`, data);
-  return response.data;
+  return http.put<OrderWithLinesResponse>(`/orders/${orderId}`, data);
 }

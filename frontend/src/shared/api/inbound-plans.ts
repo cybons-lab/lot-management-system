@@ -1,7 +1,7 @@
 // Inbound Plans API functions
 import type { components } from "../types/openapi";
 
-import { fetchApi } from "@/shared/libs/http";
+import { http as fetchApi } from "@/shared/api/http-client";
 
 type InboundPlanDetailResponse = components["schemas"]["InboundPlanDetailResponse"];
 type InboundPlanReceiveRequest = components["schemas"]["InboundPlanReceiveRequest"];

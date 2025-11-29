@@ -3,7 +3,7 @@
  * ロット関連のAPI通信関数
  */
 
-import { http } from "@/services/http";
+import { http } from "@/shared/api/http-client";
 import type { LotResponse } from "@/shared/types/aliases";
 import type { LotCreateInput, LotUpdateInput, LotSearchParams } from "@/utils/validators";
 
@@ -13,39 +13,35 @@ const BASE_PATH = "/lots";
  * ロット一覧を取得
  */
 export async function listLots(params?: LotSearchParams): Promise<LotResponse[]> {
-  const response = await http.get<LotResponse[]>(BASE_PATH, { params });
-  return response.data;
+  return http.get<LotResponse[]>(BASE_PATH, { searchParams: params as any });
 }
 
 /**
  * ロット詳細を取得
  */
 export async function getLotById(id: number): Promise<LotResponse> {
-  const response = await http.get<LotResponse>(`${BASE_PATH}/${id}`);
-  return response.data;
+  return http.get<LotResponse>(`${BASE_PATH}/${id}`);
 }
 
 /**
  * ロットを作成
  */
 export async function createLot(data: LotCreateInput): Promise<LotResponse> {
-  const response = await http.post<LotResponse>(BASE_PATH, data);
-  return response.data;
+  return http.post<LotResponse>(BASE_PATH, data);
 }
 
 /**
  * ロットを更新
  */
 export async function updateLot(id: number, data: LotUpdateInput): Promise<LotResponse> {
-  const response = await http.put<LotResponse>(`${BASE_PATH}/${id}`, data);
-  return response.data;
+  return http.put<LotResponse>(`${BASE_PATH}/${id}`, data);
 }
 
 /**
  * ロットを削除
  */
 export async function deleteLot(id: number): Promise<void> {
-  await http.delete(`${BASE_PATH}/${id}`);
+  await http.deleteVoid(`${BASE_PATH}/${id}`);
 }
 
 /**
@@ -75,14 +71,12 @@ export async function listLotsBySupplier(supplierCode: string): Promise<LotRespo
  * ロットをロック
  */
 export async function lockLot(id: number, reason: string, quantity?: number): Promise<LotResponse> {
-  const response = await http.post<LotResponse>(`${BASE_PATH}/${id}/lock`, { reason, quantity });
-  return response.data;
+  return http.post<LotResponse>(`${BASE_PATH}/${id}/lock`, { reason, quantity });
 }
 
 /**
  * ロットのロックを解除
  */
 export async function unlockLot(id: number, quantity?: number): Promise<LotResponse> {
-  const response = await http.post<LotResponse>(`${BASE_PATH}/${id}/unlock`, { quantity });
-  return response.data;
+  return http.post<LotResponse>(`${BASE_PATH}/${id}/unlock`, { quantity });
 }

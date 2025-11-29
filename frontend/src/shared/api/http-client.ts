@@ -7,6 +7,9 @@
 
 import ky, { type KyInstance, type Options } from "ky";
 
+import { logError } from "@/services/error-logger";
+import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
+
 /**
  * Base API configuration
  */
@@ -39,18 +42,40 @@ export const apiClient: KyInstance = ky.create({
     ],
     beforeError: [
       async (error) => {
-        const { response } = error;
+        const { response, request } = error;
 
-        if (response) {
-          // Try to parse error response
-          try {
-            const body = (await response.json()) as any;
-            error.message = body.message || body.detail || error.message;
-          } catch {
-            // If not JSON, use status text
-            error.message = response.statusText || error.message;
-          }
+        // ネットワークエラー（responseがない場合）
+        if (!response) {
+          const networkError = new NetworkError("ネットワークエラーが発生しました");
+          logError("HTTP", networkError, {
+            url: request?.url,
+            method: request?.method,
+          });
+          error.message = networkError.message;
+          return error;
         }
+
+        // APIエラー（responseがある場合）
+        const { status } = response;
+        let body: any;
+
+        // Try to parse error response
+        try {
+          body = await response.json();
+          error.message = body.message || body.detail || error.message;
+        } catch {
+          // If not JSON, use status text
+          error.message = response.statusText || error.message;
+        }
+
+        // Create typed error and log
+        const apiError = createApiError(status, error.message, body);
+        logError("HTTP", apiError, {
+          url: request?.url,
+          method: request?.method,
+          status,
+          response: body,
+        });
 
         return error;
       },
