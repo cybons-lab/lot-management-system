@@ -30,10 +30,9 @@ import { InboundPlanEditPage } from "@/features/inbound-plans/pages/InboundPlanE
 import { InboundPlansListPage } from "@/features/inbound-plans/pages/InboundPlansListPage";
 import { InventoryItemDetailPage } from "@/features/inventory/pages/InventoryItemDetailPage";
 import { InventoryLayout } from "@/features/inventory/pages/InventoryLayout";
+import { InventoryPage } from "@/features/inventory/pages/InventoryPage";
 import { LotDetailPage } from "@/features/inventory/pages/LotDetailPage";
-import { LotsPage } from "@/features/inventory/pages/LotsPage";
 import { MovesPage } from "@/features/inventory/pages/MovesPage";
-import { SummaryPage } from "@/features/inventory/pages/SummaryPage";
 import { MastersBulkLoadPage } from "@/features/masters/pages/MastersBulkLoadPage";
 import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogsPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
@@ -124,11 +123,9 @@ function App() {
                 <Route path="/inbound-plans/:id" element={<InboundPlanDetailPage />} />
                 <Route path="/inbound-plans/:planId/edit" element={<InboundPlanEditPage />} />
 
-                {/* Inventory routes with nested children */}
+                {/* Inventory routes */}
                 <Route path={ROUTES.INVENTORY.ROOT} element={<InventoryLayout />}>
-                  <Route index element={<Navigate to={ROUTES.INVENTORY.SUMMARY} replace />} />
-                  <Route path="summary" element={<SummaryPage />} />
-                  <Route path="lots" element={<LotsPage />} />
+                  <Route index element={<InventoryPage />} />
                   <Route path="moves" element={<MovesPage />} />
                   <Route path="adjustments" element={<AdjustmentsListPage />} />
                   <Route path="adjustments/new" element={<AdjustmentCreatePage />} />

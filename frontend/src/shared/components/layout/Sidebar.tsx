@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  Package,
   ShoppingCart,
   GitBranch,
   TrendingUp,
@@ -22,11 +21,6 @@ const navItems: NavItem[] = [
     title: "ダッシュボード",
     href: "/dashboard",
     icon: LayoutDashboard,
-  },
-  {
-    title: "在庫管理",
-    href: "/inventory",
-    icon: Package,
   },
   {
     title: "受注管理",
@@ -84,8 +78,8 @@ export function Sidebar() {
                     ? "bg-gray-100 text-gray-900"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                   item.variant === "danger" &&
-                    !isActive &&
-                    "text-red-600 hover:bg-red-50 hover:text-red-700",
+                  !isActive &&
+                  "text-red-600 hover:bg-red-50 hover:text-red-700",
                 )}
               >
                 <Icon className="h-5 w-5" />
