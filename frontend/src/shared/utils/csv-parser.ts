@@ -7,6 +7,21 @@
 
 import Papa from "papaparse";
 
+interface CsvParseError {
+  row?: number;
+  message: string;
+}
+
+interface CsvParseMeta {
+  fields?: string[];
+}
+
+interface PapaParseResult<T> {
+  data: T[];
+  errors: CsvParseError[];
+  meta: CsvParseMeta;
+}
+
 /**
  * Parse CSV line handling quoted values correctly
  *
@@ -137,9 +152,9 @@ export class CsvParser<TRow> {
       Papa.parse<Record<string, string>>(file, {
         header: true,
         skipEmptyLines: true,
-        transformHeader: (header) => header.trim(),
-        transform: (value) => value.trim(),
-        complete: (results) => {
+        transformHeader: (header: string) => header.trim(),
+        transform: (value: string) => value.trim(),
+        complete: (results: PapaParseResult<Record<string, string>>) => {
           const rows: TRow[] = [];
           const errors: string[] = [];
 
@@ -166,7 +181,7 @@ export class CsvParser<TRow> {
             try {
               // Validate required fields
               const missingFields = this.config.requiredFields.filter(
-                (field) => !data[field] || data[field].trim() === ""
+                (field) => !data[field] || data[field].trim() === "",
               );
 
               if (missingFields.length > 0) {
@@ -185,14 +200,14 @@ export class CsvParser<TRow> {
               rows.push(row);
             } catch (error) {
               errors.push(
-                `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`
+                `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`,
               );
             }
           });
 
           resolve({ rows, errors });
         },
-        error: (error) => {
+        error: (error: Error) => {
           resolve({ rows: [], errors: [error.message] });
         },
       });
@@ -212,9 +227,9 @@ export class CsvParser<TRow> {
     const results = Papa.parse<Record<string, string>>(text, {
       header: true,
       skipEmptyLines: true,
-      transformHeader: (header) => header.trim(),
-      transform: (value) => value.trim(),
-    });
+      transformHeader: (header: string) => header.trim(),
+      transform: (value: string) => value.trim(),
+    }) as PapaParseResult<Record<string, string>>;
 
     // Check for parsing errors
     if (results.errors.length > 0) {
@@ -238,7 +253,7 @@ export class CsvParser<TRow> {
       try {
         // Validate required fields
         const missingFields = this.config.requiredFields.filter(
-          (field) => !data[field] || data[field].trim() === ""
+          (field) => !data[field] || data[field].trim() === "",
         );
 
         if (missingFields.length > 0) {
@@ -257,7 +272,7 @@ export class CsvParser<TRow> {
         rows.push(row);
       } catch (error) {
         errors.push(
-          `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`
+          `行${lineNumber}: パースエラー - ${error instanceof Error ? error.message : String(error)}`,
         );
       }
     });
@@ -274,7 +289,7 @@ export class CsvParser<TRow> {
    */
   generateCSV<TEntity>(
     entities: TEntity[],
-    mapEntity: (e: TEntity) => Record<string, unknown>
+    mapEntity: (e: TEntity) => Record<string, unknown>,
   ): string {
     const data = entities.map(mapEntity);
     return Papa.unparse(data, {
@@ -309,7 +324,7 @@ export class CsvParser<TRow> {
  */
 export function generateSimpleCSV<T extends Record<string, unknown>>(
   data: T[],
-  columns?: string[]
+  columns?: string[],
 ): string {
   return Papa.unparse(data, {
     header: true,

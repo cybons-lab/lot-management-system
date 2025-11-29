@@ -4,10 +4,10 @@
 import { Upload, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useState, useId, useCallback } from "react";
 
-import { bulkUpsertWarehouses } from "../api";
 import { bulkImport as styles } from "../pages/styles";
 import type { BulkUpsertResponse, WarehouseBulkRow } from "../types/bulk-operation";
 import { parseWarehouseCsv, generateEmptyTemplate, downloadCSV } from "../utils/warehouse-csv";
+import { useBulkUpsertWarehouses } from "../hooks/useWarehouseMutations";
 
 import { Button, Input, Label } from "@/components/ui";
 import {
@@ -55,8 +55,8 @@ export function WarehouseBulkImportDialog({ open, onOpenChange }: WarehouseBulkI
   const handleImport = useCallback(() => {
     if (parsedRows.length === 0) return;
     bulkUpsert(parsedRows, {
-      onSuccess: (result) => setImportResult(result),
-      onError: (error) =>
+      onSuccess: (result: BulkUpsertResponse) => setImportResult(result),
+      onError: (error: Error) =>
         setImportResult({
           status: "failed",
           summary: {

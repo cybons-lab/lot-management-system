@@ -29,7 +29,7 @@ export function useUpdateWarehouse() {
   return useMutation({
     mutationFn: ({ warehouseCode, data }: { warehouseCode: string; data: WarehouseUpdate }) =>
       updateWarehouse(warehouseCode, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
   });
 }
 
@@ -37,7 +37,7 @@ export function useDeleteWarehouse() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (warehouseCode: string) => deleteWarehouse(warehouseCode),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
   });
 }
 
@@ -45,6 +45,6 @@ export function useBulkUpsertWarehouses() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (rows: WarehouseBulkRow[]) => bulkUpsertWarehouses(rows),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: WAREHOUSES_QUERY_KEY }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: warehousesQueryKey }),
   });
 }

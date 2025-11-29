@@ -5,7 +5,7 @@
  * Ky is built on fetch API with TypeScript-first design.
  */
 
-import ky, { type KyInstance, type Options } from "ky";
+import ky, { type HTTPError, type KyInstance, type Options } from "ky";
 
 /**
  * Base API configuration
@@ -26,7 +26,7 @@ export const apiClient: KyInstance = ky.create({
   },
   hooks: {
     beforeRequest: [
-      (request) => {
+      (request: Request) => {
         // Add common headers
         request.headers.set("Content-Type", "application/json");
 
@@ -38,7 +38,7 @@ export const apiClient: KyInstance = ky.create({
       },
     ],
     beforeError: [
-      async (error) => {
+      async (error: HTTPError) => {
         const { response } = error;
 
         if (response) {
@@ -123,7 +123,7 @@ export interface ApiResponse<T> {
  */
 export interface PaginatedResponse<T> {
   items: T[];
-  total: int;
+  total: number;
   page?: number;
   page_size?: number;
 }

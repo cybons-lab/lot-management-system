@@ -5,7 +5,7 @@ import { ArrowLeft, Trash2, Edit } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import type { ProductUpdate } from "../api";
+import type { Product } from "../api";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
 import { useProducts } from "../hooks/useProducts";
 
@@ -40,7 +40,10 @@ export function ProductDetailPage() {
   const handleUpdate = useCallback(
     (data: ProductFormOutput) => {
       if (!productCode) return;
-      updateProduct({ id: productCode, data: data as ProductUpdate }, { onSuccess: () => setIsEditing(false) });
+      updateProduct(
+        { id: productCode, data: data as Partial<Product> },
+        { onSuccess: () => setIsEditing(false) },
+      );
     },
     [productCode, updateProduct],
   );
