@@ -337,5 +337,18 @@ export default [
     },
   },
 
+  {
+    files: ["**/*.mjs"],
+    languageOptions: {
+      sourceType: "module",
+      ecmaVersion: 2022,
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        URL: "readonly",
+      },
+    },
+  },
+
   eslintConfigPrettier,
 ];

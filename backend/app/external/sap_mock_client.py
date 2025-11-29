@@ -67,7 +67,6 @@ class SAPMockClient:
             - UI確認のため、日付は現在日からの相対値で生成
             - 数量はDecimalで返し、単位も併せて提供
         """
-
         today = datetime.now().date()
 
         return [
