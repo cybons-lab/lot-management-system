@@ -38,9 +38,7 @@ export function LotTableRow({ lot, onEdit, onLock, onUnlock }: LotTableRowProps)
   const isLocked = statuses.includes("locked");
 
   return (
-    <tr
-      className={`border-b border-gray-100 hover:bg-gray-100 ${isLocked ? "opacity-60" : ""}`}
-    >
+    <tr className={`border-b border-gray-100 hover:bg-gray-100 ${isLocked ? "opacity-60" : ""}`}>
       <td className="py-2 font-medium text-gray-900">{lot.lot_number}</td>
       <td className="py-2 text-right font-semibold">{fmt(Number(lot.current_quantity))}</td>
       <td className="py-2 text-gray-600">{lot.unit}</td>
@@ -210,7 +208,9 @@ export function InventoryRow({
         <td className={styles.table.tdRight}>{fmt(item.total_quantity)}</td>
         <td className={styles.table.tdRightYellow}>{fmt(item.allocated_quantity)}</td>
         <td className={styles.table.tdRightGreen}>{fmt(item.available_quantity)}</td>
-        <td className={styles.table.tdGray}>{new Date(item.last_updated).toLocaleString("ja-JP")}</td>
+        <td className={styles.table.tdGray}>
+          {new Date(item.last_updated).toLocaleString("ja-JP")}
+        </td>
         <td className={styles.table.tdRight}>
           <Button
             variant="outline"

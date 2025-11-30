@@ -39,9 +39,7 @@ function EmptyState({ onBack }: { onBack: () => void }) {
         <h2 className="mt-4 text-xl font-semibold text-slate-900">
           引当確定済みの明細がありません
         </h2>
-        <p className="mt-2 text-sm text-slate-600">
-          受注管理ページでロット引当を完了してください
-        </p>
+        <p className="mt-2 text-sm text-slate-600">受注管理ページでロット引当を完了してください</p>
         <Button variant="outline" className="mt-6" onClick={onBack}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           受注管理へ戻る
@@ -242,7 +240,9 @@ export function ConfirmedLinesPage() {
 
   const handleToggleAll = () => {
     setSelectedIds(
-      selectedIds.length === confirmedLines.length ? [] : confirmedLines.map((line) => line.line_id)
+      selectedIds.length === confirmedLines.length
+        ? []
+        : confirmedLines.map((line) => line.line_id),
     );
   };
 
