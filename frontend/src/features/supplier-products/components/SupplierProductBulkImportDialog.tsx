@@ -110,11 +110,15 @@ export function SupplierProductBulkImportDialog({ open, onOpenChange }: Props) {
         <div className="space-y-6 py-4">
           {/* ファイルアップロード */}
           <div className="space-y-2">
-            <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+            <label
+              htmlFor="supplier-product-csv-file"
+              className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
               CSVファイル選択
             </label>
             <div className="flex items-center gap-2">
               <Input
+                id="supplier-product-csv-file"
                 type="file"
                 accept=".csv"
                 onChange={handleFileChange}
