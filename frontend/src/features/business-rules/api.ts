@@ -70,7 +70,7 @@ export const getBusinessRules = (params?: BusinessRulesListParams) => {
 
   const queryString = searchParams.toString();
   return http.get<BusinessRuleListResponse>(
-    `/business-rules${queryString ? "?" + queryString : ""}`,
+    `business-rules${queryString ? "?" + queryString : ""}`,
   );
 };
 
@@ -79,7 +79,7 @@ export const getBusinessRules = (params?: BusinessRulesListParams) => {
  * @endpoint GET /business-rules/{rule_id}
  */
 export const getBusinessRule = (ruleId: number) => {
-  return http.get<BusinessRule>(`/business-rules/${ruleId}`);
+  return http.get<BusinessRule>(`business-rules/${ruleId}`);
 };
 
 /**
@@ -87,7 +87,7 @@ export const getBusinessRule = (ruleId: number) => {
  * @endpoint GET /business-rules/code/{rule_code}
  */
 export const getBusinessRuleByCode = (ruleCode: string) => {
-  return http.get<BusinessRule>(`/business-rules/code/${ruleCode}`);
+  return http.get<BusinessRule>(`business-rules/code/${ruleCode}`);
 };
 
 /**
@@ -95,7 +95,7 @@ export const getBusinessRuleByCode = (ruleCode: string) => {
  * @endpoint POST /business-rules
  */
 export const createBusinessRule = (data: CreateBusinessRuleRequest) => {
-  return http.post<BusinessRule>("/business-rules", data);
+  return http.post<BusinessRule>("business-rules", data);
 };
 
 /**
@@ -103,7 +103,7 @@ export const createBusinessRule = (data: CreateBusinessRuleRequest) => {
  * @endpoint PUT /business-rules/{rule_id}
  */
 export const updateBusinessRule = (ruleId: number, data: UpdateBusinessRuleRequest) => {
-  return http.put<BusinessRule>(`/business-rules/${ruleId}`, data);
+  return http.put<BusinessRule>(`business-rules/${ruleId}`, data);
 };
 
 /**
@@ -111,7 +111,7 @@ export const updateBusinessRule = (ruleId: number, data: UpdateBusinessRuleReque
  * @endpoint PUT /business-rules/code/{rule_code}
  */
 export const updateBusinessRuleByCode = (ruleCode: string, data: UpdateBusinessRuleRequest) => {
-  return http.put<BusinessRule>(`/business-rules/code/${ruleCode}`, data);
+  return http.put<BusinessRule>(`business-rules/code/${ruleCode}`, data);
 };
 
 /**
@@ -119,7 +119,7 @@ export const updateBusinessRuleByCode = (ruleCode: string, data: UpdateBusinessR
  * @endpoint DELETE /business-rules/{rule_id}
  */
 export const deleteBusinessRule = (ruleId: number) => {
-  return http.delete(`/business-rules/${ruleId}`);
+  return http.delete(`business-rules/${ruleId}`);
 };
 
 /**
@@ -127,5 +127,5 @@ export const deleteBusinessRule = (ruleId: number) => {
  * @endpoint PATCH /business-rules/{rule_id}/toggle
  */
 export const toggleBusinessRuleActive = (ruleId: number) => {
-  return http.patch<BusinessRule>(`/business-rules/${ruleId}/toggle`, {});
+  return http.patch<BusinessRule>(`business-rules/${ruleId}/toggle`, {});
 };

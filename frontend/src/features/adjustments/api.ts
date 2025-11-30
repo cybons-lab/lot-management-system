@@ -62,7 +62,7 @@ export const getAdjustments = (params?: AdjustmentsListParams) => {
   if (params?.adjustment_type) searchParams.append("adjustment_type", params.adjustment_type);
 
   const queryString = searchParams.toString();
-  return http.get<Adjustment[]>(`/adjustments${queryString ? "?" + queryString : ""}`);
+  return http.get<Adjustment[]>(`adjustments${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -70,7 +70,7 @@ export const getAdjustments = (params?: AdjustmentsListParams) => {
  * @endpoint GET /adjustments/{id}
  */
 export const getAdjustment = (id: number) => {
-  return http.get<Adjustment>(`/adjustments/${id}`);
+  return http.get<Adjustment>(`adjustments/${id}`);
 };
 
 /**
@@ -78,5 +78,5 @@ export const getAdjustment = (id: number) => {
  * @endpoint POST /adjustments
  */
 export const createAdjustment = (data: CreateAdjustmentRequest) => {
-  return http.post<Adjustment>("/adjustments", data);
+  return http.post<Adjustment>("adjustments", data);
 };

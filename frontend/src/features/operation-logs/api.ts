@@ -62,7 +62,7 @@ export const getOperationLogs = (params?: OperationLogsListParams) => {
 
   const queryString = searchParams.toString();
   return http.get<OperationLogListResponse>(
-    `/operation-logs${queryString ? "?" + queryString : ""}`,
+    `operation-logs${queryString ? "?" + queryString : ""}`,
   );
 };
 
@@ -71,5 +71,5 @@ export const getOperationLogs = (params?: OperationLogsListParams) => {
  * @endpoint GET /operation-logs/{log_id}
  */
 export const getOperationLog = (logId: number) => {
-  return http.get<OperationLog>(`/operation-logs/${logId}`);
+  return http.get<OperationLog>(`operation-logs/${logId}`);
 };

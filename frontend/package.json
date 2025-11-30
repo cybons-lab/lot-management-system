@@ -14,9 +14,8 @@
     "typegen:curl": "curl -s http://localhost:8000/api/openapi.json -o openapi.json && pnpm typegen",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typegen": "openapi-typescript ../backend/openapi.json -o src/shared/types/openapi.d.ts && prettier --write src/shared/types/openapi.d.ts",
-    "doc:api": "widdershins http://localhost:8000/api/openapi.json -o docs/api_reference.md --summary --omitHeader --expandBody --language_tabs 'typescript:TypeScript'",
     "doc:fe": "typedoc --options typedoc.json",
-    "doc": "npm run typegen && npm run doc:api && npm run doc:fe",
+    "doc": "npm run typegen && npm run doc:fe",
     "capture:screens": "node capture-screens.mjs"
   },
   "dependencies": {
@@ -32,7 +31,6 @@
     "@tanstack/react-query": "^5.90.7",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.12",
-    "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -86,7 +84,6 @@
     "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
-    "vite": "^7.2.0",
-    "widdershins": "^4.0.1"
+    "vite": "^7.2.0"
   }
 }

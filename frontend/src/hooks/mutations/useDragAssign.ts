@@ -4,7 +4,7 @@
  */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import { http } from "@/shared/api/http-client";
 
 // ドラッグ引当リクエストの型定義
 // Note: allocated_quantity フィールド名に統一（allocate_qty は deprecated）
@@ -35,11 +35,7 @@ export const useDragAssign = () => {
 
   return useMutation({
     mutationFn: async (request: DragAssignRequest) => {
-      const response = await axios.post<DragAssignResponse>(
-        "/api/allocation-suggestions/manual",
-        request,
-      );
-      return response.data;
+      return http.post<DragAssignResponse>("allocation-suggestions/manual", request);
     },
     onSuccess: () => {
       // 引当成功時に関連データを再取得

@@ -70,7 +70,7 @@ export const getUsers = (params?: UsersListParams) => {
     searchParams.append("is_active", params.is_active.toString());
 
   const queryString = searchParams.toString();
-  return http.get<User[]>(`/users${queryString ? "?" + queryString : ""}`);
+  return http.get<User[]>(`users${queryString ? "?" + queryString : ""}`);
 };
 
 /**
@@ -78,7 +78,7 @@ export const getUsers = (params?: UsersListParams) => {
  * @endpoint GET /users/{user_id}
  */
 export const getUser = (userId: number) => {
-  return http.get<UserWithRoles>(`/users/${userId}`);
+  return http.get<UserWithRoles>(`users/${userId}`);
 };
 
 /**
@@ -86,7 +86,7 @@ export const getUser = (userId: number) => {
  * @endpoint POST /users
  */
 export const createUser = (data: CreateUserRequest) => {
-  return http.post<User>("/users", data);
+  return http.post<User>("users", data);
 };
 
 /**
@@ -94,7 +94,7 @@ export const createUser = (data: CreateUserRequest) => {
  * @endpoint PUT /users/{user_id}
  */
 export const updateUser = (userId: number, data: UpdateUserRequest) => {
-  return http.put<User>(`/users/${userId}`, data);
+  return http.put<User>(`users/${userId}`, data);
 };
 
 /**
@@ -102,7 +102,7 @@ export const updateUser = (userId: number, data: UpdateUserRequest) => {
  * @endpoint DELETE /users/{user_id}
  */
 export const deleteUser = (userId: number) => {
-  return http.delete(`/users/${userId}`);
+  return http.delete(`users/${userId}`);
 };
 
 /**
@@ -110,5 +110,5 @@ export const deleteUser = (userId: number) => {
  * @endpoint PATCH /users/{user_id}/roles
  */
 export const assignUserRoles = (userId: number, data: UserRoleAssignment) => {
-  return http.patch<UserWithRoles>(`/users/${userId}/roles`, data);
+  return http.patch<UserWithRoles>(`users/${userId}/roles`, data);
 };
