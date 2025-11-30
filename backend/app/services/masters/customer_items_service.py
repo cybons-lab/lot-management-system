@@ -33,8 +33,9 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         product_id: int | None = None,
     ) -> list[dict]:
         """Get all customer item mappings with optional filtering and enriched data."""
-        from app.models.masters_models import Customer, Product, Supplier
         from sqlalchemy import select
+
+        from app.models.masters_models import Customer, Product, Supplier
 
         # Build query with JOINs to get related names
         query = (
@@ -73,10 +74,16 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "supplier_name": r.supplier_name,
                 "base_unit": r.CustomerItem.base_unit,
                 "pack_unit": r.CustomerItem.pack_unit,
-                "pack_quantity": float(r.CustomerItem.pack_quantity) if r.CustomerItem.pack_quantity else None,
+                "pack_quantity": float(r.CustomerItem.pack_quantity)
+                if r.CustomerItem.pack_quantity
+                else None,
                 "special_instructions": r.CustomerItem.special_instructions,
-                "created_at": r.CustomerItem.created_at.isoformat() if r.CustomerItem.created_at else None,
-                "updated_at": r.CustomerItem.updated_at.isoformat() if r.CustomerItem.updated_at else None,
+                "created_at": r.CustomerItem.created_at.isoformat()
+                if r.CustomerItem.created_at
+                else None,
+                "updated_at": r.CustomerItem.updated_at.isoformat()
+                if r.CustomerItem.updated_at
+                else None,
             }
             for r in results
         ]

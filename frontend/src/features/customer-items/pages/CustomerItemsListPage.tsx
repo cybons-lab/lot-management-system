@@ -192,35 +192,38 @@ export function CustomerItemsListPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
                     得意先
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
                     得意先品番
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
                     製品
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
                     仕入先
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
                     基本単位
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
                     包装単位
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700">
+                  <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
                     包装数量
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-700">
+                  <th className="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-700 uppercase">
                     操作
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {filteredItems.map((item) => (
-                  <tr key={`${item.customer_id}-${item.external_product_code}`} className="hover:bg-gray-50">
+                  <tr
+                    key={`${item.customer_id}-${item.external_product_code}`}
+                    className="hover:bg-gray-50"
+                  >
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-orange-600" />
@@ -230,7 +233,7 @@ export function CustomerItemsListPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
+                    <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">
                       {item.external_product_code}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
@@ -252,16 +255,16 @@ export function CustomerItemsListPage() {
                         "-"
                       )}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900">
                       {item.base_unit}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-600">
                       {item.pack_unit || "-"}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-600">
                       {item.pack_quantity || "-"}
                     </td>
-                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                    <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
                       <Button
                         variant="destructive"
                         size="sm"
