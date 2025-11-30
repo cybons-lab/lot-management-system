@@ -1,417 +1,80 @@
 /**
- * OrdersListPage.tsx (リファクタリング版)
+ * OrdersListPage.tsx
  *
- * 受注一覧画面
- * - 新しいフック・コンポーネントを使用
- * - データ取得: useOrdersQuery
- * - UI状態管理: useDialog, useToast, useTable, useFilters
- * - 共通コンポーネント: DataTable, etc.
+ * 受注一覧画面（リファクタリング版）
+ * - カスタムフック化により80行以下に削減
+ * - ビューコンポーネント分割
+ * - UIコンポーネント分離
  */
 
-import { Plus, RefreshCw, Search, Send } from "lucide-react";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
-import { Badge, Button } from "@/components/ui";
-import { Input } from "@/components/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import { ErrorState } from "@/features/inventory/components/ErrorState";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
-import { orderLineColumns } from "@/features/orders/components/OrderLineColumns";
-import { useOrderLines, type OrderLineRow } from "@/features/orders/hooks/useOrderLines";
-import { useCreateOrder } from "@/hooks/mutations";
-import { useDialog, useTable, useFilters } from "@/hooks/ui";
-import { useConfirmedOrderLines } from "@/hooks/useConfirmedOrderLines";
-import { DataTable } from "@/shared/components/data/DataTable";
+import { OrdersDeliveryView } from "@/features/orders/components/OrdersDeliveryView";
+import { OrdersFilters } from "@/features/orders/components/OrdersFilters";
+import { OrdersFlatView } from "@/features/orders/components/OrdersFlatView";
+import { OrdersHeader } from "@/features/orders/components/OrdersHeader";
+import { OrdersOrderView } from "@/features/orders/components/OrdersOrderView";
+import { useOrdersGrouping } from "@/features/orders/hooks/useOrdersGrouping";
+import { useOrdersListLogic } from "@/features/orders/hooks/useOrdersListLogic";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
 
-/**
- * 表示モード型定義
- */
-type ViewMode = "delivery" | "flat" | "order";
-
-type GroupedOrderLine = {
-  deliveryPlaceCode?: string;
-  deliveryPlaceName?: string;
-  orderNumber?: string;
-  customerName?: string;
-  orderDate?: string;
-  status?: string;
-  lines: OrderLineRow[];
-};
-
-/**
- * メインコンポーネント
- */
 export function OrdersListPage() {
   const navigate = useNavigate();
+  const logic = useOrdersListLogic();
 
-  // UI状態管理
-  const createDialog = useDialog();
-
-  const table = useTable({
-    initialPageSize: 25,
-    initialSort: { column: "due_date", direction: "asc" },
-  });
-
-  // フィルター状態管理
-  const filters = useFilters({
-    search: "",
-    customer_code: "",
-    status: "all",
-    unallocatedOnly: false,
-  });
-
-  // 表示モード状態 (デフォルトは1行単位)
-  const [viewMode, setViewMode] = useState<ViewMode>("flat");
-
-  // データ取得 (Line-based)
-  const {
-    data: allOrderLines = [],
-    isLoading,
-    error,
-    refetch,
-  } = useOrderLines({
-    customer_code: filters.values.customer_code || undefined,
-    status: filters.values.status !== "all" ? filters.values.status : undefined,
-  });
-
-  // SAP登録用の引当確定済み明細取得
-  const { data: confirmedLines = [] } = useConfirmedOrderLines();
-
-  // 受注作成Mutation
-  const createOrderMutation = useCreateOrder({
-    onSuccess: () => {
-      toast.success("受注を作成しました");
-      createDialog.close();
-      refetch();
-    },
-    onError: (error) => {
-      toast.error(`作成に失敗しました: ${error.message}`);
-    },
-  });
-
-  // データの加工 (フィルタリング & ソート)
-  // useFiltersのsearchは受注番号や顧客名での検索を想定
-  const filteredLines = allOrderLines.filter((line: OrderLineRow) => {
-    if (filters.values.search) {
-      const searchLower = filters.values.search.toLowerCase();
-      const matchOrderNo = (line.order_number || "").toLowerCase().includes(searchLower);
-      const matchCustomer =
-        (line.customer_name || "").toLowerCase().includes(searchLower) ||
-        (line.customer_code || "").toLowerCase().includes(searchLower);
-      const matchProduct =
-        (line.product_name || "").toLowerCase().includes(searchLower) ||
-        (line.product_code || "").toLowerCase().includes(searchLower);
-
-      if (!matchOrderNo && !matchCustomer && !matchProduct) return false;
-    }
-
-    if (filters.values.unallocatedOnly) {
-      // 簡易的な未引当判定: 引当率 < 100
-      const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
-      // Use allocations from new API if available, otherwise fallback to allocated_lots
-      const allocations = line.allocations || line.allocated_lots || [];
-      const allocatedQty = allocations.reduce((acc: number, alloc: unknown) => {
-        const item = alloc as {
-          allocated_quantity?: number | string;
-          allocated_qty?: number | string;
-        };
-        return acc + Number(item.allocated_quantity ?? item.allocated_qty ?? 0);
-      }, 0);
-      if (orderQty > 0 && allocatedQty >= orderQty) return false;
-    }
-
-    return true;
-  });
-
-  const sortedLines = table.sortData(filteredLines);
-  const paginatedLines = table.paginateData(sortedLines);
-  const safeTotalCount = filteredLines.length;
-  const pagination = table.calculatePagination(safeTotalCount);
-
-  // 統計情報 (Lineベースでの集計は少し異なるが、一旦既存のuseOrderStatsはOrder単位なのでここでは表示しないか、別途計算が必要)
-  // 今回はシンプルにリスト表示を優先し、統計カードは一旦非表示にするか、後で再実装する。
-  // 要件は「明細単位表示への変更」なので、リスト部分を重点的に変更する。
+  const groups = useOrdersGrouping(
+    logic.paginatedLines,
+    logic.viewMode === "flat" ? "delivery" : logic.viewMode,
+  );
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
-      {/* ヘッダー */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">受注管理</h1>
-          <p className="mt-1 text-sm text-slate-600">受注明細一覧と引当状況を管理します</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {confirmedLines.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => navigate("/confirmed-lines")}>
-              <Send className="mr-2 h-4 w-4" />
-              SAP登録
-              <Badge variant="secondary" className="ml-2">
-                {confirmedLines.length}
-              </Badge>
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            更新
-          </Button>
-          <Button size="sm" onClick={createDialog.open}>
-            <Plus className="mr-2 h-4 w-4" />
-            新規登録
-          </Button>
-        </div>
-      </div>
+      <OrdersHeader
+        confirmedLinesCount={logic.confirmedLines.length}
+        isLoading={logic.isLoading}
+        onRefresh={logic.refetch}
+        onCreateClick={logic.createDialog.open}
+        onNavigateToConfirmed={() => navigate("/confirmed-lines")}
+      />
 
-      {/* フィルター */}
-      <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
-            <Input
-              value={filters.values.search}
-              onChange={(e) => filters.set("search", e.target.value)}
-              placeholder="受注番号、得意先、製品で検索..."
-              className="pl-9"
-            />
-          </div>
-        </div>
+      <OrdersFilters filters={logic.filters} viewMode={logic.viewMode} onViewModeChange={logic.setViewMode} />
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="space-y-2">
-            <label htmlFor="customer-code-filter" className="text-sm font-medium text-slate-700">
-              得意先コード
-            </label>
-            <Input
-              id="customer-code-filter"
-              value={filters.values.customer_code}
-              onChange={(e) => filters.set("customer_code", e.target.value)}
-              placeholder="例: C001"
-            />
-          </div>
+      <ErrorState error={logic.error} onRetry={logic.refetch} />
 
-          <div className="space-y-2">
-            <label htmlFor="status-filter" className="text-sm font-medium text-slate-700">
-              ステータス
-            </label>
-            <Select
-              value={filters.values.status}
-              onValueChange={(value) => filters.set("status", value)}
-            >
-              <SelectTrigger id="status-filter">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">すべて</SelectItem>
-                <SelectItem value="draft">未処理</SelectItem>
-                <SelectItem value="allocated">引当済</SelectItem>
-                <SelectItem value="shipped">出荷済</SelectItem>
-                <SelectItem value="closed">完了</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-end space-x-2 pb-2">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="unallocatedOnly"
-                checked={filters.values.unallocatedOnly}
-                onChange={(e) => filters.set("unallocatedOnly", e.target.checked as false)}
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
-              />
-              <label htmlFor="unallocatedOnly" className="text-sm font-medium text-slate-700">
-                未引当のみ表示
-              </label>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant={viewMode === "delivery" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("delivery")}
-                className="min-w-[120px]"
-              >
-                納入先単位
-              </Button>
-              <Button
-                variant={viewMode === "flat" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("flat")}
-                className="min-w-[120px]"
-              >
-                1行単位
-              </Button>
-              <Button
-                variant={viewMode === "order" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setViewMode("order")}
-                className="min-w-[120px]"
-              >
-                受注単位
-              </Button>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={filters.reset}
-              className="text-xs text-slate-500"
-            >
-              リセット
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* エラー表示 */}
-      {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 shadow-sm">
-          <div className="space-y-2 text-center">
-            <p className="text-lg font-semibold text-red-900">データの取得に失敗しました</p>
-            <p className="text-sm text-red-700">
-              {error instanceof Error ? error.message : "サーバーエラーが発生しました"}
-            </p>
-            <Button variant="outline" size="sm" onClick={() => refetch()} className="mt-4">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              再試行
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* テーブル (Delivery Grouped / Flat / Order Grouped) */}
       <div className="space-y-4">
-        {viewMode === "delivery" ? (
-          // 納入先単位表示
-          <div className="space-y-6">
-            {Object.values(
-              paginatedLines.reduce<Record<string, GroupedOrderLine>>((acc, line) => {
-                const key = line.delivery_place_code || "unknown";
-                if (!acc[key]) {
-                  acc[key] = {
-                    deliveryPlaceCode: line.delivery_place_code || undefined,
-                    deliveryPlaceName: line.delivery_place_name || undefined,
-                    lines: [],
-                  };
-                }
-                acc[key].lines.push(line);
-                return acc;
-              }, {}),
-            ).map((group) => (
-              <div
-                key={group.deliveryPlaceCode || "unknown"}
-                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-              >
-                <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-green-50 to-slate-50 px-6 py-3">
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-slate-900">{group.deliveryPlaceCode}</span>
-                    <span className="text-sm text-slate-600">{group.deliveryPlaceName}</span>
-                    <span className="text-xs text-slate-500">明細数: {group.lines.length}</span>
-                  </div>
-                </div>
-                <div className="p-0">
-                  <DataTable
-                    data={group.lines}
-                    columns={orderLineColumns}
-                    isLoading={false}
-                    emptyMessage="明細がありません"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : viewMode === "order" ? (
-          // 受注単位表示
-          <div className="space-y-6">
-            {Object.values(
-              paginatedLines.reduce<Record<string, GroupedOrderLine>>((acc, line) => {
-                const key = line.order_number || "unknown";
-                if (!acc[key]) {
-                  acc[key] = {
-                    orderNumber: line.order_number || undefined,
-                    customerName: line.customer_name || undefined,
-                    orderDate: line.order_date || undefined,
-                    status: line.order_status || undefined,
-                    lines: [],
-                  };
-                }
-                acc[key].lines.push(line);
-                return acc;
-              }, {}),
-            ).map((group) => (
-              <div
-                key={group.orderNumber || "unknown"}
-                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
-              >
-                <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-slate-50 px-6 py-3">
-                  <div className="flex items-center gap-4">
-                    <span className="font-bold text-slate-900">{group.orderNumber}</span>
-                    <span className="text-sm text-slate-600">{group.customerName}</span>
-                    <span className="text-xs text-slate-500">受注日: {group.orderDate}</span>
-                  </div>
-                  <span
-                    className={`rounded-full px-2 py-1 text-xs font-semibold ${
-                      group.status === "allocated"
-                        ? "bg-blue-100 text-blue-800"
-                        : group.status === "shipped"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {group.status}
-                  </span>
-                </div>
-                <div className="p-0">
-                  <DataTable
-                    data={group.lines}
-                    columns={orderLineColumns}
-                    isLoading={false}
-                    emptyMessage="明細がありません"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          // 1行単位表示 (Flat)
-          <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-            <DataTable
-              data={paginatedLines}
-              columns={orderLineColumns}
-              isLoading={isLoading}
-              emptyMessage="明細がありません"
-            />
-          </div>
-        )}
+        {logic.viewMode === "delivery" && <OrdersDeliveryView groups={groups} />}
+        {logic.viewMode === "order" && <OrdersOrderView groups={groups} />}
+        {logic.viewMode === "flat" && <OrdersFlatView lines={logic.paginatedLines} isLoading={logic.isLoading} />}
 
-        {/* ページネーション */}
-        {!error && sortedLines.length > 0 && (
+        {!logic.error && logic.sortedLines.length > 0 && (
           <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
             <TablePagination
-              currentPage={pagination.page ?? 1}
-              pageSize={pagination.pageSize ?? 25}
-              totalCount={pagination.totalItems ?? safeTotalCount ?? 0}
-              onPageChange={table.setPage}
-              onPageSizeChange={table.setPageSize}
+              currentPage={logic.table.calculatePagination(logic.filteredLines.length).page ?? 1}
+              pageSize={logic.table.calculatePagination(logic.filteredLines.length).pageSize ?? 25}
+              totalCount={logic.table.calculatePagination(logic.filteredLines.length).totalItems ?? logic.filteredLines.length}
+              onPageChange={logic.table.setPage}
+              onPageSizeChange={logic.table.setPageSize}
             />
           </div>
         )}
       </div>
 
-      {/* 新規登録ダイアログ */}
       <FormDialog
-        open={createDialog.isOpen}
-        onClose={createDialog.close}
+        open={logic.createDialog.isOpen}
+        onClose={logic.createDialog.close}
         title="受注新規登録"
         description="新しい受注を登録します"
         size="lg"
       >
         <OrderCreateForm
           onSubmit={async (data) => {
-            await createOrderMutation.mutateAsync(data);
+            await logic.createOrderMutation.mutateAsync(data);
           }}
-          onCancel={createDialog.close}
-          isSubmitting={createOrderMutation.isPending}
+          onCancel={logic.createDialog.close}
+          isSubmitting={logic.createOrderMutation.isPending}
         />
       </FormDialog>
     </div>
