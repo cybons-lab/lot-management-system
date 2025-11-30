@@ -1,14 +1,43 @@
 # Code Quality Improvement Report
-**Date:** 2025-11-30
+**Date:** 2025-11-30 (Updated: 2025-11-30 17:00)
 **Project:** Lot Management System v2.0
 **Baseline:** CLAUDE.md Quality Standards
 
 ---
 
+## 📊 Progress Update (2025-11-30 17:00)
+
+**ESLint Errors: 19 → 7** (63% reduction ✅)
+**Critical Complexity Fixed: CC 35 → 6** (CRITICAL item resolved ✅)
+**Commits Made: 6** | **All changes pushed ✅**
+
+### What Was Fixed
+
+✅ **Backend - CRITICAL:**
+- `execute_candidate_lot_query`: CC 35 → 6 (extracted 10 helper functions)
+
+✅ **Frontend - ESLint (12 errors fixed):**
+- SupplierProductsPage.tsx: 89 → 45 lines (extracted sub-components)
+- ConfirmedLinesPage.tsx: 196 → 70 lines (extracted 6 sub-components)
+- InventoryTable.tsx: Fixed 178-line arrow function, reduced file size
+- Accessibility: 2 label-has-associated-control issues fixed
+- Type safety: 8 `any` types replaced with proper types
+
+### Remaining Issues (7 ESLint errors)
+
+⚠️ **Complex Components (need further extraction):**
+- InventoryTable.tsx: 1 error (main function 139 lines)
+- LotListPanel.tsx: 2 errors (329 lines, CC 21)
+- SupplierProductBulkImportDialog.tsx: 2 errors (243 lines, CC 22)
+- UomConversionBulkImportDialog.tsx: 2 errors (245 lines, CC 22)
+
+---
+
 ## Executive Summary
 
-✅ **自動修正完了:** 0 issues (全てのlint/formatチェックが既にパス済み)
-⚠️ **手動対応が必要:** 38 issues (ファイルサイズ、複雑度、ESLint警告)
+✅ **自動修正完了:** Prettier formatting applied
+✅ **手動対応完了:** 13 issues (1 CRITICAL backend, 12 frontend ESLint)
+⚠️ **手動対応が必要:** 25 remaining issues (ファイルサイズ、複雑度、ESLint警告)
 
 ### Overall Status
 
@@ -16,11 +45,12 @@
 |----------|--------|---------|
 | **Backend Lint (Ruff)** | ✅ PASS | All checks passed |
 | **Backend Format (Ruff)** | ✅ PASS | 186 files already formatted |
+| **Backend Complexity** | ✅ IMPROVED | Critical CC=35 fixed → CC=6 |
 | **Frontend TypeScript** | ✅ PASS | No type errors |
-| **Frontend ESLint** | ⚠️ WARNINGS | 19 errors (0 auto-fixable) |
+| **Frontend ESLint** | ⚠️ IMPROVED | 19 → 7 errors (63% reduction) |
 | **Frontend Prettier** | ✅ PASS | All files formatted |
-| **File Size (300+ lines)** | ⚠️ WARNINGS | 9 backend, 10 frontend files |
-| **Complexity (CC > 10)** | ⚠️ WARNINGS | 17 functions |
+| **File Size (300+ lines)** | ⚠️ WARNINGS | 9 backend, 7 frontend files |
+| **Complexity (CC > 10)** | ⚠️ IMPROVED | 17 → 16 functions (1 critical fixed)
 
 ---
 
@@ -99,30 +129,28 @@
 
 **CLAUDE.md基準:** Maximum 10 (STRICT), Target < 7
 
-| CC | Function | File | Priority |
-|----|----------|------|----------|
-| **35** | `execute_candidate_lot_query` | `services/allocations/search.py` | 🔴 CRITICAL |
-| **20** | `generate_orders` | `services/test_data/orders.py` | 🔴 HIGH |
-| **20** | `_validate_profile` | `services/common/profile_loader.py` | 🔴 HIGH |
-| **18** | `calculate_line_allocations` | `services/allocations/fefo.py` | 🔴 HIGH |
-| **15** | `create_stock_movement` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM |
-| **15** | `bulk_import` | `services/forecasts/forecast_import_service.py` | 🟡 MEDIUM |
-| **14** | `create_lot` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM |
-| **14** | `update_lot` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM |
-| **13** | `allocate_with_tracing` | `services/allocations/tracing.py` | 🟡 MEDIUM |
-| **12** | `collect_all_alerts` | `services/alerts/alert_service.py` | 🟡 MEDIUM |
-| **12** | `get_order_lines` | `services/orders/order_service.py` | 🟡 MEDIUM |
-| **11** | `get_db_counts` | `api/routes/admin/admin_healthcheck_router.py` | 🟡 MEDIUM |
-| **11** | `list_lots` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM |
-| **11** | `lock_lot` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM |
-| **11** | `generate_lots` | `services/test_data/inventory.py` | 🟡 MEDIUM |
-| **11** | `calculate_allocation` | `domain/allocation/calculator.py` | 🟡 MEDIUM |
+| CC | Function | File | Priority | Status |
+|----|----------|------|----------|--------|
+| ~~**35**~~ → **6** | `execute_candidate_lot_query` | `services/allocations/search.py` | ✅ **FIXED** | Refactored into 11 functions |
+| **20** | `generate_orders` | `services/test_data/orders.py` | 🔴 HIGH | Pending |
+| **20** | `_validate_profile` | `services/common/profile_loader.py` | 🔴 HIGH | Pending |
+| **18** | `calculate_line_allocations` | `services/allocations/fefo.py` | 🔴 HIGH | Pending |
+| **15** | `create_stock_movement` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM | Pending |
+| **15** | `bulk_import` | `services/forecasts/forecast_import_service.py` | 🟡 MEDIUM | Pending |
+| **14** | `create_lot` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM | Pending |
+| **14** | `update_lot` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM | Pending |
+| **13** | `allocate_with_tracing` | `services/allocations/tracing.py` | 🟡 MEDIUM | Pending |
+| **12** | `collect_all_alerts` | `services/alerts/alert_service.py` | 🟡 MEDIUM | Pending |
+| **12** | `get_order_lines` | `services/orders/order_service.py` | 🟡 MEDIUM | Pending |
+| **11** | `get_db_counts` | `api/routes/admin/admin_healthcheck_router.py` | 🟡 MEDIUM | Pending |
+| **11** | `list_lots` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM | Pending |
+| **11** | `lock_lot` | `api/routes/inventory/lots_router.py` | 🟡 MEDIUM | Pending |
+| **11** | `generate_lots` | `services/test_data/inventory.py` | 🟡 MEDIUM | Pending |
+| **11** | `calculate_allocation` | `domain/allocation/calculator.py` | 🟡 MEDIUM | Pending |
 
 **推奨アクション:**
-1. **execute_candidate_lot_query (CC=35):** CRITICAL - 至急リファクタリング
-   - 複数の小さな関数に分割
-   - 早期returnを使用
-   - ネストを減らす
+1. ~~**execute_candidate_lot_query (CC=35):** CRITICAL~~ ✅ **COMPLETED** (CC 35 → 6)
+   - ✅ Extracted 10 helper functions: `_apply_fefo_ordering`, `_get_delivery_place_name`, `_query_lots_from_view`, `_query_lots_with_fallback`, `_convert_to_candidate_item`, `_enrich_lot_details`, `_enrich_warehouse_names`, `_enrich_product_units`, `_enrich_candidate_details`
 2. **generate_orders, _validate_profile (CC=20):**
    - 検証ロジックを別関数に分離
    - Strategy パターンを検討
@@ -133,75 +161,86 @@
 
 ### 2.4 Frontend: ESLint エラー
 
-**19 errors detected:**
+**19 → 7 errors (63% reduction ✅)**
 
 #### A. 関数が長すぎる (max-lines-per-function: 80)
 
-| File | Function | Lines | Action |
-|------|----------|-------|--------|
-| `inventory/components/InventoryTable.tsx` | `InventoryTable` | 337 | Extract sub-components |
-| `inventory/components/InventoryTable.tsx` | Arrow function | 178 | Extract handler logic to hook |
-| `inventory/components/LotListPanel.tsx` | `LotListPanel` | 329 | Extract filters, table |
-| `orders/pages/ConfirmedLinesPage.tsx` | `ConfirmedLinesPage` | 187 | Extract sub-components |
-| `supplier-products/components/SupplierProductBulkImportDialog.tsx` | Dialog | 239 | Extract form sections |
-| `supplier-products/pages/SupplierProductsPage.tsx` | Page | 85 | Extract filters |
-| `uom-conversions/components/UomConversionBulkImportDialog.tsx` | Dialog | 241 | Extract form sections |
+| File | Function | Lines | Status | Action |
+|------|----------|-------|--------|--------|
+| ~~`inventory/components/InventoryTable.tsx`~~ | Arrow function | ~~178~~ | ✅ **FIXED** | Extracted to InventoryTableComponents.tsx |
+| `inventory/components/InventoryTable.tsx` | `InventoryTable` | 139 ⬇️ | ⚠️ IMPROVED | Reduced from 337, needs further extraction |
+| `inventory/components/LotListPanel.tsx` | `LotListPanel` | 329 | 🔴 PENDING | Extract filters, table |
+| ~~`orders/pages/ConfirmedLinesPage.tsx`~~ | `ConfirmedLinesPage` | ~~187~~ → 70 | ✅ **FIXED** | Extracted 6 sub-components |
+| `supplier-products/components/SupplierProductBulkImportDialog.tsx` | Dialog | 243 | 🔴 PENDING | Extract form sections |
+| ~~`supplier-products/pages/SupplierProductsPage.tsx`~~ | Page | ~~85~~ → 45 | ✅ **FIXED** | Extracted table components |
+| `uom-conversions/components/UomConversionBulkImportDialog.tsx` | Dialog | 245 | 🔴 PENDING | Extract form sections |
 
 #### B. 複雑度が高い (complexity > 12)
 
-| File | Function | CC | Action |
-|------|----------|-----|--------|
-| `LotListPanel.tsx` | `LotListPanel` | 21 | Simplify conditional logic |
-| `SupplierProductBulkImportDialog.tsx` | Dialog | 22 | Extract validation logic |
-| `UomConversionBulkImportDialog.tsx` | Dialog | 22 | Extract validation logic |
+| File | Function | CC | Status | Action |
+|------|----------|-----|--------|--------|
+| `LotListPanel.tsx` | `LotListPanel` | 21 | 🔴 PENDING | Simplify conditional logic |
+| `SupplierProductBulkImportDialog.tsx` | Dialog | 22 | 🔴 PENDING | Extract validation logic |
+| `UomConversionBulkImportDialog.tsx` | Dialog | 22 | 🔴 PENDING | Extract validation logic |
 
 #### C. 型の問題 (@typescript-eslint/no-explicit-any)
 
-| File | Line | Issue |
-|------|------|-------|
-| `hooks/api/useLots.ts` | 15 | Unexpected any |
-| `hooks/api/useOrders.ts` | 15 | Unexpected any |
-| `services/api.ts` | 42, 58, 67 | Unexpected any (3x) |
-| `services/api/lot-service.ts` | 16 | Unexpected any |
-| `services/api/order-service.ts` | 20 | Unexpected any |
+| File | Line | Status |
+|------|------|--------|
+| ~~`hooks/api/useLots.ts`~~ | ~~15~~ | ✅ **FIXED** |
+| ~~`hooks/api/useOrders.ts`~~ | ~~15~~ | ✅ **FIXED** |
+| ~~`services/api.ts`~~ | ~~42, 58, 67~~ | ✅ **FIXED** (3x) |
+| ~~`services/api/lot-service.ts`~~ | ~~16~~ | ✅ **FIXED** |
+| ~~`services/api/order-service.ts`~~ | ~~20~~ | ✅ **FIXED** |
 
-**推奨アクション:** 全ての `any` を適切な型に置き換え
+**完了:** 全ての `any` を `Record<string, string | number | boolean | undefined>` に置き換え ✅
 
 #### D. アクセシビリティ (jsx-a11y/label-has-associated-control)
 
-| File | Line |
-|------|------|
-| `SupplierProductBulkImportDialog.tsx` | 113 |
-| `UomConversionBulkImportDialog.tsx` | 109 |
+| File | Line | Status |
+|------|------|--------|
+| ~~`SupplierProductBulkImportDialog.tsx`~~ | ~~113~~ | ✅ **FIXED** |
+| ~~`UomConversionBulkImportDialog.tsx`~~ | ~~109~~ | ✅ **FIXED** |
 
-**推奨アクション:** `htmlFor` 属性を追加
+**完了:** `htmlFor` と `id` 属性を追加 ✅
 
 ---
 
 ## 3. 優先度付き TODO リスト
 
-### 🔴 CRITICAL (即対応)
+### ✅ COMPLETED
 
-1. **Backend: `execute_candidate_lot_query` (CC=35) をリファクタリング**
-   - 期限: 1週間以内
-   - 理由: 複雑度が基準の3.5倍
-   - アクション: 複数の小さな関数に分割
+1. ~~**Backend: `execute_candidate_lot_query` (CC=35) をリファクタリング**~~ ✅
+   - ✅ CC 35 → 6 に削減
+   - ✅ 10個のヘルパー関数に分割
+   - Commit: `fd53a3c`
+
+2. ~~**Frontend: `any` 型の置き換え (8箇所)**~~ ✅
+   - ✅ 全8箇所を `Record<string, string | number | boolean | undefined>` に置き換え
+   - Commit: `b440d9d`
+
+3. ~~**Frontend: アクセシビリティ問題の修正 (2箇所)**~~ ✅
+   - ✅ `htmlFor` と `id` 属性を追加
+   - Commit: `db79776`
+
+4. ~~**Frontend: ESLint max-lines-per-function 違反の修正 (3/7箇所)**~~ ✅
+   - ✅ SupplierProductsPage.tsx (89 → 45 lines)
+   - ✅ ConfirmedLinesPage.tsx (187 → 70 lines)
+   - ✅ InventoryTable.tsx (178-line arrow function fixed)
 
 ### 🔴 HIGH (2週間以内)
 
-2. **Backend: `lots_router.py` (531行) を分割**
+5. **Backend: `lots_router.py` (531行) を分割**
    - 3つのルーターファイルに分割
 
-3. **Backend: 高複雑度関数のリファクタリング (CC 18-20)**
+6. **Backend: 高複雑度関数のリファクタリング (CC 18-20)**
    - `generate_orders`, `_validate_profile`, `calculate_line_allocations`
 
-4. **Frontend: 大きなコンポーネントの分割**
-   - `InventoryTable` (337行)
-   - `LotListPanel` (329行)
-   - `OrdersListPage` (419行)
-
-5. **Frontend: `any` 型の置き換え (8箇所)**
-   - 型安全性の向上
+7. **Frontend: 大きなコンポーネントの分割**
+   - `LotListPanel` (329行, CC 21) - 最優先
+   - `SupplierProductBulkImportDialog` (243行, CC 22)
+   - `UomConversionBulkImportDialog` (245行, CC 22)
+   - `InventoryTable` (139行) - 部分的完了、さらに削減必要
 
 ### 🟡 MEDIUM (1ヶ月以内)
 
@@ -250,12 +289,20 @@
 ## 5. 次のステップ
 
 1. ✅ **このレポートをレビュー**
-2. ⬜ **Critical 項目の対応開始** (execute_candidate_lot_query)
-3. ⬜ **High 項目のスプリント計画** (2週間スプリント推奨)
-4. ⬜ **CI/CD に品質ゲートを追加**
+2. ✅ **Critical 項目の対応完了** (execute_candidate_lot_query CC 35 → 6)
+3. ✅ **ESLint 問題の部分的対応** (19 → 7 errors, 63% reduction)
+4. ⬜ **残り7個のESLint errorを修正**
+   - LotListPanel.tsx (2 errors: 329 lines, CC 21)
+   - SupplierProductBulkImportDialog.tsx (2 errors: 243 lines, CC 22)
+   - UomConversionBulkImportDialog.tsx (2 errors: 245 lines, CC 22)
+   - InventoryTable.tsx (1 error: 139 lines)
+5. ⬜ **High 項目のスプリント計画** (2週間スプリント推奨)
+   - Backend: lots_router.py 分割, 高複雑度関数リファクタリング
+6. ⬜ **CI/CD に品質ゲートを追加**
    - radon complexity check (fail if CC > 15)
    - File size check (fail if > 300 lines)
-5. ⬜ **定期的な品質レビュー** (月次推奨)
+   - ESLint check with --max-warnings=0
+7. ⬜ **定期的な品質レビュー** (月次推奨)
 
 ---
 
