@@ -1,556 +1,99 @@
-= 予測データドキュメント
+= 予測管理機能
 :toc: left
 :toc-title: 目次
-:sectnums:
-
-**最終更新:** 2025-11-24
-**目的:** 予測データ生成・管理に関するすべてのドキュメントを1つに統合
-
-== 予測データ調査レポート
-
-**元ファイル:** `FORECAST_TEST_DATA_INVESTIGATION.md`
-
-=== 概要
-
-Lot Management Systemでは、**Simulation Service** (`seed_simulate_service.py`) が予測データを生成します。
-
-=== データ構造
-
-==== ForecastHeader（ヘッダ）
-
-[source,python]
-----
-forecast_headers
-├─ id: BigInteger (PK)
-├─ customer_id: BigInteger (FK → customers)
-├─ delivery_place_id: BigInteger (FK → delivery_places)
-├─ forecast_number: String(50) [UNIQUE]
-├─ forecast_start_date: Date
-├─ forecast_end_date: Date
-├─ status: Enum (active|completed|cancelled)
-├─ created_at: DateTime
-└─ updated_at: DateTime
-----
-
-==== ForecastLine（明細）
-
-[source,python]
-----
-forecast_lines
-├─ id: BigInteger (PK)
-├─ forecast_id: BigInteger (FK → forecast_headers, CASCADE)
-├─ product_id: BigInteger (FK → products)
-├─ delivery_date: Date
-├─ forecast_quantity: Decimal(15,3)
-├─ unit: String(20)
-├─ created_at: DateTime
-└─ updated_at: DateTime
-----
-
-=== 日付範囲（2025-11-19時点）
-
-==== 日次予測
-* **開始:** base_date - 31日
-* **終了:** 2ヶ月後の10日
-* **例:** 2025-10-19 ～ 2026-01-10（約83日）
-
-==== 旬次予測（10日単位）
-* **期間:** 開始日 ～ 2ヶ月後の月末
-* **日付:** 各月の1日、11日、21日
-* **例:** 約9～10旬分
-
-==== 月次予測
-* **期間:** 当月 ～ 3ヶ月先（計4ヶ月）
-* **日付:** 各月の1日
-* **例:** 2025-11, 2025-12, 2026-01, 2026-02
-
-=== データ生成ロジック
-
-[source,python]
-----
-def create_forecast_data(
-    db: Session,
-    params: dict,  # forecasts=1で有効化
-    masters: dict,
-    rng: Random,
-    tracker,
-    task_id: str,
-) -> int:
-    """
-    予測データを生成する
-
-    Returns:
-        forecast_line count
-    """
-----
 
-**生成手順:**
-. 納入先ごとにループ
-. 全製品に対して予測を生成
-. 日次・旬次・月次の3種類を作成
-. `forecast_quantity` はランダム（10～1000）
+**最終更新:** 2025-11-30 +
+**ステータス:** ✅ 実装完了
 
-=== レコード数計算式
+NOTE: 詳細設計・実装コードは `backend/app/services/forecasts/` と `frontend/src/features/forecasts/` を参照してください。
 
-----
-Daily Lines   = delivery_places × products × days (~83)
-Dekad Lines   = delivery_places × products × dekads (~9-10)
-Monthly Lines = delivery_places × products × 4
+== 機能概要
 
-Total Lines = Daily + Dekad + Monthly
-----
+* 顧客別・製品別・納品先別の需要予測管理
+* 日次予測データの管理
+* 予測と実績の比較
+* 予測インポート機能（CSV/API）
 
-**例（small profile）:**
-* 納入先: 5
-* 製品: 40
-* 合計: 5 × 40 × (83 + 9 + 4) = **19,200行**
+== 主要機能
 
-=== API呼び出し
+=== 1. 予測データ管理
 
-[source,bash]
-----
-# 予測データを含むシード生成
-POST /api/admin/simulate-seed-data
-{
-  "profile": "small",
-  "warehouses": 2,
-  "forecasts": 1,  # ← 必須（0=無効、1=有効）
-  "random_seed": 42
-}
-----
+* 日次予測（`forecast_date`）
+* 月次集計（`forecast_period`: YYYY-MM）
+* 旬別表示（1-10日、11-20日、21-月末）
 
-=== 重要な注意点
+=== 2. 在庫サマリー統合
 
-. **デフォルトでは無効**
-* `forecasts=1` を明示的に指定する必要あり
+* 現在在庫
+* 引当済み数量
+* 入荷予定
+* 予測対比での充足率
 
-. **全製品が対象**
-* ランダムサンプリングではなく、全製品に予測を生成
+=== 3. SAP連携（モック）
 
-. **大量データに注意**
-* 製品数が多いと数万レコードになる可能性
+* SAP在庫トータルチェック（日次バッチ）
+* SAP受注登録
+* 在庫差異アラート
 
-== 予測データ問題サマリー
+== データモデル
 
-**元ファイル:** `docs/forecast_issue_summary.md`
+=== forecast_current テーブル
 
-=== ユーザー報告の問題
+最新の予測データを保持
 
-**症状:**
-* Forecast ページが本日のみ表示
-* 日次・旬次・月次予測が欠落
+[cols=\"1,1,1\"]
+|===
+| カラム | 型 | 説明
 
-=== 原因調査
+| id | BigInteger | PK
+| forecast_date | Date | 予測対象日
+| forecast_period | String(7) | 予測期間（YYYY-MM）
+| customer_id | BigInteger | 顧客ID
+| product_id | BigInteger | 製品ID
+| delivery_place_id | BigInteger | 納品先ID
+| quantity | Decimal | 予測数量
+|===
 
-==== フロントエンド
-* `useForecastCalculations` が `forecast_period` と `forecast_date` で集計
-* `ForecastDayCell` は欠損データを `-` で表示（問題なし）
+=== forecast_history テーブル
 
-==== バックエンド（シード）
-* `create_forecast_data` が予測を生成
-* `target_month` の計算: 25日未満→当月、以降→翌月
-* `forecast_period` の設定:
-** 日次: `forecast_date` の月（例: `2025-11`）
-** 旬次: 翌月
-** 月次: 翌々月
+過去の予測データを履歴として保持
 
-=== Phase 4完了タスク
+== API仕様
 
-✅ 実装済み機能:
-* ナビゲーション改善
-* `product_id` フィルタ追加
-* クロスページナビゲーション
+=== 予測インポート
 
-=== Phase 5残タスク
+`POST /forecasts/bulk-import`
 
-. **DBデータ確認**
-* `forecast_current` テーブルのレコード確認
-* `forecast_period` が期待通りか検証
+* CSVまたはJSON形式で複数行を一括登録
+* 既存データは `forecast_history` に移動
+* 引当推奨を自動再生成
 
-. **フロントエンドロジック追跡**
-* `useForecastCalculations` の動作確認
+=== 予測一覧取得
 
-. **シードロジック調整**
-* `forecast_period` 計算の見直し（必要なら）
-* デフォルトで予測生成されるように修正（検討）
+`GET /forecasts`
 
-== 予測データ生成リファクタリング
+* 期間、顧客、製品でフィルタリング可能
+* 旬別・月別の集計をサポート
 
-**元ファイル:** `docs/forecast_data_generation_refactor.md`
+== UI機能
 
-=== リファクタリング概要
+=== 予測詳細カード
 
-**実施日:** 2025-11-24
+* 集約表示（月次 / 旬別）
+* 日次詳細表示（展開可能）
+* 在庫サマリー統合表示
+* 入荷予定表示
 
-=== 修正前の問題点
+=== 予測一覧画面
 
-==== 問題1: DemandKeyごとに日次・旬次・月次がバラバラ
+* フィルタリング機能
+* 一括インポート
+* 引当推奨生成ボタン
 
-**症状:**
-* 1つのDemandKey（customer, delivery_place, product）に対して、日次・旬次・月次がランダムに生成
-* 同じキーで日次予測があるのに旬次予測がない、などの不整合
+== 参照
 
-**原因:**
-[source,python]
-----
-# 旧実装
-forecast = forecast_strategy(...).example()  # 1つだけ生成
-----
-
-==== 問題2: 毎日データが存在（非現実的）
-
-**症状:**
-* 全ての日に予測データが生成される
-* 実際のビジネスでは空白日も多い
-
-**原因:**
-[source,python]
-----
-# 旧実装
-while current_date <= end_date:
-    entries.append(...)  # 毎日必ず追加
-    current_date += timedelta(days=1)
-----
-
-==== 問題3: 旬次予測が日次合計と完全一致
-
-**症状:**
-* 旬次予測の合計 = 日次予測の合計（完全一致）
-* 「予測」なのに「確定値」のように見える
-
-**原因:**
-[source,python]
-----
-# 旧実装
-jyun_quantity = daily_total / Decimal(3)  # 単純に3等分
-----
-
-=== 解決策
-
-==== 修正1: DemandKeyごとにセットで生成
-
-[source,python]
-----
-for product in selected_products:
-    # Step 1: 日次予測を生成
-    daily_entries, period_totals = _create_daily_forecasts(...)
-
-    # Step 2: 旬次予測を生成
-    jyun_entries = _create_jyun_forecasts_from_daily(..., period_totals)
-
-    # Step 3: 月次予測を生成
-    monthly_entries = _create_monthly_forecasts_from_daily(..., period_totals)
-----
-
-**効果:**
-* ✅ 日次・旬次・月次が必ずセットで生成
-* ✅ データの整合性が保証される
-
-==== 修正2: ランダムな日のみ生成（60-80%カバレッジ）
-
-[source,python]
-----
-coverage_ratio = random.uniform(0.6, 0.8)
-
-while current_date <= end_date:
-    if random.random() < coverage_ratio:
-        entries.append(...)  # 確率的に生成
-    current_date += timedelta(days=1)
-----
-
-**効果:**
-* ✅ 60～80%の日だけデータ生成
-* ✅ より現実的なテストデータ
-
-==== 修正3: 旬次予測に揺らぎを追加
-
-[source,python]
-----
-# 日次合計を旬ごとに集計
-period_totals = {
-    'joujun': Decimal(0),   # 上旬（1-10日）
-    'chuujun': Decimal(0),  # 中旬（11-20日）
-    'gejun': Decimal(0)     # 下旬（21-月末）
-}
-
-# ±15-25%の揺らぎを追加
-variance_pct = Decimal(str(random.uniform(-0.25, 0.25)))
-jyun_quantity = base_quantity * (Decimal(1) + variance_pct)
-----
-
-**効果:**
-* ✅ 旬次予測が日次合計から±15～25%の範囲でばらつく
-* ✅ 「予測は外れる」という現実的なシミュレーション
-
-=== 実装完了（2025-11-24）
-
-✅ **ロジック統合の完了**
-
-**実装内容:**
-* ✅ 共通モジュール `backend/app/services/forecasts/forecast_generator.py` を作成
-* ✅ 3つのヘルパー関数を共通化:
-** `create_daily_forecasts`
-** `create_jyun_forecasts_from_daily`
-** `create_monthly_forecasts_from_daily`
-* ✅ `seed_simulate_service.py` を更新（124行削減）
-* ✅ `generate_test_data.py` を更新（175行削減）
-
-**削減されたコード:**
-* 合計 299行の重複コードを削減
-
-**メリット:**
-* ✅ Single Source of Truth
-* ✅ バグ修正が1箇所で済む
-* ✅ テストデータと本番データの一貫性
-
-== 予測生成Phase 1計画
-
-**元ファイル:** `docs/forecast-generation-refactor-plan.md`
-
-=== Phase 1の目的
-
-**現在の問題:**
-* 製品ベースで予測を生成している
-* CustomerItem（商流）を考慮していない
-* 存在しない商流でも予測が生成される
-
-**Phase 1の解決:**
-* CustomerItemベースの予測生成に変更
-* 商流（customer × product）が存在するものだけを対象
-
-=== 正しいアプローチ
-
-----
-商流（CustomerItem）でループ
-  └─ 納入先でループ（その顧客の納入先のみ）
-      └─ キー: (customer_id, delivery_place_id, product_id)
-          └─ 日次・旬次・月次を一貫して生成
-----
-
-=== 実装手順
-
-==== Step 1: CustomerItemベースのグルーピング
-
-[source,python]
-----
-# CustomerItemを取得
-all_customer_items = db.execute(select(CustomerItem)).scalars().all()
-
-# 顧客ごとにグルーピング
-customer_items_by_customer = {}
-for ci in all_customer_items:
-    if ci.customer_id not in customer_items_by_customer:
-        customer_items_by_customer[ci.customer_id] = []
-    customer_items_by_customer[ci.customer_id].append(ci)
-----
-
-==== Step 2: 商流×納入先のキー生成
-
-[source,python]
-----
-forecast_keys = []  # (customer_id, delivery_place_id, product_id)
-
-for customer_id, customer_items in customer_items_by_customer.items():
-    customer_delivery_places = delivery_places_by_customer.get(customer_id, [])
-
-    for customer_item in customer_items:
-        for delivery_place in customer_delivery_places:
-            forecast_keys.append((
-                customer_id,
-                delivery_place.id,
-                customer_item.product_id
-            ))
-----
-
-==== Step 3: キー単位で一貫生成
-
-[source,python]
-----
-for customer_id, delivery_place_id, product_id in forecast_keys:
-    # Step 1: 日次予測を生成
-    daily_entries = _create_daily_forecasts_for_key(...)
-
-    # Step 2: 日次合計を計算
-    daily_total = sum(entry.forecast_quantity for entry in daily_entries)
-
-    # Step 3: 旬次予測を生成
-    jyun_entries = _create_jyun_forecasts_for_key(..., daily_total)
-
-    # Step 4: 月次予測を生成
-    monthly_entries = _create_monthly_forecasts_for_key(..., daily_total)
-----
-
-=== データ整合性の保証
-
-Phase 1での保証事項:
-
-. **商流の存在保証**
-* CustomerItemに登録されている組み合わせのみ処理
-
-. **日次・旬次・月次の完全性**
-* 必ず3種類セットで生成
-
-. **数値の整合性**
-* 旬次の合計 = 日次合計（各旬）
-* 月次の数量 = 日次合計
-
-=== テスト計画
-
-==== 商流の整合性確認
-
-[source,sql]
-----
--- 予測データがすべてcustomer_itemsに存在することを確認
-SELECT DISTINCT fc.customer_id, fc.product_id
-FROM forecast_current fc
-LEFT JOIN customer_items ci
-  ON fc.customer_id = ci.customer_id
-  AND fc.product_id = ci.product_id
-WHERE ci.id IS NULL;
--- 結果が0件であること
-----
-
-==== 完全性確認
-
-[source,sql]
-----
--- 各キーに日次・旬次・月次が存在することを確認
--- (詳細なSQLは元ドキュメント参照)
-----
-
-== シードデータジェネレータ比較
-
-**元ファイル:** `docs/seed_data_generators_comparison.md`
-
-=== 2つのツールの棲み分け
-
-==== seed_simulate_service.py（本番シミュレーション）
-
-**用途:**
-* デモ・UI開発
-* パフォーマンステスト
-* シナリオテスト
-
-**特徴:**
-* API経由で実行（GUI対応）
-* 細かいパラメータ制御
-* プログレストラッキング
-* スナップショット機能
-
-**呼び出し方法:**
-[source,bash]
-----
-POST /api/admin/simulate-seed-data
-{
-  "profile": "medium",
-  "warehouses": 3,
-  "products": 20,
-  "orders": 50,
-  "forecasts": 1
-}
-----
-
-==== generate_test_data.py（テストシナリオ）
-
-**用途:**
-* ユニットテスト
-* 統合テスト
-* バグ再現
-* CI/CDパイプライン
-
-**特徴:**
-* Hypothesisベースの戦略的データ生成
-* エッジケースを含むテストデータ
-* 固定データ量（予測可能）
-* CLI実行
-
-**呼び出し方法:**
-[source,bash]
-----
-cd backend
-python scripts/generate_test_data.py
-----
-
-=== 共通化されているもの
-
-**2025-11-24にリファクタリング完了！**
-
-両方のツールが以下の共通モジュールを使用:
-
-[source,python]
-----
-from app.services.forecasts.forecast_generator import (
-    create_daily_forecasts,
-    create_jyun_forecasts_from_daily,
-    create_monthly_forecasts_from_daily,
-)
-----
-
-**メリット:**
-* ✅ Single Source of Truth
-* ✅ バグ修正が1箇所で済む
-* ✅ テストデータと本番データの一貫性
-
-=== 使い分けフローチャート
-
-----
-質問: 何をしたいですか？
-
-├─ UI開発・デモ・パフォーマンステスト
-│   └→ ✅ seed_simulate_service.py (API経由)
-│
-├─ ユニットテスト・統合テスト
-│   └→ ✅ generate_test_data.py (CLI)
-│
-├─ 特定のバグ再現（在庫不足など）
-│   └→ ✅ generate_test_data.py (シナリオ指定)
-│
-├─ 大量データでの負荷テスト
-│   └→ ✅ seed_simulate_service.py (パラメータ調整)
-│
-└─ CI/CDパイプライン
-    └→ ✅ generate_test_data.py (高速・安定)
-----
-
-== 補足情報
-
-=== 予測データ生成のベストプラクティス
-
-. **CustomerItemベースで生成する（Phase 1）**
-* 存在しない商流で予測を作らない
-* データの整合性を保証
-
-. **日次・旬次・月次をセットで生成**
-* 1つのキーに対して3種類必ず作る
-* 欠損を防ぐ
-
-. **揺らぎを加える**
-* 旬次予測に±15～25%の誤差
-* 現実的なシミュレーション
-
-. **共通ロジックを使う**
-* `forecast_generator.py` を活用
-* 重複コードを避ける
-
-=== トラブルシューティング
-
-**問題:** 予測データが表示されない
-
-**確認手順:**
-. `forecasts=1` を指定したか確認
-. DBに `forecast_headers` / `forecast_lines` が存在するか確認
-. `forecast_period` が正しい形式（YYYY-MM）か確認
-. フロントエンドの `useForecastCalculations` が正しく動作しているか確認
-
-**問題:** 予測データが不完全（旬次だけない等）
-
-**原因:** 古いバージョンのロジックを使用している可能性
-
-**解決:** 最新の `forecast_generator.py` を使用し、シードデータを再生成
-
-== 関連ドキュメント
-
-* **CLAUDE.md** - プロジェクト全体のガイド
-* **backend/app/services/forecasts/forecast_generator.py** - 共通ロジック
-* **backend/app/services/seed/seed_simulate_service.py** - シミュレーションサービス
-* **backend/scripts/generate_test_data.py** - テストデータジェネレータ
+* **実装コード**
+** Backend: `backend/app/services/forecasts/`
+** Frontend: `frontend/src/features/forecasts/`
+* **モデル定義:** `backend/app/models/forecast_models.py`
+* **API仕様:** `docs/api_reference.adoc`
