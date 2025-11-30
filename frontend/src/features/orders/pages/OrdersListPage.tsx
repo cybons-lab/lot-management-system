@@ -40,21 +40,30 @@ export function OrdersListPage() {
         onNavigateToConfirmed={() => navigate("/confirmed-lines")}
       />
 
-      <OrdersFilters filters={logic.filters} viewMode={logic.viewMode} onViewModeChange={logic.setViewMode} />
+      <OrdersFilters
+        filters={logic.filters}
+        viewMode={logic.viewMode}
+        onViewModeChange={logic.setViewMode}
+      />
 
       <ErrorState error={logic.error} onRetry={logic.refetch} />
 
       <div className="space-y-4">
         {logic.viewMode === "delivery" && <OrdersDeliveryView groups={groups} />}
         {logic.viewMode === "order" && <OrdersOrderView groups={groups} />}
-        {logic.viewMode === "flat" && <OrdersFlatView lines={logic.paginatedLines} isLoading={logic.isLoading} />}
+        {logic.viewMode === "flat" && (
+          <OrdersFlatView lines={logic.paginatedLines} isLoading={logic.isLoading} />
+        )}
 
         {!logic.error && logic.sortedLines.length > 0 && (
           <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
             <TablePagination
               currentPage={logic.table.calculatePagination(logic.filteredLines.length).page ?? 1}
               pageSize={logic.table.calculatePagination(logic.filteredLines.length).pageSize ?? 25}
-              totalCount={logic.table.calculatePagination(logic.filteredLines.length).totalItems ?? logic.filteredLines.length}
+              totalCount={
+                logic.table.calculatePagination(logic.filteredLines.length).totalItems ??
+                logic.filteredLines.length
+              }
               onPageChange={logic.table.setPage}
               onPageSizeChange={logic.table.setPageSize}
             />
