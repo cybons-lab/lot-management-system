@@ -40,7 +40,12 @@ export function LotListPanel() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => logic.refetch()} disabled={logic.isLoading}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => logic.refetch()}
+          disabled={logic.isLoading}
+        >
           <RefreshCw className="mr-2 h-4 w-4" />
           更新
         </Button>
@@ -79,7 +84,9 @@ export function LotListPanel() {
           currentPage={(logic.tableSettings.page ?? 0) + 1}
           pageSize={logic.tableSettings.pageSize ?? 25}
           totalCount={logic.sortedLots.length}
-          onPageChange={(page) => logic.setTableSettings({ ...logic.tableSettings, page: page - 1 })}
+          onPageChange={(page) =>
+            logic.setTableSettings({ ...logic.tableSettings, page: page - 1 })
+          }
           onPageSizeChange={(pageSize) =>
             logic.setTableSettings({ ...logic.tableSettings, pageSize, page: 0 })
           }
