@@ -31,9 +31,25 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         limit: int = 100,
         customer_id: int | None = None,
         product_id: int | None = None,
-    ) -> list[CustomerItem]:
-        """Get all customer item mappings with optional filtering."""
-        query = self.db.query(CustomerItem)
+    ) -> list[dict]:
+        """Get all customer item mappings with optional filtering and enriched data."""
+        from app.models.masters_models import Customer, Product, Supplier
+        from sqlalchemy import select
+
+        # Build query with JOINs to get related names
+        query = (
+            select(
+                CustomerItem,
+                Customer.customer_code,
+                Customer.customer_name,
+                Product.product_name,
+                Supplier.supplier_code,
+                Supplier.supplier_name,
+            )
+            .join(Customer, CustomerItem.customer_id == Customer.id)
+            .join(Product, CustomerItem.product_id == Product.id)
+            .outerjoin(Supplier, CustomerItem.supplier_id == Supplier.id)
+        )
 
         if customer_id is not None:
             query = query.filter(CustomerItem.customer_id == customer_id)
@@ -41,7 +57,29 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         if product_id is not None:
             query = query.filter(CustomerItem.product_id == product_id)
 
-        return query.offset(skip).limit(limit).all()
+        results = self.db.execute(query.offset(skip).limit(limit)).all()
+
+        # Convert to dict with enriched data
+        return [
+            {
+                "customer_id": r.CustomerItem.customer_id,
+                "customer_code": r.customer_code,
+                "customer_name": r.customer_name,
+                "external_product_code": r.CustomerItem.external_product_code,
+                "product_id": r.CustomerItem.product_id,
+                "product_name": r.product_name,
+                "supplier_id": r.CustomerItem.supplier_id,
+                "supplier_code": r.supplier_code,
+                "supplier_name": r.supplier_name,
+                "base_unit": r.CustomerItem.base_unit,
+                "pack_unit": r.CustomerItem.pack_unit,
+                "pack_quantity": float(r.CustomerItem.pack_quantity) if r.CustomerItem.pack_quantity else None,
+                "special_instructions": r.CustomerItem.special_instructions,
+                "created_at": r.CustomerItem.created_at.isoformat() if r.CustomerItem.created_at else None,
+                "updated_at": r.CustomerItem.updated_at.isoformat() if r.CustomerItem.updated_at else None,
+            }
+            for r in results
+        ]
 
     def get_by_customer(self, customer_id: int) -> list[CustomerItem]:
         """Get all customer item mappings for a specific customer."""

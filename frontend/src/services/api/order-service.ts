@@ -11,7 +11,7 @@ import type {
 } from "@/shared/types/aliases";
 import type { OrderCreate, OrderUpdate } from "@/utils/validators";
 
-const BASE_PATH = "/orders";
+const BASE_PATH = "orders";
 
 /**
  * 受注一覧を取得
@@ -92,12 +92,12 @@ export async function listOrdersByCustomer(customerCode: string): Promise<OrderR
 }
 
 export async function getOrderDetail(orderId: number): Promise<OrderWithLinesResponse> {
-  return http.get<OrderWithLinesResponse>(`/orders/${orderId}`);
+  return http.get<OrderWithLinesResponse>(`${BASE_PATH}/${orderId}`);
 }
 
 export async function updateOrder(
   orderId: number,
   data: OrderUpdate,
 ): Promise<OrderWithLinesResponse> {
-  return http.put<OrderWithLinesResponse>(`/orders/${orderId}`, data);
+  return http.put<OrderWithLinesResponse>(`${BASE_PATH}/${orderId}`, data);
 }

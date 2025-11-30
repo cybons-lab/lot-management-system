@@ -72,11 +72,33 @@ function SupplierProductTableRow({ product }: { product: SupplierProduct }) {
 
 export function SupplierProductsPage() {
   const { useList } = useSupplierProducts();
-  const { data: products = [], isLoading } = useList();
+  const { data: products = [], isLoading, error, isError } = useList();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+
+  // Debug logging
+  console.log("[SupplierProductsPage] Query state:", {
+    isLoading,
+    isError,
+    error,
+    dataLength: products?.length,
+    data: products,
+  });
 
   if (isLoading) {
     return <div className="p-6">読み込み中...</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="p-6">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-lg font-semibold text-red-900">データの取得に失敗しました</p>
+          <p className="mt-2 text-sm text-red-700">
+            {error instanceof Error ? error.message : "不明なエラー"}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

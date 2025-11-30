@@ -38,8 +38,13 @@ class CustomerItemUpdate(BaseSchema):
 
 
 class CustomerItemResponse(CustomerItemBase):
-    """Schema for customer item response."""
+    """Schema for customer item response with enriched data."""
 
+    customer_code: str = Field(..., description="得意先コード")
+    customer_name: str = Field(..., description="得意先名")
+    product_name: str = Field(..., description="製品名")
+    supplier_code: str | None = Field(None, description="仕入先コード")
+    supplier_name: str | None = Field(None, description="仕入先名")
     created_at: datetime
     updated_at: datetime
 
