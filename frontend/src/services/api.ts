@@ -3,9 +3,8 @@
  * フロントエンドからバックエンドAPIへのリクエストを管理
  */
 
-import { http } from "@/shared/api/http-client";
-
 import type { ForecastListResponse } from "@/features/forecasts/api";
+import { http } from "@/shared/api/http-client";
 import type {
   OrderResponse as Order,
   OrderWithLinesResponse as OrderDetail,
@@ -31,7 +30,7 @@ export const api = {
    * ダッシュボード統計を取得
    * @returns ダッシュボード統計情報
    */
-  getDashboardStats: () => http.get<DashboardStats>("/api/admin/stats"),
+  getDashboardStats: () => http.get<DashboardStats>("admin/stats"),
 
   // ===== 受注 =====
   /**
@@ -40,14 +39,14 @@ export const api = {
    * @returns 受注リスト
    */
   getOrders: (params?: Record<string, unknown>) =>
-    http.get<Order[]>("/orders", { searchParams: params as any }),
+    http.get<Order[]>("orders", { searchParams: params as any }),
 
   /**
    * 受注詳細を取得
    * @param orderId 受注ID
    * @returns 受注詳細（明細行を含む）
    */
-  getOrderDetail: (orderId: number) => http.get<OrderDetail>(`/orders/${orderId}`),
+  getOrderDetail: (orderId: number) => http.get<OrderDetail>(`orders/${orderId}`),
 
   // ===== ロット =====
   /**
@@ -56,7 +55,7 @@ export const api = {
    * @returns ロットリスト
    */
   listLots: (params?: Record<string, unknown>) =>
-    http.get<Lot[]>("/lots", { searchParams: params as any }),
+    http.get<Lot[]>("lots", { searchParams: params as any }),
 
   // ===== Forecast =====
   /**
@@ -65,7 +64,7 @@ export const api = {
    * @returns Forecastグループリスト
    */
   listForecasts: (params?: Record<string, unknown>) =>
-    http.get<ForecastListResponse>("/forecasts", { searchParams: params as any }),
+    http.get<ForecastListResponse>("forecasts", { searchParams: params as any }),
 };
 
 // ========================================
@@ -86,11 +85,11 @@ interface OrdersResponse {
 }
 
 export async function getOrdersWithAllocations() {
-  const data = await http.get<OrdersResponse>("/api/orders");
+  const data = await http.get<OrdersResponse>("orders");
   return Array.isArray(data?.items) ? data : { items: data ?? [] };
 }
 export async function reMatchOrder(orderId: number) {
-  return await http.post(`/api/orders/${orderId}/re-match`, {});
+  return await http.post(`orders/${orderId}/re-match`, {});
 }
 // Attach to api object if present
 Object.assign(api, { getOrdersWithAllocations, reMatchOrder });

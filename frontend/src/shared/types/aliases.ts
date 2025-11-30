@@ -1,3 +1,5 @@
+import type { OrderLineLegacy } from "./legacy/order-line-legacy";
+
 import type { components } from "@/types/api";
 
 // src/types/aliases.ts
@@ -48,14 +50,10 @@ export type LotCreate = Partial<LotResponse>;
 export type LotWithStock = LotResponse;
 
 // ---- Allocation ----
-export type AllocatedLot = {
-  lot_id: number;
-  allocated_quantity: number | string | null; // DDL v2.2: DECIMAL(15,3)
-  allocated_qty?: number | null; // Deprecated: use allocated_quantity
-  allocation_id?: number; // UI参照あり
-  delivery_place_code: string | null;
-  delivery_place_name: string | null;
-};
+// AllocatedLot is imported from allocation-types.ts to avoid circular dependencies
+// Re-export for backward compatibility
+export type { AllocatedLot } from "./allocation-types";
+
 export type LotCandidate = {
   id?: number;
   lot_id?: number;
@@ -149,52 +147,20 @@ export const ORDER_STATUS_DISPLAY: Record<OrderStatus, { label: string; variant:
 
 type ApiOrderLine = components["schemas"]["OrderLineResponse"];
 
-export type OrderLine = ApiOrderLine & {
-  // Legacy fields for backward compatibility (will be removed)
-  line_no?: number | null;
-  product_code?: string | null;
-  product_name?: string | null;
-  quantity?: number | string | null; // Deprecated: use order_quantity
-  due_date?: string | null; // Deprecated: use delivery_date
-  allocated_qty?: number | string | null; // Deprecated: use allocated_quantity
-  allocated_quantity?: number | string | null; // API may expose the canonical column name
-  converted_quantity?: number | string | null; // Internal unit quantity (converted from external unit)
-  allocated_lots?: AllocatedLot[];
-  delivery_place_allocations?: Array<{ delivery_place_code: string; quantity: number }>;
-  delivery_place?: string | null;
-  delivery_place_code?: string | null;
-  delivery_place_name?: string | null;
-  forecast_qty?: number | null;
-  forecast_version_no?: number | null;
-  status?: string | null;
-  customer_code?: string | null;
-  customer_name?: string | null;
-  supplier_name?: string | null;
-  product_internal_unit?: string | null;
-  product_external_unit?: string | null;
-  product_qty_per_internal_unit?: number | null;
+export type OrderLine = ApiOrderLine &
+  OrderLineLegacy & {
+    // Canonical fields overrides or additions
+    allocated_quantity?: number | string | null; // API may expose the canonical column name
+    converted_quantity?: number | string | null; // Internal unit quantity (converted from external unit)
 
-  // Flattened Order Info (New)
-  order_number?: string | null;
-  order_date?: string | null;
-  // due_date, customer_code, etc are already defined above as legacy/deprecated.
-  // We should reuse them or remove the old ones if we want to enforce new structure.
-  // For now, I will comment out the duplicates I added and rely on existing ones or remove existing ones if they are in the way.
-  // Actually, existing ones are:
-  // due_date?: string | null;
-  // customer_code?: string | null;
-  // customer_name?: string | null;
-  // delivery_place_name?: string | null;
-  // status?: string | null;
+    // Flattened Order Info (New)
+    order_number?: string | null;
+    order_date?: string | null;
+    customer_id?: number | null;
+    order_status?: string | null;
 
-  // So I only need to add order_number, order_date, customer_id, order_status (if status is different).
-  // status is already there. order_status is new alias?
-  // I will remove the duplicates I added.
-
-  customer_id?: number | null;
-  order_status?: string | null;
-  [key: string]: unknown; // Allow extra properties
-};
+    [key: string]: unknown; // Allow extra properties
+  };
 
 type ApiOrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
 type ApiOrderResponse = Omit<ApiOrderWithLinesResponse, "lines">;

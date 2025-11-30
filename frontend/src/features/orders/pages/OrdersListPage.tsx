@@ -31,6 +31,16 @@ import { FormDialog } from "@/shared/components/form";
  */
 type ViewMode = "delivery" | "flat" | "order";
 
+type GroupedOrderLine = {
+  deliveryPlaceCode?: string;
+  deliveryPlaceName?: string;
+  orderNumber?: string;
+  customerName?: string;
+  orderDate?: string;
+  status?: string;
+  lines: OrderLineRow[];
+};
+
 /**
  * メインコンポーネント
  */
@@ -103,11 +113,13 @@ export function OrdersListPage() {
       const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
       // Use allocations from new API if available, otherwise fallback to allocated_lots
       const allocations = line.allocations || line.allocated_lots || [];
-      const allocatedQty = allocations.reduce(
-        (acc: number, alloc: any) =>
-          acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
-        0,
-      );
+      const allocatedQty = allocations.reduce((acc: number, alloc: unknown) => {
+        const item = alloc as {
+          allocated_quantity?: number | string;
+          allocated_qty?: number | string;
+        };
+        return acc + Number(item.allocated_quantity ?? item.allocated_qty ?? 0);
+      }, 0);
       if (orderQty > 0 && allocatedQty >= orderQty) return false;
     }
 
@@ -273,24 +285,21 @@ export function OrdersListPage() {
           // 納入先単位表示
           <div className="space-y-6">
             {Object.values(
-              paginatedLines.reduce(
-                (acc, line) => {
-                  const key = line.delivery_place_code || "unknown";
-                  if (!acc[key]) {
-                    acc[key] = {
-                      deliveryPlaceCode: line.delivery_place_code,
-                      deliveryPlaceName: line.delivery_place_name,
-                      lines: [],
-                    };
-                  }
-                  acc[key].lines.push(line);
-                  return acc;
-                },
-                {} as Record<string, any>,
-              ),
-            ).map((group: any) => (
+              paginatedLines.reduce<Record<string, GroupedOrderLine>>((acc, line) => {
+                const key = line.delivery_place_code || "unknown";
+                if (!acc[key]) {
+                  acc[key] = {
+                    deliveryPlaceCode: line.delivery_place_code || undefined,
+                    deliveryPlaceName: line.delivery_place_name || undefined,
+                    lines: [],
+                  };
+                }
+                acc[key].lines.push(line);
+                return acc;
+              }, {}),
+            ).map((group) => (
               <div
-                key={group.deliveryPlaceCode}
+                key={group.deliveryPlaceCode || "unknown"}
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
               >
                 <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-green-50 to-slate-50 px-6 py-3">
@@ -315,26 +324,23 @@ export function OrdersListPage() {
           // 受注単位表示
           <div className="space-y-6">
             {Object.values(
-              paginatedLines.reduce(
-                (acc, line) => {
-                  const key = line.order_number || "unknown";
-                  if (!acc[key]) {
-                    acc[key] = {
-                      orderNumber: line.order_number,
-                      customerName: line.customer_name,
-                      orderDate: line.order_date,
-                      status: line.order_status,
-                      lines: [],
-                    };
-                  }
-                  acc[key].lines.push(line);
-                  return acc;
-                },
-                {} as Record<string, any>,
-              ),
-            ).map((group: any) => (
+              paginatedLines.reduce<Record<string, GroupedOrderLine>>((acc, line) => {
+                const key = line.order_number || "unknown";
+                if (!acc[key]) {
+                  acc[key] = {
+                    orderNumber: line.order_number || undefined,
+                    customerName: line.customer_name || undefined,
+                    orderDate: line.order_date || undefined,
+                    status: line.order_status || undefined,
+                    lines: [],
+                  };
+                }
+                acc[key].lines.push(line);
+                return acc;
+              }, {}),
+            ).map((group) => (
               <div
-                key={group.orderNumber}
+                key={group.orderNumber || "unknown"}
                 className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm"
               >
                 <div className="flex items-center justify-between border-b border-slate-200 bg-gradient-to-r from-blue-50 to-slate-50 px-6 py-3">

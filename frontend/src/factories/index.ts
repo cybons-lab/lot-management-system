@@ -5,4 +5,3 @@
 
 export * from "./lot-factory";
 export * from "./order-factory";
-export * from "./master-factory";

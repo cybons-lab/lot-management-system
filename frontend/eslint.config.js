@@ -138,6 +138,15 @@ export default [
         },
       ],
 
+      // Circular dependency detection
+      "import/no-cycle": [
+        "error",
+        {
+          maxDepth: Infinity,
+          ignoreExternal: true,
+        },
+      ],
+
       // Feature boundary enforcement
       "import/no-restricted-paths": [
         "error",

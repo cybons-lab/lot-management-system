@@ -11,6 +11,7 @@ from decimal import Decimal
 
 from pydantic import Field
 
+from app.schemas.allocations.allocations_schema import AllocationDetail
 from app.schemas.common.base import BaseSchema
 
 
@@ -58,19 +59,8 @@ class OrderWithLinesResponse(OrderResponse):
 # ============================================================
 
 
-class AllocationResponse(BaseSchema):
-    """Allocation response for order line (DDL: allocations)."""
-
-    id: int
-    order_line_id: int
-    lot_id: int
-    allocated_quantity: Decimal = Field(..., decimal_places=3)
-    status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
-    created_at: datetime
-    updated_at: datetime
-
-    # Flattened Lot Info
-    lot_number: str | None = None
+# Alias for backward compatibility and clarity in Order context
+AllocationResponse = AllocationDetail
 
 
 # ============================================================
