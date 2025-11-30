@@ -6,10 +6,10 @@ import { useCallback } from "react";
 
 import type { AllocationsByLine } from "../types";
 import {
-    calculateTotalUiAllocated,
-    checkOverAllocation,
-    getAllocatedQuantity,
-    getOrderQuantity,
+  calculateTotalUiAllocated,
+  checkOverAllocation,
+  getAllocatedQuantity,
+  getOrderQuantity,
 } from "../utils/allocationCalculations";
 
 import type { OrderLine } from "@/shared/types/aliases";
@@ -20,23 +20,23 @@ import type { OrderLine } from "@/shared/types/aliases";
  * @returns Function to check over-allocation status
  */
 export function useIsOverAllocated({
-    allLines,
-    allocationsByLine,
+  allLines,
+  allocationsByLine,
 }: {
-    allLines: OrderLine[];
-    allocationsByLine: AllocationsByLine;
+  allLines: OrderLine[];
+  allocationsByLine: AllocationsByLine;
 }) {
-    return useCallback(
-        (lineId: number): boolean => {
-            const line = allLines.find((l) => l.id === lineId);
-            if (!line) return false;
+  return useCallback(
+    (lineId: number): boolean => {
+      const line = allLines.find((l) => l.id === lineId);
+      if (!line) return false;
 
-            const requiredQty = getOrderQuantity(line);
-            const dbAllocated = getAllocatedQuantity(line);
-            const uiAllocated = calculateTotalUiAllocated(allocationsByLine[lineId] ?? {});
+      const requiredQty = getOrderQuantity(line);
+      const dbAllocated = getAllocatedQuantity(line);
+      const uiAllocated = calculateTotalUiAllocated(allocationsByLine[lineId] ?? {});
 
-            return checkOverAllocation({ requiredQty, dbAllocated, uiAllocated });
-        },
-        [allLines, allocationsByLine],
-    );
+      return checkOverAllocation({ requiredQty, dbAllocated, uiAllocated });
+    },
+    [allLines, allocationsByLine],
+  );
 }

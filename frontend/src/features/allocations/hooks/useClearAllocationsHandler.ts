@@ -13,17 +13,17 @@ import type { AllocationsByLine, LineStatusMap } from "../types";
  * @returns Clear allocations handler function
  */
 export function useClearAllocationsHandler({
-    setAllocationsByLine,
-    setLineStatuses,
+  setAllocationsByLine,
+  setLineStatuses,
 }: {
-    setAllocationsByLine: React.Dispatch<React.SetStateAction<AllocationsByLine>>;
-    setLineStatuses: React.Dispatch<React.SetStateAction<LineStatusMap>>;
+  setAllocationsByLine: React.Dispatch<React.SetStateAction<AllocationsByLine>>;
+  setLineStatuses: React.Dispatch<React.SetStateAction<LineStatusMap>>;
 }) {
-    return useCallback(
-        (lineId: number) => {
-            removeLineAllocations(lineId, setAllocationsByLine);
-            setLineStatusToDraft(lineId, setLineStatuses);
-        },
-        [setAllocationsByLine, setLineStatuses],
-    );
+  return useCallback(
+    (lineId: number) => {
+      removeLineAllocations(lineId, setAllocationsByLine);
+      setLineStatusToDraft(lineId, setLineStatuses);
+    },
+    [setAllocationsByLine, setLineStatuses],
+  );
 }

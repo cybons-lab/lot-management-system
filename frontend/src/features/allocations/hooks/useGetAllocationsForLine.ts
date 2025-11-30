@@ -12,8 +12,8 @@ import type { AllocationsByLine, LineAllocations } from "../types";
  * @returns Function to get allocations for a line ID
  */
 export function useGetAllocationsForLine(allocationsByLine: AllocationsByLine) {
-    return useCallback(
-        (lineId: number): LineAllocations => allocationsByLine[lineId] ?? {},
-        [allocationsByLine],
-    );
+  return useCallback(
+    (lineId: number): LineAllocations => allocationsByLine[lineId] ?? {},
+    [allocationsByLine],
+  );
 }
