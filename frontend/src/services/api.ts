@@ -39,7 +39,9 @@ export const api = {
    * @returns 受注リスト
    */
   getOrders: (params?: Record<string, unknown>) =>
-    http.get<Order[]>("orders", { searchParams: params as any }),
+    http.get<Order[]>("orders", {
+      searchParams: params as Record<string, string | number | boolean | undefined>,
+    }),
 
   /**
    * 受注詳細を取得
@@ -55,7 +57,9 @@ export const api = {
    * @returns ロットリスト
    */
   listLots: (params?: Record<string, unknown>) =>
-    http.get<Lot[]>("lots", { searchParams: params as any }),
+    http.get<Lot[]>("lots", {
+      searchParams: params as Record<string, string | number | boolean | undefined>,
+    }),
 
   // ===== Forecast =====
   /**
@@ -64,7 +68,9 @@ export const api = {
    * @returns Forecastグループリスト
    */
   listForecasts: (params?: Record<string, unknown>) =>
-    http.get<ForecastListResponse>("forecasts", { searchParams: params as any }),
+    http.get<ForecastListResponse>("forecasts", {
+      searchParams: params as Record<string, string | number | boolean | undefined>,
+    }),
 };
 
 // ========================================

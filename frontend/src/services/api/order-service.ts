@@ -17,7 +17,9 @@ const BASE_PATH = "/orders";
  * 受注一覧を取得
  */
 export async function listOrders(params?: OrdersListParams): Promise<OrderResponse[]> {
-  return http.get<OrderResponse[]>(BASE_PATH, { searchParams: params as any });
+  return http.get<OrderResponse[]>(BASE_PATH, {
+    searchParams: params as Record<string, string | number | boolean | undefined>,
+  });
 }
 
 /**

@@ -12,7 +12,10 @@ type LotDetail =
 export function useLots(params?: LotsQuery) {
   return useQuery({
     queryKey: ["lots", params],
-    queryFn: () => fetchApi.get<LotsList>("/lots", { searchParams: params as any }),
+    queryFn: () =>
+      fetchApi.get<LotsList>("/lots", {
+        searchParams: params as Record<string, string | number | boolean | undefined>,
+      }),
   });
 }
 export function useLot(lotId: number | string) {

@@ -13,7 +13,9 @@ const BASE_PATH = "/lots";
  * ロット一覧を取得
  */
 export async function listLots(params?: LotSearchParams): Promise<LotResponse[]> {
-  return http.get<LotResponse[]>(BASE_PATH, { searchParams: params as any });
+  return http.get<LotResponse[]>(BASE_PATH, {
+    searchParams: params as Record<string, string | number | boolean | undefined>,
+  });
 }
 
 /**
