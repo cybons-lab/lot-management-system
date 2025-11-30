@@ -244,7 +244,7 @@ export function ProductsListPage() {
 export function ProductsListPage() {
   const { useList } = useProducts();
   const { data } = useList();
-  
+
   // data が undefined の可能性を無視
   return <ProductTable products={data} />;
 }
@@ -253,12 +253,12 @@ export function ProductsListPage() {
 export function ProductsListPage() {
   const { useList } = useProducts();
   const { data = [], isError } = useList();
-  
+
   if (isError) {
     // ユーザーに何も表示しない
     return null;
   }
-  
+
   return <ProductTable products={data} />;
 }
 ```
@@ -284,7 +284,7 @@ export function ProductForm() {
       onError: (error) => {
         // エラーメッセージを表示
         toast.error(`作成に失敗しました: ${getErrorMessage(error)}`);
-        
+
         // 特定のエラーコードに対する処理
         if (error instanceof ApiError && error.status === 409) {
           // フォームにエラーを設定
@@ -368,7 +368,7 @@ export function useProducts() {
       onError: (error) => {
         // この機能固有のエラー処理
         logError("Products", error, { context: "list" });
-        
+
         // 特定のエラーには特別な処理
         if (error instanceof AuthenticationError) {
           // 認証エラーの場合はログインページにリダイレクト
@@ -527,14 +527,14 @@ const queryClient = new QueryClient({
         return failureCount < 3;
       },
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-      
+
       // キャッシュ設定
       staleTime: 5 * 60 * 1000, // 5分
-      
+
       // グローバルエラーハンドリング
       onError: (error) => {
         logError("Query", error);
-        
+
         // 404はトーストを表示しない（多くの場合、UIで処理する）
         if (!(error instanceof NotFoundError)) {
           toast.error(getErrorMessage(error));
@@ -576,7 +576,7 @@ export const handlers = [
         status: 409,
         detail: "製品コード PROD-001 は既に存在します",
         error_code: "DUPLICATE_PRODUCT",
-      })
+      }),
     );
   }),
 
