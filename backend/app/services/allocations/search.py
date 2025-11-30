@@ -6,7 +6,10 @@ Refactored: Uses database views (v2.5) for simplified logic and better performan
 
 from __future__ import annotations
 
-from sqlalchemy.orm import Session
+import logging
+from typing import Any
+
+from sqlalchemy.orm import Query, Session
 
 from app.models.views_models import (
     VDeliveryPlaceCodeToId,
@@ -14,6 +17,9 @@ from app.models.views_models import (
     VOrderLineContext,
 )
 from app.schemas.allocations.allocations_schema import CandidateLotItem
+
+
+logger = logging.getLogger(__name__)
 
 
 def build_candidate_lot_filter(
@@ -39,6 +45,241 @@ def build_candidate_lot_filter(
     }
 
 
+def _apply_fefo_ordering(query: Query) -> Query:
+    """
+    Apply FEFO (First Expiry First Out) ordering to query.
+
+    Args:
+        query: SQLAlchemy query to order
+
+    Returns:
+        Query with FEFO ordering applied
+    """
+    return query.order_by(
+        VLotAvailableQty.expiry_date.asc().nulls_last(),
+        VLotAvailableQty.receipt_date.asc(),
+        VLotAvailableQty.lot_id.asc(),
+    )
+
+
+def _get_delivery_place_name(db: Session, delivery_place_id: int | None) -> str | None:
+    """
+    Get delivery place name by ID.
+
+    Args:
+        db: Database session
+        delivery_place_id: Delivery place ID
+
+    Returns:
+        Delivery place name or None
+    """
+    if not delivery_place_id:
+        return None
+
+    dp = (
+        db.query(VDeliveryPlaceCodeToId)
+        .filter(VDeliveryPlaceCodeToId.delivery_place_id == delivery_place_id)
+        .first()
+    )
+    return dp.delivery_place_name if dp else None
+
+
+def _query_lots_from_view(db: Session, product_id: int, strategy: str, limit: int) -> list[Any]:
+    """
+    Query lots from VLotAvailableQty view.
+
+    Args:
+        db: Database session
+        product_id: Product ID to filter
+        strategy: Allocation strategy
+        limit: Maximum results
+
+    Returns:
+        List of lot view results
+    """
+    query = db.query(VLotAvailableQty).filter(
+        VLotAvailableQty.product_id == product_id,
+        VLotAvailableQty.available_qty > 0,
+    )
+
+    if strategy == "fefo":
+        query = _apply_fefo_ordering(query)
+
+    return query.limit(limit).all()
+
+
+def _query_lots_with_fallback(db: Session, product_id: int, strategy: str, limit: int) -> list[Any]:
+    """
+    Query lots with fallback to Lot model if view returns no results.
+
+    Args:
+        db: Database session
+        product_id: Product ID to filter
+        strategy: Allocation strategy
+        limit: Maximum results
+
+    Returns:
+        List of lot results (from view or model)
+    """
+    results = _query_lots_from_view(db, product_id, strategy, limit)
+
+    if not results:
+        from app.models import Lot
+
+        lot_query = db.query(Lot).filter(
+            Lot.product_id == product_id,
+            (Lot.current_quantity - Lot.allocated_quantity) > 0,
+        )
+        if strategy == "fefo":
+            lot_query = lot_query.order_by(
+                Lot.expiry_date.asc().nulls_last(),
+                Lot.received_date.asc(),
+                Lot.id.asc(),
+            )
+        results = lot_query.limit(limit).all()
+
+    return results
+
+
+def _convert_to_candidate_item(
+    lot_view: Any,
+    delivery_place_id: int | None = None,
+    delivery_place_name: str | None = None,
+) -> CandidateLotItem:
+    """
+    Convert lot view or model to CandidateLotItem.
+
+    Args:
+        lot_view: Lot from view or Lot model
+        delivery_place_id: Delivery place ID (optional)
+        delivery_place_name: Delivery place name (optional)
+
+    Returns:
+        CandidateLotItem with basic info
+    """
+    # Determine source and extract fields
+    if hasattr(lot_view, "available_qty"):
+        # From VLotAvailableQty view
+        available_qty = float(lot_view.available_qty or 0)
+        lot_id = lot_view.lot_id
+        received_date = lot_view.receipt_date
+        status = lot_view.lot_status
+    else:
+        # From Lot model
+        available_qty = float(lot_view.current_quantity - lot_view.allocated_quantity)
+        lot_id = lot_view.id
+        received_date = lot_view.received_date
+        status = lot_view.status
+
+    return CandidateLotItem(
+        lot_id=lot_id,
+        lot_number="",  # Will be enriched later
+        product_id=lot_view.product_id,
+        warehouse_id=lot_view.warehouse_id,
+        received_date=received_date,
+        expiry_date=lot_view.expiry_date,
+        current_quantity=0.0,  # Will be enriched later
+        allocated_quantity=0.0,  # Will be enriched later
+        available_quantity=available_qty,
+        delivery_place_id=delivery_place_id,
+        delivery_place_name=delivery_place_name,
+        status=status,
+    )
+
+
+def _enrich_lot_details(db: Session, candidates: list[CandidateLotItem]) -> None:
+    """
+    Enrich candidates with lot details (lot_number, quantities, status).
+
+    Args:
+        db: Database session
+        candidates: List of candidate items to enrich
+    """
+    if not candidates:
+        return
+
+    lot_ids = [c.lot_id for c in candidates]
+    from app.models import Lot
+
+    lots = db.query(Lot).filter(Lot.id.in_(lot_ids)).all()
+    lot_map = {lot.id: lot for lot in lots}
+
+    for candidate in candidates:
+        lot = lot_map.get(candidate.lot_id)
+        if lot:
+            candidate.lot_number = lot.lot_number
+            candidate.current_quantity = float(lot.current_quantity)
+            candidate.allocated_quantity = float(lot.allocated_quantity)
+            candidate.status = lot.status
+            candidate.lock_reason = lot.lock_reason
+
+
+def _enrich_warehouse_names(db: Session, candidates: list[CandidateLotItem]) -> None:
+    """
+    Enrich candidates with warehouse names.
+
+    Args:
+        db: Database session
+        candidates: List of candidate items to enrich
+    """
+    warehouse_ids = {c.warehouse_id for c in candidates if c.warehouse_id}
+    if not warehouse_ids:
+        return
+
+    from app.models import Warehouse
+
+    warehouses = db.query(Warehouse).filter(Warehouse.id.in_(warehouse_ids)).all()
+    warehouse_map = {w.id: w.warehouse_name for w in warehouses}
+
+    for candidate in candidates:
+        if candidate.warehouse_id:
+            candidate.warehouse_name = warehouse_map.get(candidate.warehouse_id)
+
+
+def _enrich_product_units(db: Session, candidates: list[CandidateLotItem]) -> None:
+    """
+    Enrich candidates with product unit information.
+
+    Args:
+        db: Database session
+        candidates: List of candidate items to enrich
+    """
+    product_ids = {c.product_id for c in candidates if c.product_id}
+    if not product_ids:
+        return
+
+    from app.models import Product
+
+    products = db.query(Product).filter(Product.id.in_(product_ids)).all()
+    product_map = {p.id: p for p in products}
+
+    for candidate in candidates:
+        if candidate.product_id:
+            product = product_map.get(candidate.product_id)
+            if product:
+                candidate.internal_unit = product.internal_unit
+                candidate.external_unit = product.external_unit
+                candidate.qty_per_internal_unit = float(product.qty_per_internal_unit or 1.0)
+
+
+def _enrich_candidate_details(db: Session, candidates: list[CandidateLotItem]) -> None:
+    """
+    Enrich candidates with missing details from Lot, Warehouse, and Product models.
+
+    Modifies candidates in place.
+
+    Args:
+        db: Database session
+        candidates: List of candidate items to enrich
+    """
+    if not candidates:
+        return
+
+    _enrich_lot_details(db, candidates)
+    _enrich_warehouse_names(db, candidates)
+    _enrich_product_units(db, candidates)
+
+
 def execute_candidate_lot_query(
     db: Session,
     product_id: int | None = None,
@@ -50,40 +291,24 @@ def execute_candidate_lot_query(
     """
     Execute candidate lot query with FEFO ordering.
 
-    v2.5 Refactor: Uses v_lot_available_qty as the main source.
-    forecast is NOT used as a filter - lots are returned based on inventory only.
-    This ensures that products not in forecast (kanban, spot orders) still get candidates.
-
-    warehouse_id is NOT used as a filter - lots from any warehouse are returned as candidates.
-    Users can manually select lots from specific warehouses via UI.
-
-    When order_line_id is provided:
-    - Uses v_order_line_context to get product_id, customer_id, delivery_place_id
-    - Queries v_lot_available_qty filtered by product_id only
-    - forecast could be LEFT JOINed for metadata (in_forecast flag) in the future
-
-    When only product_id provided:
-    - Directly queries v_lot_available_qty filtered by product_id
+    v2.6 Refactored: Simplified using extracted helper functions.
+    Uses v_lot_available_qty as the main source with fallback to Lot model.
 
     Args:
         db: Database session
         product_id: Filter by product ID (optional if order_line_id provided)
         warehouse_id: NOT USED for filtering (kept for API compatibility)
-        order_line_id: Filter by order line ID (takes precedence, extracts product from context)
+        order_line_id: Filter by order line ID (takes precedence)
         strategy: Allocation strategy (currently only "fefo" supported)
         limit: Maximum number of candidates to return
 
     Returns:
-        List of candidate lot items with allocation info
+        List of candidate lot items with complete details
     """
-    candidates = []
+    candidates: list[CandidateLotItem] = []
 
     if order_line_id is not None:
-        # ✅ v2.5 Refactor: Use v_lot_available_qty as main source
-        # forecast is joined as LEFT JOIN for metadata only (in_forecast flag)
-        # This ensures lots are returned even if product is not in forecast
-
-        # Step 1: Get order line context
+        # Get order line context
         context = (
             db.query(VOrderLineContext)
             .filter(VOrderLineContext.order_line_id == order_line_id)
@@ -91,174 +316,41 @@ def execute_candidate_lot_query(
         )
 
         if not context:
-            # No order line found, return empty
             return candidates
 
-        # DEBUG: context情報をログ出力
-        import logging
-
-        logger = logging.getLogger(__name__)
         logger.info(
-            f"DEBUG: context found - product_id={context.product_id}, delivery_place_id={context.delivery_place_id}, order_line_id={order_line_id}"
+            f"Context found - product_id={context.product_id}, "
+            f"delivery_place_id={context.delivery_place_id}, "
+            f"order_line_id={order_line_id}"
         )
 
-        # Step 2: Query available lots based on product_id from context
-        # contextから既にproduct_id, delivery_place_idを取得済み
-        query = db.query(VLotAvailableQty).filter(
-            VLotAvailableQty.product_id == context.product_id,
-            VLotAvailableQty.available_qty > 0,
-        )
+        # Query lots with fallback
+        results = _query_lots_with_fallback(db, context.product_id, strategy, limit)
 
-        # warehouse_id フィルタは使用しない（倉庫が異なっていても候補として扱う）
+        # Get delivery place name
+        delivery_place_name = _get_delivery_place_name(db, context.delivery_place_id)
 
-        # FEFO ordering
-        if strategy == "fefo":
-            query = query.order_by(
-                VLotAvailableQty.expiry_date.asc().nulls_last(),
-                VLotAvailableQty.receipt_date.asc(),
-                VLotAvailableQty.lot_id.asc(),
+        # Convert to candidates
+        candidates = [
+            _convert_to_candidate_item(
+                lot_view,
+                delivery_place_id=context.delivery_place_id,
+                delivery_place_name=delivery_place_name,
             )
-
-        results = query.limit(limit).all()
-        # Fallback to Lot model if view returns no results (e.g., recent inserts not visible)
-        if not results:
-            from app.models import Lot
-
-            lot_query = db.query(Lot).filter(
-                Lot.product_id == context.product_id,
-                (Lot.current_quantity - Lot.allocated_quantity) > 0,
-            )
-            if strategy == "fefo":
-                lot_query = lot_query.order_by(
-                    Lot.expiry_date.asc().nulls_last(), Lot.received_date.asc(), Lot.id.asc()
-                )
-            results = lot_query.limit(limit).all()
-
-        # delivery_place情報をcontextから取得
-        delivery_place_name = None
-        if context.delivery_place_id:
-            dp = (
-                db.query(VDeliveryPlaceCodeToId)
-                .filter(VDeliveryPlaceCodeToId.delivery_place_id == context.delivery_place_id)
-                .first()
-            )
-            if dp:
-                delivery_place_name = dp.delivery_place_name
-
-        for lot_view in results:
-            # Determine available_quantity based on the source (VLotAvailableQty or Lot model)
-            if hasattr(lot_view, "available_qty"):
-                available_qty = float(lot_view.available_qty or 0)
-                lot_id = lot_view.lot_id
-                received_date = lot_view.receipt_date
-            else:  # Assume it's a Lot model instance
-                available_qty = float(lot_view.current_quantity - lot_view.allocated_quantity)
-                lot_id = lot_view.id
-                received_date = lot_view.received_date
-
-            candidates.append(
-                CandidateLotItem(
-                    lot_id=lot_id,
-                    lot_number="",  # Will be populated later
-                    product_id=lot_view.product_id,
-                    warehouse_id=lot_view.warehouse_id,
-                    received_date=received_date,
-                    expiry_date=lot_view.expiry_date,
-                    current_quantity=0.0,  # Will be populated later
-                    allocated_quantity=0.0,  # Will be populated later
-                    available_quantity=available_qty,
-                    delivery_place_id=context.delivery_place_id,
-                    delivery_place_name=delivery_place_name,
-                    status=getattr(lot_view, "lot_status", "active")
-                    if hasattr(lot_view, "lot_status")
-                    else getattr(lot_view, "status", "active"),
-                )
-            )
+            for lot_view in results
+        ]
 
     else:
-        # Use general available quantity view
-        query = db.query(VLotAvailableQty).filter(
-            VLotAvailableQty.available_qty > 0,
-        )
+        # Query without order line context
+        if product_id is None:
+            return candidates
 
-        if product_id is not None:
-            query = query.filter(VLotAvailableQty.product_id == product_id)
+        results = _query_lots_from_view(db, product_id, strategy, limit)
 
-        # warehouse_id フィルタは使用しない（倉庫が異なっていても候補として扱う）
+        # Convert to candidates (no delivery place info)
+        candidates = [_convert_to_candidate_item(row) for row in results]
 
-        if strategy == "fefo":
-            query = query.order_by(
-                VLotAvailableQty.expiry_date.asc().nulls_last(),
-                VLotAvailableQty.receipt_date.asc(),
-                VLotAvailableQty.lot_id.asc(),
-            )
-
-        results = query.limit(limit).all()
-
-        for row in results:
-            candidates.append(
-                CandidateLotItem(
-                    lot_id=row.lot_id,
-                    lot_number="",  # Missing in view
-                    product_id=row.product_id,
-                    warehouse_id=row.warehouse_id,
-                    received_date=row.receipt_date,
-                    expiry_date=row.expiry_date,
-                    current_quantity=0.0,  # Missing
-                    allocated_quantity=0.0,  # Missing
-                    available_quantity=float(row.available_qty or 0),
-                    # Delivery place info not available when not filtering by order line
-                    delivery_place_id=None,
-                    delivery_place_name=None,
-                    status=row.lot_status,
-                )
-            )
-
-    # Post-processing to fetch missing details (lot_number, current_quantity) if they are missing from views
-    if candidates:
-        lot_ids = [c.lot_id for c in candidates]
-        # Avoid circular import if possible, or import Lot model
-        from app.models import Lot
-
-        lots = db.query(Lot).filter(Lot.id.in_(lot_ids)).all()
-        lot_map = {l.id: l for l in lots}
-
-        for c in candidates:
-            lot = lot_map.get(c.lot_id)
-            if lot:
-                c.lot_number = lot.lot_number
-                c.current_quantity = float(lot.current_quantity)
-                c.allocated_quantity = float(lot.allocated_quantity)
-                c.status = lot.status
-                c.lock_reason = lot.lock_reason
-                # available is already from view, which is correct
-
-        # Populate warehouse_name
-        warehouse_ids = {c.warehouse_id for c in candidates if c.warehouse_id}
-        if warehouse_ids:
-            from app.models import Warehouse
-
-            warehouses = db.query(Warehouse).filter(Warehouse.id.in_(warehouse_ids)).all()
-            warehouse_map = {w.id: w.warehouse_name for w in warehouses}
-
-            for c in candidates:
-                if c.warehouse_id:
-                    c.warehouse_name = warehouse_map.get(c.warehouse_id)
-
-        # Populate product unit info
-        product_ids = {c.product_id for c in candidates if c.product_id}
-        if product_ids:
-            from app.models import Product
-
-            products = db.query(Product).filter(Product.id.in_(product_ids)).all()
-            product_map = {p.id: p for p in products}
-
-            for c in candidates:
-                if c.product_id:
-                    product = product_map.get(c.product_id)
-                    if product:
-                        c.internal_unit = product.internal_unit
-                        c.external_unit = product.external_unit
-                        c.qty_per_internal_unit = float(product.qty_per_internal_unit or 1.0)
+    # Enrich candidates with missing details
+    _enrich_candidate_details(db, candidates)
 
     return candidates
