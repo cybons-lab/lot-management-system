@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { http } from "@/shared/api/http-client";
 
 // 受注明細の型定義
 export interface OrderLine {
@@ -40,8 +40,7 @@ export const useOrderQuery = (orderId?: number) => {
     queryKey: ["order", orderId],
     queryFn: async () => {
       if (!orderId) throw new Error("Order ID is required");
-      const response = await axios.get<OrderDetail>(`/api/orders/${orderId}`);
-      return response.data;
+      return http.get<OrderDetail>(`orders/${orderId}`);
     },
     enabled: !!orderId, // 受注IDがある場合のみクエリを実行
   });
