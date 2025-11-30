@@ -12,7 +12,10 @@ type OrderDetail =
 export function useOrders(params?: OrdersQuery) {
   return useQuery({
     queryKey: ["orders", params],
-    queryFn: () => fetchApi.get<OrdersList>("/orders", { searchParams: params as any }),
+    queryFn: () =>
+      fetchApi.get<OrdersList>("/orders", {
+        searchParams: params as Record<string, string | number | boolean | undefined>,
+      }),
   });
 }
 export function useOrder(orderId: number | string) {

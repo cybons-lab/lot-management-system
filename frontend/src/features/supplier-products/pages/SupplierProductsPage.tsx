@@ -7,6 +7,69 @@ import { useSupplierProducts } from "../hooks/useSupplierProducts";
 
 import { Button } from "@/components/ui";
 
+interface SupplierProduct {
+  supplier_code: string;
+  supplier_name: string;
+  product_code: string;
+  product_name: string;
+  order_unit?: string;
+  order_lot_size?: number;
+}
+
+function SupplierProductTableHeader() {
+  return (
+    <thead className="bg-slate-50">
+      <tr>
+        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
+          仕入先コード
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
+          仕入先名
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
+          製品コード
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
+          製品名
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
+          発注単位
+        </th>
+        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
+          発注ロットサイズ
+        </th>
+      </tr>
+    </thead>
+  );
+}
+
+function SupplierProductTableRow({ product }: { product: SupplierProduct }) {
+  return (
+    <tr className="hover:bg-slate-50">
+      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
+        <div className="flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-orange-600" />
+          {product.supplier_code}
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm text-slate-900">{product.supplier_name}</td>
+      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
+        <div className="flex items-center gap-2">
+          <Package className="h-4 w-4 text-green-600" />
+          {product.product_code}
+        </div>
+      </td>
+      <td className="px-6 py-4 text-sm text-slate-900">{product.product_name}</td>
+      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-600">
+        {product.order_unit || "-"}
+      </td>
+      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-600">
+        {product.order_lot_size || "-"}
+      </td>
+    </tr>
+  );
+}
+
 export function SupplierProductsPage() {
   const { useList } = useSupplierProducts();
   const { data: products = [], isLoading } = useList();
@@ -18,7 +81,6 @@ export function SupplierProductsPage() {
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
-      {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">仕入先商品</h1>
@@ -33,61 +95,17 @@ export function SupplierProductsPage() {
         </div>
       </div>
 
-      {/* テーブル */}
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
         <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                仕入先コード
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                仕入先名
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                製品コード
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                製品名
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                発注単位
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                発注ロットサイズ
-              </th>
-            </tr>
-          </thead>
+          <SupplierProductTableHeader />
           <tbody className="divide-y divide-slate-200 bg-white">
             {products.map((product, index) => (
-              <tr key={index} className="hover:bg-slate-50">
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-orange-600" />
-                    {product.supplier_code}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-900">{product.supplier_name}</td>
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-green-600" />
-                    {product.product_code}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-900">{product.product_name}</td>
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-600">
-                  {product.order_unit || "-"}
-                </td>
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-600">
-                  {product.order_lot_size || "-"}
-                </td>
-              </tr>
+              <SupplierProductTableRow key={index} product={product} />
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* 件数表示 */}
       <div className="text-sm text-slate-600">{products.length} 件の仕入先商品</div>
 
       <SupplierProductBulkImportDialog
