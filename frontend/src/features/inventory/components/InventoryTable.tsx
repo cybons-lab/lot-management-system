@@ -1,8 +1,3 @@
-import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-
-import { ROUTES } from "@/constants/routes";
 import type { InventoryItem } from "@/features/inventory/api";
 import {
   LoadingState,
@@ -11,12 +6,9 @@ import {
 } from "@/features/inventory/components/InventoryTableComponents";
 import { LotEditForm, type LotUpdateData } from "@/features/inventory/components/LotEditForm";
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
+import { useInventoryTableLogic } from "@/features/inventory/hooks/useInventoryTableLogic";
 import * as styles from "@/features/inventory/pages/styles";
-import { useLotsQuery } from "@/hooks/api";
-import { useUpdateLot, useLockLot, useUnlockLot } from "@/hooks/mutations";
-import { useDialog } from "@/hooks/ui";
 import { FormDialog } from "@/shared/components/form";
-import type { LotUI } from "@/shared/libs/normalize";
 
 interface InventoryTableProps {
   data: InventoryItem[];
@@ -25,99 +17,22 @@ interface InventoryTableProps {
 }
 
 export function InventoryTable({ data, isLoading, onRowClick }: InventoryTableProps) {
-  const navigate = useNavigate();
-
-  // Dialog states
-  const editDialog = useDialog();
-  const lockDialog = useDialog();
-  const [selectedLot, setSelectedLot] = useState<LotUI | null>(null);
-
-  // 展開状態管理（製品ID-倉庫IDのキー）
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-
-  // 全ロット取得（展開行のフィルタリング用）
-  // Note: This fetches all lots. For large datasets, this should be optimized to fetch only needed lots or use a better API.
-  const { data: allLots = [], refetch: refetchLots } = useLotsQuery({});
-
-  // Lot mutations
-  const updateLotMutation = useUpdateLot(selectedLot?.id ?? 0, {
-    onSuccess: () => {
-      toast.success("ロットを更新しました");
-      editDialog.close();
-      setSelectedLot(null);
-      refetchLots();
-    },
-    onError: (error) => toast.error(`更新に失敗しました: ${error.message}`),
-  });
-
-  const lockLotMutation = useLockLot({
-    onSuccess: () => {
-      toast.success("ロットをロックしました");
-      lockDialog.close();
-      setSelectedLot(null);
-      refetchLots();
-    },
-    onError: (error) => toast.error(`ロックに失敗しました: ${error.message}`),
-  });
-
-  const unlockLotMutation = useUnlockLot({
-    onSuccess: () => {
-      toast.success("ロットのロックを解除しました");
-      refetchLots();
-    },
-    onError: (error) => toast.error(`ロック解除に失敗しました: ${error.message}`),
-  });
-
-  // Lot action handlers
-  const handleEditLot = useCallback(
-    (lot: LotUI) => {
-      setSelectedLot(lot);
-      editDialog.open();
-    },
-    [editDialog],
-  );
-
-  const handleLockLot = useCallback(
-    (lot: LotUI) => {
-      setSelectedLot(lot);
-      lockDialog.open();
-    },
-    [lockDialog],
-  );
-
-  const handleUnlockLot = useCallback(
-    async (lot: LotUI) => {
-      if (confirm(`ロット ${lot.lot_number} のロックを解除しますか?`)) {
-        await unlockLotMutation.mutateAsync({ id: lot.id });
-      }
-    },
-    [unlockLotMutation],
-  );
-
-  const toggleRow = (productId: number, warehouseId: number) => {
-    const key = `${productId}-${warehouseId}`;
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(key)) {
-      newExpanded.delete(key);
-    } else {
-      newExpanded.add(key);
-    }
-    setExpandedRows(newExpanded);
-  };
-
-  const isRowExpanded = (productId: number, warehouseId: number) => {
-    return expandedRows.has(`${productId}-${warehouseId}`);
-  };
-
-  const getLotsForItem = (productId: number, warehouseId: number) => {
-    return allLots.filter(
-      (lot) => lot.product_id === productId && lot.warehouse_id === warehouseId,
-    );
-  };
-
-  const handleViewDetail = (productId: number, warehouseId: number) => {
-    navigate(ROUTES.INVENTORY.ITEMS.DETAIL(productId, warehouseId));
-  };
+  const {
+    selectedLot,
+    editDialog,
+    lockDialog,
+    updateLotMutation,
+    lockLotMutation,
+    handleEditLot,
+    handleLockLot,
+    handleUnlockLot,
+    toggleRow,
+    isRowExpanded,
+    getLotsForItem,
+    handleViewDetail,
+    handleCloseEdit,
+    handleCloseLock,
+  } = useInventoryTableLogic();
 
   if (isLoading) {
     return <LoadingState />;
@@ -156,7 +71,7 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
                   key={`${item.product_id}-${item.warehouse_id}`}
                   item={item}
                   isExpanded={expanded}
-                  lots={lots as LotUI[]}
+                  lots={lots}
                   onToggleRow={toggleRow}
                   onRowClick={onRowClick}
                   onViewDetail={handleViewDetail}
@@ -176,25 +91,19 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
         lockDialog={lockDialog}
         updateLotMutation={updateLotMutation}
         lockLotMutation={lockLotMutation}
-        onCloseEdit={() => {
-          editDialog.close();
-          setSelectedLot(null);
-        }}
-        onCloseLock={() => {
-          lockDialog.close();
-          setSelectedLot(null);
-        }}
+        onCloseEdit={handleCloseEdit}
+        onCloseLock={handleCloseLock}
       />
     </div>
   );
 }
 
 interface LotDialogsProps {
-  selectedLot: LotUI | null;
-  editDialog: ReturnType<typeof useDialog>;
-  lockDialog: ReturnType<typeof useDialog>;
-  updateLotMutation: ReturnType<typeof useUpdateLot>;
-  lockLotMutation: ReturnType<typeof useLockLot>;
+  selectedLot: ReturnType<typeof useInventoryTableLogic>["selectedLot"];
+  editDialog: ReturnType<typeof useInventoryTableLogic>["editDialog"];
+  lockDialog: ReturnType<typeof useInventoryTableLogic>["lockDialog"];
+  updateLotMutation: ReturnType<typeof useInventoryTableLogic>["updateLotMutation"];
+  lockLotMutation: ReturnType<typeof useInventoryTableLogic>["lockLotMutation"];
   onCloseEdit: () => void;
   onCloseLock: () => void;
 }
