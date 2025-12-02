@@ -7,7 +7,12 @@ from sqlalchemy.orm import Session
 
 from app.models import Product
 from app.repositories.products_repository import ProductRepository
-from app.schemas.masters.products_schema import ProductCreate, ProductUpdate
+from app.schemas.masters.masters_schema import BulkUpsertResponse, BulkUpsertSummary
+from app.schemas.masters.products_schema import (
+    ProductBulkRow,
+    ProductCreate,
+    ProductUpdate,
+)
 from app.services.common.base_service import BaseService
 
 
@@ -144,3 +149,82 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             Tuple of (products list, total count)
         """
         return self.repository.list(page=page, per_page=per_page, q=q)
+
+    def bulk_upsert(self, rows: list[ProductBulkRow]) -> BulkUpsertResponse:
+        """Bulk upsert products by maker_part_code (product_code).
+
+        Args:
+            rows: List of product rows to upsert
+
+        Returns:
+            BulkUpsertResponse with summary and errors
+        """
+        summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
+        errors = []
+
+        for row in rows:
+            try:
+                # Map product_code to maker_part_code
+                data = row.model_dump()
+                product_code = data.pop("product_code", None)
+                if product_code:
+                    data["maker_part_code"] = product_code
+
+                # Remove fields not in model
+                data.pop("customer_part_no", None)
+                data.pop("maker_item_code", None)
+                data.pop("is_active", None)
+
+                # Set default base_unit if not present
+                if "base_unit" not in data:
+                    data["base_unit"] = data.get("internal_unit", "CAN")
+
+                # Check if product exists by maker_part_code
+                existing = (
+                    self.db.query(Product)
+                    .filter(Product.maker_part_code == data["maker_part_code"])
+                    .first()
+                )
+
+                if existing:
+                    # UPDATE
+                    for field, value in data.items():
+                        if field != "maker_part_code":  # Don't update the key field
+                            setattr(existing, field, value)
+                    summary["updated"] += 1
+                else:
+                    # CREATE
+                    new_product = Product(**data)
+                    self.db.add(new_product)
+                    summary["created"] += 1
+
+                summary["total"] += 1
+
+            except Exception as e:
+                summary["failed"] += 1
+                errors.append(f"{row.product_code}: {str(e)}")
+                self.db.rollback()
+                continue
+
+        # Commit all successful operations
+        if summary["created"] + summary["updated"] > 0:
+            try:
+                self.db.commit()
+            except Exception as e:
+                self.db.rollback()
+                errors.append(f"Commit failed: {str(e)}")
+                summary["failed"] = summary["total"]
+                summary["created"] = 0
+                summary["updated"] = 0
+
+        # Determine status
+        if summary["failed"] == 0:
+            status = "success"
+        elif summary["created"] + summary["updated"] > 0:
+            status = "partial"
+        else:
+            status = "failed"
+
+        return BulkUpsertResponse(
+            status=status, summary=BulkUpsertSummary(**summary), errors=errors
+        )

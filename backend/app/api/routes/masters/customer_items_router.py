@@ -5,10 +5,13 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.schemas.masters.customer_items_schema import (
+    CustomerItemBulkUpsertRequest,
     CustomerItemCreate,
     CustomerItemResponse,
     CustomerItemUpdate,
 )
+from app.schemas.masters.masters_schema import BulkUpsertResponse
+from app.services.common.export_service import ExportService
 from app.services.masters.customer_items_service import CustomerItemsService
 
 
@@ -139,3 +142,29 @@ def delete_customer_item(
             detail="Customer item mapping not found",
         )
     return None
+
+
+@router.get("/export/download")
+def export_customer_items(format: str = "csv", db: Session = Depends(get_db)):
+    """Export customer items to CSV or Excel."""
+    service = CustomerItemsService(db)
+    items = service.get_all()
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(items, "customer_items")
+    return ExportService.export_to_csv(items, "customer_items")
+
+
+@router.post("/bulk-upsert", response_model=BulkUpsertResponse)
+def bulk_upsert_customer_items(
+    request: CustomerItemBulkUpsertRequest, db: Session = Depends(get_db)
+):
+    """Bulk upsert customer items by composite key (customer_id, external_product_code).
+
+    - If a customer item with the same composite key exists, it will be updated
+    - If not, a new customer item will be created
+
+    Returns summary with counts of created/updated/failed records.
+    """
+    service = CustomerItemsService(db)
+    return service.bulk_upsert(request.rows)

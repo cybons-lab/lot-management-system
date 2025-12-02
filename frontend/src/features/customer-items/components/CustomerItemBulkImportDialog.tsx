@@ -1,13 +1,13 @@
 import { Upload, AlertCircle, FileText, X, Check, AlertTriangle } from "lucide-react";
 import { useCallback, useRef } from "react";
 
-import { bulkUpsertUomConversions } from "../api";
-import type { UomConversionBulkRow } from "../types/bulk-operation";
+import { bulkUpsertCustomerItems } from "../api";
+import type { CustomerItemBulkRow } from "../types/bulk-operation";
 import {
   downloadCSV,
   generateEmptyTemplate,
-  parseUomConversionCsv,
-} from "../utils/uom-conversion-csv";
+  parseCustomerItemCsv,
+} from "../utils/customer-item-csv";
 
 import { Button } from "@/components/ui";
 import {
@@ -28,16 +28,16 @@ import {
 } from "@/components/ui/table";
 import { useBulkImport } from "@/shared/hooks/useBulkImport";
 
-interface UomConversionBulkImportDialogProps {
+interface CustomerItemBulkImportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 /* eslint-disable max-lines-per-function, complexity */
-export function UomConversionBulkImportDialog({
+export function CustomerItemBulkImportDialog({
   open,
   onOpenChange,
-}: UomConversionBulkImportDialogProps) {
+}: CustomerItemBulkImportDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -51,20 +51,22 @@ export function UomConversionBulkImportDialog({
     handleClose,
     setPreviewRows,
     setParseErrors,
-  } = useBulkImport<UomConversionBulkRow>({
-    mutationFn: bulkUpsertUomConversions,
-    queryKey: ["uom-conversions"],
+  } = useBulkImport<CustomerItemBulkRow>({
+    mutationFn: bulkUpsertCustomerItems,
+    queryKey: ["customer-items"],
     onOpenChange,
   });
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Call base handler to set file state
       baseHandleFileChange(e);
+
       const selectedFile = e.target.files?.[0];
       if (!selectedFile) return;
 
       try {
-        const { rows, errors } = await parseUomConversionCsv(selectedFile);
+        const { rows, errors } = await parseCustomerItemCsv(selectedFile);
         setPreviewRows(rows);
         setParseErrors(errors);
       } catch {
@@ -76,16 +78,16 @@ export function UomConversionBulkImportDialog({
 
   const handleDownloadTemplate = () => {
     const template = generateEmptyTemplate();
-    downloadCSV(template, "uom_conversions_template.csv");
+    downloadCSV(template, "customer_items_template.csv");
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col">
         <DialogHeader>
-          <DialogTitle>単位変換マスタ 一括インポート</DialogTitle>
+          <DialogTitle>得意先品番 一括インポート</DialogTitle>
           <DialogDescription>
-            CSVファイルを使用して単位変換設定を一括登録・更新します。
+            CSVファイルを使用して得意先品番を一括登録・更新します。
           </DialogDescription>
         </DialogHeader>
 
@@ -218,18 +220,24 @@ export function UomConversionBulkImportDialog({
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[50px]">No.</TableHead>
+                          <TableHead>得意先コード</TableHead>
+                          <TableHead>得意先品番</TableHead>
                           <TableHead>製品コード</TableHead>
-                          <TableHead>変換単位</TableHead>
-                          <TableHead>変換係数</TableHead>
+                          <TableHead>基本単位</TableHead>
+                          <TableHead>梱包単位</TableHead>
+                          <TableHead>梱包数量</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {previewRows.slice(0, 100).map((row, i) => (
                           <TableRow key={i}>
                             <TableCell>{row._rowNumber}</TableCell>
+                            <TableCell>{row.customer_code}</TableCell>
+                            <TableCell>{row.external_product_code}</TableCell>
                             <TableCell>{row.product_code}</TableCell>
-                            <TableCell>{row.external_unit}</TableCell>
-                            <TableCell>{row.factor}</TableCell>
+                            <TableCell>{row.base_unit}</TableCell>
+                            <TableCell>{row.pack_unit || "-"}</TableCell>
+                            <TableCell>{row.pack_quantity || "-"}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

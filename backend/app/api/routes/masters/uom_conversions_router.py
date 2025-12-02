@@ -6,7 +6,10 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.masters_models import Product, ProductUomConversion
+from app.schemas.masters.masters_schema import BulkUpsertResponse
+from app.schemas.masters.uom_conversions_schema import UomConversionBulkUpsertRequest
 from app.services.common.export_service import ExportService
+from app.services.masters.uom_conversion_service import UomConversionService
 
 
 router = APIRouter(prefix="/uom-conversions", tags=["masters"])
@@ -79,3 +82,18 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
     if format == "xlsx":
         return ExportService.export_to_excel(data, "uom_conversions")
     return ExportService.export_to_csv(data, "uom_conversions")
+
+
+@router.post("/bulk-upsert", response_model=BulkUpsertResponse)
+def bulk_upsert_uom_conversions(
+    request: UomConversionBulkUpsertRequest, db: Session = Depends(get_db)
+):
+    """Bulk upsert UOM conversions by composite key (product_id, external_unit).
+
+    - If a UOM conversion with the same composite key exists, it will be updated
+    - If not, a new UOM conversion will be created
+
+    Returns summary with counts of created/updated/failed records.
+    """
+    service = UomConversionService(db)
+    return service.bulk_upsert(request.rows)

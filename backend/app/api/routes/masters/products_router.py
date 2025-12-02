@@ -5,7 +5,13 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.models.masters_models import Product
-from app.schemas.masters.products_schema import ProductCreate, ProductOut, ProductUpdate
+from app.schemas.masters.masters_schema import BulkUpsertResponse
+from app.schemas.masters.products_schema import (
+    ProductBulkUpsertRequest,
+    ProductCreate,
+    ProductOut,
+    ProductUpdate,
+)
 from app.services.common.export_service import ExportService
 from app.services.masters.products_service import ProductService
 
@@ -90,3 +96,16 @@ def export_products(format: str = "csv", db: Session = Depends(get_db)):
     if format == "xlsx":
         return ExportService.export_to_excel(data, "products")
     return ExportService.export_to_csv(data, "products")
+
+
+@router.post("/bulk-upsert", response_model=BulkUpsertResponse)
+def bulk_upsert_products(request: ProductBulkUpsertRequest, db: Session = Depends(get_db)):
+    """Bulk upsert products by product_code (maker_part_code).
+
+    - If a product with the same product_code exists, it will be updated
+    - If not, a new product will be created
+
+    Returns summary with counts of created/updated/failed records.
+    """
+    service = ProductService(db)
+    return service.bulk_upsert(request.rows)

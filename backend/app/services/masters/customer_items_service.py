@@ -5,7 +5,12 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.masters_models import CustomerItem
-from app.schemas.masters.customer_items_schema import CustomerItemCreate, CustomerItemUpdate
+from app.schemas.masters.customer_items_schema import (
+    CustomerItemBulkRow,
+    CustomerItemCreate,
+    CustomerItemUpdate,
+)
+from app.schemas.masters.masters_schema import BulkUpsertResponse, BulkUpsertSummary
 from app.services.common.base_service import BaseService
 
 
@@ -128,3 +133,125 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         self.db.delete(db_item)
         self.db.commit()
         return True
+
+    def bulk_upsert(self, rows: list[CustomerItemBulkRow]) -> BulkUpsertResponse:
+        """Bulk upsert customer items by composite key (customer_code, external_product_code).
+
+        Args:
+            rows: List of customer item rows to upsert
+
+        Returns:
+            BulkUpsertResponse with summary and errors
+        """
+        from app.models.masters_models import Customer, Product, Supplier
+
+        summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
+        errors = []
+
+        # 1. Collect all codes to resolve IDs efficiently
+        customer_codes = {row.customer_code for row in rows}
+        product_codes = {row.product_code for row in rows}
+        supplier_codes = {row.supplier_code for row in rows if row.supplier_code}
+
+        # 2. Resolve IDs
+        customers = (
+            self.db.query(Customer.customer_code, Customer.id)
+            .filter(Customer.customer_code.in_(customer_codes))
+            .all()
+        )
+        customer_map = {code: id for code, id in customers}
+
+        products = (
+            self.db.query(Product.product_code, Product.id)
+            .filter(Product.product_code.in_(product_codes))
+            .all()
+        )
+        product_map = {code: id for code, id in products}
+
+        supplier_map = {}
+        if supplier_codes:
+            suppliers = (
+                self.db.query(Supplier.supplier_code, Supplier.id)
+                .filter(Supplier.supplier_code.in_(supplier_codes))
+                .all()
+            )
+            supplier_map = {code: id for code, id in suppliers}
+
+        # 3. Process rows
+        for row in rows:
+            try:
+                # Resolve IDs
+                customer_id = customer_map.get(row.customer_code)
+                if not customer_id:
+                    raise ValueError(f"Customer code not found: {row.customer_code}")
+
+                product_id = product_map.get(row.product_code)
+                if not product_id:
+                    raise ValueError(f"Product code not found: {row.product_code}")
+
+                supplier_id = None
+                if row.supplier_code:
+                    supplier_id = supplier_map.get(row.supplier_code)
+                    if not supplier_id:
+                        raise ValueError(f"Supplier code not found: {row.supplier_code}")
+
+                # Check if customer item exists by composite key
+                existing = self.get_by_key(customer_id, row.external_product_code)
+
+                if existing:
+                    # UPDATE
+                    existing.product_id = product_id
+                    existing.supplier_id = supplier_id
+                    existing.base_unit = row.base_unit
+                    existing.pack_unit = row.pack_unit
+                    existing.pack_quantity = row.pack_quantity
+                    existing.special_instructions = row.special_instructions
+                    existing.updated_at = datetime.now()
+                    summary["updated"] += 1
+                else:
+                    # CREATE
+                    new_item = CustomerItem(
+                        customer_id=customer_id,
+                        external_product_code=row.external_product_code,
+                        product_id=product_id,
+                        supplier_id=supplier_id,
+                        base_unit=row.base_unit,
+                        pack_unit=row.pack_unit,
+                        pack_quantity=row.pack_quantity,
+                        special_instructions=row.special_instructions,
+                    )
+                    self.db.add(new_item)
+                    summary["created"] += 1
+
+                summary["total"] += 1
+
+            except Exception as e:
+                summary["failed"] += 1
+                errors.append(
+                    f"customer={row.customer_code}, ext_prod={row.external_product_code}: {str(e)}"
+                )
+                self.db.rollback()
+                continue
+
+        # Commit all successful operations
+        if summary["created"] + summary["updated"] > 0:
+            try:
+                self.db.commit()
+            except Exception as e:
+                self.db.rollback()
+                errors.append(f"Commit failed: {str(e)}")
+                summary["failed"] = summary["total"]
+                summary["created"] = 0
+                summary["updated"] = 0
+
+        # Determine status
+        if summary["failed"] == 0:
+            status = "success"
+        elif summary["created"] + summary["updated"] > 0:
+            status = "partial"
+        else:
+            status = "failed"
+
+        return BulkUpsertResponse(
+            status=status, summary=BulkUpsertSummary(**summary), errors=errors
+        )

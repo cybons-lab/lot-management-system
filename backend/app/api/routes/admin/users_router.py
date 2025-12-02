@@ -12,6 +12,7 @@ from app.schemas.system.users_schema import (
     UserWithRoles,
 )
 from app.services.auth.user_service import UserService
+from app.services.common.export_service import ExportService
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -167,3 +168,15 @@ def assign_user_roles(user_id: int, assignment: UserRoleAssignment, db: Session 
     user_dict["role_codes"] = role_codes
 
     return UserWithRoles(**user_dict)
+
+
+@router.get("/export/download")
+def export_users(format: str = "csv", db: Session = Depends(get_db)):
+    """Export users to CSV or Excel."""
+    service = UserService(db)
+    users = service.get_all()
+    data = [UserResponse.model_validate(u).model_dump() for u in users]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "users")
+    return ExportService.export_to_csv(data, "users")

@@ -37,7 +37,7 @@ class UserUpdate(BaseSchema):
 class UserResponse(UserBase):
     """Schema for user response (DDL: users)."""
 
-    id: int
+    id: int = Field(..., serialization_alias="user_id")
     last_login_at: datetime | None = None
     created_at: datetime
     updated_at: datetime

@@ -1,46 +1,18 @@
 /**
- * WarehouseExportButton - 倉庫エクスポート
+ * WarehouseExportButton - 倉庫エクスポート (Backend API)
  */
-import { Download } from "lucide-react";
-import { useCallback, useState } from "react";
-
-import type { Warehouse } from "../api";
-import { warehousesToCSV, downloadCSV } from "../utils/warehouse-csv";
-
-import { Button } from "@/components/ui";
+import { ExportButton } from "@/shared/components/ExportButton";
 
 export interface WarehouseExportButtonProps {
-  warehouses: Warehouse[];
   size?: "default" | "sm" | "lg";
 }
 
-export function WarehouseExportButton({
-  warehouses,
-  size = "default",
-}: WarehouseExportButtonProps) {
-  const [isExporting, setIsExporting] = useState(false);
-
-  const handleExport = useCallback(() => {
-    if (warehouses.length === 0) return;
-    setIsExporting(true);
-    try {
-      const csv = warehousesToCSV(warehouses, true);
-      const timestamp = new Date().toISOString().slice(0, 10);
-      downloadCSV(csv, `warehouses_export_${timestamp}.csv`);
-    } finally {
-      setIsExporting(false);
-    }
-  }, [warehouses]);
-
+export function WarehouseExportButton({ size = "default" }: WarehouseExportButtonProps) {
   return (
-    <Button
-      variant="outline"
+    <ExportButton
+      apiPath="/masters/warehouses/export/download"
+      filePrefix="warehouses"
       size={size}
-      onClick={handleExport}
-      disabled={isExporting || warehouses.length === 0}
-    >
-      <Download className="mr-2 h-4 w-4" />
-      {isExporting ? "エクスポート中..." : "エクスポート"}
-    </Button>
+    />
   );
 }

@@ -61,12 +61,11 @@ export function WarehouseBulkImportDialog({ open, onOpenChange }: WarehouseBulkI
           status: "failed",
           summary: {
             total: parsedRows.length,
-            added: 0,
+            created: 0,
             updated: 0,
-            deleted: 0,
             failed: parsedRows.length,
           },
-          results: [{ rowNumber: 0, success: false, errorMessage: error.message }],
+          errors: [error.message],
         }),
     });
   }, [parsedRows, bulkUpsert]);
@@ -164,16 +163,23 @@ export function WarehouseBulkImportDialog({ open, onOpenChange }: WarehouseBulkI
                 <span className={styles.summaryLabel}>総件数:</span>
                 <span className={styles.summaryValue}>{importResult.summary.total}</span>
                 <span className={styles.summaryLabel}>追加:</span>
-                <span className={styles.summaryValue}>{importResult.summary.added}</span>
+                <span className={styles.summaryValue}>{importResult.summary.created}</span>
                 <span className={styles.summaryLabel}>更新:</span>
                 <span className={styles.summaryValue}>{importResult.summary.updated}</span>
-                <span className={styles.summaryLabel}>削除:</span>
-                <span className={styles.summaryValue}>{importResult.summary.deleted}</span>
                 <span className={styles.summaryLabel}>失敗:</span>
                 <span className={`${styles.summaryValue} text-red-600`}>
                   {importResult.summary.failed}
                 </span>
               </div>
+              {importResult.errors.length > 0 && (
+                <div className="mt-2 max-h-32 overflow-y-auto rounded bg-red-50 p-2 text-xs text-red-600">
+                  <ul className="list-disc pl-4">
+                    {importResult.errors.map((error, i) => (
+                      <li key={i}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>

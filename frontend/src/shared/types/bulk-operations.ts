@@ -44,12 +44,10 @@ export interface BulkResultRow {
 export interface BulkOperationSummary {
   /** Total rows processed */
   total: number;
-  /** Number of records added */
-  added: number;
+  /** Number of records created */
+  created: number;
   /** Number of records updated */
   updated: number;
-  /** Number of records deleted */
-  deleted: number;
   /** Number of failed operations */
   failed: number;
 }
@@ -64,8 +62,8 @@ export interface BulkUpsertResponse {
   status: "success" | "partial" | "failed";
   /** Operation summary statistics */
   summary: BulkOperationSummary;
-  /** Per-row results */
-  results: BulkResultRow[];
+  /** Error messages */
+  errors: string[];
 }
 
 /**
