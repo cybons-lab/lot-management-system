@@ -10,6 +10,34 @@
 
 ---
 
+## 📊 最新進捗サマリー（2025-12-02更新）
+
+### ✅ 完了済み
+- **テスト作成（Phase 2）**: API endpoint tests 作成完了
+  - ✅ test_orders.py（13件）
+  - ✅ test_allocations.py（11件）
+  - ✅ test_allocation_suggestions.py（10件）
+  - **合計: 34テストケース作成**
+
+### ⚠️ インフラ課題
+- **PostgreSQL依存**:
+  - test_orders.py: `v_order_line_details` view 使用（ORDER_SERVICE.py:267）
+  - test_allocations.py: サービス層がBigInteger IDを明示的に設定しない
+  - test_allocation_suggestions.py: サービス層がBigInteger IDを明示的に設定しない
+
+- **解決オプション**:
+  1. PostgreSQL test DB with Docker（推奨、30-60分）
+  2. SQLite完全対応（サービス層修正、3-4時間）
+  3. サービス層のモック（単体テスト化）
+
+### 📝 次のステップ候補
+1. **テストインフラ整備**: PostgreSQL test DB セットアップ（Docker）
+2. **継続テスト作成**: users_router, roles_router（8件）
+3. **サービス層テスト**: order_service, inbound_service等
+4. **Phase 1実装**: セキュリティ対応（認証・認可）
+
+---
+
 ## 🔴 Phase 1: セキュリティ対応（本番デプロイ前必須） - 推定10日
 
 ### Week 1 (7日)
@@ -87,20 +115,25 @@
 ### Week 3-4: バックエンドテスト（14日）
 
 #### 重要APIエンドポイントテスト（8日）
-- [ ] Day 1-2: **orders_router.py** テスト（8件）
-  - [ ] POST /orders（作成、バリデーション）
-  - [ ] GET /orders（一覧、フィルター）
-  - [ ] GET /orders/{id}（詳細）
-  - [ ] PATCH /orders/{id}/status（ステータス遷移）
-  - [ ] エラーケース（無効な顧客、重複注文番号、空の明細）
-- [ ] Day 3-4: **allocations_router.py** テスト（6件）
-  - [ ] POST /allocations/commit
-  - [ ] DELETE /allocations/{id}
-  - [ ] エラーケース（在庫不足、割当競合）
-- [ ] Day 5: **allocation_suggestions_router.py** テスト（5件）
-  - [ ] POST /allocation-suggestions/fefo
-  - [ ] POST /allocation-suggestions/manual
-  - [ ] エラーケース（ロットなし、期限切れ）
+- [x] Day 1-2: **orders_router.py** テスト（13件作成済） ✅
+  - [x] POST /orders（作成、バリデーション）
+  - [x] GET /orders（一覧、フィルター: status, customer_code, date_range）
+  - [x] GET /orders/{id}（詳細）
+  - [x] DELETE /orders/{id}/cancel（キャンセル）
+  - [x] エラーケース（無効な顧客404、重複注文番号409、空の明細）
+  - ⚠️ 注: 一部テストはPostgreSQL view依存のため完全な実行にはPG必要
+- [x] Day 3-4: **allocations_router.py** テスト（11件作成済） ✅
+  - [x] POST /allocations/drag-assign（手動割当）
+  - [x] POST /allocations/commit（割当確定）
+  - [x] POST /allocations/preview（FEFOプレビュー）
+  - [x] DELETE /allocations/{id}（割当キャンセル）
+  - [x] エラーケース（在庫不足400/409、not found 404）
+  - ⚠️ 注: サービス層のID自動生成パターンによりSQLite互換性に制限あり
+- [x] Day 5: **allocation_suggestions_router.py** テスト（10件作成済） ✅
+  - [x] POST /allocation-suggestions/preview（forecast/orderモード）
+  - [x] GET /allocation-suggestions（一覧、フィルター: forecast_period, product_id）
+  - [x] エラーケース（パラメータ不足400、無効なモード400）
+  - ⚠️ 注: サービス層のID自動生成パターンによりSQLite互換性に制限あり
 - [ ] Day 6-7: **users_router.py + roles_router.py** テスト（8件）
   - [ ] POST /users
   - [ ] PATCH /users/{id}/roles
