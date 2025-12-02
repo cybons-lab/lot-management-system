@@ -5,7 +5,12 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.models.masters_models import CustomerItem
-from app.schemas.masters.customer_items_schema import CustomerItemCreate, CustomerItemUpdate
+from app.schemas.masters.customer_items_schema import (
+    CustomerItemBulkRow,
+    CustomerItemCreate,
+    CustomerItemUpdate,
+)
+from app.schemas.masters.masters_schema import BulkUpsertResponse, BulkUpsertSummary
 from app.services.common.base_service import BaseService
 
 
@@ -128,3 +133,68 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         self.db.delete(db_item)
         self.db.commit()
         return True
+
+    def bulk_upsert(self, rows: list[CustomerItemBulkRow]) -> BulkUpsertResponse:
+        """Bulk upsert customer items by composite key (customer_id, external_product_code).
+        
+        Args:
+            rows: List of customer item rows to upsert
+            
+        Returns:
+            BulkUpsertResponse with summary and errors
+        """
+        summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
+        errors = []
+
+        for row in rows:
+            try:
+                # Check if customer item exists by composite key
+                existing = self.get_by_key(row.customer_id, row.external_product_code)
+
+                if existing:
+                    # UPDATE
+                    for key, value in row.model_dump().items():
+                        # Don't update the composite key fields
+                        if key not in ("customer_id", "external_product_code"):
+                            setattr(existing, key, value)
+                    existing.updated_at = datetime.now()
+                    summary["updated"] += 1
+                else:
+                    # CREATE
+                    new_item = CustomerItem(**row.model_dump())
+                    self.db.add(new_item)
+                    summary["created"] += 1
+
+                summary["total"] += 1
+
+            except Exception as e:
+                summary["failed"] += 1
+                errors.append(
+                    f"customer_id={row.customer_id}, "
+                    f"external_product_code={row.external_product_code}: {str(e)}"
+                )
+                self.db.rollback()
+                continue
+
+        # Commit all successful operations
+        if summary["created"] + summary["updated"] > 0:
+            try:
+                self.db.commit()
+            except Exception as e:
+                self.db.rollback()
+                errors.append(f"Commit failed: {str(e)}")
+                summary["failed"] = summary["total"]
+                summary["created"] = 0
+                summary["updated"] = 0
+
+        # Determine status
+        if summary["failed"] == 0:
+            status = "success"
+        elif summary["created"] + summary["updated"] > 0:
+            status = "partial"
+        else:
+            status = "failed"
+
+        return BulkUpsertResponse(
+            status=status, summary=BulkUpsertSummary(**summary), errors=errors
+        )
