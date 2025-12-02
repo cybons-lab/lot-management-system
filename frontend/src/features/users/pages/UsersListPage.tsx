@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import type { CreateUserRequest } from "../api";
+import { UserExportButton } from "../components/UserExportButton";
 import { UserForm } from "../components/UserForm";
 import { useUsers, useCreateUser, useDeleteUser } from "../hooks";
 
@@ -78,7 +79,10 @@ export function UsersListPage() {
           <h2 className={styles.header.title}>ユーザー管理</h2>
           <p className={styles.header.description}>ユーザーの作成・編集・削除</p>
         </div>
-        {!showForm && <Button onClick={handleCreateNew}>新規ユーザー作成</Button>}
+        <div className="flex gap-2">
+          <UserExportButton size="sm" />
+          {!showForm && <Button onClick={handleCreateNew}>新規ユーザー作成</Button>}
+        </div>
       </div>
 
       {/* Create Form */}
