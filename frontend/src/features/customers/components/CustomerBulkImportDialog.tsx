@@ -56,18 +56,11 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
         status: "failed",
         summary: {
           total: parsedRows.length,
-          added: 0,
+          created: 0,
           updated: 0,
-          deleted: 0,
           failed: parsedRows.length,
         },
-        results: [
-          {
-            rowNumber: 0,
-            success: false,
-            errorMessage: error.message,
-          },
-        ],
+        errors: [error.message],
       });
     },
   });
@@ -232,11 +225,9 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
                 <span className={styles.summaryLabel}>総件数:</span>
                 <span className={styles.summaryValue}>{importResult.summary.total}</span>
                 <span className={styles.summaryLabel}>追加:</span>
-                <span className={styles.summaryValue}>{importResult.summary.added}</span>
+                <span className={styles.summaryValue}>{importResult.summary.created}</span>
                 <span className={styles.summaryLabel}>更新:</span>
                 <span className={styles.summaryValue}>{importResult.summary.updated}</span>
-                <span className={styles.summaryLabel}>削除:</span>
-                <span className={styles.summaryValue}>{importResult.summary.deleted}</span>
                 <span className={styles.summaryLabel}>失敗:</span>
                 <span className={`${styles.summaryValue} text-red-600`}>
                   {importResult.summary.failed}
@@ -244,18 +235,16 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
               </div>
 
               {/* エラー詳細 */}
-              {importResult.results.filter((r) => !r.success).length > 0 && (
+              {importResult.errors.length > 0 && (
                 <div className="mt-3 max-h-40 overflow-y-auto">
                   <p className="text-sm font-medium text-gray-700">エラー詳細:</p>
                   <ul className="mt-1 space-y-1">
-                    {importResult.results
-                      .filter((r) => !r.success)
-                      .slice(0, 10)
-                      .map((r, i) => (
-                        <li key={i} className={styles.resultItem({ status: "error" })}>
-                          <XCircle className="h-4 w-4" />行{r.rowNumber}: {r.errorMessage}
-                        </li>
-                      ))}
+                    {importResult.errors.slice(0, 10).map((error, i) => (
+                      <li key={i} className={styles.resultItem({ status: "error" })}>
+                        <XCircle className="h-4 w-4" />
+                        {error}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )}

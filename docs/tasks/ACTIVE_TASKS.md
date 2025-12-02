@@ -76,33 +76,7 @@ const userId = user.id; // ✅ 認証コンテキストから取得
 
 ## 🟠 P1 - 高（機能ブロック/データ整合性）
 
-### Backend API実装（6件）
-
-#### 3. Bulk import/upsert API実装
-
-**ソース:** todo-priorities-2025-11-30.md
-**工数:** 1日
-**優先度:** 最高（ユーザー要望多数）
-
-**対象エンドポイント:**
-- `POST /api/masters/customers/bulk-upsert`
-- `POST /api/masters/products/bulk-upsert`
-- `POST /api/masters/warehouses/bulk-upsert`
-- `POST /api/masters/suppliers/bulk-upsert`
-- `POST /api/masters/uom-conversions/bulk-upsert`
-
-**影響:**
-- 現在は1件ずつ登録しかできない
-- 大量データ登録が非効率
-
-**関連ファイル:**
-- `frontend/src/features/customers/types/bulk-operation.ts:30`
-- `frontend/src/features/products/types/bulk-operation.ts:38`
-- `frontend/src/features/warehouses/types/bulk-operation.ts:28`
-- `frontend/src/features/suppliers/types/bulk-operation.ts:26`
-- `frontend/src/shared/hooks/useBulkImport.ts:54`
-
----
+### Backend API実装（5件）
 
 #### 4. Template download API実装
 
@@ -545,6 +519,23 @@ POST /api/allocations/bulk-cancel
 - P2-27: UOM変換UPD/DEL対応（2時間）
 
 **リファクタリング（合計1日）:**
+- P2-14:# ACTIVE_TASKS - 現在のタスク一覧
+
+**最終更新日**: 2025-12-02
+**クリーンアップ実施**: 2025-12-02 (P1-7, P1-10, P1-11, P2-28削除)
+**※ 完了済みタスクを繰り返さないよう、このファイルから削除済み**
+
+## サマリー
+
+- **総タスク数**: 32件（P1-3削除）
+- **推定工数合計**: 約9日
+- **最優先タスク**: P1-4, P1-5, P1-6（高価値タスク）
+
+### 優先度別内訳
+- P0: 1件（認証）
+- P1: 9件（機能追加・性能改善）
+- P2: 6件（コード品質改善）
+- P3: 16件（長期改善・監視項目）
 - P2-14: 高複雑度関数（4時間）
 - P2-15-20: Backend 300行超過（4時間）
 

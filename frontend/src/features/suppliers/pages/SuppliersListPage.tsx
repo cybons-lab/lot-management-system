@@ -73,7 +73,7 @@ export function SuppliersListPage() {
         subtitle="仕入先の作成・編集・削除、一括インポート/エクスポート"
         actions={
           <div className={styles.actionBar}>
-            <SupplierExportButton suppliers={sortedSuppliers} size="sm" />
+            <SupplierExportButton size="sm" />
             <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
               <Upload className="mr-2 h-4 w-4" />
               インポート

@@ -144,9 +144,18 @@ export function SupplierBulkImportDialog({ open, onOpenChange }: Props) {
                 </span>
               </div>
               <p className="mt-1 text-sm">
-                追加: {result.summary.added}, 更新: {result.summary.updated}, 削除:{" "}
-                {result.summary.deleted}, 失敗: {result.summary.failed}
+                追加: {result.summary.created}, 更新: {result.summary.updated}, 失敗:{" "}
+                {result.summary.failed}
               </p>
+              {result.errors.length > 0 && (
+                <div className="mt-2 max-h-20 overflow-y-auto text-xs text-red-600">
+                  <ul className="list-disc pl-4">
+                    {result.errors.map((err, i) => (
+                      <li key={i}>{err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
 

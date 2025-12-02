@@ -73,7 +73,7 @@ export function WarehousesListPage() {
         subtitle="倉庫の作成・編集・削除、一括インポート/エクスポート"
         actions={
           <div className={styles.actionBar}>
-            <WarehouseExportButton warehouses={sortedWarehouses} size="sm" />
+            <WarehouseExportButton size="sm" />
             <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
               <Upload className="mr-2 h-4 w-4" />
               インポート
