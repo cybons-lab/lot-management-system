@@ -116,14 +116,16 @@ def test_list_orders_success(test_db: Session, master_data: dict):
     """Test listing orders without filters."""
     client = TestClient(app)
 
-    # Create 2 orders
+    # Create 2 orders (explicitly set IDs for SQLite)
     order1 = Order(
+        id=1,
         order_number="ORD-001",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
     )
     order2 = Order(
+        id=2,
         order_number="ORD-002",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -133,7 +135,7 @@ def test_list_orders_success(test_db: Session, master_data: dict):
     test_db.commit()
 
     # Test: List all orders
-    response = client.get("/orders")
+    response = client.get("/api/orders")
     assert response.status_code == 200
 
     data = response.json()
@@ -148,12 +150,14 @@ def test_list_orders_with_status_filter(test_db: Session, master_data: dict):
 
     # Create orders with different statuses
     order_open = Order(
+        id=10,
         order_number="ORD-OPEN",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
     )
     order_allocated = Order(
+        id=11,
         order_number="ORD-ALLOC",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -163,7 +167,7 @@ def test_list_orders_with_status_filter(test_db: Session, master_data: dict):
     test_db.commit()
 
     # Test: Filter by status=open
-    response = client.get("/orders", params={"status": "open"})
+    response = client.get("/api/orders", params={"status": "open"})
     assert response.status_code == 200
 
     data = response.json()
@@ -178,19 +182,22 @@ def test_list_orders_with_customer_filter(test_db: Session, master_data: dict):
 
     # Create another customer
     customer2 = Customer(
+        id=20,
         customer_code="CUST-002",
         customer_name="Another Customer",
     )
     test_db.add(customer2)
-    test_db.flush()
+    test_db.commit()
 
     # Create orders for different customers
     order1 = Order(
+        id=21,
         order_number="ORD-C1",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
     )
     order2 = Order(
+        id=22,
         order_number="ORD-C2",
         customer_id=customer2.id,
         order_date=date.today(),
@@ -199,7 +206,7 @@ def test_list_orders_with_customer_filter(test_db: Session, master_data: dict):
     test_db.commit()
 
     # Test: Filter by customer_code
-    response = client.get("/orders", params={"customer_code": "CUST-001"})
+    response = client.get("/api/orders", params={"customer_code": "CUST-001"})
     assert response.status_code == 200
 
     data = response.json()
@@ -214,11 +221,13 @@ def test_list_orders_with_date_range_filter(test_db: Session, master_data: dict)
     # Create orders on different dates
     today = date.today()
     order_old = Order(
+        id=30,
         order_number="ORD-OLD",
         customer_id=master_data["customer"].id,
         order_date=today - timedelta(days=10),
     )
     order_recent = Order(
+        id=31,
         order_number="ORD-RECENT",
         customer_id=master_data["customer"].id,
         order_date=today,
@@ -228,7 +237,7 @@ def test_list_orders_with_date_range_filter(test_db: Session, master_data: dict)
 
     # Test: Filter by date range (last 5 days)
     date_from = today - timedelta(days=5)
-    response = client.get("/orders", params={"date_from": str(date_from)})
+    response = client.get("/api/orders", params={"date_from": str(date_from)})
     assert response.status_code == 200
 
     data = response.json()
@@ -247,15 +256,17 @@ def test_get_order_success(test_db: Session, master_data: dict):
 
     # Create order with lines
     order = Order(
+        id=40,
         order_number="ORD-DETAIL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
     )
     test_db.add(order)
-    test_db.flush()
+    test_db.commit()
 
     line = OrderLine(
+        id=41,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -285,7 +296,7 @@ def test_get_order_not_found(test_db: Session):
     client = TestClient(app)
 
     # Test: Get non-existent order
-    response = client.get("/orders/99999")
+    response = client.get("/api/orders/99999")
     assert response.status_code == 404
     assert "not found" in response.json()["detail"].lower()
 
@@ -317,7 +328,7 @@ def test_create_order_success(test_db: Session, master_data: dict):
     }
 
     # Test: Create order
-    response = client.post("/orders", json=order_data)
+    response = client.post("/api/orders", json=order_data)
     assert response.status_code == 201
 
     data = response.json()
@@ -349,7 +360,7 @@ def test_create_order_with_invalid_customer(test_db: Session, master_data: dict)
     }
 
     # Test: Create order with invalid customer
-    response = client.post("/orders", json=order_data)
+    response = client.post("/api/orders", json=order_data)
     assert response.status_code in [400, 404]  # Depending on validation logic
 
 
@@ -374,11 +385,11 @@ def test_create_order_with_duplicate_order_number(test_db: Session, master_data:
         ],
     }
 
-    response1 = client.post("/orders", json=order_data)
+    response1 = client.post("/api/orders", json=order_data)
     assert response1.status_code == 201
 
     # Test: Create order with same order_number
-    response2 = client.post("/orders", json=order_data)
+    response2 = client.post("/api/orders", json=order_data)
     assert response2.status_code in [400, 409]  # Duplicate constraint violation
 
 
@@ -397,7 +408,7 @@ def test_create_order_with_empty_lines(test_db: Session, master_data: dict):
     # Test: Create order with empty lines
     # Note: This may succeed or fail depending on business rules
     # If your service requires at least 1 line, this should return 400
-    response = client.post("/orders", json=order_data)
+    response = client.post("/api/orders", json=order_data)
 
     # Adjust assertion based on actual business logic
     # For now, we check if it either succeeds or returns validation error
@@ -415,6 +426,7 @@ def test_cancel_order_success(test_db: Session, master_data: dict):
 
     # Create order
     order = Order(
+        id=100,
         order_number="ORD-CANCEL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -438,5 +450,5 @@ def test_cancel_order_not_found(test_db: Session):
     client = TestClient(app)
 
     # Test: Cancel non-existent order
-    response = client.delete("/orders/99999/cancel")
+    response = client.delete("/api/orders/99999/cancel")
     assert response.status_code == 404
