@@ -1,7 +1,8 @@
 # アクティブタスクリスト
 
-**最終更新:** 2025-12-01
+**最終更新:** 2025-12-02
 **ソース:** 全ドキュメント統合（todo-priorities, code-quality-report, audit-report, remaining_issues.adoc）
+**前回クリーンアップ:** 2025-12-02（完了済みタスク4件削除）
 
 このドキュメントは、プロジェクト全体の未完了タスクを優先度別に統合したマスタータスクリストです。
 
@@ -12,10 +13,12 @@
 | 優先度 | 件数 | 合計工数見積 | ステータス |
 |--------|------|------------|----------|
 | **🔴 P0（緊急）** | 2 | 1.5時間 | ⚠️ ブロッカーあり |
-| **🟠 P1（高）** | 13 | 約4日 | ✅ 実施可能 |
-| **🟡 P2（中）** | 15 | 約5日 | ✅ 実施可能 |
+| **🟠 P1（高）** | 10 | 約3.5日 | ✅ 実施可能 |
+| **🟡 P2（中）** | 14 | 約4.5日 | ✅ 実施可能 |
 | **🔵 P3（低）** | 7 | 1週間+ | 将来対応 |
-| **合計** | **37件** | **約10日** | - |
+| **合計** | **33件** | **約9.5日** | - |
+
+> **✅ 2025-12-02更新:** P1-7, P1-10, P1-11, P2-28 は既に完了済みのため削除しました。
 
 ---
 
@@ -157,25 +160,7 @@ POST /api/allocations/bulk-cancel
 
 ---
 
-#### 7. default_warehouse_id を設定可能に
 
-**ソース:** todo-priorities-2025-11-30.md
-**ファイル:** `backend/app/services/inventory/inbound_receiving_service.py:66`
-**工数:** 1時間
-
-**問題:**
-- ハードコード（warehouse_id = 1）で柔軟性が低い
-
-**対応:**
-```python
-# Before
-warehouse_id = 1  # ❌ ハードコード
-
-# After
-warehouse_id = settings.DEFAULT_WAREHOUSE_ID  # ✅ 環境変数
-```
-
----
 
 ### Backend コード品質（4件）
 
@@ -206,45 +191,9 @@ warehouse_id = settings.DEFAULT_WAREHOUSE_ID  # ✅ 環境変数
 
 ---
 
-#### 10. トランザクション境界の追加
 
-**ソース:** COMPLETED_CODE_CLEANUP_20251130.md
-**ファイル:** `backend/app/api/routes/orders/orders_router.py`
-**工数:** 30分
-**影響:** データ整合性の問題
 
-**箇所:**
-- Line 100-125: 手動割当ループ
-- Line 140-186: ステータス更新ループ
 
-**対応:**
-```python
-try:
-    for item in payload.allocations:
-        allocation = allocate_manually(...)
-    db.commit()  # すべて成功してからコミット
-except Exception as e:
-    db.rollback()
-    raise HTTPException(status_code=500, detail=str(e))
-```
-
----
-
-#### 11. ProductService の重複削除
-
-**ソース:** COMPLETED_CODE_CLEANUP_20251130.md
-**工数:** 15分
-
-**問題:**
-- `backend/app/services/masters/product_service.py`
-- `backend/app/services/masters/products_service.py`
-
-**対応:**
-1. `products_service.py` に統一
-2. `product_service.py` を削除
-3. Router のインポートを更新
-
----
 
 ### Frontend 構造化（3件）
 
@@ -398,32 +347,9 @@ except Exception as e:
 
 ---
 
-#### 28. 孤立ファイルの削除
-
-**ソース:** audit-report-2025-11-30.md
-**工数:** 30分
-
-**Backend（2件）:**
-- `services/allocations/tracing.py`
-- `services/common/operation_log_service.py`
-
-**Frontend（3件）:**
-- `features/inventory/components/LotListPanel.tsx`
-- `shared/utils/csv-parser.ts`
-- `features/inventory/pages/LotsPage/columns.tsx`
-
-**削除前の確認:**
-```bash
-# grep で本当に使われていないか確認
-grep -r "tracing" backend/
-grep -r "LotListPanel" frontend/
-```
-
----
-
 ## 🔵 P3 - 低（将来対応）
 
-### 29. SAP API統合の本番化
+### 28. SAP API統合の本番化
 
 **ソース:** todo-priorities-2025-11-30.md, remaining_issues.adoc
 **工数:** 1週間
@@ -446,7 +372,7 @@ grep -r "LotListPanel" frontend/
 
 ---
 
-### 30. 定期バッチジョブのスケジューラ設定
+### 29. 定期バッチジョブのスケジューラ設定
 
 **ソース:** remaining_issues.adoc
 **工数:** 1-2日
@@ -462,7 +388,7 @@ grep -r "LotListPanel" frontend/
 
 ---
 
-### 31. 担当者ロック表示（排他制御）
+### 30. 担当者ロック表示（排他制御）
 
 **ソース:** remaining_issues.adoc
 **工数:** 1-2日
@@ -479,7 +405,7 @@ grep -r "LotListPanel" frontend/
 
 ---
 
-### 32. UIレイアウト（文字数超過）の総点検
+### 31. UIレイアウト（文字数超過）の総点検
 
 **ソース:** remaining_issues.adoc
 **工数:** 1日
@@ -491,7 +417,7 @@ grep -r "LotListPanel" frontend/
 
 ---
 
-### 33. 入荷予定手動作成機能
+### 32. 入荷予定手動作成機能
 
 **ソース:** remaining_issues.adoc
 **優先度:** 低（SAP連携が主のため不要の可能性）
@@ -502,7 +428,7 @@ grep -r "LotListPanel" frontend/
 
 ---
 
-### 34. ForecastDetailCard の肥大化監視
+### 33. ForecastDetailCard の肥大化監視
 
 **ソース:** remaining_issues.adoc
 **現状:** 26ファイル（コロケーション済み）
@@ -513,7 +439,7 @@ grep -r "LotListPanel" frontend/
 
 ---
 
-### 35. Hard Allocation の本格運用
+### 34. Hard Allocation の本格運用
 
 **ソース:** remaining_issues.adoc
 **タイミング:** v3.0予定
@@ -530,7 +456,7 @@ grep -r "LotListPanel" frontend/
 
 ## 🛠️ コード品質改善（継続監視）
 
-### 36. Frontend 300行超過ファイル（6件）
+### 35. Frontend 300行超過ファイル（6件）
 
 **ソース:** code-quality-report-2025-11-30.md
 **工数:** 2日
@@ -547,7 +473,7 @@ grep -r "LotListPanel" frontend/
 
 ---
 
-### 37. ESLint 違反の修正
+### 36. ESLint 違反の修正
 
 **ソース:** remaining_issues.adoc
 **優先度:** 参考（機能には影響なし）
