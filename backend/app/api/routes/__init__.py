@@ -49,6 +49,7 @@ from app.api.routes.masters import (
     warehouses_router,
 )
 from app.api.routes.orders import confirmed_lines_router, order_lines_router, orders_router
+from app.api.routes.rpa import router as rpa_router
 
 
 # orders_validate_router is disabled: requires OrderValidation* schemas not in DDL v2.2
@@ -96,4 +97,6 @@ __all__ = [
     "test_data_router",
     # Integration (1)
     "sap_router",
+    # RPA (1)
+    "rpa_router",
 ]

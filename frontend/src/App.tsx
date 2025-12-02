@@ -40,6 +40,7 @@ import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
 import { ProductsListPage, ProductDetailPage } from "@/features/products";
+import { RPAPage } from "@/features/rpa";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
 import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
@@ -172,6 +173,10 @@ function App() {
                 <Route path={ROUTES.ADMIN.BATCH_JOBS} element={<BatchJobsPage />} />
                 <Route path={ROUTES.ADMIN.MASTER_CHANGE_LOGS} element={<MasterChangeLogsPage />} />
                 <Route path={ROUTES.ADMIN.SEED_SNAPSHOTS} element={<SeedSnapshotsPage />} />
+
+                {/* RPA */}
+                <Route path={ROUTES.RPA} element={<RPAPage />} />
+
                 {/* Catch all - redirect to dashboard */}
                 <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
               </Routes>
