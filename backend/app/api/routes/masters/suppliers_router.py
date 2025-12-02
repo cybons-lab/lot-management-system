@@ -58,6 +58,18 @@ def delete_supplier(supplier_code: str, db: Session = Depends(get_db)):
     return None
 
 
+@router.get("/export/download")
+def export_suppliers(format: str = "csv", db: Session = Depends(get_db)):
+    """Export suppliers to CSV or Excel."""
+    service = SupplierService(db)
+    suppliers = service.get_all()
+    data = [SupplierResponse.model_validate(s).model_dump() for s in suppliers]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "suppliers")
+    return ExportService.export_to_csv(data, "suppliers")
+
+
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
 def bulk_upsert_suppliers(request: SupplierBulkUpsertRequest, db: Session = Depends(get_db)):
     """Bulk upsert suppliers by supplier_code.

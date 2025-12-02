@@ -11,6 +11,7 @@ from app.schemas.masters.masters_schema import (
     WarehouseResponse,
     WarehouseUpdate,
 )
+from app.services.common.export_service import ExportService
 from app.services.masters.warehouse_service import WarehouseService
 
 
@@ -57,6 +58,18 @@ def delete_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
     service = WarehouseService(db)
     service.delete(warehouse_code)
     return None
+
+
+@router.get("/export/download")
+def export_warehouses(format: str = "csv", db: Session = Depends(get_db)):
+    """Export warehouses to CSV or Excel."""
+    service = WarehouseService(db)
+    warehouses = service.get_all()
+    data = [WarehouseResponse.model_validate(w).model_dump() for w in warehouses]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "warehouses")
+    return ExportService.export_to_csv(data, "warehouses")
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
