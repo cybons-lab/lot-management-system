@@ -63,4 +63,6 @@ class ProductBulkRow(ProductBase):
 class ProductBulkUpsertRequest(BaseModel):
     """Bulk upsert request for products."""
 
-    rows: list[ProductBulkRow] = Field(..., min_length=1, description="List of product rows to upsert")
+    rows: list[ProductBulkRow] = Field(
+        ..., min_length=1, description="List of product rows to upsert"
+    )

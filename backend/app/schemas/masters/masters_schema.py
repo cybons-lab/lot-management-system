@@ -62,8 +62,9 @@ class WarehouseBulkRow(WarehouseBase):
 class WarehouseBulkUpsertRequest(BaseSchema):
     """Bulk upsert request for warehouses."""
 
-    rows: list[WarehouseBulkRow] = Field(..., min_length=1, description="List of warehouse rows to upsert")
-
+    rows: list[WarehouseBulkRow] = Field(
+        ..., min_length=1, description="List of warehouse rows to upsert"
+    )
 
 
 # ============================================================
@@ -107,7 +108,9 @@ class SupplierBulkRow(SupplierBase):
 class SupplierBulkUpsertRequest(BaseSchema):
     """Bulk upsert request for suppliers."""
 
-    rows: list[SupplierBulkRow] = Field(..., min_length=1, description="List of supplier rows to upsert")
+    rows: list[SupplierBulkRow] = Field(
+        ..., min_length=1, description="List of supplier rows to upsert"
+    )
 
 
 # ============================================================
@@ -151,7 +154,9 @@ class CustomerBulkRow(CustomerBase):
 class CustomerBulkUpsertRequest(BaseSchema):
     """Bulk upsert request for customers."""
 
-    rows: list[CustomerBulkRow] = Field(..., min_length=1, description="List of customer rows to upsert")
+    rows: list[CustomerBulkRow] = Field(
+        ..., min_length=1, description="List of customer rows to upsert"
+    )
 
 
 # ============================================================

@@ -160,12 +160,11 @@ def bulk_upsert_customer_items(
     request: CustomerItemBulkUpsertRequest, db: Session = Depends(get_db)
 ):
     """Bulk upsert customer items by composite key (customer_id, external_product_code).
-    
+
     - If a customer item with the same composite key exists, it will be updated
     - If not, a new customer item will be created
-    
+
     Returns summary with counts of created/updated/failed records.
     """
     service = CustomerItemsService(db)
     return service.bulk_upsert(request.rows)
-

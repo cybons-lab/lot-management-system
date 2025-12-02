@@ -36,21 +36,40 @@ class UomConversionService(
         )
 
     def bulk_upsert(self, rows: list[UomConversionBulkRow]) -> BulkUpsertResponse:
-        """Bulk upsert UOM conversions by composite key (product_id, external_unit).
-        
+        """Bulk upsert UOM conversions by composite key (product_code, external_unit).
+
         Args:
             rows: List of UOM conversion rows to upsert
-            
+
         Returns:
             BulkUpsertResponse with summary and errors
         """
+        from app.models.masters_models import Product
+
         summary = {"total": 0, "created": 0, "updated": 0, "failed": 0}
         errors = []
 
+        # 1. Collect all codes to resolve IDs efficiently
+        product_codes = {row.product_code for row in rows}
+
+        # 2. Resolve IDs
+        products = (
+            self.db.query(Product.product_code, Product.id)
+            .filter(Product.product_code.in_(product_codes))
+            .all()
+        )
+        product_map = {code: id for code, id in products}
+
+        # 3. Process rows
         for row in rows:
             try:
+                # Resolve IDs
+                product_id = product_map.get(row.product_code)
+                if not product_id:
+                    raise ValueError(f"Product code not found: {row.product_code}")
+
                 # Check if UOM conversion exists by composite key
-                existing = self.get_by_key(row.product_id, row.external_unit)
+                existing = self.get_by_key(product_id, row.external_unit)
 
                 if existing:
                     # UPDATE
@@ -59,7 +78,9 @@ class UomConversionService(
                     summary["updated"] += 1
                 else:
                     # CREATE
-                    new_conversion = ProductUomConversion(**row.model_dump())
+                    new_conversion = ProductUomConversion(
+                        product_id=product_id, external_unit=row.external_unit, factor=row.factor
+                    )
                     self.db.add(new_conversion)
                     summary["created"] += 1
 
@@ -67,10 +88,7 @@ class UomConversionService(
 
             except Exception as e:
                 summary["failed"] += 1
-                errors.append(
-                    f"product_id={row.product_id}, "
-                    f"external_unit={row.external_unit}: {str(e)}"
-                )
+                errors.append(f"product={row.product_code}, ext_unit={row.external_unit}: {str(e)}")
                 self.db.rollback()
                 continue
 

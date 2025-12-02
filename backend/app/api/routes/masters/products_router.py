@@ -101,12 +101,11 @@ def export_products(format: str = "csv", db: Session = Depends(get_db)):
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
 def bulk_upsert_products(request: ProductBulkUpsertRequest, db: Session = Depends(get_db)):
     """Bulk upsert products by product_code (maker_part_code).
-    
+
     - If a product with the same product_code exists, it will be updated
     - If not, a new product will be created
-    
+
     Returns summary with counts of created/updated/failed records.
     """
     service = ProductService(db)
     return service.bulk_upsert(request.rows)
-

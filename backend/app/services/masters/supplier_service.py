@@ -19,10 +19,10 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, str]
 
     def bulk_upsert(self, rows: list[SupplierBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert suppliers by supplier_code.
-        
+
         Args:
             rows: List of supplier rows to upsert
-            
+
         Returns:
             BulkUpsertResponse with summary and errors
         """

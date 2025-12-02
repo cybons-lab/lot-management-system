@@ -19,10 +19,10 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
 
     def bulk_upsert(self, rows: list[WarehouseBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert warehouses by warehouse_code.
-        
+
         Args:
             rows: List of warehouse rows to upsert
-            
+
         Returns:
             BulkUpsertResponse with summary and errors
         """

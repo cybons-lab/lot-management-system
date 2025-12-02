@@ -73,10 +73,10 @@ def export_suppliers(format: str = "csv", db: Session = Depends(get_db)):
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
 def bulk_upsert_suppliers(request: SupplierBulkUpsertRequest, db: Session = Depends(get_db)):
     """Bulk upsert suppliers by supplier_code.
-    
+
     - If a supplier with the same supplier_code exists, it will be updated
     - If not, a new supplier will be created
-    
+
     Returns summary with counts of created/updated/failed records.
     """
     service = SupplierService(db)

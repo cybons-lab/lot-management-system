@@ -75,10 +75,10 @@ def export_customers(format: str = "csv", db: Session = Depends(get_db)):
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
 def bulk_upsert_customers(request: CustomerBulkUpsertRequest, db: Session = Depends(get_db)):
     """Bulk upsert customers by customer_code.
-    
+
     - If a customer with the same customer_code exists, it will be updated
     - If not, a new customer will be created
-    
+
     Returns summary with counts of created/updated/failed records.
     """
     service = CustomerService(db)

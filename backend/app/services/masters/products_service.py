@@ -152,10 +152,10 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
 
     def bulk_upsert(self, rows: list[ProductBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert products by maker_part_code (product_code).
-        
+
         Args:
             rows: List of product rows to upsert
-            
+
         Returns:
             BulkUpsertResponse with summary and errors
         """

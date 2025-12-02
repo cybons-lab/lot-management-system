@@ -89,12 +89,11 @@ def bulk_upsert_uom_conversions(
     request: UomConversionBulkUpsertRequest, db: Session = Depends(get_db)
 ):
     """Bulk upsert UOM conversions by composite key (product_id, external_unit).
-    
+
     - If a UOM conversion with the same composite key exists, it will be updated
     - If not, a new UOM conversion will be created
-    
+
     Returns summary with counts of created/updated/failed records.
     """
     service = UomConversionService(db)
     return service.bulk_upsert(request.rows)
-

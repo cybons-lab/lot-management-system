@@ -54,13 +54,20 @@ class CustomerItemResponse(CustomerItemBase):
         from_attributes = True
 
 
-class CustomerItemBulkRow(CustomerItemBase):
+class CustomerItemBulkRow(BaseSchema):
     """Single row for customer item bulk upsert.
-    
-    Upsert uses composite key: (customer_id, external_product_code)
+
+    Upsert uses composite key: (customer_code, external_product_code)
     """
 
-    pass  # CustomerItemBase already has all required fields
+    customer_code: str = Field(..., description="得意先コード")
+    external_product_code: str = Field(..., max_length=100, description="得意先品番")
+    product_code: str = Field(..., description="製品コード")
+    supplier_code: str | None = Field(None, description="仕入先コード")
+    base_unit: str = Field(..., max_length=20, description="基本単位")
+    pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
+    pack_quantity: int | None = Field(None, description="梱包数量")
+    special_instructions: str | None = Field(None, description="特記事項")
 
 
 class CustomerItemBulkUpsertRequest(BaseSchema):

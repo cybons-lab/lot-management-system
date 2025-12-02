@@ -42,13 +42,15 @@ class UomConversionResponse(UomConversionBase):
         from_attributes = True
 
 
-class UomConversionBulkRow(UomConversionBase):
+class UomConversionBulkRow(BaseSchema):
     """Single row for UOM conversion bulk upsert.
-    
-    Upsert uses composite key: (product_id, external_unit)
+
+    Upsert uses composite key: (product_code, external_unit)
     """
 
-    pass  # UomConversionBase already has all required fields
+    product_code: str = Field(..., description="製品コード")
+    external_unit: str = Field(..., max_length=20, description="外部単位")
+    factor: Decimal = Field(..., description="換算係数")
 
 
 class UomConversionBulkUpsertRequest(BaseSchema):

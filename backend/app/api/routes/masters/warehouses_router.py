@@ -75,12 +75,11 @@ def export_warehouses(format: str = "csv", db: Session = Depends(get_db)):
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
 def bulk_upsert_warehouses(request: WarehouseBulkUpsertRequest, db: Session = Depends(get_db)):
     """Bulk upsert warehouses by warehouse_code.
-    
+
     - If a warehouse with the same warehouse_code exists, it will be updated
     - If not, a new warehouse will be created
-    
+
     Returns summary with counts of created/updated/failed records.
     """
     service = WarehouseService(db)
     return service.bulk_upsert(request.rows)
-

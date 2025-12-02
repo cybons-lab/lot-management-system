@@ -180,4 +180,3 @@ def export_users(format: str = "csv", db: Session = Depends(get_db)):
     if format == "xlsx":
         return ExportService.export_to_excel(data, "users")
     return ExportService.export_to_csv(data, "users")
-

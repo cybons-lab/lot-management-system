@@ -19,10 +19,10 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]
 
     def bulk_upsert(self, rows: list[CustomerBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert customers by customer_code.
-        
+
         Args:
             rows: List of customer rows to upsert
-            
+
         Returns:
             BulkUpsertResponse with summary and errors
         """
