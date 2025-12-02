@@ -4,7 +4,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.masters.masters_schema import CustomerCreate, CustomerResponse, CustomerUpdate
+from app.schemas.masters.masters_schema import (
+    BulkUpsertResponse,
+    CustomerBulkUpsertRequest,
+    CustomerCreate,
+    CustomerResponse,
+    CustomerUpdate,
+)
 from app.services.common.export_service import ExportService
 from app.services.masters.customer_service import CustomerService
 
@@ -64,3 +70,16 @@ def export_customers(format: str = "csv", db: Session = Depends(get_db)):
     if format == "xlsx":
         return ExportService.export_to_excel(data, "customers")
     return ExportService.export_to_csv(data, "customers")
+
+
+@router.post("/bulk-upsert", response_model=BulkUpsertResponse)
+def bulk_upsert_customers(request: CustomerBulkUpsertRequest, db: Session = Depends(get_db)):
+    """Bulk upsert customers by customer_code.
+    
+    - If a customer with the same customer_code exists, it will be updated
+    - If not, a new customer will be created
+    
+    Returns summary with counts of created/updated/failed records.
+    """
+    service = CustomerService(db)
+    return service.bulk_upsert(request.rows)
