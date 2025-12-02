@@ -154,10 +154,11 @@ export function UomConversionBulkImportDialog({
                 </div>
               ) : importResult ? (
                 <div
-                  className={`rounded-lg border p-4 ${importResult.status === "success"
-                    ? "border-green-200 bg-green-50"
-                    : "border-red-200 bg-red-50"
-                    }`}
+                  className={`rounded-lg border p-4 ${
+                    importResult.status === "success"
+                      ? "border-green-200 bg-green-50"
+                      : "border-red-200 bg-red-50"
+                  }`}
                 >
                   <div className="mb-2 flex items-center gap-2 font-medium">
                     {importResult.status === "success" ? (

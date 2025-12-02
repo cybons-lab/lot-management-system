@@ -43,8 +43,7 @@ export function BulkImportResult({ result }: BulkImportResultProps) {
             <div className="mt-2 text-sm">
               <p>
                 総数: {result.summary.total} / 成功:{" "}
-                {result.summary.created + result.summary.updated} / 失敗:{" "}
-                {result.summary.failed}
+                {result.summary.created + result.summary.updated} / 失敗: {result.summary.failed}
               </p>
             </div>
           </div>
