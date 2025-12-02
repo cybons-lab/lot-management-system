@@ -1,6 +1,7 @@
 /**
  * Customer Item CSV Utilities
  */
+/* eslint-disable complexity */
 import type { CustomerItemBulkRow } from "../types/bulk-operation";
 
 export const CSV_HEADERS = [

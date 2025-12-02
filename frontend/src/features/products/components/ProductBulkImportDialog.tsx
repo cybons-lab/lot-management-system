@@ -169,8 +169,8 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
                 </span>
               </div>
               <p className="mt-1 text-sm">
-                追加: {result.summary.added}, 更新: {result.summary.updated}, 削除:{" "}
-                {result.summary.deleted}, 失敗: {result.summary.failed}
+                追加: {result.summary.created}, 更新: {result.summary.updated}, 失敗:{" "}
+                {result.summary.failed}
               </p>
             </div>
           )}

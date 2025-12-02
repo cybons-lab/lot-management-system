@@ -1,4 +1,4 @@
-import { BulkUpsertResponse } from "@/shared/types/bulk-operations";
+import { type BulkUpsertResponse } from "@/shared/types/bulk-operations";
 
 export type { BulkUpsertResponse };
 

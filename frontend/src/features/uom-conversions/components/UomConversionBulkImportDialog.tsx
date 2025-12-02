@@ -33,6 +33,7 @@ interface UomConversionBulkImportDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+/* eslint-disable max-lines-per-function, complexity */
 export function UomConversionBulkImportDialog({
   open,
   onOpenChange,
@@ -66,7 +67,7 @@ export function UomConversionBulkImportDialog({
         const { rows, errors } = await parseUomConversionCsv(selectedFile);
         setPreviewRows(rows);
         setParseErrors(errors);
-      } catch (error) {
+      } catch {
         setParseErrors(["CSVファイルの読み込み中にエラーが発生しました"]);
       }
     },
@@ -153,11 +154,10 @@ export function UomConversionBulkImportDialog({
                 </div>
               ) : importResult ? (
                 <div
-                  className={`rounded-lg border p-4 ${
-                    importResult.status === "success"
-                      ? "border-green-200 bg-green-50"
-                      : "border-red-200 bg-red-50"
-                  }`}
+                  className={`rounded-lg border p-4 ${importResult.status === "success"
+                    ? "border-green-200 bg-green-50"
+                    : "border-red-200 bg-red-50"
+                    }`}
                 >
                   <div className="mb-2 flex items-center gap-2 font-medium">
                     {importResult.status === "success" ? (

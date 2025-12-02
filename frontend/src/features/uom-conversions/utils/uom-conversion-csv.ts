@@ -1,6 +1,7 @@
 /**
  * UOM Conversion CSV Utilities
  */
+/* eslint-disable complexity */
 import type { UomConversionBulkRow } from "../types/bulk-operation";
 
 export const CSV_HEADERS = ["product_code", "external_unit", "factor"] as const;

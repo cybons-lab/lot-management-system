@@ -55,32 +55,31 @@ async function upsertSupplierProductRow(
 export async function bulkUpsertSupplierProducts(
   rows: SupplierProductBulkRow[],
 ): Promise<BulkUpsertResponse> {
-  const results = await Promise.all(
-    rows.map(async (row, index) => {
-      const result = await upsertSupplierProductRow(row);
-      return {
-        rowNumber: row._rowNumber ?? index + 1,
-        success: result.success,
-        code: `${row.supplier_code}-${row.product_code}`,
-        errorMessage: result.errorMessage,
-      };
-    }),
-  );
+  const errors: string[] = [];
+  let created = 0;
+  let updated = 0;
+  let failed = 0;
 
-  const added = results.filter((r, i) => r.success && rows[i]?.OPERATION === "ADD").length;
-  const updated = results.filter((r, i) => r.success && rows[i]?.OPERATION === "UPD").length;
-  const deleted = results.filter((r, i) => r.success && rows[i]?.OPERATION === "DEL").length;
-  const failed = results.filter((r) => !r.success).length;
+  for (const [index, row] of rows.entries()) {
+    const result = await upsertSupplierProductRow(row);
+    if (result.success) {
+      if (row.OPERATION === "ADD") created++;
+      else if (row.OPERATION === "UPD") updated++;
+      // DEL is processed but not counted in created/updated
+    } else {
+      failed++;
+      errors.push(`行${row._rowNumber ?? index + 1}: ${result.errorMessage}`);
+    }
+  }
 
   return {
     status: failed === 0 ? "success" : failed === rows.length ? "failed" : "partial",
     summary: {
       total: rows.length,
-      added,
+      created,
       updated,
-      deleted,
       failed,
     },
-    results,
+    errors,
   };
 }

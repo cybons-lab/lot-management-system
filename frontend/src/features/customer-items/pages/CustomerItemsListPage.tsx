@@ -149,8 +149,11 @@ export function CustomerItemsListPage() {
         <h3 className="mb-4 text-lg font-semibold">フィルター</h3>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="mb-2 block text-sm font-medium">得意先ID</label>
+            <label htmlFor="filter-customer-id" className="mb-2 block text-sm font-medium">
+              得意先ID
+            </label>
             <Input
+              id="filter-customer-id"
               type="number"
               value={filters.customer_id}
               onChange={(e) => setFilters({ ...filters, customer_id: e.target.value })}
@@ -158,8 +161,11 @@ export function CustomerItemsListPage() {
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">製品ID</label>
+            <label htmlFor="filter-product-id" className="mb-2 block text-sm font-medium">
+              製品ID
+            </label>
             <Input
+              id="filter-product-id"
               type="number"
               value={filters.product_id}
               onChange={(e) => setFilters({ ...filters, product_id: e.target.value })}
@@ -167,8 +173,11 @@ export function CustomerItemsListPage() {
             />
           </div>
           <div>
-            <label className="mb-2 block text-sm font-medium">検索</label>
+            <label htmlFor="filter-search" className="mb-2 block text-sm font-medium">
+              検索
+            </label>
             <Input
+              id="filter-search"
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
