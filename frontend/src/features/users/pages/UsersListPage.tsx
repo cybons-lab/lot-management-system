@@ -135,7 +135,7 @@ export function UsersListPage() {
           <div className={styles.table.container}>
             <table className={styles.table.root}>
               <thead className={styles.table.thead}>
-                <tr>
+                <tr key="header">
                   <th className={styles.table.th}>ユーザーID</th>
                   <th className={styles.table.th}>ユーザー名</th>
                   <th className={styles.table.th}>メールアドレス</th>
