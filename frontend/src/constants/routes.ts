@@ -86,6 +86,9 @@ export const ROUTES = {
     MASTER_CHANGE_LOGS: "/admin/master-change-logs",
     SEED_SNAPSHOTS: "/admin/seed-snapshots",
   },
+
+  // RPA
+  RPA: "/rpa",
 } as const;
 
 /**

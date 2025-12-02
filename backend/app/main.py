@@ -30,6 +30,7 @@ from app.api.routes import (
     orders_router,
     # orders_validate_router,  # Disabled: requires OrderValidation* schemas not in DDL v2.2
     roles_router,
+    rpa_router,
     sap_router,
     test_data_router,
     users_router,
@@ -217,6 +218,10 @@ app.include_router(
 
 # Integration endpoints
 app.include_router(sap_router, prefix=settings.API_PREFIX)
+
+# RPA endpoints
+app.include_router(rpa_router, prefix=settings.API_PREFIX)
+
 
 
 @app.get("/")
