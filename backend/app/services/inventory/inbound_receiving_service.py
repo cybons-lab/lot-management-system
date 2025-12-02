@@ -6,6 +6,7 @@ from decimal import Decimal
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.config import settings
 from app.models.inbound_models import InboundPlan, InboundPlanLine
 from app.models.inventory_models import Lot, StockHistory, StockTransactionType
 from app.schemas.inventory.inbound_schema import (
@@ -62,8 +63,8 @@ class InboundReceivingService:
         created_lot_ids = []
 
         # Generate lots from expected lots
-        # Assume warehouse_id is derived from supplier or set to a default (e.g., 1)
-        default_warehouse_id = 1  # TODO: Make this configurable
+        # Use configured default warehouse ID
+        default_warehouse_id = settings.DEFAULT_WAREHOUSE_ID
 
         for line in plan.lines:
             if line.expected_lots:
