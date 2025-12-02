@@ -8,6 +8,7 @@ from app.schemas.rpa_schema import (
 )
 from app.services.rpa import RPAService, get_lock_manager
 
+
 router = APIRouter(prefix="/rpa", tags=["rpa"])
 
 

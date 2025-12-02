@@ -223,7 +223,6 @@ app.include_router(sap_router, prefix=settings.API_PREFIX)
 app.include_router(rpa_router, prefix=settings.API_PREFIX)
 
 
-
 @app.get("/")
 def root():
     """ルートエンドポイント."""

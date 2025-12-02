@@ -2,7 +2,6 @@
 
 import time
 from datetime import datetime, timedelta
-from typing import Optional
 
 
 class RPALockManager:
@@ -10,8 +9,8 @@ class RPALockManager:
 
     def __init__(self):
         """初期化."""
-        self._lock_until: Optional[datetime] = None
-        self._current_user: Optional[str] = None
+        self._lock_until: datetime | None = None
+        self._current_user: str | None = None
 
     def acquire_lock(self, user: str = "system", duration_seconds: int = 60) -> bool:
         """
