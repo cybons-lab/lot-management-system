@@ -54,6 +54,7 @@ export function ExportButton({
     return (
         <div className={`flex gap-2 ${className || ""}`}>
             <Button
+                key="csv"
                 variant="outline"
                 size={size}
                 onClick={() => handleExport("csv")}
@@ -64,6 +65,7 @@ export function ExportButton({
                 CSV
             </Button>
             <Button
+                key="xlsx"
                 variant="outline"
                 size={size}
                 onClick={() => handleExport("xlsx")}
