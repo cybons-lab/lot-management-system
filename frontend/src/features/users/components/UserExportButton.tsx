@@ -4,11 +4,9 @@
 import { ExportButton } from "@/shared/components/ExportButton";
 
 export interface UserExportButtonProps {
-    size?: "default" | "sm" | "lg";
+  size?: "default" | "sm" | "lg";
 }
 
 export function UserExportButton({ size = "default" }: UserExportButtonProps) {
-    return (
-        <ExportButton apiPath="/admin/users/export/download" filePrefix="users" size={size} />
-    );
+  return <ExportButton apiPath="/admin/users/export/download" filePrefix="users" size={size} />;
 }

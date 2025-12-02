@@ -9,10 +9,6 @@ export interface SupplierExportButtonProps {
 
 export function SupplierExportButton({ size = "default" }: SupplierExportButtonProps) {
   return (
-    <ExportButton
-      apiPath="/masters/suppliers/export/download"
-      filePrefix="suppliers"
-      size={size}
-    />
+    <ExportButton apiPath="/masters/suppliers/export/download" filePrefix="suppliers" size={size} />
   );
 }

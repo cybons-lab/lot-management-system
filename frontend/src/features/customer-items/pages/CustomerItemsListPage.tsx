@@ -8,6 +8,7 @@ import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 
 import type { CreateCustomerItemRequest } from "../api";
+import { CustomerItemBulkImportDialog } from "../components/CustomerItemBulkImportDialog";
 import { CustomerItemExportButton } from "../components/CustomerItemExportButton";
 import { CustomerItemForm } from "../components/CustomerItemForm";
 import { useCustomerItems, useCreateCustomerItem, useDeleteCustomerItem } from "../hooks";
@@ -28,6 +29,7 @@ export function CustomerItemsListPage() {
     product_id: "",
   });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   // Build query params
   const queryParams = {
@@ -117,7 +119,7 @@ export function CustomerItemsListPage() {
         actions={
           <div className="flex gap-2">
             <CustomerItemExportButton size="sm" />
-            <Button variant="outline" size="sm" disabled>
+            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
               <Upload className="mr-2 h-4 w-4" />
               インポート
             </Button>
@@ -297,6 +299,12 @@ export function CustomerItemsListPage() {
           />
         </DialogContent>
       </Dialog>
+
+      {/* インポートダイアログ */}
+      <CustomerItemBulkImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+      />
     </div>
   );
 }

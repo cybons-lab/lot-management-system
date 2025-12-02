@@ -50,9 +50,14 @@ export function useBulkImport<TRow>({
 
     setFile(selectedFile);
     setImportResult(null);
+    setParseErrors([]);
+    setPreviewRows([]);
 
-    // TODO: Backend import implementation
-    toast.info("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
+    // Note: CSV parsing should be handled by the parent component or passed as a callback
+    // For now, we just set the file. The actual parsing logic is expected to be executed
+    // by the component using this hook, which then sets the previewRows.
+    // However, the current interface of this hook doesn't expose setPreviewRows.
+    // We might need to adjust the hook interface or usage pattern.
   }, []);
 
   const handleImport = useCallback(() => {
@@ -79,5 +84,7 @@ export function useBulkImport<TRow>({
     handleFileChange,
     handleImport,
     handleClose,
+    setPreviewRows,
+    setParseErrors,
   };
 }

@@ -11,10 +11,9 @@ import type {
 
 export type { BulkOperationType, BulkRowBase, BulkResultRow, BulkUpsertResponse };
 
-export interface UomConversionBulkRow extends BulkRowBase {
+export interface UomConversionBulkRow {
   product_code: string;
-  product_name: string;
   external_unit: string;
-  conversion_factor: number;
-  remarks?: string;
+  factor: number;
+  _rowNumber?: number;
 }

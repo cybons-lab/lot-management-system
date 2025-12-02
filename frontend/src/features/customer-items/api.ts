@@ -3,6 +3,8 @@
  * 得意先品番マッピング管理
  */
 
+import type { CustomerItemBulkRow, BulkUpsertResponse } from "./types/bulk-operation";
+
 import { http } from "@/shared/api/http-client";
 
 // ===== Types =====
@@ -114,4 +116,12 @@ export const deleteCustomerItem = (customerId: number, externalProductCode: stri
   return http.delete(
     `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
   );
+};
+
+/**
+ * Bulk upsert customer items
+ * @endpoint POST /masters/customer-items/bulk-upsert
+ */
+export const bulkUpsertCustomerItems = (rows: CustomerItemBulkRow[]) => {
+  return http.post<BulkUpsertResponse>("masters/customer-items/bulk-upsert", { rows });
 };
