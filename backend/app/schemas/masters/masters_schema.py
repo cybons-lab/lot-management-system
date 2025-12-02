@@ -53,6 +53,19 @@ class WarehouseResponse(WarehouseBase):
     updated_at: datetime
 
 
+class WarehouseBulkRow(WarehouseBase):
+    """Single row for warehouse bulk upsert."""
+
+    pass  # WarehouseBase already has all required fields
+
+
+class WarehouseBulkUpsertRequest(BaseSchema):
+    """Bulk upsert request for warehouses."""
+
+    rows: list[WarehouseBulkRow] = Field(..., min_length=1, description="List of warehouse rows to upsert")
+
+
+
 # ============================================================
 # Supplier (仕入先マスタ)
 # ============================================================
@@ -85,6 +98,18 @@ class SupplierResponse(SupplierBase):
     updated_at: datetime
 
 
+class SupplierBulkRow(SupplierBase):
+    """Single row for supplier bulk upsert."""
+
+    pass  # SupplierBase already has all required fields
+
+
+class SupplierBulkUpsertRequest(BaseSchema):
+    """Bulk upsert request for suppliers."""
+
+    rows: list[SupplierBulkRow] = Field(..., min_length=1, description="List of supplier rows to upsert")
+
+
 # ============================================================
 # Customer (得意先マスタ)
 # ============================================================
@@ -115,6 +140,18 @@ class CustomerResponse(CustomerBase):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class CustomerBulkRow(CustomerBase):
+    """Single row for customer bulk upsert."""
+
+    pass  # CustomerBase already has all required fields
+
+
+class CustomerBulkUpsertRequest(BaseSchema):
+    """Bulk upsert request for customers."""
+
+    rows: list[CustomerBulkRow] = Field(..., min_length=1, description="List of customer rows to upsert")
 
 
 # ============================================================
@@ -173,6 +210,28 @@ class MasterBulkLoadResponse(BaseSchema):
 
     created: dict[str, list[str]] = Field(default_factory=dict)
     warnings: list[str] = Field(default_factory=list)
+
+
+# ============================================================
+# Bulk Upsert (一括登録・更新)
+# ============================================================
+
+
+class BulkUpsertSummary(BaseSchema):
+    """Bulk upsert summary statistics."""
+
+    total: int = Field(..., description="Total number of rows processed")
+    created: int = Field(..., description="Number of newly created records")
+    updated: int = Field(..., description="Number of updated records")
+    failed: int = Field(..., description="Number of failed records")
+
+
+class BulkUpsertResponse(BaseSchema):
+    """Bulk upsert response."""
+
+    status: str = Field(..., description="Overall status: success, partial, or failed")
+    summary: BulkUpsertSummary
+    errors: list[str] = Field(default_factory=list, description="List of error messages")
 
 
 # ============================================================
