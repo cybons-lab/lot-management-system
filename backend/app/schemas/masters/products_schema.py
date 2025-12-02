@@ -52,3 +52,15 @@ class ProductOut(ORMModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+
+class ProductBulkRow(ProductBase):
+    """Single row for product bulk upsert."""
+
+    pass  # ProductBase already has all required fields
+
+
+class ProductBulkUpsertRequest(BaseModel):
+    """Bulk upsert request for products."""
+
+    rows: list[ProductBulkRow] = Field(..., min_length=1, description="List of product rows to upsert")

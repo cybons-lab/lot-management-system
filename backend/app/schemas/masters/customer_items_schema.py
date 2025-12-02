@@ -52,3 +52,20 @@ class CustomerItemResponse(CustomerItemBase):
         """Pydantic config."""
 
         from_attributes = True
+
+
+class CustomerItemBulkRow(CustomerItemBase):
+    """Single row for customer item bulk upsert.
+    
+    Upsert uses composite key: (customer_id, external_product_code)
+    """
+
+    pass  # CustomerItemBase already has all required fields
+
+
+class CustomerItemBulkUpsertRequest(BaseSchema):
+    """Bulk upsert request for customer items."""
+
+    rows: list[CustomerItemBulkRow] = Field(
+        ..., min_length=1, description="List of customer item rows to upsert"
+    )
