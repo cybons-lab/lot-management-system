@@ -83,6 +83,9 @@ class Settings(BaseSettings):
     ALERT_EXPIRY_CRITICAL_DAYS: int = 30  # 赤色アラート
     ALERT_EXPIRY_WARNING_DAYS: int = 60  # 黄色アラート
 
+    # 倉庫設定
+    DEFAULT_WAREHOUSE_ID: int = int(os.getenv("DEFAULT_WAREHOUSE_ID", "1"))
+
     # ファイルアップロード設定
     UPLOAD_DIR: Path = Path(__file__).parent.parent.parent / "uploads"
     MAX_UPLOAD_SIZE: int = 10 * 1024 * 1024  # 10MB
