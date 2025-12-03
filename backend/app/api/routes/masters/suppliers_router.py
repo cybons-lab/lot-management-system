@@ -64,9 +64,7 @@ def create_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{supplier_code}", response_model=SupplierResponse)
-def update_supplier(
-    supplier_code: str, supplier: SupplierUpdate, db: Session = Depends(get_db)
-):
+def update_supplier(supplier_code: str, supplier: SupplierUpdate, db: Session = Depends(get_db)):
     """Update supplier."""
     service = SupplierService(db)
     return service.update_by_code(supplier_code, supplier)

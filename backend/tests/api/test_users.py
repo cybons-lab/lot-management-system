@@ -3,14 +3,13 @@
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.main import app
-from app.models import User, Role
+from app.models import Role, User
 
-
-from sqlalchemy import text
 
 def _truncate_all(db: Session):
     db.execute(text("TRUNCATE TABLE users, roles, user_roles RESTART IDENTITY CASCADE"))
@@ -66,10 +65,10 @@ def test_create_user_duplicate_username(test_db: Session):
         "password": "password123",
         "display_name": "Test User",
     }
-    
+
     # Create first user
     client.post("/api/users", json=user_data)
-    
+
     # Try to create duplicate
     response = client.post("/api/users", json=user_data)
     assert response.status_code == 409
@@ -78,14 +77,14 @@ def test_create_user_duplicate_username(test_db: Session):
 def test_get_user_success(test_db: Session):
     """Test getting user details."""
     client = TestClient(app)
-    
+
     # Create user directly in DB
     user = User(
         username="testuser",
         email="test@example.com",
         password_hash="hashed_password",
         display_name="Test User",
-        is_active=True
+        is_active=True,
     )
     test_db.add(user)
     test_db.commit()
@@ -101,7 +100,7 @@ def test_get_user_success(test_db: Session):
 def test_update_user_success(test_db: Session):
     """Test updating user details."""
     client = TestClient(app)
-    
+
     user = User(
         username="testuser",
         email="test@example.com",
@@ -121,7 +120,7 @@ def test_update_user_success(test_db: Session):
 def test_delete_user_success(test_db: Session):
     """Test deleting a user."""
     client = TestClient(app)
-    
+
     user = User(
         username="testuser",
         email="test@example.com",
@@ -143,7 +142,7 @@ def test_delete_user_success(test_db: Session):
 def test_assign_user_roles(test_db: Session):
     """Test assigning roles to a user."""
     client = TestClient(app)
-    
+
     # Create user
     user = User(
         username="testuser",
@@ -152,7 +151,7 @@ def test_assign_user_roles(test_db: Session):
         display_name="Test User",
     )
     test_db.add(user)
-    
+
     # Create roles
     role1 = Role(role_code="admin", role_name="Administrator")
     role2 = Role(role_code="user", role_name="User")
@@ -167,7 +166,7 @@ def test_assign_user_roles(test_db: Session):
     assignment_data = {"role_ids": [role1.id, role2.id]}
     response = client.patch(f"/api/users/{user.id}/roles", json=assignment_data)
     assert response.status_code == 200
-    
+
     data = response.json()
     assert len(data["role_codes"]) == 2
     assert "admin" in data["role_codes"]

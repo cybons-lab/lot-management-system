@@ -64,9 +64,7 @@ def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{customer_code}", response_model=CustomerResponse)
-def update_customer(
-    customer_code: str, customer: CustomerUpdate, db: Session = Depends(get_db)
-):
+def update_customer(customer_code: str, customer: CustomerUpdate, db: Session = Depends(get_db)):
     """Update a customer."""
     service = CustomerService(db)
     return service.update_by_code(customer_code, customer)

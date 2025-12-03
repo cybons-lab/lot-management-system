@@ -33,7 +33,7 @@ class BusinessRuleUpdate(BaseModel):
 class BusinessRuleResponse(BusinessRuleBase):
     """業務ルールレスポンス."""
 
-    rule_id: int
+    rule_id: int = Field(..., validation_alias="id")
     created_at: datetime
     updated_at: datetime
 

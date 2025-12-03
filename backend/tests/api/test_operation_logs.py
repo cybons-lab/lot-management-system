@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.core.database import get_db
 from app.main import app
 from app.models import OperationLog, User
 
@@ -62,9 +62,9 @@ def test_list_operation_logs_with_user_filter(test_db: Session, sample_user: Use
     log = OperationLog(
         user_id=sample_user.id,
         operation_type="create",
-        target_type="product",
-        target_id="PROD-001",
-        description="Test log",
+        target_table="products",
+        target_id=1,
+        changes={"description": "Test log"},
     )
     test_db.add(log)
     test_db.commit()
@@ -72,7 +72,7 @@ def test_list_operation_logs_with_user_filter(test_db: Session, sample_user: Use
     response = client.get("/api/operation-logs", params={"user_id": sample_user.id})
     assert response.status_code == 200
     data = response.json()
-    assert len(data) >= 1
+    assert len(data["logs"]) >= 1
 
 
 def test_list_operation_logs_with_type_filter(test_db: Session, sample_user: User):
@@ -82,14 +82,17 @@ def test_list_operation_logs_with_type_filter(test_db: Session, sample_user: Use
     log = OperationLog(
         user_id=sample_user.id,
         operation_type="delete",
-        target_type="warehouse",
-        target_id="WH-001",
+        target_table="warehouses",
+        target_id=2,
     )
     test_db.add(log)
     test_db.commit()
 
     response = client.get("/api/operation-logs", params={"operation_type": "delete"})
     assert response.status_code == 200
+    data = response.json()
+    assert len(data["logs"]) >= 1
+    assert data["logs"][0]["operation_type"] == "delete"
 
 
 def test_list_operation_logs_with_pagination(test_db: Session, sample_user: User):
@@ -101,11 +104,13 @@ def test_list_operation_logs_with_pagination(test_db: Session, sample_user: User
         log = OperationLog(
             user_id=sample_user.id,
             operation_type="create",
-            target_type="product",
-            target_id=f"PROD-{i}",
+            target_table="products",
+            target_id=i + 10,
         )
         test_db.add(log)
     test_db.commit()
 
     response = client.get("/api/operation-logs", params={"skip": 2, "limit": 2})
     assert response.status_code == 200
+    data = response.json()
+    assert len(data["logs"]) == 2

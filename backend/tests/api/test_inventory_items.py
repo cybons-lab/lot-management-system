@@ -26,6 +26,42 @@ def _truncate_all(db: Session):
 def test_db(db: Session):
     _truncate_all(db)
 
+    # Ensure view exists (since Base.metadata.create_all doesn't create views)
+    # Also drop table if it was created by create_all (because it's defined as a model)
+    from sqlalchemy import text
+    from sqlalchemy.exc import ProgrammingError
+
+    try:
+        db.execute(text("DROP TABLE IF EXISTS v_inventory_summary CASCADE"))
+    except ProgrammingError:
+        db.rollback()
+
+    try:
+        db.execute(text("DROP VIEW IF EXISTS v_inventory_summary CASCADE"))
+    except ProgrammingError:
+        db.rollback()
+
+    db.execute(
+        text("""
+        CREATE OR REPLACE VIEW v_inventory_summary AS
+        SELECT
+            l.product_id,
+            l.warehouse_id,
+            SUM(l.current_quantity) AS total_quantity,
+            SUM(l.allocated_quantity) AS allocated_quantity,
+            (SUM(l.current_quantity) - SUM(l.allocated_quantity)) AS available_quantity,
+            COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
+            (SUM(l.current_quantity) - SUM(l.allocated_quantity) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
+            MAX(l.updated_at) AS last_updated
+        FROM lots l
+        LEFT JOIN inbound_plan_lines ipl ON l.product_id = ipl.product_id
+        LEFT JOIN inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
+        WHERE l.status = 'active'
+        GROUP BY l.product_id, l.warehouse_id
+    """)
+    )
+    db.commit()
+
     def override_get_db():
         yield db
 
@@ -75,6 +111,7 @@ def sample_data(test_db: Session):
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=90),
+        status="active",
     )
     test_db.add(lot)
     test_db.commit()

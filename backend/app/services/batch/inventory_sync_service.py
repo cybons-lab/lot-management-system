@@ -147,7 +147,7 @@ class InventorySyncService:
             if existing_alert:
                 # 既存アラートを更新
                 existing_alert.rule_name = f"在庫差異アラート: Product {disc['product_id']}"
-                existing_alert.rule_type = "other"
+                existing_alert.rule_type = "inventory_sync_alert"
                 existing_alert.rule_parameters = {
                     "product_id": disc["product_id"],
                     "local_qty": disc["local_qty"],
@@ -164,7 +164,7 @@ class InventorySyncService:
                 alert = BusinessRule(
                     rule_code=f"inv_sync_alert_{disc['product_id']}",
                     rule_name=f"在庫差異アラート: Product {disc['product_id']}",
-                    rule_type="other",
+                    rule_type="inventory_sync_alert",
                     rule_parameters={
                         "product_id": disc["product_id"],
                         "local_qty": disc["local_qty"],

@@ -3,8 +3,8 @@
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.main import app
@@ -14,7 +14,9 @@ from app.models import Customer, CustomerItem, Product
 def _truncate_all(db: Session):
     """Clean up test data."""
     try:
-        db.execute(text("TRUNCATE TABLE customer_items, customers, products RESTART IDENTITY CASCADE"))
+        db.execute(
+            text("TRUNCATE TABLE customer_items, customers, products RESTART IDENTITY CASCADE")
+        )
         db.commit()
     except Exception:
         db.rollback()
@@ -41,7 +43,7 @@ def master_data(test_db: Session):
         customer_name="Test Customer",
     )
     test_db.add(customer)
-    
+
     product = Product(
         maker_part_code="PROD-001",
         product_name="Test Product",
@@ -80,13 +82,17 @@ def test_list_customer_items_with_filters(test_db: Session, master_data):
     test_db.commit()
 
     # Filter by customer_id
-    response = client.get("/api/masters/customer-items", params={"customer_id": master_data["customer"].id})
+    response = client.get(
+        "/api/masters/customer-items", params={"customer_id": master_data["customer"].id}
+    )
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 1
 
     # Filter by product_id
-    response = client.get("/api/masters/customer-items", params={"product_id": master_data["product"].id})
+    response = client.get(
+        "/api/masters/customer-items", params={"product_id": master_data["product"].id}
+    )
     assert response.status_code == 200
 
 
@@ -207,14 +213,17 @@ def test_delete_customer_item_success(test_db: Session, master_data):
     test_db.add(item)
     test_db.commit()
 
-    response = client.delete(f"/api/masters/customer-items/{master_data['customer'].id}/CUST-DEL-001")
+    response = client.delete(
+        f"/api/masters/customer-items/{master_data['customer'].id}/CUST-DEL-001"
+    )
     assert response.status_code == 204
-    
+
     # Verify deletion
-    deleted = test_db.query(CustomerItem).filter_by(
-        customer_id=master_data["customer"].id,
-        external_product_code="CUST-DEL-001"
-    ).first()
+    deleted = (
+        test_db.query(CustomerItem)
+        .filter_by(customer_id=master_data["customer"].id, external_product_code="CUST-DEL-001")
+        .first()
+    )
     assert deleted is None
 
 
@@ -222,7 +231,9 @@ def test_delete_customer_item_not_found(test_db: Session, master_data):
     """Test deleting non-existent customer item returns 404."""
     client = TestClient(app)
 
-    response = client.delete(f"/api/masters/customer-items/{master_data['customer'].id}/NONEXISTENT")
+    response = client.delete(
+        f"/api/masters/customer-items/{master_data['customer'].id}/NONEXISTENT"
+    )
     assert response.status_code == 404
 
 

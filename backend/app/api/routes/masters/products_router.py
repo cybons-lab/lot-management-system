@@ -1,6 +1,7 @@
 """Product master CRUD endpoints (standalone)."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db

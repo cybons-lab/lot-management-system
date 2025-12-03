@@ -16,7 +16,7 @@ def _truncate_all(db: Session):
     """Clean up test data."""
     # Aggressive cleanup to avoid contamination
     from app.models import Allocation, StockHistory
-    
+
     try:
         db.query(Allocation).delete()
         db.query(StockHistory).delete()
@@ -127,7 +127,9 @@ def test_list_lots_filters_by_expiry_date(test_db: Session):
     """Test listing lots filtered by expiry date range."""
     client = TestClient(app)
 
-    wh = Warehouse(warehouse_code="WH-EXP", warehouse_name="Expiry Warehouse", warehouse_type="internal")
+    wh = Warehouse(
+        warehouse_code="WH-EXP", warehouse_name="Expiry Warehouse", warehouse_type="internal"
+    )
     sup = Supplier(supplier_code="SUP-EXP", supplier_name="Expiry Supplier")
     prod = Product(maker_part_code="PROD-EXP", product_name="Expiry Product", base_unit="EA")
     test_db.add_all([wh, sup, prod])
@@ -193,5 +195,3 @@ def test_update_lot_not_found(test_db: Session):
     update_payload = {"lot_number": "NEW-NUMBER"}
     r = client.put("/api/lots/99999", json=update_payload)
     assert r.status_code == 404
-
-

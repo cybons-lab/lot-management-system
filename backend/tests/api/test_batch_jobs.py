@@ -71,11 +71,7 @@ def test_get_batch_job_success(test_db: Session):
     """Test getting batch job by ID."""
     client = TestClient(app)
 
-    job = BatchJob(
-        job_name="Test Job 1",
-        job_type="inventory_sync",
-        status="pending"
-    )
+    job = BatchJob(job_name="Test Job 1", job_type="inventory_sync", status="pending")
     test_db.add(job)
     test_db.commit()
     test_db.refresh(job)

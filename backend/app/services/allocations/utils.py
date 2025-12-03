@@ -117,30 +117,31 @@ def update_order_line_status(db: Session, order_line_id: int) -> None:
     EPSILON = Decimal("1e-6")
 
     # Load order line with allocations
-    line_stmt = (
-        select(OrderLine)
-        .options(selectinload(OrderLine.allocations))
-        .where(OrderLine.id == order_line_id)
+    # Calculate allocated quantity using SQL aggregation
+    stmt = select(func.coalesce(func.sum(Allocation.allocated_quantity), 0.0)).where(
+        Allocation.order_line_id == order_line_id, Allocation.status != "cancelled"
     )
-    line = db.execute(line_stmt).scalar_one_or_none()
+    allocated_qty = Decimal(str(db.execute(stmt).scalar() or 0.0))
+
+    # Load order line to update status
+    line = db.get(OrderLine, order_line_id)
     if not line:
         return
 
-    # Calculate required and allocated quantities
     required_qty = Decimal(
         str(line.converted_quantity if line.converted_quantity else line.order_quantity or 0)
     )
-    allocated_qty = sum(
-        Decimal(str(a.allocated_quantity)) for a in line.allocations if a.status != "cancelled"
-    )
 
     # Update line status based on allocation
+    new_status = "pending"
     if allocated_qty + EPSILON >= required_qty:
-        line.status = "allocated"
+        new_status = "allocated"
     elif allocated_qty > EPSILON:
-        line.status = "pending"
-    else:
-        line.status = "pending"
+        new_status = "pending"  # or part_allocated?
+
+    from sqlalchemy import update
+
+    db.execute(update(OrderLine).where(OrderLine.id == order_line_id).values(status=new_status))
 
 
 def update_order_allocation_status(db: Session, order_id: int) -> None:
@@ -180,8 +181,18 @@ def update_order_allocation_status(db: Session, order_id: int) -> None:
         if allocated_total + EPSILON < required_qty:
             fully_allocated = False
 
-    target_order = db.execute(select(Order).where(Order.id == order_id)).scalar_one()
+    # Determine new status
+    new_status = None
+
+    # Get current status to avoid regression if needed, but here we recalculate
+    target_order = db.execute(select(Order.status).where(Order.id == order_id)).scalar_one()
+
     if fully_allocated:
-        target_order.status = "allocated"
-    elif any_allocated and target_order.status not in {"allocated", "part_allocated"}:
-        target_order.status = "part_allocated"
+        new_status = "allocated"
+    elif any_allocated and target_order not in {"allocated", "part_allocated"}:
+        new_status = "part_allocated"
+
+    if new_status:
+        from sqlalchemy import update
+
+        db.execute(update(Order).where(Order.id == order_id).values(status=new_status))

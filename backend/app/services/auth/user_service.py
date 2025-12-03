@@ -5,8 +5,6 @@ from datetime import datetime
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session, joinedload
 
-from typing import Any
-
 from app.models.auth_models import User, UserRole
 from app.schemas.system.users_schema import UserCreate, UserRoleAssignment, UserUpdate
 from app.services.common.base_service import BaseService
@@ -37,6 +35,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
             # Fallback for test environment where bcrypt might fail
             # Return a dummy hash that looks somewhat real but is deterministic
             import hashlib
+
             h = hashlib.sha256(password.encode()).hexdigest()
             return f"$2b$12$fallback{h}"
 
@@ -44,6 +43,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
         """Verify a password against a hash."""
         if hashed_password.startswith("$2b$12$fallback"):
             import hashlib
+
             h = hashlib.sha256(plain_password.encode()).hexdigest()
             return hashed_password == f"$2b$12$fallback{h}"
         return self.pwd_context.verify(plain_password, hashed_password)

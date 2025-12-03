@@ -19,9 +19,7 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, str]
 
     def get_by_code(self, code: str, *, raise_404: bool = True) -> Supplier | None:
         """Get supplier by supplier_code."""
-        supplier = (
-            self.db.query(Supplier).filter(Supplier.supplier_code == code).first()
-        )
+        supplier = self.db.query(Supplier).filter(Supplier.supplier_code == code).first()
         if not supplier and raise_404:
             from fastapi import HTTPException, status
 

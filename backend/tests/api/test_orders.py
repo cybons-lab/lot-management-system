@@ -25,15 +25,16 @@ def _truncate_all(db: Session):
     """Clean up test data in dependency order."""
     try:
         from sqlalchemy import text
+
         # Truncate all relevant tables with cascade to handle FKs and reset sequences
         # Note: RESTART IDENTITY in TRUNCATE should work, but sometimes fails in test transactions.
         # We explicitly restart sequences to be safe.
         tables = ["order_lines", "orders", "delivery_places", "products", "customers", "warehouses"]
-        
-        # Disable triggers to avoid foreign key checks during truncate if needed, 
+
+        # Disable triggers to avoid foreign key checks during truncate if needed,
         # but TRUNCATE CASCADE handles it.
         db.execute(text(f"TRUNCATE TABLE {', '.join(tables)} RESTART IDENTITY CASCADE"))
-        
+
         # Explicitly restart sequences just in case
         for table in tables:
             try:
@@ -41,7 +42,7 @@ def _truncate_all(db: Session):
             except Exception:
                 # Sequence might not exist or be named differently (e.g. if not serial)
                 pass
-                
+
         db.commit()
     except Exception as e:
         print(f"Truncate failed: {e}")
@@ -59,18 +60,19 @@ def test_db(db: Session):
         yield db
 
     from app.api.deps import get_uow
-    from app.services.common.uow_service import UnitOfWork
 
     def override_get_uow():
         # Create a mock UoW that uses the test session
         class MockUnitOfWork:
             def __init__(self, session):
                 self.session = session
+
             def __enter__(self):
                 return self
+
             def __exit__(self, exc_type, exc_val, exc_tb):
                 pass
-        
+
         yield MockUnitOfWork(db)
 
     app.dependency_overrides[get_db] = override_get_db

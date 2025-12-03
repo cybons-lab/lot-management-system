@@ -41,6 +41,7 @@ from .views_models import (
     VCustomerDailyProduct,
     VDeliveryPlaceCodeToId,
     VForecastOrderPair,
+    VInventorySummary,
     VLotAvailableQty,
     VLotCurrentStock,
     VLotDetails,
@@ -107,6 +108,7 @@ __all__ = [
     "VDeliveryPlaceCodeToId",
     "VForecastOrderPair",
     "VProductCodeToId",
+    "VInventorySummary",
     # Backward compatibility aliases
     "StockMovement",
     "StockMovementReason",

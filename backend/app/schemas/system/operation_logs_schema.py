@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 class OperationLogResponse(BaseModel):
     """操作ログレスポンス."""
 
-    log_id: int
+    log_id: int = Field(..., validation_alias="id")
     user_id: int | None = None
     operation_type: str = Field(
         ..., description="操作種別（create/update/delete/login/logout/export）"

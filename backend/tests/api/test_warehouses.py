@@ -85,7 +85,9 @@ def test_get_warehouse_success(test_db: Session):
     """Test getting warehouse by code."""
     client = TestClient(app)
 
-    w = Warehouse(warehouse_code="GET-TEST", warehouse_name="Test Warehouse", warehouse_type="internal")
+    w = Warehouse(
+        warehouse_code="GET-TEST", warehouse_name="Test Warehouse", warehouse_type="internal"
+    )
     test_db.add(w)
     test_db.commit()
 
@@ -132,7 +134,9 @@ def test_create_warehouse_duplicate_returns_409(test_db: Session):
     """Test creating duplicate warehouse returns 409."""
     client = TestClient(app)
 
-    existing = Warehouse(warehouse_code="DUP-001", warehouse_name="Existing", warehouse_type="internal")
+    existing = Warehouse(
+        warehouse_code="DUP-001", warehouse_name="Existing", warehouse_type="internal"
+    )
     test_db.add(existing)
     test_db.commit()
 
@@ -206,7 +210,9 @@ def test_bulk_upsert_warehouses(test_db: Session):
     client = TestClient(app)
 
     # Create one existing warehouse
-    w = Warehouse(warehouse_code="BULK-001", warehouse_name="Original Name", warehouse_type="internal")
+    w = Warehouse(
+        warehouse_code="BULK-001", warehouse_name="Original Name", warehouse_type="internal"
+    )
     test_db.add(w)
     test_db.commit()
 

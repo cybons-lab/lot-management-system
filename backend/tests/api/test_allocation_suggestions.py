@@ -36,7 +36,7 @@ def _truncate_all(db: Session):
         OrderLine,
         Order,
         Lot,
-       DeliveryPlace,
+        DeliveryPlace,
         Product,
         Customer,
         Warehouse,
@@ -188,11 +188,8 @@ def test_preview_allocation_suggestions_order_mode_missing_line_id(test_db: Sess
     assert "order line id" in response.json()["detail"].lower()
 
 
-
-
 # NOTE: Forecast mode tests temporarily disabled - ForecastHeader/ForecastLine models not in current codebase
 # TODO: Re-enable when forecast models are available
-
 
 
 # ============================================================
