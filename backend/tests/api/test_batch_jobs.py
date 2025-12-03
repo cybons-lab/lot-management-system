@@ -5,7 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.core.database import get_db
 from app.main import app
 from app.models import BatchJob
 
@@ -40,9 +40,9 @@ def test_list_batch_jobs_with_status_filter(test_db: Session):
     client = TestClient(app)
 
     job = BatchJob(
-        job_type="data_sync",
+        job_name="Sync Job 1",
+        job_type="inventory_sync",
         status="pending",
-        description="Test job",
     )
     test_db.add(job)
     test_db.commit()
@@ -56,13 +56,14 @@ def test_list_batch_jobs_with_type_filter(test_db: Session):
     client = TestClient(app)
 
     job = BatchJob(
-        job_type="data_export",
+        job_name="Report Job 1",
+        job_type="report_generation",
         status="completed",
     )
     test_db.add(job)
     test_db.commit()
 
-    response = client.get("/api/batch-jobs", params={"job_type": "data_export"})
+    response = client.get("/api/batch-jobs", params={"job_type": "report_generation"})
     assert response.status_code == 200
 
 
@@ -70,14 +71,18 @@ def test_get_batch_job_success(test_db: Session):
     """Test getting batch job by ID."""
     client = TestClient(app)
 
-    job = BatchJob(job_type="test_job", status="pending")
+    job = BatchJob(
+        job_name="Test Job 1",
+        job_type="inventory_sync",
+        status="pending"
+    )
     test_db.add(job)
     test_db.commit()
     test_db.refresh(job)
 
     response = client.get(f"/api/batch-jobs/{job.id}")
     assert response.status_code == 200
-    assert response.json()["id"] == job.id
+    assert response.json()["job_id"] == job.id
 
 
 def test_get_batch_job_not_found(test_db: Session):
