@@ -18,8 +18,10 @@ def _truncate_all(db: Session):
 @pytest.fixture
 def test_db(db: Session):
     _truncate_all(db)
+
     def override_get_db():
         yield db
+
     app.dependency_overrides[get_db] = override_get_db
     yield db
     _truncate_all(db)
@@ -69,7 +71,9 @@ def test_create_customer_duplicate(test_db: Session):
     test_db.add(existing)
     test_db.commit()
 
-    response = client.post("/api/customers", json={"customer_code": "CUST-DUP", "customer_name": "Dup"})
+    response = client.post(
+        "/api/customers", json={"customer_code": "CUST-DUP", "customer_name": "Dup"}
+    )
     assert response.status_code == 409
 
 

@@ -144,9 +144,7 @@ def master_data(test_db: Session):
 # ============================================================
 
 
-def test_preview_allocation_suggestions_order_mode_success(
-    test_db: Session, master_data: dict
-):
+def test_preview_allocation_suggestions_order_mode_success(test_db: Session, master_data: dict):
     """Test preview allocation suggestions in order mode."""
     client = TestClient(app)
 
@@ -194,9 +192,7 @@ def test_preview_allocation_suggestions_order_mode_missing_line_id(test_db: Sess
     assert "order line id" in response.json()["detail"].lower()
 
 
-def test_preview_allocation_suggestions_forecast_mode_success(
-    test_db: Session, master_data: dict
-):
+def test_preview_allocation_suggestions_forecast_mode_success(test_db: Session, master_data: dict):
     """Test preview allocation suggestions in forecast mode."""
     client = TestClient(app)
 
@@ -325,9 +321,7 @@ def test_list_allocation_suggestions_with_forecast_period_filter(
     assert data["suggestions"][0]["forecast_period"] == "2025-01"
 
 
-def test_list_allocation_suggestions_with_product_filter(
-    test_db: Session, master_data: dict
-):
+def test_list_allocation_suggestions_with_product_filter(test_db: Session, master_data: dict):
     """Test listing suggestions filtered by product_id."""
     client = TestClient(app)
 
@@ -381,7 +375,7 @@ def test_list_allocation_suggestions_with_pagination(test_db: Session, master_da
             product_id=master_data["product"].id,
             customer_id=master_data["customer"].id,
             lot_id=master_data["lot"].id,
-            suggested_quantity=Decimal(f"{(i+1)*10}.000"),
+            suggested_quantity=Decimal(f"{(i + 1) * 10}.000"),
         )
         test_db.add(suggestion)
     test_db.commit()

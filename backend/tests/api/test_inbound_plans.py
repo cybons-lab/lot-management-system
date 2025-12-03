@@ -1,14 +1,15 @@
 # backend/tests/api/test_inbound_plans.py
 """Basic tests for inbound plans API endpoints."""
 
-import pytest
 from datetime import date, timedelta
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.main import app
-from app.models import InboundPlan, InboundPlanLine, Supplier, Product, Warehouse
+from app.models import InboundPlan, InboundPlanLine, Product, Supplier, Warehouse
 
 
 def _truncate_all(db: Session):
@@ -23,8 +24,10 @@ def _truncate_all(db: Session):
 @pytest.fixture
 def test_db(db: Session):
     _truncate_all(db)
+
     def override_get_db():
         yield db
+
     app.dependency_overrides[get_db] = override_get_db
     yield db
     _truncate_all(db)
@@ -44,7 +47,9 @@ def sample_data(test_db: Session):
     test_db.commit()
     test_db.refresh(product)
 
-    warehouse = Warehouse(warehouse_code="WH-001", warehouse_name="Test WH", warehouse_type="internal")
+    warehouse = Warehouse(
+        warehouse_code="WH-001", warehouse_name="Test WH", warehouse_type="internal"
+    )
     test_db.add(warehouse)
     test_db.commit()
     test_db.refresh(warehouse)
@@ -62,10 +67,7 @@ def test_list_inbound_plans_empty(test_db: Session):
 def test_list_inbound_plans_with_filters(test_db: Session, sample_data):
     """Test listing inbound plans with filters."""
     client = TestClient(app)
-    response = client.get(
-        "/api/inbound-plans",
-        params={"supplier_id": sample_data["supplier"].id}
-    )
+    response = client.get("/api/inbound-plans", params={"supplier_id": sample_data["supplier"].id})
     assert response.status_code == 200
 
 
@@ -84,7 +86,7 @@ def test_create_inbound_plan_success(test_db: Session, sample_data):
                 "expected_quantity": 100.0,
                 "unit": "EA",
             }
-        ]
+        ],
     }
 
     response = client.post("/api/inbound-plans", json=plan_data)

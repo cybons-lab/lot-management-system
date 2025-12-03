@@ -20,8 +20,10 @@ def _truncate_all(db: Session):
 def test_db(db: Session):
     """Provide clean database session."""
     _truncate_all(db)
+
     def override_get_db():
         yield db
+
     app.dependency_overrides[get_db] = override_get_db
     yield db
     _truncate_all(db)

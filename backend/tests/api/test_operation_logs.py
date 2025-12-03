@@ -2,7 +2,6 @@
 """Tests for operation logs API endpoints."""
 
 import pytest
-from datetime import datetime
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
@@ -23,8 +22,10 @@ def _truncate_all(db: Session):
 @pytest.fixture
 def test_db(db: Session):
     _truncate_all(db)
+
     def override_get_db():
         yield db
+
     app.dependency_overrides[get_db] = override_get_db
     yield db
     _truncate_all(db)

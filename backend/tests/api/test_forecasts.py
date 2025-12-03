@@ -1,14 +1,15 @@
 # backend/tests/api/test_forecasts.py
 """Basic tests for forecasts API endpoints."""
 
-import pytest
 from datetime import date
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.main import app
-from app.models import Customer, Product, ForecastCurrent, DeliveryPlace
+from app.models import Customer, DeliveryPlace, ForecastCurrent, Product
 
 
 def _truncate_all(db: Session):
@@ -23,8 +24,10 @@ def _truncate_all(db: Session):
 @pytest.fixture
 def test_db(db: Session):
     _truncate_all(db)
+
     def override_get_db():
         yield db
+
     app.dependency_overrides[get_db] = override_get_db
     yield db
     _truncate_all(db)
@@ -66,10 +69,7 @@ def test_list_forecasts_empty(test_db: Session):
 def test_list_forecasts_with_filters(test_db: Session, sample_data):
     """Test listing forecasts with filters."""
     client = TestClient(app)
-    response = client.get(
-        "/api/forecasts",
-        params={"customer_id": sample_data["customer"].id}
-    )
+    response = client.get("/api/forecasts", params={"customer_id": sample_data["customer"].id})
     assert response.status_code == 200
 
 

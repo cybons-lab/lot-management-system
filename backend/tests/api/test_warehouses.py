@@ -46,8 +46,12 @@ def test_list_warehouses_success(test_db: Session):
     client = TestClient(app)
 
     # Create test warehouses
-    wh1 = Warehouse(warehouse_code="WH-001", warehouse_name="Main Warehouse", warehouse_type="internal")
-    wh2 = Warehouse(warehouse_code="WH-002", warehouse_name="Sub Warehouse", warehouse_type="external")
+    wh1 = Warehouse(
+        warehouse_code="WH-001", warehouse_name="Main Warehouse", warehouse_type="internal"
+    )
+    wh2 = Warehouse(
+        warehouse_code="WH-002", warehouse_name="Sub Warehouse", warehouse_type="external"
+    )
     test_db.add_all([wh1, wh2])
     test_db.commit()
 
@@ -70,7 +74,9 @@ def test_get_warehouse_success(test_db: Session):
     """Test getting warehouse by code."""
     client = TestClient(app)
 
-    wh = Warehouse(warehouse_code="WH-TEST", warehouse_name="Test Warehouse", warehouse_type="internal")
+    wh = Warehouse(
+        warehouse_code="WH-TEST", warehouse_name="Test Warehouse", warehouse_type="internal"
+    )
     test_db.add(wh)
     test_db.commit()
 
@@ -110,7 +116,9 @@ def test_create_warehouse_duplicate_returns_409(test_db: Session):
     client = TestClient(app)
 
     # Create existing warehouse
-    existing = Warehouse(warehouse_code="WH-DUP", warehouse_name="Existing", warehouse_type="internal")
+    existing = Warehouse(
+        warehouse_code="WH-DUP", warehouse_name="Existing", warehouse_type="internal"
+    )
     test_db.add(existing)
     test_db.commit()
 
@@ -179,14 +187,24 @@ def test_bulk_upsert_warehouses_success(test_db: Session):
     client = TestClient(app)
 
     # Create one existing warehouse
-    existing = Warehouse(warehouse_code="WH-EXIST", warehouse_name="Old Name", warehouse_type="internal")
+    existing = Warehouse(
+        warehouse_code="WH-EXIST", warehouse_name="Old Name", warehouse_type="internal"
+    )
     test_db.add(existing)
     test_db.commit()
 
     bulk_data = {
         "warehouses": [
-            {"warehouse_code": "WH-EXIST", "warehouse_name": "Updated Name", "warehouse_type": "internal"},
-            {"warehouse_code": "WH-NEW", "warehouse_name": "New Warehouse", "warehouse_type": "external"},
+            {
+                "warehouse_code": "WH-EXIST",
+                "warehouse_name": "Updated Name",
+                "warehouse_type": "internal",
+            },
+            {
+                "warehouse_code": "WH-NEW",
+                "warehouse_name": "New Warehouse",
+                "warehouse_type": "external",
+            },
         ]
     }
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.main import app
-from app.models import CustomerItem, Customer, Product
+from app.models import Customer, CustomerItem, Product
 
 
 def _truncate_all(db: Session):
@@ -22,8 +22,10 @@ def _truncate_all(db: Session):
 @pytest.fixture
 def test_db(db: Session):
     _truncate_all(db)
+
     def override_get_db():
         yield db
+
     app.dependency_overrides[get_db] = override_get_db
     yield db
     _truncate_all(db)
@@ -78,19 +80,13 @@ def test_list_customer_items_with_filters(test_db: Session, master_data):
     test_db.commit()
 
     # Filter by customer_id
-    response = client.get(
-        "/api/customer-items",
-        params={"customer_id": master_data["customer"].id}
-    )
+    response = client.get("/api/customer-items", params={"customer_id": master_data["customer"].id})
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 1
 
     # Filter by product_id
-    response = client.get(
-        "/api/customer-items",
-        params={"product_id": master_data["product"].id}
-    )
+    response = client.get("/api/customer-items", params={"product_id": master_data["product"].id})
     assert response.status_code == 200
 
 
@@ -169,8 +165,7 @@ def test_update_customer_item_success(test_db: Session, master_data):
     }
 
     response = client.put(
-        f"/api/customer-items/{master_data['customer'].id}/CUST-UPD-001",
-        json=update_data
+        f"/api/customer-items/{master_data['customer'].id}/CUST-UPD-001", json=update_data
     )
     assert response.status_code == 200
     data = response.json()
@@ -186,8 +181,7 @@ def test_update_customer_item_not_found(test_db: Session, master_data):
     }
 
     response = client.put(
-        f"/api/customer-items/{master_data['customer'].id}/NONEXISTENT",
-        json=update_data
+        f"/api/customer-items/{master_data['customer'].id}/NONEXISTENT", json=update_data
     )
     assert response.status_code == 404
 
@@ -204,9 +198,7 @@ def test_delete_customer_item_success(test_db: Session, master_data):
     test_db.add(item)
     test_db.commit()
 
-    response = client.delete(
-        f"/api/customer-items/{master_data['customer'].id}/CUST-DEL-001"
-    )
+    response = client.delete(f"/api/customer-items/{master_data['customer'].id}/CUST-DEL-001")
     assert response.status_code == 204
 
 
@@ -214,9 +206,7 @@ def test_delete_customer_item_not_found(test_db: Session, master_data):
     """Test deleting non-existent customer item returns 404."""
     client = TestClient(app)
 
-    response = client.delete(
-        f"/api/customer-items/{master_data['customer'].id}/NONEXISTENT"
-    )
+    response = client.delete(f"/api/customer-items/{master_data['customer'].id}/NONEXISTENT")
     assert response.status_code == 404
 
 

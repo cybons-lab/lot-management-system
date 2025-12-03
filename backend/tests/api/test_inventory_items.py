@@ -1,15 +1,16 @@
 # backend/tests/api/test_inventory_items.py
 """Comprehensive tests for inventory items API endpoints."""
 
-import pytest
 from datetime import date, timedelta
 from decimal import Decimal
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.main import app
-from app.models import Lot, Warehouse, Product, Supplier
+from app.models import Lot, Product, Supplier, Warehouse
 
 
 def _truncate_all(db: Session):
@@ -24,8 +25,10 @@ def _truncate_all(db: Session):
 @pytest.fixture
 def test_db(db: Session):
     _truncate_all(db)
+
     def override_get_db():
         yield db
+
     app.dependency_overrides[get_db] = override_get_db
     yield db
     _truncate_all(db)
@@ -97,16 +100,12 @@ def test_list_inventory_items_with_filters(test_db: Session, sample_data):
     client = TestClient(app)
 
     # Filter by product_id
-    response = client.get(
-        "/api/inventory-items",
-        params={"product_id": sample_data["product"].id}
-    )
+    response = client.get("/api/inventory-items", params={"product_id": sample_data["product"].id})
     assert response.status_code == 200
 
     # Filter by warehouse_id
     response = client.get(
-        "/api/inventory-items",
-        params={"warehouse_id": sample_data["warehouse"].id}
+        "/api/inventory-items", params={"warehouse_id": sample_data["warehouse"].id}
     )
     assert response.status_code == 200
 
