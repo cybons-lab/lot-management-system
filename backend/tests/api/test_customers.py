@@ -35,7 +35,7 @@ def test_list_customers(test_db: Session):
     test_db.add_all([c1, c2])
     test_db.commit()
 
-    response = client.get("/api/customers")
+    response = client.get("/api/masters/customers")
     assert response.status_code == 200
     assert len(response.json()) == 2
 
@@ -46,21 +46,21 @@ def test_get_customer_success(test_db: Session):
     test_db.add(c)
     test_db.commit()
 
-    response = client.get("/api/customers/CUST-TEST")
+    response = client.get("/api/masters/customers/CUST-TEST")
     assert response.status_code == 200
     assert response.json()["customer_code"] == "CUST-TEST"
 
 
 def test_get_customer_not_found(test_db: Session):
     client = TestClient(app)
-    response = client.get("/api/customers/NONEXISTENT")
+    response = client.get("/api/masters/customers/NONEXISTENT")
     assert response.status_code == 404
 
 
 def test_create_customer_success(test_db: Session):
     client = TestClient(app)
     data = {"customer_code": "CUST-NEW", "customer_name": "New Customer"}
-    response = client.post("/api/customers", json=data)
+    response = client.post("/api/masters/customers", json=data)
     assert response.status_code == 201
     assert response.json()["customer_code"] == "CUST-NEW"
 
@@ -72,7 +72,7 @@ def test_create_customer_duplicate(test_db: Session):
     test_db.commit()
 
     response = client.post(
-        "/api/customers", json={"customer_code": "CUST-DUP", "customer_name": "Dup"}
+        "/api/masters/customers", json={"customer_code": "CUST-DUP", "customer_name": "Dup"}
     )
     assert response.status_code == 409
 
@@ -83,14 +83,14 @@ def test_update_customer_success(test_db: Session):
     test_db.add(c)
     test_db.commit()
 
-    response = client.put("/api/customers/CUST-UPD", json={"customer_name": "Updated"})
+    response = client.put("/api/masters/customers/CUST-UPD", json={"customer_name": "Updated"})
     assert response.status_code == 200
     assert response.json()["customer_name"] == "Updated"
 
 
 def test_update_customer_not_found(test_db: Session):
     client = TestClient(app)
-    response = client.put("/api/customers/NONEXISTENT", json={"customer_name": "New"})
+    response = client.put("/api/masters/customers/NONEXISTENT", json={"customer_name": "New"})
     assert response.status_code == 404
 
 
@@ -100,13 +100,13 @@ def test_delete_customer_success(test_db: Session):
     test_db.add(c)
     test_db.commit()
 
-    response = client.delete("/api/customers/CUST-DEL")
+    response = client.delete("/api/masters/customers/CUST-DEL")
     assert response.status_code == 204
 
 
 def test_delete_customer_not_found(test_db: Session):
     client = TestClient(app)
-    response = client.delete("/api/customers/NONEXISTENT")
+    response = client.delete("/api/masters/customers/NONEXISTENT")
     assert response.status_code == 404
 
 
@@ -123,6 +123,6 @@ def test_bulk_upsert_customers(test_db: Session):
         ]
     }
 
-    response = client.post("/api/customers/bulk-upsert", json=bulk_data)
+    response = client.post("/api/masters/customers/bulk-upsert", json=bulk_data)
     assert response.status_code == 200
     assert response.json()["created"] >= 1

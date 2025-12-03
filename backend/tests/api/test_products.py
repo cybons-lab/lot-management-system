@@ -39,7 +39,7 @@ def test_list_products_success(test_db: Session):
     test_db.add_all([p1, p2])
     test_db.commit()
 
-    response = client.get("/api/products")
+    response = client.get("/api/masters/products")
     assert response.status_code == 200
     assert len(response.json()) == 2
 
@@ -52,7 +52,7 @@ def test_get_product_success(test_db: Session):
     test_db.add(p)
     test_db.commit()
 
-    response = client.get("/api/products/PROD-TEST")
+    response = client.get("/api/masters/products/PROD-TEST")
     assert response.status_code == 200
     data = response.json()
     assert data["maker_part_code"] == "PROD-TEST"
@@ -61,7 +61,7 @@ def test_get_product_success(test_db: Session):
 def test_get_product_not_found(test_db: Session):
     """Test getting non-existent product returns 404."""
     client = TestClient(app)
-    response = client.get("/api/products/NONEXISTENT")
+    response = client.get("/api/masters/products/NONEXISTENT")
     assert response.status_code == 404
 
 
@@ -75,7 +75,7 @@ def test_create_product_success(test_db: Session):
         "base_unit": "EA",
     }
 
-    response = client.post("/api/products", json=product_data)
+    response = client.post("/api/masters/products", json=product_data)
     assert response.status_code == 201
     assert response.json()["maker_part_code"] == "PROD-NEW"
 
@@ -94,7 +94,7 @@ def test_create_product_duplicate_returns_409(test_db: Session):
         "base_unit": "EA",
     }
 
-    response = client.post("/api/products", json=product_data)
+    response = client.post("/api/masters/products", json=product_data)
     assert response.status_code == 409
 
 
@@ -107,7 +107,7 @@ def test_update_product_success(test_db: Session):
     test_db.commit()
 
     update_data = {"product_name": "Updated Name"}
-    response = client.put("/api/products/PROD-UPD", json=update_data)
+    response = client.put("/api/masters/products/PROD-UPD", json=update_data)
     assert response.status_code == 200
     assert response.json()["product_name"] == "Updated Name"
 
@@ -115,7 +115,7 @@ def test_update_product_success(test_db: Session):
 def test_update_product_not_found(test_db: Session):
     """Test updating non-existent product returns 404."""
     client = TestClient(app)
-    response = client.put("/api/products/NONEXISTENT", json={"product_name": "New"})
+    response = client.put("/api/masters/products/NONEXISTENT", json={"product_name": "New"})
     assert response.status_code == 404
 
 
@@ -127,7 +127,7 @@ def test_delete_product_success(test_db: Session):
     test_db.add(p)
     test_db.commit()
 
-    response = client.delete("/api/products/PROD-DEL")
+    response = client.delete("/api/masters/products/PROD-DEL")
     assert response.status_code == 204
 
     deleted = test_db.query(Product).filter(Product.maker_part_code == "PROD-DEL").first()
@@ -137,7 +137,7 @@ def test_delete_product_success(test_db: Session):
 def test_delete_product_not_found(test_db: Session):
     """Test deleting non-existent product returns 404."""
     client = TestClient(app)
-    response = client.delete("/api/products/NONEXISTENT")
+    response = client.delete("/api/masters/products/NONEXISTENT")
     assert response.status_code == 404
 
 
@@ -156,7 +156,7 @@ def test_bulk_upsert_products_success(test_db: Session):
         ]
     }
 
-    response = client.post("/api/products/bulk-upsert", json=bulk_data)
+    response = client.post("/api/masters/products/bulk-upsert", json=bulk_data)
     assert response.status_code == 200
     data = response.json()
     assert data["created"] >= 1

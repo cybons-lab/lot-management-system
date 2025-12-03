@@ -55,7 +55,7 @@ def test_list_warehouses_success(test_db: Session):
     test_db.add_all([wh1, wh2])
     test_db.commit()
 
-    response = client.get("/api/warehouses")
+    response = client.get("/api/masters/warehouses")
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 2
@@ -64,7 +64,7 @@ def test_list_warehouses_success(test_db: Session):
 def test_list_warehouses_empty(test_db: Session):
     """Test listing warehouses when none exist."""
     client = TestClient(app)
-    response = client.get("/api/warehouses")
+    response = client.get("/api/masters/warehouses")
     assert response.status_code == 200
     assert response.json() == []
 
@@ -80,7 +80,7 @@ def test_get_warehouse_success(test_db: Session):
     test_db.add(wh)
     test_db.commit()
 
-    response = client.get("/api/warehouses/WH-TEST")
+    response = client.get("/api/masters/warehouses/WH-TEST")
     assert response.status_code == 200
     data = response.json()
     assert data["warehouse_code"] == "WH-TEST"
@@ -90,7 +90,7 @@ def test_get_warehouse_success(test_db: Session):
 def test_get_warehouse_not_found(test_db: Session):
     """Test getting non-existent warehouse returns 404."""
     client = TestClient(app)
-    response = client.get("/api/warehouses/NONEXISTENT")
+    response = client.get("/api/masters/warehouses/NONEXISTENT")
     assert response.status_code == 404
 
 
@@ -105,7 +105,7 @@ def test_create_warehouse_success(test_db: Session):
         "warehouse_type": "internal",
     }
 
-    response = client.post("/api/warehouses", json=warehouse_data)
+    response = client.post("/api/masters/warehouses", json=warehouse_data)
     assert response.status_code == 201
     data = response.json()
     assert data["warehouse_code"] == "WH-NEW"
@@ -129,7 +129,7 @@ def test_create_warehouse_duplicate_returns_409(test_db: Session):
         "warehouse_type": "internal",
     }
 
-    response = client.post("/api/warehouses", json=warehouse_data)
+    response = client.post("/api/masters/warehouses", json=warehouse_data)
     assert response.status_code == 409
 
 
@@ -143,7 +143,7 @@ def test_update_warehouse_success(test_db: Session):
     test_db.commit()
 
     update_data = {"warehouse_name": "New Name"}
-    response = client.put("/api/warehouses/WH-UPD", json=update_data)
+    response = client.put("/api/masters/warehouses/WH-UPD", json=update_data)
     assert response.status_code == 200
     data = response.json()
     assert data["warehouse_name"] == "New Name"
@@ -153,7 +153,7 @@ def test_update_warehouse_not_found(test_db: Session):
     """Test updating non-existent warehouse returns 404."""
     client = TestClient(app)
     update_data = {"warehouse_name": "New Name"}
-    response = client.put("/api/warehouses/NONEXISTENT", json=update_data)
+    response = client.put("/api/masters/warehouses/NONEXISTENT", json=update_data)
     assert response.status_code == 404
 
 
@@ -166,7 +166,7 @@ def test_delete_warehouse_success(test_db: Session):
     test_db.add(wh)
     test_db.commit()
 
-    response = client.delete("/api/warehouses/WH-DEL")
+    response = client.delete("/api/masters/warehouses/WH-DEL")
     assert response.status_code == 204
 
     # Verify deleted
@@ -177,7 +177,7 @@ def test_delete_warehouse_success(test_db: Session):
 def test_delete_warehouse_not_found(test_db: Session):
     """Test deleting non-existent warehouse returns 404."""
     client = TestClient(app)
-    response = client.delete("/api/warehouses/NONEXISTENT")
+    response = client.delete("/api/masters/warehouses/NONEXISTENT")
     assert response.status_code == 404
 
 
@@ -208,7 +208,7 @@ def test_bulk_upsert_warehouses_success(test_db: Session):
         ]
     }
 
-    response = client.post("/api/warehouses/bulk-upsert", json=bulk_data)
+    response = client.post("/api/masters/warehouses/bulk-upsert", json=bulk_data)
     assert response.status_code == 200
     data = response.json()
     assert data["created"] >= 1

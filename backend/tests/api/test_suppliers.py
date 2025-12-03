@@ -35,7 +35,7 @@ def test_list_suppliers(test_db: Session):
     test_db.add_all([s1, s2])
     test_db.commit()
 
-    response = client.get("/api/suppliers")
+    response = client.get("/api/masters/suppliers")
     assert response.status_code == 200
     assert len(response.json()) == 2
 
@@ -46,21 +46,21 @@ def test_get_supplier_success(test_db: Session):
     test_db.add(s)
     test_db.commit()
 
-    response = client.get("/api/suppliers/SUP-TEST")
+    response = client.get("/api/masters/suppliers/SUP-TEST")
     assert response.status_code == 200
     assert response.json()["supplier_code"] == "SUP-TEST"
 
 
 def test_get_supplier_not_found(test_db: Session):
     client = TestClient(app)
-    response = client.get("/api/suppliers/NONEXISTENT")
+    response = client.get("/api/masters/suppliers/NONEXISTENT")
     assert response.status_code == 404
 
 
 def test_create_supplier_success(test_db: Session):
     client = TestClient(app)
     data = {"supplier_code": "SUP-NEW", "supplier_name": "New Supplier"}
-    response = client.post("/api/suppliers", json=data)
+    response = client.post("/api/masters/suppliers", json=data)
     assert response.status_code == 201
     assert response.json()["supplier_code"] == "SUP-NEW"
 
@@ -72,7 +72,7 @@ def test_create_supplier_duplicate(test_db: Session):
     test_db.commit()
 
     response = client.post(
-        "/api/suppliers", json={"supplier_code": "SUP-DUP", "supplier_name": "Dup"}
+        "/api/masters/suppliers", json={"supplier_code": "SUP-DUP", "supplier_name": "Dup"}
     )
     assert response.status_code == 409
 
@@ -83,14 +83,14 @@ def test_update_supplier_success(test_db: Session):
     test_db.add(s)
     test_db.commit()
 
-    response = client.put("/api/suppliers/SUP-UPD", json={"supplier_name": "Updated"})
+    response = client.put("/api/masters/suppliers/SUP-UPD", json={"supplier_name": "Updated"})
     assert response.status_code == 200
     assert response.json()["supplier_name"] == "Updated"
 
 
 def test_update_supplier_not_found(test_db: Session):
     client = TestClient(app)
-    response = client.put("/api/suppliers/NONEXISTENT", json={"supplier_name": "New"})
+    response = client.put("/api/masters/suppliers/NONEXISTENT", json={"supplier_name": "New"})
     assert response.status_code == 404
 
 
@@ -100,13 +100,13 @@ def test_delete_supplier_success(test_db: Session):
     test_db.add(s)
     test_db.commit()
 
-    response = client.delete("/api/suppliers/SUP-DEL")
+    response = client.delete("/api/masters/suppliers/SUP-DEL")
     assert response.status_code == 204
 
 
 def test_delete_supplier_not_found(test_db: Session):
     client = TestClient(app)
-    response = client.delete("/api/suppliers/NONEXISTENT")
+    response = client.delete("/api/masters/suppliers/NONEXISTENT")
     assert response.status_code == 404
 
 
@@ -123,6 +123,6 @@ def test_bulk_upsert_suppliers(test_db: Session):
         ]
     }
 
-    response = client.post("/api/suppliers/bulk-upsert", json=bulk_data)
+    response = client.post("/api/masters/suppliers/bulk-upsert", json=bulk_data)
     assert response.status_code == 200
     assert response.json()["created"] >= 1
