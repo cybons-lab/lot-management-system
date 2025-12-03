@@ -55,6 +55,10 @@ class OrderService:
             stmt = stmt.join(Customer, Order.customer_id == Customer.id).where(
                 Customer.customer_code == customer_code
             )
+        if status:
+            stmt = stmt.where(Order.status == status)
+        if status:
+            stmt = stmt.where(Order.status == status)
         if date_from:
             stmt = stmt.where(Order.order_date >= date_from)
         if date_to:

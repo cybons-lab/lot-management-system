@@ -50,13 +50,17 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         self.db = db
         self.model = model
 
-    def get_all(self) -> list[ModelType]:
-        """Get all entities.
+    def get_all(self, skip: int = 0, limit: int = 100) -> list[ModelType]:
+        """Get all entities with pagination.
+
+        Args:
+            skip: Number of records to skip
+            limit: Maximum number of records to return
 
         Returns:
-            List of all entities
+            List of entities
         """
-        return self.db.query(self.model).all()
+        return self.db.query(self.model).offset(skip).limit(limit).all()
 
     def get_by_id(self, id: IDType, *, raise_404: bool = True) -> ModelType | None:
         """Get entity by ID.

@@ -26,21 +26,41 @@ def list_warehouses(
 ):
     """List warehouses."""
     service = WarehouseService(db)
-    return service.get_all()
+    return service.get_all(skip=skip, limit=limit)
 
 
 @router.get("/{warehouse_code}", response_model=WarehouseResponse)
 def get_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
     """Get warehouse by code."""
     service = WarehouseService(db)
-    return service.get_by_id(warehouse_code)
+    return service.get_by_code(warehouse_code)
 
 
 @router.post("", response_model=WarehouseResponse, status_code=201)
 def create_warehouse(warehouse: WarehouseCreate, db: Session = Depends(get_db)):
     """Create warehouse."""
     service = WarehouseService(db)
-    return service.create(warehouse)
+    # Check if exists
+    existing = service.get_by_code(warehouse.warehouse_code, raise_404=False)
+    if existing:
+        from fastapi import HTTPException, status
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Warehouse with this code already exists",
+        )
+    try:
+        return service.create(warehouse)
+    except Exception as e:
+        from fastapi import HTTPException, status
+        from sqlalchemy.exc import IntegrityError
+
+        if isinstance(e, IntegrityError):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Warehouse with this code already exists",
+            )
+        raise e
 
 
 @router.put("/{warehouse_code}", response_model=WarehouseResponse)
@@ -49,14 +69,14 @@ def update_warehouse(
 ):
     """Update warehouse."""
     service = WarehouseService(db)
-    return service.update(warehouse_code, warehouse)
+    return service.update_by_code(warehouse_code, warehouse)
 
 
 @router.delete("/{warehouse_code}", status_code=204)
 def delete_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
     """Delete warehouse."""
     service = WarehouseService(db)
-    service.delete(warehouse_code)
+    service.delete_by_code(warehouse_code)
     return None
 
 

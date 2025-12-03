@@ -83,7 +83,7 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
             FefoLotAllocation(
                 lot_id=alloc.lot_id,
                 lot_number=alloc.lot_number,
-                allocate_qty=alloc.allocate_qty,
+                allocated_quantity=alloc.allocate_qty,
                 expiry_date=alloc.expiry_date,
                 receipt_date=alloc.receipt_date,
             )
@@ -92,8 +92,9 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
         lines.append(
             FefoLineAllocation(
                 order_line_id=line.order_line_id,
+                product_id=line.product_id,
                 product_code=line.product_code,
-                required_qty=line.required_qty,
+                order_quantity=line.required_qty,
                 already_allocated_qty=line.already_allocated_qty,
                 allocations=lot_items,
                 next_div=line.next_div,

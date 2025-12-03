@@ -72,7 +72,7 @@ def persist_allocation_entities(
         .options(joinedload(OrderLine.allocations))
         .where(OrderLine.id == line_plan.order_line_id)
     )
-    line = db.execute(line_stmt).scalar_one_or_none()
+    line = db.execute(line_stmt).unique().scalar_one_or_none()
     if not line:
         raise AllocationCommitError(f"OrderLine {line_plan.order_line_id} not found")
 
@@ -99,7 +99,7 @@ def persist_allocation_entities(
             )
 
         # 引当数量を更新
-        lot.allocated_quantity += alloc_plan.allocate_qty
+        lot.allocated_quantity += Decimal(str(alloc_plan.allocate_qty))
         lot.updated_at = datetime.utcnow()
 
         # 引当レコード作成
@@ -107,7 +107,7 @@ def persist_allocation_entities(
             order_line_id=line.id,
             lot_id=lot.id,
             allocated_quantity=alloc_plan.allocate_qty,
-            status="reserved",
+            status="allocated",
             created_at=datetime.utcnow(),
         )
         db.add(allocation)
@@ -248,12 +248,8 @@ def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True
         AllocationNotFoundError: 引当が見つからない場合
         AllocationCommitError: ロットが見つからない場合
     """
-    allocation_stmt = (
-        select(Allocation)
-        .options(joinedload(Allocation.lot), joinedload(Allocation.order_line))
-        .where(Allocation.id == allocation_id)
-    )
-    allocation = db.execute(allocation_stmt).scalar_one_or_none()
+    # Fetch allocation
+    allocation = db.get(Allocation, allocation_id)
     if not allocation:
         raise AllocationNotFoundError(f"Allocation {allocation_id} not found")
 
@@ -267,13 +263,19 @@ def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True
     lot.allocated_quantity -= allocation.allocated_quantity
     lot.updated_at = datetime.utcnow()
 
+    # 注文ステータス更新のためにOrderLine情報を保持
+    order_line_id = allocation.order_line_id
+
+    # 削除実行
     db.delete(allocation)
+    db.flush()
 
     # 注文ステータス更新
-    db.flush()
-    if allocation.order_line:
-        update_order_allocation_status(db, allocation.order_line.order_id)
-        update_order_line_status(db, allocation.order_line.id)
+    if order_line_id:
+        line = db.get(OrderLine, order_line_id)
+        if line:
+            update_order_allocation_status(db, line.order_id)
+            update_order_line_status(db, line.id)
 
     if commit_db:
         db.commit()

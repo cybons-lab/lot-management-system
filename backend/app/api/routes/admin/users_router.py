@@ -135,9 +135,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
         HTTPException: ユーザーが存在しない場合
     """
     service = UserService(db)
-    deleted = service.delete(user_id)
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    service.delete(user_id)
     return None
 
 

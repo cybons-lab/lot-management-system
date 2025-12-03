@@ -123,7 +123,7 @@ class BusinessRule(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "rule_type IN ('allocation', 'expiry_warning', 'kanban', 'other')",
+            "rule_type IN ('allocation', 'expiry_warning', 'kanban', 'inventory_sync_alert', 'other')",
             name="chk_business_rules_type",
         ),
         Index("idx_business_rules_code", "rule_code"),

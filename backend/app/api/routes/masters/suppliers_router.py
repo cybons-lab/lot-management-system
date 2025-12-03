@@ -26,35 +26,55 @@ def list_suppliers(
 ):
     """List suppliers."""
     service = SupplierService(db)
-    return service.get_all()
+    return service.get_all(skip=skip, limit=limit)
 
 
 @router.get("/{supplier_code}", response_model=SupplierResponse)
 def get_supplier(supplier_code: str, db: Session = Depends(get_db)):
     """Get supplier by code."""
     service = SupplierService(db)
-    return service.get_by_id(supplier_code)
+    return service.get_by_code(supplier_code)
 
 
 @router.post("", response_model=SupplierResponse, status_code=201)
 def create_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
     """Create supplier."""
     service = SupplierService(db)
-    return service.create(supplier)
+    # Check if exists
+    existing = service.get_by_code(supplier.supplier_code, raise_404=False)
+    if existing:
+        from fastapi import HTTPException, status
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Supplier with this code already exists",
+        )
+    try:
+        return service.create(supplier)
+    except Exception as e:
+        from fastapi import HTTPException, status
+        from sqlalchemy.exc import IntegrityError
+
+        if isinstance(e, IntegrityError):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Supplier with this code already exists",
+            )
+        raise e
 
 
 @router.put("/{supplier_code}", response_model=SupplierResponse)
 def update_supplier(supplier_code: str, supplier: SupplierUpdate, db: Session = Depends(get_db)):
     """Update supplier."""
     service = SupplierService(db)
-    return service.update(supplier_code, supplier)
+    return service.update_by_code(supplier_code, supplier)
 
 
 @router.delete("/{supplier_code}", status_code=204)
 def delete_supplier(supplier_code: str, db: Session = Depends(get_db)):
     """Delete supplier."""
     service = SupplierService(db)
-    service.delete(supplier_code)
+    service.delete_by_code(supplier_code)
     return None
 
 

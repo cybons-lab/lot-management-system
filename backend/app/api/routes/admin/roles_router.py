@@ -115,7 +115,6 @@ def delete_role(role_id: int, db: Session = Depends(get_db)):
         HTTPException: ロールが存在しない場合、またはロールが使用中の場合
     """
     service = RoleService(db)
-    deleted = service.delete(role_id)
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
+    service = RoleService(db)
+    service.delete(role_id)
     return None

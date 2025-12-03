@@ -35,7 +35,7 @@ class BatchJobUpdate(BaseModel):
 class BatchJobResponse(BatchJobBase):
     """バッチジョブレスポンス."""
 
-    job_id: int
+    job_id: int = Field(..., validation_alias="id", serialization_alias="job_id")
     status: str = Field(..., description="ステータス（pending/running/completed/failed）")
     result_message: str | None = Field(None, description="実行結果メッセージ")
     started_at: datetime | None = Field(None, description="開始日時")

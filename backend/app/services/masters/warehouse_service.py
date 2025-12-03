@@ -17,6 +17,27 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
     def __init__(self, db: Session):
         super().__init__(db, Warehouse)
 
+    def get_by_code(self, code: str, *, raise_404: bool = True) -> Warehouse | None:
+        """Get warehouse by warehouse_code."""
+        warehouse = self.db.query(Warehouse).filter(Warehouse.warehouse_code == code).first()
+        if not warehouse and raise_404:
+            from fastapi import HTTPException, status
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="倉庫が見つかりません"
+            )
+        return warehouse
+
+    def update_by_code(self, code: str, payload: WarehouseUpdate) -> Warehouse:
+        """Update warehouse by warehouse_code."""
+        warehouse = self.get_by_code(code)
+        return self.update(warehouse.id, payload)
+
+    def delete_by_code(self, code: str) -> None:
+        """Delete warehouse by warehouse_code."""
+        warehouse = self.get_by_code(code)
+        self.delete(warehouse.id)
+
     def bulk_upsert(self, rows: list[WarehouseBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert warehouses by warehouse_code.
 

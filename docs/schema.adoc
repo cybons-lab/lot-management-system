@@ -312,7 +312,7 @@ erDiagram
         bigint id PK
         varchar rule_code UK
         varchar rule_name
-        varchar rule_type "allocation/expiry_warning/kanban/other"
+        varchar rule_type "allocation/expiry_warning/kanban/inventory_sync_alert/other"
         jsonb rule_parameters
         boolean is_active
         timestamp created_at

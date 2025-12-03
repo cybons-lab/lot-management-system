@@ -42,6 +42,7 @@ class OrderResponse(OrderBase):
     """Order response (DDL: orders)."""
 
     id: int
+    status: str
     created_at: datetime
     updated_at: datetime
 
