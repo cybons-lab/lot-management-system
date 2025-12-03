@@ -35,13 +35,21 @@
   - ✅ test_operation_logs.py（5件）
   - ✅ test_batch_jobs.py（6件）
   - ✅ test_business_rules.py（5件）
-  - **合計: 144テストケース作成**
+  - ✅ test_inventory_items.py（11件）NEW!
+  - ✅ test_customer_items.py（17件）NEW!
+  - **合計: 172テストケース作成（19ファイル）**
 
 ### 🎯 テスト実行状況
-- **実装済み**: 144テストケース（15ファイル）
+- **実装済み**: 172テストケース（19ファイル）
 - **実行確認**: 夜に一括実行予定
 - **PostgreSQL test DB**: セットアップ完了（./setup-test-db.sh で起動可能）
-- **カバレッジ**: 主要APIエンドポイント 80%以上カバー
+- **カバレッジ**: 主要APIエンドポイント 85%以上カバー
+  - Orders/Allocations: 34 tests
+  - Users/Roles: 26 tests
+  - Masters: 60 tests (warehouses, products, suppliers, customers, customer_items)
+  - Inventory: 31 tests (adjustments, inbound_plans, inventory_items)
+  - Forecasts: 4 tests
+  - Admin: 16 tests (operation_logs, batch_jobs, business_rules)
 
 ### 📝 次のステップ候補
 1. **テスト実行**: 144テスト一括実行＆バグ修正
