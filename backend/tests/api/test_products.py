@@ -3,9 +3,10 @@
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.core.database import get_db
 from app.main import app
 from app.models import Product
 
@@ -13,8 +14,11 @@ from app.models import Product
 def _truncate_all(db: Session):
     """Clean up test data."""
     try:
-        # Use raw SQL to ensure cleanup even with foreign key constraints  
-        db.execute("TRUNCATE TABLE products RESTART IDENTITY CASCADE")
+        # Use DELETE instead of TRUNCATE to avoid transaction issues
+        # Order matters due to foreign keys
+        db.execute(text("DELETE FROM stock_movements"))
+        db.execute(text("DELETE FROM lots"))
+        db.execute(text("DELETE FROM products"))
         db.commit()
     except Exception:
         db.rollback()

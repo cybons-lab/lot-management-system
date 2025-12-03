@@ -17,6 +17,29 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]
     def __init__(self, db: Session):
         super().__init__(db, Customer)
 
+    def get_by_code(self, code: str, *, raise_404: bool = True) -> Customer | None:
+        """Get customer by customer_code."""
+        customer = (
+            self.db.query(Customer).filter(Customer.customer_code == code).first()
+        )
+        if not customer and raise_404:
+            from fastapi import HTTPException, status
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="得意先が見つかりません"
+            )
+        return customer
+
+    def update_by_code(self, code: str, payload: CustomerUpdate) -> Customer:
+        """Update customer by customer_code."""
+        customer = self.get_by_code(code)
+        return self.update(customer.id, payload)
+
+    def delete_by_code(self, code: str) -> None:
+        """Delete customer by customer_code."""
+        customer = self.get_by_code(code)
+        self.delete(customer.id)
+
     def bulk_upsert(self, rows: list[CustomerBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert customers by customer_code.
 

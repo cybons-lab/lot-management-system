@@ -110,7 +110,7 @@ def update_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    updated = service.update(customer_id, external_product_code, item)
+    updated = service.update_by_key(customer_id, external_product_code, item)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -135,7 +135,7 @@ def delete_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    deleted = service.delete(customer_id, external_product_code)
+    deleted = service.delete_by_key(customer_id, external_product_code)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

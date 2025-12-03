@@ -30,6 +30,32 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         """Initialize service with database session."""
         super().__init__(db=db, model=CustomerItem)
 
+    def _enrich_item(self, item: CustomerItem) -> dict:
+        """Enrich customer item with related names."""
+        self.db.refresh(item, attribute_names=["customer", "product", "supplier"])
+        return {
+            "customer_id": item.customer_id,
+            "customer_code": item.customer.customer_code,
+            "customer_name": item.customer.customer_name,
+            "external_product_code": item.external_product_code,
+            "product_id": item.product_id,
+            "product_name": item.product.product_name,
+            "supplier_id": item.supplier_id,
+            "supplier_code": item.supplier.supplier_code if item.supplier else None,
+            "supplier_name": item.supplier.supplier_name if item.supplier else None,
+            "base_unit": item.base_unit,
+            "pack_unit": item.pack_unit,
+            "pack_quantity": item.pack_quantity,
+            "special_instructions": item.special_instructions,
+            "created_at": item.created_at,
+            "updated_at": item.updated_at,
+        }
+
+    def create(self, item: CustomerItemCreate) -> dict:
+        """Create a new customer item mapping and return enriched data."""
+        created_item = super().create(item)
+        return self._enrich_item(created_item)
+
     def get_all(
         self,
         skip: int = 0,
@@ -93,9 +119,9 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             for r in results
         ]
 
-    def get_by_customer(self, customer_id: int) -> list[CustomerItem]:
+    def get_by_customer(self, customer_id: int) -> list[dict]:
         """Get all customer item mappings for a specific customer."""
-        return self.db.query(CustomerItem).filter(CustomerItem.customer_id == customer_id).all()
+        return self.get_all(customer_id=customer_id)
 
     def get_by_key(self, customer_id: int, external_product_code: str) -> CustomerItem | None:
         """Get customer item mapping by composite key."""
@@ -122,7 +148,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         db_item.updated_at = datetime.now()
         self.db.commit()
         self.db.refresh(db_item)
-        return db_item
+        return self._enrich_item(db_item)
 
     def delete_by_key(self, customer_id: int, external_product_code: str) -> bool:
         """Delete a customer item mapping by composite key."""
@@ -162,8 +188,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         customer_map = {code: id for code, id in customers}
 
         products = (
-            self.db.query(Product.product_code, Product.id)
-            .filter(Product.product_code.in_(product_codes))
+            self.db.query(Product.maker_part_code, Product.id)
+            .filter(Product.maker_part_code.in_(product_codes))
             .all()
         )
         product_map = {code: id for code, id in products}

@@ -26,36 +26,57 @@ def list_customers(
 ):
     """Return customers."""
     service = CustomerService(db)
-    return service.get_all()
+    return service.get_all(skip=skip, limit=limit)
 
 
 @router.get("/{customer_code}", response_model=CustomerResponse)
 def get_customer(customer_code: str, db: Session = Depends(get_db)):
     """Fetch a customer by code."""
     service = CustomerService(db)
-    return service.get_by_id(customer_code)
+    return service.get_by_code(customer_code)
 
 
 @router.post("", response_model=CustomerResponse, status_code=201)
 def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
     """Create a new customer."""
     service = CustomerService(db)
-    return service.create(customer)
+    # Check if exists
+    existing = service.get_by_code(customer.customer_code, raise_404=False)
+    if existing:
+        from fastapi import HTTPException, status
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Customer with this code already exists",
+        )
+    try:
+        return service.create(customer)
+    except Exception as e:
+        from fastapi import HTTPException, status
+        from sqlalchemy.exc import IntegrityError
+
+        if isinstance(e, IntegrityError):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Customer with this code already exists",
+            )
+        raise e
 
 
 @router.put("/{customer_code}", response_model=CustomerResponse)
-def update_customer(customer_code: str, customer: CustomerUpdate, db: Session = Depends(get_db)):
+def update_customer(
+    customer_code: str, customer: CustomerUpdate, db: Session = Depends(get_db)
+):
     """Update a customer."""
     service = CustomerService(db)
-    return service.update(customer_code, customer)
+    return service.update_by_code(customer_code, customer)
 
 
 @router.delete("/{customer_code}", status_code=204)
 def delete_customer(customer_code: str, db: Session = Depends(get_db)):
     """Delete a customer."""
     service = CustomerService(db)
-    service = CustomerService(db)
-    service.delete(customer_code)
+    service.delete_by_code(customer_code)
     return None
 
 

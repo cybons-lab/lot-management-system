@@ -1,6 +1,6 @@
 """Product master CRUD endpoints (standalone)."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -62,10 +62,24 @@ def get_product(product_code: str, db: Session = Depends(get_db)):
 @router.post("", response_model=ProductOut, status_code=201)
 def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     """Create a new product."""
-    """Create a new product."""
     service = ProductService(db)
-    db_product = service.create(product)
-    return _to_product_out(db_product)
+
+    # Check if exists
+    existing = service.get_by_code(product.product_code, raise_404=False)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Product with this code already exists",
+        )
+
+    try:
+        db_product = service.create(product)
+        return _to_product_out(db_product)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Product with this code already exists",
+        )
 
 
 @router.put("/{product_code}", response_model=ProductOut)

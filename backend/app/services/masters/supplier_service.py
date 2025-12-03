@@ -17,6 +17,29 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, str]
     def __init__(self, db: Session):
         super().__init__(db, Supplier)
 
+    def get_by_code(self, code: str, *, raise_404: bool = True) -> Supplier | None:
+        """Get supplier by supplier_code."""
+        supplier = (
+            self.db.query(Supplier).filter(Supplier.supplier_code == code).first()
+        )
+        if not supplier and raise_404:
+            from fastapi import HTTPException, status
+
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="仕入先が見つかりません"
+            )
+        return supplier
+
+    def update_by_code(self, code: str, payload: SupplierUpdate) -> Supplier:
+        """Update supplier by supplier_code."""
+        supplier = self.get_by_code(code)
+        return self.update(supplier.id, payload)
+
+    def delete_by_code(self, code: str) -> None:
+        """Delete supplier by supplier_code."""
+        supplier = self.get_by_code(code)
+        self.delete(supplier.id)
+
     def bulk_upsert(self, rows: list[SupplierBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert suppliers by supplier_code.
 
