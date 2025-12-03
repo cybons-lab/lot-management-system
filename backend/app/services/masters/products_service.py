@@ -135,6 +135,16 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             self.db.rollback()
             raise exc
 
+    def update_by_code(self, code: str, payload: ProductUpdate) -> Product:
+        """Update product by product code."""
+        product = self.get_by_code(code)
+        return self.update(product.id, payload)
+
+    def delete_by_code(self, code: str) -> None:
+        """Delete product by product code."""
+        product = self.get_by_code(code)
+        self.delete(product.id)
+
     def list_products(
         self, *, page: int, per_page: int, q: str | None
     ) -> tuple[list[Product], int]:

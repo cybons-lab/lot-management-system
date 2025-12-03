@@ -73,7 +73,7 @@ def update_product(product_code: str, product: ProductUpdate, db: Session = Depe
     """Update an existing product (by maker_part_code)."""
     """Update an existing product (by maker_part_code)."""
     service = ProductService(db)
-    db_product = service.update(product_code, product)
+    db_product = service.update_by_code(product_code, product)
     return _to_product_out(db_product)
 
 
@@ -82,7 +82,7 @@ def delete_product(product_code: str, db: Session = Depends(get_db)):
     """Delete a product by its code (maker_part_code)."""
     """Delete a product by its code (maker_part_code)."""
     service = ProductService(db)
-    service.delete(product_code)
+    service.delete_by_code(product_code)
     return None
 
 
