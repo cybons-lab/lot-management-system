@@ -67,7 +67,6 @@ def master_data(test_db: Session):
     """Create master data for allocations testing."""
     # Warehouse (explicitly set ID for SQLite compatibility)
     warehouse = Warehouse(
-        id=1,
         warehouse_code="WH-001",
         warehouse_name="Main Warehouse",
         warehouse_type="internal",
@@ -78,7 +77,6 @@ def master_data(test_db: Session):
 
     # Customer (explicitly set ID)
     customer = Customer(
-        id=1,
         customer_code="CUST-001",
         customer_name="Test Customer",
     )
@@ -88,7 +86,6 @@ def master_data(test_db: Session):
 
     # Product (explicitly set ID)
     product = Product(
-        id=1,
         maker_part_code="PROD-001",
         product_name="Test Product",
         base_unit="EA",
@@ -99,7 +96,6 @@ def master_data(test_db: Session):
 
     # Delivery Place
     delivery_place = DeliveryPlace(
-        id=1,
         customer_id=customer.id,
         delivery_place_code="DEL-001",
         delivery_place_name="Test Delivery Place",
@@ -110,7 +106,6 @@ def master_data(test_db: Session):
 
     # Create lot with stock
     lot = Lot(
-        id=1,
         product_id=product.id,
         warehouse_id=warehouse.id,
         lot_number="LOT-001",
@@ -144,7 +139,6 @@ def test_drag_assign_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        id=1,
         order_number="ORD-001",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -154,7 +148,6 @@ def test_drag_assign_success(test_db: Session, master_data: dict):
     test_db.commit()
 
     order_line = OrderLine(
-        id=1,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -188,7 +181,6 @@ def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        id=10,
         order_number="ORD-DEP",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -198,7 +190,6 @@ def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
     test_db.commit()
 
     order_line = OrderLine(
-        id=10,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -228,7 +219,6 @@ def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data:
 
     # Create order with line
     order = Order(
-        id=20,
         order_number="ORD-NO-QTY",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -238,7 +228,6 @@ def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data:
     test_db.commit()
 
     order_line = OrderLine(
-        id=20,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -268,7 +257,6 @@ def test_drag_assign_insufficient_stock_returns_400(test_db: Session, master_dat
 
     # Create order with line
     order = Order(
-        id=30,
         order_number="ORD-INSUF",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -278,7 +266,6 @@ def test_drag_assign_insufficient_stock_returns_400(test_db: Session, master_dat
     test_db.commit()
 
     order_line = OrderLine(
-        id=30,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -312,7 +299,6 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        id=40,
         order_number="ORD-CANCEL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -322,7 +308,6 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
     test_db.commit()
 
     order_line = OrderLine(
-        id=40,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -336,7 +321,6 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
 
     # Create allocation
     allocation = Allocation(
-        id=1,
         order_line_id=order_line.id,
         lot_id=master_data["lot"].id,
         allocated_quantity=Decimal("10.000"),
@@ -374,7 +358,6 @@ def test_preview_allocations_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        id=50,
         order_number="ORD-PREVIEW",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -384,7 +367,6 @@ def test_preview_allocations_success(test_db: Session, master_data: dict):
     test_db.commit()
 
     order_line = OrderLine(
-        id=50,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -430,7 +412,6 @@ def test_commit_allocation_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        id=60,
         order_number="ORD-COMMIT",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -440,7 +421,6 @@ def test_commit_allocation_success(test_db: Session, master_data: dict):
     test_db.commit()
 
     order_line = OrderLine(
-        id=60,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),

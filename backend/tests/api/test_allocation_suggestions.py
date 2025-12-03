@@ -78,7 +78,6 @@ def master_data(test_db: Session):
     """Create master data for allocation suggestions testing."""
     # Warehouse (explicitly set ID for SQLite compatibility)
     warehouse = Warehouse(
-        id=1,
         warehouse_code="WH-001",
         warehouse_name="Main Warehouse",
         warehouse_type="internal",
@@ -89,7 +88,6 @@ def master_data(test_db: Session):
 
     # Customer (explicitly set ID)
     customer = Customer(
-        id=1,
         customer_code="CUST-001",
         customer_name="Test Customer",
     )
@@ -99,7 +97,6 @@ def master_data(test_db: Session):
 
     # Product (explicitly set ID)
     product = Product(
-        id=1,
         maker_part_code="PROD-001",
         product_name="Test Product",
         base_unit="EA",
@@ -110,7 +107,6 @@ def master_data(test_db: Session):
 
     # Delivery Place
     delivery_place = DeliveryPlace(
-        id=1,
         customer_id=customer.id,
         delivery_place_code="DEL-001",
         delivery_place_name="Test Delivery Place",
@@ -121,7 +117,6 @@ def master_data(test_db: Session):
 
     # Create lot with stock
     lot = Lot(
-        id=1,
         product_id=product.id,
         warehouse_id=warehouse.id,
         lot_number="LOT-001",
@@ -157,7 +152,6 @@ def test_preview_allocation_suggestions_order_mode_success(
 
     # Create order with line
     order = Order(
-        id=1,
         order_number="ORD-001",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -167,7 +161,6 @@ def test_preview_allocation_suggestions_order_mode_success(
     test_db.commit()
 
     order_line = OrderLine(
-        id=1,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -209,7 +202,6 @@ def test_preview_allocation_suggestions_forecast_mode_success(
 
     # Create forecast header and line
     forecast_header = ForecastHeader(
-        id=1,
         customer_id=master_data["customer"].id,
         forecast_period="2025-01",
         status="confirmed",
@@ -218,7 +210,6 @@ def test_preview_allocation_suggestions_forecast_mode_success(
     test_db.commit()
 
     forecast_line = ForecastLine(
-        id=1,
         forecast_header_id=forecast_header.id,
         product_id=master_data["product"].id,
         forecast_quantity=Decimal("50.000"),
@@ -275,7 +266,6 @@ def test_list_allocation_suggestions_success(test_db: Session, master_data: dict
 
     # Create allocation suggestions
     suggestion1 = AllocationSuggestion(
-        id=1,
         forecast_period="2025-01",
         product_id=master_data["product"].id,
         customer_id=master_data["customer"].id,
@@ -283,7 +273,6 @@ def test_list_allocation_suggestions_success(test_db: Session, master_data: dict
         suggested_quantity=Decimal("10.000"),
     )
     suggestion2 = AllocationSuggestion(
-        id=2,
         forecast_period="2025-01",
         product_id=master_data["product"].id,
         customer_id=master_data["customer"].id,
@@ -311,7 +300,6 @@ def test_list_allocation_suggestions_with_forecast_period_filter(
 
     # Create suggestions for different periods
     suggestion_jan = AllocationSuggestion(
-        id=10,
         forecast_period="2025-01",
         product_id=master_data["product"].id,
         customer_id=master_data["customer"].id,
@@ -319,7 +307,6 @@ def test_list_allocation_suggestions_with_forecast_period_filter(
         suggested_quantity=Decimal("10.000"),
     )
     suggestion_feb = AllocationSuggestion(
-        id=11,
         forecast_period="2025-02",
         product_id=master_data["product"].id,
         customer_id=master_data["customer"].id,
@@ -346,7 +333,6 @@ def test_list_allocation_suggestions_with_product_filter(
 
     # Create another product
     product2 = Product(
-        id=2,
         maker_part_code="PROD-002",
         product_name="Another Product",
         base_unit="EA",
@@ -356,7 +342,6 @@ def test_list_allocation_suggestions_with_product_filter(
 
     # Create suggestions for different products
     suggestion_p1 = AllocationSuggestion(
-        id=20,
         forecast_period="2025-01",
         product_id=master_data["product"].id,
         customer_id=master_data["customer"].id,
@@ -364,7 +349,6 @@ def test_list_allocation_suggestions_with_product_filter(
         suggested_quantity=Decimal("10.000"),
     )
     suggestion_p2 = AllocationSuggestion(
-        id=21,
         forecast_period="2025-01",
         product_id=product2.id,
         customer_id=master_data["customer"].id,

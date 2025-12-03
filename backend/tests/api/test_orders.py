@@ -56,9 +56,8 @@ def test_db(db: Session):
 @pytest.fixture
 def master_data(test_db: Session):
     """Create master data for orders testing."""
-    # Warehouse (explicitly set ID for SQLite compatibility)
+    # Warehouse (PostgreSQL auto-assigns ID with BIGSERIAL)
     warehouse = Warehouse(
-        id=1,
         warehouse_code="WH-001",
         warehouse_name="Main Warehouse",
         warehouse_type="internal",
@@ -67,9 +66,8 @@ def master_data(test_db: Session):
     test_db.commit()
     test_db.refresh(warehouse)
 
-    # Customer (explicitly set ID)
+    # Customer
     customer = Customer(
-        id=1,
         customer_code="CUST-001",
         customer_name="Test Customer",
     )
@@ -77,9 +75,8 @@ def master_data(test_db: Session):
     test_db.commit()
     test_db.refresh(customer)
 
-    # Product (explicitly set ID)
+    # Product
     product = Product(
-        id=1,
         maker_part_code="PROD-001",
         product_name="Test Product",
         base_unit="EA",
@@ -90,7 +87,6 @@ def master_data(test_db: Session):
 
     # Delivery Place
     delivery_place = DeliveryPlace(
-        id=1,
         customer_id=customer.id,
         delivery_place_code="DEL-001",
         delivery_place_name="Test Delivery Place",
@@ -118,14 +114,12 @@ def test_list_orders_success(test_db: Session, master_data: dict):
 
     # Create 2 orders (explicitly set IDs for SQLite)
     order1 = Order(
-        id=1,
         order_number="ORD-001",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
     )
     order2 = Order(
-        id=2,
         order_number="ORD-002",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -150,14 +144,12 @@ def test_list_orders_with_status_filter(test_db: Session, master_data: dict):
 
     # Create orders with different statuses
     order_open = Order(
-        id=10,
         order_number="ORD-OPEN",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
     )
     order_allocated = Order(
-        id=11,
         order_number="ORD-ALLOC",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -182,7 +174,6 @@ def test_list_orders_with_customer_filter(test_db: Session, master_data: dict):
 
     # Create another customer
     customer2 = Customer(
-        id=20,
         customer_code="CUST-002",
         customer_name="Another Customer",
     )
@@ -191,13 +182,11 @@ def test_list_orders_with_customer_filter(test_db: Session, master_data: dict):
 
     # Create orders for different customers
     order1 = Order(
-        id=21,
         order_number="ORD-C1",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
     )
     order2 = Order(
-        id=22,
         order_number="ORD-C2",
         customer_id=customer2.id,
         order_date=date.today(),
@@ -221,13 +210,11 @@ def test_list_orders_with_date_range_filter(test_db: Session, master_data: dict)
     # Create orders on different dates
     today = date.today()
     order_old = Order(
-        id=30,
         order_number="ORD-OLD",
         customer_id=master_data["customer"].id,
         order_date=today - timedelta(days=10),
     )
     order_recent = Order(
-        id=31,
         order_number="ORD-RECENT",
         customer_id=master_data["customer"].id,
         order_date=today,
@@ -256,7 +243,6 @@ def test_get_order_success(test_db: Session, master_data: dict):
 
     # Create order with lines
     order = Order(
-        id=40,
         order_number="ORD-DETAIL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
@@ -266,7 +252,6 @@ def test_get_order_success(test_db: Session, master_data: dict):
     test_db.commit()
 
     line = OrderLine(
-        id=41,
         order_id=order.id,
         product_id=master_data["product"].id,
         delivery_date=date.today() + timedelta(days=7),
@@ -426,7 +411,6 @@ def test_cancel_order_success(test_db: Session, master_data: dict):
 
     # Create order
     order = Order(
-        id=100,
         order_number="ORD-CANCEL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),

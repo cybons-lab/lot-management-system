@@ -1,3 +1,4 @@
+import os
 from collections.abc import Generator
 
 import pytest
@@ -9,10 +10,18 @@ from app.main import app
 from app.models.base_model import Base
 
 
-# Use SQLite in-memory database for testing
-SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+# Use PostgreSQL test database (docker-compose.test.yml)
+# Can be overridden with TEST_DATABASE_URL environment variable
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "TEST_DATABASE_URL",
+    "postgresql://testuser:testpass@localhost:5433/lot_management_test",
+)
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    pool_pre_ping=True,  # Verify connections before using
+    echo=False,  # Set to True for SQL query debugging
+)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
