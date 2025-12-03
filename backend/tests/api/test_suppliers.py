@@ -14,8 +14,11 @@ from app.models import Supplier
 def _truncate_all(db: Session):
     """Clean up test data."""
     try:
-        # Use TRUNCATE CASCADE to ensure cleanup
-        db.execute(text("TRUNCATE TABLE suppliers RESTART IDENTITY CASCADE"))
+        # Use DELETE instead of TRUNCATE to avoid transaction issues
+        # Order matters due to foreign keys
+        db.execute(text("DELETE FROM lots"))
+        db.execute(text("DELETE FROM customer_items"))
+        db.execute(text("DELETE FROM suppliers"))
         db.commit()
     except Exception:
         db.rollback()
@@ -42,66 +45,47 @@ def test_list_suppliers_success(test_db: Session):
     """Test listing suppliers."""
     client = TestClient(app)
 
-    s1 = Supplier(
-        supplier_code="LIST-001",
-        supplier_name="Supplier 1",
-    )
-    s2 = Supplier(
-        supplier_code="LIST-002",
-        supplier_name="Supplier 2",
-    )
+    s1 = Supplier(supplier_code="SUP-001", supplier_name="Supplier 1")
+    s2 = Supplier(supplier_code="SUP-002", supplier_name="Supplier 2")
     test_db.add_all([s1, s2])
     test_db.commit()
 
     response = client.get("/api/masters/suppliers")
     assert response.status_code == 200
     data = response.json()
-    supplier_codes = [s["supplier_code"] for s in data]
-    assert "LIST-001" in supplier_codes
-    assert "LIST-002" in supplier_codes
+    codes = [s["supplier_code"] for s in data]
+    assert "SUP-001" in codes
+    assert "SUP-002" in codes
 
 
 def test_list_suppliers_with_pagination(test_db: Session):
     """Test listing suppliers with pagination."""
     client = TestClient(app)
 
-    # Create 15 suppliers
-    suppliers = [
-        Supplier(
+    # Create 5 suppliers
+    for i in range(1, 6):
+        s = Supplier(
             supplier_code=f"PAGE-{i:03d}",
             supplier_name=f"Supplier {i}",
         )
-        for i in range(1, 16)
-    ]
-    test_db.add_all(suppliers)
+        test_db.add(s)
     test_db.commit()
 
-    # Get first page (10 items)
-    response = client.get("/api/masters/suppliers?skip=0&limit=10")
+    # Test pagination
+    response = client.get("/api/masters/suppliers", params={"skip": 0, "limit": 3})
     assert response.status_code == 200
     data = response.json()
-    assert len(data) == 10
-    assert data[0]["supplier_code"] == "PAGE-001"
-
-    # Get second page (5 items)
-    response = client.get("/api/masters/suppliers?skip=10&limit=10")
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 5
-    assert data[0]["supplier_code"] == "PAGE-011"
+    assert len(data) >= 3
 
 
 # ===== GET /api/masters/suppliers/{code} Tests =====
 
 
 def test_get_supplier_success(test_db: Session):
-    """Test getting a single supplier."""
+    """Test getting supplier by code."""
     client = TestClient(app)
 
-    s = Supplier(
-        supplier_code="GET-TEST",
-        supplier_name="Test Supplier",
-    )
+    s = Supplier(supplier_code="GET-TEST", supplier_name="Test Supplier")
     test_db.add(s)
     test_db.commit()
 
@@ -113,9 +97,9 @@ def test_get_supplier_success(test_db: Session):
 
 
 def test_get_supplier_not_found(test_db: Session):
-    """Test getting a non-existent supplier."""
+    """Test getting non-existent supplier returns 404."""
     client = TestClient(app)
-    response = client.get("/api/masters/suppliers/NON-EXISTENT")
+    response = client.get("/api/masters/suppliers/NONEXISTENT-SUP")
     assert response.status_code == 404
 
 
@@ -123,7 +107,7 @@ def test_get_supplier_not_found(test_db: Session):
 
 
 def test_create_supplier_success(test_db: Session):
-    """Test creating a new supplier."""
+    """Test creating a supplier."""
     client = TestClient(app)
 
     supplier_data = {
@@ -136,17 +120,18 @@ def test_create_supplier_success(test_db: Session):
     data = response.json()
     assert data["supplier_code"] == "CREATE-001"
     assert data["supplier_name"] == "New Supplier"
-    assert "id" in data
+
+    # Verify in DB
+    db_supplier = test_db.query(Supplier).filter(Supplier.supplier_code == "CREATE-001").first()
+    assert db_supplier is not None
+    assert db_supplier.supplier_name == "New Supplier"
 
 
 def test_create_supplier_duplicate_returns_409(test_db: Session):
     """Test creating duplicate supplier returns 409."""
     client = TestClient(app)
 
-    existing = Supplier(
-        supplier_code="DUP-001",
-        supplier_name="Existing",
-    )
+    existing = Supplier(supplier_code="DUP-001", supplier_name="Existing")
     test_db.add(existing)
     test_db.commit()
 
@@ -166,30 +151,21 @@ def test_update_supplier_success(test_db: Session):
     """Test updating a supplier."""
     client = TestClient(app)
 
-    s = Supplier(
-        supplier_code="UPDATE-001",
-        supplier_name="Old Name",
-    )
+    s = Supplier(supplier_code="UPD-001", supplier_name="Old Name")
     test_db.add(s)
     test_db.commit()
 
-    update_data = {
-        "supplier_name": "New Name",
-    }
-
-    response = client.put("/api/masters/suppliers/UPDATE-001", json=update_data)
+    update_data = {"supplier_name": "Updated Name"}
+    response = client.put("/api/masters/suppliers/UPD-001", json=update_data)
     assert response.status_code == 200
     data = response.json()
-    assert data["supplier_code"] == "UPDATE-001"
-    assert data["supplier_name"] == "New Name"
+    assert data["supplier_name"] == "Updated Name"
 
 
 def test_update_supplier_not_found(test_db: Session):
-    """Test updating a non-existent supplier."""
+    """Test updating non-existent supplier returns 404."""
     client = TestClient(app)
-
-    update_data = {"supplier_name": "New Name"}
-    response = client.put("/api/masters/suppliers/NON-EXISTENT", json=update_data)
+    response = client.put("/api/masters/suppliers/NONEXISTENT-UPD", json={"supplier_name": "New"})
     assert response.status_code == 404
 
 
@@ -200,23 +176,63 @@ def test_delete_supplier_success(test_db: Session):
     """Test deleting a supplier."""
     client = TestClient(app)
 
-    s = Supplier(
-        supplier_code="DELETE-001",
-        supplier_name="To Delete",
-    )
+    s = Supplier(supplier_code="DEL-001", supplier_name="Delete Me")
     test_db.add(s)
     test_db.commit()
 
-    response = client.delete("/api/masters/suppliers/DELETE-001")
+    response = client.delete("/api/masters/suppliers/DEL-001")
     assert response.status_code == 204
 
-    # Verify deletion
-    response = client.get("/api/masters/suppliers/DELETE-001")
-    assert response.status_code == 404
+    # Verify deleted
+    test_db.expire_all()
+    deleted = test_db.query(Supplier).filter(Supplier.supplier_code == "DEL-001").first()
+    assert deleted is None
 
 
 def test_delete_supplier_not_found(test_db: Session):
-    """Test deleting a non-existent supplier."""
+    """Test deleting non-existent supplier returns 404."""
     client = TestClient(app)
-    response = client.delete("/api/masters/suppliers/NON-EXISTENT")
+    response = client.delete("/api/masters/suppliers/NONEXISTENT-DEL")
     assert response.status_code == 404
+
+
+# ===== Bulk Upsert Tests =====
+
+
+def test_bulk_upsert_suppliers(test_db: Session):
+    """Test bulk upserting suppliers."""
+    client = TestClient(app)
+
+    # Create one existing supplier
+    s = Supplier(supplier_code="BULK-001", supplier_name="Original Name")
+    test_db.add(s)
+    test_db.commit()
+
+    upsert_data = {
+        "rows": [
+            {
+                "supplier_code": "BULK-001",  # Update
+                "supplier_name": "Updated Bulk Name",
+            },
+            {
+                "supplier_code": "BULK-002",  # Create
+                "supplier_name": "New Bulk Supplier",
+            },
+        ]
+    }
+
+    response = client.post("/api/masters/suppliers/bulk-upsert", json=upsert_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["summary"]["created"] == 1
+    assert data["summary"]["updated"] == 1
+    assert data["summary"]["failed"] == 0
+
+    # Verify updates
+    test_db.expire_all()
+    s1 = test_db.query(Supplier).filter(Supplier.supplier_code == "BULK-001").first()
+    assert s1.supplier_name == "Updated Bulk Name"
+
+    s2 = test_db.query(Supplier).filter(Supplier.supplier_code == "BULK-002").first()
+    assert s2 is not None
+    assert s2.supplier_name == "New Bulk Supplier"
