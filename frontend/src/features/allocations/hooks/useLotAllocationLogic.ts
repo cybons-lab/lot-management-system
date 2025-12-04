@@ -14,6 +14,8 @@ import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery
  * Consolidates logic from previous useLotAllocationState, useLotAllocationData, and useLotAllocationComputed.
  */
 
+import { ALLOCATION_CONSTANTS } from "../constants";
+
 export function useLotAllocationLogic() {
   // --- State ---
   const [allocationsByLine, setAllocationsByLine] = useState<
@@ -45,13 +47,13 @@ export function useLotAllocationLogic() {
       queryKey: allocationCandidatesKeys.list({
         order_line_id: line.id!,
         strategy: "fefo",
-        limit: 100,
+        limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
       }),
       queryFn: async () => {
         return getAllocationCandidates({
           order_line_id: line.id!,
           strategy: "fefo",
-          limit: 100,
+          limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         });
       },
       enabled: !!line.id,
