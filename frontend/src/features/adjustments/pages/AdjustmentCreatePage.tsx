@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import type { CreateAdjustmentRequest } from "../api";
 import { AdjustmentForm } from "../components/AdjustmentForm";
@@ -22,11 +23,13 @@ export function AdjustmentCreatePage() {
 
     try {
       await createMutation.mutateAsync(data);
-      // Success - redirect to list
+      toast.success("在庫調整を登録しました");
       navigate(ROUTES.INVENTORY.ADJUSTMENTS.LIST);
     } catch (err) {
       console.error("Create adjustment failed:", err);
-      setError("在庫調整の登録に失敗しました");
+      const message = "在庫調整の登録に失敗しました";
+      setError(message);
+      toast.error(message);
     }
   };
 
