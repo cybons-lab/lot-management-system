@@ -7,7 +7,7 @@ Refactored: Uses database views (v2.5) for simplified logic and better performan
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy.orm import Query, Session
 
@@ -105,7 +105,7 @@ def _query_lots_from_view(db: Session, product_id: int, strategy: str, limit: in
     if strategy == "fefo":
         query = _apply_fefo_ordering(query)
 
-    return query.limit(limit).all()
+    return cast(list[Any], query.limit(limit).all())
 
 
 def _query_lots_with_fallback(db: Session, product_id: int, strategy: str, limit: int) -> list[Any]:

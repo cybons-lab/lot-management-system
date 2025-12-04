@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import cast
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, selectinload
@@ -160,7 +161,7 @@ class OrderService:
         if not order:
             raise OrderNotFoundError(order_id)
 
-        response_order = OrderWithLinesResponse.model_validate(order)
+        response_order = cast(OrderWithLinesResponse, OrderWithLinesResponse.model_validate(order))
         self._populate_additional_info([response_order])
         return response_order
 
@@ -224,7 +225,7 @@ class OrderService:
         self.db.flush()
         self.db.refresh(order)
 
-        return OrderWithLinesResponse.model_validate(order)
+        return cast(OrderWithLinesResponse, OrderWithLinesResponse.model_validate(order))
 
     def cancel_order(self, order_id: int) -> None:
         # Load order with lines

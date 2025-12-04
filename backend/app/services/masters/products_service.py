@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -50,7 +52,10 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
         Raises:
             HTTPException: 404 if product not found and raise_404=True
         """
-        product = self.db.query(Product).filter(Product.maker_part_code == code).first()
+        product = cast(
+            Product | None,
+            self.db.query(Product).filter(Product.maker_part_code == code).first(),
+        )
         if not product and raise_404:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND, detail="製品が見つかりません"
@@ -75,7 +80,9 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
                 (Product.maker_part_code.contains(search)) | (Product.product_name.contains(search))
             )
 
-        return query.order_by(Product.maker_part_code).offset(skip).limit(limit).all()
+        return cast(
+            list[Product], query.order_by(Product.maker_part_code).offset(skip).limit(limit).all()
+        )
 
     def get_all(self) -> list[Product]:
         """Get all products.
@@ -83,7 +90,7 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
         Returns:
             List of all products ordered by product code
         """
-        return self.db.query(Product).order_by(Product.maker_part_code).all()
+        return cast(list[Product], self.db.query(Product).order_by(Product.maker_part_code).all())
 
     def create(self, payload: ProductCreate) -> Product:
         """Create new product with field mapping."""

@@ -3,6 +3,7 @@
 import logging
 import traceback
 from datetime import date
+from typing import cast
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select, text
@@ -199,7 +200,9 @@ def _ensure_warehouse(db: Session, warehouse_code: str, warn_cb) -> Warehouse | 
         warn_cb("倉庫コードが指定されていません")
         return None
 
-    warehouse = db.query(Warehouse).filter_by(warehouse_code=warehouse_code).first()
+    warehouse = cast(
+        Warehouse | None, db.query(Warehouse).filter_by(warehouse_code=warehouse_code).first()
+    )
     if warehouse:
         return warehouse
 

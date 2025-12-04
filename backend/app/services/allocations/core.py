@@ -6,6 +6,8 @@
 v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
 """
 
+from typing import cast
+
 from sqlalchemy.orm import Session
 
 from app.domain.allocation import (
@@ -27,16 +29,17 @@ class AllocationService:
 
     def _resolve_warehouse_id(self, lot) -> int:
         if lot:
-            if getattr(lot, "warehouse_id", None) is not None:
-                return lot.warehouse_id
+            warehouse_id = getattr(lot, "warehouse_id", None)
+            if warehouse_id is not None:
+                return cast(int, warehouse_id)
             warehouse = getattr(lot, "warehouse", None)
             if warehouse:
-                return warehouse.id
+                return cast(int, warehouse.id)
 
-        fallback = self.db.query(Warehouse).first()
+        fallback = cast(Warehouse | None, self.db.query(Warehouse).first())
         if not fallback:
             raise NotFoundError("Warehouse", "default")
-        return fallback.id
+        return cast(int, fallback.id)
 
     def allocate_lot(
         self, order_line_id: int, lot_id: int, allocate_qty: float
