@@ -51,7 +51,7 @@ class InboundService:
         Returns:
             Tuple of (list of inbound plans, total count)
         """
-        query = self.db.query(InboundPlan)
+        query = self.db.query(InboundPlan).options(joinedload(InboundPlan.lines))
 
         if supplier_id is not None:
             query = query.filter(InboundPlan.supplier_id == supplier_id)
@@ -66,7 +66,17 @@ class InboundService:
         if product_id is not None:
             query = query.distinct()
 
-        total = query.count()
+        # Count total before applying pagination (using subquery without joinedload)
+        count_query = self.db.query(InboundPlan)
+        if supplier_id is not None:
+            count_query = count_query.filter(InboundPlan.supplier_id == supplier_id)
+        if product_id is not None:
+            count_query = count_query.join(InboundPlan.lines).filter(
+                InboundPlanLine.product_id == product_id
+            ).distinct()
+        if status is not None:
+            count_query = count_query.filter(InboundPlan.status == status)
+        total = count_query.count()
 
         query = query.order_by(InboundPlan.planned_arrival_date.desc())
         plans = query.offset(skip).limit(limit).all()

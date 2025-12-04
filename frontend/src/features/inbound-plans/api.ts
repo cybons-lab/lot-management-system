@@ -21,6 +21,8 @@ export interface InboundPlan {
   updated_at: string;
   // Joined data (optional)
   supplier_name?: string;
+  /** Sum of planned_quantity from all lines */
+  total_quantity?: number;
 }
 
 /**

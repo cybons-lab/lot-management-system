@@ -79,7 +79,8 @@ export function InboundReceiveDialog({
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to receive inbound plan:", error);
-      // エラーハンドリング（TODO: トースト表示）
+      const message = error instanceof Error ? error.message : "入庫確定に失敗しました";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
