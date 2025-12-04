@@ -1,6 +1,5 @@
 import os
 import sys
-from multiprocessing import Pool
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import ProgrammingError
