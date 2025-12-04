@@ -15,7 +15,7 @@ from app.models.base_model import Base
 # Can be overridden with TEST_DATABASE_URL environment variable
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql://testuser:testpass@localhost:5433/lot_management_test",
+    "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
 )
 
 engine = create_engine(
