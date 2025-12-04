@@ -138,7 +138,7 @@ class AllocationService:
                 product_id=lot_ref.product_id if lot_ref else None,
                 warehouse_id=self._resolve_warehouse_id(lot_ref),
                 lot_id=allocation.lot_id,
-                quantity_delta=allocation.allocated_qty,
+                quantity_delta=allocation.allocated_quantity,
                 reason=StockMovementReason.ALLOCATION_RELEASE,
                 source_table="allocations",
                 source_id=allocation.id,
@@ -149,7 +149,7 @@ class AllocationService:
 
             # 2. ロットの引当数量を解放
             self.repository.update_lot_allocated_quantity(
-                allocation.lot_id, -allocation.allocated_qty
+                allocation.lot_id, -allocation.allocated_quantity
             )
 
             # 3. 引当ステータス更新

@@ -113,8 +113,12 @@ class EndpointMetrics:
 class MetricsCollector:
     """メトリクスコレクター（シングルトン）."""
 
-    _instance = None
+    _instance: "MetricsCollector | None" = None
     _lock = Lock()
+
+    # Instance attributes (set in __new__)
+    metrics: dict[str, EndpointMetrics]
+    data_lock: Lock
 
     def __new__(cls):
         """シングルトンパターン."""
