@@ -39,6 +39,7 @@ function formatDate(date: string | null | undefined): string {
 /**
  * ロット一覧テーブルのカラム定義を生成
  */
+// eslint-disable-next-line max-lines-per-function
 export function createLotColumns(): Column<LotUI>[] {
   return [
     {

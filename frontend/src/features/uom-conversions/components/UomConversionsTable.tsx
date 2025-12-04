@@ -106,6 +106,7 @@ interface TableProps {
 }
 
 /** UOM conversions table component */
+// eslint-disable-next-line max-lines-per-function
 export function UomConversionsTable({
   conversions,
   editingId,
@@ -174,10 +175,7 @@ export function UomConversionsTable({
                 />
               </td>
               <td className="px-6 py-4 text-sm text-slate-600">
-                <span
-                  className="block max-w-[150px] truncate"
-                  title={conversion.remarks || "-"}
-                >
+                <span className="block max-w-[150px] truncate" title={conversion.remarks || "-"}>
                   {conversion.remarks || "-"}
                 </span>
               </td>
