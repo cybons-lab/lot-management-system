@@ -24,7 +24,6 @@ class InboundPlanStatus(str, Enum):
 class ExpectedLotBase(BaseSchema):
     """Shared attributes for expected lot payloads."""
 
-    inbound_plan_line_id: int
     expected_lot_number: str | None = None
     expected_quantity: Decimal
     expected_expiry_date: date | None = None
@@ -48,6 +47,7 @@ class ExpectedLotResponse(ExpectedLotBase, TimestampMixin):
     """Response model for expected lots."""
 
     id: int = Field(serialization_alias="expected_lot_id")
+    inbound_plan_line_id: int
 
 
 class InboundPlanLineBase(BaseSchema):
