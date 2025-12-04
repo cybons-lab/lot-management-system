@@ -2,7 +2,7 @@
 :toc: left
 :toc-title: 目次
 
-**最終更新:** 2025-11-30
+**最終更新:** 2025-12-04
 
 == 概要
 
@@ -193,6 +193,27 @@
 
 * MSWハンドラー定義
 * テストコードは一部のみ（拡充予定）
+
+== CI/CD
+
+**実装完了:** 2025-12
+
+=== GitHub Actions ワークフロー
+
+* **フロントエンド:** lint、typecheck、test実行
+* **バックエンド:** ruff check（テストは一時スキップ）
+* PostgreSQL 15サービスコンテナ
+
+=== 主要ファイル
+
+* `.github/workflows/ci.yml`
+* `backend/tests/conftest.py`
+* `backend/tests/conftest_hypothesis.py`
+
+=== 今後の改善予定
+
+* バックエンドテストの安定化（DBタイムアウト対策）
+* 並列テスト実行の検討
 
 == 残課題
 
