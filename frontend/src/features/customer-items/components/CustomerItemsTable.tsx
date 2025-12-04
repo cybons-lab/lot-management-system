@@ -58,10 +58,12 @@ function TableRow({ item, isDeleting, onDelete }: TableRowProps) {
     <tr className="hover:bg-gray-50">
       <td className="px-6 py-4 text-sm text-gray-900">
         <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-orange-600" />
-          <div>
+          <Building2 className="h-4 w-4 shrink-0 text-orange-600" />
+          <div className="max-w-[180px]">
             <div className="font-medium">{item.customer_code}</div>
-            <div className="text-xs text-gray-500">{item.customer_name}</div>
+            <div className="truncate text-xs text-gray-500" title={item.customer_name}>
+              {item.customer_name}
+            </div>
           </div>
         </div>
       </td>
@@ -70,18 +72,22 @@ function TableRow({ item, isDeleting, onDelete }: TableRowProps) {
       </td>
       <td className="px-6 py-4 text-sm text-gray-900">
         <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-green-600" />
-          <div>
-            <div className="font-medium">{item.product_name}</div>
+          <Package className="h-4 w-4 shrink-0 text-green-600" />
+          <div className="max-w-[200px]">
+            <div className="truncate font-medium" title={item.product_name}>
+              {item.product_name}
+            </div>
             <div className="text-xs text-gray-500">ID: {item.product_id}</div>
           </div>
         </div>
       </td>
       <td className="px-6 py-4 text-sm text-gray-600">
         {item.supplier_name ? (
-          <div>
+          <div className="max-w-[150px]">
             <div className="font-medium">{item.supplier_code}</div>
-            <div className="text-xs text-gray-500">{item.supplier_name}</div>
+            <div className="truncate text-xs text-gray-500" title={item.supplier_name}>
+              {item.supplier_name}
+            </div>
           </div>
         ) : (
           "-"

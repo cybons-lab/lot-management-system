@@ -56,13 +56,26 @@ export function createLotColumns(): Column<LotUI>[] {
     {
       id: "product_name",
       header: "製品名",
-      cell: (lot) => lot.product_name,
+      cell: (lot) => (
+        <span className="block max-w-[200px] truncate" title={lot.product_name ?? ""}>
+          {lot.product_name}
+        </span>
+      ),
+      width: "200px",
     },
     {
       id: "delivery_place",
       header: "納品先",
-      cell: (lot) => getDeliveryPlace(lot),
+      cell: (lot) => {
+        const text = getDeliveryPlace(lot);
+        return (
+          <span className="block max-w-[150px] truncate" title={text}>
+            {text}
+          </span>
+        );
+      },
       sortable: true,
+      width: "150px",
     },
     {
       id: "current_quantity",

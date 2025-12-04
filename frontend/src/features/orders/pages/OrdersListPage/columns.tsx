@@ -20,9 +20,13 @@ export const columns: Column<OrderUI>[] = [
     id: "customer_code",
     header: "得意先",
     cell: (order: OrderUI) => (
-      <div>
+      <div className="max-w-[180px]">
         <div className="font-medium text-slate-900">{order.customer_code}</div>
-        {order.customer_name && <div className="text-xs text-slate-600">{order.customer_name}</div>}
+        {order.customer_name && (
+          <div className="truncate text-xs text-slate-600" title={order.customer_name}>
+            {order.customer_name}
+          </div>
+        )}
       </div>
     ),
     sortable: true,
@@ -79,9 +83,8 @@ export const columns: Column<OrderUI>[] = [
         <div className="flex items-center gap-3">
           <div className="h-2.5 w-32 overflow-hidden rounded-full bg-slate-200">
             <div
-              className={`h-full rounded-full transition-all ${
-                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
-              }`}
+              className={`h-full rounded-full transition-all ${rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
+                }`}
               style={{ width: `${rate}%` }}
             />
           </div>

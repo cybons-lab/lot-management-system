@@ -25,8 +25,13 @@ export const warehouseColumns: Column<Warehouse>[] = [
   {
     id: "warehouse_name",
     header: "倉庫名",
-    cell: (row) => <span className="text-gray-900">{row.warehouse_name}</span>,
+    cell: (row) => (
+      <span className="block max-w-[250px] truncate text-gray-900" title={row.warehouse_name}>
+        {row.warehouse_name}
+      </span>
+    ),
     sortable: true,
+    width: "250px",
   },
   {
     id: "warehouse_type",

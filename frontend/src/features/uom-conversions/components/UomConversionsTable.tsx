@@ -151,7 +151,14 @@ export function UomConversionsTable({
                   {conversion.product_code}
                 </div>
               </td>
-              <td className="px-6 py-4 text-sm text-slate-900">{conversion.product_name}</td>
+              <td className="px-6 py-4 text-sm text-slate-900">
+                <span
+                  className="block max-w-[200px] truncate"
+                  title={conversion.product_name ?? ""}
+                >
+                  {conversion.product_name}
+                </span>
+              </td>
               <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-indigo-600">
                 {conversion.external_unit}
               </td>
@@ -166,7 +173,14 @@ export function UomConversionsTable({
                   onCancel={handleCancelEdit}
                 />
               </td>
-              <td className="px-6 py-4 text-sm text-slate-600">{conversion.remarks || "-"}</td>
+              <td className="px-6 py-4 text-sm text-slate-600">
+                <span
+                  className="block max-w-[150px] truncate"
+                  title={conversion.remarks || "-"}
+                >
+                  {conversion.remarks || "-"}
+                </span>
+              </td>
               <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
                 <ActionButtons
                   conversion={conversion}
