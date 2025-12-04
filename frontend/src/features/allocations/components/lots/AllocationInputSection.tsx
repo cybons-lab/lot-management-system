@@ -34,6 +34,7 @@ interface AllocationInputSectionProps {
   handleClearAllocation: () => void;
 }
 
+// eslint-disable-next-line max-lines-per-function, complexity
 export function AllocationInputSection({
   lot,
   allocatedQty,

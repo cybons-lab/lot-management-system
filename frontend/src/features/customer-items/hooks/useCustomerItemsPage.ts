@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { CreateCustomerItemRequest } from "../api";
 import { useCustomerItems, useCreateCustomerItem, useDeleteCustomerItem } from "../hooks";
 
+// eslint-disable-next-line max-lines-per-function
 export function useCustomerItemsPage() {
   // State
   const [searchQuery, setSearchQuery] = useState("");

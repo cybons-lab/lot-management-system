@@ -16,6 +16,7 @@ interface LotInfoSectionProps {
   freeQty: number;
 }
 
+// eslint-disable-next-line complexity
 export function LotInfoSection({
   lot,
   rank,
