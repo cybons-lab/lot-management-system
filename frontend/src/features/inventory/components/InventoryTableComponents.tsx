@@ -199,10 +199,20 @@ export function InventoryRow({
           </button>
         </td>
         <td className={styles.table.td}>
-          {item.product_name || item.product_code || `ID: ${item.product_id}`}
+          <span
+            className="block max-w-[200px] truncate"
+            title={item.product_name || item.product_code || `ID: ${item.product_id}`}
+          >
+            {item.product_name || item.product_code || `ID: ${item.product_id}`}
+          </span>
         </td>
         <td className={styles.table.td}>
-          {item.warehouse_name || item.warehouse_code || `ID: ${item.warehouse_id}`}
+          <span
+            className="block max-w-[150px] truncate"
+            title={item.warehouse_name || item.warehouse_code || `ID: ${item.warehouse_id}`}
+          >
+            {item.warehouse_name || item.warehouse_code || `ID: ${item.warehouse_id}`}
+          </span>
         </td>
         <td className={styles.table.tdRight}>{lots.length}</td>
         <td className={styles.table.tdRight}>{fmt(item.total_quantity)}</td>

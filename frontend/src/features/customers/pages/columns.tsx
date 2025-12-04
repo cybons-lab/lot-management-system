@@ -24,8 +24,13 @@ export const customerColumns: Column<Customer>[] = [
   {
     id: "customer_name",
     header: "得意先名",
-    cell: (row) => <span className="text-gray-900">{row.customer_name}</span>,
+    cell: (row) => (
+      <span className="block max-w-[300px] truncate text-gray-900" title={row.customer_name}>
+        {row.customer_name}
+      </span>
+    ),
     sortable: true,
+    width: "300px",
   },
   {
     id: "created_at",
