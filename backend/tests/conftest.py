@@ -10,6 +10,12 @@ import app.models  # Register all models
 from app.main import app
 from app.models.base_model import Base
 
+# Load Hypothesis settings
+try:
+    from . import conftest_hypothesis
+except ImportError:
+    pass
+
 
 # Use PostgreSQL test database (docker-compose.test.yml)
 # Can be overridden with TEST_DATABASE_URL environment variable
