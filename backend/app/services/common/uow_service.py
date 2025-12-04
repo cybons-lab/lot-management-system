@@ -15,6 +15,7 @@ class UnitOfWork(AbstractContextManager):
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        assert self.session is not None, "Session not initialized"
         try:
             if exc_type is None:
                 self.session.commit()

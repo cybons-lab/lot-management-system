@@ -98,6 +98,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
     def update(self, user_id: int, user: UserUpdate) -> User:
         """Update an existing user with password hashing."""
         db_user = self.get_by_id(user_id)
+        assert db_user is not None  # raise_404=True ensures this
 
         update_data = user.model_dump(exclude_unset=True)
 

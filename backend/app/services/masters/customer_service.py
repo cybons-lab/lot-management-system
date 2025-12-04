@@ -36,11 +36,13 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]
     def update_by_code(self, code: str, payload: CustomerUpdate) -> Customer:
         """Update customer by customer_code."""
         customer = self.get_by_code(code)
+        assert customer is not None  # raise_404=True ensures this
         return self.update(customer.id, payload)
 
     def delete_by_code(self, code: str) -> None:
         """Delete customer by customer_code."""
         customer = self.get_by_code(code)
+        assert customer is not None  # raise_404=True ensures this
         self.delete(customer.id)
 
     def bulk_upsert(self, rows: list[CustomerBulkRow]) -> BulkUpsertResponse:

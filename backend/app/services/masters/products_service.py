@@ -145,11 +145,13 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
     def update_by_code(self, code: str, payload: ProductUpdate) -> Product:
         """Update product by product code."""
         product = self.get_by_code(code)
+        assert product is not None  # raise_404=True ensures this
         return self.update(product.id, payload)
 
     def delete_by_code(self, code: str) -> None:
         """Delete product by product code."""
         product = self.get_by_code(code)
+        assert product is not None  # raise_404=True ensures this
         self.delete(product.id)
 
     def list_products(
