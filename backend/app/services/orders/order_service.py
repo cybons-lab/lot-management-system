@@ -193,7 +193,7 @@ class OrderService:
             product_stmt = select(Product).where(Product.id == line_data.product_id)
             product = self.db.execute(product_stmt).scalar_one_or_none()
             if not product:
-                raise ProductNotFoundError(line_data.product_id)
+                raise ProductNotFoundError(str(line_data.product_id))
 
             # Calculate converted_quantity
             converted_qty = line_data.order_quantity

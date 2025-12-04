@@ -288,7 +288,7 @@ class AllocationSuggestionService:
         )
 
         # Group by product_id
-        result = {}
+        result: dict[int, list[Lot]] = {}
         for lot in lots:
             if lot.product_id not in result:
                 result[lot.product_id] = []

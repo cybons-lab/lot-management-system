@@ -138,7 +138,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
     def update_by_key(
         self, customer_id: int, external_product_code: str, item: CustomerItemUpdate
-    ) -> CustomerItem | None:
+    ) -> dict | None:
         """Update an existing customer item mapping by composite key."""
         db_item = self.get_by_key(customer_id, external_product_code)
         if not db_item:

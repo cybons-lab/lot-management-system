@@ -68,7 +68,8 @@ class AuthService:
             raise credentials_exception
 
         user_service = UserService(db)
-        user = user_service.get_by_username(username=token_data.username)
+        # username is guaranteed to be str after the None check above
+        user = user_service.get_by_username(username=username)
         if user is None:
             raise credentials_exception
         return user
@@ -107,5 +108,6 @@ class AuthService:
             return None
 
         user_service = UserService(db)
-        user = user_service.get_by_username(username=token_data.username)
+        # username is guaranteed to be str after the None check above
+        user = user_service.get_by_username(username=username)
         return user

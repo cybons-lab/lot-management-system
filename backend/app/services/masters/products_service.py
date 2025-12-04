@@ -123,6 +123,7 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
     def update(self, id: int, payload: ProductUpdate) -> Product:
         """Update product with field mapping."""
         instance = self.get_by_id(id)
+        assert instance is not None  # raise_404=True ensures this
         data = payload.model_dump(exclude_unset=True)
 
         if "product_code" in data:

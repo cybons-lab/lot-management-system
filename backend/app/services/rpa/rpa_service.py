@@ -54,7 +54,7 @@ class RPALockManager:
         Returns:
             残り秒数（ロックされていない場合は0）
         """
-        if not self.is_locked():
+        if not self.is_locked() or self._lock_until is None:
             return 0
 
         now = datetime.now()

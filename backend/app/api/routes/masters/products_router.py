@@ -79,9 +79,9 @@ def export_products(format: str = "csv", db: Session = Depends(get_db)):
 @router.get("/{product_code}", response_model=ProductOut)
 def get_product(product_code: str, db: Session = Depends(get_db)):
     """Fetch a product by its code (maker_part_code)."""
-    """Fetch a product by its code (maker_part_code)."""
     service = ProductService(db)
     product = service.get_by_code(product_code)
+    assert product is not None  # raise_404=True ensures this
     return _to_product_out(product)
 
 

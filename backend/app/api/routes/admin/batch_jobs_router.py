@@ -207,8 +207,6 @@ def delete_batch_job(job_id: int, db: Session = Depends(get_db)):
         HTTPException: ジョブが存在しない場合
     """
     service = BatchJobService(db)
-    deleted = service.delete(job_id)
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Batch job not found")
-
+    # delete() raises HTTPException 404 if not found
+    service.delete(job_id)
     return None

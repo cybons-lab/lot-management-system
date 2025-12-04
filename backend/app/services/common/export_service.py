@@ -129,11 +129,11 @@ class ExportService:
             raise ValueError(f"Unknown template type: {template_type}")
 
         template = TEMPLATE_DEFINITIONS[template_type]
-        columns = template["columns"]
-        data = [columns]
+        columns = list(template["columns"])
+        data: list[list[str]] = [columns]
 
         if include_sample:
-            data.append(template["sample_row"])
+            data.append(list(template["sample_row"]))
 
         filename = f"{template_type}_template"
 
