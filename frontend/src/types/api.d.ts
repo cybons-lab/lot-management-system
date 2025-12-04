@@ -2549,10 +2549,10 @@ export interface components {
        * @description Target resource for navigation
        */
       target:
-        | components["schemas"]["AlertTargetOrder"]
-        | components["schemas"]["AlertTargetInventoryItem"]
-        | components["schemas"]["AlertTargetLot"]
-        | components["schemas"]["AlertTargetForecastDaily"];
+      | components["schemas"]["AlertTargetOrder"]
+      | components["schemas"]["AlertTargetInventoryItem"]
+      | components["schemas"]["AlertTargetLot"]
+      | components["schemas"]["AlertTargetForecastDaily"];
     };
     /**
      * AlertSummaryResponse
@@ -3222,6 +3222,14 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
+      /** Address */
+      address?: string | null;
+      /** Contact Name */
+      contact_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+      /** Email */
+      email?: string | null;
     };
     /**
      * CustomerItemCreate
@@ -3370,6 +3378,14 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
+      /** Address */
+      address?: string | null;
+      /** Contact Name */
+      contact_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+      /** Email */
+      email?: string | null;
       /** Id */
       id: number;
       /**
@@ -3390,6 +3406,14 @@ export interface components {
     CustomerUpdate: {
       /** Customer Name */
       customer_name?: string | null;
+      /** Address */
+      address?: string | null;
+      /** Contact Name */
+      contact_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+      /** Email */
+      email?: string | null;
     };
     /**
      * DashboardStatsResponse
