@@ -73,7 +73,7 @@ jobs:
         working-directory: backend
         run: |
           uv sync
-          uv pip install pytest-cov pytest-xdist
+          uv pip install pytest-cov
 
       - name: Run ruff check
         working-directory: backend
@@ -90,7 +90,7 @@ jobs:
           TEST_DB_PRE_INITIALIZED: "1"
         run: |
           uv run python tests/init_test_db.py
-          uv run pytest -n auto --cov=app --cov-report=term-missing --cov-report=html --durations=10
+          uv run pytest --cov=app --cov-report=term-missing --cov-report=html --durations=10
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

@@ -25,11 +25,6 @@ SQLALCHEMY_DATABASE_URL = os.getenv(
     "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
 )
 
-# Modify database URL for parallel execution (pytest-xdist)
-if os.getenv("PYTEST_XDIST_WORKER"):
-    worker_id = os.getenv("PYTEST_XDIST_WORKER")
-    SQLALCHEMY_DATABASE_URL = f"{SQLALCHEMY_DATABASE_URL}_{worker_id}"
-
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
     pool_pre_ping=True,  # Verify connections before using

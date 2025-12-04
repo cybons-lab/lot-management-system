@@ -182,24 +182,19 @@ def init_single_db(db_url):
 
 
 def init_test_dbs():
-    """Initialize test databases for parallel execution."""
+    """Initialize test databases."""
     base_db_url = os.getenv(
         "TEST_DATABASE_URL",
         "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
     )
     
-    # Always initialize the main test db (for non-parallel tests or gw0 fallback)
+    # Only initialize the main test db
     db_urls = [base_db_url]
-    
-    # If running in CI with xdist, create additional databases
-    # Assuming 4 workers max for safety
-    if os.getenv("CI"):
-        for i in range(4):
-            db_urls.append(f"{base_db_url}_gw{i}")
             
-    # Initialize databases in parallel
-    with Pool(processes=len(db_urls)) as pool:
-        pool.map(init_single_db, db_urls)
+    # Initialize databases
+    # Use Pool even for single DB to keep the logic simple or just call directly
+    for db_url in db_urls:
+        init_single_db(db_url)
 
 if __name__ == "__main__":
     init_test_dbs()
