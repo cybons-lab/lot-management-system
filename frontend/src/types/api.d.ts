@@ -87,7 +87,7 @@ export interface paths {
     put?: never;
     /**
      * Lock Lot
-     * @description ロットをロックする.
+     * @description ロットをロックする（数量指定可）.
      */
     post: operations["lock_lot_api_lots__lot_id__lock_post"];
     delete?: never;
@@ -107,7 +107,7 @@ export interface paths {
     put?: never;
     /**
      * Unlock Lot
-     * @description ロットのロックを解除する.
+     * @description ロットのロックを解除する（数量指定可）.
      */
     post: operations["unlock_lot_api_lots__lot_id__unlock_post"];
     delete?: never;
@@ -170,9 +170,34 @@ export interface paths {
      * Get Confirmed Order Lines
      * @description Get all order lines that are fully allocated and not yet registered in SAP.
      *
-     *     Returns lines where allocated_quantity >= order_quantity and sap_order_no is NULL.
+     *     Returns lines where allocated_quantity >= converted_quantity and sap_order_no is NULL.
+     *
+     *     Note: Both allocated_quantity and converted_quantity are in internal management units.
+     *           Do NOT compare with order_quantity as it uses the original order unit (PCS/ML/etc).
      */
     get: operations["get_confirmed_order_lines_api_orders_confirmed_order_lines_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/orders/lines": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Order Lines
+     * @description 受注明細一覧取得.
+     *
+     *     受注ヘッダ情報や製品情報などを結合したフラットな明細リストを返します。
+     */
+    get: operations["list_order_lines_api_orders_lines_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -256,10 +281,10 @@ export interface paths {
     put?: never;
     /**
      * Save Manual Allocations
-     * @description 手動引当保存 (確定).
+     * @description 手動引当保存 (確定) - トランザクション保護版.
      *
      *     既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。
-     *     これにより、DB上の在庫数(allocated_quantity)とステータスが更新される。
+     *     全ての操作を1つのトランザクションで実行し、エラー時はロールバックします。
      */
     post: operations["save_manual_allocations_api_orders__order_line_id__allocations_post"];
     delete?: never;
@@ -752,6 +777,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/inbound-plans/sync-from-sap": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sync From Sap
+     * @description SAP から発注データを取得して入荷予定を作成.
+     *
+     *     SAP の発注データ（モック）を取得し、入荷予定（InboundPlan）として
+     *     システムに登録します。既に存在する発注番号はスキップされます。
+     *
+     *     Args:
+     *         request: SAP同期リクエスト（現在パラメータなし）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SAP同期結果（作成された入荷予定リスト、スキップ数）
+     *
+     *     Note:
+     *         現在はモック実装です。本番環境では実際のSAP RFC/APIに接続します。
+     */
+    post: operations["sync_from_sap_api_inbound_plans_sync_from_sap_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/inbound-plans/{plan_id}": {
     parameters: {
       query?: never;
@@ -806,39 +864,6 @@ export interface paths {
      *         HTTPException: 入荷予定が見つからない場合は404
      */
     delete: operations["delete_inbound_plan_api_inbound_plans__plan_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/inbound-plans/sync-from-sap": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Sync From Sap
-     * @description SAP から発注データを取得して入荷予定を作成.
-     *
-     *     SAP の発注データ（モック）を取得し、入荷予定（InboundPlan）として
-     *     システムに登録します。既に存在する発注番号はスキップされます。
-     *
-     *     Args:
-     *         request: SAP同期リクエスト（現在パラメータなし）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         SAP同期結果（作成された入荷予定リスト、スキップ数）
-     *
-     *     Note:
-     *         現在はモック実装です。本番環境では実際のSAP RFC/APIに接続します。
-     */
-    post: operations["sync_from_sap_api_inbound_plans_sync_from_sap_post"];
-    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1053,7 +1078,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/warehouses": {
+  "/api/inventory-items/by-supplier": {
     parameters: {
       query?: never;
       header?: never;
@@ -1061,23 +1086,22 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * List Warehouses
-     * @description List warehouses.
+     * List Inventory By Supplier
+     * @description 在庫サマリ（仕入先別集計）取得.
+     *
+     *     Returns:
+     *         仕入先ごとの在庫集計リスト
      */
-    get: operations["list_warehouses_api_warehouses_get"];
+    get: operations["list_inventory_by_supplier_api_inventory_items_by_supplier_get"];
     put?: never;
-    /**
-     * Create Warehouse
-     * @description Create warehouse.
-     */
-    post: operations["create_warehouse_api_warehouses_post"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/warehouses/{warehouse_code}": {
+  "/api/inventory-items/by-warehouse": {
     parameters: {
       query?: never;
       header?: never;
@@ -1085,51 +1109,22 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Warehouse
-     * @description Get warehouse by code.
+     * List Inventory By Warehouse
+     * @description 在庫サマリ（倉庫別集計）取得.
+     *
+     *     Returns:
+     *         倉庫ごとの在庫集計リスト
      */
-    get: operations["get_warehouse_api_warehouses__warehouse_code__get"];
-    /**
-     * Update Warehouse
-     * @description Update warehouse.
-     */
-    put: operations["update_warehouse_api_warehouses__warehouse_code__put"];
-    post?: never;
-    /**
-     * Delete Warehouse
-     * @description Delete warehouse.
-     */
-    delete: operations["delete_warehouse_api_warehouses__warehouse_code__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/suppliers": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Suppliers
-     * @description List suppliers.
-     */
-    get: operations["list_suppliers_api_suppliers_get"];
+    get: operations["list_inventory_by_warehouse_api_inventory_items_by_warehouse_get"];
     put?: never;
-    /**
-     * Create Supplier
-     * @description Create supplier.
-     */
-    post: operations["create_supplier_api_suppliers_post"];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/suppliers/{supplier_code}": {
+  "/api/inventory-items/by-product": {
     parameters: {
       query?: never;
       header?: never;
@@ -1137,27 +1132,22 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Supplier
-     * @description Get supplier by code.
+     * List Inventory By Product
+     * @description 在庫サマリ（製品別集計）取得.
+     *
+     *     Returns:
+     *         製品ごとの在庫集計リスト（全倉庫合計）
      */
-    get: operations["get_supplier_api_suppliers__supplier_code__get"];
-    /**
-     * Update Supplier
-     * @description Update supplier.
-     */
-    put: operations["update_supplier_api_suppliers__supplier_code__put"];
+    get: operations["list_inventory_by_product_api_inventory_items_by_product_get"];
+    put?: never;
     post?: never;
-    /**
-     * Delete Supplier
-     * @description Delete supplier.
-     */
-    delete: operations["delete_supplier_api_suppliers__supplier_code__delete"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/customers": {
+  "/api/masters/customers": {
     parameters: {
       query?: never;
       header?: never;
@@ -1168,20 +1158,67 @@ export interface paths {
      * List Customers
      * @description Return customers.
      */
-    get: operations["list_customers_api_customers_get"];
+    get: operations["list_customers_api_masters_customers_get"];
     put?: never;
     /**
      * Create Customer
      * @description Create a new customer.
      */
-    post: operations["create_customer_api_customers_post"];
+    post: operations["create_customer_api_masters_customers_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/customers/{customer_code}": {
+  "/api/masters/customers/template/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Customers Template
+     * @description Download customer import template.
+     *
+     *     Args:
+     *         format: 'csv' or 'xlsx' (default: csv)
+     *         include_sample: Whether to include a sample row (default: True)
+     *
+     *     Returns:
+     *         Template file for customer import
+     */
+    get: operations["download_customers_template_api_masters_customers_template_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customers/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Customers
+     * @description Export customers to CSV or Excel.
+     */
+    get: operations["export_customers_api_masters_customers_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customers/{customer_code}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1192,24 +1229,49 @@ export interface paths {
      * Get Customer
      * @description Fetch a customer by code.
      */
-    get: operations["get_customer_api_customers__customer_code__get"];
+    get: operations["get_customer_api_masters_customers__customer_code__get"];
     /**
      * Update Customer
      * @description Update a customer.
      */
-    put: operations["update_customer_api_customers__customer_code__put"];
+    put: operations["update_customer_api_masters_customers__customer_code__put"];
     post?: never;
     /**
      * Delete Customer
      * @description Delete a customer.
      */
-    delete: operations["delete_customer_api_customers__customer_code__delete"];
+    delete: operations["delete_customer_api_masters_customers__customer_code__delete"];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/products": {
+  "/api/masters/customers/bulk-upsert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Upsert Customers
+     * @description Bulk upsert customers by customer_code.
+     *
+     *     - If a customer with the same customer_code exists, it will be updated
+     *     - If not, a new customer will be created
+     *
+     *     Returns summary with counts of created/updated/failed records.
+     */
+    post: operations["bulk_upsert_customers_api_masters_customers_bulk_upsert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/products": {
     parameters: {
       query?: never;
       header?: never;
@@ -1220,20 +1282,67 @@ export interface paths {
      * List Products
      * @description Return a paginated list of products.
      */
-    get: operations["list_products_api_products_get"];
+    get: operations["list_products_api_masters_products_get"];
     put?: never;
     /**
      * Create Product
      * @description Create a new product.
      */
-    post: operations["create_product_api_products_post"];
+    post: operations["create_product_api_masters_products_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/products/{product_code}": {
+  "/api/masters/products/template/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Products Template
+     * @description Download product import template.
+     *
+     *     Args:
+     *         format: 'csv' or 'xlsx' (default: csv)
+     *         include_sample: Whether to include a sample row (default: True)
+     *
+     *     Returns:
+     *         Template file for product import
+     */
+    get: operations["download_products_template_api_masters_products_template_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/products/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Products
+     * @description Export products to CSV or Excel.
+     */
+    get: operations["export_products_api_masters_products_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/products/{product_code}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1244,24 +1353,440 @@ export interface paths {
      * Get Product
      * @description Fetch a product by its code (maker_part_code).
      */
-    get: operations["get_product_api_products__product_code__get"];
+    get: operations["get_product_api_masters_products__product_code__get"];
     /**
      * Update Product
      * @description Update an existing product (by maker_part_code).
      */
-    put: operations["update_product_api_products__product_code__put"];
+    put: operations["update_product_api_masters_products__product_code__put"];
     post?: never;
     /**
      * Delete Product
      * @description Delete a product by its code (maker_part_code).
      */
-    delete: operations["delete_product_api_products__product_code__delete"];
+    delete: operations["delete_product_api_masters_products__product_code__delete"];
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/customer-items": {
+  "/api/masters/products/bulk-upsert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Upsert Products
+     * @description Bulk upsert products by product_code (maker_part_code).
+     *
+     *     - If a product with the same product_code exists, it will be updated
+     *     - If not, a new product will be created
+     *
+     *     Returns summary with counts of created/updated/failed records.
+     */
+    post: operations["bulk_upsert_products_api_masters_products_bulk_upsert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/suppliers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Suppliers
+     * @description List suppliers.
+     */
+    get: operations["list_suppliers_api_masters_suppliers_get"];
+    put?: never;
+    /**
+     * Create Supplier
+     * @description Create supplier.
+     */
+    post: operations["create_supplier_api_masters_suppliers_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/suppliers/template/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Suppliers Template
+     * @description Download supplier import template.
+     *
+     *     Args:
+     *         format: 'csv' or 'xlsx' (default: csv)
+     *         include_sample: Whether to include a sample row (default: True)
+     *
+     *     Returns:
+     *         Template file for supplier import
+     */
+    get: operations["download_suppliers_template_api_masters_suppliers_template_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/suppliers/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Suppliers
+     * @description Export suppliers to CSV or Excel.
+     */
+    get: operations["export_suppliers_api_masters_suppliers_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/suppliers/{supplier_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Supplier
+     * @description Get supplier by code.
+     */
+    get: operations["get_supplier_api_masters_suppliers__supplier_code__get"];
+    /**
+     * Update Supplier
+     * @description Update supplier.
+     */
+    put: operations["update_supplier_api_masters_suppliers__supplier_code__put"];
+    post?: never;
+    /**
+     * Delete Supplier
+     * @description Delete supplier.
+     */
+    delete: operations["delete_supplier_api_masters_suppliers__supplier_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/suppliers/bulk-upsert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Upsert Suppliers
+     * @description Bulk upsert suppliers by supplier_code.
+     *
+     *     - If a supplier with the same supplier_code exists, it will be updated
+     *     - If not, a new supplier will be created
+     *
+     *     Returns summary with counts of created/updated/failed records.
+     */
+    post: operations["bulk_upsert_suppliers_api_masters_suppliers_bulk_upsert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/supplier-products": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Supplier Products
+     * @description Get supplier products (仕入先商品一覧).
+     *
+     *     CustomerItem テーブルから supplier_id が NOT NULL のレコードを取得。
+     */
+    get: operations["list_supplier_products_api_masters_supplier_products_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/supplier-products/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Supplier Products
+     * @description Export supplier products.
+     */
+    get: operations["export_supplier_products_api_masters_supplier_products_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/uom-conversions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Uom Conversions
+     * @description Get UOM conversions (単位換算一覧).
+     */
+    get: operations["list_uom_conversions_api_masters_uom_conversions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/uom-conversions/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Uom Conversions
+     * @description Export UOM conversions.
+     */
+    get: operations["export_uom_conversions_api_masters_uom_conversions_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/uom-conversions/bulk-upsert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Upsert Uom Conversions
+     * @description Bulk upsert UOM conversions by composite key (product_id, external_unit).
+     *
+     *     - If a UOM conversion with the same composite key exists, it will be updated
+     *     - If not, a new UOM conversion will be created
+     *
+     *     Returns summary with counts of created/updated/failed records.
+     */
+    post: operations["bulk_upsert_uom_conversions_api_masters_uom_conversions_bulk_upsert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/uom-conversions/{conversion_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Uom Conversion
+     * @description Update a UOM conversion by ID.
+     *
+     *     Args:
+     *         conversion_id: ID of the conversion to update
+     *         data: Update data (factor)
+     *         db: Database session
+     *
+     *     Returns:
+     *         Updated UOM conversion
+     */
+    put: operations["update_uom_conversion_api_masters_uom_conversions__conversion_id__put"];
+    post?: never;
+    /**
+     * Delete Uom Conversion
+     * @description Delete a UOM conversion by ID.
+     *
+     *     Args:
+     *         conversion_id: ID of the conversion to delete
+     *         db: Database session
+     */
+    delete: operations["delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouses": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Warehouses
+     * @description List warehouses.
+     */
+    get: operations["list_warehouses_api_masters_warehouses_get"];
+    put?: never;
+    /**
+     * Create Warehouse
+     * @description Create warehouse.
+     */
+    post: operations["create_warehouse_api_masters_warehouses_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouses/template/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Warehouses Template
+     * @description Download warehouse import template.
+     *
+     *     Args:
+     *         format: 'csv' or 'xlsx' (default: csv)
+     *         include_sample: Whether to include a sample row (default: True)
+     *
+     *     Returns:
+     *         Template file for warehouse import
+     */
+    get: operations["download_warehouses_template_api_masters_warehouses_template_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouses/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Warehouses
+     * @description Export warehouses to CSV or Excel.
+     */
+    get: operations["export_warehouses_api_masters_warehouses_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouses/{warehouse_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Warehouse
+     * @description Get warehouse by code.
+     */
+    get: operations["get_warehouse_api_masters_warehouses__warehouse_code__get"];
+    /**
+     * Update Warehouse
+     * @description Update warehouse.
+     */
+    put: operations["update_warehouse_api_masters_warehouses__warehouse_code__put"];
+    post?: never;
+    /**
+     * Delete Warehouse
+     * @description Delete warehouse.
+     */
+    delete: operations["delete_warehouse_api_masters_warehouses__warehouse_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouses/bulk-upsert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Upsert Warehouses
+     * @description Bulk upsert warehouses by warehouse_code.
+     *
+     *     - If a warehouse with the same warehouse_code exists, it will be updated
+     *     - If not, a new warehouse will be created
+     *
+     *     Returns summary with counts of created/updated/failed records.
+     */
+    post: operations["bulk_upsert_warehouses_api_masters_warehouses_bulk_upsert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customer-items": {
     parameters: {
       query?: never;
       header?: never;
@@ -1282,7 +1807,7 @@ export interface paths {
      *     Returns:
      *         得意先品番マッピングのリスト
      */
-    get: operations["list_customer_items_api_customer_items_get"];
+    get: operations["list_customer_items_api_masters_customer_items_get"];
     put?: never;
     /**
      * Create Customer Item
@@ -1298,14 +1823,14 @@ export interface paths {
      *     Raises:
      *         HTTPException: 既に同じマッピングが存在する場合
      */
-    post: operations["create_customer_item_api_customer_items_post"];
+    post: operations["create_customer_item_api_masters_customer_items_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/customer-items/{customer_id}": {
+  "/api/masters/customer-items/{customer_id}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1323,7 +1848,7 @@ export interface paths {
      *     Returns:
      *         該当得意先の品番マッピングリスト
      */
-    get: operations["list_customer_items_by_customer_api_customer_items__customer_id__get"];
+    get: operations["list_customer_items_by_customer_api_masters_customer_items__customer_id__get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1332,7 +1857,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/customer-items/{customer_id}/{external_product_code}": {
+  "/api/masters/customer-items/{customer_id}/{external_product_code}": {
     parameters: {
       query?: never;
       header?: never;
@@ -1356,7 +1881,7 @@ export interface paths {
      *     Raises:
      *         HTTPException: マッピングが存在しない場合
      */
-    put: operations["update_customer_item_api_customer_items__customer_id___external_product_code__put"];
+    put: operations["update_customer_item_api_masters_customer_items__customer_id___external_product_code__put"];
     post?: never;
     /**
      * Delete Customer Item
@@ -1370,7 +1895,52 @@ export interface paths {
      *     Raises:
      *         HTTPException: マッピングが存在しない場合
      */
-    delete: operations["delete_customer_item_api_customer_items__customer_id___external_product_code__delete"];
+    delete: operations["delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customer-items/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Customer Items
+     * @description Export customer items to CSV or Excel.
+     */
+    get: operations["export_customer_items_api_masters_customer_items_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customer-items/bulk-upsert": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Upsert Customer Items
+     * @description Bulk upsert customer items by composite key (customer_id, external_product_code).
+     *
+     *     - If a customer item with the same composite key exists, it will be updated
+     *     - If not, a new customer item will be created
+     *
+     *     Returns summary with counts of created/updated/failed records.
+     */
+    post: operations["bulk_upsert_customer_items_api_masters_customer_items_bulk_upsert_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1552,6 +2122,26 @@ export interface paths {
      *         HTTPException: ユーザーが存在しない場合
      */
     patch: operations["assign_user_roles_api_users__user_id__roles_patch"];
+    trace?: never;
+  };
+  "/api/users/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Users
+     * @description Export users to CSV or Excel.
+     */
+    get: operations["export_users_api_users_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/roles": {
@@ -2372,6 +2962,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/batch-jobs/inventory-sync/execute": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Inventory Sync Direct
+     * @description SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
+     *
+     *     管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。
+     *     バッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。
+     *
+     *     Args:
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         dict: 実行結果の詳細
+     *             - checked_products: チェックした商品数
+     *             - discrepancies_found: 発見された差異数
+     *             - alerts_created: 作成されたアラート数
+     *             - details: 差異の詳細リスト
+     */
+    post: operations["execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/batch-jobs/{job_id}": {
     parameters: {
       query?: never;
@@ -2476,39 +3099,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/batch-jobs/inventory-sync/execute": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Execute Inventory Sync Direct
-     * @description SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
-     *
-     *     管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。
-     *     バッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。
-     *
-     *     Args:
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         dict: 実行結果の詳細
-     *             - checked_products: チェックした商品数
-     *             - discrepancies_found: 発見された差異数
-     *             - alerts_created: 作成されたアラート数
-     *             - details: 差異の詳細リスト
-     */
-    post: operations["execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/integration/sap/sales-orders": {
     parameters: {
       query?: never;
@@ -2526,6 +3116,32 @@ export interface paths {
      *     It returns dummy SAP order numbers for the provided order IDs.
      */
     post: operations["register_sales_orders_api_integration_sap_sales_orders_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-document": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Material Delivery Document
+     * @description 素材納品書発行を実行.
+     *
+     *     Args:
+     *         request: リクエスト（開始日・終了日）
+     *
+     *     Returns:
+     *         実行結果
+     */
+    post: operations["execute_material_delivery_document_api_rpa_material_delivery_document_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2803,6 +3419,28 @@ export interface components {
       message?: string | null;
     };
     /**
+     * AllocationDetail
+     * @description Allocation detail (DDL: allocations).
+     */
+    AllocationDetail: {
+      /** Id */
+      id: number;
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Status */
+      status: string;
+      /** Created At */
+      created_at?: string | null;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Lot Number */
+      lot_number?: string | null;
+    };
+    /**
      * AllocationGap
      * @description 不足情報.
      */
@@ -2843,32 +3481,6 @@ export interface components {
        * @default false
        */
       ignore_existing_suggestions: boolean;
-    };
-    /**
-     * AllocationResponse
-     * @description Allocation response for order line (DDL: allocations).
-     */
-    AllocationResponse: {
-      /** Id */
-      id: number;
-      /** Order Line Id */
-      order_line_id: number;
-      /** Lot Id */
-      lot_id: number;
-      /** Allocated Quantity */
-      allocated_quantity: string;
-      /** Status */
-      status: string;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
     };
     /** AllocationScopeForecast */
     AllocationScopeForecast: {
@@ -3172,6 +3784,49 @@ export interface components {
       client_secret?: string | null;
     };
     /**
+     * BulkUpsertResponse
+     * @description Bulk upsert response.
+     */
+    BulkUpsertResponse: {
+      /**
+       * Status
+       * @description Overall status: success, partial, or failed
+       */
+      status: string;
+      summary: components["schemas"]["BulkUpsertSummary"];
+      /**
+       * Errors
+       * @description List of error messages
+       */
+      errors?: string[];
+    };
+    /**
+     * BulkUpsertSummary
+     * @description Bulk upsert summary statistics.
+     */
+    BulkUpsertSummary: {
+      /**
+       * Total
+       * @description Total number of rows processed
+       */
+      total: number;
+      /**
+       * Created
+       * @description Number of newly created records
+       */
+      created: number;
+      /**
+       * Updated
+       * @description Number of updated records
+       */
+      updated: number;
+      /**
+       * Failed
+       * @description Number of failed records
+       */
+      failed: number;
+    };
+    /**
      * BusinessRuleCreate
      * @description 業務ルール作成スキーマ.
      */
@@ -3338,19 +3993,6 @@ export interface components {
       lock_reason?: string | null;
     };
     /**
-     * CandidateLotsResponse
-     * @description Candidate lots list response.
-     */
-    CandidateLotsResponse: {
-      /** Items */
-      items?: components["schemas"]["CandidateLotItem"][];
-      /**
-       * Total
-       * @default 0
-       */
-      total: number;
-    };
-    /**
      * ConfirmedOrderLineResponse
      * @description Confirmed order line for SAP registration.
      */
@@ -3383,6 +4025,35 @@ export interface components {
       sap_order_no?: string | null;
     };
     /**
+     * CustomerBulkRow
+     * @description Single row for customer bulk upsert.
+     */
+    CustomerBulkRow: {
+      /** Customer Code */
+      customer_code: string;
+      /** Customer Name */
+      customer_name: string;
+      /** Address */
+      address?: string | null;
+      /** Contact Name */
+      contact_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+      /** Email */
+      email?: string | null;
+    };
+    /**
+     * CustomerBulkUpsertRequest
+     * @description Bulk upsert request for customers.
+     */
+    CustomerBulkUpsertRequest: {
+      /**
+       * Rows
+       * @description List of customer rows to upsert
+       */
+      rows: components["schemas"]["CustomerBulkRow"][];
+    };
+    /**
      * CustomerCreate
      * @description Create customer request.
      */
@@ -3391,6 +4062,73 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
+      /** Address */
+      address?: string | null;
+      /** Contact Name */
+      contact_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+      /** Email */
+      email?: string | null;
+    };
+    /**
+     * CustomerItemBulkRow
+     * @description Single row for customer item bulk upsert.
+     *
+     *     Upsert uses composite key: (customer_code, external_product_code)
+     */
+    CustomerItemBulkRow: {
+      /**
+       * Customer Code
+       * @description 得意先コード
+       */
+      customer_code: string;
+      /**
+       * External Product Code
+       * @description 得意先品番
+       */
+      external_product_code: string;
+      /**
+       * Product Code
+       * @description 製品コード
+       */
+      product_code: string;
+      /**
+       * Supplier Code
+       * @description 仕入先コード
+       */
+      supplier_code?: string | null;
+      /**
+       * Base Unit
+       * @description 基本単位
+       */
+      base_unit: string;
+      /**
+       * Pack Unit
+       * @description 梱包単位
+       */
+      pack_unit?: string | null;
+      /**
+       * Pack Quantity
+       * @description 梱包数量
+       */
+      pack_quantity?: number | null;
+      /**
+       * Special Instructions
+       * @description 特記事項
+       */
+      special_instructions?: string | null;
+    };
+    /**
+     * CustomerItemBulkUpsertRequest
+     * @description Bulk upsert request for customer items.
+     */
+    CustomerItemBulkUpsertRequest: {
+      /**
+       * Rows
+       * @description List of customer item rows to upsert
+       */
+      rows: components["schemas"]["CustomerItemBulkRow"][];
     };
     /**
      * CustomerItemCreate
@@ -3440,7 +4178,7 @@ export interface components {
     };
     /**
      * CustomerItemResponse
-     * @description Schema for customer item response.
+     * @description Schema for customer item response with enriched data.
      */
     CustomerItemResponse: {
       /**
@@ -3483,6 +4221,31 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
+      /**
+       * Customer Code
+       * @description 得意先コード
+       */
+      customer_code: string;
+      /**
+       * Customer Name
+       * @description 得意先名
+       */
+      customer_name: string;
+      /**
+       * Product Name
+       * @description 製品名
+       */
+      product_name: string;
+      /**
+       * Supplier Code
+       * @description 仕入先コード
+       */
+      supplier_code?: string | null;
+      /**
+       * Supplier Name
+       * @description 仕入先名
+       */
+      supplier_name?: string | null;
       /**
        * Created At
        * Format: date-time
@@ -3539,6 +4302,14 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
+      /** Address */
+      address?: string | null;
+      /** Contact Name */
+      contact_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+      /** Email */
+      email?: string | null;
       /** Id */
       id: number;
       /**
@@ -3559,6 +4330,14 @@ export interface components {
     CustomerUpdate: {
       /** Customer Name */
       customer_name?: string | null;
+      /** Address */
+      address?: string | null;
+      /** Contact Name */
+      contact_name?: string | null;
+      /** Phone */
+      phone?: string | null;
+      /** Email */
+      email?: string | null;
     };
     /**
      * DashboardStatsResponse
@@ -3610,8 +4389,6 @@ export interface components {
      * @description Payload for creating expected lots.
      */
     ExpectedLotCreate: {
-      /** Inbound Plan Line Id */
-      inbound_plan_line_id: number;
       /** Expected Lot Number */
       expected_lot_number?: string | null;
       /** Expected Quantity */
@@ -3631,8 +4408,6 @@ export interface components {
       created_at: string;
       /** Updated At */
       updated_at?: string | null;
-      /** Inbound Plan Line Id */
-      inbound_plan_line_id: number;
       /** Expected Lot Number */
       expected_lot_number?: string | null;
       /** Expected Quantity */
@@ -3641,6 +4416,8 @@ export interface components {
       expected_expiry_date?: string | null;
       /** Expected Lot Id */
       expected_lot_id: number;
+      /** Inbound Plan Line Id */
+      inbound_plan_line_id: number;
     };
     /**
      * FefoLineAllocation
@@ -3878,16 +4655,6 @@ export interface components {
       product_name?: string | null;
     };
     /**
-     * ForecastListResponse
-     * @description List response with grouped forecasts.
-     */
-    ForecastListResponse: {
-      /** Items */
-      items: components["schemas"]["ForecastGroupResponse"][];
-      /** Total */
-      total: number;
-    };
-    /**
      * ForecastResponse
      * @description API response model for forecast_current entries.
      */
@@ -3999,6 +4766,11 @@ export interface components {
       notes?: string | null;
       /** Inbound Plan Id */
       inbound_plan_id: number;
+      /**
+       * Total Quantity
+       * @description Sum of planned_quantity from all lines
+       */
+      total_quantity?: string | null;
       /** Lines */
       lines?: components["schemas"]["InboundPlanLineResponse"][];
     };
@@ -4040,16 +4812,6 @@ export interface components {
       inbound_plan_id: number;
       /** Expected Lots */
       expected_lots?: components["schemas"]["ExpectedLotResponse"][];
-    };
-    /**
-     * InboundPlanListResponse
-     * @description Response wrapper for inbound plan listings.
-     */
-    InboundPlanListResponse: {
-      /** Items */
-      items: components["schemas"]["InboundPlanResponse"][];
-      /** Total */
-      total: number;
     };
     /**
      * InboundPlanReceiveRequest
@@ -4105,6 +4867,11 @@ export interface components {
       notes?: string | null;
       /** Inbound Plan Id */
       inbound_plan_id: number;
+      /**
+       * Total Quantity
+       * @description Sum of planned_quantity from all lines
+       */
+      total_quantity?: string | null;
     };
     /**
      * InboundPlanStatus
@@ -4122,6 +4889,64 @@ export interface components {
       status?: components["schemas"]["InboundPlanStatus"] | null;
       /** Notes */
       notes?: string | null;
+    };
+    /**
+     * InventoryByProductResponse
+     * @description Inventory aggregated by product (across all warehouses).
+     */
+    InventoryByProductResponse: {
+      /** Product Id */
+      product_id: number;
+      /** Product Name */
+      product_name: string;
+      /** Product Code */
+      product_code: string;
+      /** Total Quantity */
+      total_quantity: string;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Available Quantity */
+      available_quantity: string;
+      /** Lot Count */
+      lot_count: number;
+      /** Warehouse Count */
+      warehouse_count: number;
+    };
+    /**
+     * InventoryBySupplierResponse
+     * @description Inventory aggregated by supplier.
+     */
+    InventoryBySupplierResponse: {
+      /** Supplier Id */
+      supplier_id: number;
+      /** Supplier Name */
+      supplier_name: string;
+      /** Supplier Code */
+      supplier_code: string;
+      /** Total Quantity */
+      total_quantity: string;
+      /** Lot Count */
+      lot_count: number;
+      /** Product Count */
+      product_count: number;
+    };
+    /**
+     * InventoryByWarehouseResponse
+     * @description Inventory aggregated by warehouse.
+     */
+    InventoryByWarehouseResponse: {
+      /** Warehouse Id */
+      warehouse_id: number;
+      /** Warehouse Name */
+      warehouse_name: string;
+      /** Warehouse Code */
+      warehouse_code: string;
+      /** Total Quantity */
+      total_quantity: string;
+      /** Lot Count */
+      lot_count: number;
+      /** Product Count */
+      product_count: number;
     };
     /**
      * InventoryItemResponse
@@ -4157,6 +4982,36 @@ export interface components {
       /** Warehouse Code */
       warehouse_code?: string | null;
     };
+    /** ListResponse[CandidateLotItem] */
+    ListResponse_CandidateLotItem_: {
+      /** Items */
+      items: components["schemas"]["CandidateLotItem"][];
+      /**
+       * Total
+       * @default 0
+       */
+      total: number;
+    };
+    /** ListResponse[ForecastGroupResponse] */
+    ListResponse_ForecastGroupResponse_: {
+      /** Items */
+      items: components["schemas"]["ForecastGroupResponse"][];
+      /**
+       * Total
+       * @default 0
+       */
+      total: number;
+    };
+    /** ListResponse[InboundPlanResponse] */
+    ListResponse_InboundPlanResponse_: {
+      /** Items */
+      items: components["schemas"]["InboundPlanResponse"][];
+      /**
+       * Total
+       * @default 0
+       */
+      total: number;
+    };
     /**
      * LotCreate
      * @description Payload for creating lots.
@@ -4189,10 +5044,17 @@ export interface components {
        * @default 0
        */
       allocated_quantity: number | string;
+      /**
+       * Locked Quantity
+       * @default 0
+       */
+      locked_quantity: number | string;
       /** Unit */
       unit: string;
       /** @default active */
       status: components["schemas"]["LotStatus"];
+      /** Lock Reason */
+      lock_reason?: string | null;
       /**
        * Inspection Status
        * @default not_required
@@ -4209,7 +5071,9 @@ export interface components {
      */
     LotLock: {
       /** Reason */
-      reason: string;
+      reason?: string | null;
+      /** Quantity */
+      quantity?: number | string | null;
     };
     /**
      * LotResponse
@@ -4250,10 +5114,17 @@ export interface components {
        * @default 0
        */
       allocated_quantity: string;
+      /**
+       * Locked Quantity
+       * @default 0
+       */
+      locked_quantity: string;
       /** Unit */
       unit: string;
       /** @default active */
       status: components["schemas"]["LotStatus"];
+      /** Lock Reason */
+      lock_reason?: string | null;
       /**
        * Inspection Status
        * @default not_required
@@ -4386,6 +5257,46 @@ export interface components {
        * @description 変更日時
        */
       changed_at: string;
+    };
+    /**
+     * MaterialDeliveryDocumentRequest
+     * @description 素材納品書発行リクエスト.
+     */
+    MaterialDeliveryDocumentRequest: {
+      /**
+       * Start Date
+       * Format: date
+       * @description 開始日
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       * @description 終了日
+       */
+      end_date: string;
+    };
+    /**
+     * MaterialDeliveryDocumentResponse
+     * @description 素材納品書発行レスポンス.
+     */
+    MaterialDeliveryDocumentResponse: {
+      /**
+       * Status
+       * @description 実行ステータス (success, locked)
+       */
+      status: string;
+      /**
+       * Message
+       * @description メッセージ
+       */
+      message: string;
+      /**
+       * Execution Time Seconds
+       * @description 実行時間（秒）
+       * @default 60
+       */
+      execution_time_seconds: number;
     };
     /**
      * OperationLogListResponse
@@ -4538,6 +5449,16 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /** Order Number */
+      order_number?: string | null;
+      /** Customer Id */
+      customer_id?: number | null;
+      /** Customer Name */
+      customer_name?: string | null;
+      /** Customer Code */
+      customer_code?: string | null;
+      /** Order Date */
+      order_date?: string | null;
       /** Supplier Name */
       supplier_name?: string | null;
       /** Product Internal Unit */
@@ -4553,7 +5474,7 @@ export interface components {
       /** Delivery Place Name */
       delivery_place_name?: string | null;
       /** Allocations */
-      allocations?: components["schemas"]["AllocationResponse"][];
+      allocations?: components["schemas"]["AllocationDetail"][];
       /**
        * Allocated Quantity
        * @description 引当済数量
@@ -4577,6 +5498,8 @@ export interface components {
       order_date: string;
       /** Id */
       id: number;
+      /** Status */
+      status: string;
       /**
        * Created At
        * Format: date-time
@@ -4589,6 +5512,42 @@ export interface components {
       updated_at: string;
       /** Lines */
       lines?: components["schemas"]["OrderLineResponse"][];
+    };
+    /**
+     * ProductBulkRow
+     * @description Single row for product bulk upsert.
+     */
+    ProductBulkRow: {
+      /** Product Code */
+      product_code: string;
+      /** Product Name */
+      product_name: string;
+      /**
+       * Internal Unit
+       * @default CAN
+       */
+      internal_unit: string;
+      /**
+       * External Unit
+       * @default KG
+       */
+      external_unit: string;
+      /**
+       * Qty Per Internal Unit
+       * @default 1
+       */
+      qty_per_internal_unit: number;
+    };
+    /**
+     * ProductBulkUpsertRequest
+     * @description Bulk upsert request for products.
+     */
+    ProductBulkUpsertRequest: {
+      /**
+       * Rows
+       * @description List of product rows to upsert
+       */
+      rows: components["schemas"]["ProductBulkRow"][];
     };
     /**
      * ProductCreate
@@ -4897,6 +5856,27 @@ export interface components {
       is_primary: boolean;
     };
     /**
+     * SupplierBulkRow
+     * @description Single row for supplier bulk upsert.
+     */
+    SupplierBulkRow: {
+      /** Supplier Code */
+      supplier_code: string;
+      /** Supplier Name */
+      supplier_name: string;
+    };
+    /**
+     * SupplierBulkUpsertRequest
+     * @description Bulk upsert request for suppliers.
+     */
+    SupplierBulkUpsertRequest: {
+      /**
+       * Rows
+       * @description List of supplier rows to upsert
+       */
+      rows: components["schemas"]["SupplierBulkRow"][];
+    };
+    /**
      * SupplierCreate
      * @description Create supplier request.
      */
@@ -4945,6 +5925,84 @@ export interface components {
       access_token: string;
       /** Token Type */
       token_type: string;
+    };
+    /**
+     * UomConversionBulkRow
+     * @description Single row for UOM conversion bulk upsert.
+     *
+     *     Upsert uses composite key: (product_code, external_unit)
+     */
+    UomConversionBulkRow: {
+      /**
+       * Product Code
+       * @description 製品コード
+       */
+      product_code: string;
+      /**
+       * External Unit
+       * @description 外部単位
+       */
+      external_unit: string;
+      /**
+       * Factor
+       * @description 換算係数
+       */
+      factor: number | string;
+    };
+    /**
+     * UomConversionBulkUpsertRequest
+     * @description Bulk upsert request for UOM conversions.
+     */
+    UomConversionBulkUpsertRequest: {
+      /**
+       * Rows
+       * @description List of UOM conversion rows to upsert
+       */
+      rows: components["schemas"]["UomConversionBulkRow"][];
+    };
+    /**
+     * UomConversionResponse
+     * @description Schema for UOM conversion response.
+     */
+    UomConversionResponse: {
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id: number;
+      /**
+       * External Unit
+       * @description 外部単位
+       */
+      external_unit: string;
+      /**
+       * Factor
+       * @description 換算係数
+       */
+      factor: string;
+      /** Conversion Id */
+      conversion_id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * UomConversionUpdate
+     * @description Schema for updating a UOM conversion.
+     */
+    UomConversionUpdate: {
+      /**
+       * Factor
+       * @description 換算係数
+       */
+      factor?: number | string | null;
     };
     /**
      * UserCreate
@@ -5006,8 +6064,8 @@ export interface components {
        * @default true
        */
       is_active: boolean;
-      /** Id */
-      id: number;
+      /** User Id */
+      user_id: number;
       /** Last Login At */
       last_login_at?: string | null;
       /**
@@ -5148,8 +6206,8 @@ export interface components {
        * @default true
        */
       is_active: boolean;
-      /** Id */
-      id: number;
+      /** User Id */
+      user_id: number;
       /** Last Login At */
       last_login_at?: string | null;
       /**
@@ -5195,8 +6253,8 @@ export interface components {
        * @default true
        */
       is_active: boolean;
-      /** Id */
-      id: number;
+      /** User Id */
+      user_id: number;
       /** Last Login At */
       last_login_at?: string | null;
       /**
@@ -5223,6 +6281,32 @@ export interface components {
       msg: string;
       /** Error Type */
       type: string;
+    };
+    /**
+     * WarehouseBulkRow
+     * @description Single row for warehouse bulk upsert.
+     */
+    WarehouseBulkRow: {
+      /** Warehouse Code */
+      warehouse_code: string;
+      /** Warehouse Name */
+      warehouse_name: string;
+      /**
+       * Warehouse Type
+       * @description internal/external/supplier
+       */
+      warehouse_type: string;
+    };
+    /**
+     * WarehouseBulkUpsertRequest
+     * @description Bulk upsert request for warehouses.
+     */
+    WarehouseBulkUpsertRequest: {
+      /**
+       * Rows
+       * @description List of warehouse rows to upsert
+       */
+      rows: components["schemas"]["WarehouseBulkRow"][];
     };
     /**
      * WarehouseCreate
@@ -5511,7 +6595,11 @@ export interface operations {
       };
       cookie?: never;
     };
-    requestBody?: never;
+    requestBody?: {
+      content: {
+        "application/json": components["schemas"]["LotLock"] | null;
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
@@ -5613,6 +6701,43 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ConfirmedOrderLineResponse"][];
+        };
+      };
+    };
+  };
+  list_order_lines_api_orders_lines_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        status?: string | null;
+        customer_code?: string | null;
+        product_code?: string | null;
+        date_from?: string | null;
+        date_to?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderLineResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -5948,7 +7073,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CandidateLotsResponse"];
+          "application/json": components["schemas"]["ListResponse_CandidateLotItem_"];
         };
       };
       /** @description Validation Error */
@@ -6076,7 +7201,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ForecastListResponse"];
+          "application/json": components["schemas"]["ListResponse_ForecastGroupResponse_"];
         };
       };
       /** @description Validation Error */
@@ -6365,7 +7490,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["InboundPlanListResponse"];
+          "application/json": components["schemas"]["ListResponse_InboundPlanResponse_"];
         };
       };
       /** @description Validation Error */
@@ -6399,6 +7524,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["InboundPlanDetailResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  sync_from_sap_api_inbound_plans_sync_from_sap_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SAPSyncRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SAPSyncResponse"];
         };
       };
       /** @description Validation Error */
@@ -6495,39 +7653,6 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  sync_from_sap_api_inbound_plans_sync_from_sap_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SAPSyncRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SAPSyncResponse"];
-        };
       };
       /** @description Validation Error */
       422: {
@@ -6805,12 +7930,29 @@ export interface operations {
       };
     };
   };
-  list_warehouses_api_warehouses_get: {
+  list_inventory_by_supplier_api_inventory_items_by_supplier_get: {
     parameters: {
-      query?: {
-        skip?: number;
-        limit?: number;
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryBySupplierResponse"][];
+        };
       };
+    };
+  };
+  list_inventory_by_warehouse_api_inventory_items_by_warehouse_get: {
+    parameters: {
+      query?: never;
       header?: never;
       path?: never;
       cookie?: never;
@@ -6823,62 +7965,18 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["WarehouseResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["InventoryByWarehouseResponse"][];
         };
       };
     };
   };
-  create_warehouse_api_warehouses_post: {
+  list_inventory_by_product_api_inventory_items_by_product_get: {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["WarehouseCreate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WarehouseResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_warehouse_api_warehouses__warehouse_code__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        warehouse_code: string;
-      };
-      cookie?: never;
-    };
     requestBody?: never;
     responses: {
       /** @description Successful Response */
@@ -6887,245 +7985,12 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["WarehouseResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
+          "application/json": components["schemas"]["InventoryByProductResponse"][];
         };
       };
     };
   };
-  update_warehouse_api_warehouses__warehouse_code__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        warehouse_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["WarehouseUpdate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WarehouseResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_warehouse_api_warehouses__warehouse_code__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        warehouse_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_suppliers_api_suppliers_get: {
-    parameters: {
-      query?: {
-        skip?: number;
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SupplierResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  create_supplier_api_suppliers_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SupplierCreate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SupplierResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_supplier_api_suppliers__supplier_code__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        supplier_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SupplierResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  update_supplier_api_suppliers__supplier_code__put: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        supplier_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SupplierUpdate"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SupplierResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_supplier_api_suppliers__supplier_code__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        supplier_code: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_customers_api_customers_get: {
+  list_customers_api_masters_customers_get: {
     parameters: {
       query?: {
         skip?: number;
@@ -7157,7 +8022,7 @@ export interface operations {
       };
     };
   };
-  create_customer_api_customers_post: {
+  create_customer_api_masters_customers_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -7190,7 +8055,70 @@ export interface operations {
       };
     };
   };
-  get_customer_api_customers__customer_code__get: {
+  download_customers_template_api_masters_customers_template_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+        include_sample?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_customers_api_masters_customers_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_customer_api_masters_customers__customer_code__get: {
     parameters: {
       query?: never;
       header?: never;
@@ -7221,7 +8149,7 @@ export interface operations {
       };
     };
   };
-  update_customer_api_customers__customer_code__put: {
+  update_customer_api_masters_customers__customer_code__put: {
     parameters: {
       query?: never;
       header?: never;
@@ -7256,7 +8184,7 @@ export interface operations {
       };
     };
   };
-  delete_customer_api_customers__customer_code__delete: {
+  delete_customer_api_masters_customers__customer_code__delete: {
     parameters: {
       query?: never;
       header?: never;
@@ -7285,7 +8213,40 @@ export interface operations {
       };
     };
   };
-  list_products_api_products_get: {
+  bulk_upsert_customers_api_masters_customers_bulk_upsert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CustomerBulkUpsertRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_products_api_masters_products_get: {
     parameters: {
       query?: {
         skip?: number;
@@ -7318,7 +8279,7 @@ export interface operations {
       };
     };
   };
-  create_product_api_products_post: {
+  create_product_api_masters_products_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -7351,7 +8312,70 @@ export interface operations {
       };
     };
   };
-  get_product_api_products__product_code__get: {
+  download_products_template_api_masters_products_template_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+        include_sample?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_products_api_masters_products_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_product_api_masters_products__product_code__get: {
     parameters: {
       query?: never;
       header?: never;
@@ -7382,7 +8406,7 @@ export interface operations {
       };
     };
   };
-  update_product_api_products__product_code__put: {
+  update_product_api_masters_products__product_code__put: {
     parameters: {
       query?: never;
       header?: never;
@@ -7417,7 +8441,7 @@ export interface operations {
       };
     };
   };
-  delete_product_api_products__product_code__delete: {
+  delete_product_api_masters_products__product_code__delete: {
     parameters: {
       query?: never;
       header?: never;
@@ -7446,7 +8470,777 @@ export interface operations {
       };
     };
   };
-  list_customer_items_api_customer_items_get: {
+  bulk_upsert_products_api_masters_products_bulk_upsert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductBulkUpsertRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_suppliers_api_masters_suppliers_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_supplier_api_masters_suppliers_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SupplierCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  download_suppliers_template_api_masters_suppliers_template_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+        include_sample?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_suppliers_api_masters_suppliers_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_supplier_api_masters_suppliers__supplier_code__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_supplier_api_masters_suppliers__supplier_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SupplierUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_supplier_api_masters_suppliers__supplier_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_upsert_suppliers_api_masters_suppliers_bulk_upsert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SupplierBulkUpsertRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_supplier_products_api_masters_supplier_products_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        supplier_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_supplier_products_api_masters_supplier_products_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_uom_conversions_api_masters_uom_conversions_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_uom_conversions_api_masters_uom_conversions_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_upsert_uom_conversions_api_masters_uom_conversions_bulk_upsert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UomConversionBulkUpsertRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_uom_conversion_api_masters_uom_conversions__conversion_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversion_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UomConversionUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UomConversionResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversion_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_warehouses_api_masters_warehouses_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_warehouse_api_masters_warehouses_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WarehouseCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  download_warehouses_template_api_masters_warehouses_template_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+        include_sample?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_warehouses_api_masters_warehouses_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_warehouse_api_masters_warehouses__warehouse_code__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouse_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_warehouse_api_masters_warehouses__warehouse_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouse_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WarehouseUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_warehouse_api_masters_warehouses__warehouse_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouse_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_upsert_warehouses_api_masters_warehouses_bulk_upsert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WarehouseBulkUpsertRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_customer_items_api_masters_customer_items_get: {
     parameters: {
       query?: {
         skip?: number;
@@ -7482,7 +9276,7 @@ export interface operations {
       };
     };
   };
-  create_customer_item_api_customer_items_post: {
+  create_customer_item_api_masters_customer_items_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -7515,7 +9309,7 @@ export interface operations {
       };
     };
   };
-  list_customer_items_by_customer_api_customer_items__customer_id__get: {
+  list_customer_items_by_customer_api_masters_customer_items__customer_id__get: {
     parameters: {
       query?: never;
       header?: never;
@@ -7546,7 +9340,7 @@ export interface operations {
       };
     };
   };
-  update_customer_item_api_customer_items__customer_id___external_product_code__put: {
+  update_customer_item_api_masters_customer_items__customer_id___external_product_code__put: {
     parameters: {
       query?: never;
       header?: never;
@@ -7582,7 +9376,7 @@ export interface operations {
       };
     };
   };
-  delete_customer_item_api_customer_items__customer_id___external_product_code__delete: {
+  delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete: {
     parameters: {
       query?: never;
       header?: never;
@@ -7600,6 +9394,70 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_customer_items_api_masters_customer_items_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_upsert_customer_items_api_masters_customer_items_bulk_upsert_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CustomerItemBulkUpsertRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -7849,6 +9707,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["UserWithRoles"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_users_api_users_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -8276,7 +10165,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["CandidateLotsResponse"];
+          "application/json": components["schemas"]["ListResponse_CandidateLotItem_"];
         };
       };
       /** @description Validation Error */
@@ -8968,6 +10857,26 @@ export interface operations {
       };
     };
   };
+  execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
   get_batch_job_api_batch_jobs__job_id__get: {
     parameters: {
       query?: never;
@@ -9094,26 +11003,6 @@ export interface operations {
       };
     };
   };
-  execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-    };
-  };
   register_sales_orders_api_integration_sap_sales_orders_post: {
     parameters: {
       query?: never;
@@ -9134,6 +11023,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["SAPOrderRegistrationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_material_delivery_document_api_rpa_material_delivery_document_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MaterialDeliveryDocumentRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialDeliveryDocumentResponse"];
         };
       };
       /** @description Validation Error */
