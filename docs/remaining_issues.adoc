@@ -242,6 +242,25 @@ NOTE: 認証機能はテスト効率を考慮し保留。SAP連携は本番環�
 
 ---
 
+=== 10. レガシー AllocationService の削除
+
+**ステータス:** 未着手 +
+**優先度:** 低
+
+==== 現状
+
+* `backend/app/services/allocations/core.py` の `AllocationService` クラス
+* APIからは使用されていない（孤立コード）
+* 新しい引当ロジックは `actions.py` に実装済み
+
+==== 対応タスク
+
+. `AllocationService` の使用箇所がないことを再確認
+. `core.py` を削除またはアーカイブ
+. 関連する `AllocationRepository` のメソッドも整理
+
+---
+
 == ESLint/コード品質課題（参考）
 
 フロントエンドに以下のESLint違反が残存しています。機能には影響しませんが、将来のリファクタリング対象です。

@@ -343,8 +343,6 @@ def confirm_hard_allocation(
     """
     from app.services.allocations.schemas import InsufficientStockError
 
-    EPSILON = Decimal("1e-6")
-
     # 引当取得
     allocation = db.get(Allocation, allocation_id)
     if not allocation:

@@ -5,14 +5,15 @@ Revises: add_allocation_type, d7898334ad53
 Create Date: 2025-12-04 22:49:19.358512
 
 """
+
 import sqlalchemy as sa  # noqa: F401
 
 from alembic import op  # noqa: F401
 
 
 # revision identifiers, used by Alembic.
-revision = '4d2a15d9492f'
-down_revision = ('add_allocation_type', 'd7898334ad53')
+revision = "4d2a15d9492f"
+down_revision = ("add_allocation_type", "d7898334ad53")
 branch_labels = None
 depends_on = None
 
