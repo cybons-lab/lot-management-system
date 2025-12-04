@@ -127,7 +127,11 @@ export function RolesListPage() {
                         {role.role_code}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">{role.role_name}</td>
+                    <td className="px-4 py-3 text-sm">
+                      <span className="block max-w-[150px] truncate" title={role.role_name}>
+                        {role.role_name}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-sm">
                       {role.description ? (
                         <span className="line-clamp-2" title={role.description}>

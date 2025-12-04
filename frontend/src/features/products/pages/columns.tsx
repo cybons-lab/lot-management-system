@@ -19,8 +19,13 @@ export const productColumns: Column<Product>[] = [
   {
     id: "product_name",
     header: "商品名",
-    cell: (row) => <span className="text-gray-900">{row.product_name}</span>,
+    cell: (row) => (
+      <span className="block max-w-[300px] truncate text-gray-900" title={row.product_name}>
+        {row.product_name}
+      </span>
+    ),
     sortable: true,
+    width: "300px",
   },
   {
     id: "internal_unit",

@@ -172,7 +172,12 @@ export function InboundPlansList({
                   <tr key={plan.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm">{plan.plan_number}</td>
                     <td className="px-4 py-3 text-sm">
-                      {plan.supplier_name || `ID: ${plan.supplier_id}`}
+                      <span
+                        className="block max-w-[200px] truncate"
+                        title={plan.supplier_name || `ID: ${plan.supplier_id}`}
+                      >
+                        {plan.supplier_name || `ID: ${plan.supplier_id}`}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-sm">{formatDate(plan.planned_arrival_date)}</td>
                     <td className="px-4 py-3 text-sm">

@@ -149,8 +149,19 @@ export function UsersListPage() {
                   <tr key={user.user_id} className={styles.table.tr}>
                     <td className={styles.table.td}>{user.user_id}</td>
                     <td className={styles.table.tdMedium}>{user.username}</td>
-                    <td className={styles.table.td}>{user.email}</td>
-                    <td className={styles.table.td}>{user.display_name}</td>
+                    <td className={styles.table.td}>
+                      <span className="block max-w-[200px] truncate" title={user.email}>
+                        {user.email}
+                      </span>
+                    </td>
+                    <td className={styles.table.td}>
+                      <span
+                        className="block max-w-[150px] truncate"
+                        title={user.display_name || ""}
+                      >
+                        {user.display_name}
+                      </span>
+                    </td>
                     <td className={styles.table.td}>
                       <span className={styles.statusBadge({ isActive: user.is_active })}>
                         {user.is_active ? "有効" : "無効"}

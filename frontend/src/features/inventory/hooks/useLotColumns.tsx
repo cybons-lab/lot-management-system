@@ -119,8 +119,13 @@ export function useLotColumns({ viewMode, onEdit, onLock, onUnlock }: UseLotColu
       {
         id: "supplier_name",
         header: "仕入先",
-        cell: (lot) => lot.supplier_name ?? "–",
+        cell: (lot) => (
+          <div className="max-w-[150px] truncate" title={lot.supplier_name ?? ""}>
+            {lot.supplier_name ?? "–"}
+          </div>
+        ),
         sortable: true,
+        width: "150px",
       },
       ...baseColumns.slice(1), // current_quantity以降
     ],

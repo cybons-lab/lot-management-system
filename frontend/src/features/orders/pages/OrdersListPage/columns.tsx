@@ -20,9 +20,13 @@ export const columns: Column<OrderUI>[] = [
     id: "customer_code",
     header: "得意先",
     cell: (order: OrderUI) => (
-      <div>
+      <div className="max-w-[180px]">
         <div className="font-medium text-slate-900">{order.customer_code}</div>
-        {order.customer_name && <div className="text-xs text-slate-600">{order.customer_name}</div>}
+        {order.customer_name && (
+          <div className="truncate text-xs text-slate-600" title={order.customer_name}>
+            {order.customer_name}
+          </div>
+        )}
       </div>
     ),
     sortable: true,
