@@ -73,7 +73,7 @@ jobs:
         working-directory: backend
         run: |
           uv sync
-          uv pip install pytest-cov
+          uv pip install pytest-cov pytest-xdist
 
       - name: Run ruff check
         working-directory: backend
@@ -87,7 +87,10 @@ jobs:
           SECRET_KEY: test-secret-key-for-ci-do-not-use-in-production
           JWT_SECRET_KEY: test-jwt-secret-for-ci
           HYPOTHESIS_PROFILE: ci
-        run: uv run pytest --cov=app --cov-report=term-missing --cov-report=html --durations=10
+          TEST_DB_PRE_INITIALIZED: "1"
+        run: |
+          uv run python tests/init_test_db.py
+          uv run pytest -n auto --cov=app --cov-report=term-missing --cov-report=html --durations=10
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
