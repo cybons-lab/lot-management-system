@@ -4,7 +4,8 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.models.masters_models import Customer, CustomerItem, DeliveryPlace, Product
+from app.models.forecast_models import ForecastCurrent
+from app.models.masters_models import Customer, DeliveryPlace, Product
 from app.models.orders_models import Order, OrderLine
 
 from .utils import fake
@@ -17,101 +18,126 @@ def generate_orders(
     products_with_forecast: list[Product],
     delivery_places: list[DeliveryPlace],
 ):
-    # 1 Customer is "Perfect Scenario"
+    """Generate orders based on forecast data.
+
+    Strategy:
+    - Query daily forecasts from forecast_current table
+    - For each forecast entry, create an order line with:
+      - delivery_date = forecast_date
+      - quantity ≈ forecast_quantity (with variance)
+    - 80% normal scenario, 20% anomaly scenarios
+    """
+    # 1 Customer is "Perfect Scenario" - no anomalies
     perfect_customer = customers[0]
 
-    dp_map = {c.id: [dp for dp in delivery_places if dp.customer_id == c.id] for c in customers}
+    # Get all daily forecasts (where forecast_date is set)
+    forecasts = (
+        db.query(ForecastCurrent)
+        .filter(
+            ForecastCurrent.forecast_date.isnot(None),
+            ForecastCurrent.forecast_quantity > 0,
+        )
+        .all()
+    )
 
-    # Build customer-product mapping from CustomerItem
-    customer_products_map = {}
-    customer_items = db.query(CustomerItem).all()
-    for ci in customer_items:
-        if ci.customer_id not in customer_products_map:
-            customer_products_map[ci.customer_id] = []
-        customer_products_map[ci.customer_id].append(ci.product_id)
+    print(f"[INFO] Found {len(forecasts)} daily forecasts to generate orders from")
 
-    # Generate 50-80 orders total (spread across all products, not per product)
-    total_orders = random.randint(50, 80)
+    # Group forecasts: create one order per (customer, date) with multiple lines
+    # Key: (customer_id, order_date) -> list of forecasts
+    order_groups: dict[tuple[int, date], list[ForecastCurrent]] = {}
 
-    for _ in range(total_orders):
-        # Pick customer
-        c = random.choice(customers)
+    for fc in forecasts:
+        key = (fc.customer_id, fc.forecast_date)
+        if key not in order_groups:
+            order_groups[key] = []
+        order_groups[key].append(fc)
 
-        # Only pick products that this customer deals with
-        available_product_ids = customer_products_map.get(c.id, [])
-        if not available_product_ids:
+    print(f"[INFO] Grouped into {len(order_groups)} orders")
+
+    order_count = 0
+    line_count = 0
+
+    for (customer_id, _order_date), fc_list in order_groups.items():
+        # Find customer
+        customer = next((c for c in customers if c.id == customer_id), None)
+        if not customer:
             continue
 
-        # Pick random product from available ones
-        p_id = random.choice(available_product_ids)
-        p = next((prod for prod in products if prod.id == p_id), None)
-        if not p:
-            continue
-
-        dps = dp_map.get(c.id, [])
-        if not dps:
-            continue
-        dp = random.choice(dps)
-
-        # CRITICAL: delivery_place must always be set (never NULL)
-        # This ensures "納入先未設定" does not occur
-        if not dp or not dp.id:
-            continue
-
-        is_perfect = c.id == perfect_customer.id
-
-        # Base date and quantity
-        has_forecast = p in products_with_forecast
-
-        order_date = date.today() + timedelta(days=random.randint(1, 60))
-        qty = Decimal(random.randint(20, 120))
-
-        if has_forecast and is_perfect:
-            pass
-
-        if not is_perfect:
-            # Apply anomalies
-            anomaly = random.choices(
-                [
-                    "normal",
-                    "early",
-                    "late",
-                    "qty_mismatch",
-                    "wrong_dp",
-                    "steal",
-                    "no_stock",
-                    "no_fc",
-                ],
-                weights=[50, 10, 10, 10, 5, 5, 5, 5],
-                k=1,
-            )[0]
-
-            if anomaly == "early":
-                order_date -= timedelta(days=random.randint(1, 3))
-            elif anomaly == "late":
-                order_date += timedelta(days=random.randint(1, 3))
-            elif anomaly == "qty_mismatch":
-                qty = qty * Decimal(random.uniform(0.8, 1.5))
+        is_perfect = customer.id == perfect_customer.id
 
         # Create Order
-        o = Order(
+        order = Order(
             order_number=fake.unique.bothify(text="ORD-########"),
-            customer_id=c.id,
+            customer_id=customer_id,
             order_date=date.today(),
         )
-        db.add(o)
+        db.add(order)
         db.flush()
+        order_count += 1
 
-        # Create OrderLine with delivery_place_id (NEVER NULL)
-        ol = OrderLine(
-            order_id=o.id,
-            product_id=p.id,
-            delivery_date=order_date,
-            order_quantity=qty,
-            unit="pcs",
-            delivery_place_id=dp.id,  # CRITICAL: Always set
-            status="pending",
-        )
-        db.add(ol)
+        # Create OrderLines from forecasts
+        for fc in fc_list:
+            # Get product for unit info
+            product = next((p for p in products if p.id == fc.product_id), None)
+            if not product:
+                continue
+
+            # Base quantity from forecast
+            base_qty = fc.forecast_quantity
+
+            # Determine delivery date and quantity based on scenario
+            delivery_date = fc.forecast_date
+            qty = base_qty
+
+            if is_perfect:
+                # Perfect scenario: exact match to forecast (±5%)
+                qty = base_qty * Decimal(str(random.uniform(0.95, 1.05)))
+            else:
+                # Apply anomalies for non-perfect customers
+                anomaly = random.choices(
+                    ["normal", "early", "late", "qty_high", "qty_low"],
+                    weights=[60, 10, 10, 10, 10],
+                    k=1,
+                )[0]
+
+                if anomaly == "normal":
+                    # Normal: forecast ±10%
+                    qty = base_qty * Decimal(str(random.uniform(0.9, 1.1)))
+                elif anomaly == "early":
+                    # Early delivery: 1-3 days before forecast
+                    delivery_date = fc.forecast_date - timedelta(days=random.randint(1, 3))
+                    qty = base_qty * Decimal(str(random.uniform(0.9, 1.1)))
+                elif anomaly == "late":
+                    # Late delivery: 1-3 days after forecast
+                    delivery_date = fc.forecast_date + timedelta(days=random.randint(1, 3))
+                    qty = base_qty * Decimal(str(random.uniform(0.9, 1.1)))
+                elif anomaly == "qty_high":
+                    # Higher quantity: 120-150% of forecast
+                    qty = base_qty * Decimal(str(random.uniform(1.2, 1.5)))
+                elif anomaly == "qty_low":
+                    # Lower quantity: 50-80% of forecast
+                    qty = base_qty * Decimal(str(random.uniform(0.5, 0.8)))
+
+            # Round quantity to integer (most units are countable)
+            qty = Decimal(str(int(qty)))
+            if qty <= 0:
+                qty = Decimal("1")
+
+            # Use product's internal unit
+            unit = product.internal_unit or product.base_unit or "pcs"
+
+            # Create OrderLine
+            ol = OrderLine(
+                order_id=order.id,
+                product_id=fc.product_id,
+                delivery_date=delivery_date,
+                order_quantity=qty,
+                unit=unit,
+                delivery_place_id=fc.delivery_place_id,
+                status="pending",
+            )
+            db.add(ol)
+            line_count += 1
 
     db.commit()
+    print(f"[INFO] Generated {order_count} orders with {line_count} lines (forecast-based)")
