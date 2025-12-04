@@ -1,15 +1,20 @@
 """Allocation endpoints using FEFO strategy and drag-assign compatibility."""
 
 import logging
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.models import Lot
+from app.models import Allocation, Lot, OrderLine
 from app.schemas.allocations.allocations_schema import (
     AllocationCommitRequest,
     AllocationCommitResponse,
+    AutoAllocateRequest,
+    AutoAllocateResponse,
+    BulkCancelRequest,
+    BulkCancelResponse,
     DragAssignRequest,
     DragAssignResponse,
     FefoLineAllocation,
@@ -19,6 +24,8 @@ from app.schemas.allocations.allocations_schema import (
 )
 from app.services.allocations.actions import (
     allocate_manually,
+    auto_allocate_line,
+    bulk_cancel_allocations,
     cancel_allocation,
     commit_fefo_allocation,
 )
@@ -170,3 +177,106 @@ def commit_allocation(request: AllocationCommitRequest, db: Session = Depends(ge
         status="committed",
         message=f"引当確定成功。{len(created_ids)}件の引当を作成しました。",
     )
+
+
+# --- Phase 4: P1-5/6 新エンドポイント ---
+
+
+@router.post("/bulk-cancel", response_model=BulkCancelResponse)
+def bulk_cancel(request: BulkCancelRequest, db: Session = Depends(get_db)):
+    """
+    引当一括取消.
+
+    複数の引当を一度に取り消す。部分的な失敗を許容する。
+
+    Args:
+        request: 取消対象の引当ID一覧
+        db: データベースセッション
+
+    Returns:
+        BulkCancelResponse: 取消結果（成功ID、失敗ID）
+    """
+    cancelled_ids, failed_ids = bulk_cancel_allocations(db, request.allocation_ids)
+
+    if not cancelled_ids and failed_ids:
+        raise HTTPException(
+            status_code=400,
+            detail=f"全ての引当取消に失敗しました: {failed_ids}",
+        )
+
+    message = f"{len(cancelled_ids)}件取消成功"
+    if failed_ids:
+        message += f", {len(failed_ids)}件失敗"
+
+    logger.info(f"引当一括取消: 成功={cancelled_ids}, 失敗={failed_ids}")
+
+    return BulkCancelResponse(
+        cancelled_ids=cancelled_ids,
+        failed_ids=failed_ids,
+        message=message,
+    )
+
+
+@router.post("/auto-allocate", response_model=AutoAllocateResponse)
+def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
+    """
+    受注明細に対してFEFO戦略で自動引当を実行.
+
+    Args:
+        request: 自動引当リクエスト（order_line_id, strategy）
+        db: データベースセッション
+
+    Returns:
+        AutoAllocateResponse: 引当結果
+    """
+    try:
+        allocations = auto_allocate_line(db, request.order_line_id)
+
+        # 結果集計
+        total_allocated = sum(a.allocated_quantity for a in allocations)
+
+        # 残量計算
+        line = db.query(OrderLine).filter(OrderLine.id == request.order_line_id).first()
+        existing = (
+            db.query(Allocation)
+            .filter(
+                Allocation.order_line_id == request.order_line_id,
+                Allocation.status == "allocated",
+            )
+            .all()
+        )
+        total_line_allocated = sum(a.allocated_quantity for a in existing)
+        remaining = max(Decimal("0"), Decimal(str(line.order_quantity)) - total_line_allocated)
+
+        # レスポンス作成
+        allocated_lots = [
+            FefoLotAllocation(
+                lot_id=a.lot_id,
+                lot_number=db.query(Lot).filter(Lot.id == a.lot_id).first().lot_number,
+                allocated_quantity=a.allocated_quantity,
+                expiry_date=db.query(Lot).filter(Lot.id == a.lot_id).first().expiry_date,
+                received_date=db.query(Lot).filter(Lot.id == a.lot_id).first().received_date,
+            )
+            for a in allocations
+        ]
+
+        if allocations:
+            message = f"{len(allocations)}件のロットに引当しました"
+        else:
+            message = "引当可能なロットがありません、または既に全量引当済みです"
+
+        logger.info(
+            f"自動引当実行: order_line_id={request.order_line_id}, "
+            f"allocated={len(allocations)}, remaining={remaining}"
+        )
+
+        return AutoAllocateResponse(
+            order_line_id=request.order_line_id,
+            allocated_lots=allocated_lots,
+            total_allocated=total_allocated,
+            remaining_quantity=remaining,
+            message=message,
+        )
+
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))

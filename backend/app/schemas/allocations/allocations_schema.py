@@ -114,6 +114,42 @@ class AllocationCommitResponse(BaseSchema):
 
 
 # ============================================================
+# Bulk Operations (一括操作)
+# ============================================================
+
+
+class BulkCancelRequest(BaseSchema):
+    """Bulk cancel allocations request."""
+
+    allocation_ids: list[int] = Field(..., min_length=1, description="取消対象の引当ID一覧")
+
+
+class BulkCancelResponse(BaseSchema):
+    """Bulk cancel allocations response."""
+
+    cancelled_ids: list[int] = Field(default_factory=list, description="取消成功した引当ID")
+    failed_ids: list[int] = Field(default_factory=list, description="取消失敗した引当ID")
+    message: str
+
+
+class AutoAllocateRequest(BaseSchema):
+    """Auto-allocate request using FEFO strategy."""
+
+    order_line_id: int = Field(..., description="対象の受注明細ID")
+    strategy: str = Field(default="fefo", description="引当戦略 (fefo)")
+
+
+class AutoAllocateResponse(BaseSchema):
+    """Auto-allocate response."""
+
+    order_line_id: int
+    allocated_lots: list[FefoLotAllocation] = Field(default_factory=list)
+    total_allocated: Decimal = Field(default=Decimal("0"), decimal_places=3)
+    remaining_quantity: Decimal = Field(default=Decimal("0"), decimal_places=3)
+    message: str
+
+
+# ============================================================
 # Candidate Lots (候補ロット)
 # ============================================================
 

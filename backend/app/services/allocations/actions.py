@@ -285,3 +285,111 @@ def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True
 
     if commit_db:
         db.commit()
+
+
+def bulk_cancel_allocations(
+    db: Session, allocation_ids: list[int]
+) -> tuple[list[int], list[int]]:
+    """
+    引当を一括キャンセル.
+
+    Args:
+        db: データベースセッション
+        allocation_ids: キャンセル対象の引当ID一覧
+
+    Returns:
+        tuple[list[int], list[int]]: (成功したID一覧, 失敗したID一覧)
+    """
+    cancelled_ids: list[int] = []
+    failed_ids: list[int] = []
+
+    for allocation_id in allocation_ids:
+        try:
+            cancel_allocation(db, allocation_id, commit_db=False)
+            cancelled_ids.append(allocation_id)
+        except (AllocationNotFoundError, AllocationCommitError):
+            failed_ids.append(allocation_id)
+
+    if cancelled_ids:
+        db.commit()
+
+    return cancelled_ids, failed_ids
+
+
+def auto_allocate_line(
+    db: Session,
+    order_line_id: int,
+) -> list[Allocation]:
+    """
+    受注明細に対してFEFO戦略で自動引当を実行.
+
+    Args:
+        db: データベースセッション
+        order_line_id: 受注明細ID
+
+    Returns:
+        list[Allocation]: 作成された引当一覧
+
+    Raises:
+        ValueError: 受注明細が見つからない場合
+    """
+    # 受注明細取得
+    line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
+    if not line:
+        raise ValueError(f"OrderLine {order_line_id} not found")
+
+    # 既存引当数量
+    existing_allocations = (
+        db.query(Allocation)
+        .filter(Allocation.order_line_id == order_line_id, Allocation.status == "allocated")
+        .all()
+    )
+    already_allocated = sum(a.allocated_quantity for a in existing_allocations)
+
+    # 必要数量
+    required_qty = Decimal(str(line.order_quantity)) - already_allocated
+    if required_qty <= 0:
+        return []  # 既に全量引当済み
+
+    # 候補ロットを期限順で取得（FEFO）
+    candidate_lots = (
+        db.query(Lot)
+        .filter(
+            Lot.product_id == line.product_id,
+            Lot.status == "active",
+            Lot.current_quantity > Lot.allocated_quantity,
+        )
+        .order_by(Lot.expiry_date.asc().nulls_last(), Lot.received_date.asc())
+        .with_for_update()
+        .all()
+    )
+
+    created_allocations: list[Allocation] = []
+    remaining_qty = required_qty
+
+    for lot in candidate_lots:
+        if remaining_qty <= 0:
+            break
+
+        available = lot.current_quantity - lot.allocated_quantity
+        if available <= 0:
+            continue
+
+        allocate_qty = min(available, remaining_qty)
+
+        allocation = allocate_manually(
+            db,
+            order_line_id=order_line_id,
+            lot_id=lot.id,
+            quantity=allocate_qty,
+            commit_db=False,
+        )
+        created_allocations.append(allocation)
+        remaining_qty -= allocate_qty
+
+    if created_allocations:
+        db.commit()
+        for alloc in created_allocations:
+            db.refresh(alloc)
+
+    return created_allocations
