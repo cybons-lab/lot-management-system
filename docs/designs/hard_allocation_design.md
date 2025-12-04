@@ -21,7 +21,7 @@ Soft Allocation はフォーキャスト（内示）に基づく「引当の提�
 |------|----------------|-----------------|
 | **用途** | フォーキャスト（内示）向けの引当提案 | 受注確定後の在庫予約 |
 | **ロットロック** | なし（他オーダーも引当可） | あり（他オーダーは引当不可） |
-| **変更可否** | 自由に変更可能 | 確定後は承認フローが必要 |
+| **変更可否** | 自由に変更可能 | 担当者判断で即時取消可能 |
 | **在庫計算** | 利用可能数量に影響しない | `allocated_quantity` に加算 |
 | **ステータス** | `allocation_type = 'soft'` | `allocation_type = 'hard'` |
 
@@ -75,7 +75,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant User as 承認者
+    participant User as 業務担当者
     participant UI as 引当管理画面
     participant API as Backend
     participant DB as Database
@@ -87,6 +87,9 @@ sequenceDiagram
     API->>DB: lots.allocated_quantity を減算
     DB-->>UI: 取り消し完了
 ```
+
+> [!NOTE]
+> **取り消しは担当者判断で即時OK**。承認フローは不要。
 
 ---
 
@@ -121,7 +124,7 @@ stateDiagram-v2
     soft --> hard: 確定（Confirm）
     soft --> cancelled: 取り消し
     hard --> shipped: 出荷確定
-    hard --> cancelled: 取り消し（要承認）
+    hard --> cancelled: 取り消し（即時OK）
     shipped --> [*]
     cancelled --> [*]
 ```
@@ -286,9 +289,38 @@ const handleConfirm = async (allocationId: number) => {
 
 ## ⚠️ エッジケースと例外処理
 
-### 1. 競合（在庫の取り合い）
+### 1. 同一ロットへの複数引当（通常受注 + かんばん）
 
-**シナリオ:** 2つのオーダーが同じロットをSoft引当 → 片方が先にHard確定
+**典型的なシナリオ:** 同一担当者が、通常受注とかんばん受注で同じロットをSoft引当
+
+```mermaid
+sequenceDiagram
+    participant User as 業務担当者
+    participant DB as Database
+
+    Note over User,DB: ロット在庫: 100個
+
+    User->>DB: 通常受注A: Soft引当 80個（納期: 12/10）
+    User->>DB: かんばんB: Soft引当 50個（納期: 12/05）
+    Note over DB: 両方Soft = 130個（OK）
+
+    User->>DB: 受注BをHard確定（納期が早い）
+    DB-->>User: OK（allocated_quantity = 50）
+
+    User->>DB: 受注AをHard確定
+    DB-->>User: ⚠️ アラート（残り50個、要求80個）
+```
+
+**ルール:**
+- **納期が早いオーダーを優先してHard確定する**
+- 同一担当者の場合はエラーではなく**アラート**で通知
+- UIでは「他のオーダーでもこのロットを引当中です」と表示
+
+---
+
+### 2. 競合（別ユーザー間の在庫の取り合い）
+
+**シナリオ:** 別ユーザーが同じロットをSoft引当 → 片方が先にHard確定
 
 ```mermaid
 sequenceDiagram
@@ -310,12 +342,12 @@ sequenceDiagram
 ```
 
 **対処:**
-- Hard確定時に在庫チェックを行い、不足ならエラーを返す
+- 別ユーザー間の競合は **エラー**（409 Conflict）
 - UIでリアルタイムに「確定可能数量」を表示
 
 ---
 
-### 2. 部分確定
+### 3. 部分確定
 
 **シナリオ:** Soft引当 100個のうち、60個だけHard確定したい
 
@@ -333,7 +365,7 @@ PATCH /allocations/{id}/confirm
 
 ---
 
-### 3. ロット期限切れ後の引当
+### 4. ロット期限切れ後の引当
 
 **ルール:**
 - 期限切れロット（`lots.status = 'expired'`）はHard確定不可
