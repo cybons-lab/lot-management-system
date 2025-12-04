@@ -12,22 +12,51 @@ import app.models  # noqa: F401, E402
 from app.models.base_model import Base  # noqa: E402
 
 
-def init_test_db():
-    """Initialize test database with tables and views."""
-    database_url = os.getenv(
-        "TEST_DATABASE_URL",
-        "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
-    )
+import os
+import sys
+from multiprocessing import Pool
+
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import ProgrammingError
+
+# Add backend directory to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import app.models  # noqa: F401, E402
+from app.models.base_model import Base  # noqa: E402
+
+
+def init_single_db(db_url):
+    """Initialize a single database."""
+    print(f"Initializing database: {db_url}")
     
-    print(f"Initializing test database: {database_url}")
-    engine = create_engine(database_url)
+    # Create database if not exists (needs connection to default db)
+    # Extract db name
+    base_url = db_url.rsplit("/", 1)[0]
+    db_name = db_url.rsplit("/", 1)[1]
+    
+    # Connect to postgres db to create new db
+    postgres_url = f"{base_url}/postgres"
+    engine_pg = create_engine(postgres_url, isolation_level="AUTOCOMMIT")
+    
+    with engine_pg.connect() as conn:
+        # Check if db exists
+        result = conn.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{db_name}'"))
+        if not result.scalar():
+            print(f"Creating database {db_name}...")
+            conn.execute(text(f"CREATE DATABASE {db_name}"))
+    
+    engine_pg.dispose()
+
+    # Now connect to the target db
+    engine = create_engine(db_url)
 
     # Create tables
-    print("Creating tables...")
+    print(f"Creating tables in {db_name}...")
     Base.metadata.create_all(bind=engine)
 
     # Create views
-    print("Creating views...")
+    print(f"Creating views in {db_name}...")
     with engine.connect() as connection:
         transaction = connection.begin()
         try:
@@ -157,11 +186,33 @@ def init_test_db():
             )
 
             transaction.commit()
-            print("Database initialization completed successfully.")
+            print(f"Database {db_name} initialization completed successfully.")
         except Exception as e:
             transaction.rollback()
-            print(f"Error initializing database: {e}")
+            print(f"Error initializing database {db_name}: {e}")
             raise
+    engine.dispose()
+
+
+def init_test_dbs():
+    """Initialize test databases for parallel execution."""
+    base_db_url = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
+    )
+    
+    # Always initialize the main test db (for non-parallel tests or gw0 fallback)
+    db_urls = [base_db_url]
+    
+    # If running in CI with xdist, create additional databases
+    # Assuming 4 workers max for safety
+    if os.getenv("CI"):
+        for i in range(4):
+            db_urls.append(f"{base_db_url}_gw{i}")
+            
+    # Initialize databases in parallel
+    with Pool(processes=len(db_urls)) as pool:
+        pool.map(init_single_db, db_urls)
 
 if __name__ == "__main__":
-    init_test_db()
+    init_test_dbs()
