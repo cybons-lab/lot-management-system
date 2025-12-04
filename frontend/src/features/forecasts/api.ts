@@ -1,5 +1,5 @@
 import { http } from "@/shared/api/http-client";
-import type { operations } from "@/shared/types/openapi";
+import type { operations } from "@/types/api";
 import type {
   Forecast,
   ForecastGroupKey,

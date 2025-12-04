@@ -1,6 +1,6 @@
 import { http } from "@/shared/api/http-client";
 import type { OrderLine } from "@/shared/types/aliases";
-import type { operations } from "@/shared/types/openapi";
+import type { operations } from "@/types/api";
 import type {
   CandidateLotsResponse,
   OrderResponse,

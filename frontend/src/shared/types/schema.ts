@@ -1,4 +1,4 @@
-import type { components } from "./openapi";
+import type { components } from "@/types/api";
 
 export type Schema = components["schemas"];
 

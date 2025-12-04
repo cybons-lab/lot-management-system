@@ -159,6 +159,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/orders/confirmed-order-lines": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Confirmed Order Lines
+     * @description Get all order lines that are fully allocated and not yet registered in SAP.
+     *
+     *     Returns lines where allocated_quantity >= order_quantity and sap_order_no is NULL.
+     */
+    get: operations["get_confirmed_order_lines_api_orders_confirmed_order_lines_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/orders": {
     parameters: {
       query?: never;
@@ -789,6 +811,39 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/inbound-plans/sync-from-sap": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Sync From Sap
+     * @description SAP から発注データを取得して入荷予定を作成.
+     *
+     *     SAP の発注データ（モック）を取得し、入荷予定（InboundPlan）として
+     *     システムに登録します。既に存在する発注番号はスキップされます。
+     *
+     *     Args:
+     *         request: SAP同期リクエスト（現在パラメータなし）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SAP同期結果（作成された入荷予定リスト、スキップ数）
+     *
+     *     Note:
+     *         現在はモック実装です。本番環境では実際のSAP RFC/APIに接続します。
+     */
+    post: operations["sync_from_sap_api_inbound_plans_sync_from_sap_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/inbound-plans/{plan_id}/lines": {
     parameters: {
       query?: never;
@@ -1321,6 +1376,54 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/login": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Login For Access Token
+     * @description OAuth2 compatible token login, get an access token for future requests.
+     */
+    post: operations["login_for_access_token_api_login_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/me": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Current User Info
+     * @description Get current authenticated user information with assigned suppliers (optional authentication).
+     *
+     *     Returns:
+     *         User information with supplier assignments if authenticated, None if not authenticated
+     *
+     *     Use case:
+     *         - Frontend can check if user is logged in
+     *         - Display user name and assigned suppliers
+     *         - Prioritize user's assigned suppliers in list views
+     */
+    get: operations["get_current_user_info_api_me_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/users": {
     parameters: {
       query?: never;
@@ -1549,6 +1652,110 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/assignments/user/{user_id}/suppliers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get User Suppliers
+     * @description ユーザーの担当仕入先一覧を取得.
+     */
+    get: operations["get_user_suppliers_api_assignments_user__user_id__suppliers_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/supplier/{supplier_id}/users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Supplier Users
+     * @description 仕入先の担当者一覧を取得.
+     */
+    get: operations["get_supplier_users_api_assignments_supplier__supplier_id__users_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Assignment
+     * @description 担当割り当てを作成.
+     */
+    post: operations["create_assignment_api_assignments__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/{assignment_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Assignment
+     * @description 担当割り当てを更新（主担当の変更など）.
+     */
+    put: operations["update_assignment_api_assignments__assignment_id__put"];
+    post?: never;
+    /**
+     * Delete Assignment
+     * @description 担当割り当てを削除.
+     */
+    delete: operations["delete_assignment_api_assignments__assignment_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments/supplier/{supplier_id}/set-primary/{user_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Set Primary User
+     * @description 仕入先の主担当者を設定.
+     */
+    post: operations["set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/admin/stats": {
     parameters: {
       query?: never;
@@ -1595,30 +1802,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/admin/seeds": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Create Seeds
-     * @description シードデータ生成（UPSERT方式）.
-     *
-     *     - 既存データに追加する形でサンプルデータを投入
-     *     - UPSERT（ON CONFLICT DO NOTHING）で重複を防止
-     *     - dry_run=true で投入前のサマリのみ確認可能
-     */
-    post: operations["create_seeds_api_admin_seeds_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/admin/diagnostics/allocatable-lots": {
     parameters: {
       query?: never;
@@ -1650,6 +1833,50 @@ export interface paths {
     get: operations["get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/metrics": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Metrics
+     * @description パフォーマンスメトリクスを取得.
+     *
+     *     APIエンドポイントごとのリクエスト数、エラー率、レスポンスタイムなどを返す。
+     */
+    get: operations["get_metrics_api_admin_metrics_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/metrics/reset": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset Metrics
+     * @description パフォーマンスメトリクスをリセット.
+     *
+     *     開発環境でのテスト用。
+     */
+    post: operations["reset_metrics_api_admin_metrics_reset_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1696,141 +1923,6 @@ export interface paths {
     get: operations["get_masters_health_api_admin_healthcheck_masters_get"];
     put?: never;
     post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/simulate-seed-data": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Simulate Seed Data
-     * @description テストデータシミュレーションを開始.
-     *
-     *     - Reset → Insert を一括実行
-     *     - バックグラウンドでジョブを起動
-     *     - task_id を返す
-     */
-    post: operations["simulate_seed_data_api_admin_simulate_seed_data_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/simulate-progress/{task_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Simulate Progress
-     * @description テストデータシミュレーションの進捗を取得.
-     *
-     *     - ポーリングJSONで進捗を返す（3〜5秒間隔でクライアントが呼び出す想定）
-     */
-    get: operations["get_simulate_progress_api_admin_simulate_progress__task_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/simulate-result/{task_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Simulate Result
-     * @description テストデータシミュレーションの結果を取得.
-     *
-     *     - 完了サマリを返す
-     */
-    get: operations["get_simulate_result_api_admin_simulate_result__task_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/seed-snapshots": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Seed Snapshots
-     * @description スナップショット一覧を取得.
-     */
-    get: operations["list_seed_snapshots_api_admin_seed_snapshots_get"];
-    put?: never;
-    /**
-     * Create Seed Snapshot
-     * @description スナップショットを手動作成.
-     */
-    post: operations["create_seed_snapshot_api_admin_seed_snapshots_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/seed-snapshots/{snapshot_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete Seed Snapshot
-     * @description スナップショットを削除.
-     */
-    delete: operations["delete_seed_snapshot_api_admin_seed_snapshots__snapshot_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/admin/seed-snapshots/{snapshot_id}/restore": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Restore Seed Snapshot
-     * @description スナップショットから復元.
-     *
-     *     - 保存されたパラメータで Reset → Insert を実行
-     *     - task_id を返す
-     */
-    post: operations["restore_seed_snapshot_api_admin_seed_snapshots__snapshot_id__restore_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2384,6 +2476,62 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/batch-jobs/inventory-sync/execute": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Inventory Sync Direct
+     * @description SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
+     *
+     *     管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。
+     *     バッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。
+     *
+     *     Args:
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         dict: 実行結果の詳細
+     *             - checked_products: チェックした商品数
+     *             - discrepancies_found: 発見された差異数
+     *             - alerts_created: 作成されたアラート数
+     *             - details: 差異の詳細リスト
+     */
+    post: operations["execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/integration/sap/sales-orders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Register Sales Orders
+     * @description Register sales orders to SAP (Mock implementation).
+     *
+     *     This endpoint simulates the registration of sales orders to SAP ERP.
+     *     It returns dummy SAP order numbers for the provided order IDs.
+     */
+    post: operations["register_sales_orders_api_integration_sap_sales_orders_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/": {
     parameters: {
       query?: never;
@@ -2408,32 +2556,6 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
-    /**
-     * ActualCounts
-     * @description 実際のDB件数（投入後）.
-     */
-    ActualCounts: {
-      /** Customers */
-      customers: number;
-      /** Suppliers */
-      suppliers: number;
-      /** Delivery Places */
-      delivery_places: number;
-      /** Products */
-      products: number;
-      /** Warehouses */
-      warehouses: number;
-      /** Lots */
-      lots: number;
-      /** Stock Movements */
-      stock_movements: number;
-      /** Orders */
-      orders: number;
-      /** Order Lines */
-      order_lines: number;
-      /** Allocations */
-      allocations: number;
-    };
     /**
      * AdjustmentCreate
      * @description Payload for recording adjustments.
@@ -2549,10 +2671,10 @@ export interface components {
        * @description Target resource for navigation
        */
       target:
-      | components["schemas"]["AlertTargetOrder"]
-      | components["schemas"]["AlertTargetInventoryItem"]
-      | components["schemas"]["AlertTargetLot"]
-      | components["schemas"]["AlertTargetForecastDaily"];
+        | components["schemas"]["AlertTargetOrder"]
+        | components["schemas"]["AlertTargetInventoryItem"]
+        | components["schemas"]["AlertTargetLot"]
+        | components["schemas"]["AlertTargetForecastDaily"];
     };
     /**
      * AlertSummaryResponse
@@ -2931,7 +3053,9 @@ export interface components {
        * Parameters
        * @description ジョブパラメータ（JSON）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * BatchJobExecuteRequest
@@ -2942,7 +3066,9 @@ export interface components {
        * Parameters
        * @description 実行時パラメータ（上書き）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * BatchJobExecuteResponse
@@ -2989,7 +3115,9 @@ export interface components {
        * Parameters
        * @description ジョブパラメータ（JSON）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
       /** Job Id */
       job_id: number;
       /**
@@ -3019,6 +3147,30 @@ export interface components {
        */
       created_at: string;
     };
+    /** Body_login_for_access_token_api_login_post */
+    Body_login_for_access_token_api_login_post: {
+      /** Grant Type */
+      grant_type?: string | null;
+      /** Username */
+      username: string;
+      /**
+       * Password
+       * Format: password
+       */
+      password: string;
+      /**
+       * Scope
+       * @default
+       */
+      scope: string;
+      /** Client Id */
+      client_id?: string | null;
+      /**
+       * Client Secret
+       * Format: password
+       */
+      client_secret?: string | null;
+    };
     /**
      * BusinessRuleCreate
      * @description 業務ルール作成スキーマ.
@@ -3043,7 +3195,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -3085,7 +3239,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -3124,7 +3280,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: Record<string, never> | null;
+      rule_parameters?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -3193,25 +3351,36 @@ export interface components {
       total: number;
     };
     /**
-     * CapCheckResult
-     * @description 上限チェック結果.
+     * ConfirmedOrderLineResponse
+     * @description Confirmed order line for SAP registration.
      */
-    CapCheckResult: {
-      /**
-       * Lot Split
-       * @description ロット分割チェック（OK/NG）
-       */
-      lot_split: string;
-      /**
-       * Destinations
-       * @description 納品先数チェック（OK/NG）
-       */
-      destinations: string;
-      /**
-       * Order Lines
-       * @description 受注明細行チェック（OK/NG）
-       */
-      order_lines: string;
+    ConfirmedOrderLineResponse: {
+      /** Line Id */
+      line_id: number;
+      /** Order Id */
+      order_id: number;
+      /** Order Number */
+      order_number: string;
+      /** Customer Id */
+      customer_id: number;
+      /** Customer Name */
+      customer_name: string;
+      /** Product Id */
+      product_id: number;
+      /** Product Code */
+      product_code: string;
+      /** Product Name */
+      product_name: string;
+      /** Order Quantity */
+      order_quantity: number;
+      /** Allocated Quantity */
+      allocated_quantity: number;
+      /** Unit */
+      unit: string;
+      /** Delivery Date */
+      delivery_date: string;
+      /** Sap Order No */
+      sap_order_no?: string | null;
     };
     /**
      * CustomerCreate
@@ -3222,14 +3391,6 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
-      /** Address */
-      address?: string | null;
-      /** Contact Name */
-      contact_name?: string | null;
-      /** Phone */
-      phone?: string | null;
-      /** Email */
-      email?: string | null;
     };
     /**
      * CustomerItemCreate
@@ -3378,14 +3539,6 @@ export interface components {
       customer_code: string;
       /** Customer Name */
       customer_name: string;
-      /** Address */
-      address?: string | null;
-      /** Contact Name */
-      contact_name?: string | null;
-      /** Phone */
-      phone?: string | null;
-      /** Email */
-      email?: string | null;
       /** Id */
       id: number;
       /**
@@ -3406,14 +3559,6 @@ export interface components {
     CustomerUpdate: {
       /** Customer Name */
       customer_name?: string | null;
-      /** Address */
-      address?: string | null;
-      /** Contact Name */
-      contact_name?: string | null;
-      /** Phone */
-      phone?: string | null;
-      /** Email */
-      email?: string | null;
     };
     /**
      * DashboardStatsResponse
@@ -3672,6 +3817,8 @@ export interface components {
       forecasts?: components["schemas"]["ForecastResponse"][];
       /** Snapshot At */
       snapshot_at?: string | null;
+      /** Related Orders */
+      related_orders?: components["schemas"]["OrderWithLinesResponse"][];
     };
     /**
      * ForecastHistoryResponse
@@ -3914,8 +4061,10 @@ export interface components {
        * Format: date-time
        */
       received_at: string;
-      /** Lot Ids */
-      lot_ids?: number[] | null;
+      /** Lot Numbers */
+      lot_numbers?: {
+        [key: string]: string;
+      } | null;
     };
     /**
      * InboundPlanReceiveResponse
@@ -4216,12 +4365,16 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: Record<string, never> | null;
+      old_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: Record<string, never> | null;
+      new_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -4276,7 +4429,9 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: Record<string, never> | null;
+      changes?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -4535,7 +4690,9 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: Record<string, never> | null;
+      data?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * RoleCreate
@@ -4607,344 +4764,62 @@ export interface components {
        */
       description?: string | null;
     };
-    /** SeedRequest */
-    SeedRequest: {
+    /**
+     * SAPOrderRegistrationRequest
+     * @description Request schema for SAP order registration.
+     */
+    SAPOrderRegistrationRequest: {
       /**
-       * Seed
-       * @description Random seed for reproducibility
-       * @default 42
+       * Order Ids
+       * @description List of Order IDs to register
        */
-      seed: number | null;
-      /**
-       * Dry Run
-       * @default false
-       */
-      dry_run: boolean;
-      /**
-       * Customers
-       * @default 3
-       */
-      customers: number;
-      /**
-       * Suppliers
-       * @default 2
-       */
-      suppliers: number;
-      /**
-       * Delivery Places
-       * @default 2
-       */
-      delivery_places: number;
-      /**
-       * Products
-       * @default 5
-       */
-      products: number;
-      /**
-       * Warehouses
-       * @default 2
-       */
-      warehouses: number;
-      /**
-       * Lots
-       * @default 10
-       */
-      lots: number;
-      /**
-       * Orders
-       * @default 5
-       */
-      orders: number;
-    };
-    /** SeedResponse */
-    SeedResponse: {
-      /** Dry Run */
-      dry_run: boolean;
-      /** Seed */
-      seed: number;
-      summary: components["schemas"]["SeedSummary"];
-      /** @description 投入後の実際のDB件数（dry_run=falseの場合のみ） */
-      actual_counts?: components["schemas"]["ActualCounts"] | null;
+      order_ids: number[];
     };
     /**
-     * SeedSnapshotCreateRequest
-     * @description スナップショット作成リクエスト.
+     * SAPOrderRegistrationResponse
+     * @description Response schema for SAP order registration.
      */
-    SeedSnapshotCreateRequest: {
-      /**
-       * Name
-       * @description スナップショット名
-       */
-      name: string;
-      /**
-       * Params Json
-       * @description パラメータJSON
-       */
-      params_json: Record<string, never>;
-      /**
-       * Profile Json
-       * @description プロファイルJSON
-       */
-      profile_json?: Record<string, never> | null;
-      /**
-       * Summary Json
-       * @description サマリJSON
-       */
-      summary_json?: Record<string, never> | null;
-    };
-    /**
-     * SeedSnapshotCreateResponse
-     * @description スナップショット作成レスポンス.
-     */
-    SeedSnapshotCreateResponse: {
-      /** Id */
-      id: number;
-      /** Name */
-      name: string;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-    };
-    /**
-     * SeedSnapshotListItem
-     * @description スナップショットリストアイテム.
-     */
-    SeedSnapshotListItem: {
-      /** Id */
-      id: number;
-      /** Name */
-      name: string;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /** Params Json */
-      params_json: Record<string, never>;
-      /** Summary Json */
-      summary_json?: Record<string, never> | null;
-    };
-    /**
-     * SeedSnapshotListResponse
-     * @description スナップショット一覧レスポンス.
-     */
-    SeedSnapshotListResponse: {
-      /** Snapshots */
-      snapshots: components["schemas"]["SeedSnapshotListItem"][];
-    };
-    /**
-     * SeedSnapshotRestoreResponse
-     * @description スナップショット復元レスポンス.
-     */
-    SeedSnapshotRestoreResponse: {
-      /** Task Id */
-      task_id: string;
-      /** Message */
-      message: string;
-    };
-    /**
-     * SeedSummary
-     * @description 作成しようとした件数（UPSERT前）.
-     */
-    SeedSummary: {
-      /** Customers */
-      customers: number;
-      /** Suppliers */
-      suppliers: number;
-      /** Delivery Places */
-      delivery_places: number;
-      /** Products */
-      products: number;
-      /** Warehouses */
-      warehouses: number;
-      /** Lots */
-      lots: number;
-      /** Orders */
-      orders: number;
-      /** Order Lines */
-      order_lines: number;
-      /** Allocations */
-      allocations: number;
-    };
-    /**
-     * SimulateProgressResponse
-     * @description テストデータシミュレーション進捗レスポンス.
-     */
-    SimulateProgressResponse: {
-      /** Task Id */
-      task_id: string;
+    SAPOrderRegistrationResponse: {
       /** Status */
       status: string;
-      /** Phase */
-      phase: string;
-      /** Progress Pct */
-      progress_pct: number;
-      /** Logs */
-      logs: string[];
-      /** Error */
-      error?: string | null;
+      /** Registered Count */
+      registered_count: number;
+      /** Results */
+      results: components["schemas"]["SAPOrderRegistrationResult"][];
     };
     /**
-     * SimulateResultResponse
-     * @description テストデータシミュレーション結果レスポンス.
+     * SAPOrderRegistrationResult
+     * @description Result for a single order registration.
      */
-    SimulateResultResponse: {
+    SAPOrderRegistrationResult: {
+      /** Order Id */
+      order_id: number;
+      /** Sap Order No */
+      sap_order_no: string;
+      /** Status */
+      status: string;
+    };
+    /**
+     * SAPSyncRequest
+     * @description Payload for SAP purchase order synchronization.
+     */
+    SAPSyncRequest: Record<string, never>;
+    /**
+     * SAPSyncResponse
+     * @description Response model for SAP synchronization.
+     */
+    SAPSyncResponse: {
       /** Success */
       success: boolean;
-      summary?: components["schemas"]["SimulateResultSummary"] | null;
-      /** Snapshot Id */
-      snapshot_id?: number | null;
-      /** Error */
-      error?: string | null;
-    };
-    /**
-     * SimulateResultSummary
-     * @description テストデータシミュレーション結果サマリ.
-     */
-    SimulateResultSummary: {
-      /** Warehouses */
-      warehouses: number;
-      /**
-       * Forecasts
-       * @description 需要予測データ件数
-       * @default 0
-       */
-      forecasts: number;
-      /** Orders */
-      orders: number;
-      /** Order Lines */
-      order_lines: number;
-      /** Lots */
-      lots: number;
-      /** Allocations */
-      allocations: number;
-      cap_checks: components["schemas"]["CapCheckResult"];
-      /** Stock Equation Ok */
-      stock_equation_ok: boolean;
-      /**
-       * Orphan Count
-       * @description 孤児レコード数
-       * @default 0
-       */
-      orphan_count: number;
-    };
-    /**
-     * SimulateSeedRequest
-     * @description テストデータシミュレーションリクエスト.
-     */
-    SimulateSeedRequest: {
-      /**
-       * Profile
-       * @description プロファイル名（small/medium/large_near、Noneの場合はデフォルト）
-       */
-      profile?: string | null;
-      /**
-       * Random Seed
-       * @description 乱数シード（Noneの場合は現在時刻を使用）
-       */
-      random_seed?: number | null;
-      /**
-       * Warehouses
-       * @description 倉庫数（1〜10、既定=2）
-       * @default 2
-       */
-      warehouses: number;
-      /**
-       * Customers
-       * @description 顧客数（0以上、Noneの場合はプロファイル既定）
-       * @default 3
-       */
-      customers: number | null;
-      /**
-       * Suppliers
-       * @description 仕入先数（0以上、Noneの場合はプロファイル既定）
-       * @default 2
-       */
-      suppliers: number | null;
-      /**
-       * Products
-       * @description 製品数（0以上、Noneの場合はプロファイル既定）
-       * @default 5
-       */
-      products: number | null;
-      /**
-       * Lots
-       * @description ロット数（0以上、Noneの場合はプロファイル既定）
-       * @default 10
-       */
-      lots: number | null;
-      /**
-       * Orders
-       * @description 受注数（0以上、Noneの場合はプロファイル既定）
-       * @default 5
-       */
-      orders: number | null;
-      /**
-       * Lot Split Max Per Line
-       * @description 1明細あたりロット分割上限（1〜3、既定=1）
-       * @default 1
-       */
-      lot_split_max_per_line: number;
-      /**
-       * Order Line Items Per Order
-       * @description 受注明細行の上限（1〜5、既定=1）
-       * @default 1
-       */
-      order_line_items_per_order: number;
-      /**
-       * Destinations Max Per Order
-       * @description 受注の納品先上限（常に5固定）
-       * @default 5
-       */
-      destinations_max_per_order: number;
-      /**
-       * Forecasts
-       * @description 需要予測データ生成（0=無効, 1=有効, Noneはプロファイル既定）
-       * @default 1
-       */
-      forecasts: number | null;
-      /**
-       * Save Snapshot
-       * @description スナップショットを保存するか
-       * @default true
-       */
-      save_snapshot: boolean;
-      /**
-       * Snapshot Name
-       * @description スナップショット名（自動生成の場合はNone）
-       */
-      snapshot_name?: string | null;
-      /**
-       * Use Last Snapshot
-       * @description 最後のスナップショットを使用するか
-       * @default false
-       */
-      use_last_snapshot: boolean;
-      /**
-       * Case Mix
-       * @description ケースミックス比率（API上書き用、合計<=1.0）
-       */
-      case_mix?: {
-        [key: string]: number;
-      } | null;
-    };
-    /**
-     * SimulateSeedResponse
-     * @description テストデータシミュレーション開始レスポンス.
-     */
-    SimulateSeedResponse: {
-      /**
-       * Task Id
-       * @description ジョブID
-       */
-      task_id: string;
-      /**
-       * Message
-       * @description メッセージ
-       */
+      /** Message */
       message: string;
+      /** Created Plans */
+      created_plans?: components["schemas"]["InboundPlanDetailResponse"][];
+      /**
+       * Skipped Count
+       * @default 0
+       */
+      skipped_count: number;
     };
     /**
      * StockHistoryCreate
@@ -4996,6 +4871,32 @@ export interface components {
      */
     StockTransactionType: "inbound" | "allocation" | "shipment" | "adjustment" | "return";
     /**
+     * SupplierAssignmentInfo
+     * @description Schema for supplier assignment information.
+     */
+    SupplierAssignmentInfo: {
+      /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
+      supplier_id: number;
+      /**
+       * Supplier Code
+       * @description 仕入先コード
+       */
+      supplier_code: string;
+      /**
+       * Supplier Name
+       * @description 仕入先名
+       */
+      supplier_name: string;
+      /**
+       * Is Primary
+       * @description 主担当フラグ
+       */
+      is_primary: boolean;
+    };
+    /**
      * SupplierCreate
      * @description Create supplier request.
      */
@@ -5034,6 +4935,16 @@ export interface components {
     SupplierUpdate: {
       /** Supplier Name */
       supplier_name?: string | null;
+    };
+    /**
+     * Token
+     * @description JWT Token schema.
+     */
+    Token: {
+      /** Access Token */
+      access_token: string;
+      /** Token Type */
+      token_type: string;
     };
     /**
      * UserCreate
@@ -5122,6 +5033,69 @@ export interface components {
       role_ids: number[];
     };
     /**
+     * UserSupplierAssignmentCreate
+     * @description Schema for creating a user-supplier assignment.
+     */
+    UserSupplierAssignmentCreate: {
+      /** User Id */
+      user_id: number;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Is Primary
+       * @default false
+       */
+      is_primary: boolean;
+    };
+    /**
+     * UserSupplierAssignmentResponse
+     * @description Schema for user-supplier assignment responses.
+     */
+    UserSupplierAssignmentResponse: {
+      /** User Id */
+      user_id: number;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Is Primary
+       * @default false
+       */
+      is_primary: boolean;
+      /** Id */
+      id: number;
+      /**
+       * Assigned At
+       * Format: date-time
+       */
+      assigned_at: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Username */
+      username?: string | null;
+      /** User Display Name */
+      user_display_name?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      /** Supplier Name */
+      supplier_name?: string | null;
+    };
+    /**
+     * UserSupplierAssignmentUpdate
+     * @description Schema for updating a user-supplier assignment.
+     */
+    UserSupplierAssignmentUpdate: {
+      /** Is Primary */
+      is_primary?: boolean | null;
+    };
+    /**
      * UserUpdate
      * @description Schema for updating a user.
      */
@@ -5193,6 +5167,53 @@ export interface components {
        * @description 割り当てられたロールコード
        */
       role_codes?: string[];
+    };
+    /**
+     * UserWithSuppliers
+     * @description Schema for user with assigned suppliers (for authentication context).
+     */
+    UserWithSuppliers: {
+      /**
+       * Username
+       * @description ユーザー名
+       */
+      username: string;
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name: string;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** Id */
+      id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /**
+       * Supplier Assignments
+       * @description 担当仕入先リスト
+       */
+      supplier_assignments?: components["schemas"]["SupplierAssignmentInfo"][];
     };
     /** ValidationError */
     ValidationError: {
@@ -5572,6 +5593,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_confirmed_order_lines_api_orders_confirmed_order_lines_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ConfirmedOrderLineResponse"][];
         };
       };
     };
@@ -6454,6 +6495,39 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  sync_from_sap_api_inbound_plans_sync_from_sap_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SAPSyncRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SAPSyncResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -7538,6 +7612,59 @@ export interface operations {
       };
     };
   };
+  login_for_access_token_api_login_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/x-www-form-urlencoded": components["schemas"]["Body_login_for_access_token_api_login_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Token"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_current_user_info_api_me_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserWithSuppliers"] | null;
+        };
+      };
+    };
+  };
   list_users_api_users_get: {
     parameters: {
       query?: {
@@ -7895,6 +8022,201 @@ export interface operations {
       };
     };
   };
+  get_user_suppliers_api_assignments_user__user_id__suppliers_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_supplier_users_api_assignments_supplier__supplier_id__users_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_assignment_api_assignments__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserSupplierAssignmentCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_assignment_api_assignments__assignment_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        assignment_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserSupplierAssignmentUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_assignment_api_assignments__assignment_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        assignment_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_id: number;
+        user_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_dashboard_stats_api_admin_stats_get: {
     parameters: {
       query?: never;
@@ -7935,39 +8257,6 @@ export interface operations {
       };
     };
   };
-  create_seeds_api_admin_seeds_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SeedRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SeedResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
   get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get: {
     parameters: {
       query?: {
@@ -7997,6 +8286,46 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_metrics_api_admin_metrics_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  reset_metrics_api_admin_metrics_reset_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
     };
@@ -8037,220 +8366,6 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
-        };
-      };
-    };
-  };
-  simulate_seed_data_api_admin_simulate_seed_data_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SimulateSeedRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SimulateSeedResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_simulate_progress_api_admin_simulate_progress__task_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description タスクID */
-        task_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SimulateProgressResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_simulate_result_api_admin_simulate_result__task_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description タスクID */
-        task_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SimulateResultResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_seed_snapshots_api_admin_seed_snapshots_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SeedSnapshotListResponse"];
-        };
-      };
-    };
-  };
-  create_seed_snapshot_api_admin_seed_snapshots_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["SeedSnapshotCreateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SeedSnapshotCreateResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_seed_snapshot_api_admin_seed_snapshots__snapshot_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description スナップショットID */
-        snapshot_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  restore_seed_snapshot_api_admin_seed_snapshots__snapshot_id__restore_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        /** @description スナップショットID */
-        snapshot_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["SeedSnapshotRestoreResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -8966,6 +9081,59 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["BatchJobResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
+  register_sales_orders_api_integration_sap_sales_orders_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SAPOrderRegistrationRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SAPOrderRegistrationResponse"];
         };
       };
       /** @description Validation Error */

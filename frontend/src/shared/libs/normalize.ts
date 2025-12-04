@@ -6,7 +6,7 @@
  */
 
 import type { AllocatedLot } from "@/shared/types/aliases";
-import type { components } from "@/shared/types/openapi";
+import type { components } from "@/types/api";
 import type {
   OrderLineResponse as OrderLine,
   OrderResponse as OrderResponseAlias,

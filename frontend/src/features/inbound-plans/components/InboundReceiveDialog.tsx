@@ -7,7 +7,7 @@ import { InboundReceiveLotForm } from "./InboundReceiveLotForm";
 
 import { Button } from "@/components/ui";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui";
-import type { components } from "@/shared/types/openapi";
+import type { components } from "@/types/api";
 
 type InboundPlan = components["schemas"]["InboundPlanDetailResponse"];
 

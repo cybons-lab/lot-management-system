@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import * as assignmentsApi from "../api/assignments";
-import type { components } from "../types/openapi";
+import type { components } from "@/types/api";
 
 type UserSupplierAssignmentCreate = components["schemas"]["UserSupplierAssignmentCreate"];
 type UserSupplierAssignmentUpdate = components["schemas"]["UserSupplierAssignmentUpdate"];
