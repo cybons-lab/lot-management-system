@@ -82,7 +82,7 @@ jobs:
       - name: Run tests with coverage
         working-directory: backend
         env:
-          TEST_DATABASE_URL: postgresql://testuser:testpass@localhost:5432/lot_management_test
+          TEST_DATABASE_URL: postgresql+psycopg2://testuser:testpass@localhost:5432/lot_management_test
           SECRET_KEY: test-secret-key-for-ci-do-not-use-in-production
           JWT_SECRET_KEY: test-jwt-secret-for-ci
         run: uv run pytest --cov=app --cov-report=term-missing --cov-report=html
