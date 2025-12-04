@@ -37,7 +37,7 @@ class UomConversionService(
             .first(),
         )
 
-    def get_by_id(self, conversion_id: int) -> ProductUomConversion | None:
+    def get_by_id(self, conversion_id: int) -> ProductUomConversion | None:  # type: ignore[override]
         """Get UOM conversion by ID."""
         return cast(
             ProductUomConversion | None,

@@ -62,7 +62,9 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             )
         return product
 
-    def list(self, skip: int = 0, limit: int = 100, search: str | None = None) -> list[Product]:
+    def list_items(
+        self, skip: int = 0, limit: int = 100, search: str | None = None
+    ) -> list[Product]:
         """List products with optional search.
 
         Args:
@@ -84,7 +86,7 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             list[Product], query.order_by(Product.maker_part_code).offset(skip).limit(limit).all()
         )
 
-    def get_all(self) -> list[Product]:
+    def get_all(self) -> list[Product]:  # type: ignore[override]
         """Get all products.
 
         Returns:

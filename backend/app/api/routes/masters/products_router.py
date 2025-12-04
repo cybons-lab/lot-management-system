@@ -46,7 +46,7 @@ def list_products(
 ):
     """Return a paginated list of products."""
     service = ProductService(db)
-    products = service.list(skip=skip, limit=limit, search=search)
+    products = service.list_items(skip=skip, limit=limit, search=search)
     return [_to_product_out(product) for product in products]
 
 

@@ -52,12 +52,12 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "updated_at": item.updated_at,
         }
 
-    def create(self, item: CustomerItemCreate) -> dict:
+    def create(self, item: CustomerItemCreate) -> dict:  # type: ignore[override]
         """Create a new customer item mapping and return enriched data."""
         created_item = super().create(item)
         return self._enrich_item(created_item)
 
-    def get_all(
+    def get_all(  # type: ignore[override]
         self,
         skip: int = 0,
         limit: int = 100,

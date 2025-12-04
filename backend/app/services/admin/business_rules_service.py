@@ -26,7 +26,7 @@ class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, Business
         """Initialize service with database session."""
         super().__init__(db=db, model=BusinessRule)
 
-    def get_all(
+    def get_all(  # type: ignore[override]
         self,
         skip: int = 0,
         limit: int = 100,
