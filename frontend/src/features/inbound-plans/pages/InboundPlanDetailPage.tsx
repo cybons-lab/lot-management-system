@@ -21,8 +21,8 @@ import {
 import { ROUTES } from "@/constants/routes";
 import { useInboundPlan, useUpdateInboundPlan } from "@/features/inbound-plans/hooks";
 import { useReceiveInboundPlan } from "@/shared/hooks/useInboundPlans";
-import type { components } from "@/types/api";
 import { formatDate, formatDateTime } from "@/shared/utils/date";
+import type { components } from "@/types/api";
 
 type InboundPlanDetailResponse = components["schemas"]["InboundPlanDetailResponse"];
 type InboundPlanLineResponse = components["schemas"]["InboundPlanLineResponse"];

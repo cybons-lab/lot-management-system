@@ -33,6 +33,8 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     allocated_quantity: String(allocatedQty), // DDL v2.2: DECIMAL as string
     unit: faker.helpers.arrayElement(["EA", "CASE", "BOX"]),
     status: faker.helpers.arrayElement(["active", "depleted", "expired", "quarantine"]), // DDL v2.2
+    locked_quantity: "0", // DDL v2.2
+    lock_reason: null, // DDL v2.2
     expected_lot_id: null, // DDL v2.2
 
     // Inspection certificate fields

@@ -1,5 +1,4 @@
 import { http } from "@/shared/api/http-client";
-import type { operations } from "@/types/api";
 import type {
   Forecast,
   ForecastGroupKey,
@@ -11,6 +10,7 @@ import type {
   BulkImportForecastRequest,
   BulkImportForecastSummary,
 } from "@/shared/types/schema";
+import type { operations } from "@/types/api";
 
 // ===== Types =====
 

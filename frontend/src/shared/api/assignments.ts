@@ -1,7 +1,7 @@
 // User-Supplier Assignment API functions
+import { http as fetchApi } from "@/shared/api/http-client";
 import type { components } from "@/types/api";
 
-import { http as fetchApi } from "@/shared/api/http-client";
 
 type UserSupplierAssignmentCreate = components["schemas"]["UserSupplierAssignmentCreate"];
 type UserSupplierAssignmentUpdate = components["schemas"]["UserSupplierAssignmentUpdate"];

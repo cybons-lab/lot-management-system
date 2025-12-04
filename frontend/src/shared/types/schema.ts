@@ -4,7 +4,7 @@ export type Schema = components["schemas"];
 
 // Allocations
 export type CandidateLotItem = Schema["CandidateLotItem"];
-export type CandidateLotsResponse = Schema["CandidateLotsResponse"];
+export type CandidateLotsResponse = Schema["ListResponse_CandidateLotItem_"];
 export type ManualAllocationRequest = Schema["DragAssignRequest"];
 export type ManualAllocationResponse = Schema["DragAssignResponse"];
 export type FefoPreviewRequest = Schema["FefoPreviewRequest"];
@@ -20,7 +20,7 @@ export type ManualAllocationSavePayload = Schema["ManualAllocationSavePayload"];
 export type Forecast = Schema["ForecastResponse"];
 export type ForecastGroupKey = Schema["ForecastGroupKey"];
 export type ForecastGroup = Schema["ForecastGroupResponse"];
-export type ForecastListResponse = Schema["ForecastListResponse"];
+export type ForecastListResponse = Schema["ListResponse_ForecastGroupResponse_"];
 export type ForecastHistory = Schema["ForecastHistoryResponse"];
 export type CreateForecastRequest = Schema["ForecastCreate"];
 export type UpdateForecastRequest = Schema["ForecastUpdate"];

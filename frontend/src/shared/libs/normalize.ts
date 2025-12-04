@@ -6,11 +6,11 @@
  */
 
 import type { AllocatedLot } from "@/shared/types/aliases";
-import type { components } from "@/types/api";
 import type {
   OrderLineResponse as OrderLine,
   OrderResponse as OrderResponseAlias,
 } from "@/shared/types/schema";
+import type { components } from "@/types/api";
 
 // ヘルパー関数
 export const S = (v: string | null | undefined, fallback = "-"): string => v ?? fallback;
