@@ -2,6 +2,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
 import { getAllocationCandidates } from "../api";
+import { ALLOCATION_CONSTANTS } from "../constants";
 import type { AllocationToastState, LineStatus } from "../types";
 
 import { allocationCandidatesKeys } from "./api/useAllocationCandidates";
@@ -14,7 +15,6 @@ import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery
  * Consolidates logic from previous useLotAllocationState, useLotAllocationData, and useLotAllocationComputed.
  */
 
-import { ALLOCATION_CONSTANTS } from "../constants";
 
 export function useLotAllocationLogic() {
   // --- State ---

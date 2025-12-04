@@ -1,5 +1,6 @@
 """Allocation suggestions service (引当推奨サービス)."""
 
+from datetime import UTC
 from decimal import Decimal
 
 from sqlalchemy import func
@@ -229,10 +230,11 @@ class AllocationSuggestionService:
                 lot=lot,
             )
             # Manually set ID to 0 or None for transient
-            from datetime import datetime, timezone
+            from datetime import datetime
+
             s.id = 0
-            s.created_at = datetime.now(timezone.utc)
-            s.updated_at = datetime.now(timezone.utc)
+            s.created_at = datetime.now(UTC)
+            s.updated_at = datetime.now(UTC)
 
             suggestions.append(s)
             needed -= alloc_qty

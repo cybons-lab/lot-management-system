@@ -7,14 +7,14 @@ Tests cover:
 - Error scenarios (validation, missing parameters)
 """
 
-from datetime import date, timedelta
+import os
+from datetime import UTC, date, timedelta
 from decimal import Decimal
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-import os
 
 from app.core.database import get_db
 from app.main import app
@@ -61,10 +61,10 @@ def test_db(db_engine):
     engine = create_engine(TEST_DATABASE_URL)
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = TestingSessionLocal()
-    
+
     # Clean before test
     _truncate_all(session)
-    
+
     # Override FastAPI dependency
     def override_get_db():
         yield session
@@ -76,7 +76,7 @@ def test_db(db_engine):
     # Clean after test
     _truncate_all(session)
     session.close()
-    
+
     # Remove override
     app.dependency_overrides.clear()
 
@@ -213,8 +213,9 @@ def test_list_allocation_suggestions_success(test_db: Session, master_data: dict
     client = TestClient(app)
 
     # Create allocation suggestions
-    from datetime import datetime, timezone
-    now = datetime.now(timezone.utc)
+    from datetime import datetime
+
+    now = datetime.now(UTC)
     suggestion1 = AllocationSuggestion(
         forecast_period="2025-01",
         product_id=master_data["product"].id,

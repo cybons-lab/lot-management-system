@@ -1,0 +1,365 @@
+
+> lot-management-frontend@1.0.0 test:run
+> vitest run
+
+
+[1m[46m RUN [49m[22m [36mv4.0.15 [39m[90m/Users/kazuya/dev/projects/lot-management-system/frontend[39m
+
+ [32m✓[39m src/App.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mrenders all input fields correctly
+[22m[39mProductForm errors: {}
+ProductForm errors: {}
+
+[90mstdout[2m | src/features/orders/components/OrderLineCard/index.test.tsx
+[22m[39m[HTTP] Initializing API Client { API_BASE_URL: [32m'/api'[39m }
+
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mdisplays validation errors for required fields
+[22m[39mProductForm errors: {}
+ProductForm errors: {}
+
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mdisplays validation errors for required fields
+[22m[39mProductForm errors: {
+  product_code: {
+    message: [32m'製品コードは必須です'[39m,
+    type: [32m'too_small'[39m,
+    ref: HTMLInputElement {
+      [32m'__reactFiber$ayv97qnywoo'[39m: [36m[FiberNode][39m,
+      [32m'__reactProps$ayv97qnywoo'[39m: [36m[Object][39m,
+      [32m'__reactEvents$ayv97qnywoo'[39m: [36m[Set][39m,
+      value: [36m[Getter/Setter][39m,
+      _valueTracker: [36m[Object][39m,
+      [32mSymbol(SameObject caches)[39m: [36m[Object: null prototype][39m
+    }
+  },
+  product_name: {
+    message: [32m'商品名は必須です'[39m,
+    type: [32m'too_small'[39m,
+    ref: HTMLInputElement {
+      [32m'__reactFiber$ayv97qnywoo'[39m: [36m[FiberNode][39m,
+      [32m'__reactProps$ayv97qnywoo'[39m: [36m[Object][39m,
+      [32m'__reactEvents$ayv97qnywoo'[39m: [36m[Set][39m,
+      value: [36m[Getter/Setter][39m,
+      _valueTracker: [36m[Object][39m,
+      [32mSymbol(SameObject caches)[39m: [36m[Object: null prototype][39m
+    }
+  }
+}
+
+ [32m✓[39m src/features/orders/components/OrderLineCard/index.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mdisplays validation error for invalid quantity
+[22m[39mProductForm errors: {}
+ProductForm errors: {}
+
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mdisplays validation error for invalid quantity
+[22m[39mProductForm errors: {
+  qty_per_internal_unit: {
+    message: [32m'数量は1以上で入力してください'[39m,
+    type: [32m'too_small'[39m,
+    ref: HTMLInputElement {
+      [32m'__reactFiber$ayv97qnywoo'[39m: [36m[FiberNode][39m,
+      [32m'__reactProps$ayv97qnywoo'[39m: [36m[Object][39m,
+      [32m'__reactEvents$ayv97qnywoo'[39m: [36m[Set][39m,
+      value: [36m[Getter/Setter][39m,
+      _valueTracker: [36m[Object][39m,
+      [32mSymbol(SameObject caches)[39m: [36m[Object: null prototype][39m
+    }
+  }
+}
+
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mcalls onSubmit with valid data
+[22m[39mProductForm errors: {}
+ProductForm errors: {}
+
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mcalls onSubmit with valid data
+[22m[39mProductForm errors: {}
+
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mpopulates fields with initial values in edit mode
+[22m[39mProductForm errors: {}
+ProductForm errors: {}
+
+[90mstdout[2m | src/features/products/components/ProductForm.test.tsx[2m > [22m[2mProductForm[2m > [22m[2mcalls onCancel when cancel button is clicked
+[22m[39mProductForm errors: {}
+ProductForm errors: {}
+
+ [31m❯[39m src/features/products/components/ProductForm.test.tsx [2m([22m[2m6 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[33m 1149[2mms[22m[39m
+     [32m✓[39m renders all input fields correctly[32m 26[2mms[22m[39m
+[31m     [31m×[31m displays validation errors for required fields[39m[33m 1061[2mms[22m[39m
+     [32m✓[39m displays validation error for invalid quantity[32m 21[2mms[22m[39m
+     [32m✓[39m calls onSubmit with valid data[32m 19[2mms[22m[39m
+     [32m✓[39m populates fields with initial values in edit mode[32m 11[2mms[22m[39m
+     [32m✓[39m calls onCancel when cancel button is clicked[32m 10[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m src/features/products/components/ProductForm.test.tsx[2m > [22mProductForm[2m > [22mdisplays validation errors for required fields
+[31m[1mTestingLibraryElementError[22m[39m: Unable to find an element with the text: 社内単位は必須です. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-2"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+          [33mdata-slot[39m=[32m"label"[39m
+          [33mfor[39m=[32m"product_code"[39m
+        [36m>[39m
+          [0m製品コード [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+          [33mid[39m=[32m"product_code"[39m
+          [33mname[39m=[32m"product_code"[39m
+          [33mplaceholder[39m=[32m"例: PROD-001"[39m
+        [36m/>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-sm text-red-500"[39m
+        [36m>[39m
+          [0m製品コードは必須です[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-2"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+          [33mdata-slot[39m=[32m"label"[39m
+          [33mfor[39m=[32m"product_name"[39m
+        [36m>[39m
+          [0m商品名 [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+          [33mid[39m=[32m"product_name"[39m
+          [33mname[39m=[32m"product_name"[39m
+          [33mplaceholder[39m=[32m"例: サンプル商品"[39m
+        [36m/>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-sm text-red-500"[39m
+        [36m>[39m
+          [0m商品名は必須です[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-2"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+          [33mdata-slot[39m=[32m"label"[39m
+          [33mfor[39m=[32m"internal_unit"[39m
+        [36m>[39m
+          [0m社内単位 [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+          [33mid[39m=[32m"internal_unit"[39m
+          [33mname[39m=[32m"internal_unit"[39m
+          [33mplaceholder[39m=[32m"例: CAN"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-2"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+          [33mdata-slot[39m=[32m"label"[39m
+          [33mfor[39m=[32m"external_unit"[39m
+        [36m>[39m
+          [0m外部単位 [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+          [33mid[39m=[32m"external_unit"[39m
+          [33mname[39m=[32m"external_unit"[39m
+          [33mplaceholder[39m=[32m"例: KG"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-2"[39m
+      [36m>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+          [33mdata-slot[39m=[32m"label"[39m
+          [33mfor[39m=[32m"qty_per_internal_unit"[39m
+        [36m>[39m
+          [0m内部単位あたりの数量 [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+          [33mid[39m=[32m"qty_per_internal_unit"[39m
+          [33mname[39m=[32m"qty_per_internal_unit"[39m
+          [33mplaceholder[39m=[32m"例: 1"[39m
+          [33mstep[39m=[32m"0.001"[39m
+          [33mtype...
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<form[39m
+        [33mclass[39m=[32m"space-y-4"[39m
+        [33mnovalidate[39m=[32m""[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+            [33mdata-slot[39m=[32m"label"[39m
+            [33mfor[39m=[32m"product_code"[39m
+          [36m>[39m
+            [0m製品コード [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+            [33mid[39m=[32m"product_code"[39m
+            [33mname[39m=[32m"product_code"[39m
+            [33mplaceholder[39m=[32m"例: PROD-001"[39m
+          [36m/>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm text-red-500"[39m
+          [36m>[39m
+            [0m製品コードは必須です[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+            [33mdata-slot[39m=[32m"label"[39m
+            [33mfor[39m=[32m"product_name"[39m
+          [36m>[39m
+            [0m商品名 [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+            [33mid[39m=[32m"product_name"[39m
+            [33mname[39m=[32m"product_name"[39m
+            [33mplaceholder[39m=[32m"例: サンプル商品"[39m
+          [36m/>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-sm text-red-500"[39m
+          [36m>[39m
+            [0m商品名は必須です[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+            [33mdata-slot[39m=[32m"label"[39m
+            [33mfor[39m=[32m"internal_unit"[39m
+          [36m>[39m
+            [0m社内単位 [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+            [33mid[39m=[32m"internal_unit"[39m
+            [33mname[39m=[32m"internal_unit"[39m
+            [33mplaceholder[39m=[32m"例: CAN"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+            [33mdata-slot[39m=[32m"label"[39m
+            [33mfor[39m=[32m"external_unit"[39m
+          [36m>[39m
+            [0m外部単位 [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm w-full"[39m
+            [33mid[39m=[32m"external_unit"[39m
+            [33mname[39m=[32m"external_unit"[39m
+            [33mplaceholder[39m=[32m"例: KG"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"flex items-center gap-2 select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50 text-sm font-medium text-gray-700"[39m
+            [33mdata-slot[39m=[32m"label"[39m
+            [33mfor[39m=[32m"qty_per_internal_unit"[39m
+          [36m>[39m
+            [0m内部単位あたりの数量 [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33mclass[39m=[32m"border-input file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-9 rounded-md border bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:outline-none disabled:cursor-not-...
+[90m [2m❯[22m waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:[2m163:27[22m[39m
+[36m [2m❯[22m src/features/products/components/ProductForm.test.tsx:[2m29:15[22m[39m
+    [90m 27| [39m        fireEvent[33m.[39m[34msubmit[39m(form[33m![39m)
+    [90m 28| [39m
+    [90m 29| [39m        [35mawait[39m [34mwaitFor[39m(() [33m=>[39m {
+    [90m   | [39m              [31m^[39m
+    [90m 30| [39m            [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'製品コードは必須です'[39m))[33m.[39m[34mtoBeInTheDocument[39m()
+    [90m 31| [39m            [34mexpect[39m(screen[33m.[39m[34mgetByText[39m([32m'商品名は必須です'[39m))[33m.[39m[34mtoBeInTheDocument[39m()
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m2 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m11 passed[39m[22m[90m (12)[39m
+[2m   Start at [22m 10:09:25
+[2m   Duration [22m 1.81s[2m (transform 316ms, setup 167ms, import 760ms, tests 1.19s, environment 739ms)[22m
+

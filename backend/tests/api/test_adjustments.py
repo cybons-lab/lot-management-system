@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.main import app
-from app.models import Lot, Product, StockHistory, Warehouse, User, Role
+from app.models import Lot, Product, Role, StockHistory, User, Warehouse
 
 
 def _truncate_all(db: Session):

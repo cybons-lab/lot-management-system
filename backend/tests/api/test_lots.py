@@ -1,13 +1,13 @@
 # backend/tests/api/test_lots.py
 """Comprehensive tests for lots API endpoints."""
 
+import os
 from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
-import os
 
 from app.core.database import get_db
 from app.main import app
@@ -42,16 +42,16 @@ def test_db(db_engine):
     engine = create_engine(TEST_DATABASE_URL)
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = TestingSessionLocal()
-    
+
     _truncate_all(session)
-    
+
     def override_get_db():
         yield session
-        
+
     app.dependency_overrides[get_db] = override_get_db
-    
+
     yield session
-    
+
     _truncate_all(session)
     session.close()
     app.dependency_overrides.clear()

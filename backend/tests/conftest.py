@@ -72,14 +72,14 @@ def db_engine():
                 GROUP BY l.product_id, l.warehouse_id
             """)
             )
-            
+
             # Create v_lot_details view
             try:
                 with connection.begin_nested():
                     connection.execute(text("DROP TABLE v_lot_details CASCADE"))
             except Exception:
                 connection.execute(text("DROP VIEW IF EXISTS v_lot_details CASCADE"))
-                
+
             connection.execute(
                 text("""
                 CREATE OR REPLACE VIEW v_lot_details AS
@@ -118,7 +118,7 @@ def db_engine():
                     connection.execute(text("DROP TABLE v_order_line_details CASCADE"))
             except Exception:
                 connection.execute(text("DROP VIEW IF EXISTS v_order_line_details CASCADE"))
-                
+
             connection.execute(
                 text("""
                 CREATE OR REPLACE VIEW v_order_line_details AS
@@ -162,7 +162,7 @@ def db_engine():
                     s.supplier_name
             """)
             )
-            
+
             transaction.commit()
         except Exception:
             transaction.rollback()
@@ -208,7 +208,7 @@ def db(db_engine) -> Generator[Session, None, None]:
 def client(db) -> Generator[TestClient, None, None]:
     """Create FastAPI TestClient."""
     from app.api.deps import get_db
-    
+
     def override_get_db():
         yield db
 
@@ -217,27 +217,23 @@ def client(db) -> Generator[TestClient, None, None]:
         yield c
     app.dependency_overrides.clear()
 
+
 @pytest.fixture
 def master_data(db):
     """Create common master data for tests."""
-    from app.models import Product, Customer, DeliveryPlace, Warehouse, Supplier
+    from app.models import Customer, DeliveryPlace, Product, Supplier, Warehouse
     from app.models.auth_models import User
-    
+
     # Create Warehouse
     warehouse = Warehouse(
-        warehouse_code="WH-TEST",
-        warehouse_name="Test Warehouse",
-        warehouse_type="internal"
+        warehouse_code="WH-TEST", warehouse_name="Test Warehouse", warehouse_type="internal"
     )
     db.add(warehouse)
-    
+
     # Create Supplier
-    supplier = Supplier(
-        supplier_code="SUP-TEST",
-        supplier_name="Test Supplier"
-    )
+    supplier = Supplier(supplier_code="SUP-TEST", supplier_name="Test Supplier")
     db.add(supplier)
-    
+
     # Create Products
     product1 = Product(
         maker_part_code="PRD-TEST-001",
@@ -245,44 +241,39 @@ def master_data(db):
         base_unit="EA",
         internal_unit="BOX",
         external_unit="PLT",
-        qty_per_internal_unit=10
+        qty_per_internal_unit=10,
     )
     product2 = Product(
-        maker_part_code="PRD-TEST-002",
-        product_name="Test Product 2",
-        base_unit="KG"
+        maker_part_code="PRD-TEST-002", product_name="Test Product 2", base_unit="KG"
     )
     db.add(product1)
     db.add(product2)
-    
+
     # Create Customer
-    customer = Customer(
-        customer_code="CUST-TEST",
-        customer_name="Test Customer"
-    )
+    customer = Customer(customer_code="CUST-TEST", customer_name="Test Customer")
     db.add(customer)
-    db.flush() # Ensure IDs are generated
-    
+    db.flush()  # Ensure IDs are generated
+
     # Create DeliveryPlace
     delivery_place = DeliveryPlace(
         customer_id=customer.id,
         delivery_place_code="DP-TEST",
-        delivery_place_name="Test Delivery Place"
+        delivery_place_name="Test Delivery Place",
     )
     db.add(delivery_place)
-    
+
     # Create User
     user = User(
         username="test_user_common",
         email="test_common@example.com",
         password_hash="dummy_hash",
         display_name="Test User Common",
-        is_active=True
+        is_active=True,
     )
     db.add(user)
-    
+
     db.flush()
-    
+
     return {
         "warehouse": warehouse,
         "supplier": supplier,
@@ -290,5 +281,5 @@ def master_data(db):
         "product2": product2,
         "customer": customer,
         "delivery_place": delivery_place,
-        "user": user
+        "user": user,
     }
