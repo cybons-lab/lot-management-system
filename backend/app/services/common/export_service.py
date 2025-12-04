@@ -9,13 +9,26 @@ from fastapi.responses import StreamingResponse
 # Template definitions for CSV import
 TEMPLATE_DEFINITIONS = {
     "products": {
-        "columns": ["product_code", "product_name", "internal_unit", "external_unit", "qty_per_internal_unit"],
+        "columns": [
+            "product_code",
+            "product_name",
+            "internal_unit",
+            "external_unit",
+            "qty_per_internal_unit",
+        ],
         "sample_row": ["PROD-001", "サンプル製品", "個", "箱", "10"],
         "description": "製品マスタ インポート用テンプレート",
     },
     "customers": {
         "columns": ["customer_code", "customer_name", "address", "contact_name", "phone", "email"],
-        "sample_row": ["CUST-001", "サンプル顧客", "東京都千代田区", "担当者名", "03-1234-5678", "sample@example.com"],
+        "sample_row": [
+            "CUST-001",
+            "サンプル顧客",
+            "東京都千代田区",
+            "担当者名",
+            "03-1234-5678",
+            "sample@example.com",
+        ],
         "description": "顧客マスタ インポート用テンプレート",
     },
     "warehouses": {

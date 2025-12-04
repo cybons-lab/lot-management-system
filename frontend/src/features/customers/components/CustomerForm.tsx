@@ -37,7 +37,12 @@ function getSubmitLabel(isSubmitting: boolean, isEditMode: boolean): string {
   return isEditMode ? "更新" : "登録";
 }
 
-export function CustomerForm({ customer, onSubmit, onCancel, isSubmitting = false }: CustomerFormProps) {
+export function CustomerForm({
+  customer,
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+}: CustomerFormProps) {
   const isEditMode = !!customer;
 
   const {

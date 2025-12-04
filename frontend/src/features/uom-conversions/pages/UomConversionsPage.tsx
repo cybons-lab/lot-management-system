@@ -23,8 +23,15 @@ export function UomConversionsPage() {
   const { data: conversions = [], isLoading } = useList();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  const { editingId, editValue, setEditValue, isUpdating, handleStartEdit, handleCancelEdit, handleSaveEdit } =
-    useInlineEdit();
+  const {
+    editingId,
+    editValue,
+    setEditValue,
+    isUpdating,
+    handleStartEdit,
+    handleCancelEdit,
+    handleSaveEdit,
+  } = useInlineEdit();
 
   const { deleteTarget, setDeleteTarget, isDeleting, handleDelete } = useDeleteConversion();
 
@@ -65,7 +72,10 @@ export function UomConversionsPage() {
       {/* 件数表示 */}
       <div className="text-sm text-slate-600">{conversions.length} 件の単位換算</div>
 
-      <UomConversionBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+      <UomConversionBulkImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+      />
 
       {/* 削除確認ダイアログ */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>

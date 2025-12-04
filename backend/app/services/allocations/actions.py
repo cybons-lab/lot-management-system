@@ -287,9 +287,7 @@ def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True
         db.commit()
 
 
-def bulk_cancel_allocations(
-    db: Session, allocation_ids: list[int]
-) -> tuple[list[int], list[int]]:
+def bulk_cancel_allocations(db: Session, allocation_ids: list[int]) -> tuple[list[int], list[int]]:
     """
     引当を一括キャンセル.
 

@@ -6,7 +6,14 @@ import { toast } from "sonner";
 import { InboundReceiveLotForm } from "./InboundReceiveLotForm";
 
 import { Button } from "@/components/ui";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui";
 import type { components } from "@/types/api";
 
 type InboundPlan = components["schemas"]["InboundPlanDetailResponse"];
@@ -18,28 +25,47 @@ interface LotFormData {
   unit: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractLotForms(lines: any[] | undefined): LotFormData[] {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return lines?.flatMap((line: any) =>
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    line.expected_lots?.map((lot: any) => ({
-      expected_lot_id: lot.expected_lot_id || lot.id,
-      product_name: line.product_name || "Unknown Product",
-      planned_quantity: lot.expected_quantity || lot.planned_quantity,
-      unit: line.unit,
-    })),
-  ) || [];
+interface ExpectedLot {
+  expected_lot_id?: number;
+  id?: number;
+  expected_quantity?: string | number;
+  planned_quantity?: number;
+}
+
+interface InboundLine {
+  product_name?: string;
+  unit: string;
+  expected_lots?: ExpectedLot[];
+}
+
+function extractLotForms(lines: InboundLine[] | undefined): LotFormData[] {
+  return (
+    lines?.flatMap((line: InboundLine) =>
+      line.expected_lots?.map((lot: ExpectedLot) => ({
+        expected_lot_id: lot.expected_lot_id || lot.id || 0,
+        product_name: line.product_name || "Unknown Product",
+        planned_quantity: lot.expected_quantity || lot.planned_quantity || 0,
+        unit: line.unit,
+      })),
+    ) || []
+  ).filter((item): item is LotFormData => item !== undefined);
 }
 
 interface InboundReceiveDialogProps {
   inboundPlan: InboundPlan;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onReceive: (data: { lots: Array<{ expected_lot_id: number; lot_number: string }> }) => Promise<void>;
+  onReceive: (data: {
+    lots: Array<{ expected_lot_id: number; lot_number: string }>;
+  }) => Promise<void>;
 }
 
-export function InboundReceiveDialog({ inboundPlan, open, onOpenChange, onReceive }: InboundReceiveDialogProps) {
+export function InboundReceiveDialog({
+  inboundPlan,
+  open,
+  onOpenChange,
+  onReceive,
+}: InboundReceiveDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lotNumbers, setLotNumbers] = useState<Record<number, string>>({});
   const lotForms = extractLotForms(inboundPlan.lines);
@@ -76,7 +102,9 @@ export function InboundReceiveDialog({ inboundPlan, open, onOpenChange, onReceiv
       <DialogContent className="max-h-[80vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>入庫確定 - {inboundPlan.plan_number}</DialogTitle>
-          <DialogDescription>各ロットのロット番号を入力してください。本番環境では必須です。</DialogDescription>
+          <DialogDescription>
+            各ロットのロット番号を入力してください。本番環境では必須です。
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           {lotForms.map((lot, index) => (

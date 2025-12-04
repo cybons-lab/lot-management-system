@@ -43,9 +43,7 @@ class UomConversionService(
             .first()
         )
 
-    def update_by_id(
-        self, conversion_id: int, data: UomConversionUpdate
-    ) -> ProductUomConversion:
+    def update_by_id(self, conversion_id: int, data: UomConversionUpdate) -> ProductUomConversion:
         """Update UOM conversion by ID.
 
         Args:

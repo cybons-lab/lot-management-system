@@ -2,7 +2,6 @@
 import { http as fetchApi } from "@/shared/api/http-client";
 import type { components } from "@/types/api";
 
-
 type InboundPlanDetailResponse = components["schemas"]["InboundPlanDetailResponse"];
 type InboundPlanReceiveRequest = components["schemas"]["InboundPlanReceiveRequest"];
 type InboundPlanReceiveResponse = components["schemas"]["InboundPlanReceiveResponse"];

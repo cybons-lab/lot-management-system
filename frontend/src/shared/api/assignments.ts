@@ -2,7 +2,6 @@
 import { http as fetchApi } from "@/shared/api/http-client";
 import type { components } from "@/types/api";
 
-
 type UserSupplierAssignmentCreate = components["schemas"]["UserSupplierAssignmentCreate"];
 type UserSupplierAssignmentUpdate = components["schemas"]["UserSupplierAssignmentUpdate"];
 type UserSupplierAssignmentResponse = components["schemas"]["UserSupplierAssignmentResponse"];

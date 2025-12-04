@@ -31,9 +31,19 @@ export function ForecastsTab({ productId }: ForecastsTabProps) {
   }
 
   const totalQuantity =
-    forecastData?.items.reduce((sum: number, group: { forecasts?: { forecast_quantity: string | number }[] }) => {
-      return sum + (group.forecasts ?? []).reduce((s: number, f: { forecast_quantity: string | number }) => s + Number(f.forecast_quantity), 0);
-    }, 0) || 0;
+    forecastData?.items.reduce(
+      (sum: number, group: { forecasts?: { forecast_quantity: string | number }[] }) => {
+        return (
+          sum +
+          (group.forecasts ?? []).reduce(
+            (s: number, f: { forecast_quantity: string | number }) =>
+              s + Number(f.forecast_quantity),
+            0,
+          )
+        );
+      },
+      0,
+    ) || 0;
 
   return (
     <div className="space-y-4">

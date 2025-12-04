@@ -71,9 +71,11 @@ class InboundService:
         if supplier_id is not None:
             count_query = count_query.filter(InboundPlan.supplier_id == supplier_id)
         if product_id is not None:
-            count_query = count_query.join(InboundPlan.lines).filter(
-                InboundPlanLine.product_id == product_id
-            ).distinct()
+            count_query = (
+                count_query.join(InboundPlan.lines)
+                .filter(InboundPlanLine.product_id == product_id)
+                .distinct()
+            )
         if status is not None:
             count_query = count_query.filter(InboundPlan.status == status)
         total = count_query.count()

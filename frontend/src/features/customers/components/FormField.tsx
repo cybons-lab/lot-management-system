@@ -8,7 +8,6 @@ import { form as formStyles } from "../pages/styles";
 
 import { Input, Label } from "@/components/ui";
 
-
 interface FormFieldProps {
   id: string;
   label: string;
