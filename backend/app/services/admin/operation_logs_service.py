@@ -61,7 +61,7 @@ class OperationLogService:
         """Get operation log by ID."""
         return cast(
             OperationLog | None,
-            self.db.query(OperationLog).filter(OperationLog.log_id == log_id).first(),
+            self.db.query(OperationLog).filter(OperationLog.log_id == log_id).first(),  # type: ignore[attr-defined]
         )
 
 
@@ -123,7 +123,7 @@ class MasterChangeLogService:
         return cast(
             MasterChangeLog | None,
             self.db.query(MasterChangeLog)
-            .filter(MasterChangeLog.change_log_id == change_log_id)
+            .filter(MasterChangeLog.change_log_id == change_log_id)  # type: ignore[attr-defined]
             .first(),
         )
 

@@ -48,7 +48,7 @@ class OrderRepository:
         Returns:
             受注エンティティ（存在しない場合はNone）
         """
-        stmt = select(Order).where(Order.order_no == order_no)
+        stmt = select(Order).where(Order.order_no == order_no)  # type: ignore[attr-defined]
         return cast(Order | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_all(
@@ -171,7 +171,7 @@ class OrderLineRepository:
         Returns:
             受注明細エンティティのリスト
         """
-        stmt = select(OrderLine).where(OrderLine.order_id == order_id).order_by(OrderLine.line_no)
+        stmt = select(OrderLine).where(OrderLine.order_id == order_id).order_by(OrderLine.line_no)  # type: ignore[attr-defined]
         return list(self.db.execute(stmt).scalars().all())
 
     def create(
