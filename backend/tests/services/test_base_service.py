@@ -31,7 +31,7 @@ class TestModelUpdate(BaseModel):
 # --- Test Service ---
 
 
-class TestService(BaseService[TestModel, TestModelCreate, TestModelUpdate]):
+class TestService(BaseService[TestModel, TestModelCreate, TestModelUpdate, int]):
     pass
 
 

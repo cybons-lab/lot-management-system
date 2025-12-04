@@ -101,6 +101,7 @@ export function useLotAllocation() {
     toast,
 
     isLoadingOrders: ordersQuery.isLoading,
+    isCandidatesLoading,
     isSavingAllocations: saveAllocationsMutation.isPending,
 
     getCandidateLots,

@@ -2,6 +2,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 
 import { getAllocationCandidates } from "../api";
+import { ALLOCATION_CONSTANTS } from "../constants";
 import type { AllocationToastState, LineStatus } from "../types";
 
 import { allocationCandidatesKeys } from "./api/useAllocationCandidates";
@@ -45,13 +46,13 @@ export function useLotAllocationLogic() {
       queryKey: allocationCandidatesKeys.list({
         order_line_id: line.id!,
         strategy: "fefo",
-        limit: 100,
+        limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
       }),
       queryFn: async () => {
         return getAllocationCandidates({
           order_line_id: line.id!,
           strategy: "fefo",
-          limit: 100,
+          limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         });
       },
       enabled: !!line.id,

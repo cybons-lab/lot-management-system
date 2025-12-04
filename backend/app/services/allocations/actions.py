@@ -199,6 +199,12 @@ def allocate_manually(
     if lot.status != "active":
         raise AllocationCommitError(f"Lot {lot_id} is not active")
 
+    # 商品チェック
+    if lot.product_id != line.product_id:
+        raise ValueError(
+            f"Product mismatch: Lot product {lot.product_id} != Line product {line.product_id}"
+        )
+
     # 在庫チェック
     available = lot.current_quantity - lot.allocated_quantity
     if available + EPSILON < quantity:

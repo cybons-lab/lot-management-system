@@ -327,6 +327,8 @@ export default [
       "src/features/warehouses/pages/WarehouseDetailPage.tsx",
       "src/features/warehouses/pages/WarehousesListPage.tsx",
       "src/features/warehouses/utils/warehouse-csv.ts",
+      // RPA
+      "src/features/rpa/pages/RPAPage.tsx",
       // Shared
       "src/shared/components/data/DataTable.tsx",
       "src/shared/components/data/TablePagination.tsx",
@@ -356,6 +358,17 @@ export default [
         console: "readonly",
         URL: "readonly",
       },
+    },
+  },
+
+  // Test files: relax strict rules
+  {
+    files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "src/test/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "max-lines-per-function": "off",
+      "max-lines": "off",
+      complexity: "off",
     },
   },
 

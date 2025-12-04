@@ -236,9 +236,7 @@ class OrderService:
         # Cancel all lines
         for line in order.order_lines:
             if line.status in {"shipped", "completed"}:
-                raise InvalidOrderStatusError(
-                    f"Line {line.id} status is '{line.status}' and cannot be cancelled"
-                )
+                raise InvalidOrderStatusError(line.status, "cancel")
             line.status = "cancelled"
 
         order.status = "cancelled"
