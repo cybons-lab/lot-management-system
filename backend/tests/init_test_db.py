@@ -1,13 +1,14 @@
 import os
 import sys
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import ProgrammingError
 
 # Add backend directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.models.base_model import Base
-import app.models  # Register all models
+import app.models  # noqa: F401, E402
+from app.models.base_model import Base  # noqa: E402
 
 def init_test_db():
     """Initialize test database with tables and views."""
