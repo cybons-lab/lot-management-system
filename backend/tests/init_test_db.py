@@ -1,56 +1,52 @@
 import os
-from collections.abc import Generator
+import sys
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
-
-import app.models  # Register all models
-from app.main import app
-from app.models.base_model import Base
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import ProgrammingError
 
 
-# Load Hypothesis settings
-try:
-    from . import conftest_hypothesis  # noqa: F401
-except ImportError:
-    pass
+# Add backend directory to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import app.models  # noqa: F401, E402
+from app.models.base_model import Base  # noqa: E402
 
 
-# Use PostgreSQL test database (docker-compose.test.yml)
-# Can be overridden with TEST_DATABASE_URL environment variable
-SQLALCHEMY_DATABASE_URL = os.getenv(
-    "TEST_DATABASE_URL",
-    "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
-)
+def init_single_db(db_url):
+    """Initialize a single database."""
+    print(f"Initializing database: {db_url}")
+    
+    # Create database if not exists (needs connection to default db)
+    # Extract db name
+    base_url = db_url.rsplit("/", 1)[0]
+    db_name = db_url.rsplit("/", 1)[1]
+    
+    # Connect to postgres db to create new db
+    postgres_url = f"{base_url}/postgres"
+    engine_pg = create_engine(postgres_url, isolation_level="AUTOCOMMIT")
+    
+    with engine_pg.connect() as conn:
+        # Check if db exists
+        result = conn.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{db_name}'"))
+        if not result.scalar():
+            print(f"Creating database {db_name}...")
+            conn.execute(text(f"CREATE DATABASE {db_name}"))
+    
+    engine_pg.dispose()
 
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    pool_pre_ping=True,  # Verify connections before using
-    echo=False,  # Set to True for SQL query debugging
-)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    # Now connect to the target db
+    engine = create_engine(db_url)
 
-
-@pytest.fixture(scope="session")
-def db_engine():
-    """Create database engine."""
-    # If pre-initialized (e.g. in CI), skip table/view creation
-    if os.getenv("TEST_DB_PRE_INITIALIZED"):
-        yield engine
-        return
-
+    # Create tables
+    print(f"Creating tables in {db_name}...")
     Base.metadata.create_all(bind=engine)
 
-    # Create views (since create_all doesn't create them, and might create tables instead)
-    from sqlalchemy import text
-    from sqlalchemy.exc import ProgrammingError
-
+    # Create views
+    print(f"Creating views in {db_name}...")
     with engine.connect() as connection:
         transaction = connection.begin()
         try:
-            # Drop table if it was created by create_all (because it's defined as a model)
+            # Drop table if it was created by create_all
             try:
                 with connection.begin_nested():
                     connection.execute(text("DROP TABLE IF EXISTS v_inventory_summary CASCADE"))
@@ -176,122 +172,28 @@ def db_engine():
             )
 
             transaction.commit()
-        except Exception:
+            print(f"Database {db_name} initialization completed successfully.")
+        except Exception as e:
             transaction.rollback()
+            print(f"Error initializing database {db_name}: {e}")
             raise
-    yield engine
-
-    # Drop view before dropping tables to avoid dependency errors
-    with engine.connect() as connection:
-        with connection.begin():
-            connection.execute(text("DROP VIEW IF EXISTS v_inventory_summary CASCADE"))
-            try:
-                with connection.begin_nested():
-                    connection.execute(text("DROP TABLE v_lot_details CASCADE"))
-            except Exception:
-                connection.execute(text("DROP VIEW IF EXISTS v_lot_details CASCADE"))
-            try:
-                with connection.begin_nested():
-                    connection.execute(text("DROP TABLE v_order_line_details CASCADE"))
-            except Exception:
-                connection.execute(text("DROP VIEW IF EXISTS v_order_line_details CASCADE"))
-
-    Base.metadata.drop_all(bind=engine)
+    engine.dispose()
 
 
-@pytest.fixture(scope="function")
-def db(db_engine) -> Generator[Session, None, None]:
-    """
-    Create a fresh database session for each test.
-    Rollback transaction after each test to ensure isolation.
-    """
-    connection = db_engine.connect()
-    transaction = connection.begin()
-    session = TestingSessionLocal(bind=connection)
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
-
-
-@pytest.fixture(scope="function")
-def client(db) -> Generator[TestClient, None, None]:
-    """Create FastAPI TestClient."""
-    from app.api.deps import get_db
-
-    def override_get_db():
-        yield db
-
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
-        yield c
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def master_data(db):
-    """Create common master data for tests."""
-    from app.models import Customer, DeliveryPlace, Product, Supplier, Warehouse
-    from app.models.auth_models import User
-
-    # Create Warehouse
-    warehouse = Warehouse(
-        warehouse_code="WH-TEST", warehouse_name="Test Warehouse", warehouse_type="internal"
+def init_test_dbs():
+    """Initialize test databases."""
+    base_db_url = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
     )
-    db.add(warehouse)
+    
+    # Only initialize the main test db
+    db_urls = [base_db_url]
+            
+    # Initialize databases
+    # Use Pool even for single DB to keep the logic simple or just call directly
+    for db_url in db_urls:
+        init_single_db(db_url)
 
-    # Create Supplier
-    supplier = Supplier(supplier_code="SUP-TEST", supplier_name="Test Supplier")
-    db.add(supplier)
-
-    # Create Products
-    product1 = Product(
-        maker_part_code="PRD-TEST-001",
-        product_name="Test Product 1",
-        base_unit="EA",
-        internal_unit="BOX",
-        external_unit="PLT",
-        qty_per_internal_unit=10,
-    )
-    product2 = Product(
-        maker_part_code="PRD-TEST-002", product_name="Test Product 2", base_unit="KG"
-    )
-    db.add(product1)
-    db.add(product2)
-
-    # Create Customer
-    customer = Customer(customer_code="CUST-TEST", customer_name="Test Customer")
-    db.add(customer)
-    db.flush()  # Ensure IDs are generated
-
-    # Create DeliveryPlace
-    delivery_place = DeliveryPlace(
-        customer_id=customer.id,
-        delivery_place_code="DP-TEST",
-        delivery_place_name="Test Delivery Place",
-    )
-    db.add(delivery_place)
-
-    # Create User
-    user = User(
-        username="test_user_common",
-        email="test_common@example.com",
-        password_hash="dummy_hash",
-        display_name="Test User Common",
-        is_active=True,
-    )
-    db.add(user)
-
-    db.flush()
-
-    return {
-        "warehouse": warehouse,
-        "supplier": supplier,
-        "product1": product1,
-        "product2": product2,
-        "customer": customer,
-        "delivery_place": delivery_place,
-        "user": user,
-    }
+if __name__ == "__main__":
+    init_test_dbs()
