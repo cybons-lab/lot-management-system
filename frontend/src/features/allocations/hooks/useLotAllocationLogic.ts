@@ -15,7 +15,6 @@ import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery
  * Consolidates logic from previous useLotAllocationState, useLotAllocationData, and useLotAllocationComputed.
  */
 
-
 export function useLotAllocationLogic() {
   // --- State ---
   const [allocationsByLine, setAllocationsByLine] = useState<
