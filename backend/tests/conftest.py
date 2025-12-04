@@ -12,7 +12,7 @@ from app.models.base_model import Base
 
 # Load Hypothesis settings
 try:
-    from . import conftest_hypothesis
+    from . import conftest_hypothesis  # noqa: F401
 except ImportError:
     pass
 

@@ -1,5 +1,6 @@
 import os
-from hypothesis import settings, HealthCheck
+
+from hypothesis import HealthCheck, settings
 
 # Define CI profile
 settings.register_profile(
