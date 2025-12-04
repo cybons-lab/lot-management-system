@@ -19,13 +19,13 @@ TEMPLATE_DEFINITIONS = {
         "description": "顧客マスタ インポート用テンプレート",
     },
     "warehouses": {
-        "columns": ["warehouse_code", "warehouse_name", "address"],
-        "sample_row": ["WH-001", "サンプル倉庫", "東京都江東区"],
-        "description": "倉庫マスタ インポート用テンプレート",
+        "columns": ["warehouse_code", "warehouse_name", "warehouse_type"],
+        "sample_row": ["WH-001", "サンプル倉庫", "internal"],
+        "description": "倉庫マスタ インポート用テンプレート（warehouse_type: internal/external/supplier）",
     },
     "suppliers": {
-        "columns": ["supplier_code", "supplier_name", "address", "contact_name", "phone", "email"],
-        "sample_row": ["SUP-001", "サンプル仕入先", "東京都品川区", "担当者名", "03-9876-5432", "supplier@example.com"],
+        "columns": ["supplier_code", "supplier_name"],
+        "sample_row": ["SUP-001", "サンプル仕入先"],
         "description": "仕入先マスタ インポート用テンプレート",
     },
 }
