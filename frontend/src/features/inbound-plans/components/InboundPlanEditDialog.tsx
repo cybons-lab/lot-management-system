@@ -16,7 +16,7 @@ import {
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Textarea } from "@/components/ui";
-import type { components } from "@/shared/types/openapi";
+import type { components } from "@/types/api";
 
 type InboundPlan = components["schemas"]["InboundPlanDetailResponse"];
 

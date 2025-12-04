@@ -14,9 +14,42 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui";
-import type { components } from "@/shared/types/openapi";
+import type { components } from "@/types/api";
 
 type InboundPlan = components["schemas"]["InboundPlanDetailResponse"];
+
+interface LotFormData {
+  expected_lot_id: number;
+  product_name: string;
+  planned_quantity: number;
+  unit: string;
+}
+
+interface ExpectedLot {
+  expected_lot_id?: number;
+  id?: number;
+  expected_quantity?: string | number;
+  planned_quantity?: number;
+}
+
+interface InboundLine {
+  product_name?: string;
+  unit: string;
+  expected_lots?: ExpectedLot[];
+}
+
+function extractLotForms(lines: InboundLine[] | undefined): LotFormData[] {
+  return (
+    lines?.flatMap((line: InboundLine) =>
+      line.expected_lots?.map((lot: ExpectedLot) => ({
+        expected_lot_id: lot.expected_lot_id || lot.id || 0,
+        product_name: line.product_name || "Unknown Product",
+        planned_quantity: lot.expected_quantity || lot.planned_quantity || 0,
+        unit: line.unit,
+      })),
+    ) || []
+  ).filter((item): item is LotFormData => item !== undefined);
+}
 
 interface InboundReceiveDialogProps {
   inboundPlan: InboundPlan;
@@ -34,41 +67,20 @@ export function InboundReceiveDialog({
   onReceive,
 }: InboundReceiveDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // 各expected_lotごとのロット番号フォーム
-
-  const lotForms =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    inboundPlan.lines?.flatMap((line: any) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      line.expected_lots?.map((lot: any) => ({
-        expected_lot_id: lot.expected_lot_id || lot.id,
-        product_name: line.product_name || "Unknown Product",
-        planned_quantity: lot.expected_quantity || lot.planned_quantity,
-        unit: line.unit,
-      })),
-    ) || [];
-
-  // ロット番号の状態管理
   const [lotNumbers, setLotNumbers] = useState<Record<number, string>>({});
+  const lotForms = extractLotForms(inboundPlan.lines);
 
   const handleLotNumberChange = (expectedLotId: number, value: string) => {
-    setLotNumbers((prev) => ({
-      ...prev,
-      [expectedLotId]: value,
-    }));
+    setLotNumbers((prev) => ({ ...prev, [expectedLotId]: value }));
   };
 
   const handleSubmit = async () => {
-    // バリデーション
     const lots = lotForms.map((lot) => ({
       expected_lot_id: lot.expected_lot_id,
       lot_number: lotNumbers[lot.expected_lot_id] || "",
     }));
 
-    // 空のロット番号チェック
-    const emptyLots = lots.filter((lot) => !lot.lot_number);
-    if (emptyLots.length > 0) {
+    if (lots.some((lot) => !lot.lot_number)) {
       toast.error("全てのロット番号を入力してください");
       return;
     }
@@ -79,7 +91,7 @@ export function InboundReceiveDialog({
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to receive inbound plan:", error);
-      // エラーハンドリング（TODO: トースト表示）
+      toast.error(error instanceof Error ? error.message : "入庫確定に失敗しました");
     } finally {
       setIsSubmitting(false);
     }
@@ -94,22 +106,17 @@ export function InboundReceiveDialog({
             各ロットのロット番号を入力してください。本番環境では必須です。
           </DialogDescription>
         </DialogHeader>
-
         <div className="space-y-4 py-4">
-          {lotForms.map((lot, index) => {
-            if (!lot) return null;
-            return (
-              <InboundReceiveLotForm
-                key={lot.expected_lot_id}
-                lot={lot}
-                index={index}
-                value={lotNumbers[lot.expected_lot_id] || ""}
-                onChange={(value) => handleLotNumberChange(lot.expected_lot_id, value)}
-              />
-            );
-          })}
+          {lotForms.map((lot, index) => (
+            <InboundReceiveLotForm
+              key={lot.expected_lot_id}
+              lot={lot}
+              index={index}
+              value={lotNumbers[lot.expected_lot_id] || ""}
+              onChange={(value) => handleLotNumberChange(lot.expected_lot_id, value)}
+            />
+          ))}
         </div>
-
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             キャンセル

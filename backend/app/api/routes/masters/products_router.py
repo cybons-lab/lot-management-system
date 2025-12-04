@@ -45,10 +45,35 @@ def list_products(
     db: Session = Depends(get_db),
 ):
     """Return a paginated list of products."""
-    """Return a paginated list of products."""
     service = ProductService(db)
     products = service.list(skip=skip, limit=limit, search=search)
     return [_to_product_out(product) for product in products]
+
+
+@router.get("/template/download")
+def download_products_template(format: str = "csv", include_sample: bool = True):
+    """Download product import template.
+
+    Args:
+        format: 'csv' or 'xlsx' (default: csv)
+        include_sample: Whether to include a sample row (default: True)
+
+    Returns:
+        Template file for product import
+    """
+    return ExportService.export_template("products", format=format, include_sample=include_sample)
+
+
+@router.get("/export/download")
+def export_products(format: str = "csv", db: Session = Depends(get_db)):
+    """Export products to CSV or Excel."""
+    service = ProductService(db)
+    products = service.get_all()
+    data = [_to_product_out(p) for p in products]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "products")
+    return ExportService.export_to_csv(data, "products")
 
 
 @router.get("/{product_code}", response_model=ProductOut)
@@ -95,22 +120,9 @@ def update_product(product_code: str, product: ProductUpdate, db: Session = Depe
 @router.delete("/{product_code}", status_code=204)
 def delete_product(product_code: str, db: Session = Depends(get_db)):
     """Delete a product by its code (maker_part_code)."""
-    """Delete a product by its code (maker_part_code)."""
     service = ProductService(db)
     service.delete_by_code(product_code)
     return None
-
-
-@router.get("/export/download")
-def export_products(format: str = "csv", db: Session = Depends(get_db)):
-    """Export products to CSV or Excel."""
-    service = ProductService(db)
-    products = service.get_all()
-    data = [_to_product_out(p) for p in products]
-
-    if format == "xlsx":
-        return ExportService.export_to_excel(data, "products")
-    return ExportService.export_to_csv(data, "products")
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

@@ -45,18 +45,20 @@ export function AllocationRowContainer({
   });
 
   // ユーザー要望: 期限切れロットは候補として表示しない
-  const candidateLots = (data?.items ?? []).filter((lot) => {
-    // is_expiredフラグがあればそれを使用、なければ日付比較
-    if ("is_expired" in lot) return !lot.is_expired;
-    // expiry_dateが文字列で来る場合を想定
-    if (lot.expiry_date) {
-      const expiry = new Date(lot.expiry_date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return expiry >= today;
-    }
-    return true;
-  });
+  const candidateLots = (data?.items ?? []).filter(
+    (lot: { is_expired?: boolean; expiry_date?: string | null }) => {
+      // is_expiredフラグがあればそれを使用、なければ日付比較
+      if ("is_expired" in lot) return !lot.is_expired;
+      // expiry_dateが文字列で来る場合を想定
+      if (lot.expiry_date) {
+        const expiry = new Date(lot.expiry_date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return expiry >= today;
+      }
+      return true;
+    },
+  );
   const currentAllocations = getLineAllocations(line.id);
   const canSave = lineStatus === "draft" && !isOverAllocated;
 

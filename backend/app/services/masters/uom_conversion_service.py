@@ -35,6 +35,66 @@ class UomConversionService(
             .first()
         )
 
+    def get_by_id(self, conversion_id: int) -> ProductUomConversion | None:
+        """Get UOM conversion by ID."""
+        return (
+            self.db.query(ProductUomConversion)
+            .filter(ProductUomConversion.conversion_id == conversion_id)
+            .first()
+        )
+
+    def update_by_id(self, conversion_id: int, data: UomConversionUpdate) -> ProductUomConversion:
+        """Update UOM conversion by ID.
+
+        Args:
+            conversion_id: ID of the conversion to update
+            data: Update data
+
+        Returns:
+            Updated conversion
+
+        Raises:
+            HTTPException: If conversion not found
+        """
+        from fastapi import HTTPException, status
+
+        conversion = self.get_by_id(conversion_id)
+        if not conversion:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"UOM conversion with ID {conversion_id} not found",
+            )
+
+        update_data = data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(conversion, key, value)
+
+        conversion.updated_at = datetime.now()
+        self.db.commit()
+        self.db.refresh(conversion)
+        return conversion
+
+    def delete_by_id(self, conversion_id: int) -> None:
+        """Delete UOM conversion by ID.
+
+        Args:
+            conversion_id: ID of the conversion to delete
+
+        Raises:
+            HTTPException: If conversion not found
+        """
+        from fastapi import HTTPException, status
+
+        conversion = self.get_by_id(conversion_id)
+        if not conversion:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"UOM conversion with ID {conversion_id} not found",
+            )
+
+        self.db.delete(conversion)
+        self.db.commit()
+
     def bulk_upsert(self, rows: list[UomConversionBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert UOM conversions by composite key (product_code, external_unit).
 

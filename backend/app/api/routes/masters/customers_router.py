@@ -29,6 +29,32 @@ def list_customers(
     return service.get_all(skip=skip, limit=limit)
 
 
+@router.get("/template/download")
+def download_customers_template(format: str = "csv", include_sample: bool = True):
+    """Download customer import template.
+
+    Args:
+        format: 'csv' or 'xlsx' (default: csv)
+        include_sample: Whether to include a sample row (default: True)
+
+    Returns:
+        Template file for customer import
+    """
+    return ExportService.export_template("customers", format=format, include_sample=include_sample)
+
+
+@router.get("/export/download")
+def export_customers(format: str = "csv", db: Session = Depends(get_db)):
+    """Export customers to CSV or Excel."""
+    service = CustomerService(db)
+    customers = service.get_all()
+    data = [CustomerResponse.model_validate(c).model_dump() for c in customers]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "customers")
+    return ExportService.export_to_csv(data, "customers")
+
+
 @router.get("/{customer_code}", response_model=CustomerResponse)
 def get_customer(customer_code: str, db: Session = Depends(get_db)):
     """Fetch a customer by code."""
@@ -76,19 +102,6 @@ def delete_customer(customer_code: str, db: Session = Depends(get_db)):
     service = CustomerService(db)
     service.delete_by_code(customer_code)
     return None
-
-
-@router.get("/export/download")
-def export_customers(format: str = "csv", db: Session = Depends(get_db)):
-    """Export customers to CSV or Excel."""
-    service = CustomerService(db)
-    customers = service.get_all()
-    # CustomerResponse has from_attributes=True, so we can use it to serialize
-    data = [CustomerResponse.model_validate(c).model_dump() for c in customers]
-
-    if format == "xlsx":
-        return ExportService.export_to_excel(data, "customers")
-    return ExportService.export_to_csv(data, "customers")
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

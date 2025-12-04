@@ -123,6 +123,10 @@ class CustomerBase(BaseSchema):
 
     customer_code: str = Field(..., min_length=1, max_length=50)
     customer_name: str = Field(..., min_length=1, max_length=200)
+    address: str | None = Field(None, max_length=500)
+    contact_name: str | None = Field(None, max_length=100)
+    phone: str | None = Field(None, max_length=50)
+    email: str | None = Field(None, max_length=200)
 
 
 class CustomerCreate(CustomerBase):
@@ -135,6 +139,10 @@ class CustomerUpdate(BaseSchema):
     """Update customer request."""
 
     customer_name: str | None = Field(None, min_length=1, max_length=200)
+    address: str | None = Field(None, max_length=500)
+    contact_name: str | None = Field(None, max_length=100)
+    phone: str | None = Field(None, max_length=50)
+    email: str | None = Field(None, max_length=200)
 
 
 class CustomerResponse(CustomerBase):

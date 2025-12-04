@@ -231,7 +231,7 @@ export function ForecastListPage() {
           <div className="text-sm text-gray-600">{response.total}件のグループが見つかりました</div>
 
           <div className="space-y-3 pb-64">
-            {groups.map((group) => {
+            {groups.map((group: ForecastGroup) => {
               const groupKey = getGroupKey(group);
               const isOpen = openGroupKeys.has(groupKey);
               return (

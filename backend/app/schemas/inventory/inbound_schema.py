@@ -107,6 +107,9 @@ class InboundPlanResponse(InboundPlanBase, TimestampMixin):
     """Response model for inbound plans."""
 
     id: int = Field(serialization_alias="inbound_plan_id")
+    total_quantity: Decimal | None = Field(
+        default=None, description="Sum of planned_quantity from all lines"
+    )
 
 
 class InboundPlanDetailResponse(InboundPlanResponse):

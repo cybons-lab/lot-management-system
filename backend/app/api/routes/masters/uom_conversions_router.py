@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.masters_models import Product, ProductUomConversion
 from app.schemas.masters.masters_schema import BulkUpsertResponse
-from app.schemas.masters.uom_conversions_schema import UomConversionBulkUpsertRequest
+from app.schemas.masters.uom_conversions_schema import (
+    UomConversionBulkUpsertRequest,
+    UomConversionResponse,
+    UomConversionUpdate,
+)
 from app.services.common.export_service import ExportService
 from app.services.masters.uom_conversion_service import UomConversionService
 
@@ -97,3 +101,39 @@ def bulk_upsert_uom_conversions(
     """
     service = UomConversionService(db)
     return service.bulk_upsert(request.rows)
+
+
+@router.put("/{conversion_id}", response_model=UomConversionResponse)
+def update_uom_conversion(
+    conversion_id: int,
+    data: UomConversionUpdate,
+    db: Session = Depends(get_db),
+):
+    """Update a UOM conversion by ID.
+
+    Args:
+        conversion_id: ID of the conversion to update
+        data: Update data (factor)
+        db: Database session
+
+    Returns:
+        Updated UOM conversion
+    """
+    service = UomConversionService(db)
+    return service.update_by_id(conversion_id, data)
+
+
+@router.delete("/{conversion_id}", status_code=204)
+def delete_uom_conversion(
+    conversion_id: int,
+    db: Session = Depends(get_db),
+):
+    """Delete a UOM conversion by ID.
+
+    Args:
+        conversion_id: ID of the conversion to delete
+        db: Database session
+    """
+    service = UomConversionService(db)
+    service.delete_by_id(conversion_id)
+    return None

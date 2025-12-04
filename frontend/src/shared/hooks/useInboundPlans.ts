@@ -2,7 +2,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import * as inboundPlansApi from "../api/inbound-plans";
-import type { components } from "../types/openapi";
+
+import type { components } from "@/types/api";
 
 type InboundPlanDetailResponse = components["schemas"]["InboundPlanDetailResponse"];
 type InboundPlanReceiveRequest = components["schemas"]["InboundPlanReceiveRequest"];

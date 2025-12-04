@@ -29,6 +29,32 @@ def list_suppliers(
     return service.get_all(skip=skip, limit=limit)
 
 
+@router.get("/template/download")
+def download_suppliers_template(format: str = "csv", include_sample: bool = True):
+    """Download supplier import template.
+
+    Args:
+        format: 'csv' or 'xlsx' (default: csv)
+        include_sample: Whether to include a sample row (default: True)
+
+    Returns:
+        Template file for supplier import
+    """
+    return ExportService.export_template("suppliers", format=format, include_sample=include_sample)
+
+
+@router.get("/export/download")
+def export_suppliers(format: str = "csv", db: Session = Depends(get_db)):
+    """Export suppliers to CSV or Excel."""
+    service = SupplierService(db)
+    suppliers = service.get_all()
+    data = [SupplierResponse.model_validate(s).model_dump() for s in suppliers]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "suppliers")
+    return ExportService.export_to_csv(data, "suppliers")
+
+
 @router.get("/{supplier_code}", response_model=SupplierResponse)
 def get_supplier(supplier_code: str, db: Session = Depends(get_db)):
     """Get supplier by code."""
@@ -76,18 +102,6 @@ def delete_supplier(supplier_code: str, db: Session = Depends(get_db)):
     service = SupplierService(db)
     service.delete_by_code(supplier_code)
     return None
-
-
-@router.get("/export/download")
-def export_suppliers(format: str = "csv", db: Session = Depends(get_db)):
-    """Export suppliers to CSV or Excel."""
-    service = SupplierService(db)
-    suppliers = service.get_all()
-    data = [SupplierResponse.model_validate(s).model_dump() for s in suppliers]
-
-    if format == "xlsx":
-        return ExportService.export_to_excel(data, "suppliers")
-    return ExportService.export_to_csv(data, "suppliers")
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

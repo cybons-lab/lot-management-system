@@ -29,6 +29,32 @@ def list_warehouses(
     return service.get_all(skip=skip, limit=limit)
 
 
+@router.get("/template/download")
+def download_warehouses_template(format: str = "csv", include_sample: bool = True):
+    """Download warehouse import template.
+
+    Args:
+        format: 'csv' or 'xlsx' (default: csv)
+        include_sample: Whether to include a sample row (default: True)
+
+    Returns:
+        Template file for warehouse import
+    """
+    return ExportService.export_template("warehouses", format=format, include_sample=include_sample)
+
+
+@router.get("/export/download")
+def export_warehouses(format: str = "csv", db: Session = Depends(get_db)):
+    """Export warehouses to CSV or Excel."""
+    service = WarehouseService(db)
+    warehouses = service.get_all()
+    data = [WarehouseResponse.model_validate(w).model_dump() for w in warehouses]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "warehouses")
+    return ExportService.export_to_csv(data, "warehouses")
+
+
 @router.get("/{warehouse_code}", response_model=WarehouseResponse)
 def get_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
     """Get warehouse by code."""
@@ -78,18 +104,6 @@ def delete_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
     service = WarehouseService(db)
     service.delete_by_code(warehouse_code)
     return None
-
-
-@router.get("/export/download")
-def export_warehouses(format: str = "csv", db: Session = Depends(get_db)):
-    """Export warehouses to CSV or Excel."""
-    service = WarehouseService(db)
-    warehouses = service.get_all()
-    data = [WarehouseResponse.model_validate(w).model_dump() for w in warehouses]
-
-    if format == "xlsx":
-        return ExportService.export_to_excel(data, "warehouses")
-    return ExportService.export_to_csv(data, "warehouses")
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

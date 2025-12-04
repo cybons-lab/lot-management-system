@@ -23,6 +23,14 @@ export interface CustomerBulkRow extends BulkRowBase {
   customer_code: string;
   /** 得意先名 */
   customer_name: string;
+  /** 住所 */
+  address?: string;
+  /** 担当者名 */
+  contact_name?: string;
+  /** 電話番号 */
+  phone?: string;
+  /** メールアドレス */
+  email?: string;
 }
 
 /**

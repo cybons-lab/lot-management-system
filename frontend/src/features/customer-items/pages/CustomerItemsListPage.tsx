@@ -38,18 +38,9 @@ export function CustomerItemsListPage() {
   };
 
   // Data
-  const { data: customerItems = [], isLoading, error } = useCustomerItems(queryParams);
+  const { data: customerItems = [], isLoading } = useCustomerItems(queryParams);
   const { mutate: createCustomerItem, isPending: isCreating } = useCreateCustomerItem();
   const { mutate: deleteCustomerItem, isPending: isDeleting } = useDeleteCustomerItem();
-
-  // Debug logging
-  console.log("[CustomerItemsListPage] Query state:", {
-    isLoading,
-    error,
-    queryParams,
-    dataLength: customerItems?.length,
-    data: customerItems,
-  });
 
   // フィルタリング
   const filteredItems = useMemo(() => {

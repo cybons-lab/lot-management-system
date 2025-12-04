@@ -51,12 +51,12 @@ export function useWarehouseData(productId: number) {
     ? inboundPlans.filter((plan) => new Date(plan.planned_arrival_date) >= today)
     : [];
 
-  // TODO: 入荷予定を倉庫別に集約する処理を実装
-  // 現在は入荷予定が倉庫情報を持っていないため、最初の倉庫に表示
+  // 入荷予定を最初の倉庫に表示（倉庫情報がないため）
+  // TODO P2-23: 入荷予定を倉庫別に集約する処理を実装
   if (upcomingPlans.length > 0 && warehouseData.length > 0) {
     warehouseData[0].upcomingInbounds = upcomingPlans.slice(0, 3).map((plan) => ({
       date: plan.planned_arrival_date,
-      quantity: 0, // TODO: 入荷予定の数量を取得
+      quantity: Number(plan.total_quantity ?? 0),
     }));
   }
 

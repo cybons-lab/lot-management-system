@@ -189,10 +189,34 @@
 
 === フロントエンドテスト
 
-**実装状況:** MSW設定済み
+**実装状況:** 26+ tests（Vitest）
 
+* Jest → Vitest 移行済み
 * MSWハンドラー定義
-* テストコードは一部のみ（拡充予定）
+* Unit/Feature テスト
+* TypeCheck: 0エラー達成
+
+=== OpenAPI型統一
+
+**実装完了:** 2025-12-04
+
+==== 機能概要
+
+* `typegen` スクリプトで `src/types/api.d.ts` を自動生成
+* バックエンドOpenAPIスキーマから型を自動抽出
+* 手動型定義ファイル（`openapi.d.ts`）を廃止し一本化
+
+==== 主要ファイル
+
+* `frontend/package.json` - typegen, typegen:curl スクリプト
+* `frontend/src/types/api.d.ts` - 生成された型定義
+* `backend/openapi.json` - OpenAPI仕様
+
+==== 成果
+
+* TypeCheckエラー 0件達成
+* 型定義の二重管理を解消
+* バックエンドスキーマ変更の自動反映
 
 == CI/CD
 

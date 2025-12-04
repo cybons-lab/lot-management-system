@@ -9,7 +9,7 @@ import {
   setPrimaryUser,
   updateAssignment,
 } from "@/shared/api/assignments";
-import type { components } from "@/shared/types/openapi";
+import type { components } from "@/types/api";
 
 type UserSupplierAssignmentUpdate = components["schemas"]["UserSupplierAssignmentUpdate"];
 

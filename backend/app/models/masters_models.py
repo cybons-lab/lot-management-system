@@ -121,6 +121,10 @@ class Customer(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     customer_code: Mapped[str] = mapped_column(String(50), nullable=False)
     customer_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    address: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    contact_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(200), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
