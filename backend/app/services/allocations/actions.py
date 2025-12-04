@@ -381,15 +381,19 @@ def confirm_hard_allocation(
             f"確定数量 {confirm_qty} は引当数量 {allocation.allocated_quantity} を超えています",
         )
 
-    # 在庫チェック（Soft引当はlots.allocated_quantityに含まれていないため、
-    # Hard確定時に利用可能数量をチェック）
-    available = lot.current_quantity - lot.allocated_quantity
-    if available + EPSILON < confirm_qty:
+    # 在庫チェック
+    # NOTE: この引当の数量は既に lots.allocated_quantity に加算済み。
+    # したがって、この引当自体を確定する場合は在庫不足にはならない。
+    # ただし、部分確定で残りを他に回す場合や、ロットの状態変化があった場合は
+    # 整合性チェックとして current_quantity >= allocated_quantity を確認。
+    if lot.current_quantity < lot.allocated_quantity:
+        # ロットの状態異常（在庫が減ったなど）
+        available = lot.current_quantity - (lot.allocated_quantity - allocation.allocated_quantity)
         raise InsufficientStockError(
             lot_id=lot.id,
             lot_number=lot.lot_number,
             required=float(confirm_qty),
-            available=float(available),
+            available=float(max(available, 0)),
         )
 
     now = datetime.utcnow()
@@ -420,8 +424,9 @@ def confirm_hard_allocation(
     allocation.confirmed_by = confirmed_by
     allocation.updated_at = now
 
-    # lots.allocated_quantity を加算（Soft→Hardなので新たにロック）
-    lot.allocated_quantity += confirm_qty
+    # NOTE: lots.allocated_quantity は引当作成時（allocate_manually等）で
+    # 既に加算済みのため、ここでは加算しない。
+    # 二重カウントを防ぐため、allocation_type の変更のみ行う。
     lot.updated_at = now
 
     db.flush()

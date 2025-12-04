@@ -505,9 +505,12 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
     test_db.add(allocation)
     test_db.commit()
 
-    # Verify initial lot state (allocated_quantity should be 0 for soft allocation)
+    # Verify initial lot state
+    # NOTE: 既存コードでは引当作成時にallocated_quantityが加算される
+    # このテストでは直接Allocationを作成しているので、手動で設定する必要がある
     lot = test_db.get(Lot, master_data["lot"].id)
-    assert lot.allocated_quantity == Decimal("0.000")
+    lot.allocated_quantity = Decimal("50.000")  # Soft引当作成をシミュレート
+    test_db.commit()
 
     # Test: Confirm soft → hard
     payload = {"confirmed_by": "test_user"}
@@ -521,9 +524,9 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
     assert data["confirmed_by"] == "test_user"
     assert data["confirmed_at"] is not None
 
-    # Verify lot allocated_quantity is updated
+    # Verify lot allocated_quantity is unchanged (already added at allocation creation)
     test_db.refresh(lot)
-    assert lot.allocated_quantity == Decimal("50.000")
+    assert lot.allocated_quantity == Decimal("50.000")  # 変更なし
 
 
 def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
@@ -561,6 +564,11 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
         status="allocated",
     )
     test_db.add(allocation)
+    test_db.commit()
+
+    # Simulate that allocation creation already added to lot.allocated_quantity
+    lot = test_db.get(Lot, master_data["lot"].id)
+    lot.allocated_quantity = Decimal("100.000")
     test_db.commit()
 
     # Test: Partial confirm (60 of 100)
