@@ -461,3 +461,359 @@ def test_commit_allocation_order_not_found(test_db: Session):
 
     response = client.post("/api/allocations/commit", json=payload)
     assert response.status_code == 404
+
+
+# ============================================================
+# PATCH /allocations/{id}/confirm - Hard Allocation Confirm
+# ============================================================
+
+
+def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
+    """Test confirming a soft allocation to hard allocation."""
+    client = TestClient(app)
+
+    # Create order with line
+    order = Order(
+        order_number="ORD-HARD-001",
+        customer_id=master_data["customer"].id,
+        order_date=date.today(),
+        status="open",
+    )
+    test_db.add(order)
+    test_db.commit()
+
+    order_line = OrderLine(
+        order_id=order.id,
+        product_id=master_data["product"].id,
+        delivery_date=date.today() + timedelta(days=7),
+        order_quantity=Decimal("50.000"),
+        unit="EA",
+        delivery_place_id=master_data["delivery_place"].id,
+        status="pending",
+    )
+    test_db.add(order_line)
+    test_db.commit()
+
+    # Create soft allocation (allocation_type='soft', not updating lot.allocated_quantity)
+    allocation = Allocation(
+        order_line_id=order_line.id,
+        lot_id=master_data["lot"].id,
+        allocated_quantity=Decimal("50.000"),
+        allocation_type="soft",
+        status="allocated",
+    )
+    test_db.add(allocation)
+    test_db.commit()
+
+    # Verify initial lot state (allocated_quantity should be 0 for soft allocation)
+    lot = test_db.get(Lot, master_data["lot"].id)
+    assert lot.allocated_quantity == Decimal("0.000")
+
+    # Test: Confirm soft → hard
+    payload = {"confirmed_by": "test_user"}
+
+    response = client.patch(f"/api/allocations/{allocation.id}/confirm", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["id"] == allocation.id
+    assert data["allocation_type"] == "hard"
+    assert data["confirmed_by"] == "test_user"
+    assert data["confirmed_at"] is not None
+
+    # Verify lot allocated_quantity is updated
+    test_db.refresh(lot)
+    assert lot.allocated_quantity == Decimal("50.000")
+
+
+def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
+    """Test partial confirmation of soft allocation."""
+    client = TestClient(app)
+
+    # Create order with line
+    order = Order(
+        order_number="ORD-HARD-PART",
+        customer_id=master_data["customer"].id,
+        order_date=date.today(),
+        status="open",
+    )
+    test_db.add(order)
+    test_db.commit()
+
+    order_line = OrderLine(
+        order_id=order.id,
+        product_id=master_data["product"].id,
+        delivery_date=date.today() + timedelta(days=7),
+        order_quantity=Decimal("100.000"),
+        unit="EA",
+        delivery_place_id=master_data["delivery_place"].id,
+        status="pending",
+    )
+    test_db.add(order_line)
+    test_db.commit()
+
+    # Create soft allocation for 100
+    allocation = Allocation(
+        order_line_id=order_line.id,
+        lot_id=master_data["lot"].id,
+        allocated_quantity=Decimal("100.000"),
+        allocation_type="soft",
+        status="allocated",
+    )
+    test_db.add(allocation)
+    test_db.commit()
+
+    # Test: Partial confirm (60 of 100)
+    payload = {"confirmed_by": "test_user", "quantity": 60.0}
+
+    response = client.patch(f"/api/allocations/{allocation.id}/confirm", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["allocation_type"] == "hard"
+    assert float(data["allocated_quantity"]) == 60.0
+
+    # Verify remaining soft allocation was created
+    all_allocations = (
+        test_db.query(Allocation).filter(Allocation.order_line_id == order_line.id).all()
+    )
+    assert len(all_allocations) == 2
+
+    soft_allocations = [a for a in all_allocations if a.allocation_type == "soft"]
+    hard_allocations = [a for a in all_allocations if a.allocation_type == "hard"]
+
+    assert len(soft_allocations) == 1
+    assert len(hard_allocations) == 1
+    assert soft_allocations[0].allocated_quantity == Decimal("40.000")
+    assert hard_allocations[0].allocated_quantity == Decimal("60.000")
+
+
+def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data: dict):
+    """Test confirming already hard allocation returns 400."""
+    client = TestClient(app)
+
+    # Create order with line
+    order = Order(
+        order_number="ORD-HARD-DUP",
+        customer_id=master_data["customer"].id,
+        order_date=date.today(),
+        status="open",
+    )
+    test_db.add(order)
+    test_db.commit()
+
+    order_line = OrderLine(
+        order_id=order.id,
+        product_id=master_data["product"].id,
+        delivery_date=date.today() + timedelta(days=7),
+        order_quantity=Decimal("10.000"),
+        unit="EA",
+        delivery_place_id=master_data["delivery_place"].id,
+        status="pending",
+    )
+    test_db.add(order_line)
+    test_db.commit()
+
+    # Create already hard allocation
+    allocation = Allocation(
+        order_line_id=order_line.id,
+        lot_id=master_data["lot"].id,
+        allocated_quantity=Decimal("10.000"),
+        allocation_type="hard",  # Already hard
+        status="allocated",
+    )
+    test_db.add(allocation)
+    test_db.commit()
+
+    # Test: Try to confirm already hard allocation
+    payload = {"confirmed_by": "test_user"}
+
+    response = client.patch(f"/api/allocations/{allocation.id}/confirm", json=payload)
+    assert response.status_code == 400
+
+    data = response.json()["detail"]
+    assert data["error"] == "ALREADY_CONFIRMED"
+
+
+def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_data: dict):
+    """Test confirming allocation with insufficient stock returns 409."""
+    client = TestClient(app)
+
+    # Create order with line
+    order = Order(
+        order_number="ORD-HARD-INSUF",
+        customer_id=master_data["customer"].id,
+        order_date=date.today(),
+        status="open",
+    )
+    test_db.add(order)
+    test_db.commit()
+
+    order_line = OrderLine(
+        order_id=order.id,
+        product_id=master_data["product"].id,
+        delivery_date=date.today() + timedelta(days=7),
+        order_quantity=Decimal("80.000"),
+        unit="EA",
+        delivery_place_id=master_data["delivery_place"].id,
+        status="pending",
+    )
+    test_db.add(order_line)
+    test_db.commit()
+
+    # Use up most of the lot's stock with a hard allocation
+    lot = master_data["lot"]
+    lot.allocated_quantity = Decimal("90.000")  # Only 10 available
+    test_db.commit()
+
+    # Create soft allocation for 80 (more than available 10)
+    allocation = Allocation(
+        order_line_id=order_line.id,
+        lot_id=lot.id,
+        allocated_quantity=Decimal("80.000"),
+        allocation_type="soft",
+        status="allocated",
+    )
+    test_db.add(allocation)
+    test_db.commit()
+
+    # Test: Try to confirm (should fail due to insufficient stock)
+    payload = {"confirmed_by": "test_user"}
+
+    response = client.patch(f"/api/allocations/{allocation.id}/confirm", json=payload)
+    assert response.status_code == 409
+
+    data = response.json()["detail"]
+    assert data["error"] == "INSUFFICIENT_STOCK"
+
+
+def test_confirm_hard_allocation_not_found(test_db: Session):
+    """Test confirming non-existent allocation returns 404."""
+    client = TestClient(app)
+
+    payload = {"confirmed_by": "test_user"}
+
+    response = client.patch("/api/allocations/99999/confirm", json=payload)
+    assert response.status_code == 404
+
+    data = response.json()["detail"]
+    assert data["error"] == "ALLOCATION_NOT_FOUND"
+
+
+# ============================================================
+# POST /allocations/confirm-batch - Batch Hard Allocation Confirm
+# ============================================================
+
+
+def test_confirm_batch_success(test_db: Session, master_data: dict):
+    """Test batch confirmation of multiple soft allocations."""
+    client = TestClient(app)
+
+    # Create order with lines
+    order = Order(
+        order_number="ORD-BATCH",
+        customer_id=master_data["customer"].id,
+        order_date=date.today(),
+        status="open",
+    )
+    test_db.add(order)
+    test_db.commit()
+
+    order_line = OrderLine(
+        order_id=order.id,
+        product_id=master_data["product"].id,
+        delivery_date=date.today() + timedelta(days=7),
+        order_quantity=Decimal("30.000"),
+        unit="EA",
+        delivery_place_id=master_data["delivery_place"].id,
+        status="pending",
+    )
+    test_db.add(order_line)
+    test_db.commit()
+
+    # Create multiple soft allocations
+    allocation1 = Allocation(
+        order_line_id=order_line.id,
+        lot_id=master_data["lot"].id,
+        allocated_quantity=Decimal("10.000"),
+        allocation_type="soft",
+        status="allocated",
+    )
+    allocation2 = Allocation(
+        order_line_id=order_line.id,
+        lot_id=master_data["lot"].id,
+        allocated_quantity=Decimal("20.000"),
+        allocation_type="soft",
+        status="allocated",
+    )
+    test_db.add_all([allocation1, allocation2])
+    test_db.commit()
+
+    # Test: Batch confirm
+    payload = {
+        "allocation_ids": [allocation1.id, allocation2.id],
+        "confirmed_by": "batch_user",
+    }
+
+    response = client.post("/api/allocations/confirm-batch", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert len(data["confirmed"]) == 2
+    assert allocation1.id in data["confirmed"]
+    assert allocation2.id in data["confirmed"]
+    assert len(data["failed"]) == 0
+
+
+def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
+    """Test batch confirmation with some failures."""
+    client = TestClient(app)
+
+    # Create order with line
+    order = Order(
+        order_number="ORD-BATCH-FAIL",
+        customer_id=master_data["customer"].id,
+        order_date=date.today(),
+        status="open",
+    )
+    test_db.add(order)
+    test_db.commit()
+
+    order_line = OrderLine(
+        order_id=order.id,
+        product_id=master_data["product"].id,
+        delivery_date=date.today() + timedelta(days=7),
+        order_quantity=Decimal("20.000"),
+        unit="EA",
+        delivery_place_id=master_data["delivery_place"].id,
+        status="pending",
+    )
+    test_db.add(order_line)
+    test_db.commit()
+
+    # Create one soft allocation
+    allocation = Allocation(
+        order_line_id=order_line.id,
+        lot_id=master_data["lot"].id,
+        allocated_quantity=Decimal("20.000"),
+        allocation_type="soft",
+        status="allocated",
+    )
+    test_db.add(allocation)
+    test_db.commit()
+
+    # Test: Batch confirm with one valid and one invalid ID
+    payload = {
+        "allocation_ids": [allocation.id, 99999],  # 99999 doesn't exist
+        "confirmed_by": "batch_user",
+    }
+
+    response = client.post("/api/allocations/confirm-batch", json=payload)
+    assert response.status_code == 200
+
+    data = response.json()
+    assert len(data["confirmed"]) == 1
+    assert allocation.id in data["confirmed"]
+    assert len(data["failed"]) == 1
+    assert data["failed"][0]["id"] == 99999
+    assert data["failed"][0]["error"] == "ALLOCATION_NOT_FOUND"

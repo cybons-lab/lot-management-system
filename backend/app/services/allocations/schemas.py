@@ -45,8 +45,52 @@ class FefoCommitResult:
 class AllocationCommitError(RuntimeError):
     """Raised when FEFO allocation cannot be committed."""
 
+    def __init__(self, error_code_or_message: str, message: str | None = None):
+        """Initialize with error code and optional message.
+
+        Args:
+            error_code_or_message: Error code (e.g., 'ALREADY_CONFIRMED') or message if only one arg
+            message: Human-readable error message (optional, for new-style calls)
+
+        Note:
+            For backward compatibility, if only one argument is provided,
+            it is treated as both error_code and message.
+        """
+        if message is None:
+            # Backward compatible: single argument is both error_code and message
+            self.error_code = "COMMIT_ERROR"
+            self.message = error_code_or_message
+        else:
+            # New style: error_code + message
+            self.error_code = error_code_or_message
+            self.message = message
+        super().__init__(self.message)
+
 
 class AllocationNotFoundError(Exception):
     """Raised when the specified allocation is not found in DB."""
 
     pass
+
+
+@dataclass
+class InsufficientStockError(Exception):
+    """Raised when there is not enough stock to confirm allocation.
+
+    Attributes:
+        lot_id: Lot ID with insufficient stock
+        lot_number: Lot number for display
+        required: Required quantity
+        available: Available quantity
+    """
+
+    lot_id: int
+    lot_number: str
+    required: float
+    available: float
+
+    def __str__(self) -> str:
+        return (
+            f"ロット {self.lot_number} の在庫が不足しています "
+            f"(必要: {self.required}, 利用可能: {self.available})"
+        )

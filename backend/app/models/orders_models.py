@@ -192,8 +192,20 @@ class Allocation(Base):
         nullable=True,  # Used for provisional allocations
     )
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
+    allocation_type: Mapped[str] = mapped_column(
+        String(10),
+        nullable=False,
+        server_default=text("'soft'"),
+        comment="Allocation type: soft (provisional) or hard (confirmed)",
+    )
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'allocated'")
+    )
+    confirmed_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True, comment="Hard allocation confirmation timestamp"
+    )
+    confirmed_by: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="User who confirmed the allocation"
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
@@ -207,10 +219,15 @@ class Allocation(Base):
             "status IN ('allocated', 'provisional', 'shipped', 'cancelled')",
             name="chk_allocations_status",
         ),
+        CheckConstraint(
+            "allocation_type IN ('soft', 'hard')",
+            name="chk_allocation_type",
+        ),
         Index("idx_allocations_order_line", "order_line_id"),
         Index("idx_allocations_lot", "lot_id"),
         Index("idx_allocations_inbound_plan_line", "inbound_plan_line_id"),
         Index("idx_allocations_status", "status"),
+        Index("idx_allocations_allocation_type", "allocation_type"),
     )
 
     # Relationships
