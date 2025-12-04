@@ -10,10 +10,10 @@
 
 | 項目 | 件数 | 割合 |
 |------|------|------|
-| ✅ **合格 (PASSED)** | **159テスト** | **99.4%** |
+| ✅ **合格 (PASSED)** | **171テスト** | **99.4%** |
 | ❌ **失敗 (FAILED)** | 0テスト | 0% |
 | ⚠️ **想定失敗 (XFAILED)** | 1テスト | 0.6% |
-| **合計** | **160テスト** | **100%** |
+| **合計** | **172テスト** | **100%** |
 | **実行時間** | **2.77秒** | - |
 
 ### ステータス
@@ -73,10 +73,12 @@
 ### SAP Integration (1/5) - 20%合格
 - `test_inventory_sync_api.py`: 1テスト合格（xfailed）、4テスト失敗
 
-### Service Layer Tests (17/17) ✅
+### Service Layer Tests (29/29) ✅
 - `test_order_service.py`: 10テスト全て合格
 - `test_inbound_service.py`: 7テスト全て合格
 - `test_inbound_receiving_service.py`: 5テスト全て合格（InboundServiceテストに含む）
+- `test_inventory_service.py`: 5テスト全て合格
+- `test_adjustment_service.py`: 7テスト全て合格
 
 ---
 

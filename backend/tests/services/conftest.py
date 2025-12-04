@@ -1,6 +1,7 @@
 import pytest
 from datetime import date, timedelta
 from app.models import Product, Customer, DeliveryPlace, Warehouse, Supplier
+from app.models.auth_models import User
 
 @pytest.fixture
 def service_master_data(db):
@@ -53,6 +54,16 @@ def service_master_data(db):
     )
     db.add(delivery_place)
     
+    # Create User
+    user = User(
+        username="test_user_svc",
+        email="test_svc@example.com",
+        password_hash="dummy_hash",
+        display_name="Test User Service",
+        is_active=True
+    )
+    db.add(user)
+    
     db.flush()
     
     return {
@@ -61,5 +72,6 @@ def service_master_data(db):
         "product1": product1,
         "product2": product2,
         "customer": customer,
-        "delivery_place": delivery_place
+        "delivery_place": delivery_place,
+        "user": user
     }

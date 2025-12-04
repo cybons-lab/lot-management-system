@@ -223,14 +223,14 @@
   - [x] receive_inbound() with lot generation (InboundReceivingService)
   - [x] create/update/delete inbound plans (InboundService)
   - [x] エラーケース（重複ロット、無効な数量）
-- [ ] Day 12-13: **inventory_service.py** テスト（5件）
-  - [ ] Real-time aggregation from lots
-  - [ ] Multi-warehouse queries
-  - [ ] エラーケース（無効な製品/倉庫）
-- [ ] Day 14: **adjustment_service.py** テスト（4件）
-  - [ ] Stock adjustments
-  - [ ] Stock movement creation
-  - [ ] エラーケース（無効な数量、理由不足）
+- [x] Day 12-13: **inventory_service.py** テスト（5件作成済） ✅
+  - [x] Real-time aggregation from lots
+  - [x] Multi-warehouse queries
+  - [x] エラーケース（無効な製品/倉庫）
+- [x] Day 14: **adjustment_service.py** テスト（7件作成済） ✅
+  - [x] Stock adjustments
+  - [x] Stock movement creation
+  - [x] エラーケース（無効な数量、理由不足）
 
 #### エラーシナリオテスト（3日）
 - [ ] Day 15: **tests/error_scenarios/** ディレクトリ作成
