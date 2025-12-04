@@ -57,7 +57,7 @@ def generate_orders(
     order_count = 0
     line_count = 0
 
-    for (customer_id, order_date), fc_list in order_groups.items():
+    for (customer_id, _order_date), fc_list in order_groups.items():
         # Find customer
         customer = next((c for c in customers if c.id == customer_id), None)
         if not customer:
