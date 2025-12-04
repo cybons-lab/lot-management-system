@@ -1,7 +1,7 @@
 # Hard Allocation（確定引当）詳細設計
 
-> **最終更新:** 2025-12-04  
-> **ステータス:** 📝 設計レビュー待ち  
+> **最終更新:** 2025-12-04
+> **ステータス:** 🚧 Phase 1 実装中
 > **目標バージョン:** v3.0
 
 ---
@@ -377,11 +377,16 @@ PATCH /allocations/{id}/confirm
 
 ### Phase 1: バックエンド
 
-- [ ] `PATCH /allocations/{id}/confirm` エンドポイント実装
-- [ ] `POST /allocations/confirm-batch` エンドポイント実装
-- [ ] 在庫不足チェックロジック
-- [ ] `lots.allocated_quantity` の更新ロジック
-- [ ] テストケース作成
+- [x] `PATCH /allocations/{id}/confirm` エンドポイント実装
+- [x] `POST /allocations/confirm-batch` エンドポイント実装
+- [x] 在庫不足チェックロジック
+- [x] `lots.allocated_quantity` の更新ロジック
+- [x] テストケース作成
+
+**実装詳細:**
+- マイグレーション: `add_allocation_type` (allocations テーブルに allocation_type, confirmed_at, confirmed_by 追加)
+- 新規エラー型: `InsufficientStockError` (在庫不足時)
+- 部分確定サポート: quantity パラメータで一部のみ確定可能
 
 ### Phase 2: フロントエンド
 

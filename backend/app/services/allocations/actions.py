@@ -314,6 +314,202 @@ def bulk_cancel_allocations(db: Session, allocation_ids: list[int]) -> tuple[lis
     return cancelled_ids, failed_ids
 
 
+def confirm_hard_allocation(
+    db: Session,
+    allocation_id: int,
+    *,
+    confirmed_by: str | None = None,
+    quantity: Decimal | None = None,
+    commit_db: bool = True,
+) -> tuple[Allocation, Allocation | None]:
+    """
+    Soft引当をHard引当に確定（Soft → Hard変換）.
+
+    Args:
+        db: データベースセッション
+        allocation_id: 引当ID
+        confirmed_by: 確定操作を行ったユーザーID（オプション）
+        quantity: 部分確定の場合の数量（未指定で全量確定）
+        commit_db: Trueの場合、処理完了後にcommitを実行（デフォルト: True）
+
+    Returns:
+        tuple[Allocation, Allocation | None]:
+            - 確定された引当（Hard）
+            - 部分確定の場合、残りのSoft引当（None: 全量確定の場合）
+
+    Raises:
+        AllocationNotFoundError: 引当が見つからない場合
+        AllocationCommitError: 確定に失敗した場合（既にhard、在庫不足など）
+    """
+    from app.services.allocations.schemas import InsufficientStockError
+
+    # 引当取得
+    allocation = db.get(Allocation, allocation_id)
+    if not allocation:
+        raise AllocationNotFoundError(f"Allocation {allocation_id} not found")
+
+    # 既にHardの場合はエラー
+    if allocation.allocation_type == "hard":
+        raise AllocationCommitError("ALREADY_CONFIRMED", f"引当 {allocation_id} は既に確定済みです")
+
+    # lot_idが必須（provisionalは確定不可）
+    if not allocation.lot_id:
+        raise AllocationCommitError(
+            "PROVISIONAL_ALLOCATION", "入荷予定ベースの仮引当は確定できません"
+        )
+
+    # ロック付きでロット取得
+    lot_stmt = select(Lot).where(Lot.id == allocation.lot_id).with_for_update()
+    lot = db.execute(lot_stmt).scalar_one_or_none()
+    if not lot:
+        raise AllocationCommitError("LOT_NOT_FOUND", f"Lot {allocation.lot_id} not found")
+
+    # ロットステータスチェック
+    if lot.status not in ("active",):
+        raise AllocationCommitError(
+            "LOT_NOT_ACTIVE", f"ロット {lot.lot_number} は {lot.status} 状態のため確定できません"
+        )
+
+    # 確定数量を決定
+    confirm_qty = quantity if quantity is not None else allocation.allocated_quantity
+
+    if confirm_qty > allocation.allocated_quantity:
+        raise AllocationCommitError(
+            "INVALID_QUANTITY",
+            f"確定数量 {confirm_qty} は引当数量 {allocation.allocated_quantity} を超えています",
+        )
+
+    # 在庫チェック
+    # NOTE: この引当の数量は既に lots.allocated_quantity に加算済み。
+    # したがって、この引当自体を確定する場合は在庫不足にはならない。
+    # ただし、部分確定で残りを他に回す場合や、ロットの状態変化があった場合は
+    # 整合性チェックとして current_quantity >= allocated_quantity を確認。
+    if lot.current_quantity < lot.allocated_quantity:
+        # ロットの状態異常（在庫が減ったなど）
+        available = lot.current_quantity - (lot.allocated_quantity - allocation.allocated_quantity)
+        raise InsufficientStockError(
+            lot_id=lot.id,
+            lot_number=lot.lot_number,
+            required=float(confirm_qty),
+            available=float(max(available, 0)),
+        )
+
+    now = datetime.utcnow()
+    remaining_allocation: Allocation | None = None
+
+    # 部分確定の場合
+    if quantity is not None and quantity < allocation.allocated_quantity:
+        # 残りのSoft引当を作成
+        remaining_qty = allocation.allocated_quantity - quantity
+        remaining_allocation = Allocation(
+            order_line_id=allocation.order_line_id,
+            lot_id=allocation.lot_id,
+            inbound_plan_line_id=allocation.inbound_plan_line_id,
+            allocated_quantity=remaining_qty,
+            allocation_type="soft",
+            status=allocation.status,
+            created_at=now,
+            updated_at=now,
+        )
+        db.add(remaining_allocation)
+
+        # 元の引当を更新
+        allocation.allocated_quantity = confirm_qty
+
+    # Hard確定
+    allocation.allocation_type = "hard"
+    allocation.confirmed_at = now
+    allocation.confirmed_by = confirmed_by
+    allocation.updated_at = now
+
+    # NOTE: lots.allocated_quantity は引当作成時（allocate_manually等）で
+    # 既に加算済みのため、ここでは加算しない。
+    # 二重カウントを防ぐため、allocation_type の変更のみ行う。
+    lot.updated_at = now
+
+    db.flush()
+
+    # 注文ステータス更新
+    if allocation.order_line_id:
+        line = db.get(OrderLine, allocation.order_line_id)
+        if line:
+            update_order_allocation_status(db, line.order_id)
+            update_order_line_status(db, line.id)
+
+    if commit_db:
+        db.commit()
+        db.refresh(allocation)
+        if remaining_allocation:
+            db.refresh(remaining_allocation)
+
+    return allocation, remaining_allocation
+
+
+def confirm_hard_allocations_batch(
+    db: Session,
+    allocation_ids: list[int],
+    *,
+    confirmed_by: str | None = None,
+) -> tuple[list[int], list[dict]]:
+    """
+    複数の引当を一括でHard確定.
+
+    Args:
+        db: データベースセッション
+        allocation_ids: 確定対象の引当ID一覧
+        confirmed_by: 確定操作を行ったユーザーID（オプション）
+
+    Returns:
+        tuple[list[int], list[dict]]:
+            - 確定成功した引当ID一覧
+            - 確定失敗した引当情報一覧 [{"id": int, "error": str, "message": str}]
+    """
+    from app.services.allocations.schemas import InsufficientStockError
+
+    confirmed_ids: list[int] = []
+    failed_items: list[dict] = []
+
+    for allocation_id in allocation_ids:
+        try:
+            confirm_hard_allocation(
+                db,
+                allocation_id,
+                confirmed_by=confirmed_by,
+                commit_db=False,
+            )
+            confirmed_ids.append(allocation_id)
+        except AllocationNotFoundError:
+            failed_items.append(
+                {
+                    "id": allocation_id,
+                    "error": "ALLOCATION_NOT_FOUND",
+                    "message": f"引当 {allocation_id} が見つかりません",
+                }
+            )
+        except InsufficientStockError as e:
+            failed_items.append(
+                {
+                    "id": allocation_id,
+                    "error": "INSUFFICIENT_STOCK",
+                    "message": f"ロット {e.lot_number} の在庫が不足しています "
+                    f"(必要: {e.required}, 利用可能: {e.available})",
+                }
+            )
+        except AllocationCommitError as e:
+            failed_items.append(
+                {
+                    "id": allocation_id,
+                    "error": e.error_code if hasattr(e, "error_code") else "COMMIT_ERROR",
+                    "message": str(e),
+                }
+            )
+
+    if confirmed_ids:
+        db.commit()
+
+    return confirmed_ids, failed_items
+
+
 def auto_allocate_line(
     db: Session,
     order_line_id: int,

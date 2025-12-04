@@ -194,7 +194,12 @@ class AllocationDetail(BaseSchema):
     order_line_id: int
     lot_id: int
     allocated_quantity: Decimal = Field(..., decimal_places=3)
-    status: str = Field(..., pattern="^(allocated|shipped|cancelled)$")
+    allocation_type: str = Field(
+        default="soft", pattern="^(soft|hard)$", description="soft: 推奨引当, hard: 確定引当"
+    )
+    status: str = Field(..., pattern="^(allocated|provisional|shipped|cancelled)$")
+    confirmed_at: datetime | None = None
+    confirmed_by: str | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -205,6 +210,57 @@ class AllocationDetail(BaseSchema):
 # Using generic ListResponse[T] for consistency
 AllocationListResponse = ListResponse[AllocationDetail]
 """Allocation list response."""
+
+
+# ============================================================
+# Hard Allocation Confirm (確定引当)
+# ============================================================
+
+
+class HardAllocationConfirmRequest(BaseSchema):
+    """Hard allocation confirm request (Soft → Hard)."""
+
+    confirmed_by: str | None = Field(None, description="確定操作を行うユーザーID")
+    quantity: Decimal | None = Field(
+        None, gt=0, decimal_places=3, description="部分確定の場合の数量（未指定で全量確定）"
+    )
+
+
+class HardAllocationConfirmResponse(BaseSchema):
+    """Hard allocation confirm response."""
+
+    id: int
+    order_line_id: int
+    lot_id: int
+    allocated_quantity: Decimal = Field(..., decimal_places=3)
+    allocation_type: str = Field(..., pattern="^(hard)$")
+    status: str = Field(..., pattern="^(allocated)$")
+    confirmed_at: datetime
+    confirmed_by: str | None = None
+
+
+class HardAllocationBatchConfirmRequest(BaseSchema):
+    """Hard allocation batch confirm request."""
+
+    allocation_ids: list[int] = Field(..., min_length=1, description="確定対象の引当ID一覧")
+    confirmed_by: str | None = Field(None, description="確定操作を行うユーザーID")
+
+
+class HardAllocationBatchFailedItem(BaseSchema):
+    """Failed item in batch confirm response."""
+
+    id: int
+    error: str
+    message: str
+
+
+class HardAllocationBatchConfirmResponse(BaseSchema):
+    """Hard allocation batch confirm response."""
+
+    confirmed: list[int] = Field(default_factory=list, description="確定成功した引当ID")
+    failed: list[HardAllocationBatchFailedItem] = Field(
+        default_factory=list, description="確定失敗した引当"
+    )
 
 
 # ============================================================

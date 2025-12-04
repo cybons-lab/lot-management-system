@@ -7,7 +7,7 @@ from hypothesis import HealthCheck, settings
 settings.register_profile(
     "ci",
     max_examples=10,  # Reduce examples for CI speed
-    deadline=None,    # Disable deadline for CI
+    deadline=None,  # Disable deadline for CI
     suppress_health_check=[HealthCheck.too_slow],
 )
 

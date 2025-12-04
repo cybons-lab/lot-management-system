@@ -15,23 +15,23 @@ from app.models.base_model import Base  # noqa: E402
 def init_single_db(db_url):
     """Initialize a single database."""
     print(f"Initializing database: {db_url}")
-    
+
     # Create database if not exists (needs connection to default db)
     # Extract db name
     base_url = db_url.rsplit("/", 1)[0]
     db_name = db_url.rsplit("/", 1)[1]
-    
+
     # Connect to postgres db to create new db
     postgres_url = f"{base_url}/postgres"
     engine_pg = create_engine(postgres_url, isolation_level="AUTOCOMMIT")
-    
+
     with engine_pg.connect() as conn:
         # Check if db exists
         result = conn.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{db_name}'"))
         if not result.scalar():
             print(f"Creating database {db_name}...")
             conn.execute(text(f"CREATE DATABASE {db_name}"))
-    
+
     engine_pg.dispose()
 
     # Now connect to the target db
@@ -186,14 +186,15 @@ def init_test_dbs():
         "TEST_DATABASE_URL",
         "postgresql+psycopg2://testuser:testpass@localhost:5433/lot_management_test",
     )
-    
+
     # Only initialize the main test db
     db_urls = [base_db_url]
-            
+
     # Initialize databases
     # Use Pool even for single DB to keep the logic simple or just call directly
     for db_url in db_urls:
         init_single_db(db_url)
+
 
 if __name__ == "__main__":
     init_test_dbs()

@@ -21,6 +21,11 @@ from app.schemas.allocations.allocations_schema import (
     FefoLotAllocation,
     FefoPreviewRequest,
     FefoPreviewResponse,
+    HardAllocationBatchConfirmRequest,
+    HardAllocationBatchConfirmResponse,
+    HardAllocationBatchFailedItem,
+    HardAllocationConfirmRequest,
+    HardAllocationConfirmResponse,
 )
 from app.services.allocations.actions import (
     allocate_manually,
@@ -28,11 +33,14 @@ from app.services.allocations.actions import (
     bulk_cancel_allocations,
     cancel_allocation,
     commit_fefo_allocation,
+    confirm_hard_allocation,
+    confirm_hard_allocations_batch,
 )
 from app.services.allocations.fefo import preview_fefo_allocation
 from app.services.allocations.schemas import (
     AllocationCommitError,
     AllocationNotFoundError,
+    InsufficientStockError,
 )
 
 
@@ -280,3 +288,118 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# --- Hard Allocation (確定引当) ---
+
+
+@router.patch("/{allocation_id}/confirm", response_model=HardAllocationConfirmResponse)
+def confirm_allocation_hard(
+    allocation_id: int,
+    request: HardAllocationConfirmRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Soft引当をHard引当に確定（Soft → Hard変換）.
+
+    - 在庫をロックし、他オーダーからは引当不可にする
+    - 部分確定も可能（quantity パラメータ指定時）
+
+    Args:
+        allocation_id: 確定対象の引当ID
+        request: 確定リクエスト（confirmed_by, quantity）
+        db: データベースセッション
+
+    Returns:
+        HardAllocationConfirmResponse: 確定された引当情報
+
+    Raises:
+        404: 引当が見つからない
+        400: 既にhard確定済み、または不正なパラメータ
+        409: 在庫不足
+    """
+    try:
+        allocation, _remaining = confirm_hard_allocation(
+            db,
+            allocation_id,
+            confirmed_by=request.confirmed_by,
+            quantity=request.quantity,
+        )
+
+        logger.info(
+            f"Hard引当確定成功: allocation_id={allocation_id}, "
+            f"lot_id={allocation.lot_id}, qty={allocation.allocated_quantity}"
+        )
+
+        return HardAllocationConfirmResponse(
+            id=allocation.id,
+            order_line_id=allocation.order_line_id,
+            lot_id=allocation.lot_id,
+            allocated_quantity=allocation.allocated_quantity,
+            allocation_type=allocation.allocation_type,
+            status=allocation.status,
+            confirmed_at=allocation.confirmed_at,
+            confirmed_by=allocation.confirmed_by,
+        )
+
+    except AllocationNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "error": "ALLOCATION_NOT_FOUND",
+                "message": f"引当 {allocation_id} が見つかりません",
+            },
+        )
+    except InsufficientStockError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"error": "INSUFFICIENT_STOCK", "message": str(e)},
+        )
+    except AllocationCommitError as e:
+        status_code = (
+            status.HTTP_400_BAD_REQUEST
+            if e.error_code in ("ALREADY_CONFIRMED", "INVALID_QUANTITY", "PROVISIONAL_ALLOCATION")
+            else status.HTTP_409_CONFLICT
+        )
+        raise HTTPException(
+            status_code=status_code,
+            detail={"error": e.error_code, "message": e.message},
+        )
+
+
+@router.post("/confirm-batch", response_model=HardAllocationBatchConfirmResponse)
+def confirm_allocations_batch(
+    request: HardAllocationBatchConfirmRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    複数のSoft引当を一括でHard確定.
+
+    部分的な失敗を許容し、成功・失敗をそれぞれ返す。
+
+    Args:
+        request: 一括確定リクエスト（allocation_ids, confirmed_by）
+        db: データベースセッション
+
+    Returns:
+        HardAllocationBatchConfirmResponse: 確定結果（成功ID一覧、失敗情報一覧）
+    """
+    confirmed_ids, failed_items = confirm_hard_allocations_batch(
+        db,
+        request.allocation_ids,
+        confirmed_by=request.confirmed_by,
+    )
+
+    logger.info(f"Hard引当一括確定: 成功={len(confirmed_ids)}, 失敗={len(failed_items)}")
+
+    return HardAllocationBatchConfirmResponse(
+        confirmed=confirmed_ids,
+        failed=[
+            HardAllocationBatchFailedItem(
+                id=item["id"],
+                error=item["error"],
+                message=item["message"],
+            )
+            for item in failed_items
+        ],
+    )
