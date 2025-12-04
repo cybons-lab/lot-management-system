@@ -24,9 +24,7 @@ export function ForecastFileUploadCard({ onUpload, className }: ForecastFileUplo
 
   const handleUpload = () => {
     if (!file) return;
-
     onUpload?.(file);
-    console.log("Uploading file:", file.name);
   };
 
   return (

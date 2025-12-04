@@ -10,7 +10,6 @@ import { Dashboard } from "../components/Dashboard";
 import { api } from "@/services/api";
 
 export function DashboardPage() {
-  console.log("[DashboardPage] Rendering DashboardPage");
   const {
     data: stats,
     isLoading,

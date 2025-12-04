@@ -75,15 +75,6 @@ export function SupplierProductsPage() {
   const { data: products = [], isLoading, error, isError } = useList();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  // Debug logging
-  console.log("[SupplierProductsPage] Query state:", {
-    isLoading,
-    isError,
-    error,
-    dataLength: products?.length,
-    data: products,
-  });
-
   if (isLoading) {
     return <div className="p-6">読み込み中...</div>;
   }
