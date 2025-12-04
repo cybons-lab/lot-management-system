@@ -13,7 +13,9 @@ export interface UomConversionResponse {
 }
 
 export type UomConversionCreate = Omit<UomConversionResponse, "conversion_id" | "product_name">;
-export type UomConversionUpdate = Partial<UomConversionCreate>;
+export type UomConversionUpdate = {
+  factor?: number;
+};
 
 /**
  * Bulk upsert UOM conversions

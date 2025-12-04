@@ -5,8 +5,10 @@ Revises: f3e7b6fd7de7
 Create Date: 2025-12-04
 """
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
+
 
 revision = "add_customer_contact_fields"
 down_revision = "f3e7b6fd7de7"

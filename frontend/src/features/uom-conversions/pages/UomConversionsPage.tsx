@@ -1,16 +1,32 @@
-import { Package, Upload } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useState } from "react";
 
 import { UomConversionBulkImportDialog } from "../components/UomConversionBulkImportDialog";
 import { UomConversionExportButton } from "../components/UomConversionExportButton";
-import { useUomConversions } from "../hooks/useUomConversions";
+import { UomConversionsTable } from "../components/UomConversionsTable";
+import { useDeleteConversion, useInlineEdit, useUomConversions } from "../hooks";
 
 import { Button } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
 
 export function UomConversionsPage() {
   const { useList } = useUomConversions();
   const { data: conversions = [], isLoading } = useList();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+
+  const { editingId, editValue, setEditValue, isUpdating, handleStartEdit, handleCancelEdit, handleSaveEdit } =
+    useInlineEdit();
+
+  const { deleteTarget, setDeleteTarget, isDeleting, handleDelete } = useDeleteConversion();
 
   if (isLoading) {
     return <div className="p-6">読み込み中...</div>;
@@ -34,57 +50,45 @@ export function UomConversionsPage() {
       </div>
 
       {/* テーブル */}
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                製品コード
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                製品名
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                外部単位
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                換算係数
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-                備考
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
-            {conversions.map((conversion) => (
-              <tr key={conversion.conversion_id} className="hover:bg-slate-50">
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
-                  <div className="flex items-center gap-2">
-                    <Package className="h-4 w-4 text-green-600" />
-                    {conversion.product_code}
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-900">{conversion.product_name}</td>
-                <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-indigo-600">
-                  {conversion.external_unit}
-                </td>
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
-                  {conversion.conversion_factor}
-                </td>
-                <td className="px-6 py-4 text-sm text-slate-600">{conversion.remarks || "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <UomConversionsTable
+        conversions={conversions}
+        editingId={editingId}
+        editValue={editValue}
+        setEditValue={setEditValue}
+        isUpdating={isUpdating}
+        handleSaveEdit={handleSaveEdit}
+        handleCancelEdit={handleCancelEdit}
+        handleStartEdit={handleStartEdit}
+        setDeleteTarget={setDeleteTarget}
+      />
 
       {/* 件数表示 */}
       <div className="text-sm text-slate-600">{conversions.length} 件の単位換算</div>
 
-      <UomConversionBulkImportDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-      />
+      <UomConversionBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>単位換算を削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              製品「{deleteTarget?.product_name}」（{deleteTarget?.product_code}）の 外部単位「
+              {deleteTarget?.external_unit}」の換算情報を削除します。 この操作は取り消せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? "削除中..." : "削除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
