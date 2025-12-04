@@ -204,8 +204,91 @@ def db(db_engine) -> Generator[Session, None, None]:
     connection.close()
 
 
-@pytest.fixture(scope="module")
-def client() -> Generator[TestClient, None, None]:
+@pytest.fixture(scope="function")
+def client(db) -> Generator[TestClient, None, None]:
     """Create FastAPI TestClient."""
+    from app.api.deps import get_db
+    
+    def override_get_db():
+        yield db
+
+    app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
+    app.dependency_overrides.clear()
+
+@pytest.fixture
+def master_data(db):
+    """Create common master data for tests."""
+    from app.models import Product, Customer, DeliveryPlace, Warehouse, Supplier
+    from app.models.auth_models import User
+    
+    # Create Warehouse
+    warehouse = Warehouse(
+        warehouse_code="WH-TEST",
+        warehouse_name="Test Warehouse",
+        warehouse_type="internal"
+    )
+    db.add(warehouse)
+    
+    # Create Supplier
+    supplier = Supplier(
+        supplier_code="SUP-TEST",
+        supplier_name="Test Supplier"
+    )
+    db.add(supplier)
+    
+    # Create Products
+    product1 = Product(
+        maker_part_code="PRD-TEST-001",
+        product_name="Test Product 1",
+        base_unit="EA",
+        internal_unit="BOX",
+        external_unit="PLT",
+        qty_per_internal_unit=10
+    )
+    product2 = Product(
+        maker_part_code="PRD-TEST-002",
+        product_name="Test Product 2",
+        base_unit="KG"
+    )
+    db.add(product1)
+    db.add(product2)
+    
+    # Create Customer
+    customer = Customer(
+        customer_code="CUST-TEST",
+        customer_name="Test Customer"
+    )
+    db.add(customer)
+    db.flush() # Ensure IDs are generated
+    
+    # Create DeliveryPlace
+    delivery_place = DeliveryPlace(
+        customer_id=customer.id,
+        delivery_place_code="DP-TEST",
+        delivery_place_name="Test Delivery Place"
+    )
+    db.add(delivery_place)
+    
+    # Create User
+    user = User(
+        username="test_user_common",
+        email="test_common@example.com",
+        password_hash="dummy_hash",
+        display_name="Test User Common",
+        is_active=True
+    )
+    db.add(user)
+    
+    db.flush()
+    
+    return {
+        "warehouse": warehouse,
+        "supplier": supplier,
+        "product1": product1,
+        "product2": product2,
+        "customer": customer,
+        "delivery_place": delivery_place,
+        "user": user
+    }

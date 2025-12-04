@@ -233,52 +233,55 @@
   - [x] エラーケース（無効な数量、理由不足）
 
 #### エラーシナリオテスト（3日）
-- [ ] Day 15: **tests/error_scenarios/** ディレクトリ作成
-- [ ] Day 15-16: バリデーションエラーテスト（422）
-  - [ ] 空の必須フィールド
-  - [ ] 無効な型
-  - [ ] 範囲外の値
-- [ ] Day 16-17: ビジネスルール違反テスト（400）
-  - [ ] 期限切れロットへの割当
-  - [ ] 利用可能在庫超過
-  - [ ] 無効なステータス遷移
-- [ ] Day 17: 制約違反テスト（409）
-  - [ ] 重複キー
-  - [ ] 外部キー違反
-- [ ] Day 17: 並行性テスト
-  - [ ] 同一ロットへの同時割当
-  - [ ] 二重割当防止
-  - [ ] 楽観的ロック
+- [x] Day 15: **tests/error_scenarios/** ディレクトリ作成 ✅
+- [x] Day 15-16: バリデーションエラーテスト（422） ✅
+  - [x] 空の必須フィールド
+  - [x] 無効な型
+  - [x] 範囲外の値
+- [x] Day 16-17: ビジネスルール違反テスト（400/409） ✅
+  - [x] 期限切れロットへの割当
+  - [x] 利用可能在庫超過
+  - [x] 無効なステータス遷移
+- [x] Day 17: 制約違反テスト（409） ✅
+  - [x] 重複キー
+  - [x] 外部キー違反
+- [x] Day 17: 並行性テスト ✅
+  - [x] 同一ロットへの同時割当
+  - [x] 二重割当防止
+  - [x] 楽観的ロック
 
 ### Week 5-6: フロントエンドテスト（8日）
 
 #### テスト基盤構築（1日）
-- [ ] Day 1: Vitestセットアップ
-  - [ ] `npm install -D vitest @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom @vitest/ui`
-  - [ ] `vitest.config.ts` 作成
-  - [ ] `package.json` にテストスクリプト追加
+- [x] Day 1: Vitestセットアップ ✅
+  - [x] `npm install -D vitest @testing-library/react @testing-library/user-event @testing-library/jest-dom jsdom @vitest/ui`
+  - [x] `vitest.config.ts` 作成
+  - [x] `package.json` にテストスクリプト追加
 
 #### コンポーネントテスト（3日）
-- [ ] Day 2: **OrderCard.test.tsx**
-  - [ ] 表示内容確認
-  - [ ] ボタンクリックイベント
-- [ ] Day 3: **ProductForm.test.tsx**
-  - [ ] フォーム入力
-  - [ ] バリデーション
-  - [ ] 送信
-- [ ] Day 4: **AllocationTable.test.tsx**
-  - [ ] データ表示
-  - [ ] ソート
-  - [ ] フィルター
+- [x] Day 2: **OrderCard.test.tsx** (OrderLineCard) ✅
+  - [x] 表示内容確認
+  - [x] ボタンクリックイベント
+- [x] Day 3: **ProductForm.test.tsx** ✅
+  - [x] フォーム入力
+  - [x] バリデーション
+  - [x] 送信
+- [x] Day 4: **AllocationTable.test.tsx** (LineBasedAllocationList) ✅
+  - [x] データ表示
+  - [x] ソート
+  - [x] フィルター
 
 #### フックテスト（2日）
 - [x] **API Tests Pass Rate**: 99.3% (142/143)
 - [x] **Critical Path Coverage**: 100%
 - [x] **Test Execution Time**: < 5s (Actual: 2.77s)
-- [ ] Day 5: **useOrders.test.ts**
-  - [ ] useQuery
-  - [ ] useMutation
-  - [ ] MSWモック
+- [x] Day 5: **useLotAllocation.test.ts** ✅
+  - [x] 引当ロジック
+  - [x] 状態管理
+- [x] Day 5: **useOrders.test.ts** ✅ (3テスト、1スキップ)
+  - [x] useQuery (useOrderDetail)
+  - [x] useMutation (useUpdateOrderStatus)
+  - [~] useOrdersList (initialData問題によりスキップ)
 - [ ] Day 6: **useAuth.test.ts**
   - [ ] ログイン
   - [ ] ログアウト

@@ -5,9 +5,11 @@ from datetime import date, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.orm import Session
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+import os
 
-from app.api.deps import get_db
+from app.core.database import get_db
 from app.main import app
 from app.models import Lot, Product, Supplier, Warehouse
 
@@ -30,16 +32,28 @@ def _truncate_all(db: Session):
 
 
 @pytest.fixture
-def test_db(db: Session):
-    """Provide clean database session for each test."""
-    _truncate_all(db)
-
+def test_db(db_engine):
+    """Provide clean database session for each test with COMMIT behavior."""
+    # Create engine for this test module
+    TEST_DATABASE_URL = os.getenv(
+        "TEST_DATABASE_URL",
+        "postgresql://testuser:testpass@localhost:5433/lot_management_test",
+    )
+    engine = create_engine(TEST_DATABASE_URL)
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    session = TestingSessionLocal()
+    
+    _truncate_all(session)
+    
     def override_get_db():
-        yield db
-
+        yield session
+        
     app.dependency_overrides[get_db] = override_get_db
-    yield db
-    _truncate_all(db)
+    
+    yield session
+    
+    _truncate_all(session)
+    session.close()
     app.dependency_overrides.clear()
 
 

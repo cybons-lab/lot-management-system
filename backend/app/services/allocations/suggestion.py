@@ -195,7 +195,7 @@ class AllocationSuggestionService:
                 gaps=[],
             )
 
-        needed = order_line.quantity
+        needed = order_line.order_quantity
         product_id = order_line.product_id
 
         # Fetch lots
@@ -218,8 +218,8 @@ class AllocationSuggestionService:
             s = AllocationSuggestion(
                 order_line_id=order_line_id,
                 forecast_period="PREVIEW",  # Dummy
-                customer_id=order_line.order.customer_id,  # Assuming order has customer_id
-                delivery_place_id=order_line.order.delivery_place_id,  # Assuming order has delivery_place_id
+                customer_id=order_line.order.customer_id,
+                delivery_place_id=order_line.delivery_place_id,
                 product_id=product_id,
                 lot_id=lot.id,
                 quantity=alloc_qty,
@@ -229,9 +229,10 @@ class AllocationSuggestionService:
                 lot=lot,
             )
             # Manually set ID to 0 or None for transient
+            from datetime import datetime, timezone
             s.id = 0
-            s.created_at = func.now()
-            s.updated_at = func.now()
+            s.created_at = datetime.now(timezone.utc)
+            s.updated_at = datetime.now(timezone.utc)
 
             suggestions.append(s)
             needed -= alloc_qty
@@ -240,7 +241,7 @@ class AllocationSuggestionService:
         shortage = max(Decimal("0"), needed)
 
         stats = AllocationStatsSummary(
-            total_forecast_quantity=order_line.quantity,
+            total_forecast_quantity=order_line.order_quantity,
             total_allocated_quantity=allocated_total,
             total_shortage_quantity=shortage,
             per_key=[],
@@ -251,7 +252,7 @@ class AllocationSuggestionService:
             gaps.append(
                 AllocationGap(
                     customer_id=order_line.order.customer_id,
-                    delivery_place_id=order_line.order.delivery_place_id,
+                    delivery_place_id=order_line.delivery_place_id,
                     product_id=product_id,
                     forecast_period="PREVIEW",
                     shortage_quantity=shortage,
