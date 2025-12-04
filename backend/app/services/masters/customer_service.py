@@ -1,3 +1,5 @@
+from typing import cast
+
 from sqlalchemy.orm import Session
 
 from app.models.masters_models import Customer
@@ -19,7 +21,10 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]
 
     def get_by_code(self, code: str, *, raise_404: bool = True) -> Customer | None:
         """Get customer by customer_code."""
-        customer = self.db.query(Customer).filter(Customer.customer_code == code).first()
+        customer = cast(
+            Customer | None,
+            self.db.query(Customer).filter(Customer.customer_code == code).first(),
+        )
         if not customer and raise_404:
             from fastapi import HTTPException, status
 

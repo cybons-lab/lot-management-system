@@ -208,8 +208,8 @@ def _enrich_lot_details(db: Session, candidates: list[CandidateLotItem]) -> None
         lot = lot_map.get(candidate.lot_id)
         if lot:
             candidate.lot_number = lot.lot_number
-            candidate.current_quantity = float(lot.current_quantity)
-            candidate.allocated_quantity = float(lot.allocated_quantity)
+            candidate.current_quantity = lot.current_quantity
+            candidate.allocated_quantity = lot.allocated_quantity
             candidate.status = lot.status
             candidate.lock_reason = lot.lock_reason
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import date
+from typing import cast
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, joinedload
@@ -29,7 +30,7 @@ class LotRepository:
             .options(joinedload(Lot.product), joinedload(Lot.warehouse))
             .where(Lot.id == lot_id)
         )
-        return self.db.execute(stmt).scalar_one_or_none()
+        return cast(Lot | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_available_lots(
         self,
@@ -66,7 +67,7 @@ class LotRepository:
             else:
                 return []
 
-        return self.db.execute(stmt).scalars().all()
+        return cast(Sequence[Lot], self.db.execute(stmt).scalars().all())
 
     def create(
         self,

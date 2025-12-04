@@ -1,3 +1,5 @@
+from typing import cast
+
 from sqlalchemy.orm import Session
 
 from app.models.masters_models import Warehouse
@@ -19,7 +21,10 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
 
     def get_by_code(self, code: str, *, raise_404: bool = True) -> Warehouse | None:
         """Get warehouse by warehouse_code."""
-        warehouse = self.db.query(Warehouse).filter(Warehouse.warehouse_code == code).first()
+        warehouse = cast(
+            Warehouse | None,
+            self.db.query(Warehouse).filter(Warehouse.warehouse_code == code).first(),
+        )
         if not warehouse and raise_404:
             from fastapi import HTTPException, status
 

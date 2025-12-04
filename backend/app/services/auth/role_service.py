@@ -1,5 +1,7 @@
 """Role service (ロール管理サービス)."""
 
+from typing import cast
+
 from sqlalchemy.orm import Session
 
 from app.models.auth_models import Role
@@ -25,8 +27,8 @@ class RoleService(BaseService[Role, RoleCreate, RoleUpdate, int]):
 
     def get_all(self, skip: int = 0, limit: int = 100) -> list[Role]:
         """Get all roles with pagination."""
-        return self.db.query(Role).offset(skip).limit(limit).all()
+        return cast(list[Role], self.db.query(Role).offset(skip).limit(limit).all())
 
     def get_by_code(self, role_code: str) -> Role | None:
         """Get role by code."""
-        return self.db.query(Role).filter(Role.role_code == role_code).first()
+        return cast(Role | None, self.db.query(Role).filter(Role.role_code == role_code).first())

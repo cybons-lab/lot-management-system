@@ -1,6 +1,7 @@
 """Customer items service (得意先品番マッピング管理)."""
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -125,13 +126,14 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
     def get_by_key(self, customer_id: int, external_product_code: str) -> CustomerItem | None:
         """Get customer item mapping by composite key."""
-        return (
+        return cast(
+            CustomerItem | None,
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer_id,
                 CustomerItem.external_product_code == external_product_code,
             )
-            .first()
+            .first(),
         )
 
     def update_by_key(

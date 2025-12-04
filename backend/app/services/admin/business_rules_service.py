@@ -1,6 +1,7 @@
 """Business rules service (業務ルールサービス)."""
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -57,7 +58,10 @@ class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, Business
 
     def get_by_code(self, rule_code: str) -> BusinessRule | None:
         """Get business rule by code."""
-        return self.db.query(BusinessRule).filter(BusinessRule.rule_code == rule_code).first()
+        return cast(
+            BusinessRule | None,
+            self.db.query(BusinessRule).filter(BusinessRule.rule_code == rule_code).first(),
+        )
 
     def update_by_code(self, rule_code: str, rule: BusinessRuleUpdate) -> BusinessRule | None:
         """Update an existing business rule by code."""
