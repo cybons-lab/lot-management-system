@@ -2,6 +2,7 @@ import os
 
 from hypothesis import HealthCheck, settings
 
+
 # Define CI profile
 settings.register_profile(
     "ci",

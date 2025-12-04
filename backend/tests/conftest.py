@@ -10,6 +10,7 @@ import app.models  # Register all models
 from app.main import app
 from app.models.base_model import Base
 
+
 # Load Hypothesis settings
 try:
     from . import conftest_hypothesis  # noqa: F401
