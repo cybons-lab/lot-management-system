@@ -81,14 +81,11 @@ export const getWarehouseAllocList = (): Promise<WarehouseListResponse> =>
  * @endpoint GET /allocation-candidates (was /allocations/candidate-lots - deprecated 2026-02-15)
  */
 export const getCandidateLots = (params: {
-  product_id: number;
-  delivery_place_id?: number;
+  order_line_id: number;
   limit?: number;
 }) => {
   const searchParams = new URLSearchParams();
-  searchParams.append("product_id", params.product_id.toString());
-  if (params.delivery_place_id !== undefined)
-    searchParams.append("delivery_place_id", params.delivery_place_id.toString());
+  searchParams.append("order_line_id", params.order_line_id.toString());
   if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());
 
   const queryString = searchParams.toString();

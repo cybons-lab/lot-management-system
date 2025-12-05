@@ -29,8 +29,7 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
             setIsLoadingCandidates(true);
             try {
                 const res = await ordersApi.getCandidateLots({
-                    product_id: orderLine.product_id,
-                    delivery_place_id: orderLine.delivery_place_id,
+                    order_line_id: orderLine.id,
                 });
                 setCandidateLots(res.items);
 

@@ -24,21 +24,20 @@ type LotCandidateResult = {
  * ロット候補を取得（product_id基準）
  * 識別キー: customer_code + product_code (+ delivery_place_code optional)
  */
-export function useCandidateLots(orderLineId: number | undefined, productId?: number) {
-  const enabled =
-    typeof orderLineId === "number" && orderLineId > 0 && typeof productId === "number";
+export function useCandidateLots(orderLineId: number | undefined) {
+  const enabled = typeof orderLineId === "number" && orderLineId > 0;
 
   return useQuery<LotCandidateResult>({
     queryKey: enabled
-      ? [...keyCandidates(orderLineId!), productId ?? null]
+      ? [...keyCandidates(orderLineId!)]
       : ["orders", "line", "candidates", "disabled"],
     queryFn: async () => {
-      if (!productId) {
+      if (!orderLineId) {
         return { items: [], warnings: [] };
       }
 
       const serverData = await ordersApi.getCandidateLots({
-        product_id: productId,
+        order_line_id: orderLineId,
         limit: 200,
       });
 
