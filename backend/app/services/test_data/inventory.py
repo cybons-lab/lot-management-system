@@ -81,8 +81,7 @@ def generate_lots(
         # DEBUG: Log lot creation
         print(
             f"[DEBUG] Product {p.maker_part_code} (id={p.id}): "
-            f"is_fragmented={is_fragmented}, forecast_total={forecast_total}, "
-            f"creating {len(lots_to_create)} lots"
+            f"forecast_total={forecast_total}, lot_count={len(lots_to_create)}"
         )
 
         # Create the lots

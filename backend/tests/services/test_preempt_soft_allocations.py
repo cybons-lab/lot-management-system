@@ -191,9 +191,7 @@ class TestPreemptSoftAllocations:
 
         # Try to allocate 500 units (should succeed without preemption)
         # Available: 1000 - 300 = 700 units
-        hard_line = create_order_line(
-            test_db, master_data, "ORDER", Decimal("500"), "ORD-002"
-        )
+        hard_line = create_order_line(test_db, master_data, "ORDER", Decimal("500"), "ORD-002")
 
         released = preempt_soft_allocations_for_hard(
             test_db,
@@ -204,22 +202,16 @@ class TestPreemptSoftAllocations:
 
         assert len(released) == 0
         # Soft allocation should still exist
-        remaining_allocations = test_db.query(Allocation).filter_by(
-            allocation_type="soft"
-        ).count()
+        remaining_allocations = test_db.query(Allocation).filter_by(allocation_type="soft").count()
         assert remaining_allocations == 1
 
-    def test_preemption_forecast_linked_first(
-        self, test_db: Session, master_data, lot_with_stock
-    ):
+    def test_preemption_forecast_linked_first(self, test_db: Session, master_data, lot_with_stock):
         """Test: FORECAST_LINKED (lowest priority) is released first."""
         # Create soft allocations
         forecast_line = create_order_line(
             test_db, master_data, "FORECAST_LINKED", Decimal("300"), "ORD-FC"
         )
-        order_line = create_order_line(
-            test_db, master_data, "ORDER", Decimal("300"), "ORD-01"
-        )
+        order_line = create_order_line(test_db, master_data, "ORDER", Decimal("300"), "ORD-01")
 
         create_soft_allocation(test_db, forecast_line, lot_with_stock, Decimal("300"))
         create_soft_allocation(test_db, order_line, lot_with_stock, Decimal("300"))
@@ -227,9 +219,7 @@ class TestPreemptSoftAllocations:
         # Total allocated: 600
         # Available: 1000 - 600 = 400
         # Try to allocate 700 units (need to release 300)
-        hard_line = create_order_line(
-            test_db, master_data, "KANBAN", Decimal("700"), "ORD-KB"
-        )
+        hard_line = create_order_line(test_db, master_data, "KANBAN", Decimal("700"), "ORD-KB")
 
         released = preempt_soft_allocations_for_hard(
             test_db,
@@ -244,28 +234,22 @@ class TestPreemptSoftAllocations:
         assert released[0]["released_qty"] == 300.0
 
         # ORDER soft allocation should still exist
-        remaining = test_db.query(Allocation).filter_by(
-            allocation_type="soft", order_line_id=order_line.id
-        ).count()
+        remaining = (
+            test_db.query(Allocation)
+            .filter_by(allocation_type="soft", order_line_id=order_line.id)
+            .count()
+        )
         assert remaining == 1
 
-    def test_preemption_priority_order(
-        self, test_db: Session, master_data, lot_with_stock
-    ):
+    def test_preemption_priority_order(self, test_db: Session, master_data, lot_with_stock):
         """Test: Soft allocations are released in priority order (FORECAST < SPOT < ORDER < KANBAN)."""
         # Create soft allocations for all types
         forecast_line = create_order_line(
             test_db, master_data, "FORECAST_LINKED", Decimal("200"), "ORD-FC"
         )
-        spot_line = create_order_line(
-            test_db, master_data, "SPOT", Decimal("200"), "ORD-SP"
-        )
-        order_line = create_order_line(
-            test_db, master_data, "ORDER", Decimal("200"), "ORD-OR"
-        )
-        kanban_line = create_order_line(
-            test_db, master_data, "KANBAN", Decimal("200"), "ORD-KB"
-        )
+        spot_line = create_order_line(test_db, master_data, "SPOT", Decimal("200"), "ORD-SP")
+        order_line = create_order_line(test_db, master_data, "ORDER", Decimal("200"), "ORD-OR")
+        kanban_line = create_order_line(test_db, master_data, "KANBAN", Decimal("200"), "ORD-KB")
 
         create_soft_allocation(test_db, forecast_line, lot_with_stock, Decimal("200"))
         create_soft_allocation(test_db, spot_line, lot_with_stock, Decimal("200"))
@@ -275,9 +259,7 @@ class TestPreemptSoftAllocations:
         # Total allocated: 800
         # Available: 1000 - 800 = 200
         # Try to allocate 600 units (need to release 400)
-        hard_line = create_order_line(
-            test_db, master_data, "KANBAN", Decimal("600"), "ORD-HARD"
-        )
+        hard_line = create_order_line(test_db, master_data, "KANBAN", Decimal("600"), "ORD-HARD")
 
         released = preempt_soft_allocations_for_hard(
             test_db,
@@ -294,12 +276,16 @@ class TestPreemptSoftAllocations:
         assert released[1]["released_qty"] == 200.0
 
         # ORDER and KANBAN soft allocations should still exist
-        remaining_order = test_db.query(Allocation).filter_by(
-            allocation_type="soft", order_line_id=order_line.id
-        ).count()
-        remaining_kanban = test_db.query(Allocation).filter_by(
-            allocation_type="soft", order_line_id=kanban_line.id
-        ).count()
+        remaining_order = (
+            test_db.query(Allocation)
+            .filter_by(allocation_type="soft", order_line_id=order_line.id)
+            .count()
+        )
+        remaining_kanban = (
+            test_db.query(Allocation)
+            .filter_by(allocation_type="soft", order_line_id=kanban_line.id)
+            .count()
+        )
         assert remaining_order == 1
         assert remaining_kanban == 1
 
@@ -313,9 +299,7 @@ class TestPreemptSoftAllocations:
 
         # Available: 1000 - 500 = 500
         # Try to allocate 700 units (need to release 200)
-        hard_line = create_order_line(
-            test_db, master_data, "ORDER", Decimal("700"), "ORD-HARD"
-        )
+        hard_line = create_order_line(test_db, master_data, "ORDER", Decimal("700"), "ORD-HARD")
 
         released = preempt_soft_allocations_for_hard(
             test_db,
@@ -336,9 +320,7 @@ class TestPreemptSoftAllocations:
     def test_no_self_preemption(self, test_db: Session, master_data, lot_with_stock):
         """Test: Hard demand doesn't release its own soft allocation."""
         # Create soft allocation
-        order_line = create_order_line(
-            test_db, master_data, "ORDER", Decimal("500"), "ORD-001"
-        )
+        order_line = create_order_line(test_db, master_data, "ORDER", Decimal("500"), "ORD-001")
         create_soft_allocation(test_db, order_line, lot_with_stock, Decimal("500"))
 
         # Try to confirm the same order_line as hard
@@ -353,9 +335,11 @@ class TestPreemptSoftAllocations:
         assert len(released) == 0
 
         # Soft allocation should still exist
-        remaining = test_db.query(Allocation).filter_by(
-            allocation_type="soft", order_line_id=order_line.id
-        ).count()
+        remaining = (
+            test_db.query(Allocation)
+            .filter_by(allocation_type="soft", order_line_id=order_line.id)
+            .count()
+        )
         assert remaining == 1
 
     def test_lot_not_found(self, test_db: Session):
@@ -383,9 +367,7 @@ class TestPreemptSoftAllocations:
         assert initial_allocated == Decimal("400")
 
         # Release 200 units
-        hard_line = create_order_line(
-            test_db, master_data, "KANBAN", Decimal("800"), "ORD-KB"
-        )
+        hard_line = create_order_line(test_db, master_data, "KANBAN", Decimal("800"), "ORD-KB")
 
         preempt_soft_allocations_for_hard(
             test_db,
@@ -409,9 +391,7 @@ class TestPreemptSoftAllocations:
         forecast_line1 = create_order_line(
             test_db, master_data, "FORECAST_LINKED", Decimal("300"), "ORD-FC1"
         )
-        alloc1 = create_soft_allocation(
-            test_db, forecast_line1, lot_with_stock, Decimal("300")
-        )
+        alloc1 = create_soft_allocation(test_db, forecast_line1, lot_with_stock, Decimal("300"))
         alloc1.created_at = datetime.utcnow() - timedelta(hours=2)  # Older
         test_db.commit()
 
@@ -420,17 +400,13 @@ class TestPreemptSoftAllocations:
         forecast_line2 = create_order_line(
             test_db, master_data, "FORECAST_LINKED", Decimal("300"), "ORD-FC2"
         )
-        alloc2 = create_soft_allocation(
-            test_db, forecast_line2, lot_with_stock, Decimal("300")
-        )
+        alloc2 = create_soft_allocation(test_db, forecast_line2, lot_with_stock, Decimal("300"))
         alloc2.created_at = datetime.utcnow()  # Newer
         test_db.commit()
 
         # Available: 1000 - 600 = 400
         # Try to allocate 600 units (need to release 200)
-        hard_line = create_order_line(
-            test_db, master_data, "KANBAN", Decimal("600"), "ORD-KB"
-        )
+        hard_line = create_order_line(test_db, master_data, "KANBAN", Decimal("600"), "ORD-KB")
 
         released = preempt_soft_allocations_for_hard(
             test_db,

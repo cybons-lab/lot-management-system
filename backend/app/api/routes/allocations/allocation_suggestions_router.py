@@ -116,8 +116,6 @@ def get_allocation_suggestions_by_group(
     """
     from decimal import Decimal
 
-    from sqlalchemy import func
-
     from app.models.inventory_models import AllocationSuggestion, Lot
 
     # Base query
@@ -180,4 +178,3 @@ def get_allocation_suggestions_by_group(
         "lot_breakdown": lot_breakdown,
         "by_period": by_period,
     }
-

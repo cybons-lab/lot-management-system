@@ -22,8 +22,8 @@ import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
 import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
-import { bulkAutoAllocate } from "@/features/allocations/api";
 import { Card, CardContent } from "@/components/ui";
+import { bulkAutoAllocate } from "@/features/allocations/api";
 import { cn } from "@/shared/libs/utils";
 
 export function ForecastDetailCard({
@@ -82,8 +82,9 @@ export function ForecastDetailCard({
   const now = new Date();
   const todayKey = formatDateKey(now);
   const todayStart = getTodayStart();
-  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${targetMonthStartDate.getMonth() + 1
-    }月`;
+  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
+    targetMonthStartDate.getMonth() + 1
+  }月`;
 
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =

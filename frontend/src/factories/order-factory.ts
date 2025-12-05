@@ -155,9 +155,9 @@ export function createOrderWithLines(
         "customer_name" in line
           ? nullToUndefined(line.customer_name as string | null | undefined)
           : nullToUndefined(
-            (overrides as { customer_name?: string | null })?.customer_name ??
-            (order as { customer_name?: string | null }).customer_name,
-          ),
+              (overrides as { customer_name?: string | null })?.customer_name ??
+                (order as { customer_name?: string | null }).customer_name,
+            ),
     }),
   );
 

@@ -1,3 +1,5 @@
+import { Loader2 } from "lucide-react";
+
 import type { CandidateLotItem } from "../../api";
 import { getCustomerName, getDeliveryPlaceName, getProductName } from "../../utils/orderLineUtils";
 
@@ -7,11 +9,10 @@ import { LotAllocationHeader } from "./LotAllocationHeader";
 import { LotAllocationList } from "./LotAllocationList";
 import * as styles from "./styles";
 
+import { Button } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
-import { Button } from "@/components/ui";
-import { Loader2 } from "lucide-react";
 
 interface LotAllocationPanelProps {
   order?: OrderWithLinesResponse;

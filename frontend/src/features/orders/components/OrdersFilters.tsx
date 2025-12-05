@@ -51,7 +51,7 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
           />
         </div>
 
-        <div className="space-y-2 col-span-2">
+        <div className="col-span-2 space-y-2">
           <label className="text-sm font-medium text-slate-700">需要種別</label>
           <div className="flex flex-wrap gap-2">
             {[

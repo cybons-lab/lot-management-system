@@ -16,10 +16,7 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     id: "order_number",
     header: "受注番号",
     cell: (row: OrderLineRow) => (
-      <Link
-        to={`/orders/${row.order_id}`}
-        className="font-medium text-blue-600 hover:underline"
-      >
+      <Link to={`/orders/${row.order_id}`} className="font-medium text-blue-600 hover:underline">
         {row.order_number}
       </Link>
     ),
@@ -38,9 +35,7 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
       const orderType = (row.order_type as string) || "ORDER";
       const info = typeMap[orderType] || typeMap["ORDER"];
       return (
-        <span
-          className={`inline-flex rounded text-xs font-semibold px-2 py-0.5 ${info.color}`}
-        >
+        <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${info.color}`}>
           {info.label}
         </span>
       );
@@ -106,11 +101,7 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
           <span className="font-medium text-slate-900">
             {allocatedQty.toLocaleString()} {row.unit ?? ""}
           </span>
-          {hasSoft && (
-            <span className="text-[10px] text-amber-600 font-medium">
-              (内Softあり)
-            </span>
-          )}
+          {hasSoft && <span className="text-[10px] font-medium text-amber-600">(内Softあり)</span>}
         </div>
       );
     },
@@ -133,8 +124,9 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
         <div className="flex items-center gap-3">
           <div className="h-2.5 w-24 overflow-hidden rounded-full bg-slate-200">
             <div
-              className={`h-full rounded-full transition-all ${rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
-                }`}
+              className={`h-full rounded-full transition-all ${
+                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
+              }`}
               style={{ width: `${rate}%` }}
             />
           </div>
@@ -186,9 +178,7 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     cell: (row: OrderLineRow) => (
       <div className="flex justify-end">
         <Button asChild variant="outline" size="sm" className="h-8 text-xs">
-          <Link to={`/orders/${row.order_id}`}>
-            詳細 / 引当
-          </Link>
+          <Link to={`/orders/${row.order_id}`}>詳細 / 引当</Link>
         </Button>
       </div>
     ),

@@ -3,14 +3,17 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import * as ordersApi from "@/features/orders/api";
-import { OrderStatusBadge } from "@/shared/components/data/StatusBadge";
-import { formatDate } from "@/shared/utils/date";
-import { formatQuantity } from "@/shared/utils/formatQuantity";
 
 import { useOrderLineAllocation } from "../hooks/useOrderLineAllocation";
 
-import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui";
+import {
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui";
 import {
   Table,
   TableBody,
@@ -20,7 +23,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { LotAllocationPanel } from "@/features/allocations/components/lots/LotAllocationPanel";
+import * as ordersApi from "@/features/orders/api";
+import { OrderStatusBadge } from "@/shared/components/data/StatusBadge";
 import type { OrderLine } from "@/shared/types/aliases";
+import { formatDate } from "@/shared/utils/date";
+import { formatQuantity } from "@/shared/utils/formatQuantity";
 
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
@@ -48,11 +55,7 @@ export function OrderDetailPage() {
   }
 
   if (isError || !order) {
-    return (
-      <div className="p-8 text-center text-red-500">
-        受注データの取得に失敗しました。
-      </div>
-    );
+    return <div className="p-8 text-center text-red-500">受注データの取得に失敗しました。</div>;
   }
 
   const customerName = order.lines?.[0]?.customer_name || `ID: ${order.customer_id}`;
@@ -124,11 +127,7 @@ export function OrderDetailPage() {
                   {formatQuantity(Number(line.allocated_quantity ?? 0), line.unit)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedLine(line)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setSelectedLine(line)}>
                     引当操作
                   </Button>
                 </TableCell>

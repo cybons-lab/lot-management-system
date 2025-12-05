@@ -3,7 +3,6 @@
  * Displays quantity info, progress bar, and action buttons.
  */
 
-
 interface QuantityProgressSectionProps {
   required: number;
   allocated: number;
@@ -30,9 +29,7 @@ export function QuantityProgressSection({
         <div>
           <div className="text-sm font-medium text-slate-500">必要数</div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-bold text-slate-900">
-              {required.toLocaleString()}
-            </span>
+            <span className="text-3xl font-bold text-slate-900">{required.toLocaleString()}</span>
             <span className="text-sm font-medium text-slate-500">{unit}</span>
           </div>
         </div>
@@ -45,9 +42,7 @@ export function QuantityProgressSection({
             <span className="font-medium text-amber-600">
               Soft: {softAllocated.toLocaleString()}
             </span>
-            <span className="font-bold text-blue-600">
-              Total: {allocated.toLocaleString()}
-            </span>
+            <span className="font-bold text-blue-600">Total: {allocated.toLocaleString()}</span>
             <span className="text-slate-400">/</span>
             <span className="text-slate-500">
               残り: {Math.max(0, required - allocated).toLocaleString()}

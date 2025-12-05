@@ -80,10 +80,7 @@ export const getWarehouseAllocList = (): Promise<WarehouseListResponse> =>
  * 引当候補ロット取得（product_id基準）
  * @endpoint GET /allocation-candidates (was /allocations/candidate-lots - deprecated 2026-02-15)
  */
-export const getCandidateLots = (params: {
-  order_line_id: number;
-  limit?: number;
-}) => {
+export const getCandidateLots = (params: { order_line_id: number; limit?: number }) => {
   const searchParams = new URLSearchParams();
   searchParams.append("order_line_id", params.order_line_id.toString());
   if (params.limit !== undefined) searchParams.append("limit", params.limit.toString());

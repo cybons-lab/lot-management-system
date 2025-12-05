@@ -137,8 +137,14 @@ export const cancelAllocation = (allocationId: number) => {
  * Confirm allocations (Soft -> Hard)
  * @endpoint POST /allocations/confirm-batch
  */
-export const confirmAllocationsBatch = (data: { allocation_ids: number[]; confirmed_by?: string }) => {
-  return http.post<{ confirmed_ids: number[]; failed_items: any[] }>("allocations/confirm-batch", data);
+export const confirmAllocationsBatch = (data: {
+  allocation_ids: number[];
+  confirmed_by?: string;
+}) => {
+  return http.post<{ confirmed_ids: number[]; failed_items: any[] }>(
+    "allocations/confirm-batch",
+    data,
+  );
 };
 
 /**
@@ -365,4 +371,3 @@ export interface BulkAutoAllocateResponse {
 export const bulkAutoAllocate = (data: BulkAutoAllocateRequest) => {
   return http.post<BulkAutoAllocateResponse>("allocations/bulk-auto-allocate", data);
 };
-

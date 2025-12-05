@@ -502,7 +502,7 @@ def confirm_hard_allocation(
 
     # Soft引当の自動解除（必要に応じて）
     # Hard引当時に同ロットのSoft引当を優先度に基づいて解除
-    preempted = preempt_soft_allocations_for_hard(
+    _preempted = preempt_soft_allocations_for_hard(
         db,
         lot_id=allocation.lot_id,
         required_qty=confirm_qty,
@@ -737,8 +737,6 @@ def auto_allocate_bulk(
             "failed_lines": 失敗した明細のリスト [{line_id, error}],
         }
     """
-    from sqlalchemy import and_
-
     # 対象の受注明細を取得（未完了のもの）
     query = (
         db.query(OrderLine)

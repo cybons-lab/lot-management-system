@@ -28,9 +28,7 @@ export function OrderLineCard({ order, line, onRematch }: Props) {
   const computed = useOrderLineComputed(line, order ?? undefined);
 
   const lineId = computed.lineId;
-  const { candidatesQ, createAlloc, cancelAlloc } = useAllocationActions(
-    lineId,
-  );
+  const { candidatesQ, createAlloc, cancelAlloc } = useAllocationActions(lineId);
 
   const allocatedLots = React.useMemo<AllocatedLot[]>(
     () => coerceAllocatedLots(line?.allocated_lots),

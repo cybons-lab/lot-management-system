@@ -154,7 +154,9 @@ class BulkAutoAllocateRequest(BaseSchema):
 
     product_id: int | None = Field(None, description="製品ID（指定時はその製品のみ対象）")
     customer_id: int | None = Field(None, description="得意先ID（指定時はその得意先のみ対象）")
-    delivery_place_id: int | None = Field(None, description="納入先ID（指定時はその納入先のみ対象）")
+    delivery_place_id: int | None = Field(
+        None, description="納入先ID（指定時はその納入先のみ対象）"
+    )
     order_type: str | None = Field(
         None,
         pattern="^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$",

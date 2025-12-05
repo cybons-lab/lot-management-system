@@ -100,7 +100,10 @@ function App() {
 
                 {/* Allocations - Redirected to Orders (functionality integrated) */}
                 <Route path="/allocations" element={<Navigate to="/orders" replace />} />
-                <Route path="/allocations/suggestions" element={<Navigate to="/orders" replace />} />
+                <Route
+                  path="/allocations/suggestions"
+                  element={<Navigate to="/orders" replace />}
+                />
 
                 {/* Forecasts - New structure (v2.2 - Phase B) */}
                 <Route path={ROUTES.FORECASTS.LIST} element={<ForecastListPage />} />
