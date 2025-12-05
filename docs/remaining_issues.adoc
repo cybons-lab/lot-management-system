@@ -68,15 +68,46 @@ APScheduler または Celery Beat の導入検討。
 
 === 6. Hard Allocation の本格運用
 
-**タイミング:** v3.0予定
+**ステータス:** v3.0予定
 
 現在はSoft Allocation（推奨引当）のみ。
 
-=== 7. レガシー AllocationService の削除
+=== 7. 在庫管理ページ Soft/Hard 引当表示
+
+**ステータス:** 未実装 +
+**追加日:** 2025-12-05
+
+在庫管理ページで「引当済」を「仮引当(Soft)」と「確定引当(Hard)」に分割表示する。
+バックエンドAPIの拡張が必要。
+
+**サブタスク:**
+
+. `InventoryItemResponse` に `soft_allocated_quantity`, `hard_allocated_quantity` 追加
+. `InventoryService.get_inventory_items()` で allocations テーブル集計
+. フロントエンド `InventoryTable` 列追加
+
+=== 8. テストデータ生成の改善
+
+**ステータス:** 一部完了 +
+**追加日:** 2025-12-05
+
+テストデータ生成で既に対応済み:
+
+* ✅ 在庫量: フォーキャストの70-90%（制約発生）
+* ✅ ロット: 60% 1ロット、30% 2ロット、10% 3ロット
+* ✅ フォーキャスト種別: 50% 日別、30% 旬別、20% 月別
+* ✅ 受注: 90%がフォーキャスト一致、10%のみ変動
+
+残タスク（別ブランチで対応予定）:
+
+* 全製品に最低1ロット確保
+* エッジケーステスト用データパターン追加
+
+=== 9. レガシー AllocationService の削除
 
 `backend/app/services/allocations/core.py` は孤立コード。
 
-=== 8. mypy attr-defined エラー
+=== 10. mypy attr-defined エラー
 
 17件残（MetricsCollector関連15件、Enum2件）
 
@@ -87,6 +118,24 @@ APScheduler または Celery Beat の導入検討。
 === ESLint
 
 **Critical:** ✅ 全完了（2025-12-05）
+
+**eslint-disable コメント:** 38件
+
+一時的にLintエラーを無視しているファイル。
+将来的にリファクタリングして削除する。
+
+.検索コマンド
+[source,bash]
+----
+grep -rn "eslint-disable" --include="*.tsx" --include="*.ts" frontend/src/
+----
+
+**主な課題:**
+
+* max-lines-per-function 違反: 約20件
+* complexity 違反: 約8件
+* @typescript-eslint/no-explicit-any: 約8件
+* jsx-a11y: 2件
 
 **High（将来対応）:**
 

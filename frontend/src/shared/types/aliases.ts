@@ -269,6 +269,7 @@ export type OrdersListParams = {
   limit?: number;
   status?: string | null;
   customer_code?: string | null;
+  order_type?: string | null;
   date_from?: string | null;
   date_to?: string | null;
   unallocatedOnly?: boolean | null;

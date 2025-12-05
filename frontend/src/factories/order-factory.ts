@@ -48,6 +48,7 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 /**
  * 受注明細を生成 (DDL v2.2 compliant)
  */
+// eslint-disable-next-line complexity
 export function createOrderLine(
   overrides?: Partial<OrderLineFactoryResult>,
 ): OrderLineFactoryResult {
@@ -101,6 +102,7 @@ export function createOrderLine(
     delivery_date: deliveryDate ?? faker.date.soon({ days: 30 }).toISOString().split("T")[0], // DDL v2.2
     created_at: faker.date.past().toISOString(), // DDL v2.2
     updated_at: faker.date.recent().toISOString(), // DDL v2.2
+    order_type: overrides?.order_type || "ORDER", // DDL v2.2
     // Legacy fields for backward compatibility
     line_no:
       overrides?.line_no ??

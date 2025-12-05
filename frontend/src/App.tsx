@@ -11,8 +11,7 @@ import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsLis
 import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
 import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
-import { AllocationSuggestionsPage } from "@/features/allocations/pages/AllocationSuggestionsPage";
-import { LotAllocationPage } from "@/features/allocations/pages/LotAllocationPage";
+// Allocation pages removed - integrated into OrderDetailPage
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
 import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
@@ -99,11 +98,11 @@ function App() {
                 <Route path="/orders/:orderId" element={<OrderDetailPage />} />
                 <Route path="/confirmed-lines" element={<ConfirmedLinesPage />} />
 
-                {/* Allocations */}
-                <Route path={ROUTES.ALLOCATIONS.INDEX} element={<LotAllocationPage />} />
+                {/* Allocations - Redirected to Orders (functionality integrated) */}
+                <Route path="/allocations" element={<Navigate to="/orders" replace />} />
                 <Route
-                  path={ROUTES.ALLOCATIONS.SUGGESTIONS}
-                  element={<AllocationSuggestionsPage />}
+                  path="/allocations/suggestions"
+                  element={<Navigate to="/orders" replace />}
                 />
 
                 {/* Forecasts - New structure (v2.2 - Phase B) */}

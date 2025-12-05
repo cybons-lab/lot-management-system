@@ -56,6 +56,7 @@ export function useOrdersListLogic() {
     search: "",
     customer_code: "",
     status: "all",
+    order_type: "all",
     unallocatedOnly: false,
   });
 
@@ -69,6 +70,7 @@ export function useOrdersListLogic() {
   } = useOrderLines({
     customer_code: filters.values.customer_code || undefined,
     status: filters.values.status !== "all" ? filters.values.status : undefined,
+    order_type: filters.values.order_type !== "all" ? filters.values.order_type : undefined,
   });
 
   const { data: confirmedLines = [] } = useConfirmedOrderLines();

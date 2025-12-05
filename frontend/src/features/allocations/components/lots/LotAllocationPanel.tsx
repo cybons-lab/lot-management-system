@@ -1,3 +1,5 @@
+import { Loader2 } from "lucide-react";
+
 import type { CandidateLotItem } from "../../api";
 import { getCustomerName, getDeliveryPlaceName, getProductName } from "../../utils/orderLineUtils";
 
@@ -7,6 +9,7 @@ import { LotAllocationHeader } from "./LotAllocationHeader";
 import { LotAllocationList } from "./LotAllocationList";
 import * as styles from "./styles";
 
+import { Button } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
@@ -19,6 +22,7 @@ interface LotAllocationPanelProps {
   onAutoAllocate: () => void;
   onClearAllocations: () => void;
   onSaveAllocations?: () => void;
+  onConfirmHard?: () => void;
 
   canSave?: boolean;
   isOverAllocated?: boolean;
@@ -34,6 +38,10 @@ interface LotAllocationPanelProps {
   // Active state management
   isActive?: boolean;
   onActivate?: () => void;
+
+  // New props
+  hardAllocated?: number;
+  softAllocated?: number;
 }
 
 /**
@@ -49,6 +57,7 @@ export function LotAllocationPanel({
   onAutoAllocate,
   onClearAllocations,
   onSaveAllocations,
+  onConfirmHard,
   canSave = false,
   isLoading = false,
   error = null,
@@ -59,6 +68,8 @@ export function LotAllocationPanel({
   deliveryPlaceName: propDeliveryPlaceName,
   isActive = false,
   onActivate,
+  hardAllocated,
+  softAllocated,
 }: LotAllocationPanelProps & { deliveryPlaceName?: string }) {
   // 数量計算（カスタムフックで集約）
   const calculations = useAllocationCalculations({
@@ -165,14 +176,11 @@ export function LotAllocationPanel({
             deliveryPlaceName={deliveryPlaceName}
             requiredQty={requiredQty}
             totalAllocated={totalAllocated}
+            hardAllocated={hardAllocated}
+            softAllocated={softAllocated}
             remainingQty={displayRemaining}
             progressPercent={progressPercent}
             isOverAllocated={isOverAllocated}
-            onAutoAllocate={onAutoAllocate}
-            onClearAllocations={onClearAllocations}
-            onSaveAllocations={handleSave}
-            canSave={canSave}
-            isSaving={isSaving}
             isLoading={isLoading}
             hasCandidates={candidateLots.length > 0}
             allocationCount={allocationCount}
@@ -187,6 +195,25 @@ export function LotAllocationPanel({
 
         {/* ロット一覧エリア */}
         <div className={styles.panelBody}>
+          <div className="mb-4 flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onAutoAllocate}
+              disabled={isSaving || isComplete}
+            >
+              自動割当
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClearAllocations}
+              disabled={isSaving || allocationCount === 0}
+            >
+              クリア
+            </Button>
+          </div>
+
           {isLoading ? (
             <AllocationEmptyState type="loading" />
           ) : error ? (
@@ -194,17 +221,40 @@ export function LotAllocationPanel({
           ) : candidateLots.length === 0 ? (
             <AllocationEmptyState type="no-candidates" />
           ) : (
-            <LotAllocationList
-              candidateLots={candidateLots}
-              lotAllocations={lotAllocations}
-              remainingNeeded={remainingNeeded}
-              requiredQty={requiredQty}
-              customerId={order?.customer_id}
-              deliveryPlaceId={orderLine?.delivery_place_id}
-              productId={orderLine?.product_id}
-              isActive={isActive}
-              onLotAllocationChange={onLotAllocationChange}
-            />
+            <>
+              <LotAllocationList
+                candidateLots={candidateLots}
+                lotAllocations={lotAllocations}
+                remainingNeeded={remainingNeeded}
+                requiredQty={requiredQty}
+                customerId={order?.customer_id}
+                deliveryPlaceId={orderLine?.delivery_place_id}
+                productId={orderLine?.product_id}
+                isActive={isActive}
+                onLotAllocationChange={onLotAllocationChange}
+              />
+
+              <div className="mt-6 flex items-center justify-end gap-3 border-t pt-4">
+                <Button
+                  onClick={handleSave}
+                  disabled={!canSave || isSaving}
+                  className="min-w-[6rem] bg-blue-600 font-bold text-white hover:bg-blue-700"
+                >
+                  {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  保存
+                </Button>
+                {onConfirmHard && (softAllocated ?? 0) > 0 && (
+                  <Button
+                    onClick={onConfirmHard}
+                    disabled={isSaving}
+                    className="bg-purple-600 font-bold text-white hover:bg-purple-700"
+                    title="Soft引当をHard引当に確定します"
+                  >
+                    Hard確定
+                  </Button>
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

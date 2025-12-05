@@ -12,11 +12,22 @@ import type { ForecastGroup } from "../api";
 import { ForecastListCard } from "../components";
 import { useForecasts, useDeleteForecast } from "../hooks";
 
-import { Button } from "@/components/ui";
-import { Input } from "@/components/ui";
-import { Label } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
+  Label,
+} from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { ROUTES } from "@/constants/routes";
 import { generateAllocationSuggestions } from "@/features/allocations/api";
+import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
 
 export function ForecastListPage() {
   const navigate = useNavigate();
@@ -26,6 +37,10 @@ export function ForecastListPage() {
     product_id: "",
   });
 
+  // 確認ダイアログの状態
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingPeriods, setPendingPeriods] = useState<string[]>([]);
+
   const queryParams = {
     customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
     delivery_place_id: filters.delivery_place_id ? Number(filters.delivery_place_id) : undefined,
@@ -33,6 +48,46 @@ export function ForecastListPage() {
   };
 
   const { data: response, isLoading, isError, refetch } = useForecasts(queryParams);
+
+  // Master data for filter options
+  const { data: customers = [] } = useCustomersQuery();
+  const { data: products = [] } = useProductsQuery();
+
+  // Generate filter options
+  const customerOptions = useMemo(
+    () =>
+      customers.map((c) => ({
+        value: String(c.id),
+        label: `${c.customer_code} - ${c.customer_name}`,
+      })),
+    [customers],
+  );
+
+  const productOptions = useMemo(
+    () =>
+      products.map((p) => ({
+        value: String(p.id),
+        label: `${p.product_code} - ${p.product_name}`,
+      })),
+    [products],
+  );
+
+  // Delivery place options extracted from forecast data
+  const deliveryPlaceOptions = useMemo(() => {
+    if (!response?.items) return [];
+    const seen = new Set<string>();
+    return response.items
+      .filter((g) => {
+        const key = String(g.group_key.delivery_place_id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((g) => ({
+        value: String(g.group_key.delivery_place_id),
+        label: g.group_key.delivery_place_name || `納入場所ID: ${g.group_key.delivery_place_id}`,
+      }));
+  }, [response]);
 
   // Allocation Suggestion Generation
   const generateMutation = useMutation({
@@ -55,16 +110,17 @@ export function ForecastListPage() {
       periods.push(period);
     }
 
-    if (
-      !confirm(`${periods.join(", ")} の引当推奨を生成しますか？\n既存の推奨は上書きされます。`)
-    ) {
-      return;
-    }
+    // ダイアログを開く
+    setPendingPeriods(periods);
+    setConfirmDialogOpen(true);
+  };
 
+  const handleConfirmGenerate = () => {
+    setConfirmDialogOpen(false);
     generateMutation.mutate({
       mode: "forecast",
       forecast_scope: {
-        forecast_periods: periods,
+        forecast_periods: pendingPeriods,
       },
     });
   };
@@ -185,30 +241,30 @@ export function ForecastListPage() {
       <div className="rounded-lg border bg-white p-4">
         <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <Label className="mb-2 block text-sm font-medium">得意先ID</Label>
-            <Input
-              type="number"
+            <Label className="mb-2 block text-sm font-medium">得意先</Label>
+            <SearchableSelect
+              options={customerOptions}
               value={filters.customer_id}
-              onChange={(e) => setFilters({ ...filters, customer_id: e.target.value })}
-              placeholder="得意先IDで絞り込み"
+              onChange={(value) => setFilters({ ...filters, customer_id: value })}
+              placeholder="得意先を検索..."
             />
           </div>
           <div>
-            <Label className="mb-2 block text-sm font-medium">納入場所ID</Label>
-            <Input
-              type="number"
+            <Label className="mb-2 block text-sm font-medium">納入場所</Label>
+            <SearchableSelect
+              options={deliveryPlaceOptions}
               value={filters.delivery_place_id}
-              onChange={(e) => setFilters({ ...filters, delivery_place_id: e.target.value })}
-              placeholder="納入場所IDで絞り込み"
+              onChange={(value) => setFilters({ ...filters, delivery_place_id: value })}
+              placeholder="納入場所を検索..."
             />
           </div>
           <div>
-            <Label className="mb-2 block text-sm font-medium">製品ID</Label>
-            <Input
-              type="number"
+            <Label className="mb-2 block text-sm font-medium">製品</Label>
+            <SearchableSelect
+              options={productOptions}
               value={filters.product_id}
-              onChange={(e) => setFilters({ ...filters, product_id: e.target.value })}
-              placeholder="製品IDで絞り込み"
+              onChange={(value) => setFilters({ ...filters, product_id: value })}
+              placeholder="製品を検索..."
             />
           </div>
         </div>
@@ -258,6 +314,24 @@ export function ForecastListPage() {
           </div>
         </div>
       )}
+
+      {/* 引当推奨生成 確認ダイアログ */}
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>引当推奨の生成</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingPeriods.join(", ")} の引当推奨を生成しますか？
+              <br />
+              既存の推奨は上書きされます。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmGenerate}>生成する</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

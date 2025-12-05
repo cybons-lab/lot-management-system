@@ -149,6 +149,44 @@ class AutoAllocateResponse(BaseSchema):
     message: str
 
 
+class BulkAutoAllocateRequest(BaseSchema):
+    """Bulk auto-allocate request for group-based FEFO allocation."""
+
+    product_id: int | None = Field(None, description="製品ID（指定時はその製品のみ対象）")
+    customer_id: int | None = Field(None, description="得意先ID（指定時はその得意先のみ対象）")
+    delivery_place_id: int | None = Field(
+        None, description="納入先ID（指定時はその納入先のみ対象）"
+    )
+    order_type: str | None = Field(
+        None,
+        pattern="^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$",
+        description="受注タイプでフィルタ",
+    )
+    skip_already_allocated: bool = Field(
+        default=True, description="既に全量引当済みの明細をスキップ"
+    )
+
+
+class BulkAutoAllocateFailedLine(BaseSchema):
+    """Failed line in bulk auto-allocate response."""
+
+    line_id: int
+    error: str
+
+
+class BulkAutoAllocateResponse(BaseSchema):
+    """Bulk auto-allocate response."""
+
+    processed_lines: int = Field(default=0, description="処理した受注明細数")
+    allocated_lines: int = Field(default=0, description="引当を作成した明細数")
+    total_allocations: int = Field(default=0, description="作成した引当レコード数")
+    skipped_lines: int = Field(default=0, description="スキップした明細数（既に引当済み等）")
+    failed_lines: list[BulkAutoAllocateFailedLine] = Field(
+        default_factory=list, description="失敗した明細"
+    )
+    message: str
+
+
 # ============================================================
 # Candidate Lots (候補ロット)
 # ============================================================

@@ -80,6 +80,12 @@ class OrderLineBase(BaseSchema):
         None, decimal_places=3, description="社内基準単位換算数量"
     )
     delivery_place_id: int = Field(..., gt=0)
+    order_type: str = Field(
+        default="ORDER",
+        pattern="^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$",
+        description="需要種別",
+    )
+    forecast_id: int | None = Field(None, gt=0, description="紐づく予測ID")
     status: str = Field(
         default="pending",
         pattern="^(pending|allocated|shipped|completed|cancelled)$",
@@ -99,6 +105,8 @@ class OrderLineUpdate(BaseSchema):
     order_quantity: Decimal | None = Field(None, gt=0, decimal_places=3)
     unit: str | None = Field(None, min_length=1, max_length=20)
     delivery_place_id: int | None = Field(None, gt=0)
+    order_type: str | None = Field(None, pattern="^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$")
+    forecast_id: int | None = Field(None, gt=0)
     status: str | None = Field(None, pattern="^(pending|allocated|shipped|completed|cancelled)$")
 
 
@@ -127,6 +135,7 @@ class OrderLineResponse(OrderLineBase):
     product_code: str | None = None
     product_name: str | None = None
     delivery_place_name: str | None = None
+    forecast_period: str | None = Field(None, description="予測期間（YYYY-MM）")
 
     # Allocation Info
     allocations: list[AllocationResponse] = Field(default_factory=list)

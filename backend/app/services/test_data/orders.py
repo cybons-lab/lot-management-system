@@ -27,9 +27,6 @@ def generate_orders(
       - quantity ≈ forecast_quantity (with variance)
     - 80% normal scenario, 20% anomaly scenarios
     """
-    # 1 Customer is "Perfect Scenario" - no anomalies
-    perfect_customer = customers[0]
-
     # Get all daily forecasts (where forecast_date is set)
     forecasts = (
         db.query(ForecastCurrent)
@@ -63,8 +60,6 @@ def generate_orders(
         if not customer:
             continue
 
-        is_perfect = customer.id == perfect_customer.id
-
         # Create Order
         order = Order(
             order_number=fake.unique.bothify(text="ORD-########"),
@@ -89,34 +84,31 @@ def generate_orders(
             delivery_date = fc.forecast_date
             qty = base_qty
 
-            if is_perfect:
-                # Perfect scenario: exact match to forecast (±5%)
-                qty = base_qty * Decimal(str(random.uniform(0.95, 1.05)))
-            else:
-                # Apply anomalies for non-perfect customers
+            # 90% of orders match forecast exactly, 10% have variance
+            # (Changed from previous: only "perfect" customer had exact match)
+            has_variance = random.random() < 0.10
+
+            if has_variance:
+                # 10% have some anomaly
                 anomaly = random.choices(
-                    ["normal", "early", "late", "qty_high", "qty_low"],
-                    weights=[60, 10, 10, 10, 10],
+                    ["qty_high", "qty_low", "early", "late"],
+                    weights=[30, 30, 20, 20],
                     k=1,
                 )[0]
 
-                if anomaly == "normal":
-                    # Normal: forecast ±10%
-                    qty = base_qty * Decimal(str(random.uniform(0.9, 1.1)))
-                elif anomaly == "early":
-                    # Early delivery: 1-3 days before forecast
-                    delivery_date = fc.forecast_date - timedelta(days=random.randint(1, 3))
-                    qty = base_qty * Decimal(str(random.uniform(0.9, 1.1)))
-                elif anomaly == "late":
-                    # Late delivery: 1-3 days after forecast
-                    delivery_date = fc.forecast_date + timedelta(days=random.randint(1, 3))
-                    qty = base_qty * Decimal(str(random.uniform(0.9, 1.1)))
-                elif anomaly == "qty_high":
-                    # Higher quantity: 120-150% of forecast
-                    qty = base_qty * Decimal(str(random.uniform(1.2, 1.5)))
+                if anomaly == "qty_high":
+                    # Higher quantity: 110-130% of forecast
+                    qty = base_qty * Decimal(str(random.uniform(1.10, 1.30)))
                 elif anomaly == "qty_low":
-                    # Lower quantity: 50-80% of forecast
-                    qty = base_qty * Decimal(str(random.uniform(0.5, 0.8)))
+                    # Lower quantity: 70-90% of forecast
+                    qty = base_qty * Decimal(str(random.uniform(0.70, 0.90)))
+                elif anomaly == "early":
+                    # Early delivery: 1-2 days before forecast
+                    delivery_date = fc.forecast_date - timedelta(days=random.randint(1, 2))
+                elif anomaly == "late":
+                    # Late delivery: 1-2 days after forecast
+                    delivery_date = fc.forecast_date + timedelta(days=random.randint(1, 2))
+            # else: qty stays exactly at base_qty (90% of orders)
 
             # Round quantity to integer (most units are countable)
             qty = Decimal(str(int(qty)))

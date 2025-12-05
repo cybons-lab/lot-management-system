@@ -28,7 +28,7 @@ export function ForecastCardHeaderActions({
             event.stopPropagation();
             onAutoAllocate();
           }}
-          title="このフォーキャストグループの全受注に対して自動引当を実行します（未実装）"
+          title="このフォーキャストグループの全受注に対して自動引当を実行します"
         >
           <Wand2 className="h-3 w-3" />
           自動引当

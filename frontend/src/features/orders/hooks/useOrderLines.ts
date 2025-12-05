@@ -10,6 +10,7 @@ export function useOrderLines(params?: {
   customer_code?: string;
   status?: string;
   product_code?: string;
+  order_type?: string;
 }) {
   const {
     data: orderLines = [],
@@ -23,6 +24,7 @@ export function useOrderLines(params?: {
         customer_code: params?.customer_code,
         status: params?.status,
         product_code: params?.product_code,
+        order_type: params?.order_type,
       }),
   });
 

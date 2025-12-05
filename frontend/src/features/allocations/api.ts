@@ -134,6 +134,21 @@ export const cancelAllocation = (allocationId: number) => {
 };
 
 /**
+ * Confirm allocations (Soft -> Hard)
+ * @endpoint POST /allocations/confirm-batch
+ */
+export const confirmAllocationsBatch = (data: {
+  allocation_ids: number[];
+  confirmed_by?: string;
+}) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return http.post<{ confirmed_ids: number[]; failed_items: any[] }>(
+    "allocations/confirm-batch",
+    data,
+  );
+};
+
+/**
  * Drag-assign allocation (manual allocation)
  * @deprecated Use createManualAllocationSuggestion + commitAllocation instead
  * @endpoint POST /allocation-suggestions/manual (updated from /allocations/drag-assign)
@@ -281,4 +296,79 @@ export const getAllocationSuggestions = (params: {
   return http.get<AllocationSuggestionListResponse>(
     `allocation-suggestions${queryString ? "?" + queryString : ""}`,
   );
+};
+
+// ===== Group Planning Summary (計画引当サマリ) =====
+
+export interface PlanningAllocationLotBreakdown {
+  lot_id: number;
+  lot_number: string | null;
+  expiry_date: string | null;
+  planned_quantity: number;
+}
+
+export interface PlanningAllocationPeriod {
+  forecast_period: string;
+  planned_quantity: number;
+}
+
+export interface PlanningAllocationSummary {
+  has_data: boolean;
+  total_planned_quantity: number;
+  lot_breakdown: PlanningAllocationLotBreakdown[];
+  by_period: PlanningAllocationPeriod[];
+}
+
+/**
+ * Get planning allocation summary for a forecast group
+ * @endpoint GET /allocation-suggestions/group-summary
+ */
+export const getPlanningAllocationSummary = (params: {
+  customer_id: number;
+  delivery_place_id: number;
+  product_id: number;
+  forecast_period?: string;
+}) => {
+  const searchParams = new URLSearchParams();
+  searchParams.append("customer_id", params.customer_id.toString());
+  searchParams.append("delivery_place_id", params.delivery_place_id.toString());
+  searchParams.append("product_id", params.product_id.toString());
+  if (params.forecast_period) {
+    searchParams.append("forecast_period", params.forecast_period);
+  }
+  return http.get<PlanningAllocationSummary>(
+    `allocation-suggestions/group-summary?${searchParams.toString()}`,
+  );
+};
+
+// ===== Bulk Auto-Allocate (グループ一括引当) =====
+
+export interface BulkAutoAllocateRequest {
+  product_id?: number | null;
+  customer_id?: number | null;
+  delivery_place_id?: number | null;
+  order_type?: "FORECAST_LINKED" | "KANBAN" | "SPOT" | "ORDER" | null;
+  skip_already_allocated?: boolean;
+}
+
+export interface BulkAutoAllocateFailedLine {
+  line_id: number;
+  error: string;
+}
+
+export interface BulkAutoAllocateResponse {
+  processed_lines: number;
+  allocated_lines: number;
+  total_allocations: number;
+  skipped_lines: number;
+  failed_lines: BulkAutoAllocateFailedLine[];
+  message: string;
+}
+
+/**
+ * Bulk auto-allocate for groups (FEFO strategy)
+ * @endpoint POST /allocations/bulk-auto-allocate
+ */
+export const bulkAutoAllocate = (data: BulkAutoAllocateRequest) => {
+  return http.post<BulkAutoAllocateResponse>("allocations/bulk-auto-allocate", data);
 };

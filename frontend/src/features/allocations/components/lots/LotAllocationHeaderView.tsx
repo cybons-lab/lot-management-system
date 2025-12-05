@@ -19,19 +19,16 @@ interface LotAllocationHeaderViewProps {
   orderQuantity: number;
   requiredQty: number;
   totalAllocated: number;
+  hardAllocated?: number;
+  softAllocated?: number;
   remainingQty: number;
   progressPercent: number;
   isOverAllocated: boolean;
   isComplete: boolean;
   justSaved: boolean;
-  isSaving: boolean;
   isLoading: boolean;
   hasCandidates: boolean;
   supplierName?: string;
-  onAutoAllocate: () => void;
-  onClearAllocations: () => void;
-  onSaveAllocations: () => void;
-  canSave: boolean;
   lockedBy?: string;
   lockedAt?: string;
   allocationCount?: number;
@@ -46,23 +43,16 @@ export function LotAllocationHeaderView({
   productCode,
   productName,
   orderUnit,
-  inventoryUnit,
   orderQuantity,
-  requiredQty,
   totalAllocated,
+  hardAllocated,
+  softAllocated,
   remainingQty,
-  progressPercent,
   isOverAllocated,
   isComplete,
   justSaved,
-  isSaving,
-  isLoading,
   hasCandidates,
   supplierName,
-  onAutoAllocate,
-  onClearAllocations,
-  onSaveAllocations,
-  canSave,
   lockedBy,
   lockedAt,
   allocationCount = 0,
@@ -70,15 +60,13 @@ export function LotAllocationHeaderView({
   hasExpiredError = false,
   lineStatus,
 }: LotAllocationHeaderViewProps) {
-  const isPartial = totalAllocated > 0 && remainingQty > 0;
-
   const { status, colorClass } = useAllocationStatus({
     isOverAllocated,
     isComplete,
     totalAllocated,
     remainingQty,
     justSaved,
-    canSave,
+    canSave: false, // canSave is removed, so setting a default or removing if not needed by useAllocationStatus
     lineStatus,
   });
 
@@ -113,26 +101,15 @@ export function LotAllocationHeaderView({
             deliveryDate={deliveryDate}
           />
 
-          <QuantityProgressSection
-            orderQuantity={orderQuantity}
-            orderUnit={orderUnit}
-            inventoryUnit={inventoryUnit}
-            requiredQty={requiredQty}
-            totalAllocated={totalAllocated}
-            remainingQty={remainingQty}
-            progressPercent={progressPercent}
-            isOverAllocated={isOverAllocated}
-            isComplete={isComplete}
-            isPartial={isPartial}
-            isLoading={isLoading}
-            isSaving={isSaving}
-            justSaved={justSaved}
-            hasCandidates={hasCandidates}
-            canSave={canSave}
-            onAutoAllocate={onAutoAllocate}
-            onClearAllocations={onClearAllocations}
-            onSaveAllocations={onSaveAllocations}
-          />
+          <div className="col-span-5">
+            <QuantityProgressSection
+              required={orderQuantity}
+              allocated={totalAllocated}
+              hardAllocated={hardAllocated}
+              softAllocated={softAllocated}
+              unit={orderUnit}
+            />
+          </div>
 
           <StatusSection
             statusBadge={<AllocationStatusBadge status={status} colorClass={colorClass} />}

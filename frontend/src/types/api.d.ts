@@ -416,6 +416,127 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/allocations/bulk-cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Cancel
+     * @description 引当一括取消.
+     *
+     *     複数の引当を一度に取り消す。部分的な失敗を許容する。
+     *
+     *     Args:
+     *         request: 取消対象の引当ID一覧
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         BulkCancelResponse: 取消結果（成功ID、失敗ID）
+     */
+    post: operations["bulk_cancel_api_allocations_bulk_cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/auto-allocate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Auto Allocate
+     * @description 受注明細に対してFEFO戦略で自動引当を実行.
+     *
+     *     Args:
+     *         request: 自動引当リクエスト（order_line_id, strategy）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         AutoAllocateResponse: 引当結果
+     */
+    post: operations["auto_allocate_api_allocations_auto_allocate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/{allocation_id}/confirm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Confirm Allocation Hard
+     * @description Soft引当をHard引当に確定（Soft → Hard変換）.
+     *
+     *     - 在庫をロックし、他オーダーからは引当不可にする
+     *     - 部分確定も可能（quantity パラメータ指定時）
+     *
+     *     Args:
+     *         allocation_id: 確定対象の引当ID
+     *         request: 確定リクエスト（confirmed_by, quantity）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         HardAllocationConfirmResponse: 確定された引当情報
+     *
+     *     Raises:
+     *         404: 引当が見つからない
+     *         400: 既にhard確定済み、または不正なパラメータ
+     *         409: 在庫不足
+     */
+    patch: operations["confirm_allocation_hard_api_allocations__allocation_id__confirm_patch"];
+    trace?: never;
+  };
+  "/api/allocations/confirm-batch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm Allocations Batch
+     * @description 複数のSoft引当を一括でHard確定.
+     *
+     *     部分的な失敗を許容し、成功・失敗をそれぞれ返す。
+     *
+     *     Args:
+     *         request: 一括確定リクエスト（allocation_ids, confirmed_by）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         HardAllocationBatchConfirmResponse: 確定結果（成功ID一覧、失敗情報一覧）
+     */
+    post: operations["confirm_allocations_batch_api_allocations_confirm_batch_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/allocation-candidates": {
     parameters: {
       query?: never;
@@ -3431,8 +3552,18 @@ export interface components {
       lot_id: number;
       /** Allocated Quantity */
       allocated_quantity: string;
+      /**
+       * Allocation Type
+       * @description soft: 推奨引当, hard: 確定引当
+       * @default soft
+       */
+      allocation_type: string;
       /** Status */
       status: string;
+      /** Confirmed At */
+      confirmed_at?: string | null;
+      /** Confirmed By */
+      confirmed_by?: string | null;
       /** Created At */
       created_at?: string | null;
       /** Updated At */
@@ -3647,6 +3778,45 @@ export interface components {
       warehouse_name?: string | null;
     };
     /**
+     * AutoAllocateRequest
+     * @description Auto-allocate request using FEFO strategy.
+     */
+    AutoAllocateRequest: {
+      /**
+       * Order Line Id
+       * @description 対象の受注明細ID
+       */
+      order_line_id: number;
+      /**
+       * Strategy
+       * @description 引当戦略 (fefo)
+       * @default fefo
+       */
+      strategy: string;
+    };
+    /**
+     * AutoAllocateResponse
+     * @description Auto-allocate response.
+     */
+    AutoAllocateResponse: {
+      /** Order Line Id */
+      order_line_id: number;
+      /** Allocated Lots */
+      allocated_lots?: components["schemas"]["FefoLotAllocation"][];
+      /**
+       * Total Allocated
+       * @default 0
+       */
+      total_allocated: string;
+      /**
+       * Remaining Quantity
+       * @default 0
+       */
+      remaining_quantity: string;
+      /** Message */
+      message: string;
+    };
+    /**
      * BatchJobCreate
      * @description バッチジョブ作成スキーマ.
      */
@@ -3782,6 +3952,35 @@ export interface components {
        * Format: password
        */
       client_secret?: string | null;
+    };
+    /**
+     * BulkCancelRequest
+     * @description Bulk cancel allocations request.
+     */
+    BulkCancelRequest: {
+      /**
+       * Allocation Ids
+       * @description 取消対象の引当ID一覧
+       */
+      allocation_ids: number[];
+    };
+    /**
+     * BulkCancelResponse
+     * @description Bulk cancel allocations response.
+     */
+    BulkCancelResponse: {
+      /**
+       * Cancelled Ids
+       * @description 取消成功した引当ID
+       */
+      cancelled_ids?: number[];
+      /**
+       * Failed Ids
+       * @description 取消失敗した引当ID
+       */
+      failed_ids?: number[];
+      /** Message */
+      message: string;
     };
     /**
      * BulkUpsertResponse
@@ -4719,6 +4918,91 @@ export interface components {
       detail?: components["schemas"]["ValidationError"][];
     };
     /**
+     * HardAllocationBatchConfirmRequest
+     * @description Hard allocation batch confirm request.
+     */
+    HardAllocationBatchConfirmRequest: {
+      /**
+       * Allocation Ids
+       * @description 確定対象の引当ID一覧
+       */
+      allocation_ids: number[];
+      /**
+       * Confirmed By
+       * @description 確定操作を行うユーザーID
+       */
+      confirmed_by?: string | null;
+    };
+    /**
+     * HardAllocationBatchConfirmResponse
+     * @description Hard allocation batch confirm response.
+     */
+    HardAllocationBatchConfirmResponse: {
+      /**
+       * Confirmed
+       * @description 確定成功した引当ID
+       */
+      confirmed?: number[];
+      /**
+       * Failed
+       * @description 確定失敗した引当
+       */
+      failed?: components["schemas"]["HardAllocationBatchFailedItem"][];
+    };
+    /**
+     * HardAllocationBatchFailedItem
+     * @description Failed item in batch confirm response.
+     */
+    HardAllocationBatchFailedItem: {
+      /** Id */
+      id: number;
+      /** Error */
+      error: string;
+      /** Message */
+      message: string;
+    };
+    /**
+     * HardAllocationConfirmRequest
+     * @description Hard allocation confirm request (Soft → Hard).
+     */
+    HardAllocationConfirmRequest: {
+      /**
+       * Confirmed By
+       * @description 確定操作を行うユーザーID
+       */
+      confirmed_by?: string | null;
+      /**
+       * Quantity
+       * @description 部分確定の場合の数量（未指定で全量確定）
+       */
+      quantity?: number | string | null;
+    };
+    /**
+     * HardAllocationConfirmResponse
+     * @description Hard allocation confirm response.
+     */
+    HardAllocationConfirmResponse: {
+      /** Id */
+      id: number;
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Allocation Type */
+      allocation_type: string;
+      /** Status */
+      status: string;
+      /**
+       * Confirmed At
+       * Format: date-time
+       */
+      confirmed_at: string;
+      /** Confirmed By */
+      confirmed_by?: string | null;
+    };
+    /**
      * InboundPlanCreate
      * @description Payload for registering inbound plans.
      */
@@ -5399,6 +5683,17 @@ export interface components {
       /** Delivery Place Id */
       delivery_place_id: number;
       /**
+       * Order Type
+       * @description 需要種別
+       * @default ORDER
+       */
+      order_type: string;
+      /**
+       * Forecast Id
+       * @description 紐づく予測ID
+       */
+      forecast_id?: number | null;
+      /**
        * Status
        * @default pending
        */
@@ -5430,6 +5725,17 @@ export interface components {
       converted_quantity?: string | null;
       /** Delivery Place Id */
       delivery_place_id: number;
+      /**
+       * Order Type
+       * @description 需要種別
+       * @default ORDER
+       */
+      order_type: string;
+      /**
+       * Forecast Id
+       * @description 紐づく予測ID
+       */
+      forecast_id?: number | null;
       /**
        * Status
        * @default pending
@@ -5473,6 +5779,11 @@ export interface components {
       product_name?: string | null;
       /** Delivery Place Name */
       delivery_place_name?: string | null;
+      /**
+       * Forecast Period
+       * @description 予測期間（YYYY-MM）
+       */
+      forecast_period?: string | null;
       /** Allocations */
       allocations?: components["schemas"]["AllocationDetail"][];
       /**
@@ -6751,6 +7062,7 @@ export interface operations {
         customer_code?: string | null;
         date_from?: string | null;
         date_to?: string | null;
+        order_type?: string | null;
       };
       header?: never;
       path?: never;
@@ -7041,6 +7353,140 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AllocationCommitResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_cancel_api_allocations_bulk_cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BulkCancelRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkCancelResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  auto_allocate_api_allocations_auto_allocate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AutoAllocateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AutoAllocateResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  confirm_allocation_hard_api_allocations__allocation_id__confirm_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        allocation_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HardAllocationConfirmRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HardAllocationConfirmResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  confirm_allocations_batch_api_allocations_confirm_batch_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HardAllocationBatchConfirmRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HardAllocationBatchConfirmResponse"];
         };
       };
       /** @description Validation Error */

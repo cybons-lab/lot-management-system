@@ -23,6 +23,7 @@ interface OrdersFiltersProps {
 /**
  * 受注管理画面のフィルターUI
  */
+// eslint-disable-next-line max-lines-per-function
 export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFiltersProps) {
   return (
     <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -38,7 +39,7 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
         <div className="space-y-2">
           <label htmlFor="customer-code-filter" className="text-sm font-medium text-slate-700">
             得意先コード
@@ -49,6 +50,34 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
             onChange={(e) => filters.set("customer_code", e.target.value)}
             placeholder="例: C001"
           />
+        </div>
+
+        <div className="col-span-2 space-y-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
+          <label className="text-sm font-medium text-slate-700">需要種別</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "all", label: "すべて" },
+              { value: "FORECAST_LINKED", label: "FC連携" },
+              { value: "KANBAN", label: "かんばん" },
+              { value: "SPOT", label: "スポット" },
+              { value: "ORDER", label: "通常受注" },
+            ].map((option) => {
+              const currentValue = (filters.values.order_type as string) || "all";
+              const isActive = currentValue === option.value;
+              return (
+                <Button
+                  key={option.value}
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => filters.set("order_type", option.value)}
+                  className={isActive ? "" : "text-slate-600"}
+                >
+                  {option.label}
+                </Button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="space-y-2">

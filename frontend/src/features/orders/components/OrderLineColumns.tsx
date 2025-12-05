@@ -3,6 +3,9 @@
  * 受注明細行のカラム定義
  */
 
+import { Link } from "react-router-dom";
+
+import { Button } from "@/components/ui";
 import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import type { Column } from "@/shared/components/data/DataTable";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
@@ -13,9 +16,31 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     id: "order_number",
     header: "受注番号",
     cell: (row: OrderLineRow) => (
-      <div className="font-medium text-slate-900">{row.order_number}</div>
+      <Link to={`/orders/${row.order_id}`} className="font-medium text-blue-600 hover:underline">
+        {row.order_number}
+      </Link>
     ),
     width: "120px",
+  },
+  {
+    id: "order_type",
+    header: "種別",
+    cell: (row: OrderLineRow) => {
+      const typeMap: Record<string, { label: string; color: string }> = {
+        FORECAST_LINKED: { label: "FC連携", color: "bg-purple-100 text-purple-800" },
+        KANBAN: { label: "かんばん", color: "bg-orange-100 text-orange-800" },
+        SPOT: { label: "スポット", color: "bg-pink-100 text-pink-800" },
+        ORDER: { label: "通常受注", color: "bg-slate-100 text-slate-800" },
+      };
+      const orderType = (row.order_type as string) || "ORDER";
+      const info = typeMap[orderType] || typeMap["ORDER"];
+      return (
+        <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${info.color}`}>
+          {info.label}
+        </span>
+      );
+    },
+    width: "80px",
   },
   {
     id: "customer_name",
@@ -68,9 +93,15 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
         (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,
       );
+      // Soft引当が含まれているか判定
+      const hasSoft = lots.some((a) => a.allocation_type === "soft");
+
       return (
-        <div className="text-slate-900">
-          {allocatedQty.toLocaleString()} {row.unit ?? ""}
+        <div className="flex flex-col items-end">
+          <span className="font-medium text-slate-900">
+            {allocatedQty.toLocaleString()} {row.unit ?? ""}
+          </span>
+          {hasSoft && <span className="text-[10px] font-medium text-amber-600">(内Softあり)</span>}
         </div>
       );
     },
@@ -139,6 +170,18 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
         </span>
       );
     },
+    width: "100px",
+  },
+  {
+    id: "actions",
+    header: "",
+    cell: (row: OrderLineRow) => (
+      <div className="flex justify-end">
+        <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+          <Link to={`/orders/${row.order_id}`}>詳細 / 引当</Link>
+        </Button>
+      </div>
+    ),
     width: "100px",
   },
 ];

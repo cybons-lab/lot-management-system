@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  GitBranch,
   Settings,
   Sparkles,
   TrendingUp,
@@ -70,13 +69,7 @@ const navItems: NavItem[] = [
     color: "text-gray-600",
     activeColor: "text-green-600 bg-green-50",
   },
-  {
-    title: "ロット引当",
-    href: ROUTES.ALLOCATIONS.INDEX,
-    icon: GitBranch,
-    color: "text-gray-600",
-    activeColor: "text-orange-600 bg-orange-50",
-  },
+
   {
     title: "RPA",
     href: ROUTES.RPA,

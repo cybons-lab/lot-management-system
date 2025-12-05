@@ -13,6 +13,9 @@ from app.schemas.allocations.allocations_schema import (
     AllocationCommitResponse,
     AutoAllocateRequest,
     AutoAllocateResponse,
+    BulkAutoAllocateFailedLine,
+    BulkAutoAllocateRequest,
+    BulkAutoAllocateResponse,
     BulkCancelRequest,
     BulkCancelResponse,
     DragAssignRequest,
@@ -29,6 +32,7 @@ from app.schemas.allocations.allocations_schema import (
 )
 from app.services.allocations.actions import (
     allocate_manually,
+    auto_allocate_bulk,
     auto_allocate_line,
     bulk_cancel_allocations,
     cancel_allocation,
@@ -291,6 +295,67 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
 
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/bulk-auto-allocate", response_model=BulkAutoAllocateResponse)
+def bulk_auto_allocate(request: BulkAutoAllocateRequest, db: Session = Depends(get_db)):
+    """
+    複数受注明細に対して一括でFEFO自動引当を実行.
+
+    フィルタリング条件を指定して対象を絞り込み可能。
+    フォーキャストグループ、個別受注、全受注への一括引当に対応。
+
+    - product_id: 製品IDでフィルタ
+    - customer_id: 得意先IDでフィルタ
+    - delivery_place_id: 納入先IDでフィルタ
+    - order_type: 受注タイプでフィルタ (FORECAST_LINKED, KANBAN, SPOT, ORDER)
+
+    Args:
+        request: 一括引当リクエスト
+        db: データベースセッション
+
+    Returns:
+        BulkAutoAllocateResponse: 一括引当結果
+    """
+    result = auto_allocate_bulk(
+        db,
+        product_id=request.product_id,
+        customer_id=request.customer_id,
+        delivery_place_id=request.delivery_place_id,
+        order_type=request.order_type,
+        skip_already_allocated=request.skip_already_allocated,
+    )
+
+    # 結果メッセージ作成
+    if result["total_allocations"] > 0:
+        message = (
+            f"{result['allocated_lines']}件の明細に引当しました "
+            f"(計{result['total_allocations']}件の引当レコード作成)"
+        )
+    elif result["skipped_lines"] > 0:
+        message = f"{result['skipped_lines']}件の明細は既に引当済みのためスキップしました"
+    else:
+        message = "引当対象の明細がありません"
+
+    if result["failed_lines"]:
+        message += f", {len(result['failed_lines'])}件失敗"
+
+    logger.info(
+        f"一括自動引当実行: processed={result['processed_lines']}, "
+        f"allocated={result['allocated_lines']}, skipped={result['skipped_lines']}"
+    )
+
+    return BulkAutoAllocateResponse(
+        processed_lines=result["processed_lines"],
+        allocated_lines=result["allocated_lines"],
+        total_allocations=result["total_allocations"],
+        skipped_lines=result["skipped_lines"],
+        failed_lines=[
+            BulkAutoAllocateFailedLine(line_id=f["line_id"], error=f["error"])
+            for f in result["failed_lines"]
+        ],
+        message=message,
+    )
 
 
 # --- Hard Allocation (確定引当) ---
