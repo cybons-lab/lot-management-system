@@ -119,20 +119,15 @@ POST /api/allocations/bulk-cancel
 
 ### Frontend 構造化（3件）
 
-#### 12. HTTPクライアント統合
+#### ✅ 12. HTTPクライアント統合（完了: 2025-12-05）
 
 **ソース:** COMPLETED_CODE_CLEANUP_20251130.md
 **工数:** 1-2時間
-**影響:** コード重複、設定の不一致
+**ステータス:** ✅ 完了
 
-**ファイル:**
-- `frontend/src/services/http.ts` (legacy, axios)
-- `frontend/src/shared/libs/http.ts` (modern, axios)
-
-**対応:**
-1. 両方の機能を `shared/libs/http.ts` に統合
-2. `services/http.ts` を削除
-3. インポートを更新（5ファイル）
+**完了内容:**
+- `shared/api/http-client.ts` に統合済み
+- 旧ファイル（`services/http.ts`, `shared/libs/http.ts`）は削除済み
 
 ---
 
@@ -446,8 +441,8 @@ const userId = user?.id ?? 1; // 認証がなければデフォルト
 **優先度:** 参考（機能には影響なし）
 
 **Critical（修正必須）:**
-- `WarehouseSelector.tsx:24`: useEffect が条件付きで呼ばれている
-- `useDialog.ts:204`: コールバック内で useDialog が呼ばれている（Rules of Hooks 違反）
+- ✅ `WarehouseSelector.tsx:24`: useEffect が条件付きで呼ばれている → 修正済み（早期リターン前に移動）
+- ✅ `useDialog.ts:204`: コールバック内で useDialog が呼ばれている（Rules of Hooks 違反） → 削除済み（未使用）
 
 **High（推奨修正）:**
 - アクセシビリティ（ラベル関連付け）: 6件
