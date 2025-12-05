@@ -12,9 +12,19 @@ import type { ForecastGroup } from "../api";
 import { ForecastListCard } from "../components";
 import { useForecasts, useDeleteForecast } from "../hooks";
 
-import { Button } from "@/components/ui";
-import { Input } from "@/components/ui";
-import { Label } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  Button,
+  Input,
+  Label,
+} from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { generateAllocationSuggestions } from "@/features/allocations/api";
 
@@ -25,6 +35,10 @@ export function ForecastListPage() {
     delivery_place_id: "",
     product_id: "",
   });
+
+  // 確認ダイアログの状態
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [pendingPeriods, setPendingPeriods] = useState<string[]>([]);
 
   const queryParams = {
     customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
@@ -55,16 +69,17 @@ export function ForecastListPage() {
       periods.push(period);
     }
 
-    if (
-      !confirm(`${periods.join(", ")} の引当推奨を生成しますか？\n既存の推奨は上書きされます。`)
-    ) {
-      return;
-    }
+    // ダイアログを開く
+    setPendingPeriods(periods);
+    setConfirmDialogOpen(true);
+  };
 
+  const handleConfirmGenerate = () => {
+    setConfirmDialogOpen(false);
     generateMutation.mutate({
       mode: "forecast",
       forecast_scope: {
-        forecast_periods: periods,
+        forecast_periods: pendingPeriods,
       },
     });
   };
@@ -258,6 +273,26 @@ export function ForecastListPage() {
           </div>
         </div>
       )}
+
+      {/* 引当推奨生成 確認ダイアログ */}
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>引当推奨の生成</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingPeriods.join(", ")} の引当推奨を生成しますか？
+              <br />
+              既存の推奨は上書きされます。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmGenerate}>
+              生成する
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
