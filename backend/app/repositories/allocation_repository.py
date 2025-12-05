@@ -7,6 +7,7 @@ v2.2: lot_current_stock ビューは廃止。lots テーブルを直接使用。
 """
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
@@ -36,7 +37,7 @@ class AllocationRepository:
             .options(joinedload(Allocation.order_line))
             .where(Allocation.id == allocation_id)
         )
-        return self.db.execute(stmt).scalar_one_or_none()
+        return cast(Allocation | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_by_order_line_id(self, order_line_id: int) -> list[Allocation]:
         """
@@ -134,7 +135,7 @@ class AllocationRepository:
             ロットエンティティ（存在しない場合はNone）
         """
         stmt = select(Lot).where(Lot.id == lot_id)
-        return self.db.execute(stmt).scalar_one_or_none()
+        return cast(Lot | None, self.db.execute(stmt).scalar_one_or_none())
 
     def update_lot_quantities(self, lot_id: int, quantity_delta: float) -> None:
         """
@@ -152,7 +153,9 @@ class AllocationRepository:
         """
         lot = self.get_lot(lot_id)
         if lot:
-            lot.current_quantity += quantity_delta
+            from decimal import Decimal
+
+            lot.current_quantity += Decimal(str(quantity_delta))
             lot.updated_at = datetime.now()
         # NOTE: commitはservice層で行う
 
@@ -168,6 +171,8 @@ class AllocationRepository:
         """
         lot = self.get_lot(lot_id)
         if lot:
-            lot.allocated_quantity += allocated_delta
+            from decimal import Decimal
+
+            lot.allocated_quantity += Decimal(str(allocated_delta))
             lot.updated_at = datetime.now()
         # NOTE: commitはservice層で行う

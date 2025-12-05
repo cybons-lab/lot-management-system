@@ -42,6 +42,8 @@ class StockTransactionType(str, PyEnum):
 
     INBOUND = "inbound"
     ALLOCATION = "allocation"
+    ALLOCATION_HOLD = "allocation_hold"
+    ALLOCATION_RELEASE = "allocation_release"
     SHIPMENT = "shipment"
     ADJUSTMENT = "adjustment"
     RETURN = "return"

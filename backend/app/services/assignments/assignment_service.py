@@ -1,5 +1,7 @@
 """User-Supplier assignment service."""
 
+from typing import cast
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -78,7 +80,9 @@ class UserSupplierAssignmentService(
             UserSupplierAssignment.supplier_id == supplier_id,
             UserSupplierAssignment.is_primary == True,  # noqa: E712
         )
-        existing_primary = self.db.execute(stmt).scalar_one_or_none()
+        existing_primary = cast(
+            UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none()
+        )
 
         if existing_primary:
             existing_primary.is_primary = False
@@ -88,7 +92,7 @@ class UserSupplierAssignmentService(
             UserSupplierAssignment.user_id == user_id,
             UserSupplierAssignment.supplier_id == supplier_id,
         )
-        assignment = self.db.execute(stmt).scalar_one_or_none()
+        assignment = cast(UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none())
 
         if assignment:
             assignment.is_primary = True

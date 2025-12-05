@@ -67,13 +67,13 @@ def list_inbound_plans(
                 plan_number=plan.plan_number,
                 supplier_id=plan.supplier_id,
                 planned_arrival_date=plan.planned_arrival_date,
-                status=plan.status,
+                status=plan.status,  # type: ignore[arg-type]
                 notes=plan.notes,
                 created_at=plan.created_at,
                 updated_at=plan.updated_at,
                 total_quantity=sum(line.planned_quantity for line in plan.lines)
                 if plan.lines
-                else None,
+                else None,  # type: ignore[arg-type]
             )
             for plan in plans
         ],

@@ -1,3 +1,5 @@
+from typing import cast
+
 from sqlalchemy.orm import Session
 
 from app.models.masters_models import Customer
@@ -19,7 +21,10 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]
 
     def get_by_code(self, code: str, *, raise_404: bool = True) -> Customer | None:
         """Get customer by customer_code."""
-        customer = self.db.query(Customer).filter(Customer.customer_code == code).first()
+        customer = cast(
+            Customer | None,
+            self.db.query(Customer).filter(Customer.customer_code == code).first(),
+        )
         if not customer and raise_404:
             from fastapi import HTTPException, status
 
@@ -31,12 +36,14 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]
     def update_by_code(self, code: str, payload: CustomerUpdate) -> Customer:
         """Update customer by customer_code."""
         customer = self.get_by_code(code)
-        return self.update(customer.id, payload)
+        assert customer is not None  # raise_404=True ensures this
+        return self.update(customer.id, payload)  # type: ignore[arg-type]
 
     def delete_by_code(self, code: str) -> None:
         """Delete customer by customer_code."""
         customer = self.get_by_code(code)
-        self.delete(customer.id)
+        assert customer is not None  # raise_404=True ensures this
+        self.delete(customer.id)  # type: ignore[arg-type]
 
     def bulk_upsert(self, rows: list[CustomerBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert customers by customer_code.

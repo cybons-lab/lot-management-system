@@ -1,6 +1,7 @@
 """User service (ユーザー管理サービス)."""
 
 from datetime import datetime
+from typing import cast
 
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session, joinedload
@@ -30,7 +31,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
     def _hash_password(self, password: str) -> str:
         """Hash a password using bcrypt."""
         try:
-            return self.pwd_context.hash(password)
+            return cast(str, self.pwd_context.hash(password))
         except Exception:
             # Fallback for test environment where bcrypt might fail
             # Return a dummy hash that looks somewhat real but is deterministic
@@ -46,7 +47,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
 
             h = hashlib.sha256(plain_password.encode()).hexdigest()
             return hashed_password == f"$2b$12$fallback{h}"
-        return self.pwd_context.verify(plain_password, hashed_password)
+        return cast(bool, self.pwd_context.verify(plain_password, hashed_password))
 
     def get_all(self, skip: int = 0, limit: int = 100, is_active: bool | None = None) -> list[User]:
         """Get all users with optional filtering."""
@@ -55,15 +56,16 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
         if is_active is not None:
             query = query.filter(User.is_active == is_active)
 
-        return query.offset(skip).limit(limit).all()
+        return cast(list[User], query.offset(skip).limit(limit).all())
 
     def get_by_id(self, user_id: int, *, raise_404: bool = True) -> User | None:
         """Get user by ID with roles loaded."""
-        user = (
+        user = cast(
+            User | None,
             self.db.query(User)
             .options(joinedload(User.user_roles))
             .filter(User.id == user_id)
-            .first()
+            .first(),
         )
         if user is None and raise_404:
             from fastapi import HTTPException, status
@@ -73,11 +75,11 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
 
     def get_by_username(self, username: str) -> User | None:
         """Get user by username."""
-        return self.db.query(User).filter(User.username == username).first()
+        return cast(User | None, self.db.query(User).filter(User.username == username).first())
 
     def get_by_email(self, email: str) -> User | None:
         """Get user by email."""
-        return self.db.query(User).filter(User.email == email).first()
+        return cast(User | None, self.db.query(User).filter(User.email == email).first())
 
     def create(self, user: UserCreate) -> User:
         """Create a new user with hashed password."""
@@ -96,6 +98,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
     def update(self, user_id: int, user: UserUpdate) -> User:
         """Update an existing user with password hashing."""
         db_user = self.get_by_id(user_id)
+        assert db_user is not None  # raise_404=True ensures this
 
         update_data = user.model_dump(exclude_unset=True)
 

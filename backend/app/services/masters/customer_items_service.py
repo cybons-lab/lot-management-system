@@ -1,6 +1,7 @@
 """Customer items service (得意先品番マッピング管理)."""
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -51,12 +52,12 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "updated_at": item.updated_at,
         }
 
-    def create(self, item: CustomerItemCreate) -> dict:
+    def create(self, item: CustomerItemCreate) -> dict:  # type: ignore[override]
         """Create a new customer item mapping and return enriched data."""
         created_item = super().create(item)
         return self._enrich_item(created_item)
 
-    def get_all(
+    def get_all(  # type: ignore[override]
         self,
         skip: int = 0,
         limit: int = 100,
@@ -125,18 +126,19 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
 
     def get_by_key(self, customer_id: int, external_product_code: str) -> CustomerItem | None:
         """Get customer item mapping by composite key."""
-        return (
+        return cast(
+            CustomerItem | None,
             self.db.query(CustomerItem)
             .filter(
                 CustomerItem.customer_id == customer_id,
                 CustomerItem.external_product_code == external_product_code,
             )
-            .first()
+            .first(),
         )
 
     def update_by_key(
         self, customer_id: int, external_product_code: str, item: CustomerItemUpdate
-    ) -> CustomerItem | None:
+    ) -> dict | None:
         """Update an existing customer item mapping by composite key."""
         db_item = self.get_by_key(customer_id, external_product_code)
         if not db_item:

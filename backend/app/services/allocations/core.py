@@ -6,6 +6,8 @@
 v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
 """
 
+from typing import cast
+
 from sqlalchemy.orm import Session
 
 from app.domain.allocation import (
@@ -27,16 +29,17 @@ class AllocationService:
 
     def _resolve_warehouse_id(self, lot) -> int:
         if lot:
-            if getattr(lot, "warehouse_id", None) is not None:
-                return lot.warehouse_id
+            warehouse_id = getattr(lot, "warehouse_id", None)
+            if warehouse_id is not None:
+                return cast(int, warehouse_id)
             warehouse = getattr(lot, "warehouse", None)
             if warehouse:
-                return warehouse.id
+                return cast(int, warehouse.id)
 
-        fallback = self.db.query(Warehouse).first()
+        fallback = cast(Warehouse | None, self.db.query(Warehouse).first())
         if not fallback:
             raise NotFoundError("Warehouse", "default")
-        return fallback.id
+        return cast(int, fallback.id)
 
     def allocate_lot(
         self, order_line_id: int, lot_id: int, allocate_qty: float
@@ -70,7 +73,9 @@ class AllocationService:
         available_quantity = lot.current_quantity - lot.allocated_quantity
         if available_quantity < allocate_qty:
             raise InsufficientStockError(
-                lot_id=lot_id, required=allocate_qty, available=available_quantity
+                lot_id=lot_id,
+                required=allocate_qty,
+                available=available_quantity,  # type: ignore[arg-type]
             )
 
         # トランザクション開始
@@ -135,7 +140,7 @@ class AllocationService:
                 product_id=lot_ref.product_id if lot_ref else None,
                 warehouse_id=self._resolve_warehouse_id(lot_ref),
                 lot_id=allocation.lot_id,
-                quantity_delta=allocation.allocated_qty,
+                quantity_delta=allocation.allocated_quantity,
                 reason=StockMovementReason.ALLOCATION_RELEASE,
                 source_table="allocations",
                 source_id=allocation.id,
@@ -146,7 +151,8 @@ class AllocationService:
 
             # 2. ロットの引当数量を解放
             self.repository.update_lot_allocated_quantity(
-                allocation.lot_id, -allocation.allocated_qty
+                allocation.lot_id,
+                -allocation.allocated_quantity,  # type: ignore[arg-type]
             )
 
             # 3. 引当ステータス更新

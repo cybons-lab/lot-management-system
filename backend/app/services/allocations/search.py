@@ -7,7 +7,7 @@ Refactored: Uses database views (v2.5) for simplified logic and better performan
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy.orm import Query, Session
 
@@ -105,7 +105,7 @@ def _query_lots_from_view(db: Session, product_id: int, strategy: str, limit: in
     if strategy == "fefo":
         query = _apply_fefo_ordering(query)
 
-    return query.limit(limit).all()
+    return cast(list[Any], query.limit(limit).all())
 
 
 def _query_lots_with_fallback(db: Session, product_id: int, strategy: str, limit: int) -> list[Any]:
@@ -178,9 +178,9 @@ def _convert_to_candidate_item(
         warehouse_id=lot_view.warehouse_id,
         received_date=received_date,
         expiry_date=lot_view.expiry_date,
-        current_quantity=0.0,  # Will be enriched later
-        allocated_quantity=0.0,  # Will be enriched later
-        available_quantity=available_qty,
+        current_quantity=0.0,  # type: ignore[arg-type]  # Will be enriched later
+        allocated_quantity=0.0,  # type: ignore[arg-type]  # Will be enriched later
+        available_quantity=available_qty,  # type: ignore[arg-type]
         delivery_place_id=delivery_place_id,
         delivery_place_name=delivery_place_name,
         status=status,
@@ -208,8 +208,8 @@ def _enrich_lot_details(db: Session, candidates: list[CandidateLotItem]) -> None
         lot = lot_map.get(candidate.lot_id)
         if lot:
             candidate.lot_number = lot.lot_number
-            candidate.current_quantity = float(lot.current_quantity)
-            candidate.allocated_quantity = float(lot.allocated_quantity)
+            candidate.current_quantity = lot.current_quantity
+            candidate.allocated_quantity = lot.allocated_quantity
             candidate.status = lot.status
             candidate.lock_reason = lot.lock_reason
 
@@ -325,7 +325,7 @@ def execute_candidate_lot_query(
         )
 
         # Query lots with fallback
-        results = _query_lots_with_fallback(db, context.product_id, strategy, limit)
+        results = _query_lots_with_fallback(db, context.product_id, strategy, limit)  # type: ignore[arg-type]
 
         # Get delivery place name
         delivery_place_name = _get_delivery_place_name(db, context.delivery_place_id)

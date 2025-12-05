@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import cast
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -8,7 +9,6 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.auth_models import User
-from app.schemas.auth.token_schema import TokenData
 from app.services.auth.user_service import UserService
 
 
@@ -45,7 +45,7 @@ class AuthService:
             expire = datetime.now(UTC) + timedelta(minutes=15)
         to_encode.update({"exp": expire})
         encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
-        return encoded_jwt
+        return cast(str, encoded_jwt)
 
     @staticmethod
     def get_current_user(
@@ -59,15 +59,15 @@ class AuthService:
         )
         try:
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            username: str = payload.get("sub")
+            username: str | None = payload.get("sub")
             if username is None:
                 raise credentials_exception
-            token_data = TokenData(username=username)
         except JWTError:
             raise credentials_exception
 
         user_service = UserService(db)
-        user = user_service.get_by_username(username=token_data.username)
+        # username is guaranteed to be str after the None check above
+        user = user_service.get_by_username(username=username)
         if user is None:
             raise credentials_exception
         return user
@@ -98,13 +98,13 @@ class AuthService:
 
         try:
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            username: str = payload.get("sub")
+            username: str | None = payload.get("sub")
             if username is None:
                 return None
-            token_data = TokenData(username=username)
         except JWTError:
             return None
 
         user_service = UserService(db)
-        user = user_service.get_by_username(username=token_data.username)
+        # username is guaranteed to be str after the None check above
+        user = user_service.get_by_username(username=username)
         return user

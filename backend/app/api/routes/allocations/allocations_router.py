@@ -66,6 +66,8 @@ def drag_assign(request: DragAssignRequest, db: Session = Depends(get_db)):
         )
 
         lot = db.query(Lot).filter(Lot.id == request.lot_id).first()
+        if not lot:
+            raise HTTPException(status_code=404, detail="Lot not found")
         remaining = lot.current_quantity - lot.allocated_quantity
 
         return DragAssignResponse(
@@ -100,12 +102,12 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
                 lot_number=alloc.lot_number,
                 allocated_quantity=alloc.allocate_qty,
                 expiry_date=alloc.expiry_date,
-                receipt_date=alloc.receipt_date,
+                received_date=alloc.receipt_date,
             )
             for alloc in line.allocations
         ]
         lines.append(
-            FefoLineAllocation(
+            FefoLineAllocation(  # type: ignore[call-arg]
                 order_line_id=line.order_line_id,
                 product_id=line.product_id,
                 product_code=line.product_code,
@@ -254,16 +256,17 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
             .all()
         )
         total_line_allocated = sum(a.allocated_quantity for a in existing)
+        assert line is not None  # Already checked above
         remaining = max(Decimal("0"), Decimal(str(line.order_quantity)) - total_line_allocated)
 
         # レスポンス作成
         allocated_lots = [
             FefoLotAllocation(
-                lot_id=a.lot_id,
-                lot_number=db.query(Lot).filter(Lot.id == a.lot_id).first().lot_number,
+                lot_id=a.lot_id,  # type: ignore[arg-type]
+                lot_number=db.query(Lot).filter(Lot.id == a.lot_id).first().lot_number,  # type: ignore[union-attr]
                 allocated_quantity=a.allocated_quantity,
-                expiry_date=db.query(Lot).filter(Lot.id == a.lot_id).first().expiry_date,
-                received_date=db.query(Lot).filter(Lot.id == a.lot_id).first().received_date,
+                expiry_date=db.query(Lot).filter(Lot.id == a.lot_id).first().expiry_date,  # type: ignore[union-attr]
+                received_date=db.query(Lot).filter(Lot.id == a.lot_id).first().received_date,  # type: ignore[union-attr]
             )
             for a in allocations
         ]
@@ -281,7 +284,7 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
         return AutoAllocateResponse(
             order_line_id=request.order_line_id,
             allocated_lots=allocated_lots,
-            total_allocated=total_allocated,
+            total_allocated=total_allocated,  # type: ignore[arg-type]
             remaining_quantity=remaining,
             message=message,
         )
@@ -334,11 +337,11 @@ def confirm_allocation_hard(
         return HardAllocationConfirmResponse(
             id=allocation.id,
             order_line_id=allocation.order_line_id,
-            lot_id=allocation.lot_id,
+            lot_id=allocation.lot_id,  # type: ignore[arg-type]
             allocated_quantity=allocation.allocated_quantity,
             allocation_type=allocation.allocation_type,
             status=allocation.status,
-            confirmed_at=allocation.confirmed_at,
+            confirmed_at=allocation.confirmed_at,  # type: ignore[arg-type]
             confirmed_by=allocation.confirmed_by,
         )
 

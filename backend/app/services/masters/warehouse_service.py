@@ -1,3 +1,5 @@
+from typing import cast
+
 from sqlalchemy.orm import Session
 
 from app.models.masters_models import Warehouse
@@ -19,7 +21,10 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
 
     def get_by_code(self, code: str, *, raise_404: bool = True) -> Warehouse | None:
         """Get warehouse by warehouse_code."""
-        warehouse = self.db.query(Warehouse).filter(Warehouse.warehouse_code == code).first()
+        warehouse = cast(
+            Warehouse | None,
+            self.db.query(Warehouse).filter(Warehouse.warehouse_code == code).first(),
+        )
         if not warehouse and raise_404:
             from fastapi import HTTPException, status
 
@@ -31,12 +36,14 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
     def update_by_code(self, code: str, payload: WarehouseUpdate) -> Warehouse:
         """Update warehouse by warehouse_code."""
         warehouse = self.get_by_code(code)
-        return self.update(warehouse.id, payload)
+        assert warehouse is not None  # raise_404=True ensures this
+        return self.update(warehouse.id, payload)  # type: ignore[arg-type]
 
     def delete_by_code(self, code: str) -> None:
         """Delete warehouse by warehouse_code."""
         warehouse = self.get_by_code(code)
-        self.delete(warehouse.id)
+        assert warehouse is not None  # raise_404=True ensures this
+        self.delete(warehouse.id)  # type: ignore[arg-type]
 
     def bulk_upsert(self, rows: list[WarehouseBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert warehouses by warehouse_code.

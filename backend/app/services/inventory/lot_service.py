@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import date
+from typing import cast
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, joinedload
@@ -29,7 +30,7 @@ class LotRepository:
             .options(joinedload(Lot.product), joinedload(Lot.warehouse))
             .where(Lot.id == lot_id)
         )
-        return self.db.execute(stmt).scalar_one_or_none()
+        return cast(Lot | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_available_lots(
         self,
@@ -66,7 +67,7 @@ class LotRepository:
             else:
                 return []
 
-        return self.db.execute(stmt).scalars().all()
+        return cast(Sequence[Lot], self.db.execute(stmt).scalars().all())
 
     def create(
         self,
@@ -82,11 +83,11 @@ class LotRepository:
         product: Product | None = None
         supplier: Supplier | None = None
         if supplier_code:
-            stmt = select(Supplier).where(Supplier.supplier_code == supplier_code)
-            supplier = self.db.execute(stmt).scalar_one_or_none()
+            supplier_stmt = select(Supplier).where(Supplier.supplier_code == supplier_code)
+            supplier = self.db.execute(supplier_stmt).scalar_one_or_none()
         if product_code:
-            stmt = select(Product).where(Product.maker_part_code == product_code)
-            product = self.db.execute(stmt).scalar_one_or_none()
+            product_stmt = select(Product).where(Product.maker_part_code == product_code)
+            product = self.db.execute(product_stmt).scalar_one_or_none()
 
         lot = Lot(
             supplier_id=supplier.id if supplier else None,

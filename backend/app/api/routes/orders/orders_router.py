@@ -58,6 +58,7 @@ def get_order(order_id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=OrderWithLinesResponse, status_code=201)
 def create_order(order: OrderCreate, uow: UnitOfWork = Depends(get_uow)):
     """受注作成."""
+    assert uow.session is not None
     service = OrderService(uow.session)
     return service.create_order(order)
 
@@ -65,6 +66,7 @@ def create_order(order: OrderCreate, uow: UnitOfWork = Depends(get_uow)):
 @router.delete("/{order_id}/cancel", status_code=204)
 def cancel_order(order_id: int, uow: UnitOfWork = Depends(get_uow)):
     """受注キャンセル."""
+    assert uow.session is not None
     service = OrderService(uow.session)
     service.cancel_order(order_id)
     return None
@@ -113,9 +115,11 @@ def save_manual_allocations(
 
         # 4. 作成された引当をrefresh
         for alloc_id in created_ids:
-            alloc = db.query(Allocation).filter(Allocation.id == alloc_id).first()
-            if alloc:
-                db.refresh(alloc)
+            refreshed_alloc: Allocation | None = (
+                db.query(Allocation).filter(Allocation.id == alloc_id).first()
+            )
+            if refreshed_alloc:
+                db.refresh(refreshed_alloc)
 
         logger.info(f"Saved allocations for line {order_line_id}: {len(created_ids)} items")
 

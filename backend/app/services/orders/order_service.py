@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import date
+from typing import cast
 
-from sqlalchemy import Select, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.domain.order import (
@@ -44,7 +45,7 @@ class OrderService:
         date_from: date | None = None,
         date_to: date | None = None,
     ) -> list[OrderResponse]:
-        stmt: Select[Order] = select(Order).options(
+        stmt = select(Order).options(  # type: ignore[assignment]
             selectinload(Order.order_lines)
             .selectinload(OrderLine.allocations)
             .joinedload(Allocation.lot)
@@ -145,7 +146,7 @@ class OrderService:
 
     def get_order_detail(self, order_id: int) -> OrderWithLinesResponse:
         # Load order with related data (DDL v2.2 compliant)
-        stmt: Select[Order] = (
+        stmt = (  # type: ignore[assignment]
             select(Order)
             .options(
                 selectinload(Order.order_lines).selectinload(OrderLine.product),
@@ -160,7 +161,7 @@ class OrderService:
         if not order:
             raise OrderNotFoundError(order_id)
 
-        response_order = OrderWithLinesResponse.model_validate(order)
+        response_order = cast(OrderWithLinesResponse, OrderWithLinesResponse.model_validate(order))
         self._populate_additional_info([response_order])
         return response_order
 
@@ -192,7 +193,7 @@ class OrderService:
             product_stmt = select(Product).where(Product.id == line_data.product_id)
             product = self.db.execute(product_stmt).scalar_one_or_none()
             if not product:
-                raise ProductNotFoundError(line_data.product_id)
+                raise ProductNotFoundError(str(line_data.product_id))
 
             # Calculate converted_quantity
             converted_qty = line_data.order_quantity
@@ -224,7 +225,7 @@ class OrderService:
         self.db.flush()
         self.db.refresh(order)
 
-        return OrderWithLinesResponse.model_validate(order)
+        return cast(OrderWithLinesResponse, OrderWithLinesResponse.model_validate(order))
 
     def cancel_order(self, order_id: int) -> None:
         # Load order with lines

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import cast
 
-from sqlalchemy import Select, func, nulls_last, select
+from sqlalchemy import func, nulls_last, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import (
@@ -32,7 +33,7 @@ def _load_order(db: Session, order_id: int | None = None, order_number: str | No
     if not order_id and not order_number:
         raise ValueError("Either order_id or order_number must be provided")
 
-    stmt: Select[Order] = select(Order).options(
+    stmt = select(Order).options(  # type: ignore[assignment]
         selectinload(Order.order_lines)
         .joinedload(OrderLine.allocations)
         .joinedload(Allocation.lot),
@@ -44,7 +45,7 @@ def _load_order(db: Session, order_id: int | None = None, order_number: str | No
     else:
         stmt = stmt.where(Order.order_number == order_number)
 
-    order = db.execute(stmt).scalar_one_or_none()
+    order = cast(Order | None, db.execute(stmt).scalar_one_or_none())
     if not order:
         identifier = f"ID={order_id}" if order_id else f"order_number={order_number}"
         raise ValueError(f"Order not found: {identifier}")
@@ -53,10 +54,13 @@ def _load_order(db: Session, order_id: int | None = None, order_number: str | No
 
 def _existing_allocated_qty(line: OrderLine) -> float:
     """Calculate already allocated quantity for an order line."""
-    return sum(
-        alloc.allocated_quantity
-        for alloc in line.allocations
-        if getattr(alloc, "status", "reserved") != "cancelled"
+    return cast(
+        float,
+        sum(
+            alloc.allocated_quantity
+            for alloc in line.allocations
+            if getattr(alloc, "status", "reserved") != "cancelled"
+        ),
     )
 
 
@@ -69,7 +73,7 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
     if product is None:
         product_code = getattr(line, "product_code", None)
         if product_code:
-            stmt = select(Product).where(Product.product_code == product_code)
+            stmt = select(Product).where(Product.product_code == product_code)  # type: ignore[attr-defined]
             product = db.execute(stmt).scalar_one_or_none()
     if product and getattr(product, "next_div", None):
         return product.next_div, None
@@ -90,7 +94,7 @@ def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
     Returns:
         List of (Lot, available_quantity) tuples sorted by FEFO order
     """
-    stmt: Select[tuple[Lot, float]] = (
+    stmt = (  # type: ignore[assignment]
         select(Lot, (Lot.current_quantity - Lot.allocated_quantity).label("available_qty"))
         .where(
             Lot.product_id == product_id,
@@ -103,7 +107,7 @@ def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
             Lot.id.asc(),
         )
     )
-    return db.execute(stmt).all()
+    return cast(list[tuple[Lot, float]], db.execute(stmt).all())
 
 
 def update_order_line_status(db: Session, order_line_id: int) -> None:

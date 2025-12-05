@@ -5,7 +5,7 @@ across 26+ service classes by providing common CRUD operations, transaction
 management, and error handling.
 """
 
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, cast
 
 from fastapi import HTTPException, status
 from pydantic import BaseModel
@@ -60,7 +60,8 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         Returns:
             List of entities
         """
-        return self.db.query(self.model).offset(skip).limit(limit).all()
+        result = self.db.query(self.model).offset(skip).limit(limit).all()
+        return cast(list[ModelType], result)
 
     def get_by_id(self, id: IDType, *, raise_404: bool = True) -> ModelType | None:
         """Get entity by ID.
@@ -75,7 +76,7 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         Raises:
             HTTPException: 404 if entity not found and raise_404=True
         """
-        instance = self.db.get(self.model, id)
+        instance = cast(ModelType | None, self.db.get(self.model, id))
         if instance is None and raise_404:
             model_name = self.model.__name__
             raise HTTPException(
@@ -122,7 +123,8 @@ class BaseService(Generic[ModelType, CreateSchemaType, UpdateSchemaType, IDType]
         Raises:
             HTTPException: 404 if entity not found, 409 if integrity constraint violated
         """
-        instance = self.get_by_id(id)
+        instance = self.get_by_id(id)  # raise_404=True raises if not found
+        assert instance is not None  # for mypy: get_by_id with raise_404=True never returns None
         for field, value in payload.model_dump(exclude_unset=True).items():
             setattr(instance, field, value)
 

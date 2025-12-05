@@ -1,6 +1,6 @@
 """Data access for products."""
 
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -40,7 +40,7 @@ class ProductRepository:
 
     def get(self, product_id: int) -> Product | None:
         """Fetch a product by id."""
-        return self.session.get(Product, product_id)
+        return cast(Product | None, self.session.get(Product, product_id))
 
     def create(self, product: Product) -> Product:
         """Persist a new product."""

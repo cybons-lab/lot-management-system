@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import cast
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
@@ -40,23 +41,30 @@ class SeedSnapshotRepository:
 
     def get_by_id(self, snapshot_id: int) -> SeedSnapshot | None:
         """IDでスナップショットを取得."""
-        return self.db.execute(
-            select(SeedSnapshot).where(SeedSnapshot.id == snapshot_id)
-        ).scalar_one_or_none()
+        return cast(
+            SeedSnapshot | None,
+            self.db.execute(
+                select(SeedSnapshot).where(SeedSnapshot.id == snapshot_id)
+            ).scalar_one_or_none(),
+        )
 
     def get_all(self) -> Sequence[SeedSnapshot]:
         """全スナップショットを取得（新しい順）."""
-        return (
+        return cast(
+            Sequence[SeedSnapshot],
             self.db.execute(select(SeedSnapshot).order_by(desc(SeedSnapshot.created_at)))
             .scalars()
-            .all()
+            .all(),
         )
 
     def get_latest(self) -> SeedSnapshot | None:
         """最新のスナップショットを取得."""
-        return self.db.execute(
-            select(SeedSnapshot).order_by(desc(SeedSnapshot.created_at)).limit(1)
-        ).scalar_one_or_none()
+        return cast(
+            SeedSnapshot | None,
+            self.db.execute(
+                select(SeedSnapshot).order_by(desc(SeedSnapshot.created_at)).limit(1)
+            ).scalar_one_or_none(),
+        )
 
     def delete(self, snapshot_id: int) -> bool:
         """スナップショットを削除."""

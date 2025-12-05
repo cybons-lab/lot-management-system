@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Annotated
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -74,7 +74,7 @@ async def get_current_user_info(
     ]
 
     # Create response
-    user_data = UserWithSuppliers.model_validate(current_user)
+    user_data = cast(UserWithSuppliers, UserWithSuppliers.model_validate(current_user))
     user_data.supplier_assignments = supplier_assignments
 
     return user_data

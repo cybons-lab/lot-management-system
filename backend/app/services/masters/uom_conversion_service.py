@@ -2,6 +2,7 @@
 """UOM conversion service (単位換算マスタ管理)."""
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -26,21 +27,23 @@ class UomConversionService(
 
     def get_by_key(self, product_id: int, external_unit: str) -> ProductUomConversion | None:
         """Get UOM conversion by composite key."""
-        return (
+        return cast(
+            ProductUomConversion | None,
             self.db.query(ProductUomConversion)
             .filter(
                 ProductUomConversion.product_id == product_id,
                 ProductUomConversion.external_unit == external_unit,
             )
-            .first()
+            .first(),
         )
 
-    def get_by_id(self, conversion_id: int) -> ProductUomConversion | None:
+    def get_by_id(self, conversion_id: int) -> ProductUomConversion | None:  # type: ignore[override]
         """Get UOM conversion by ID."""
-        return (
+        return cast(
+            ProductUomConversion | None,
             self.db.query(ProductUomConversion)
             .filter(ProductUomConversion.conversion_id == conversion_id)
-            .first()
+            .first(),
         )
 
     def update_by_id(self, conversion_id: int, data: UomConversionUpdate) -> ProductUomConversion:
@@ -114,8 +117,8 @@ class UomConversionService(
 
         # 2. Resolve IDs
         products = (
-            self.db.query(Product.product_code, Product.id)
-            .filter(Product.product_code.in_(product_codes))
+            self.db.query(Product.product_code, Product.id)  # type: ignore[attr-defined]
+            .filter(Product.product_code.in_(product_codes))  # type: ignore[attr-defined]
             .all()
         )
         product_map = {code: id for code, id in products}

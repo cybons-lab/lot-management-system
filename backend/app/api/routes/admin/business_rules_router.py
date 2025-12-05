@@ -190,10 +190,8 @@ def delete_business_rule(rule_id: int, db: Session = Depends(get_db)):
         HTTPException: ルールが存在しない場合
     """
     service = BusinessRuleService(db)
-    deleted = service.delete(rule_id)
-    if not deleted:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Business rule not found")
-
+    # delete() raises HTTPException 404 if not found
+    service.delete(rule_id)
     return None
 
 

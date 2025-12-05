@@ -94,10 +94,10 @@ class AllocationSuggestionService:
                 # 'lot' object is shared reference, so we can attach a temporary attribute or track usage separately.
                 # Here we use a temporary attribute '_temp_allocated' on the lot object.
                 if not hasattr(lot, "_temp_allocated"):
-                    lot._temp_allocated = Decimal("0")
+                    lot._temp_allocated = Decimal("0")  # type: ignore[attr-defined]
 
                 available_real = lot.current_quantity - lot.allocated_quantity
-                available_now = available_real - lot._temp_allocated
+                available_now = available_real - lot._temp_allocated  # type: ignore[attr-defined]
 
                 if available_now <= 0:
                     continue
@@ -119,7 +119,7 @@ class AllocationSuggestionService:
                 # Update counters
                 needed -= alloc_qty
                 allocated_for_key += alloc_qty
-                lot._temp_allocated += alloc_qty
+                lot._temp_allocated += alloc_qty  # type: ignore[attr-defined]
 
             shortage = max(Decimal("0"), needed)
 
@@ -288,7 +288,7 @@ class AllocationSuggestionService:
         )
 
         # Group by product_id
-        result = {}
+        result: dict[int, list[Lot]] = {}
         for lot in lots:
             if lot.product_id not in result:
                 result[lot.product_id] = []

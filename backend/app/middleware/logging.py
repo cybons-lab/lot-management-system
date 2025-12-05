@@ -157,7 +157,7 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             },
         )
 
-        return response
+        return response  # type: ignore[no-any-return]
 
     def _filter_headers(self, headers: dict[str, str]) -> dict[str, str]:
         """センシティブなヘッダーをフィルタリング.

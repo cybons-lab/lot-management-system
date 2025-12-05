@@ -1,6 +1,7 @@
 """Operation logs service (操作ログサービス)."""
 
 from datetime import datetime
+from typing import cast
 
 from sqlalchemy.orm import Session
 
@@ -58,7 +59,10 @@ class OperationLogService:
 
     def get_by_id(self, log_id: int) -> OperationLog | None:
         """Get operation log by ID."""
-        return self.db.query(OperationLog).filter(OperationLog.log_id == log_id).first()
+        return cast(
+            OperationLog | None,
+            self.db.query(OperationLog).filter(OperationLog.log_id == log_id).first(),  # type: ignore[attr-defined]
+        )
 
 
 class MasterChangeLogService:
@@ -116,19 +120,21 @@ class MasterChangeLogService:
 
     def get_by_id(self, change_log_id: int) -> MasterChangeLog | None:
         """Get master change log by ID."""
-        return (
+        return cast(
+            MasterChangeLog | None,
             self.db.query(MasterChangeLog)
-            .filter(MasterChangeLog.change_log_id == change_log_id)
-            .first()
+            .filter(MasterChangeLog.change_log_id == change_log_id)  # type: ignore[attr-defined]
+            .first(),
         )
 
     def get_by_record(self, table_name: str, record_id: int) -> list[MasterChangeLog]:
         """Get all change logs for a specific record."""
-        return (
+        return cast(
+            list[MasterChangeLog],
             self.db.query(MasterChangeLog)
             .filter(
                 MasterChangeLog.table_name == table_name, MasterChangeLog.record_id == record_id
             )
             .order_by(MasterChangeLog.changed_at.desc())
-            .all()
+            .all(),
         )

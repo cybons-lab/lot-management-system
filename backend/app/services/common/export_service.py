@@ -55,11 +55,11 @@ class ExportService:
 
         # If first item has model_dump, assume all are Pydantic models
         if hasattr(data[0], "model_dump"):
-            return [item.model_dump() for item in data]
+            return [item.model_dump() for item in data]  # type: ignore[union-attr]
 
         # If first item has dict, assume all are SQLAlchemy models or similar
         if hasattr(data[0], "_asdict"):
-            return [item._asdict() for item in data]
+            return [item._asdict() for item in data]  # type: ignore[union-attr]
 
         return data
 
@@ -129,11 +129,11 @@ class ExportService:
             raise ValueError(f"Unknown template type: {template_type}")
 
         template = TEMPLATE_DEFINITIONS[template_type]
-        columns = template["columns"]
-        data = [columns]
+        columns = list(template["columns"])
+        data: list[list[str]] = [columns]
 
         if include_sample:
-            data.append(template["sample_row"])
+            data.append(list(template["sample_row"]))
 
         filename = f"{template_type}_template"
 

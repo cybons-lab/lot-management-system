@@ -201,6 +201,7 @@ def setup_logging(
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(level.upper())
 
+    console_formatter: logging.Formatter
     if json_format:
         # JSON形式（本番環境）
         console_formatter = CustomJsonFormatter(

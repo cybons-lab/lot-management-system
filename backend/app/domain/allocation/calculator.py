@@ -133,7 +133,7 @@ def calculate_allocation(
             )
         )
 
-    total_allocated = sum(lot.allocated_qty for lot in allocated_lots)
+    total_allocated = sum((lot.allocated_qty for lot in allocated_lots), Decimal(0))
     shortage = request.required_quantity - total_allocated
 
     return AllocationResult(

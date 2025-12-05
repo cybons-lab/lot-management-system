@@ -60,7 +60,7 @@ class LotCandidate:
     expiry_date: date | None
     receipt_date: date | None
 
-    def is_expired(self, reference_date: date = None) -> bool:
+    def is_expired(self, reference_date: date | None = None) -> bool:
         """期限切れかチェック."""
         if not self.expiry_date:
             return False
@@ -110,7 +110,7 @@ class FefoPolicy:
 
     @staticmethod
     def filter_expired_lots(
-        lots: list[LotCandidate], reference_date: date = None
+        lots: list[LotCandidate], reference_date: date | None = None
     ) -> tuple[list[LotCandidate], list[LotCandidate]]:
         """
         期限切れロットを除外.
@@ -157,7 +157,7 @@ class StockValidator:
 
     @staticmethod
     def validate_not_expired(
-        lot_id: int, expiry_date: date | None, reference_date: date = None
+        lot_id: int, expiry_date: date | None, reference_date: date | None = None
     ) -> None:
         """
         期限切れでないかチェック.

@@ -48,7 +48,7 @@ def _drop_dependent_views() -> None:
     テーブル依存のVIEWを先にDROPする。
     依存で落ちる代表VIEWをここへ列挙。存在しない場合はスキップ。.
     """
-    dependent_views = [
+    dependent_views: list[str] = [
         # v2.2: lot_current_stock ビューは廃止（lots テーブルに統合済み）
         # 追加のVIEWがあればここに追記
         # "lot_daily_stock",

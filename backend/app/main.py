@@ -85,9 +85,10 @@ app = FastAPI(
 
 # 【修正#1】グローバル例外ハンドラの登録（重要: 登録順序に注意）
 # HTTP例外 → バリデーションエラー → ドメイン例外 → 汎用例外の順
-app.add_exception_handler(StarletteHTTPException, errors.http_exception_handler)
-app.add_exception_handler(RequestValidationError, errors.validation_exception_handler)
-app.add_exception_handler(DomainError, errors.domain_exception_handler)
+# Note: type: ignore is needed due to FastAPI/Starlette type signature mismatch
+app.add_exception_handler(StarletteHTTPException, errors.http_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(RequestValidationError, errors.validation_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(DomainError, errors.domain_exception_handler)  # type: ignore[arg-type]
 app.add_exception_handler(Exception, errors.generic_exception_handler)
 
 # ミドルウェア登録

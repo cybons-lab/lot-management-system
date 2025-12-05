@@ -46,7 +46,7 @@ def list_products(
 ):
     """Return a paginated list of products."""
     service = ProductService(db)
-    products = service.list(skip=skip, limit=limit, search=search)
+    products = service.list_items(skip=skip, limit=limit, search=search)
     return [_to_product_out(product) for product in products]
 
 
@@ -79,9 +79,9 @@ def export_products(format: str = "csv", db: Session = Depends(get_db)):
 @router.get("/{product_code}", response_model=ProductOut)
 def get_product(product_code: str, db: Session = Depends(get_db)):
     """Fetch a product by its code (maker_part_code)."""
-    """Fetch a product by its code (maker_part_code)."""
     service = ProductService(db)
     product = service.get_by_code(product_code)
+    assert product is not None  # raise_404=True ensures this
     return _to_product_out(product)
 
 

@@ -5,6 +5,7 @@ DBアクセスのみを責務とする.
 """
 
 from datetime import date
+from typing import cast
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
@@ -35,7 +36,7 @@ class OrderRepository:
         if with_lines:
             stmt = stmt.options(selectinload(Order.order_lines))
 
-        return self.db.execute(stmt).scalar_one_or_none()
+        return cast(Order | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_by_order_no(self, order_no: str) -> Order | None:
         """
@@ -47,8 +48,8 @@ class OrderRepository:
         Returns:
             受注エンティティ（存在しない場合はNone）
         """
-        stmt = select(Order).where(Order.order_no == order_no)
-        return self.db.execute(stmt).scalar_one_or_none()
+        stmt = select(Order).where(Order.order_no == order_no)  # type: ignore[attr-defined]
+        return cast(Order | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_all(
         self,
@@ -158,7 +159,7 @@ class OrderLineRepository:
             .options(joinedload(OrderLine.product))
             .where(OrderLine.id == order_line_id)
         )
-        return self.db.execute(stmt).scalar_one_or_none()
+        return cast(OrderLine | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_by_order_id(self, order_id: int) -> list[OrderLine]:
         """
@@ -170,7 +171,7 @@ class OrderLineRepository:
         Returns:
             受注明細エンティティのリスト
         """
-        stmt = select(OrderLine).where(OrderLine.order_id == order_id).order_by(OrderLine.line_no)
+        stmt = select(OrderLine).where(OrderLine.order_id == order_id).order_by(OrderLine.line_no)  # type: ignore[attr-defined]
         return list(self.db.execute(stmt).scalars().all())
 
     def create(

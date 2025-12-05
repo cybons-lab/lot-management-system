@@ -77,7 +77,7 @@ def persist_allocation_entities(
         raise AllocationCommitError(f"OrderLine {line_plan.order_line_id} not found")
 
     if line_plan.next_div and not getattr(line, "next_div", None):
-        line.next_div = line_plan.next_div
+        line.next_div = line_plan.next_div  # type: ignore[attr-defined]
 
     for alloc_plan in line_plan.allocations:
         # ロックをかけてロットを取得
