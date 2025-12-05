@@ -35,7 +35,7 @@ class ProductRepository:
         if filters:
             stmt = stmt.where(*filters)
 
-        items = self.session.execute(stmt).scalars().all()
+        items = cast(list[Product], self.session.execute(stmt).scalars().all())
         return items, total
 
     def get(self, product_id: int) -> Product | None:

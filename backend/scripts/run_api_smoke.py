@@ -29,14 +29,15 @@ def print_error(msg: str):
     print(f" [ERROR] {msg}")
 
 
-def load_json(name: str) -> dict:
+def load_json(name: str) -> dict | None:
     """data/配下のJSONファイルを絶対パスで読み込む."""
     path = DATA_DIR / name
     if not path.exists():
         print_error(f"ファイルが見つかりません: {path}")
         return None
+    from typing import cast
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        return cast(dict, json.load(f))
 
 
 def run_test(title: str, method: str, endpoint: str, payload: dict | None = None):

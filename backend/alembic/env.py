@@ -69,8 +69,13 @@ def run_migrations_online() -> None:
     """Online mode (to apply changes to the DB)"""
 
     # ✅ 環境変数からDATABASE_URLを取得
+    section = config.get_section(config.config_ini_section)
+    if section is None:
+        section = {}
+    from typing import Any, cast
+    
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        cast(dict[str, Any], section),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

@@ -9,6 +9,7 @@ Handles execution of allocations:
 
 from __future__ import annotations
 
+from typing import Any
 from datetime import datetime
 from decimal import Decimal
 
@@ -497,7 +498,7 @@ def confirm_hard_allocation(
             lot_id=lot.id,
             lot_number=lot.lot_number,
             required=float(confirm_qty),
-            available=float(max(available, 0)),
+            available=float(max(available, Decimal(0))),
         )
 
     # Soft引当の自動解除（必要に応じて）
@@ -763,7 +764,7 @@ def auto_allocate_bulk(
     # 納期順でソート（優先度高い順）
     order_lines = query.order_by(OrderLine.delivery_date.asc()).all()
 
-    result = {
+    result: dict[str, Any] = {
         "processed_lines": 0,
         "allocated_lines": 0,
         "total_allocations": 0,

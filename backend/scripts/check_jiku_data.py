@@ -47,12 +47,15 @@ with engine.connect() as conn:
         FROM delivery_places
     """)
     ).first()
-
-    print("\n統計情報:")
-    print(f"  総納入先数: {stats.total}")
-    print(f"  次区コードあり: {stats.with_jiku}")
-    print(f"  次区コードなし: {stats.without_jiku}")
-    print(f"  ユニークな次区コード数: {stats.unique_jiku}")
+    
+    if stats:
+        print("\n統計情報:")
+        print(f"  総納入先数: {stats.total}")
+        print(f"  次区コードあり: {stats.with_jiku}")
+        print(f"  次区コードなし: {stats.without_jiku}")
+        print(f"  ユニークな次区コード数: {stats.unique_jiku}")
+    else:
+        print("\n統計情報: データなし")
 
     # 重複チェック
     duplicates = conn.execute(
