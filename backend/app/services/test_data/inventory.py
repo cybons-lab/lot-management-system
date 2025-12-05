@@ -20,7 +20,12 @@ def generate_lots(
 ):
     """Generate lots based on forecast data (planned procurement).
 
-    CRITICAL: Maximum 3 lots per product to avoid overwhelming allocation UI.
+    REALISTIC ALLOCATION TESTING:
+    - Inventory should be ~70-90% of forecast (to create allocation constraints)
+    - 60% of products: 1 lot
+    - 30% of products: 2 lots
+    - 10% of products: 3 lots
+    - Maximum 3 lots per product to avoid overwhelming allocation UI.
 
     Args:
         db: データベースセッション.
@@ -35,34 +40,40 @@ def generate_lots(
         # Get forecast total for this product (default to 0 if no forecast)
         forecast_total = forecast_totals.get(p.id, 0)
 
-        # Only 5% of products have "fragmented" lots (over-purchasing test case)
-        # Use random selection instead of first N% to avoid clustering
-        is_fragmented = random.random() < 0.05
-
-        if is_fragmented:
-            # Over-purchasing pattern: 3-5 lots (REDUCED from 10-20)
-            lot_count = random.randint(3, 5)
-            qty_range = (15, 40)
-            lots_to_create = [(random.randint(*qty_range),) for _ in range(lot_count)]
-        elif forecast_total > 0:
-            # Forecast-based lot generation
-            # 80% of products: 1 lot at forecast_total ± 5%
-            # 20% of products: 2 lots (1 at forecast total, 1 random)
-            use_two_lots = random.random() < 0.2
-
-            if use_two_lots:
-                # 2 lots: one planned, one random
-                lot1_qty = int(forecast_total * random.uniform(0.95, 1.05))
-                lot2_qty = random.randint(50, 150)
-                lots_to_create = [(lot1_qty,), (lot2_qty,)]
-            else:
-                # 1 lot: planned quantity ± 5%
-                lot_qty = int(forecast_total * random.uniform(0.95, 1.05))
-                lots_to_create = [(lot_qty,)]
+        if forecast_total <= 0:
+            # No forecast: create 1 small lot
+            lots_to_create = [(random.randint(50, 100),)]
         else:
-            # No forecast: create 1-2 medium lots
-            lot_count = random.randint(1, 2)
-            lots_to_create = [(random.randint(100, 300),) for _ in range(lot_count)]
+            # Determine lot count distribution
+            # 60% -> 1 lot, 30% -> 2 lots, 10% -> 3 lots
+            roll = random.random()
+            if roll < 0.60:
+                lot_count = 1
+            elif roll < 0.90:
+                lot_count = 2
+            else:
+                lot_count = 3
+
+            # Total inventory = 70-90% of forecast (to create allocation constraints)
+            inventory_ratio = random.uniform(0.70, 0.90)
+            total_inventory = int(forecast_total * inventory_ratio)
+
+            # Distribute inventory across lots
+            if lot_count == 1:
+                lots_to_create = [(total_inventory,)]
+            elif lot_count == 2:
+                # Split: 60-80% in first lot, rest in second
+                first_ratio = random.uniform(0.60, 0.80)
+                first_qty = int(total_inventory * first_ratio)
+                second_qty = total_inventory - first_qty
+                lots_to_create = [(first_qty,), (second_qty,)]
+            else:  # 3 lots
+                # Split into 3 roughly equal parts with variance
+                base = total_inventory // 3
+                lot1 = int(base * random.uniform(0.8, 1.2))
+                lot2 = int(base * random.uniform(0.8, 1.2))
+                lot3 = total_inventory - lot1 - lot2
+                lots_to_create = [(lot1,), (lot2,), (lot3,)]
 
         # CRITICAL: Ensure we never create more than 3 lots per product
         lots_to_create = lots_to_create[:3]
