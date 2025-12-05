@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
-  GitBranch,
   Settings,
   Sparkles,
   TrendingUp,

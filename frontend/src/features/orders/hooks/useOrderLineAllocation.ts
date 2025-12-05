@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
 import * as ordersApi from "@/features/orders/api";
+import * as allocationsApi from "@/features/allocations/api";
 import type { OrderLine } from "@/shared/types/aliases";
 import type { CandidateLotItem } from "@/shared/types/schema";
 
@@ -137,6 +138,33 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
         }
     };
 
+    const confirmAllocations = async () => {
+        if (!orderLine || !orderLine.allocations) {
+            toast.error("確定対象の引当がありません");
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const ids = orderLine.allocations.map((a: any) => a.id);
+            if (ids.length === 0) {
+                toast.error("確定対象の引当がありません");
+                return;
+            }
+
+            await allocationsApi.confirmAllocationsBatch({
+                allocation_ids: ids,
+            });
+
+            toast.success("引当を確定しました");
+            if (onSuccess) onSuccess();
+        } catch (error) {
+            console.error("Failed to confirm allocations", error);
+            toast.error("引当の確定に失敗しました");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return {
         candidateLots,
         lotAllocations,
@@ -146,5 +174,6 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
         clearAllocations,
         autoAllocate,
         saveAllocations,
+        confirmAllocations,
     };
 }

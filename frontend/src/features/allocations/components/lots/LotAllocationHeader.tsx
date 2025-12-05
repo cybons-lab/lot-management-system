@@ -25,6 +25,7 @@ interface LotAllocationHeaderProps {
   onAutoAllocate: () => void;
   onClearAllocations: () => void;
   onSaveAllocations: () => void;
+  onConfirmHard?: () => void;
   canSave: boolean;
   isSaving: boolean;
   isLoading: boolean;
@@ -50,6 +51,7 @@ export function LotAllocationHeader({
   onAutoAllocate,
   onClearAllocations,
   onSaveAllocations,
+  onConfirmHard,
   canSave,
   isSaving,
   isLoading,
@@ -109,6 +111,7 @@ export function LotAllocationHeader({
       onAutoAllocate={onAutoAllocate}
       onClearAllocations={onClearAllocations}
       onSaveAllocations={onSaveAllocations}
+      onConfirmHard={onConfirmHard}
       canSave={canSave}
       supplierName={orderLine.supplier_name || undefined}
       allocationCount={allocationCount}

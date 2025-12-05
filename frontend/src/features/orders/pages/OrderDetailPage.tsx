@@ -182,34 +182,40 @@ function AllocationDialog({
     clearAllocations,
     autoAllocate,
     saveAllocations,
-  } = useOrderLineAllocation({ orderLine: line, onSuccess });
+    confirmAllocations,
+  } = useOrderLineAllocation({
+    orderLine: line,
+    onSuccess: () => {
+      onSuccess();
+    },
+  });
 
   if (!line) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>ロット引当操作</DialogTitle>
+      <DialogContent className="max-w-5xl p-0">
+        <DialogHeader className="px-6 py-4">
+          <DialogTitle>ロット引当</DialogTitle>
         </DialogHeader>
-
-        <LotAllocationPanel
-          order={order}
-          orderLine={line}
-          candidateLots={candidateLots}
-          lotAllocations={lotAllocations}
-          onLotAllocationChange={changeAllocation}
-          onAutoAllocate={autoAllocate}
-          onClearAllocations={clearAllocations}
-          onSaveAllocations={saveAllocations}
-          isLoading={isLoadingCandidates}
-          isSaving={isSaving}
-          canSave={Object.keys(lotAllocations).length > 0}
-          // Optional props
-          isActive={true}
-        />
+        <div className="p-6 pt-0">
+          <LotAllocationPanel
+            order={order}
+            orderLine={line}
+            candidateLots={candidateLots}
+            lotAllocations={lotAllocations}
+            onLotAllocationChange={changeAllocation}
+            onAutoAllocate={autoAllocate}
+            onClearAllocations={clearAllocations}
+            onSaveAllocations={saveAllocations}
+            onConfirmHard={confirmAllocations}
+            isLoading={isLoadingCandidates}
+            isSaving={isSaving}
+            canSave={Object.keys(lotAllocations).length > 0}
+            isActive={true}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
-

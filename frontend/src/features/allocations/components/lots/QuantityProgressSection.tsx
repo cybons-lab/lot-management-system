@@ -26,6 +26,7 @@ interface QuantityProgressSectionProps {
   onAutoAllocate: () => void;
   onClearAllocations: () => void;
   onSaveAllocations: () => void;
+  onConfirmHard?: () => void;
 }
 
 // eslint-disable-next-line max-lines-per-function, complexity
@@ -48,6 +49,7 @@ export function QuantityProgressSection({
   onAutoAllocate,
   onClearAllocations,
   onSaveAllocations,
+  onConfirmHard,
 }: QuantityProgressSectionProps) {
   return (
     <div className="col-span-5 flex flex-col justify-between rounded-xl border border-gray-100 bg-gray-50/50 p-5">
@@ -111,7 +113,7 @@ export function QuantityProgressSection({
           disabled={isLoading || !hasCandidates || remainingQty <= 0}
           className="h-9 min-w-[4rem] flex-1 bg-white px-2 text-xs hover:bg-gray-50"
         >
-          自動引当
+          自動
         </Button>
 
         <Button
@@ -141,9 +143,20 @@ export function QuantityProgressSection({
           ) : justSaved ? (
             <span className="i-lucide-check h-4 w-4" />
           ) : (
-            "確定"
+            "保存"
           )}
         </Button>
+
+        {onConfirmHard && (
+          <Button
+            type="button"
+            onClick={onConfirmHard}
+            disabled={isSaving || totalAllocated === 0}
+            className="h-9 min-w-[4rem] flex-1 bg-purple-600 px-2 font-bold text-white shadow-sm hover:bg-purple-700"
+          >
+            Hard
+          </Button>
+        )}
       </div>
     </div>
   );

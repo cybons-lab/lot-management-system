@@ -31,6 +31,7 @@ interface LotAllocationHeaderViewProps {
   onAutoAllocate: () => void;
   onClearAllocations: () => void;
   onSaveAllocations: () => void;
+  onConfirmHard?: () => void;
   canSave: boolean;
   lockedBy?: string;
   lockedAt?: string;
@@ -62,6 +63,7 @@ export function LotAllocationHeaderView({
   onAutoAllocate,
   onClearAllocations,
   onSaveAllocations,
+  onConfirmHard,
   canSave,
   lockedBy,
   lockedAt,
@@ -132,6 +134,7 @@ export function LotAllocationHeaderView({
             onAutoAllocate={onAutoAllocate}
             onClearAllocations={onClearAllocations}
             onSaveAllocations={onSaveAllocations}
+            onConfirmHard={onConfirmHard}
           />
 
           <StatusSection

@@ -19,6 +19,7 @@ interface LotAllocationPanelProps {
   onAutoAllocate: () => void;
   onClearAllocations: () => void;
   onSaveAllocations?: () => void;
+  onConfirmHard?: () => void;
 
   canSave?: boolean;
   isOverAllocated?: boolean;
@@ -49,6 +50,7 @@ export function LotAllocationPanel({
   onAutoAllocate,
   onClearAllocations,
   onSaveAllocations,
+  onConfirmHard,
   canSave = false,
   isLoading = false,
   error = null,
@@ -171,6 +173,7 @@ export function LotAllocationPanel({
             onAutoAllocate={onAutoAllocate}
             onClearAllocations={onClearAllocations}
             onSaveAllocations={handleSave}
+            onConfirmHard={onConfirmHard}
             canSave={canSave}
             isSaving={isSaving}
             isLoading={isLoading}

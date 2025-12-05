@@ -134,6 +134,14 @@ export const cancelAllocation = (allocationId: number) => {
 };
 
 /**
+ * Confirm allocations (Soft -> Hard)
+ * @endpoint POST /allocations/confirm-batch
+ */
+export const confirmAllocationsBatch = (data: { allocation_ids: number[]; confirmed_by?: string }) => {
+  return http.post<{ confirmed_ids: number[]; failed_items: any[] }>("allocations/confirm-batch", data);
+};
+
+/**
  * Drag-assign allocation (manual allocation)
  * @deprecated Use createManualAllocationSuggestion + commitAllocation instead
  * @endpoint POST /allocation-suggestions/manual (updated from /allocations/drag-assign)
