@@ -291,6 +291,49 @@ export const getAllocationSuggestions = (params: {
   );
 };
 
+// ===== Group Planning Summary (計画引当サマリ) =====
+
+export interface PlanningAllocationLotBreakdown {
+  lot_id: number;
+  lot_number: string | null;
+  expiry_date: string | null;
+  planned_quantity: number;
+}
+
+export interface PlanningAllocationPeriod {
+  forecast_period: string;
+  planned_quantity: number;
+}
+
+export interface PlanningAllocationSummary {
+  has_data: boolean;
+  total_planned_quantity: number;
+  lot_breakdown: PlanningAllocationLotBreakdown[];
+  by_period: PlanningAllocationPeriod[];
+}
+
+/**
+ * Get planning allocation summary for a forecast group
+ * @endpoint GET /allocation-suggestions/group-summary
+ */
+export const getPlanningAllocationSummary = (params: {
+  customer_id: number;
+  delivery_place_id: number;
+  product_id: number;
+  forecast_period?: string;
+}) => {
+  const searchParams = new URLSearchParams();
+  searchParams.append("customer_id", params.customer_id.toString());
+  searchParams.append("delivery_place_id", params.delivery_place_id.toString());
+  searchParams.append("product_id", params.product_id.toString());
+  if (params.forecast_period) {
+    searchParams.append("forecast_period", params.forecast_period);
+  }
+  return http.get<PlanningAllocationSummary>(
+    `allocation-suggestions/group-summary?${searchParams.toString()}`,
+  );
+};
+
 // ===== Bulk Auto-Allocate (グループ一括引当) =====
 
 export interface BulkAutoAllocateRequest {

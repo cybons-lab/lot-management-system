@@ -99,3 +99,85 @@ def list_allocation_suggestions(
         ],
         total=total,
     )
+
+
+@router.get("/group-summary")
+def get_allocation_suggestions_by_group(
+    customer_id: int = Query(..., description="得意先ID"),
+    delivery_place_id: int = Query(..., description="納入先ID"),
+    product_id: int = Query(..., description="製品ID"),
+    forecast_period: str | None = Query(None, description="期間 (YYYY-MM)"),
+    db: Session = Depends(get_db),
+):
+    """
+    フォーキャストグループ別の計画引当サマリを取得.
+
+    allocation_suggestions テーブルから該当グループのデータを集計して返す。
+    """
+    from decimal import Decimal
+
+    from sqlalchemy import func
+
+    from app.models.inventory_models import AllocationSuggestion, Lot
+
+    # Base query
+    query = db.query(AllocationSuggestion).filter(
+        AllocationSuggestion.customer_id == customer_id,
+        AllocationSuggestion.delivery_place_id == delivery_place_id,
+        AllocationSuggestion.product_id == product_id,
+    )
+
+    if forecast_period:
+        query = query.filter(AllocationSuggestion.forecast_period == forecast_period)
+
+    suggestions = query.all()
+
+    if not suggestions:
+        return {
+            "has_data": False,
+            "total_planned_quantity": Decimal("0"),
+            "lot_breakdown": [],
+            "by_period": [],
+        }
+
+    # Aggregate by lot
+    lot_totals: dict[int, Decimal] = {}
+    period_totals: dict[str, Decimal] = {}
+
+    for s in suggestions:
+        lot_totals[s.lot_id] = lot_totals.get(s.lot_id, Decimal("0")) + s.quantity
+        period_totals[s.forecast_period] = (
+            period_totals.get(s.forecast_period, Decimal("0")) + s.quantity
+        )
+
+    total_planned = sum(lot_totals.values())
+
+    # Get lot info
+    lot_ids = list(lot_totals.keys())
+    lots = db.query(Lot).filter(Lot.id.in_(lot_ids)).all()
+    lot_map = {lot.id: lot for lot in lots}
+
+    lot_breakdown = []
+    for lot_id, qty in sorted(lot_totals.items(), key=lambda x: x[0]):
+        lot = lot_map.get(lot_id)
+        lot_breakdown.append(
+            {
+                "lot_id": lot_id,
+                "lot_number": lot.lot_number if lot else None,
+                "expiry_date": lot.expiry_date.isoformat() if lot and lot.expiry_date else None,
+                "planned_quantity": qty,
+            }
+        )
+
+    by_period = [
+        {"forecast_period": period, "planned_quantity": qty}
+        for period, qty in sorted(period_totals.items())
+    ]
+
+    return {
+        "has_data": True,
+        "total_planned_quantity": total_planned,
+        "lot_breakdown": lot_breakdown,
+        "by_period": by_period,
+    }
+

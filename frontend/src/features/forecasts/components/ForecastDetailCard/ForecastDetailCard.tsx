@@ -16,6 +16,7 @@ import { ForecastCardHeader } from "./ForecastCardHeader";
 import { ForecastCollapsedSummary } from "./ForecastCollapsedSummary";
 import { ForecastDailyGrid } from "./ForecastDailyGrid";
 import { useForecastCalculations } from "./hooks/use-forecast-calculations";
+import { PlanningAllocationPanel } from "./PlanningAllocationPanel";
 import { RelatedOrdersSection } from "./RelatedOrdersSection";
 import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
@@ -144,9 +145,19 @@ export function ForecastDetailCard({
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />
             </div>
 
-            <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-3 md:col-span-5">
-              <h4 className="text-xs font-semibold text-gray-700">関連情報</h4>
-              <WarehouseInfoCard productId={group_key.product_id} />
+            <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-3 md:col-span-5">
+              <div>
+                <h4 className="text-xs font-semibold text-gray-700">在庫情報</h4>
+                <WarehouseInfoCard productId={group_key.product_id} />
+              </div>
+
+              <div className="border-t pt-3">
+                <PlanningAllocationPanel
+                  customerId={group_key.customer_id}
+                  deliveryPlaceId={group_key.delivery_place_id}
+                  productId={group_key.product_id}
+                />
+              </div>
             </div>
           </div>
 
