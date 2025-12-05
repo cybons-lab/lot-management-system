@@ -200,7 +200,7 @@ def db_engine():
 
 
 @pytest.fixture(scope="function")
-def db(db_engine) -> Generator[Session, None, None]:
+def db(db_engine) -> Generator[Session]:
     """
     Create a fresh database session for each test.
     Rollback transaction after each test to ensure isolation.
@@ -217,7 +217,7 @@ def db(db_engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture(scope="function")
-def client(db) -> Generator[TestClient, None, None]:
+def client(db) -> Generator[TestClient]:
     """Create FastAPI TestClient."""
     from app.api.deps import get_db
 
