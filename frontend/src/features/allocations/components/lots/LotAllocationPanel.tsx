@@ -13,7 +13,6 @@ import { Button } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 
-
 interface LotAllocationPanelProps {
   order?: OrderWithLinesResponse;
   orderLine: OrderLine | null;

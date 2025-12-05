@@ -11,7 +11,7 @@
  */
 
 import { ChevronDown, X, Search } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 import { cn } from "@/shared/libs/utils";
 
@@ -29,20 +29,12 @@ export interface SearchableSelectProps {
   disabled?: boolean;
 }
 
-export function SearchableSelect({
-  options,
-  value,
-  onChange,
-  placeholder = "選択...",
-  className,
-  disabled = false,
-}: SearchableSelectProps) {
+/** Hook for managing dropdown open/close state */
+function useDropdownState() {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -54,18 +46,67 @@ export function SearchableSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter options based on search term
-  const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const close = useCallback(() => {
+    setIsOpen(false);
+    setSearchTerm("");
+  }, []);
 
-  // Get selected option label
+  return { isOpen, setIsOpen, searchTerm, setSearchTerm, containerRef, close };
+}
+
+/** Dropdown options list */
+function OptionsList({
+  options,
+  selectedValue,
+  onSelect,
+}: {
+  options: SelectOption[];
+  selectedValue?: string;
+  onSelect: (value: string) => void;
+}) {
+  if (options.length === 0) {
+    return <div className="px-3 py-2 text-sm text-slate-500">該当なし</div>;
+  }
+
+  return (
+    <>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          className={cn(
+            "w-full cursor-pointer px-3 py-2 text-left text-sm hover:bg-slate-100",
+            option.value === selectedValue && "bg-primary/10 text-primary",
+          )}
+          onClick={() => onSelect(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </>
+  );
+}
+
+// eslint-disable-next-line complexity, max-lines-per-function
+export function SearchableSelect({
+  options,
+  value,
+  onChange,
+  placeholder = "選択...",
+  className,
+  disabled = false,
+}: SearchableSelectProps) {
+  const { isOpen, setIsOpen, searchTerm, setSearchTerm, containerRef, close } = useDropdownState();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const filteredOptions = options.filter((opt) =>
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
   const selectedOption = options.find((opt) => opt.value === value);
 
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
-    setIsOpen(false);
-    setSearchTerm("");
+    close();
   };
 
   const handleClear = (e: React.MouseEvent) => {
@@ -74,22 +115,24 @@ export function SearchableSelect({
     setSearchTerm("");
   };
 
+  const handleOpen = () => {
+    if (disabled) return;
+    setIsOpen(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      {/* Trigger Button */}
-      <div
+      <button
+        type="button"
         className={cn(
           "flex h-10 w-full items-center justify-between rounded-md border border-slate-300 bg-white px-3 py-2 text-sm",
           "focus-within:border-primary focus-within:ring-primary focus-within:ring-1",
           disabled && "cursor-not-allowed opacity-50",
           isOpen && "border-primary ring-primary ring-1",
         )}
-        onClick={() => {
-          if (!disabled) {
-            setIsOpen(true);
-            setTimeout(() => inputRef.current?.focus(), 0);
-          }
-        }}
+        onClick={handleOpen}
+        disabled={disabled}
       >
         {isOpen ? (
           <div className="flex flex-1 items-center gap-2">
@@ -112,39 +155,25 @@ export function SearchableSelect({
 
         <div className="flex items-center gap-1">
           {value && !isOpen && (
-            <button
-              type="button"
+            <span
+              role="button"
+              tabIndex={0}
               onClick={handleClear}
+              onKeyDown={(e) => e.key === "Enter" && handleClear(e as unknown as React.MouseEvent)}
               className="rounded p-0.5 hover:bg-slate-100"
             >
               <X className="h-4 w-4 text-slate-400" />
-            </button>
+            </span>
           )}
           <ChevronDown
             className={cn("h-4 w-4 text-slate-400 transition-transform", isOpen && "rotate-180")}
           />
         </div>
-      </div>
+      </button>
 
-      {/* Dropdown */}
       {isOpen && (
         <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-slate-200 bg-white shadow-lg">
-          {filteredOptions.length === 0 ? (
-            <div className="px-3 py-2 text-sm text-slate-500">該当なし</div>
-          ) : (
-            filteredOptions.map((option) => (
-              <div
-                key={option.value}
-                className={cn(
-                  "cursor-pointer px-3 py-2 text-sm hover:bg-slate-100",
-                  option.value === value && "bg-primary/10 text-primary",
-                )}
-                onClick={() => handleSelect(option.value)}
-              >
-                {option.label}
-              </div>
-            ))
-          )}
+          <OptionsList options={filteredOptions} selectedValue={value} onSelect={handleSelect} />
         </div>
       )}
     </div>
