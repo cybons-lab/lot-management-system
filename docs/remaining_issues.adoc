@@ -119,6 +119,24 @@ APScheduler または Celery Beat の導入検討。
 
 **Critical:** ✅ 全完了（2025-12-05）
 
+**eslint-disable コメント:** 38件
+
+一時的にLintエラーを無視しているファイル。
+将来的にリファクタリングして削除する。
+
+.検索コマンド
+[source,bash]
+----
+grep -rn "eslint-disable" --include="*.tsx" --include="*.ts" frontend/src/
+----
+
+**主な課題:**
+
+* max-lines-per-function 違反: 約20件
+* complexity 違反: 約8件
+* @typescript-eslint/no-explicit-any: 約8件
+* jsx-a11y: 2件
+
 **High（将来対応）:**
 
 * アクセシビリティ（ラベル関連付け）: 6件
