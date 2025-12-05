@@ -7,14 +7,25 @@ v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
-from typing import cast
+from datetime import date, datetime
+from decimal import Decimal
+from typing import cast, Optional
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.domain.lot import FefoPolicy, LotCandidate, LotNotFoundError, StockValidator
-from app.models import Lot, Product, Supplier, Warehouse
+from app.models import Lot, Product, Supplier, Warehouse, StockMovement, StockMovementReason, VLotDetails
+from app.schemas.inventory.inventory_schema import (
+    LotCreate,
+    LotUpdate,
+    LotLock,
+    StockMovementCreate,
+    LotResponse,
+    StockMovementResponse
+)
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from fastapi import HTTPException
 
 
 class LotRepository:
@@ -166,3 +177,364 @@ class LotService:
 
         StockValidator.validate_sufficient_stock(lot_id, required_qty, available_qty)
         StockValidator.validate_not_expired(lot_id, lot.expiry_date)
+
+    # --- New Methods Extracted from Router ---
+
+    def list_lots(
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        product_id: int | None = None,
+        product_code: str | None = None,
+        supplier_code: str | None = None,
+        warehouse_code: str | None = None,
+        expiry_from: date | None = None,
+        expiry_to: date | None = None,
+        with_stock: bool = True,
+    ) -> list[LotResponse]:
+        """List lots using VLotDetails view."""
+        query = self.db.query(VLotDetails)
+
+        if product_id is not None:
+            query = query.filter(VLotDetails.product_id == product_id)
+        elif product_code:
+            query = query.filter(VLotDetails.maker_part_code == product_code)
+
+        if supplier_code:
+            supplier = self.db.query(Supplier).filter(Supplier.supplier_code == supplier_code).first()
+            if supplier:
+                query = query.filter(VLotDetails.supplier_id == supplier.id)
+
+        if warehouse_code:
+            warehouse = self.db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
+            if warehouse:
+                query = query.filter(VLotDetails.warehouse_id == warehouse.id)
+
+        if expiry_from:
+            query = query.filter(VLotDetails.expiry_date >= expiry_from)
+        if expiry_to:
+            query = query.filter(VLotDetails.expiry_date <= expiry_to)
+
+        if with_stock:
+            query = query.filter(VLotDetails.available_quantity > 0)
+
+        query = query.order_by(
+            VLotDetails.maker_part_code.asc(),
+            VLotDetails.supplier_name.asc(),
+            VLotDetails.expiry_date.asc().nullslast(),
+        )
+
+        lot_views = query.offset(skip).limit(limit).all()
+
+        responses: list[LotResponse] = []
+        for lot_view in lot_views:
+            response = LotResponse(
+                id=lot_view.lot_id,
+                lot_number=lot_view.lot_number,
+                product_id=lot_view.product_id,
+                product_code=lot_view.maker_part_code,  # type: ignore[arg-type]
+                product_name=lot_view.product_name,
+                supplier_id=lot_view.supplier_id,
+                supplier_code=lot_view.supplier_code,
+                supplier_name=lot_view.supplier_name,  # type: ignore[arg-type]
+                warehouse_id=lot_view.warehouse_id,
+                warehouse_code=lot_view.warehouse_code,
+                warehouse_name=lot_view.warehouse_name,
+                current_quantity=float(lot_view.current_quantity),  # type: ignore[arg-type]
+                allocated_quantity=float(lot_view.allocated_quantity),  # type: ignore[arg-type]
+                unit=lot_view.unit,
+                received_date=lot_view.received_date,
+                expiry_date=lot_view.expiry_date,
+                status=lot_view.status,  # type: ignore[arg-type]
+                created_at=lot_view.created_at,
+                updated_at=lot_view.updated_at,
+                last_updated=lot_view.updated_at,
+            )
+            responses.append(response)
+        return responses
+
+    def create_lot(self, lot_create: LotCreate) -> LotResponse:
+        """Create a new lot."""
+        # Validation
+        if not lot_create.product_id:
+            raise HTTPException(status_code=400, detail="product_id は必須です")
+
+        product = self.db.query(Product).filter(Product.id == lot_create.product_id).first()
+        if not product:
+            raise HTTPException(status_code=404, detail=f"製品ID '{lot_create.product_id}' が見つかりません")
+
+        supplier = self.db.query(Supplier).filter(Supplier.supplier_code == lot_create.supplier_code).first()
+        if not supplier:
+            raise HTTPException(
+                status_code=404,
+                detail=f"仕入先コード '{lot_create.supplier_code}' が見つかりません",
+            )
+
+        warehouse_id: int | None = None
+        if lot_create.warehouse_id is not None:
+            warehouse = self.db.query(Warehouse).filter(Warehouse.id == lot_create.warehouse_id).first()
+            if not warehouse:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"倉庫ID '{lot_create.warehouse_id}' が見つかりません",
+                )
+            warehouse_id = warehouse.id
+        elif lot_create.warehouse_code:
+            warehouse = (
+                self.db.query(Warehouse).filter(Warehouse.warehouse_code == lot_create.warehouse_code).first()
+            )
+            if not warehouse:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"倉庫コード '{lot_create.warehouse_code}' が見つかりません",
+                )
+            warehouse_id = warehouse.id
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="倉庫コードまたは倉庫IDを指定してください",
+            )
+
+        lot_payload = lot_create.model_dump()
+        lot_payload["warehouse_id"] = warehouse_id
+        lot_payload.pop("warehouse_code", None)
+
+        try:
+            db_lot = Lot(**lot_payload)
+            self.db.add(db_lot)
+            self.db.commit()
+            self.db.refresh(db_lot)
+        except IntegrityError as exc:
+            self.db.rollback()
+            raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
+        except SQLAlchemyError as exc:
+            self.db.rollback()
+            raise HTTPException(status_code=400, detail="DBエラーが発生しました") from exc
+
+        # Response Construction
+        return self._build_lot_response(db_lot.id)
+
+    def update_lot(self, lot_id: int, lot_update: LotUpdate) -> LotResponse:
+        """Update an existing lot."""
+        db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        if not db_lot:
+            raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+        updates = lot_update.model_dump(exclude_unset=True)
+
+        if "warehouse_id" in updates:
+            warehouse = self.db.query(Warehouse).filter(Warehouse.id == updates["warehouse_id"]).first()
+            if not warehouse:
+                raise HTTPException(status_code=404, detail=f"倉庫ID '{updates['warehouse_id']}' が見つかりません")
+        elif "warehouse_code" in updates:
+            warehouse = self.db.query(Warehouse).filter(Warehouse.warehouse_code == updates["warehouse_code"]).first()
+            if not warehouse:
+                raise HTTPException(status_code=404, detail=f"倉庫コード '{updates['warehouse_code']}' が見つかりません")
+            updates["warehouse_id"] = warehouse.id
+
+        updates.pop("warehouse_code", None)
+        
+        for key, value in updates.items():
+            setattr(db_lot, key, value)
+
+        db_lot.updated_at = datetime.now()
+
+        try:
+            self.db.commit()
+            self.db.refresh(db_lot)
+        except IntegrityError as exc:
+            self.db.rollback()
+            raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
+        except SQLAlchemyError as exc:
+            self.db.rollback()
+            raise HTTPException(status_code=400, detail="DBエラーが発生しました") from exc
+
+        return self._build_lot_response(db_lot.id)
+
+    def delete_lot(self, lot_id: int) -> None:
+        """Delete a lot."""
+        db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        if not db_lot:
+            raise HTTPException(status_code=404, detail="ロットが見つかりません")
+        
+        self.db.delete(db_lot)
+        self.db.commit()
+
+    def lock_lot(self, lot_id: int, lock_data: LotLock) -> LotResponse:
+        """Lock lot quantity."""
+        db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        if not db_lot:
+            raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+        quantity_to_lock = lock_data.quantity
+        current_qty = db_lot.current_quantity or Decimal(0)
+        allocated_qty = db_lot.allocated_quantity or Decimal(0)
+        locked_qty = db_lot.locked_quantity or Decimal(0)
+        available_qty = current_qty - allocated_qty - locked_qty
+
+        if quantity_to_lock is None:
+            quantity_to_lock = available_qty
+
+        if quantity_to_lock < 0:
+            raise HTTPException(status_code=400, detail="ロック数量は0以上である必要があります")
+
+        if quantity_to_lock > available_qty:
+            raise HTTPException(
+                status_code=400,
+                detail=f"ロック数量({quantity_to_lock})が有効在庫({available_qty})を超えています",
+            )
+
+        db_lot.locked_quantity = locked_qty + quantity_to_lock
+        if lock_data.reason:
+            db_lot.lock_reason = lock_data.reason
+        
+        db_lot.updated_at = datetime.now()
+        
+        try:
+            self.db.commit()
+            self.db.refresh(db_lot)
+        except IntegrityError as exc:
+            self.db.rollback()
+            raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
+
+        # Return view-based response
+        lot_view = self.db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
+        if not lot_view:
+             # Fallback if view not updated immediately (though within txn usually fine)
+             return self._build_lot_response(lot_id)
+        return LotResponse.model_validate(lot_view)
+
+    def unlock_lot(self, lot_id: int, unlock_data: LotLock | None = None) -> LotResponse:
+        """Unlock lot quantity."""
+        db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
+        if not db_lot:
+            raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+        quantity_to_unlock = unlock_data.quantity if unlock_data else None
+        locked_qty = db_lot.locked_quantity or Decimal(0)
+
+        if quantity_to_unlock is None:
+            # Full unlock
+            db_lot.locked_quantity = Decimal(0)
+            db_lot.lock_reason = None
+            if db_lot.status == "locked":
+                db_lot.status = "active"
+        else:
+            if quantity_to_unlock < 0:
+                raise HTTPException(status_code=400, detail="解除数量は0以上である必要があります")
+            if quantity_to_unlock > locked_qty:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"解除数量({quantity_to_unlock})がロック済み数量({locked_qty})を超えています",
+                )
+            db_lot.locked_quantity = locked_qty - quantity_to_unlock
+
+        db_lot.updated_at = datetime.now()
+        self.db.commit()
+        
+        lot_view = self.db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
+        if not lot_view:
+             return self._build_lot_response(lot_id)
+        return LotResponse.model_validate(lot_view)
+
+    def create_stock_movement(self, movement: StockMovementCreate) -> StockMovementResponse:
+        """Create a stock movement (history) and update lot quantity."""
+        lot = None
+        if movement.lot_id is not None:
+            lot = self.db.query(Lot).filter(Lot.id == movement.lot_id).first()
+            if not lot:
+                raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+        # StockHistory does not store product/warehouse directly, but we validate lot link
+        
+        # We need to map schema fields to model fields correctly
+        # Schema: StockMovementCreate (alias of StockHistoryCreate) -> StockHistoryBase
+        # Fields: transaction_type, quantity_change, quantity_after, reference_type, reference_id
+        
+        db_movement = StockMovement(
+            lot_id=movement.lot_id,
+            transaction_type=movement.transaction_type,
+            quantity_change=movement.quantity_change,
+            quantity_after=movement.quantity_after, # We will overwrite this after calc if needed, or trust input?
+                                                  # Better to calculate it to ensure consistency.
+            reference_type=movement.reference_type,
+            reference_id=movement.reference_id,
+        )
+        # Note: product_id, warehouse_id, batch_id, created_by are NOT in StockHistory model.
+
+        self.db.add(db_movement)
+
+        if movement.lot_id:
+            # Re-fetch or use lot
+            if not lot: # Already fetched above
+                 lot = self.db.query(Lot).filter(Lot.id == movement.lot_id).first()
+            
+            if not lot:
+                self.db.rollback()
+                raise HTTPException(status_code=404, detail="ロットが見つかりません")
+
+            # Calculate new quantity based on change
+            # movement.quantity_change should be signed (+ or -)
+            projected_quantity = float(lot.current_quantity or 0.0) + float(movement.quantity_change)
+            
+            if projected_quantity < 0:
+                self.db.rollback()
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"在庫不足: 現在在庫 {lot.current_quantity or 0}, "
+                        f"変動 {movement.quantity_change}"
+                    ),
+                )
+            
+            lot.current_quantity = Decimal(str(projected_quantity))
+            lot.updated_at = datetime.now()
+            
+            # Update quantity_after in history to match reality
+            db_movement.quantity_after = lot.current_quantity
+
+        self.db.commit()
+        self.db.refresh(db_movement)
+        return db_movement # type: ignore[return-value]
+
+    def list_lot_movements(self, lot_id: int) -> list[StockMovementResponse]:
+        """List movements for a lot."""
+        movements = (
+            self.db.query(StockMovement)
+            .filter(StockMovement.lot_id == lot_id)
+            .order_by(StockMovement.transaction_date.desc())
+            .all()
+        )
+        # Assuming Pydantic v2 validation or direct mapping happens at router, 
+        # but here we return ORM objects which FastAPI handles if return_type is set.
+        # However, to be strict we might want to validate here.
+        return movements # type: ignore[return-value]
+
+    def _build_lot_response(self, lot_id: int) -> LotResponse:
+        """Helper to build LotResponse from Lot model definition (joined load)."""
+        db_lot = (
+            self.db.query(Lot)
+            .options(joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier))
+            .filter(Lot.id == lot_id)
+            .first()
+        )
+        if not db_lot:
+             raise HTTPException(status_code=404, detail="Lot not found")
+
+        response = LotResponse.model_validate(db_lot)
+
+        if db_lot.product:
+            response.product_name = db_lot.product.product_name
+            response.product_code = db_lot.product.product_code # type: ignore[attr-defined]
+
+        if db_lot.warehouse:
+            response.warehouse_name = db_lot.warehouse.warehouse_name
+            response.warehouse_code = db_lot.warehouse.warehouse_code
+
+        if db_lot.supplier:
+            response.supplier_name = db_lot.supplier.supplier_name
+            response.supplier_code = db_lot.supplier.supplier_code
+
+        response.current_quantity = float(db_lot.current_quantity or 0.0) # type: ignore[assignment]
+        response.last_updated = db_lot.updated_at
+        return response
