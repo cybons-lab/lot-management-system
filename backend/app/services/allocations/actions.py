@@ -12,6 +12,7 @@ from __future__ import annotations
 from datetime import datetime
 from decimal import Decimal
 
+from sqlalchemy import case as sa_case
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
@@ -314,6 +315,111 @@ def bulk_cancel_allocations(db: Session, allocation_ids: list[int]) -> tuple[lis
     return cancelled_ids, failed_ids
 
 
+def preempt_soft_allocations_for_hard(
+    db: Session,
+    lot_id: int,
+    required_qty: Decimal,
+    hard_demand_id: int,
+) -> list[dict]:
+    """
+    Hard引当時に同ロットのSoft引当を自動解除.
+
+    優先度: KANBAN > ORDER > FORECAST (優先度の低いものから解除)
+
+    Args:
+        db: データベースセッション
+        lot_id: ロットID
+        required_qty: 必要数量（Hard引当する数量）
+        hard_demand_id: 新しいHard需要のorder_line_id
+
+    Returns:
+        list[dict]: 解除された引当情報のリスト
+            [{"allocation_id": 1, "order_line_id": 2, "released_qty": 100, "order_type": "FORECAST_LINKED"}]
+    """
+    # ロット取得（ロック付き）
+    lot_stmt = select(Lot).where(Lot.id == lot_id).with_for_update()
+    lot = db.execute(lot_stmt).scalar_one_or_none()
+    if not lot:
+        return []
+
+    # 現在の利用可能在庫を確認
+    available = lot.current_quantity - lot.allocated_quantity
+    if available >= required_qty:
+        # 十分な在庫がある場合は解除不要
+        return []
+
+    # 不足分を計算
+    shortage = required_qty - available
+
+    # 同じロットの全Soft引当を取得（優先度の低い順）
+    # 優先度: FORECAST_LINKED (最低) < SPOT < ORDER < KANBAN (最高)
+    # つまり、FORECAST_LINKEDから先に解除する
+    soft_allocations_stmt = (
+        select(Allocation)
+        .join(OrderLine, Allocation.order_line_id == OrderLine.id)
+        .where(
+            Allocation.lot_id == lot_id,
+            Allocation.allocation_type == "soft",
+            Allocation.status == "allocated",
+            Allocation.order_line_id != hard_demand_id,
+        )
+        .order_by(
+            # order_typeで優先度をつける（CASE文でソート）
+            # FORECAST_LINKED=1, SPOT=2, ORDER=3, KANBAN=4
+            # 昇順なので、値が小さい（優先度が低い）ものから取得
+            sa_case(
+                (OrderLine.order_type == "KANBAN", 4),
+                (OrderLine.order_type == "ORDER", 3),
+                (OrderLine.order_type == "SPOT", 2),
+                (OrderLine.order_type == "FORECAST_LINKED", 1),
+                else_=3,  # デフォルトはORDER扱い
+            ).asc(),
+            Allocation.created_at.asc(),  # 同じ優先度の場合は古い順
+        )
+    )
+
+    soft_allocations = db.execute(soft_allocations_stmt).scalars().all()
+
+    released_info: list[dict] = []
+    remaining_shortage = shortage
+
+    for allocation in soft_allocations:
+        if remaining_shortage <= 0:
+            break
+
+        # この引当を解除
+        release_qty = min(allocation.allocated_quantity, remaining_shortage)
+
+        # ロットから引当数量を減らす
+        lot.allocated_quantity -= release_qty
+        lot.updated_at = datetime.utcnow()
+
+        # 引当を削除
+        order_line_id = allocation.order_line_id
+        order_line = db.get(OrderLine, order_line_id)
+
+        released_info.append(
+            {
+                "allocation_id": allocation.id,
+                "order_line_id": order_line_id,
+                "released_qty": float(release_qty),
+                "order_type": order_line.order_type if order_line else "UNKNOWN",
+            }
+        )
+
+        db.delete(allocation)
+        remaining_shortage -= release_qty
+
+        # 注文ステータス更新
+        if order_line:
+            update_order_allocation_status(db, order_line.order_id)
+            update_order_line_status(db, order_line.id)
+
+    db.flush()
+
+    return released_info
+
+
 def confirm_hard_allocation(
     db: Session,
     allocation_id: int,
@@ -393,6 +499,16 @@ def confirm_hard_allocation(
             required=float(confirm_qty),
             available=float(max(available, 0)),
         )
+
+    # Soft引当の自動解除（必要に応じて）
+    # Hard引当時に同ロットのSoft引当を優先度に基づいて解除
+    preempted = preempt_soft_allocations_for_hard(
+        db,
+        lot_id=allocation.lot_id,
+        required_qty=confirm_qty,
+        hard_demand_id=allocation.order_line_id,
+    )
+    # 解除されたSoft引当は後でログに記録可能（現在は内部処理のみ）
 
     now = datetime.utcnow()
     remaining_allocation: Allocation | None = None

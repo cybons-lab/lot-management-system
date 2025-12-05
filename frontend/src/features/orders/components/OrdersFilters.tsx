@@ -38,7 +38,7 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="space-y-2">
           <label htmlFor="customer-code-filter" className="text-sm font-medium text-slate-700">
             得意先コード
@@ -49,6 +49,27 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
             onChange={(e) => filters.set("customer_code", e.target.value)}
             placeholder="例: C001"
           />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="order-type-filter" className="text-sm font-medium text-slate-700">
+            需要種別
+          </label>
+          <Select
+            value={(filters.values.order_type as string) || "all"}
+            onValueChange={(value) => filters.set("order_type", value)}
+          >
+            <SelectTrigger id="order-type-filter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">すべて</SelectItem>
+              <SelectItem value="FORECAST_LINKED">FC連携</SelectItem>
+              <SelectItem value="KANBAN">かんばん</SelectItem>
+              <SelectItem value="SPOT">スポット</SelectItem>
+              <SelectItem value="ORDER">通常受注</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">

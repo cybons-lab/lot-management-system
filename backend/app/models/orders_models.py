@@ -32,6 +32,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
+    from .forecast_models import ForecastCurrent
     from .inventory_models import Lot
     from .masters_models import Customer, Product
 
@@ -124,6 +125,20 @@ class OrderLine(Base):
         Text, nullable=True, comment="出荷表テキスト"
     )
 
+    # Forecast/Order integration
+    order_type: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        server_default=text("'ORDER'"),
+        comment="需要種別: FORECAST_LINKED / KANBAN / SPOT / ORDER",
+    )
+    forecast_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("forecast_current.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="紐づく予測ID（FORECAST_LINKEDの場合）",
+    )
+
     status: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'pending'")
     )
@@ -135,6 +150,8 @@ class OrderLine(Base):
         Index("idx_order_lines_date", "delivery_date"),
         Index("idx_order_lines_delivery_place", "delivery_place_id"),
         Index("idx_order_lines_status", "status"),
+        Index("idx_order_lines_order_type", "order_type"),
+        Index("idx_order_lines_forecast_id", "forecast_id"),
         Index(
             "idx_order_lines_sap_order_no",
             "sap_order_no",
@@ -144,6 +161,10 @@ class OrderLine(Base):
             "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled')",
             name="chk_order_lines_status",
         ),
+        CheckConstraint(
+            "order_type IN ('FORECAST_LINKED', 'KANBAN', 'SPOT', 'ORDER')",
+            name="chk_order_lines_order_type",
+        ),
     )
 
     __mapper_args__ = {"version_id_col": version}
@@ -151,6 +172,9 @@ class OrderLine(Base):
     # Relationships
     order: Mapped[Order] = relationship("Order", back_populates="order_lines")
     product: Mapped[Product] = relationship("Product", back_populates="order_lines")
+    forecast: Mapped[ForecastCurrent | None] = relationship(
+        "ForecastCurrent", back_populates="order_lines"
+    )
     allocations: Mapped[list[Allocation]] = relationship(
         "Allocation", back_populates="order_line", cascade="all, delete-orphan"
     )

@@ -14,6 +14,7 @@ from .base_model import Base
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .masters_models import Customer, DeliveryPlace, Product
+    from .orders_models import OrderLine
 
 
 class ForecastCurrent(Base):
@@ -81,6 +82,9 @@ class ForecastCurrent(Base):
         "DeliveryPlace", back_populates="forecast_current"
     )
     product: Mapped[Product] = relationship("Product", back_populates="forecast_current")
+    order_lines: Mapped[list[OrderLine]] = relationship(
+        "OrderLine", back_populates="forecast", foreign_keys="OrderLine.forecast_id"
+    )
 
 
 class ForecastHistory(Base):
