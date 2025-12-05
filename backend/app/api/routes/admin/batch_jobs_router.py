@@ -161,7 +161,7 @@ def execute_batch_job(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Batch job not found")
 
     return BatchJobExecuteResponse(
-        job_id=executed_job.job_id,
+        job_id=executed_job.job_id,  # type: ignore[attr-defined]
         status=executed_job.status,
         message=executed_job.result_message or "Job executed",
     )

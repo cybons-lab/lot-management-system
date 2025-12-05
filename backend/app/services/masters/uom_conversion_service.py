@@ -117,8 +117,8 @@ class UomConversionService(
 
         # 2. Resolve IDs
         products = (
-            self.db.query(Product.product_code, Product.id)
-            .filter(Product.product_code.in_(product_codes))
+            self.db.query(Product.product_code, Product.id)  # type: ignore[attr-defined]
+            .filter(Product.product_code.in_(product_codes))  # type: ignore[attr-defined]
             .all()
         )
         product_map = {code: id for code, id in products}

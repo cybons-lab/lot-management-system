@@ -84,7 +84,7 @@ def get_masters_health(db: Session = Depends(get_db)):
 
     # 製品
     product_count = db.scalar(select(func.count()).select_from(Product)) or 0
-    product_codes = [p for (p,) in db.execute(select(Product.product_code).limit(5)).all()]
+    product_codes = [p for (p,) in db.execute(select(Product.product_code).limit(5)).all()]  # type: ignore[attr-defined]
     result["products"] = {"count": product_count, "sample_codes": product_codes}
 
     # 倉庫

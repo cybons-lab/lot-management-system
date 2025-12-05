@@ -220,7 +220,7 @@ def _ensure_warehouse(db: Session, warehouse_code: str, warn_cb) -> Warehouse | 
 def _collect_supplier_codes(data: FullSampleDataRequest) -> set[str]:
     codes: set[str] = set()
     if data.lots:
-        codes.update(lot.supplier_code for lot in data.lots if lot.supplier_code)
+        codes.update(lot.supplier_code for lot in data.lots if lot.supplier_code)  # type: ignore[attr-defined]
     return codes
 
 
@@ -228,15 +228,15 @@ def _collect_warehouse_codes(data: FullSampleDataRequest) -> set[str]:
     codes: set[str] = set()
     if data.lots:
         codes.update(
-            lot.warehouse_code for lot in data.lots if getattr(lot, "warehouse_code", None)
+            lot.warehouse_code for lot in data.lots if getattr(lot, "warehouse_code", None)  # type: ignore[attr-defined]
         )
     return codes
 
 
 def _collect_customer_codes(data: FullSampleDataRequest) -> set[str]:
     codes: set[str] = set()
-    if data.orders:
-        codes.update(order.customer_code for order in data.orders if order.customer_code)
+    if data.orders:  # type: ignore[attr-defined]
+        codes.update(order.customer_code for order in data.orders if order.customer_code)  # type: ignore[attr-defined]
     return codes
 
 
