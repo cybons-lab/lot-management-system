@@ -12,4 +12,5 @@ export type AllocatedLot = {
   allocation_id?: number; // UI参照あり
   delivery_place_code: string | null;
   delivery_place_name: string | null;
+  allocation_type?: string;
 };

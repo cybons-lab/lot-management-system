@@ -44,6 +44,7 @@ class OrderService:
         customer_code: str | None = None,
         date_from: date | None = None,
         date_to: date | None = None,
+        order_type: str | None = None,
     ) -> list[OrderResponse]:
         stmt = select(Order).options(  # type: ignore[assignment]
             selectinload(Order.order_lines)
@@ -64,6 +65,8 @@ class OrderService:
             stmt = stmt.where(Order.order_date >= date_from)
         if date_to:
             stmt = stmt.where(Order.order_date <= date_to)
+        if order_type:
+            stmt = stmt.where(Order.order_lines.any(OrderLine.order_type == order_type))
 
         stmt = stmt.order_by(Order.order_date.desc()).offset(skip).limit(limit)
         orders = self.db.execute(stmt).scalars().all()

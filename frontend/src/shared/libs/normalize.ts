@@ -44,7 +44,10 @@ export interface OrderLineUI extends Record<string, unknown> {
   related_lots: unknown[];
   allocated_lots: AllocatedLot[];
   // Legacy fields (deprecated, for backward compatibility)
-  line_no?: number;
+  // DDL v2.2 additions
+  order_type: string;
+  project_code?: string;
+  forecast_id?: number;
   product_code?: string;
   customer_code?: string;
   supplier_code?: string;
@@ -251,6 +254,7 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
     created_at: S(line.created_at),
     updated_at: S(line.updated_at),
     allocated_quantity: String(line.allocated_quantity ?? "0"),
+    order_type: line.order_type ?? "ORDER",
     warehouse_allocations:
       ((line as Record<string, unknown>).warehouse_allocations as unknown[]) ?? [],
     related_lots: ((line as Record<string, unknown>).related_lots as unknown[]) ?? [],

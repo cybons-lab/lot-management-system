@@ -111,6 +111,7 @@ def lot_with_stock(test_db: Session, master_data):
         expiry_date=date.today() + timedelta(days=30),
         received_date=date.today(),
         status="active",
+        unit="EA",
     )
     test_db.add(lot)
     test_db.commit()

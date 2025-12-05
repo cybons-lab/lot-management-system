@@ -101,6 +101,7 @@ export function createOrderLine(
     delivery_date: deliveryDate ?? faker.date.soon({ days: 30 }).toISOString().split("T")[0], // DDL v2.2
     created_at: faker.date.past().toISOString(), // DDL v2.2
     updated_at: faker.date.recent().toISOString(), // DDL v2.2
+    order_type: overrides?.order_type || "ORDER", // DDL v2.2
     // Legacy fields for backward compatibility
     line_no:
       overrides?.line_no ??
@@ -154,9 +155,9 @@ export function createOrderWithLines(
         "customer_name" in line
           ? nullToUndefined(line.customer_name as string | null | undefined)
           : nullToUndefined(
-              (overrides as { customer_name?: string | null })?.customer_name ??
-                (order as { customer_name?: string | null }).customer_name,
-            ),
+            (overrides as { customer_name?: string | null })?.customer_name ??
+            (order as { customer_name?: string | null }).customer_name,
+          ),
     }),
   );
 

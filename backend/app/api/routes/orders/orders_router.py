@@ -34,6 +34,7 @@ def list_orders(
     customer_code: str | None = None,
     date_from: date | None = None,
     date_to: date | None = None,
+    order_type: str | None = None,
     db: Session = Depends(get_db),
 ):
     """受注一覧取得（読み取り専用）."""
@@ -45,6 +46,7 @@ def list_orders(
         customer_code=customer_code,
         date_from=date_from,
         date_to=date_to,
+        order_type=order_type,
     )
 
 

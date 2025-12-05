@@ -36,9 +36,6 @@ export const getOrders = (params?: OrdersListParams) => {
   return http.get<OrderResponse[]>(`orders${queryString ? "?" + queryString : ""}`);
 };
 
-/**
- * 受注明細一覧取得 (Flattened)
- */
 export const getOrderLines = (params?: OrdersListParams & { product_code?: string }) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
@@ -46,6 +43,7 @@ export const getOrderLines = (params?: OrdersListParams & { product_code?: strin
   if (params?.status) searchParams.append("status", params.status);
   if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
   if (params?.product_code) searchParams.append("product_code", params.product_code);
+  if (params?.order_type) searchParams.append("order_type", params.order_type);
   if (params?.date_from) searchParams.append("date_from", params.date_from);
   if (params?.date_to) searchParams.append("date_to", params.date_to);
 

@@ -18,6 +18,28 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     width: "120px",
   },
   {
+    id: "order_type",
+    header: "種別",
+    cell: (row: OrderLineRow) => {
+      const typeMap: Record<string, { label: string; color: string }> = {
+        FORECAST_LINKED: { label: "FC連携", color: "bg-purple-100 text-purple-800" },
+        KANBAN: { label: "かんばん", color: "bg-orange-100 text-orange-800" },
+        SPOT: { label: "スポット", color: "bg-pink-100 text-pink-800" },
+        ORDER: { label: "通常受注", color: "bg-slate-100 text-slate-800" },
+      };
+      const orderType = (row.order_type as string) || "ORDER";
+      const info = typeMap[orderType] || typeMap["ORDER"];
+      return (
+        <span
+          className={`inline-flex rounded text-xs font-semibold px-2 py-0.5 ${info.color}`}
+        >
+          {info.label}
+        </span>
+      );
+    },
+    width: "80px",
+  },
+  {
     id: "customer_name",
     header: "得意先",
     cell: (row: OrderLineRow) => (
@@ -68,9 +90,19 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
         (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
         0,
       );
+      // Soft引当が含まれているか判定
+      const hasSoft = lots.some((a) => a.allocation_type === "soft");
+
       return (
-        <div className="text-slate-900">
-          {allocatedQty.toLocaleString()} {row.unit ?? ""}
+        <div className="flex flex-col items-end">
+          <span className="font-medium text-slate-900">
+            {allocatedQty.toLocaleString()} {row.unit ?? ""}
+          </span>
+          {hasSoft && (
+            <span className="text-[10px] text-amber-600 font-medium">
+              (内Softあり)
+            </span>
+          )}
         </div>
       );
     },
@@ -93,9 +125,8 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
         <div className="flex items-center gap-3">
           <div className="h-2.5 w-24 overflow-hidden rounded-full bg-slate-200">
             <div
-              className={`h-full rounded-full transition-all ${
-                rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
-              }`}
+              className={`h-full rounded-full transition-all ${rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
+                }`}
               style={{ width: `${rate}%` }}
             />
           </div>
