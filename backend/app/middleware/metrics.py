@@ -244,4 +244,4 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             status_code=response.status_code,
         )
 
-        return response
+        return response  # type: ignore[no-any-return]
