@@ -38,7 +38,7 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
         <div className="space-y-2">
           <label htmlFor="customer-code-filter" className="text-sm font-medium text-slate-700">
             得意先コード
@@ -51,25 +51,31 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
           />
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="order-type-filter" className="text-sm font-medium text-slate-700">
-            需要種別
-          </label>
-          <Select
-            value={(filters.values.order_type as string) || "all"}
-            onValueChange={(value) => filters.set("order_type", value)}
-          >
-            <SelectTrigger id="order-type-filter">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">すべて</SelectItem>
-              <SelectItem value="FORECAST_LINKED">FC連携</SelectItem>
-              <SelectItem value="KANBAN">かんばん</SelectItem>
-              <SelectItem value="SPOT">スポット</SelectItem>
-              <SelectItem value="ORDER">通常受注</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="space-y-2 col-span-2">
+          <label className="text-sm font-medium text-slate-700">需要種別</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { value: "all", label: "すべて" },
+              { value: "FORECAST_LINKED", label: "FC連携" },
+              { value: "KANBAN", label: "かんばん" },
+              { value: "SPOT", label: "スポット" },
+              { value: "ORDER", label: "通常受注" },
+            ].map((option) => {
+              const currentValue = (filters.values.order_type as string) || "all";
+              const isActive = currentValue === option.value;
+              return (
+                <Button
+                  key={option.value}
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => filters.set("order_type", option.value)}
+                  className={isActive ? "" : "text-slate-600"}
+                >
+                  {option.label}
+                </Button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="space-y-2">
