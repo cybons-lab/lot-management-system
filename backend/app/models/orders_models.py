@@ -257,3 +257,8 @@ class Allocation(Base):
     # Relationships
     order_line: Mapped[OrderLine] = relationship("OrderLine", back_populates="allocations")
     lot: Mapped[Lot | None] = relationship("Lot", back_populates="allocations")
+
+    @property
+    def lot_number(self) -> str | None:
+        """Flattened lot number for API response."""
+        return self.lot.lot_number if self.lot else None

@@ -25,7 +25,6 @@ from app.models import (
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderLineResponse,
-    OrderResponse,
     OrderWithLinesResponse,
 )
 
@@ -45,7 +44,7 @@ class OrderService:
         date_from: date | None = None,
         date_to: date | None = None,
         order_type: str | None = None,
-    ) -> list[OrderResponse]:
+    ) -> list[OrderWithLinesResponse]:
         stmt = select(Order).options(  # type: ignore[assignment]
             selectinload(Order.order_lines)
             .selectinload(OrderLine.allocations)

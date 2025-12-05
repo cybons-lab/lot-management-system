@@ -22,6 +22,8 @@ class AllocationSuggestionBase(BaseModel):
     source: str = Field(..., description="発生源 (forecast_import / order_preview)")
 
     order_line_id: int | None = Field(None, description="オーダー明細ID (Preview時など)")
+    forecast_id: int | None = Field(None, description="予測ID (Forecast Link時)")
+    priority: int = Field(0, description="引当優先順位 (1=High)")
 
 
 class AllocationSuggestionCreate(AllocationSuggestionBase):

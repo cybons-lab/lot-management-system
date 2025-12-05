@@ -116,7 +116,8 @@ def generate_lots(
         print("\n[WARNING] Products with >3 lots after generation:")
         for product_id, count in lot_counts:
             product = db.query(Product).filter(Product.id == product_id).first()
-            print(f"  - Product {product.maker_part_code} (id={product_id}): {count} lots")
+            product_code = product.maker_part_code if product else "UNKNOWN"
+            print(f"  - Product {product_code} (id={product_id}): {count} lots")
     else:
         print("\n[SUCCESS] All products have ≤3 lots")
 

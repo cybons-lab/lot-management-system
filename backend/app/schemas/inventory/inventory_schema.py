@@ -54,7 +54,10 @@ class LotBase(BaseSchema):
 class LotCreate(LotBase):
     """Payload for creating lots."""
 
-    pass
+    # Optional fields for looking up IDs
+    product_code: str | None = None
+    supplier_code: str | None = None
+    warehouse_code: str | None = None
 
 
 class LotUpdate(BaseSchema):

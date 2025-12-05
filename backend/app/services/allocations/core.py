@@ -150,10 +150,11 @@ class AllocationService:
             self.db.add(movement)
 
             # 2. ロットの引当数量を解放
-            self.repository.update_lot_allocated_quantity(
-                allocation.lot_id,
-                -allocation.allocated_quantity,  # type: ignore[arg-type]
-            )
+            if allocation.lot_id:
+                self.repository.update_lot_allocated_quantity(
+                    allocation.lot_id,
+                    float(-allocation.allocated_quantity),
+                )
 
             # 3. 引当ステータス更新
             self.repository.update_status(allocation, "cancelled")

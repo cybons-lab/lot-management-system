@@ -13,4 +13,6 @@ export type AllocatedLot = {
   delivery_place_code: string | null;
   delivery_place_name: string | null;
   allocation_type?: string;
+  lot_number?: string | null;
+  status?: string;
 };
