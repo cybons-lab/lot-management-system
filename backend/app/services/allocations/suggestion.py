@@ -3,7 +3,6 @@
 from datetime import UTC
 from decimal import Decimal
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.forecast_models import ForecastCurrent
@@ -38,26 +37,19 @@ class AllocationSuggestionService:
             AllocationSuggestionPreviewResponse with suggestions, stats, and gaps.
         """
         # 1. Delete existing suggestions for these periods
+        # TODO: Ideally should only delete for the specific forecast lines we are about to re-process generally,
+        # but for "Regenerate for periods", wiping clean is the expected behavior.
         self.db.query(AllocationSuggestion).filter(
             AllocationSuggestion.forecast_period.in_(forecast_periods)
         ).delete(synchronize_session=False)
 
-        # 2. Fetch forecasts for these periods
+        # 2. Fetch individual forecasts for these periods (Row-level)
         forecasts = (
-            self.db.query(
-                ForecastCurrent.forecast_period,
-                ForecastCurrent.customer_id,
-                ForecastCurrent.delivery_place_id,
-                ForecastCurrent.product_id,
-                func.sum(ForecastCurrent.forecast_quantity).label("total_quantity"),
-            )
+            self.db.query(ForecastCurrent)
             .filter(ForecastCurrent.forecast_period.in_(forecast_periods))
-            .group_by(
-                ForecastCurrent.forecast_period,
-                ForecastCurrent.customer_id,
-                ForecastCurrent.delivery_place_id,
-                ForecastCurrent.product_id,
-            )
+            # Optional: Sort to prioritize which forecast gets stock first?
+            # For now, simplistic order.
+            .order_by(ForecastCurrent.forecast_date, ForecastCurrent.id)
             .all()
         )
 
@@ -65,34 +57,38 @@ class AllocationSuggestionService:
         stats_per_key: list[AllocationStatsPerKey] = []
         gaps: list[AllocationGap] = []
 
+        # Helper to aggregate stats (since we now process row-by-row)
+        # Key: (customer_id, delivery_place_id, product_id, forecast_period)
+        stats_agg: dict[tuple, dict] = {}
+
         total_forecast = Decimal("0")
         total_allocated = Decimal("0")
         total_shortage = Decimal("0")
 
         # Cache lots by product_id to avoid repeated queries
-        # In a real scenario with many products, we might want to fetch in batches or lazily
-        product_ids = list({f.product_id for f in forecasts})
+        if not forecasts:
+            product_ids = []
+        else:
+            product_ids = list({f.product_id for f in forecasts})
         lots_by_product = self._fetch_available_lots(product_ids)
 
-        # 3. Process each forecast group
+        # 3. Process each forecast row
         for f in forecasts:
-            needed = Decimal(str(f.total_quantity))
+            needed = f.forecast_quantity
             total_forecast += needed
 
-            allocated_for_key = Decimal("0")
+            allocated_for_row: Decimal = Decimal("0")
 
             # Get lots for this product
             lots = lots_by_product.get(f.product_id, [])
 
             # FEFO Allocation Logic
+            priority_counter = 1
             for lot in lots:
                 if needed <= 0:
                     break
 
-                # Calculate available quantity for this lot (considering what we've already allocated in this loop)
-                # Note: In a single regeneration run, we track usage in memory.
-                # 'lot' object is shared reference, so we can attach a temporary attribute or track usage separately.
-                # Here we use a temporary attribute '_temp_allocated' on the lot object.
+                # Calculate available quantity for this lot (considering temp usage)
                 if not hasattr(lot, "_temp_allocated"):
                     lot._temp_allocated = Decimal("0")  # type: ignore[attr-defined]
 
@@ -106,11 +102,13 @@ class AllocationSuggestionService:
 
                 suggestion = AllocationSuggestion(
                     forecast_period=f.forecast_period,
+                    forecast_id=f.id,
                     customer_id=f.customer_id,
                     delivery_place_id=f.delivery_place_id,
                     product_id=f.product_id,
                     lot_id=lot.id,
                     quantity=alloc_qty,
+                    priority=priority_counter,
                     allocation_type="soft",
                     source="forecast_import",
                 )
@@ -118,46 +116,55 @@ class AllocationSuggestionService:
 
                 # Update counters
                 needed -= alloc_qty
-                allocated_for_key += alloc_qty
+                allocated_for_row += alloc_qty
                 lot._temp_allocated += alloc_qty  # type: ignore[attr-defined]
+                priority_counter += 1
 
             shortage = max(Decimal("0"), needed)
+            total_shortage += shortage
+            total_allocated += allocated_for_row
 
-            # Stats
+            # Aggregate stats
+            key = (f.customer_id, f.delivery_place_id, f.product_id, f.forecast_period)
+            if key not in stats_agg:
+                stats_agg[key] = {
+                    "forecast_quantity": Decimal("0"),
+                    "allocated_quantity": Decimal("0"),
+                    "shortage_quantity": Decimal("0"),
+                }
+            stats_agg[key]["forecast_quantity"] += f.forecast_quantity
+            stats_agg[key]["allocated_quantity"] += allocated_for_row
+            stats_agg[key]["shortage_quantity"] += shortage
+
+        # 4. Finalize Stats & Gaps
+        for key, vals in stats_agg.items():
+            cid, did, pid, period = key
             stats_per_key.append(
                 AllocationStatsPerKey(
-                    customer_id=f.customer_id,
-                    delivery_place_id=f.delivery_place_id,
-                    product_id=f.product_id,
-                    forecast_period=f.forecast_period,
-                    forecast_quantity=Decimal(str(f.total_quantity)),
-                    allocated_quantity=allocated_for_key,
-                    shortage_quantity=shortage,
+                    customer_id=cid,
+                    delivery_place_id=did,
+                    product_id=pid,
+                    forecast_period=period,
+                    forecast_quantity=vals["forecast_quantity"],
+                    allocated_quantity=vals["allocated_quantity"],
+                    shortage_quantity=vals["shortage_quantity"],
                 )
             )
-
-            if shortage > 0:
+            if vals["shortage_quantity"] > 0:
                 gaps.append(
                     AllocationGap(
-                        customer_id=f.customer_id,
-                        delivery_place_id=f.delivery_place_id,
-                        product_id=f.product_id,
-                        forecast_period=f.forecast_period,
-                        shortage_quantity=shortage,
+                        customer_id=cid,
+                        delivery_place_id=did,
+                        product_id=pid,
+                        forecast_period=period,
+                        shortage_quantity=vals["shortage_quantity"],
                     )
                 )
-                total_shortage += shortage
 
-            total_allocated += allocated_for_key
-
-        # 4. Bulk Insert
+        # 5. Bulk Insert
         if new_suggestions:
             self.db.add_all(new_suggestions)
             self.db.commit()
-
-            # Refresh to get IDs and relationships if needed, but for bulk performance we might skip full refresh
-            # If response needs full details, we might need to re-query or refresh.
-            # For now, let's just return what we have.
 
         stats_summary = AllocationStatsSummary(
             total_forecast_quantity=total_forecast,
@@ -166,12 +173,8 @@ class AllocationSuggestionService:
             per_key=stats_per_key,
         )
 
-        # Convert DB models to Response schemas
-        # We need to manually construct response objects or let Pydantic handle it from attributes
-        # Since new_suggestions are not refreshed, relationships like lot/warehouse are missing.
-        # If the frontend needs them immediately, we should fetch them.
-        # For this implementation, we'll return the basic info.
-
+        # For response, validating models from ORM objects works, though strictly speaking
+        # relationships might be unloaded. Validating from attributes is usually fine.
         return AllocationSuggestionPreviewResponse(
             suggestions=[
                 AllocationSuggestionResponse.model_validate(s, from_attributes=True)
@@ -204,6 +207,7 @@ class AllocationSuggestionService:
 
         suggestions = []
         allocated_total = Decimal("0")
+        priority_counter = 1
 
         for lot in lots:
             if needed <= 0:
@@ -224,6 +228,7 @@ class AllocationSuggestionService:
                 product_id=product_id,
                 lot_id=lot.id,
                 quantity=alloc_qty,
+                priority=priority_counter,
                 allocation_type="soft",
                 source="order_preview",
                 # Mock relationships for response
@@ -239,6 +244,7 @@ class AllocationSuggestionService:
             suggestions.append(s)
             needed -= alloc_qty
             allocated_total += alloc_qty
+            priority_counter += 1
 
         shortage = max(Decimal("0"), needed)
 

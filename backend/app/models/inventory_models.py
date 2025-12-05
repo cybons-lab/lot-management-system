@@ -32,6 +32,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
+    from .forecast_models import ForecastCurrent
     from .inbound_models import ExpectedLot
     from .masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
     from .orders_models import Allocation
@@ -278,6 +279,11 @@ class AllocationSuggestion(Base):
     # 需要側キー
     order_line_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     forecast_period: Mapped[str] = mapped_column(String(7), nullable=False)  # "YYYY-MM"
+    forecast_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("forecast_current.id", ondelete="CASCADE"),
+        nullable=True,
+    )
 
     customer_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -300,6 +306,7 @@ class AllocationSuggestion(Base):
         BigInteger, ForeignKey("lots.id", ondelete="CASCADE"), nullable=False
     )
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
 
     # 種別 / 由来
     allocation_type: Mapped[str] = mapped_column(String(10), nullable=False)  # 'soft' or 'hard'
@@ -317,12 +324,14 @@ class AllocationSuggestion(Base):
         Index("idx_allocation_suggestions_customer", "customer_id"),
         Index("idx_allocation_suggestions_product", "product_id"),
         Index("idx_allocation_suggestions_lot", "lot_id"),
+        Index("idx_allocation_suggestions_forecast", "forecast_id"),
     )
     # Relationships
     customer: Mapped[Customer] = relationship("Customer")
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
     product: Mapped[Product] = relationship("Product")
     lot: Mapped[Lot] = relationship("Lot")
+    forecast: Mapped[ForecastCurrent | None] = relationship("ForecastCurrent")
 
 
 class AllocationTrace(Base):
