@@ -4,9 +4,8 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.inbound_models import ExpectedLot, InboundPlan, InboundPlanLine
+from app.models.inbound_models import InboundPlan, InboundPlanLine
 from app.schemas.inventory.inbound_schema import (
-    ExpectedLotResponse,
     InboundPlanCreate,
     InboundPlanDetailResponse,
     InboundPlanLineCreate,
@@ -14,6 +13,9 @@ from app.schemas.inventory.inbound_schema import (
     InboundPlanResponse,
     InboundPlanUpdate,
 )
+
+
+from app.services.inventory.inbound_line_service import InboundLineService
 
 
 class InboundService:
@@ -116,28 +118,7 @@ class InboundService:
             created_at=plan.created_at,
             updated_at=plan.updated_at,
             lines=[
-                InboundPlanLineResponse(
-                    id=line.id,
-                    inbound_plan_id=line.inbound_plan_id,
-                    product_id=line.product_id,
-                    planned_quantity=line.planned_quantity,
-                    unit=line.unit,
-                    created_at=line.created_at,
-                    updated_at=line.updated_at,
-                    expected_lots=[
-                        ExpectedLotResponse(
-                            id=lot.id,
-                            inbound_plan_line_id=lot.inbound_plan_line_id,
-                            expected_lot_number=lot.expected_lot_number,
-                            expected_quantity=lot.expected_quantity,
-                            expected_expiry_date=lot.expected_expiry_date,
-                            created_at=lot.created_at,
-                            updated_at=lot.updated_at,
-                        )
-                        for lot in line.expected_lots
-                    ],
-                )
-                for line in plan.lines
+                InboundLineService(self.db).map_line_to_response(line) for line in plan.lines
             ],
         )
 
@@ -164,42 +145,19 @@ class InboundService:
         self.db.flush()  # Get plan ID
 
         # Create lines if provided
-        created_lines = []
+        created_lines_responses = []
         if plan.lines:
+            line_service = InboundLineService(self.db)
             for line_data in plan.lines:
-                db_line = InboundPlanLine(
-                    inbound_plan_id=db_plan.id,
-                    product_id=line_data.product_id,
-                    planned_quantity=line_data.planned_quantity,
-                    unit=line_data.unit,
-                )
-                self.db.add(db_line)
-                self.db.flush()  # Get line ID
-
-                # Create expected lots if provided
-                created_expected_lots = []
-                if line_data.expected_lots:
-                    for lot_data in line_data.expected_lots:
-                        db_expected_lot = ExpectedLot(
-                            inbound_plan_line_id=db_line.id,
-                            expected_lot_number=lot_data.expected_lot_number,
-                            expected_quantity=lot_data.expected_quantity,
-                            expected_expiry_date=lot_data.expected_expiry_date,
-                        )
-                        self.db.add(db_expected_lot)
-                        created_expected_lots.append(db_expected_lot)
-
-                db_line.expected_lots = created_expected_lots
-                created_lines.append(db_line)
+                # Use internal method to avoid double verification/commit
+                line_response = line_service.create_line_internal(db_plan.id, line_data)
+                created_lines_responses.append(line_response)
 
         self.db.commit()
         self.db.refresh(db_plan)
 
-        # Refresh lines and expected lots to get IDs
-        for line in created_lines:
-            self.db.refresh(line)
-            for expected_lot in line.expected_lots:
-                self.db.refresh(expected_lot)
+        # Note: created_lines_responses contain IDs because create_line_internal flushed.
+        # But after commit, we are good.
 
         return InboundPlanDetailResponse(
             id=db_plan.id,
@@ -210,30 +168,7 @@ class InboundService:
             notes=db_plan.notes,
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,
-            lines=[
-                InboundPlanLineResponse(
-                    id=line.id,
-                    inbound_plan_id=line.inbound_plan_id,
-                    product_id=line.product_id,
-                    planned_quantity=line.planned_quantity,
-                    unit=line.unit,
-                    created_at=line.created_at,
-                    updated_at=line.updated_at,
-                    expected_lots=[
-                        ExpectedLotResponse(
-                            id=lot.id,
-                            inbound_plan_line_id=lot.inbound_plan_line_id,
-                            expected_lot_number=lot.expected_lot_number,
-                            expected_quantity=lot.expected_quantity,
-                            expected_expiry_date=lot.expected_expiry_date,
-                            created_at=lot.created_at,
-                            updated_at=lot.updated_at,
-                        )
-                        for lot in line.expected_lots
-                    ],
-                )
-                for line in created_lines
-            ],
+            lines=created_lines_responses,
         )
 
     def update_inbound_plan(
@@ -307,37 +242,8 @@ class InboundService:
         Returns:
             List of inbound plan lines with expected lots
         """
-        lines = (
-            self.db.query(InboundPlanLine)
-            .options(joinedload(InboundPlanLine.expected_lots))
-            .filter(InboundPlanLine.inbound_plan_id == plan_id)
-            .all()
-        )
-
-        return [
-            InboundPlanLineResponse(
-                id=line.id,
-                inbound_plan_id=line.inbound_plan_id,
-                product_id=line.product_id,
-                planned_quantity=line.planned_quantity,
-                unit=line.unit,
-                created_at=line.created_at,
-                updated_at=line.updated_at,
-                expected_lots=[
-                    ExpectedLotResponse(
-                        id=lot.id,
-                        inbound_plan_line_id=lot.inbound_plan_line_id,
-                        expected_lot_number=lot.expected_lot_number,
-                        expected_quantity=lot.expected_quantity,
-                        expected_expiry_date=lot.expected_expiry_date,
-                        created_at=lot.created_at,
-                        updated_at=lot.updated_at,
-                    )
-                    for lot in line.expected_lots
-                ],
-            )
-            for line in lines
-        ]
+        line_service = InboundLineService(self.db)
+        return line_service.get_lines_by_plan(plan_id)
 
     def create_line(self, plan_id: int, line: InboundPlanLineCreate) -> InboundPlanLineResponse:
         """
@@ -353,59 +259,10 @@ class InboundService:
         Raises:
             ValueError: If plan not found
         """
-        # Verify plan exists
-        plan = self.db.query(InboundPlan).filter(InboundPlan.id == plan_id).first()
-
-        if not plan:
-            raise ValueError(f"Inbound plan with id={plan_id} not found")
-
-        db_line = InboundPlanLine(
-            inbound_plan_id=plan_id,
-            product_id=line.product_id,
-            planned_quantity=line.planned_quantity,
-            unit=line.unit,
-        )
-
-        self.db.add(db_line)
-        self.db.flush()
-
-        # Create expected lots if provided
-        created_expected_lots = []
-        if line.expected_lots:
-            for lot_data in line.expected_lots:
-                db_expected_lot = ExpectedLot(
-                    inbound_plan_line_id=db_line.id,
-                    expected_lot_number=lot_data.expected_lot_number,
-                    expected_quantity=lot_data.expected_quantity,
-                    expected_expiry_date=lot_data.expected_expiry_date,
-                )
-                self.db.add(db_expected_lot)
-                created_expected_lots.append(db_expected_lot)
-
+        line_service = InboundLineService(self.db)
+        response = line_service.create_line(plan_id, line)
         self.db.commit()
-        self.db.refresh(db_line)
-
-        for expected_lot in created_expected_lots:
-            self.db.refresh(expected_lot)
-
-        return InboundPlanLineResponse(
-            id=db_line.id,
-            inbound_plan_id=db_line.inbound_plan_id,
-            product_id=db_line.product_id,
-            planned_quantity=db_line.planned_quantity,
-            unit=db_line.unit,
-            created_at=db_line.created_at,
-            updated_at=db_line.updated_at,
-            expected_lots=[
-                ExpectedLotResponse(
-                    id=lot.id,
-                    inbound_plan_line_id=lot.inbound_plan_line_id,
-                    expected_lot_number=lot.expected_lot_number,
-                    expected_quantity=lot.expected_quantity,
-                    expected_expiry_date=lot.expected_expiry_date,
-                    created_at=lot.created_at,
-                    updated_at=lot.updated_at,
-                )
-                for lot in created_expected_lots
-            ],
-        )
+        # We need to refresh the response data or ensure it's loaded?
+        # InboundLineService.create_line (public) calls internal, which flushes.
+        # We commit here. DB IDs are already in response.
+        return response
