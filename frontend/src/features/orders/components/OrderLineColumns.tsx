@@ -3,6 +3,9 @@
  * 受注明細行のカラム定義
  */
 
+import { Link } from "react-router-dom";
+
+import { Button } from "@/components/ui";
 import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import type { Column } from "@/shared/components/data/DataTable";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
@@ -13,7 +16,12 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
     id: "order_number",
     header: "受注番号",
     cell: (row: OrderLineRow) => (
-      <div className="font-medium text-slate-900">{row.order_number}</div>
+      <Link
+        to={`/orders/${row.order_id}`}
+        className="font-medium text-blue-600 hover:underline"
+      >
+        {row.order_number}
+      </Link>
     ),
     width: "120px",
   },
@@ -170,6 +178,20 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
         </span>
       );
     },
+    width: "100px",
+  },
+  {
+    id: "actions",
+    header: "",
+    cell: (row: OrderLineRow) => (
+      <div className="flex justify-end">
+        <Button asChild variant="outline" size="sm" className="h-8 text-xs">
+          <Link to={`/orders/${row.order_id}`}>
+            詳細 / 引当
+          </Link>
+        </Button>
+      </div>
+    ),
     width: "100px",
   },
 ];
