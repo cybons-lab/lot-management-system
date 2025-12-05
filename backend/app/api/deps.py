@@ -12,7 +12,7 @@ from app.core.database import SessionLocal
 from app.services.common.uow_service import UnitOfWork
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     """
     データベースセッションの依存性注入（読み取り専用用）.
 
@@ -29,7 +29,7 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
-def get_uow() -> Generator[UnitOfWork, None, None]:
+def get_uow() -> Generator[UnitOfWork]:
     """
     UnitOfWorkの依存性注入（更新系用）.
 
