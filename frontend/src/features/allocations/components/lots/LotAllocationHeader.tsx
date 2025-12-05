@@ -4,7 +4,8 @@ import type { OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 
 interface LotAllocationHeaderProps {
-  order: unknown;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  order: any;
   orderLine: OrderLine;
   customerName: string;
   productName: string;
