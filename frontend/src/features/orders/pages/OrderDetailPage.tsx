@@ -10,7 +10,7 @@ import { formatQuantity } from "@/shared/utils/formatQuantity";
 
 import { useOrderLineAllocation } from "../hooks/useOrderLineAllocation";
 
-import { Button, Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui";
+import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui";
 import {
   Table,
   TableBody,
@@ -199,6 +199,9 @@ function AllocationDialog({
       <DialogContent className="max-w-5xl p-0">
         <DialogHeader className="px-6 py-4">
           <DialogTitle>ロット引当</DialogTitle>
+          <DialogDescription className="sr-only">
+            受注明細に対するロット引当を行います。
+          </DialogDescription>
         </DialogHeader>
         <div className="p-6 pt-0">
           <LotAllocationPanel

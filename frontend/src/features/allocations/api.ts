@@ -290,3 +290,36 @@ export const getAllocationSuggestions = (params: {
     `allocation-suggestions${queryString ? "?" + queryString : ""}`,
   );
 };
+
+// ===== Bulk Auto-Allocate (グループ一括引当) =====
+
+export interface BulkAutoAllocateRequest {
+  product_id?: number | null;
+  customer_id?: number | null;
+  delivery_place_id?: number | null;
+  order_type?: "FORECAST_LINKED" | "KANBAN" | "SPOT" | "ORDER" | null;
+  skip_already_allocated?: boolean;
+}
+
+export interface BulkAutoAllocateFailedLine {
+  line_id: number;
+  error: string;
+}
+
+export interface BulkAutoAllocateResponse {
+  processed_lines: number;
+  allocated_lines: number;
+  total_allocations: number;
+  skipped_lines: number;
+  failed_lines: BulkAutoAllocateFailedLine[];
+  message: string;
+}
+
+/**
+ * Bulk auto-allocate for groups (FEFO strategy)
+ * @endpoint POST /allocations/bulk-auto-allocate
+ */
+export const bulkAutoAllocate = (data: BulkAutoAllocateRequest) => {
+  return http.post<BulkAutoAllocateResponse>("allocations/bulk-auto-allocate", data);
+};
+

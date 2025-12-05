@@ -703,3 +703,170 @@ def auto_allocate_line(
             db.refresh(alloc)
 
     return created_allocations
+
+
+def auto_allocate_bulk(
+    db: Session,
+    *,
+    product_id: int | None = None,
+    customer_id: int | None = None,
+    delivery_place_id: int | None = None,
+    order_type: str | None = None,
+    skip_already_allocated: bool = True,
+) -> dict:
+    """
+    複数受注明細に対して一括でFEFO自動引当を実行.
+
+    フィルタリング条件を指定して対象を絞り込み可能。
+    フォーキャストグループ、個別受注、全受注への一括引当に対応。
+
+    Args:
+        db: データベースセッション
+        product_id: 製品ID（指定時はその製品のみ対象）
+        customer_id: 得意先ID（指定時はその得意先のみ対象）
+        delivery_place_id: 納入先ID（指定時はその納入先のみ対象）
+        order_type: 受注タイプ（FORECAST_LINKED, KANBAN, SPOT, ORDER）
+        skip_already_allocated: True の場合、既に全量引当済みの明細はスキップ
+
+    Returns:
+        dict: {
+            "processed_lines": 処理した受注明細数,
+            "allocated_lines": 引当を作成した明細数,
+            "total_allocations": 作成した引当レコード数,
+            "skipped_lines": スキップした明細数（既に引当済み等）,
+            "failed_lines": 失敗した明細のリスト [{line_id, error}],
+        }
+    """
+    from sqlalchemy import and_
+
+    # 対象の受注明細を取得（未完了のもの）
+    query = (
+        db.query(OrderLine)
+        .join(Order, OrderLine.order_id == Order.id)
+        .filter(
+            OrderLine.status.in_(["pending", "allocated"]),  # Not shipped/completed
+            Order.status.in_(["open", "part_allocated"]),
+        )
+    )
+
+    # フィルタ条件を追加
+    if product_id is not None:
+        query = query.filter(OrderLine.product_id == product_id)
+
+    if customer_id is not None:
+        query = query.filter(Order.customer_id == customer_id)
+
+    if delivery_place_id is not None:
+        query = query.filter(OrderLine.delivery_place_id == delivery_place_id)
+
+    if order_type is not None:
+        query = query.filter(OrderLine.order_type == order_type)
+
+    # 納期順でソート（優先度高い順）
+    order_lines = query.order_by(OrderLine.delivery_date.asc()).all()
+
+    result = {
+        "processed_lines": 0,
+        "allocated_lines": 0,
+        "total_allocations": 0,
+        "skipped_lines": 0,
+        "failed_lines": [],
+    }
+
+    for line in order_lines:
+        result["processed_lines"] += 1
+
+        # 既存引当数量を計算
+        existing_allocations = (
+            db.query(Allocation)
+            .filter(
+                Allocation.order_line_id == line.id,
+                Allocation.status == "allocated",
+            )
+            .all()
+        )
+        already_allocated = sum(a.allocated_quantity for a in existing_allocations)
+        required_qty = Decimal(str(line.order_quantity)) - already_allocated
+
+        # 既に全量引当済みならスキップ
+        if required_qty <= 0 and skip_already_allocated:
+            result["skipped_lines"] += 1
+            continue
+
+        try:
+            # auto_allocate_line はコミットするので、ここでは直接ロジックを実行
+            # （コミットを1回にまとめるため）
+            allocations = _auto_allocate_line_no_commit(db, line.id, required_qty)
+            if allocations:
+                result["allocated_lines"] += 1
+                result["total_allocations"] += len(allocations)
+        except Exception as e:
+            result["failed_lines"].append({"line_id": line.id, "error": str(e)})
+
+    # 一括コミット
+    if result["total_allocations"] > 0:
+        db.commit()
+
+    return result
+
+
+def _auto_allocate_line_no_commit(
+    db: Session,
+    order_line_id: int,
+    required_qty: Decimal,
+) -> list[Allocation]:
+    """
+    auto_allocate_line の内部版（コミットなし）.
+
+    Args:
+        db: データベースセッション
+        order_line_id: 受注明細ID
+        required_qty: 必要数量（既存引当を差し引いた残数）
+
+    Returns:
+        list[Allocation]: 作成された引当一覧
+    """
+    if required_qty <= 0:
+        return []
+
+    line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
+    if not line:
+        return []
+
+    # 候補ロットを期限順で取得（FEFO）
+    candidate_lots = (
+        db.query(Lot)
+        .filter(
+            Lot.product_id == line.product_id,
+            Lot.status == "active",
+            Lot.current_quantity > Lot.allocated_quantity,
+        )
+        .order_by(Lot.expiry_date.asc().nulls_last(), Lot.received_date.asc())
+        .with_for_update()
+        .all()
+    )
+
+    created_allocations: list[Allocation] = []
+    remaining_qty = required_qty
+
+    for lot in candidate_lots:
+        if remaining_qty <= 0:
+            break
+
+        available = lot.current_quantity - lot.allocated_quantity
+        if available <= 0:
+            continue
+
+        allocate_qty = min(available, remaining_qty)
+
+        allocation = allocate_manually(
+            db,
+            order_line_id=order_line_id,
+            lot_id=lot.id,
+            quantity=allocate_qty,
+            commit_db=False,
+        )
+        created_allocations.append(allocation)
+        remaining_qty -= allocate_qty
+
+    return created_allocations

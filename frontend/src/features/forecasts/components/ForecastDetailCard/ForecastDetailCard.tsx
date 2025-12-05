@@ -7,6 +7,7 @@
  * - Section 3: Dekad (left) and Monthly (right) aggregations beneath the grid
  */
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +21,7 @@ import type { ForecastDetailCardProps } from "./types";
 import { formatDateKey, getTodayStart } from "./utils/date-utils";
 import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
+import { bulkAutoAllocate } from "@/features/allocations/api";
 import { Card, CardContent } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 
@@ -34,10 +36,35 @@ export function ForecastDetailCard({
 }: ForecastDetailCardProps) {
   const { group_key, forecasts = [] } = group;
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   // Calculate all forecast data using custom hook
   const { dailyData, unit, targetMonthStartDate, dates, dekadData, monthlyData, targetMonthTotal } =
     useForecastCalculations(group);
+
+  // グループ自動引当 mutation
+  const autoAllocateMutation = useMutation({
+    mutationFn: () =>
+      bulkAutoAllocate({
+        product_id: group_key.product_id,
+        customer_id: group_key.customer_id,
+        delivery_place_id: group_key.delivery_place_id,
+      }),
+    onSuccess: (result) => {
+      if (result.allocated_lines > 0) {
+        toast.success(result.message);
+      } else {
+        toast.info(result.message);
+      }
+      // 関連クエリを無効化して再取得
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      queryClient.invalidateQueries({ queryKey: ["allocations"] });
+    },
+    onError: (error) => {
+      console.error("Auto-allocate failed:", error);
+      toast.error("自動引当に失敗しました");
+    },
+  });
 
   // Early return if no forecasts
   if (forecasts.length === 0) {
@@ -54,9 +81,8 @@ export function ForecastDetailCard({
   const now = new Date();
   const todayKey = formatDateKey(now);
   const todayStart = getTodayStart();
-  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
-    targetMonthStartDate.getMonth() + 1
-  }月`;
+  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${targetMonthStartDate.getMonth() + 1
+    }月`;
 
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =
@@ -66,10 +92,9 @@ export function ForecastDetailCard({
 
   const groupKey = `${group_key.customer_id}-${group_key.delivery_place_id}-${group_key.product_id}`;
 
-  // 自動引当ハンドラー（未実装）
+  // 自動引当ハンドラー
   const handleAutoAllocate = () => {
-    console.log("TODO: Implement auto-allocation for forecast group:", groupKey);
-    toast.info("一括自動引当機能は現在開発中です。各受注を展開して個別に引当を行ってください。");
+    autoAllocateMutation.mutate();
   };
 
   return (
