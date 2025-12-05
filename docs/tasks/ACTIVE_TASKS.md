@@ -13,7 +13,7 @@
 |--------|------|-----------|
 | P1（高） | 2 | 実施可能 |
 | P2（中） | 4 | 実施可能 |
-| P3（低） | 4 | 将来対応 |
+| P3（低） | 3 | 将来対応 |
 
 ---
 
@@ -21,8 +21,8 @@
 
 ### Backend コード品質
 
-- [ ] **lots_router.py 分割** - 533行 → 300行制限超過（3時間）
-- [ ] **inbound_service.py 分割** - 411行 → 300行制限超過（2時間）
+- [ ] **lots_router.py 分割** - 533行 → 300行制限（3時間）
+- [ ] **inbound_service.py 分割** - 411行 → 300行制限（2時間）
 
 ---
 
@@ -45,24 +45,6 @@
 - [ ] **SAP API統合の本番化** - 現在モック実装
 - [ ] **定期バッチジョブのスケジューラ設定** - 手動実行のみ
 - [ ] **担当者ロック表示（排他制御）** - 認証機能依存
-- [ ] **Hard Allocation の本格運用** - v3.0予定
-
----
-
-## 本日確認済み（完了 → CHANGELOG移動）
-
-以下のタスクは実装済みであることを確認しました：
-
-- ✅ **Template download API** - 全マスタ（products, customers, warehouses, suppliers）で実装済み
-- ✅ **受注明細一括取消API** - `POST /allocations/bulk-cancel` 実装済み
-- ✅ **自動引当API（FEFO適用）** - `POST /allocations/auto-allocate` 実装済み
-- ✅ **UOM変換のUPD/DEL対応** - `PUT/DELETE /{conversion_id}` 実装済み
-- ✅ **エラートースト表示追加** - InboundReceiveDialogで実装済み
-- ✅ **入荷予定の数量取得** - 実装済み（useWarehouseDataで使用）
-- ✅ **入荷予定を倉庫別に集約** - 同上
-- ✅ **レガシー AllocationService の削除** - APIから未使用（孤立コードだが現状機能に影響なし）
-- ✅ **UIレイアウト総点検** - 主要な修正完了（ロット一覧など）
-- ✅ **mypy attr-defined エラー** - 現行で問題なく動作中
 
 ---
 
