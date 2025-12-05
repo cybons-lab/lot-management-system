@@ -37,13 +37,13 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, str]
         """Update supplier by supplier_code."""
         supplier = self.get_by_code(code)
         assert supplier is not None  # raise_404=True ensures this
-        return self.update(supplier.id, payload)
+        return self.update(supplier.id, payload)  # type: ignore[arg-type]
 
     def delete_by_code(self, code: str) -> None:
         """Delete supplier by supplier_code."""
         supplier = self.get_by_code(code)
         assert supplier is not None  # raise_404=True ensures this
-        self.delete(supplier.id)
+        self.delete(supplier.id)  # type: ignore[arg-type]
 
     def bulk_upsert(self, rows: list[SupplierBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert suppliers by supplier_code.

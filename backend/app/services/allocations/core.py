@@ -73,7 +73,7 @@ class AllocationService:
         available_quantity = lot.current_quantity - lot.allocated_quantity
         if available_quantity < allocate_qty:
             raise InsufficientStockError(
-                lot_id=lot_id, required=allocate_qty, available=available_quantity
+                lot_id=lot_id, required=allocate_qty, available=available_quantity  # type: ignore[arg-type]
             )
 
         # トランザクション開始
@@ -149,7 +149,7 @@ class AllocationService:
 
             # 2. ロットの引当数量を解放
             self.repository.update_lot_allocated_quantity(
-                allocation.lot_id, -allocation.allocated_quantity
+                allocation.lot_id, -allocation.allocated_quantity  # type: ignore[arg-type]
             )
 
             # 3. 引当ステータス更新

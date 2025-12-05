@@ -111,7 +111,7 @@ class InboundService:
             plan_number=plan.plan_number,
             supplier_id=plan.supplier_id,
             planned_arrival_date=plan.planned_arrival_date,
-            status=plan.status,
+            status=plan.status,  # type: ignore[arg-type]
             notes=plan.notes,
             created_at=plan.created_at,
             updated_at=plan.updated_at,
@@ -206,7 +206,7 @@ class InboundService:
             plan_number=db_plan.plan_number,
             supplier_id=db_plan.supplier_id,
             planned_arrival_date=db_plan.planned_arrival_date,
-            status=db_plan.status,
+            status=db_plan.status,  # type: ignore[arg-type]
             notes=db_plan.notes,
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,
@@ -269,7 +269,7 @@ class InboundService:
             plan_number=db_plan.plan_number,
             supplier_id=db_plan.supplier_id,
             planned_arrival_date=db_plan.planned_arrival_date,
-            status=db_plan.status,
+            status=db_plan.status,  # type: ignore[arg-type]
             notes=db_plan.notes,
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,

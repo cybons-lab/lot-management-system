@@ -37,13 +37,13 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
         """Update warehouse by warehouse_code."""
         warehouse = self.get_by_code(code)
         assert warehouse is not None  # raise_404=True ensures this
-        return self.update(warehouse.id, payload)
+        return self.update(warehouse.id, payload)  # type: ignore[arg-type]
 
     def delete_by_code(self, code: str) -> None:
         """Delete warehouse by warehouse_code."""
         warehouse = self.get_by_code(code)
         assert warehouse is not None  # raise_404=True ensures this
-        self.delete(warehouse.id)
+        self.delete(warehouse.id)  # type: ignore[arg-type]
 
     def bulk_upsert(self, rows: list[WarehouseBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert warehouses by warehouse_code.

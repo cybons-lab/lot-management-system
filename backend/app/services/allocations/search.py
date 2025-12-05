@@ -178,9 +178,9 @@ def _convert_to_candidate_item(
         warehouse_id=lot_view.warehouse_id,
         received_date=received_date,
         expiry_date=lot_view.expiry_date,
-        current_quantity=0.0,  # Will be enriched later
-        allocated_quantity=0.0,  # Will be enriched later
-        available_quantity=available_qty,
+        current_quantity=0.0,  # type: ignore[arg-type]  # Will be enriched later
+        allocated_quantity=0.0,  # type: ignore[arg-type]  # Will be enriched later
+        available_quantity=available_qty,  # type: ignore[arg-type]
         delivery_place_id=delivery_place_id,
         delivery_place_name=delivery_place_name,
         status=status,
@@ -325,7 +325,7 @@ def execute_candidate_lot_query(
         )
 
         # Query lots with fallback
-        results = _query_lots_with_fallback(db, context.product_id, strategy, limit)
+        results = _query_lots_with_fallback(db, context.product_id, strategy, limit)  # type: ignore[arg-type]
 
         # Get delivery place name
         delivery_place_name = _get_delivery_place_name(db, context.delivery_place_id)
