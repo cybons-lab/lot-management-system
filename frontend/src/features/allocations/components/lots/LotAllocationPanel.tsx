@@ -243,11 +243,12 @@ export function LotAllocationPanel({
                   {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   保存
                 </Button>
-                {onConfirmHard && (
+                {onConfirmHard && (softAllocated ?? 0) > 0 && (
                   <Button
                     onClick={onConfirmHard}
-                    disabled={isSaving || !canSave}
+                    disabled={isSaving}
                     className="bg-purple-600 font-bold text-white hover:bg-purple-700"
+                    title="Soft引当をHard引当に確定します"
                   >
                     Hard確定
                   </Button>

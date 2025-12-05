@@ -190,6 +190,9 @@ class OrderService:
         self.db.add(order)
         self.db.flush()
 
+        # Track lines that need auto-allocation (KANBAN/SPOT)
+        lines_for_auto_alloc: list[int] = []
+
         # Create order lines
         for line_data in order_data.lines:
             # Validate product_id exists
@@ -222,11 +225,33 @@ class OrderService:
                 unit=line_data.unit,
                 converted_quantity=converted_qty,
                 delivery_place_id=line_data.delivery_place_id,
+                order_type=line_data.order_type,
+                forecast_id=line_data.forecast_id,
             )
             self.db.add(line)
+            self.db.flush()
+
+            # Track KANBAN/SPOT lines for auto-allocation
+            if line_data.order_type in ("KANBAN", "SPOT"):
+                lines_for_auto_alloc.append(line.id)
 
         self.db.flush()
         self.db.refresh(order)
+
+        # Auto-allocate KANBAN/SPOT lines (Soft allocation)
+        if lines_for_auto_alloc:
+            from app.services.allocations.actions import auto_allocate_line
+
+            for line_id in lines_for_auto_alloc:
+                try:
+                    auto_allocate_line(self.db, line_id)
+                except Exception as e:
+                    # Log but don't fail order creation
+                    import logging
+
+                    logging.getLogger(__name__).warning(
+                        f"Auto-allocation failed for line {line_id}: {e}"
+                    )
 
         return cast(OrderWithLinesResponse, OrderWithLinesResponse.model_validate(order))
 
