@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HTTPクライアントを `shared/api/http-client.ts` に統合済み確認
 - ドキュメント整理: ACTIVE_TASKS.md, remaining_issues.adoc 更新
 
+### Verified (以前に実装済みと確認)
+- Template download API - 全マスタ（products, customers, warehouses, suppliers）
+- 受注明細一括取消API (`POST /allocations/bulk-cancel`)
+- 自動引当API FEFO適用 (`POST /allocations/auto-allocate`)
+- UOM変換 更新/削除対応 (`PUT/DELETE /{conversion_id}`)
+- エラートースト表示 (InboundReceiveDialog)
+
 ## [2025-12-04]
 
 ### Fixed
