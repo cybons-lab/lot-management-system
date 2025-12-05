@@ -314,6 +314,7 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
         .filter(Lot.id == db_lot.id)
         .first()
     )
+    assert db_lot is not None  # Guaranteed to exist after commit
 
     # v2.2: Use Lot model directly for stock quantities
     response = LotResponse.model_validate(db_lot)

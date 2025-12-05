@@ -66,6 +66,8 @@ def drag_assign(request: DragAssignRequest, db: Session = Depends(get_db)):
         )
 
         lot = db.query(Lot).filter(Lot.id == request.lot_id).first()
+        if not lot:
+            raise HTTPException(status_code=404, detail="Lot not found")
         remaining = lot.current_quantity - lot.allocated_quantity
 
         return DragAssignResponse(
