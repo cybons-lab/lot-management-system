@@ -143,6 +143,21 @@ grep -rn "eslint-disable" --include="*.tsx" --include="*.ts" frontend/src/
 * 関数長さ違反（80行超過）: 17件
 * 複雑度違反: 15件
 
+=== Backend Type Checks (Mypy)
+
+**# type: ignore 使用箇所:** 約30ファイル
+
+主な要因:
+* 動的な属性アクセス (SQLAlchemy/Pydantic)
+* 循環参照回避
+* 外部ライブラリの型定義不足
+
+**要注意ファイル:**
+* `backend/app/services/allocations/core.py` (レガシーコード?)
+* `backend/app/services/allocations/utils.py`
+* `backend/app/services/inventory/inbound_service.py`
+* `backend/app/api/routes/inventory/lots_router.py`
+
 ---
 
 == 更新履歴

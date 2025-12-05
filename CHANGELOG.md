@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - HTTPクライアントを `shared/api/http-client.ts` に統合済み確認
 - ドキュメント整理: ACTIVE_TASKS.md, remaining_issues.adoc 更新
+- 実装済み/不要なドキュメントの削除 (forecast-order-integration-plan.md, forecast_allocation_actions.md, spec-allocation.md)
 
 ### Verified (以前に実装済みと確認)
 - Template download API - 全マスタ（products, customers, warehouses, suppliers）
