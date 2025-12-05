@@ -17,13 +17,17 @@ def generate_forecasts(
     products: list[Product],
     delivery_places: list[DeliveryPlace],
 ) -> tuple[list[Product], dict[int, int]]:
-    """Generate forecasts and return products with forecasts + forecast totals.
+    """Generate forecasts (daily, dekad, monthly) and return products with forecasts + totals.
+
+    Forecast Types:
+    - Daily (日別): forecast_date is set, no dekad/monthly indicator
+    - Dekad (旬別): forecast_date is set to 1st/11th/21st, dekad indicator
+    - Monthly (月別): forecast_date is None, only forecast_period is set
 
     Returns:
         Tuple of (products_with_forecast, forecast_totals)
         where forecast_totals is a dict mapping product_id to total forecast quantity
     """
-    # 3.1 Forecast products vs 3.2 No Forecast products
     # Split products: 70% with forecast, 30% without
     num_products = len(products)
     num_with_forecast = int(num_products * 0.7)
@@ -31,6 +35,7 @@ def generate_forecasts(
 
     today = date.today()
     next_month = (today.replace(day=1) + timedelta(days=32)).replace(day=1)
+    forecast_period = next_month.strftime("%Y-%m")
 
     # Helper to get delivery places for a customer
     dp_map = {c.id: [dp for dp in delivery_places if dp.customer_id == c.id] for c in customers}
@@ -46,31 +51,74 @@ def generate_forecasts(
             if not dps:
                 continue
 
-            # For each delivery place
             for dp in dps:
-                # Daily Forecast (Next Month)
-                # Randomly pick days (3, 5, 10 day intervals)
-                interval = random.choice([3, 5, 10])
-                current_date = next_month
+                # Forecast type distribution: 50% daily, 30% dekad, 20% monthly
+                forecast_type = random.choices(
+                    ["daily", "dekad", "monthly"],
+                    weights=[50, 30, 20],
+                    k=1,
+                )[0]
 
-                while current_date.month == next_month.month:
-                    if random.random() > 0.3:  # 70% chance to have forecast on interval
-                        qty = random.randint(20, 120)
+                if forecast_type == "daily":
+                    # Daily Forecast: multiple days in the month
+                    interval = random.choice([3, 5, 7])
+                    current_date = next_month
+
+                    while current_date.month == next_month.month:
+                        if random.random() > 0.3:  # 70% chance
+                            qty = random.randint(20, 80)
+                            product_total += qty
+
+                            fc = ForecastCurrent(
+                                customer_id=c.id,
+                                delivery_place_id=dp.id,
+                                product_id=p.id,
+                                forecast_date=current_date,
+                                forecast_quantity=Decimal(qty),
+                                unit="pcs",
+                                forecast_period=forecast_period,
+                            )
+                            db.add(fc)
+
+                        current_date += timedelta(days=interval)
+
+                elif forecast_type == "dekad":
+                    # Dekad Forecast: 3 entries per month (1st, 11th, 21st)
+                    dekad_dates = [
+                        next_month.replace(day=1),
+                        next_month.replace(day=11),
+                        next_month.replace(day=21),
+                    ]
+                    for dekad_date in dekad_dates:
+                        qty = random.randint(50, 150)
                         product_total += qty
 
-                        # Create ForecastCurrent
                         fc = ForecastCurrent(
                             customer_id=c.id,
                             delivery_place_id=dp.id,
                             product_id=p.id,
-                            forecast_date=current_date,
+                            forecast_date=dekad_date,
                             forecast_quantity=Decimal(qty),
                             unit="pcs",
-                            forecast_period=current_date.strftime("%Y-%m"),
+                            forecast_period=forecast_period,
                         )
                         db.add(fc)
 
-                    current_date += timedelta(days=interval)
+                else:  # monthly
+                    # Monthly Forecast: single entry with no specific date
+                    qty = random.randint(100, 300)
+                    product_total += qty
+
+                    fc = ForecastCurrent(
+                        customer_id=c.id,
+                        delivery_place_id=dp.id,
+                        product_id=p.id,
+                        forecast_date=None,  # Monthly = no specific date
+                        forecast_quantity=Decimal(qty),
+                        unit="pcs",
+                        forecast_period=forecast_period,
+                    )
+                    db.add(fc)
 
         # Store total forecast for this product
         forecast_totals[p.id] = product_total
