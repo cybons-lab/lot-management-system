@@ -200,6 +200,7 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
         .filter(Lot.id == db_lot.id)
         .first()
     )
+    assert db_lot is not None  # Guaranteed to exist after commit
 
     # レスポンス（v2.2: Lot モデルから直接取得）
     response = LotResponse.model_validate(db_lot)
@@ -217,7 +218,7 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
         response.supplier_name = db_lot.supplier.supplier_name
         response.supplier_code = db_lot.supplier.supplier_code
 
-    response.current_quantity = float(db_lot.current_quantity or 0.0)
+    response.current_quantity = float(db_lot.current_quantity or 0.0)  # type: ignore[assignment]
     response.last_updated = db_lot.updated_at
 
     return response
@@ -250,7 +251,7 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
         response.supplier_name = lot.supplier.supplier_name
         response.supplier_code = lot.supplier.supplier_code
 
-    response.current_quantity = float(lot.current_quantity or 0.0)
+    response.current_quantity = float(lot.current_quantity or 0.0)  # type: ignore[assignment]
     response.last_updated = lot.updated_at
     return response
 
@@ -330,7 +331,7 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
         response.supplier_name = db_lot.supplier.supplier_name
         response.supplier_code = db_lot.supplier.supplier_code
 
-    response.current_quantity = float(db_lot.current_quantity or 0.0)
+    response.current_quantity = float(db_lot.current_quantity or 0.0)  # type: ignore[assignment]
     response.last_updated = db_lot.updated_at
 
     return response

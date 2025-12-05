@@ -33,7 +33,7 @@ def _load_order(db: Session, order_id: int | None = None, order_number: str | No
     if not order_id and not order_number:
         raise ValueError("Either order_id or order_number must be provided")
 
-    stmt: Select[Order] = select(Order).options(
+    stmt = select(Order).options(  # type: ignore[assignment]
         selectinload(Order.order_lines)
         .joinedload(OrderLine.allocations)
         .joinedload(Allocation.lot),
@@ -94,7 +94,7 @@ def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
     Returns:
         List of (Lot, available_quantity) tuples sorted by FEFO order
     """
-    stmt: Select[tuple[Lot, float]] = (
+    stmt = (  # type: ignore[assignment]
         select(Lot, (Lot.current_quantity - Lot.allocated_quantity).label("available_qty"))
         .where(
             Lot.product_id == product_id,

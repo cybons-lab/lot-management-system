@@ -140,7 +140,7 @@ class InboundReceivingService:
                 created_lot_ids.append(db_lot.id)
 
         # Update plan status
-        plan.status = "received"
+        plan.status = "received"  # type: ignore[assignment]
         plan.updated_at = datetime.now()
 
         self.db.commit()

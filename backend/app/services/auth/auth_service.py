@@ -60,7 +60,7 @@ class AuthService:
         )
         try:
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            username: str = payload.get("sub")
+            username: str | None = payload.get("sub")
             if username is None:
                 raise credentials_exception
             token_data = TokenData(username=username)
@@ -100,7 +100,7 @@ class AuthService:
 
         try:
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            username: str = payload.get("sub")
+            username: str | None = payload.get("sub")
             if username is None:
                 return None
             token_data = TokenData(username=username)

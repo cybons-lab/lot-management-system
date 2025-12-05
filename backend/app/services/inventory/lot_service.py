@@ -83,11 +83,11 @@ class LotRepository:
         product: Product | None = None
         supplier: Supplier | None = None
         if supplier_code:
-            stmt = select(Supplier).where(Supplier.supplier_code == supplier_code)
-            supplier = self.db.execute(stmt).scalar_one_or_none()
+            supplier_stmt = select(Supplier).where(Supplier.supplier_code == supplier_code)
+            supplier = self.db.execute(supplier_stmt).scalar_one_or_none()
         if product_code:
-            stmt = select(Product).where(Product.maker_part_code == product_code)
-            product = self.db.execute(stmt).scalar_one_or_none()
+            product_stmt = select(Product).where(Product.maker_part_code == product_code)
+            product = self.db.execute(product_stmt).scalar_one_or_none()
 
         lot = Lot(
             supplier_id=supplier.id if supplier else None,

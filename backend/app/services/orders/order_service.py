@@ -45,7 +45,7 @@ class OrderService:
         date_from: date | None = None,
         date_to: date | None = None,
     ) -> list[OrderResponse]:
-        stmt: Select[Order] = select(Order).options(
+        stmt = select(Order).options(  # type: ignore[assignment]
             selectinload(Order.order_lines)
             .selectinload(OrderLine.allocations)
             .joinedload(Allocation.lot)
@@ -146,7 +146,7 @@ class OrderService:
 
     def get_order_detail(self, order_id: int) -> OrderWithLinesResponse:
         # Load order with related data (DDL v2.2 compliant)
-        stmt: Select[Order] = (
+        stmt = (  # type: ignore[assignment]
             select(Order)
             .options(
                 selectinload(Order.order_lines).selectinload(OrderLine.product),
