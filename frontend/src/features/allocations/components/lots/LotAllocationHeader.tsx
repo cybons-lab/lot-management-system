@@ -1,22 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-
 import { LotAllocationHeaderView } from "./LotAllocationHeaderView";
 
 import type { OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 
-type Order = {
-  order_number?: string | null;
-};
-
 interface LotAllocationHeaderProps {
-  order?: Order;
+  order: any;
   orderLine: OrderLine;
-
-  customerName?: string;
-  deliveryPlaceName?: string;
-  productName?: string;
-
+  customerName: string;
+  productName: string;
+  deliveryPlaceName: string;
   requiredQty: number;
   totalAllocated: number;
   hardAllocated?: number;
@@ -24,27 +16,20 @@ interface LotAllocationHeaderProps {
   remainingQty: number;
   progressPercent: number;
   isOverAllocated: boolean;
-  onAutoAllocate: () => void;
-  onClearAllocations: () => void;
-  onSaveAllocations: () => void;
-  onConfirmHard?: () => void;
-  canSave: boolean;
-  isSaving: boolean;
   isLoading: boolean;
-  hasCandidates?: boolean;
-  // New props
-  allocationCount?: number;
-  hasExpiryWarning?: boolean;
-  hasExpiredError?: boolean;
+  hasCandidates: boolean;
+  allocationCount: number;
+  hasExpiryWarning: boolean;
+  hasExpiredError: boolean;
   lineStatus?: string | null;
 }
 
 export function LotAllocationHeader({
   order,
   orderLine,
-  customerName = "顧客未設定",
-  deliveryPlaceName = "納入先未設定",
-  productName: propProductName,
+  customerName,
+  productName: propProductName, // Keep propProductName for internal renaming
+  deliveryPlaceName,
   requiredQty,
   totalAllocated,
   hardAllocated,
@@ -52,22 +37,16 @@ export function LotAllocationHeader({
   remainingQty,
   progressPercent,
   isOverAllocated,
-  onAutoAllocate,
-  onClearAllocations,
-  onSaveAllocations,
-  onConfirmHard,
-  canSave,
-  isSaving,
   isLoading,
   hasCandidates,
-  allocationCount = 0,
-  hasExpiryWarning = false,
+  allocationCount,
+  hasExpiryWarning,
   hasExpiredError,
   lineStatus,
 }: LotAllocationHeaderProps) {
   const orderNumber = order?.order_number || "不明な受注";
   const productCode = orderLine.product_code || "CODE";
-  const productName = propProductName || orderLine.product_name || "品名不明";
+  const productName = propProductName || orderLine.product_name || "品名不明"; // Use propProductName here
   const deliveryDate = formatDate(orderLine.delivery_date || orderLine.due_date, {
     fallback: "未設定",
   });
@@ -75,19 +54,7 @@ export function LotAllocationHeader({
   const orderUnit = orderLine.unit || orderLine.product_external_unit || "";
   const inventoryUnit = orderLine.product_internal_unit || orderUnit;
 
-  const [justSaved, setJustSaved] = useState(false);
-  const prevSavingRef = useRef(isSaving);
-
-  useEffect(() => {
-    if (prevSavingRef.current && !isSaving) {
-      setJustSaved(true);
-      const timer = setTimeout(() => {
-        setJustSaved(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-    prevSavingRef.current = isSaving;
-  }, [isSaving]);
+  // Removed justSaved state and useEffect as isSaving is no longer a prop
 
   const isComplete = remainingQty === 0 && !isOverAllocated;
 
@@ -110,15 +77,10 @@ export function LotAllocationHeader({
       progressPercent={progressPercent}
       isOverAllocated={isOverAllocated}
       isComplete={isComplete}
-      justSaved={justSaved}
-      isSaving={isSaving}
+      justSaved={false} // Set to false as per instruction example
       isLoading={isLoading}
       hasCandidates={hasCandidates ?? false}
-      onAutoAllocate={onAutoAllocate}
-      onClearAllocations={onClearAllocations}
-      onSaveAllocations={onSaveAllocations}
-      onConfirmHard={onConfirmHard}
-      canSave={canSave}
+      // Removed onAutoAllocate, onClearAllocations, onSaveAllocations, onConfirmHard, canSave
       supplierName={orderLine.supplier_name || undefined}
       allocationCount={allocationCount}
       hasExpiryWarning={hasExpiryWarning}

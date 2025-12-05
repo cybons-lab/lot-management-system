@@ -26,15 +26,9 @@ interface LotAllocationHeaderViewProps {
   isOverAllocated: boolean;
   isComplete: boolean;
   justSaved: boolean;
-  isSaving: boolean;
   isLoading: boolean;
   hasCandidates: boolean;
   supplierName?: string;
-  onAutoAllocate: () => void;
-  onClearAllocations: () => void;
-  onSaveAllocations: () => void;
-  onConfirmHard?: () => void;
-  canSave: boolean;
   lockedBy?: string;
   lockedAt?: string;
   allocationCount?: number;
@@ -57,14 +51,8 @@ export function LotAllocationHeaderView({
   isOverAllocated,
   isComplete,
   justSaved,
-  isSaving,
   hasCandidates,
   supplierName,
-  onAutoAllocate,
-  onClearAllocations,
-  onSaveAllocations,
-  onConfirmHard,
-  canSave,
   lockedBy,
   lockedAt,
   allocationCount = 0,
@@ -78,7 +66,7 @@ export function LotAllocationHeaderView({
     totalAllocated,
     remainingQty,
     justSaved,
-    canSave,
+    canSave: false, // canSave is removed, so setting a default or removing if not needed by useAllocationStatus
     lineStatus,
   });
 
@@ -120,12 +108,6 @@ export function LotAllocationHeaderView({
               hardAllocated={hardAllocated}
               softAllocated={softAllocated}
               unit={orderUnit}
-              onAutoAllocate={onAutoAllocate}
-              onClear={onClearAllocations}
-              onSave={onSaveAllocations}
-              onConfirmHard={onConfirmHard}
-              isSaving={isSaving}
-              canSave={canSave}
             />
           </div>
 
