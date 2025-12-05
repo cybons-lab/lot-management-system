@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import cast
 
-from sqlalchemy import Select, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.domain.order import (

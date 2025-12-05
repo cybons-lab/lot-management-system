@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.database import get_db
 from app.models.auth_models import User
-from app.schemas.auth.token_schema import TokenData
 from app.services.auth.user_service import UserService
 
 
@@ -63,7 +62,6 @@ class AuthService:
             username: str | None = payload.get("sub")
             if username is None:
                 raise credentials_exception
-            token_data = TokenData(username=username)
         except JWTError:
             raise credentials_exception
 
@@ -103,7 +101,6 @@ class AuthService:
             username: str | None = payload.get("sub")
             if username is None:
                 return None
-            token_data = TokenData(username=username)
         except JWTError:
             return None
 

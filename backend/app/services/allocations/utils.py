@@ -3,7 +3,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import cast
 
-from sqlalchemy import Select, func, nulls_last, select
+from sqlalchemy import func, nulls_last, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import (

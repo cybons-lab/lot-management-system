@@ -228,7 +228,9 @@ def _collect_warehouse_codes(data: FullSampleDataRequest) -> set[str]:
     codes: set[str] = set()
     if data.lots:
         codes.update(
-            lot.warehouse_code for lot in data.lots if getattr(lot, "warehouse_code", None)  # type: ignore[attr-defined]
+            lot.warehouse_code
+            for lot in data.lots
+            if getattr(lot, "warehouse_code", None)  # type: ignore[attr-defined]
         )
     return codes
 

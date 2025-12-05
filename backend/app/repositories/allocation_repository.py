@@ -154,6 +154,7 @@ class AllocationRepository:
         lot = self.get_lot(lot_id)
         if lot:
             from decimal import Decimal
+
             lot.current_quantity += Decimal(str(quantity_delta))
             lot.updated_at = datetime.now()
         # NOTE: commitはservice層で行う
@@ -171,6 +172,7 @@ class AllocationRepository:
         lot = self.get_lot(lot_id)
         if lot:
             from decimal import Decimal
+
             lot.allocated_quantity += Decimal(str(allocated_delta))
             lot.updated_at = datetime.now()
         # NOTE: commitはservice層で行う

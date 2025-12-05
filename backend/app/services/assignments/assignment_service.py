@@ -92,9 +92,7 @@ class UserSupplierAssignmentService(
             UserSupplierAssignment.user_id == user_id,
             UserSupplierAssignment.supplier_id == supplier_id,
         )
-        assignment = cast(
-            UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none()
-        )
+        assignment = cast(UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none())
 
         if assignment:
             assignment.is_primary = True

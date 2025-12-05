@@ -115,7 +115,9 @@ def save_manual_allocations(
 
         # 4. 作成された引当をrefresh
         for alloc_id in created_ids:
-            refreshed_alloc: Allocation | None = db.query(Allocation).filter(Allocation.id == alloc_id).first()
+            refreshed_alloc: Allocation | None = (
+                db.query(Allocation).filter(Allocation.id == alloc_id).first()
+            )
             if refreshed_alloc:
                 db.refresh(refreshed_alloc)
 
