@@ -19,8 +19,9 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
 
     // Calculate totals
     const hardAllocatedDb = useMemo(() => {
-        if (!orderLine?.allocated_lots) return 0;
-        return orderLine.allocated_lots
+        const allocations = orderLine?.allocations || orderLine?.allocated_lots || [];
+        if (!Array.isArray(allocations)) return 0;
+        return allocations
             .filter((a: any) => a.allocation_type === 'hard')
             .reduce((sum: number, a: any) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
     }, [orderLine]);
@@ -48,10 +49,12 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
                 });
                 setCandidateLots(res.items);
 
-                // Initialize allocations from existing orderLine.allocated_lots if any
+                // Initialize allocations from existing orderLine.allocations or allocated_lots
                 const initialAllocations: Record<number, number> = {};
-                if (orderLine.allocated_lots && Array.isArray(orderLine.allocated_lots)) {
-                    orderLine.allocated_lots.forEach((alloc: any) => {
+                const existingAllocations = orderLine.allocations || orderLine.allocated_lots || [];
+
+                if (Array.isArray(existingAllocations)) {
+                    existingAllocations.forEach((alloc: any) => {
                         if (alloc.lot_id) {
                             initialAllocations[alloc.lot_id] = Number(alloc.allocated_quantity || alloc.quantity || 0);
                         }
