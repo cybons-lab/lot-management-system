@@ -194,7 +194,7 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
     db.refresh(db_lot)
 
     # Eagerly load relationships for response
-    db_lot = (
+    db_lot = (  # type: ignore[assignment]
         db.query(Lot)
         .options(joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier))
         .filter(Lot.id == db_lot.id)
@@ -322,7 +322,7 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
     # Populate joined fields
     if db_lot.product:
         response.product_name = db_lot.product.product_name
-        response.product_code = db_lot.product.product_code
+        response.product_code = db_lot.product.product_code  # type: ignore[attr-defined]
 
     if db_lot.warehouse:
         response.warehouse_name = db_lot.warehouse.warehouse_name

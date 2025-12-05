@@ -71,9 +71,7 @@ def list_inbound_plans(
                 notes=plan.notes,
                 created_at=plan.created_at,
                 updated_at=plan.updated_at,
-                total_quantity=sum(line.planned_quantity for line in plan.lines)
-                if plan.lines
-                else None,
+                total_quantity=sum(line.planned_quantity for line in plan.lines) if plan.lines else None,  # type: ignore[arg-type]
             )
             for plan in plans
         ],

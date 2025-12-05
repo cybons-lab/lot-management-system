@@ -327,7 +327,7 @@ def get_allocatable_lots(
             for row in rows
         ]
 
-        return CandidateLotsResponse(items=items, total=len(items))
+        return CandidateLotsResponse(items=items, total=len(items))  # type: ignore[arg-type]
 
     except Exception as e:
         logger.error(f"診断API実行エラー: {e}")

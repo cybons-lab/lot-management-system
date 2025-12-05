@@ -102,7 +102,7 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
                 lot_number=alloc.lot_number,
                 allocated_quantity=alloc.allocate_qty,
                 expiry_date=alloc.expiry_date,
-                receipt_date=alloc.receipt_date,
+                received_date=alloc.receipt_date,
             )
             for alloc in line.allocations
         ]
