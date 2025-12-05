@@ -172,41 +172,4 @@ export function useConfirmDialog() {
   };
 }
 
-/**
- * 複数ダイアログ状態管理フック
- *
- * @param dialogNames - ダイアログ名の配列
- * @returns 各ダイアログの状態と操作関数
- *
- * @example
- * ```tsx
- * const dialogs = useMultipleDialogs(['create', 'edit', 'delete']);
- *
- * return (
- *   <>
- *     <button onClick={dialogs.create.open}>新規作成</button>
- *     <button onClick={dialogs.edit.open}>編集</button>
- *     <button onClick={dialogs.delete.open}>削除</button>
- *
- *     <Dialog open={dialogs.create.isOpen} onOpenChange={dialogs.create.setIsOpen}>
- *       ...
- *     </Dialog>
- *   </>
- * );
- * ```
- *
- * @deprecated This hook violates Rules of Hooks (calls useDialog in a loop).
- * TODO: Refactor to use React.useMemo with a stable array, or remove if unused.
- * Currently not used anywhere in the codebase.
- */
-export function useMultipleDialogs<T extends string>(
-  dialogNames: readonly T[],
-): Record<T, ReturnType<typeof useDialog>> {
-  const dialogs = {} as Record<T, ReturnType<typeof useDialog>>;
 
-  dialogNames.forEach((name) => {
-    dialogs[name] = useDialog();
-  });
-
-  return dialogs;
-}
