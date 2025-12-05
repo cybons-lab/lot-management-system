@@ -38,11 +38,11 @@ export function useAllocationCalculations({
   // レガシーフィールド対応: allocated_qty または allocated_quantity
   const dbAllocated = orderLine ? getAllocatedQuantity(orderLine) : 0;
 
-  // UI上で新規に引き当てた数量の合計
+  // UI上で新規に引き当てた数量の合計 (DB初期値も含む)
   const uiAllocatedTotal = calculateTotalUiAllocated(lotAllocations);
 
-  // DB既存 + UI新規の合計
-  const totalAllocated = dbAllocated + uiAllocatedTotal;
+  // lotAllocationsはDB値で初期化されるため、uiAllocatedTotalが全量となる
+  const totalAllocated = uiAllocatedTotal;
 
   // まだ引き当てが必要な数量
   const remainingNeeded = Math.max(0, requiredQty - totalAllocated);
