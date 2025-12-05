@@ -17,9 +17,11 @@ import type { OrderLine } from "@/shared/types/aliases";
  */
 // eslint-disable-next-line complexity
 export function getOrderQuantity(line: OrderLine): number {
-  const converted = Number(line.converted_quantity);
-  if (Number.isFinite(converted)) {
-    return converted;
+  if (line.converted_quantity != null && line.converted_quantity !== "") {
+    const converted = Number(line.converted_quantity);
+    if (Number.isFinite(converted) && converted > 0) {
+      return converted;
+    }
   }
 
   const baseQuantity = Number(line.order_quantity ?? line.quantity ?? 0);
