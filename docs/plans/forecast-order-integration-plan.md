@@ -198,5 +198,8 @@ def preempt_soft_allocations_for_hard(
 ## 次のアクション
 
 1. ✅ この計画書をコミット
-2. 🔜 新ブランチ `feature/forecast-order-integration` 作成
-3. 🔜 Phase 1 開始（データモデル拡張）
+2. ✅ 新ブランチ `claude/forecast-order-integration-01U97poSnBvdU7AHfvwYPGwe` 作成
+3. ✅ Phase 1 開始（データモデル拡張）
+4. ✅ フォーキャストフィルター検索改善（SearchableSelect）
+5. 🔜 在庫管理ページ Soft/Hard 引当表示（バックエンドAPI追加必要）
+6. 🔜 テストデータ調整（別ブランチで実施）
