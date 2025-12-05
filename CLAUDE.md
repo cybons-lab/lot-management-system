@@ -226,6 +226,8 @@ git checkout -b feature/xxx
 4. Update OpenAPI types after backend changes: `npm run typegen`
 5. Write tests for new features
 6. Document domain logic with docstrings
+7. Commit frequently with atomic changes (avoid large bulk commits). Commits do not require user confirmation.
+8. Create feature branches for new work (e.g., `feature/order-filters`).
 
 ### DON'T
 1. Bypass service layer (routes → repositories directly)
