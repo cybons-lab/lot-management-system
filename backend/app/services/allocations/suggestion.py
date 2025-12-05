@@ -82,23 +82,16 @@ class AllocationSuggestionService:
             # Get lots for this product
             lots = lots_by_product.get(f.product_id, [])
 
-            # FEFO Allocation Logic
-            priority_counter = 1
-            for lot in lots:
-                if needed <= 0:
-                    break
+            # FEFO Allocation Logic (Delegated to allocator)
+            from app.services.allocations.allocator import allocate_soft_for_forecast
 
-                # Calculate available quantity for this lot (considering temp usage)
-                if not hasattr(lot, "_temp_allocated"):
-                    lot._temp_allocated = Decimal("0")  # type: ignore[attr-defined]
+            alloc_results = allocate_soft_for_forecast(needed, lots)
 
-                available_real = lot.current_quantity - lot.allocated_quantity
-                available_now = available_real - lot._temp_allocated  # type: ignore[attr-defined]
+            priority_counter = 1  # Reset or continue? Usually per forecast line => starts at 1
 
-                if available_now <= 0:
-                    continue
-
-                alloc_qty = min(needed, available_now)
+            for res in alloc_results:
+                # Find the lot object to update temp state
+                allocated_lot = next(l for l in lots if l.id == res.lot_id)
 
                 suggestion = AllocationSuggestion(
                     forecast_period=f.forecast_period,
@@ -106,18 +99,23 @@ class AllocationSuggestionService:
                     customer_id=f.customer_id,
                     delivery_place_id=f.delivery_place_id,
                     product_id=f.product_id,
-                    lot_id=lot.id,
-                    quantity=alloc_qty,
-                    priority=priority_counter,
+                    lot_id=res.lot_id,
+                    quantity=res.quantity,
+                    priority=res.priority,
                     allocation_type="soft",
                     source="forecast_import",
                 )
                 new_suggestions.append(suggestion)
 
                 # Update counters
-                needed -= alloc_qty
-                allocated_for_row += alloc_qty
-                lot._temp_allocated += alloc_qty  # type: ignore[attr-defined]
+                needed -= res.quantity
+                allocated_for_row += res.quantity
+
+                # Update temp allocation on lot for subsequent iterations in this loop
+                if not hasattr(allocated_lot, "_temp_allocated"):
+                    allocated_lot._temp_allocated = Decimal("0")  # type: ignore[attr-defined]
+                allocated_lot._temp_allocated += res.quantity  # type: ignore[attr-defined]
+
                 priority_counter += 1
 
             shortage = max(Decimal("0"), needed)

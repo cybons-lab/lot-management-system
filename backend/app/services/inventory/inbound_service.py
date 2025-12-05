@@ -13,8 +13,6 @@ from app.schemas.inventory.inbound_schema import (
     InboundPlanResponse,
     InboundPlanUpdate,
 )
-
-
 from app.services.inventory.inbound_line_service import InboundLineService
 
 
@@ -117,9 +115,7 @@ class InboundService:
             notes=plan.notes,
             created_at=plan.created_at,
             updated_at=plan.updated_at,
-            lines=[
-                InboundLineService(self.db).map_line_to_response(line) for line in plan.lines
-            ],
+            lines=[InboundLineService(self.db).map_line_to_response(line) for line in plan.lines],
         )
 
     def create_inbound_plan(self, plan: InboundPlanCreate) -> InboundPlanDetailResponse:

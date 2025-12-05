@@ -9,9 +9,9 @@ Handles execution of allocations:
 
 from __future__ import annotations
 
-from typing import Any
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import case as sa_case
 from sqlalchemy import select

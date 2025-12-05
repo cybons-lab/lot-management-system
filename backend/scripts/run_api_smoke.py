@@ -36,6 +36,7 @@ def load_json(name: str) -> dict | None:
         print_error(f"ファイルが見つかりません: {path}")
         return None
     from typing import cast
+
     with open(path, encoding="utf-8") as f:
         return cast(dict, json.load(f))
 

@@ -9,23 +9,30 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import date, datetime
 from decimal import Decimal
-from typing import cast, Optional
+from typing import cast
 
+from fastapi import HTTPException
 from sqlalchemy import Select, select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
 from app.domain.lot import FefoPolicy, LotCandidate, LotNotFoundError, StockValidator
-from app.models import Lot, Product, Supplier, Warehouse, StockMovement, StockMovementReason, VLotDetails
+from app.models import (
+    Lot,
+    Product,
+    StockMovement,
+    Supplier,
+    VLotDetails,
+    Warehouse,
+)
 from app.schemas.inventory.inventory_schema import (
     LotCreate,
-    LotUpdate,
     LotLock,
-    StockMovementCreate,
     LotResponse,
-    StockMovementResponse
+    LotUpdate,
+    StockMovementCreate,
+    StockMovementResponse,
 )
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
-from fastapi import HTTPException
 
 
 class LotRepository:
@@ -201,12 +208,16 @@ class LotService:
             query = query.filter(VLotDetails.maker_part_code == product_code)
 
         if supplier_code:
-            supplier = self.db.query(Supplier).filter(Supplier.supplier_code == supplier_code).first()
+            supplier = (
+                self.db.query(Supplier).filter(Supplier.supplier_code == supplier_code).first()
+            )
             if supplier:
                 query = query.filter(VLotDetails.supplier_id == supplier.id)
 
         if warehouse_code:
-            warehouse = self.db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
+            warehouse = (
+                self.db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
+            )
             if warehouse:
                 query = query.filter(VLotDetails.warehouse_id == warehouse.id)
 
@@ -261,9 +272,15 @@ class LotService:
 
         product = self.db.query(Product).filter(Product.id == lot_create.product_id).first()
         if not product:
-            raise HTTPException(status_code=404, detail=f"製品ID '{lot_create.product_id}' が見つかりません")
+            raise HTTPException(
+                status_code=404, detail=f"製品ID '{lot_create.product_id}' が見つかりません"
+            )
 
-        supplier = self.db.query(Supplier).filter(Supplier.supplier_code == lot_create.supplier_code).first()
+        supplier = (
+            self.db.query(Supplier)
+            .filter(Supplier.supplier_code == lot_create.supplier_code)
+            .first()
+        )
         if not supplier:
             raise HTTPException(
                 status_code=404,
@@ -272,7 +289,9 @@ class LotService:
 
         warehouse_id: int | None = None
         if lot_create.warehouse_id is not None:
-            warehouse = self.db.query(Warehouse).filter(Warehouse.id == lot_create.warehouse_id).first()
+            warehouse = (
+                self.db.query(Warehouse).filter(Warehouse.id == lot_create.warehouse_id).first()
+            )
             if not warehouse:
                 raise HTTPException(
                     status_code=404,
@@ -281,7 +300,9 @@ class LotService:
             warehouse_id = warehouse.id
         elif lot_create.warehouse_code:
             warehouse = (
-                self.db.query(Warehouse).filter(Warehouse.warehouse_code == lot_create.warehouse_code).first()
+                self.db.query(Warehouse)
+                .filter(Warehouse.warehouse_code == lot_create.warehouse_code)
+                .first()
             )
             if not warehouse:
                 raise HTTPException(
@@ -323,17 +344,28 @@ class LotService:
         updates = lot_update.model_dump(exclude_unset=True)
 
         if "warehouse_id" in updates:
-            warehouse = self.db.query(Warehouse).filter(Warehouse.id == updates["warehouse_id"]).first()
+            warehouse = (
+                self.db.query(Warehouse).filter(Warehouse.id == updates["warehouse_id"]).first()
+            )
             if not warehouse:
-                raise HTTPException(status_code=404, detail=f"倉庫ID '{updates['warehouse_id']}' が見つかりません")
+                raise HTTPException(
+                    status_code=404, detail=f"倉庫ID '{updates['warehouse_id']}' が見つかりません"
+                )
         elif "warehouse_code" in updates:
-            warehouse = self.db.query(Warehouse).filter(Warehouse.warehouse_code == updates["warehouse_code"]).first()
+            warehouse = (
+                self.db.query(Warehouse)
+                .filter(Warehouse.warehouse_code == updates["warehouse_code"])
+                .first()
+            )
             if not warehouse:
-                raise HTTPException(status_code=404, detail=f"倉庫コード '{updates['warehouse_code']}' が見つかりません")
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"倉庫コード '{updates['warehouse_code']}' が見つかりません",
+                )
             updates["warehouse_id"] = warehouse.id
 
         updates.pop("warehouse_code", None)
-        
+
         for key, value in updates.items():
             setattr(db_lot, key, value)
 
@@ -356,7 +388,7 @@ class LotService:
         db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
         if not db_lot:
             raise HTTPException(status_code=404, detail="ロットが見つかりません")
-        
+
         self.db.delete(db_lot)
         self.db.commit()
 
@@ -387,9 +419,9 @@ class LotService:
         db_lot.locked_quantity = locked_qty + quantity_to_lock
         if lock_data.reason:
             db_lot.lock_reason = lock_data.reason
-        
+
         db_lot.updated_at = datetime.now()
-        
+
         try:
             self.db.commit()
             self.db.refresh(db_lot)
@@ -400,8 +432,8 @@ class LotService:
         # Return view-based response
         lot_view = self.db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
         if not lot_view:
-             # Fallback if view not updated immediately (though within txn usually fine)
-             return self._build_lot_response(lot_id)
+            # Fallback if view not updated immediately (though within txn usually fine)
+            return self._build_lot_response(lot_id)
         return LotResponse.model_validate(lot_view)
 
     def unlock_lot(self, lot_id: int, unlock_data: LotLock | None = None) -> LotResponse:
@@ -431,10 +463,10 @@ class LotService:
 
         db_lot.updated_at = datetime.now()
         self.db.commit()
-        
+
         lot_view = self.db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
         if not lot_view:
-             return self._build_lot_response(lot_id)
+            return self._build_lot_response(lot_id)
         return LotResponse.model_validate(lot_view)
 
     def create_stock_movement(self, movement: StockMovementCreate) -> StockMovementResponse:
@@ -446,17 +478,17 @@ class LotService:
                 raise HTTPException(status_code=404, detail="ロットが見つかりません")
 
         # StockHistory does not store product/warehouse directly, but we validate lot link
-        
+
         # We need to map schema fields to model fields correctly
         # Schema: StockMovementCreate (alias of StockHistoryCreate) -> StockHistoryBase
         # Fields: transaction_type, quantity_change, quantity_after, reference_type, reference_id
-        
+
         db_movement = StockMovement(
             lot_id=movement.lot_id,
             transaction_type=movement.transaction_type,
             quantity_change=movement.quantity_change,
-            quantity_after=movement.quantity_after, # We will overwrite this after calc if needed, or trust input?
-                                                  # Better to calculate it to ensure consistency.
+            quantity_after=movement.quantity_after,  # We will overwrite this after calc if needed, or trust input?
+            # Better to calculate it to ensure consistency.
             reference_type=movement.reference_type,
             reference_id=movement.reference_id,
         )
@@ -466,17 +498,19 @@ class LotService:
 
         if movement.lot_id:
             # Re-fetch or use lot
-            if not lot: # Already fetched above
-                 lot = self.db.query(Lot).filter(Lot.id == movement.lot_id).first()
-            
+            if not lot:  # Already fetched above
+                lot = self.db.query(Lot).filter(Lot.id == movement.lot_id).first()
+
             if not lot:
                 self.db.rollback()
                 raise HTTPException(status_code=404, detail="ロットが見つかりません")
 
             # Calculate new quantity based on change
             # movement.quantity_change should be signed (+ or -)
-            projected_quantity = float(lot.current_quantity or 0.0) + float(movement.quantity_change)
-            
+            projected_quantity = float(lot.current_quantity or 0.0) + float(
+                movement.quantity_change
+            )
+
             if projected_quantity < 0:
                 self.db.rollback()
                 raise HTTPException(
@@ -486,16 +520,16 @@ class LotService:
                         f"変動 {movement.quantity_change}"
                     ),
                 )
-            
+
             lot.current_quantity = Decimal(str(projected_quantity))
             lot.updated_at = datetime.now()
-            
+
             # Update quantity_after in history to match reality
             db_movement.quantity_after = lot.current_quantity
 
         self.db.commit()
         self.db.refresh(db_movement)
-        return db_movement # type: ignore[return-value]
+        return db_movement  # type: ignore[return-value]
 
     def list_lot_movements(self, lot_id: int) -> list[StockMovementResponse]:
         """List movements for a lot."""
@@ -505,10 +539,10 @@ class LotService:
             .order_by(StockMovement.transaction_date.desc())
             .all()
         )
-        # Assuming Pydantic v2 validation or direct mapping happens at router, 
+        # Assuming Pydantic v2 validation or direct mapping happens at router,
         # but here we return ORM objects which FastAPI handles if return_type is set.
         # However, to be strict we might want to validate here.
-        return movements # type: ignore[return-value]
+        return movements  # type: ignore[return-value]
 
     def _build_lot_response(self, lot_id: int) -> LotResponse:
         """Helper to build LotResponse from Lot model definition (joined load)."""
@@ -519,13 +553,13 @@ class LotService:
             .first()
         )
         if not db_lot:
-             raise HTTPException(status_code=404, detail="Lot not found")
+            raise HTTPException(status_code=404, detail="Lot not found")
 
         response = LotResponse.model_validate(db_lot)
 
         if db_lot.product:
             response.product_name = db_lot.product.product_name
-            response.product_code = db_lot.product.product_code # type: ignore[attr-defined]
+            response.product_code = db_lot.product.product_code  # type: ignore[attr-defined]
 
         if db_lot.warehouse:
             response.warehouse_name = db_lot.warehouse.warehouse_name
@@ -535,6 +569,6 @@ class LotService:
             response.supplier_name = db_lot.supplier.supplier_name
             response.supplier_code = db_lot.supplier.supplier_code
 
-        response.current_quantity = float(db_lot.current_quantity or 0.0) # type: ignore[assignment]
+        response.current_quantity = float(db_lot.current_quantity or 0.0)  # type: ignore[assignment]
         response.last_updated = db_lot.updated_at
         return response

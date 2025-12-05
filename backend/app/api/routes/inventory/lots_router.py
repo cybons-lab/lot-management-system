@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -83,7 +83,7 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
     # Note: Service.get_lot returns Lot model, but for Response we need to build it with joined fields.
     # The service now has a internal _build_lot_response method used by create/update,
     # but strictly get_lot in service currently returns the ORM model without explicit joined load in the same way (it uses repository).
-    # However, to be consistent with previous router logic which used joinedload options, 
+    # However, to be consistent with previous router logic which used joinedload options,
     # we should check if service.get_lot is sufficient or if we should use the new service method _build_lot_response equivalent.
     # The extended service implementation I just added has _build_lot_response.
     # But I didn't expose it as public `get_lot_details` or similar.
@@ -101,7 +101,7 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
     # Actually, let's look at `LotService.get_lot` again from my memory/context.
     # It returns `Lot` model.
     # And `LotRepository.find_by_id` has `joinedload`.
-    
+
     # So validation from attributes works for basic fields.
     # But the manual mapping of `product_name` from relation was done in router.
     # I moved that manual mapping logic to `_build_lot_response` in service.
@@ -110,11 +110,11 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
     # `LotResponse` schema seems to have `product_name` fields that need to be populated.
     # Let's check `LotResponse` schema again? No I can't.
     # Assuming the router code was doing it manually means it's needed.
-    
+
     # I will implement the mapping logic here for `get_lot` to be safe, using `service.get_lot`.
     service = LotService(db)
     lot = service.get_lot(lot_id)
-    
+
     response = LotResponse.model_validate(lot)
 
     if lot.product:

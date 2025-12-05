@@ -227,11 +227,7 @@ def _collect_supplier_codes(data: FullSampleDataRequest) -> set[str]:
 def _collect_warehouse_codes(data: FullSampleDataRequest) -> set[str]:
     codes: set[str] = set()
     if data.lots:
-        codes.update(
-            lot.warehouse_code
-            for lot in data.lots
-            if lot.warehouse_code
-        )
+        codes.update(lot.warehouse_code for lot in data.lots if lot.warehouse_code)
     return codes
 
 

@@ -28,27 +28,27 @@ export function AllocationOrderLineCard({
   // 引当済み数量を計算(allocated_lotsまたはallocationsから)
   const allocatedQty: number = line.allocated_lots
     ? line.allocated_lots.reduce((sum: number, alloc) => {
-        // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
-        const qty =
-          typeof alloc === "object" && alloc !== null
-            ? Number(
-                (
-                  alloc as {
-                    allocated_quantity?: number | string | null;
-                    allocated_qty?: number | null;
-                  }
-                ).allocated_quantity ??
-                  (
-                    alloc as {
-                      allocated_quantity?: number | string | null;
-                      allocated_qty?: number | null;
-                    }
-                  ).allocated_qty ??
-                  0,
-              )
-            : 0;
-        return sum + qty;
-      }, 0)
+      // DDL v2.2: prefer allocated_quantity, fallback to allocated_qty
+      const qty =
+        typeof alloc === "object" && alloc !== null
+          ? Number(
+            (
+              alloc as {
+                allocated_quantity?: number | string | null;
+                allocated_qty?: number | null;
+              }
+            ).allocated_quantity ??
+            (
+              alloc as {
+                allocated_quantity?: number | string | null;
+                allocated_qty?: number | null;
+              }
+            ).allocated_qty ??
+            0,
+          )
+          : 0;
+      return sum + qty;
+    }, 0)
     : 0;
 
   // Prefer the original order quantity/unit for display; calculations fall back as needed
@@ -67,11 +67,10 @@ export function AllocationOrderLineCard({
   return (
     <button
       type="button"
-      className={`w-full cursor-pointer rounded-lg border p-3 text-left transition-all ${
-        isSelected
+      className={`w-full cursor-pointer rounded-lg border p-3 text-left transition-all ${isSelected
           ? "border-blue-500 bg-blue-50 shadow-md"
           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-      }`}
+        }`}
       onClick={onClick}
     >
       <div className="mb-2 flex items-start justify-between">
@@ -99,9 +98,8 @@ export function AllocationOrderLineCard({
       {/* 進捗バー */}
       <div className="mb-1 h-2 w-full rounded-full bg-gray-200">
         <div
-          className={`h-2 rounded-full transition-all ${
-            progress === 100 ? "bg-green-500" : "bg-blue-500"
-          }`}
+          className={`h-2 rounded-full transition-all ${progress === 100 ? "bg-green-500" : "bg-blue-500"
+            }`}
           style={{ width: `${Math.min(progress, 100)}%` }}
         />
       </div>
@@ -161,11 +159,43 @@ export function AllocationOrderLineCard({
       )}
 
       {/* 引当詳細(あれば表示) */}
-      {line.allocated_lots && line.allocated_lots.length > 0 && (
+      {line.allocations?.length || line.allocated_lots?.length ? (
         <div className="mt-2 border-t border-gray-200 pt-2">
-          <div className="text-xs text-gray-600">引当数: {line.allocated_lots.length} 件</div>
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-medium text-gray-500">引当内訳</div>
+            <div className="text-[10px] text-gray-400">
+              {(line.allocations || line.allocated_lots || []).length}件
+            </div>
+          </div>
+          <div className="mt-1 flex flex-col gap-1">
+            {((line.allocations || line.allocated_lots || []) as Array<{
+              allocated_quantity?: number | string | null;
+              allocated_qty?: number | null;
+              lot_number?: string | null;
+              lot_id?: number | string;
+              status?: string;
+            }>).map((alloc, idx) => {
+              // Handle both API naming (allocated_quantity) and legacy (allocated_qty)
+              const qty = Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0);
+              // Handle generic API response where lot_number might be missing in type but present in runtime
+              const lotNum = alloc.lot_number || `ID:${alloc.lot_id}`;
+              const isProvisional = alloc.status === "provisional";
+
+              return (
+                <div key={idx} className="flex justify-between text-[11px] text-gray-600">
+                  <span className="truncate pr-2" title={lotNum}>
+                    {lotNum}
+                    {isProvisional && <span className="ml-1 text-orange-600">(仮)</span>}
+                  </span>
+                  <span className="font-medium whitespace-nowrap">
+                    {formatQuantity(qty, unitLabel)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </div>
-      )}
+      ) : null}
     </button>
   );
 }

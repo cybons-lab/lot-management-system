@@ -47,7 +47,7 @@ with engine.connect() as conn:
         FROM delivery_places
     """)
     ).first()
-    
+
     if stats:
         print("\n統計情報:")
         print(f"  総納入先数: {stats.total}")

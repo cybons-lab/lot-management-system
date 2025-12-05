@@ -73,7 +73,7 @@ def run_migrations_online() -> None:
     if section is None:
         section = {}
     from typing import Any, cast
-    
+
     connectable = engine_from_config(
         cast(dict[str, Any], section),
         prefix="sqlalchemy.",

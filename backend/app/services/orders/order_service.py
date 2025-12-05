@@ -25,7 +25,6 @@ from app.models import (
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderLineResponse,
-    OrderResponse,
     OrderWithLinesResponse,
 )
 

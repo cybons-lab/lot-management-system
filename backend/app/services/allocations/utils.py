@@ -76,7 +76,7 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
             stmt = select(Product).where(Product.product_code == product_code)  # type: ignore[attr-defined]
             product = db.execute(stmt).scalar_one_or_none()
     if product and getattr(product, "next_div", None):
-        return getattr(product, "next_div"), None
+        return product.next_div, None
 
     product_code = getattr(line, "product_code", None)
     if not product_code and product:
