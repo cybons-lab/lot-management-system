@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
 import * as ordersApi from "@/features/orders/api";
@@ -17,6 +17,21 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
+    // Calculate totals
+    const hardAllocatedDb = useMemo(() => {
+        if (!orderLine?.allocated_lots) return 0;
+        return orderLine.allocated_lots
+            .filter((a: any) => a.allocation_type === 'hard')
+            .reduce((sum: number, a: any) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
+    }, [orderLine]);
+
+    const totalAllocated = useMemo(() => {
+        return Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
+    }, [lotAllocations]);
+
+    const hardAllocated = Math.min(totalAllocated, hardAllocatedDb);
+    const softAllocated = Math.max(0, totalAllocated - hardAllocatedDb);
+
     // Fetch candidates when orderLine changes
     useEffect(() => {
         if (!orderLine) {
@@ -34,22 +49,8 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
                 setCandidateLots(res.items);
 
                 // Initialize allocations from existing orderLine.allocated_lots if any
-                // Note: We need to map existing allocations to the local state
-                // But OrderLine from API (via getOrder) contains `allocations` or `allocated_lots`?
-                // normalize.ts says allocated_lots.
-                // Let's assume we start fresh or need to map it.
-                // For now, initially we might want to populate from existing if we are Editing.
-                // But usually "Allocate" means we are adding/modifying.
-                // If the backend `allocated_lots` has data, we should show it.
                 const initialAllocations: Record<number, number> = {};
                 if (orderLine.allocated_lots && Array.isArray(orderLine.allocated_lots)) {
-                    // Mapping logic if needed. 
-                    // However, the panel expects us to manage *updates*. 
-                    // If we are in "Edit" mode, we should pre-fill.
-                    // For simple implementation, we might rely on the backend response 
-                    // for current state and this state for *changes*.
-                    // But `LotAllocationPanel` takes `lotAllocations` as the *current* target state.
-                    // So we should pre-fill.
                     orderLine.allocated_lots.forEach((alloc: any) => {
                         if (alloc.lot_id) {
                             initialAllocations[alloc.lot_id] = Number(alloc.allocated_quantity || alloc.quantity || 0);
@@ -83,25 +84,13 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     const autoAllocate = useCallback(() => {
         if (!orderLine || candidateLots.length === 0) return;
 
-        // Simple FIFO/FEFO logic (candidates are usually sorted by expiry)
-        // We need to fill `orderLine.order_quantity - currentAllocated`?
-        // Or just fill total `order_quantity`.
-        // Let's assume we want to reach order_quantity.
-
-        // Calculate already allocated is tricky if we don't track what was already committed vs draft.
-        // But here `lotAllocations` represents the *desired* final state for this session.
-        // So we reset and fill up to order_quantity.
-
         let remaining = Number(orderLine.order_quantity);
         const newAllocations: Record<number, number> = {};
 
         for (const lot of candidateLots) {
             if (remaining <= 0) break;
 
-            const available = Number(lot.available_quantity || 0); // This should be "allocatable" qty
-            // Logic: min(remaining, available)
-            // Note: `current_quantity` - `allocated_quantity` = `free_qty`.
-
+            const available = Number(lot.available_quantity || 0);
             const allocQty = Math.min(remaining, available);
             if (allocQty > 0) {
                 newAllocations[lot.lot_id] = allocQty;
@@ -115,7 +104,6 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
         if (!orderLine) return;
         setIsSaving(true);
         try {
-            // Transform local state to API payload
             const allocationsList = Object.entries(lotAllocations)
                 .filter(([_, qty]) => qty > 0)
                 .map(([lotId, qty]) => ({
@@ -167,6 +155,9 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     return {
         candidateLots,
         lotAllocations,
+        hardAllocated,
+        softAllocated,
+        totalAllocated,
         isLoadingCandidates,
         isSaving,
         changeAllocation,

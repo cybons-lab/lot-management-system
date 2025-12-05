@@ -19,6 +19,8 @@ interface LotAllocationHeaderViewProps {
   orderQuantity: number;
   requiredQty: number;
   totalAllocated: number;
+  hardAllocated?: number;
+  softAllocated?: number;
   remainingQty: number;
   progressPercent: number;
   isOverAllocated: boolean;
@@ -47,17 +49,15 @@ export function LotAllocationHeaderView({
   productCode,
   productName,
   orderUnit,
-  inventoryUnit,
   orderQuantity,
-  requiredQty,
   totalAllocated,
+  hardAllocated,
+  softAllocated,
   remainingQty,
-  progressPercent,
   isOverAllocated,
   isComplete,
   justSaved,
   isSaving,
-  isLoading,
   hasCandidates,
   supplierName,
   onAutoAllocate,
@@ -72,8 +72,6 @@ export function LotAllocationHeaderView({
   hasExpiredError = false,
   lineStatus,
 }: LotAllocationHeaderViewProps) {
-  const isPartial = totalAllocated > 0 && remainingQty > 0;
-
   const { status, colorClass } = useAllocationStatus({
     isOverAllocated,
     isComplete,
@@ -115,27 +113,21 @@ export function LotAllocationHeaderView({
             deliveryDate={deliveryDate}
           />
 
-          <QuantityProgressSection
-            orderQuantity={orderQuantity}
-            orderUnit={orderUnit}
-            inventoryUnit={inventoryUnit}
-            requiredQty={requiredQty}
-            totalAllocated={totalAllocated}
-            remainingQty={remainingQty}
-            progressPercent={progressPercent}
-            isOverAllocated={isOverAllocated}
-            isComplete={isComplete}
-            isPartial={isPartial}
-            isLoading={isLoading}
-            isSaving={isSaving}
-            justSaved={justSaved}
-            hasCandidates={hasCandidates}
-            canSave={canSave}
-            onAutoAllocate={onAutoAllocate}
-            onClearAllocations={onClearAllocations}
-            onSaveAllocations={onSaveAllocations}
-            onConfirmHard={onConfirmHard}
-          />
+          <div className="col-span-5">
+            <QuantityProgressSection
+              required={orderQuantity}
+              allocated={totalAllocated}
+              hardAllocated={hardAllocated}
+              softAllocated={softAllocated}
+              unit={orderUnit}
+              onAutoAllocate={onAutoAllocate}
+              onClear={onClearAllocations}
+              onSave={onSaveAllocations}
+              onConfirmHard={onConfirmHard}
+              isSaving={isSaving}
+              canSave={canSave}
+            />
+          </div>
 
           <StatusSection
             statusBadge={<AllocationStatusBadge status={status} colorClass={colorClass} />}

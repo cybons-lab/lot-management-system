@@ -19,6 +19,8 @@ interface LotAllocationHeaderProps {
 
   requiredQty: number;
   totalAllocated: number;
+  hardAllocated?: number;
+  softAllocated?: number;
   remainingQty: number;
   progressPercent: number;
   isOverAllocated: boolean;
@@ -45,6 +47,8 @@ export function LotAllocationHeader({
   productName: propProductName,
   requiredQty,
   totalAllocated,
+  hardAllocated,
+  softAllocated,
   remainingQty,
   progressPercent,
   isOverAllocated,
@@ -100,6 +104,8 @@ export function LotAllocationHeader({
       orderQuantity={orderQuantity}
       requiredQty={requiredQty}
       totalAllocated={totalAllocated}
+      hardAllocated={hardAllocated}
+      softAllocated={softAllocated}
       remainingQty={remainingQty}
       progressPercent={progressPercent}
       isOverAllocated={isOverAllocated}

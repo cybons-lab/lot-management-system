@@ -176,6 +176,8 @@ function AllocationDialog({
   const {
     candidateLots,
     lotAllocations,
+    hardAllocated,
+    softAllocated,
     isLoadingCandidates,
     isSaving,
     changeAllocation,
@@ -213,6 +215,8 @@ function AllocationDialog({
             isSaving={isSaving}
             canSave={Object.keys(lotAllocations).length > 0}
             isActive={true}
+            hardAllocated={hardAllocated}
+            softAllocated={softAllocated}
           />
         </div>
       </DialogContent>

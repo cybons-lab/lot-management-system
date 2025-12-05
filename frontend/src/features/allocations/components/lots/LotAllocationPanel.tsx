@@ -35,6 +35,10 @@ interface LotAllocationPanelProps {
   // Active state management
   isActive?: boolean;
   onActivate?: () => void;
+
+  // New props
+  hardAllocated?: number;
+  softAllocated?: number;
 }
 
 /**
@@ -61,6 +65,8 @@ export function LotAllocationPanel({
   deliveryPlaceName: propDeliveryPlaceName,
   isActive = false,
   onActivate,
+  hardAllocated,
+  softAllocated,
 }: LotAllocationPanelProps & { deliveryPlaceName?: string }) {
   // 数量計算（カスタムフックで集約）
   const calculations = useAllocationCalculations({
@@ -167,6 +173,8 @@ export function LotAllocationPanel({
             deliveryPlaceName={deliveryPlaceName}
             requiredQty={requiredQty}
             totalAllocated={totalAllocated}
+            hardAllocated={hardAllocated}
+            softAllocated={softAllocated}
             remainingQty={displayRemaining}
             progressPercent={progressPercent}
             isOverAllocated={isOverAllocated}
