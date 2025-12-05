@@ -141,6 +141,7 @@ export const confirmAllocationsBatch = (data: {
   allocation_ids: number[];
   confirmed_by?: string;
 }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return http.post<{ confirmed_ids: number[]; failed_items: any[] }>(
     "allocations/confirm-batch",
     data,

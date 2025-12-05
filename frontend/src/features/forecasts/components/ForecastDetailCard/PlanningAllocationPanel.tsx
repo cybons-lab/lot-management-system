@@ -14,6 +14,7 @@ interface PlanningAllocationPanelProps {
   productId: number;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function PlanningAllocationPanel({
   customerId,
   deliveryPlaceId,

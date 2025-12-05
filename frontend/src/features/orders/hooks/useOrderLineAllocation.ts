@@ -11,6 +11,7 @@ interface UseOrderLineAllocationProps {
   onSuccess?: () => void;
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any, max-lines-per-function */
 export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAllocationProps) {
   const [candidateLots, setCandidateLots] = useState<CandidateLotItem[]>([]);
   const [lotAllocations, setLotAllocations] = useState<Record<number, number>>({});

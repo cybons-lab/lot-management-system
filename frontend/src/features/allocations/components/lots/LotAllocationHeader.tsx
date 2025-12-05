@@ -4,7 +4,7 @@ import type { OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 
 interface LotAllocationHeaderProps {
-  order: any;
+  order: unknown;
   orderLine: OrderLine;
   customerName: string;
   productName: string;

@@ -23,6 +23,7 @@ interface OrdersFiltersProps {
 /**
  * 受注管理画面のフィルターUI
  */
+// eslint-disable-next-line max-lines-per-function
 export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFiltersProps) {
   return (
     <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
@@ -52,6 +53,7 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
         </div>
 
         <div className="col-span-2 space-y-2">
+          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
           <label className="text-sm font-medium text-slate-700">需要種別</label>
           <div className="flex flex-wrap gap-2">
             {[

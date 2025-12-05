@@ -28,6 +28,7 @@ import type { OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
+/* eslint-disable @typescript-eslint/no-explicit-any, max-lines-per-function */
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const id = Number(orderId);

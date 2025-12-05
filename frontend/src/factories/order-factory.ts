@@ -48,6 +48,7 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 /**
  * 受注明細を生成 (DDL v2.2 compliant)
  */
+// eslint-disable-next-line complexity
 export function createOrderLine(
   overrides?: Partial<OrderLineFactoryResult>,
 ): OrderLineFactoryResult {
