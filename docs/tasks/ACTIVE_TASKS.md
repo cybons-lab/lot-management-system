@@ -13,37 +13,70 @@
 |--------|------|------|
 | P1（高） | 0 | 完了 |
 | P2（中） | 2 | 対応中 |
-| P3（低） | 3 | 将来対応 |
+| P3（低） | 4 | 将来対応 |
 
 ---
 
 ## 📋 抑制コメント まとめ
 
-| 種類 | 件数 | カテゴリ |
-|------|------|----------|
-| eslint-disable | 39件 | Frontend Lint |
-| @typescript-eslint/no-explicit-any | 1件 | (external-modules.d.tsのみ) |
-| type: ignore | 0件 | Backend Mypy ✅ |
-| noqa | 42件 | Backend Ruff (意図的) |
-| pragma: no cover | 5件 | テストカバレッジ除外（正常） |
-| TODO | 9件 | 未完了タスク（バックエンド待ち） |
+| 種類 | 件数 | 状態 |
+|------|------|------|
+| eslint-disable | 39件 | ✅ 全てにコメント追加済み |
+| @typescript-eslint/no-explicit-any | 1件 | ✅ 完了（external-modules.d.tsのみ） |
+| type: ignore | 0件 | ✅ 完了 |
+| noqa | 42件 | ✅ 意図的（Backend Ruff） |
+| pragma: no cover | 5件 | ✅ テストカバレッジ除外（正常） |
+| TODO | 9件 | 🟡 バックエンド待ち |
 
-### � eslint-disable (39件) 内訳:
-- `max-lines-per-function`: 約25件（関数分割を検討）
-- `complexity`: 約8件
-- `max-params`: 1件
-- `jsx-a11y`: 1件
-
-### 🔴 残りのTODO（9件）- 全てバックエンド待ち
+### 残りのTODO（9件）- 全てバックエンド待ち
 
 | ファイル | 内容 | 対応時期 |
 |----------|------|----------|
-| `CustomerBulkImportDialog.tsx` | Backend import未実装 | P3 |
-| `ProductBulkImportDialog.tsx` | Backend import未実装 | P3 |
+| `CustomerBulkImportDialog.tsx` (2件) | Backend import未実装 | P3 |
+| `ProductBulkImportDialog.tsx` (2件) | Backend import未実装 | P3 |
 | `useWarehouseData.ts` | 入荷予定を倉庫別に集約 | P2-23 |
 | `useAllocationMutations.ts` (2件) | バックエンドAPI待ち | 将来 |
 | `sap_service.py` | 本番SAP API統合 | P3 |
 | `suggestion.py` | 削除範囲の最適化 | 将来 |
+
+---
+
+## P3 - 将来のリファクタリング候補
+
+### eslint-disable削減（39件）
+
+**ステータス:** コメント追加済み、リファクタリングは将来対応
+
+現在残っている39件のeslint-disableは、全てに理由コメントを追加済み。
+削減するには以下のリファクタリングが必要：
+
+#### `max-lines-per-function` (約25件)
+
+| ファイル | 行数 | リファクタリング案 |
+|----------|------|-------------------|
+| `App.tsx` | ~200行 | ルート定義を別ファイルに分離 |
+| `GlobalNavigation.tsx` | ~100行 | NavItemsを別コンポーネントに分離 |
+| `LineBasedAllocationList.tsx` | ~200行 | 仮想スクロール/フィルタ/グルーピングを分離 |
+| `PrimaryAssignmentsPage.tsx` | ~200行 | テーブル/サマリー/ダイアログを分離 |
+| `OrderDetailPage.tsx` | ~160行 | AllocationDialogを別ファイルに分離 |
+| `*BulkImportDialog.tsx` | ~250行 | プレビュー/結果表示を別コンポーネントに分離 |
+| その他ダイアログ/フォーム | 各100-150行 | フォームフィールドを別コンポーネントに分離 |
+
+#### `complexity` (約8件)
+
+| ファイル | リファクタリング案 |
+|----------|-------------------|
+| `getOrderQuantity()` | 単位変換ロジックを別ユーティリティに分離 |
+| `LotInfoSection.tsx` | 条件分岐をhelper関数に分離 |
+| `AllocationInputSection.tsx` | 状態計算をカスタムフックに分離 |
+| `parseXxxCsv()` | バリデーションを別関数に分離 |
+| `SearchableSelect.tsx` | ドロップダウン状態管理を別フックに分離（済） |
+
+#### `max-params` (1件)
+
+| ファイル | リファクタリング案 |
+|----------|-------------------|
+| `filterHelpers.ts` | パラメータをオブジェクト（options）にまとめる |
 
 ---
 
@@ -114,6 +147,7 @@ APScheduler または Celery Beat の導入検討。
 - [x] pre-commit設定改善（docformatter削除、ruff統一）
 - [x] no-explicit-any: 5件 → 1件（external-modules.d.tsのみ）
 - [x] system_router.py: ユーザー名をJoinで取得
+- [x] eslint-disable: 39件に理由コメント追加
 
 ---
 
