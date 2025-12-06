@@ -11,8 +11,7 @@ class OrderBusinessRules:
 
     @staticmethod
     def validate_order_no(order_no: str) -> None:
-        """
-        受注番号のバリデーション.
+        """受注番号のバリデーション.
 
         Args:
             order_no: 受注番号
@@ -28,8 +27,7 @@ class OrderBusinessRules:
 
     @staticmethod
     def validate_quantity(quantity: float, product_code: str) -> None:
-        """
-        数量のバリデーション.
+        """数量のバリデーション.
 
         Args:
             quantity: 数量
@@ -45,8 +43,7 @@ class OrderBusinessRules:
 
     @staticmethod
     def validate_due_date(due_date: date | None, order_date: date) -> None:
-        """
-        納期のバリデーション.
+        """納期のバリデーション.
 
         Args:
             due_date: 納期
@@ -62,8 +59,7 @@ class OrderBusinessRules:
 
     @staticmethod
     def calculate_progress_percentage(total_qty: float, allocated_qty: float) -> float:
-        """
-        進捗率を計算.
+        """進捗率を計算.
 
         Args:
             total_qty: 総数量

@@ -1,8 +1,5 @@
 # backend/app/domain/allocation/rounding.py
-"""
-数量丸めポリシー
-既存の丸めロジックを再現し、挙動を変更しない.
-"""
+"""数量丸めポリシー 既存の丸めロジックを再現し、挙動を変更しない."""
 
 from decimal import ROUND_CEILING, ROUND_FLOOR, ROUND_HALF_UP, Decimal
 from enum import Enum
@@ -23,8 +20,7 @@ class RoundingPolicy:
     def round_quantity(
         value: float, mode: RoundingMode = RoundingMode.ROUND_HALF_UP, precision: int = 2
     ) -> float:
-        """
-        数量を指定されたモードで丸める.
+        """数量を指定されたモードで丸める.
 
         Args:
             value: 丸める値
@@ -50,16 +46,10 @@ class RoundingPolicy:
 
     @classmethod
     def round_allocation_qty(cls, qty: float) -> float:
-        """
-        引当数量の丸め（既存挙動を再現）
-        デフォルト: 四捨五入、小数点以下2桁.
-        """
+        """引当数量の丸め（既存挙動を再現） デフォルト: 四捨五入、小数点以下2桁."""
         return cls.round_quantity(qty, RoundingMode.ROUND_HALF_UP, precision=2)
 
     @classmethod
     def round_stock_qty(cls, qty: float) -> float:
-        """
-        在庫数量の丸め（既存挙動を再現）
-        デフォルト: 四捨五入、小数点以下2桁.
-        """
+        """在庫数量の丸め（既存挙動を再現） デフォルト: 四捨五入、小数点以下2桁."""
         return cls.round_quantity(qty, RoundingMode.ROUND_HALF_UP, precision=2)

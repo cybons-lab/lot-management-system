@@ -16,8 +16,7 @@ def create_adjustment(
     adjustment: AdjustmentCreate,
     db: Session = Depends(get_db),
 ):
-    """
-    在庫調整登録.
+    """在庫調整登録.
 
     Args:
         adjustment: 在庫調整データ
@@ -47,8 +46,7 @@ def list_adjustments(
     adjustment_type: str | None = None,
     db: Session = Depends(get_db),
 ):
-    """
-    在庫調整履歴取得.
+    """在庫調整履歴取得.
 
     Args:
         skip: スキップ件数（ページネーション用）
@@ -74,8 +72,7 @@ def get_adjustment(
     adjustment_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    在庫調整詳細取得.
+    """在庫調整詳細取得.
 
     Args:
         adjustment_id: 在庫調整ID

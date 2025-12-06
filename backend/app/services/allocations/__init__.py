@@ -1,5 +1,4 @@
-"""
-Allocations Service Package.
+"""Allocations Service Package.
 
 Modules:
 - core: CRUD operations and stock movements

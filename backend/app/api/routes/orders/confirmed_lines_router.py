@@ -34,8 +34,8 @@ class ConfirmedOrderLineResponse(BaseModel):
 
 @router.get("/confirmed-order-lines", response_model=list[ConfirmedOrderLineResponse])
 def get_confirmed_order_lines(db: Session = Depends(get_db)):
-    """
-    Get all order lines that are fully allocated and not yet registered in SAP.
+    """Get all order lines that are fully allocated and not yet registered in
+    SAP.
 
     Returns lines where allocated_quantity >= converted_quantity and sap_order_no is NULL.
 

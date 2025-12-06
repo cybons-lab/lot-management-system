@@ -1,4 +1,6 @@
-"""Forecast API endpoints for v2.4 schema (forecast_current / forecast_history)."""
+"""Forecast API endpoints for v2.4 schema (forecast_current /
+forecast_history).
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -29,8 +31,7 @@ def list_forecasts(
     product_id: int | None = None,
     db: Session = Depends(get_db),
 ):
-    """
-    フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.
+    """フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.
 
     Args:
         skip: スキップ件数（ページネーション用）
@@ -62,8 +63,7 @@ def list_forecast_history(
     product_id: int | None = None,
     db: Session = Depends(get_db),
 ):
-    """
-    フォーキャスト履歴取得.
+    """フォーキャスト履歴取得.
 
     Args:
         skip: スキップ件数
@@ -91,8 +91,7 @@ def get_forecast(
     forecast_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    フォーキャスト詳細取得.
+    """フォーキャスト詳細取得.
 
     Args:
         forecast_id: フォーキャストID
@@ -123,8 +122,7 @@ def create_forecast(
     data: ForecastCreate,
     db: Session = Depends(get_db),
 ):
-    """
-    フォーキャスト作成.
+    """フォーキャスト作成.
 
     Args:
         data: フォーキャスト作成データ
@@ -143,8 +141,7 @@ def update_forecast(
     data: ForecastUpdate,
     db: Session = Depends(get_db),
 ):
-    """
-    フォーキャスト更新.
+    """フォーキャスト更新.
 
     Args:
         forecast_id: フォーキャストID
@@ -172,8 +169,7 @@ def delete_forecast(
     forecast_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    フォーキャスト削除.
+    """フォーキャスト削除.
 
     Args:
         forecast_id: フォーキャストID
@@ -204,8 +200,7 @@ def bulk_import_forecasts(
     request: ForecastBulkImportRequest,
     db: Session = Depends(get_db),
 ):
-    """
-    フォーキャスト一括インポート.
+    """フォーキャスト一括インポート.
 
     CSVデータからフォーキャストを一括登録します。
     replace_existing=True の場合、同じ顧客×納入先×製品の既存データを

@@ -14,8 +14,7 @@ class InboundLineService:
     """Business logic for inbound plan lines and expected lots."""
 
     def __init__(self, db: Session):
-        """
-        Initialize inbound line service.
+        """Initialize inbound line service.
 
         Args:
             db: Database session
@@ -47,8 +46,7 @@ class InboundLineService:
         )
 
     def get_lines_by_plan(self, plan_id: int) -> list[InboundPlanLineResponse]:
-        """
-        Get all inbound plan lines for a plan.
+        """Get all inbound plan lines for a plan.
 
         Args:
             plan_id: Inbound plan ID
@@ -68,8 +66,7 @@ class InboundLineService:
     def create_line(
         self, plan_id: int, line_data: InboundPlanLineCreate
     ) -> InboundPlanLineResponse:
-        """
-        Create inbound plan line (and expected lots).
+        """Create inbound plan line (and expected lots).
 
         Args:
             plan_id: Inbound plan ID
@@ -91,7 +88,9 @@ class InboundLineService:
     def create_line_internal(
         self, plan_id: int, line_data: InboundPlanLineCreate
     ) -> InboundPlanLineResponse:
-        """Internal method to create a line without re-verifying plan existence (for transaction reuse)."""
+        """Internal method to create a line without re-verifying plan existence
+        (for transaction reuse).
+        """
         db_line = InboundPlanLine(
             inbound_plan_id=plan_id,
             product_id=line_data.product_id,

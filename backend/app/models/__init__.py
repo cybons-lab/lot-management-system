@@ -1,7 +1,7 @@
 """SQLAlchemy models for the Lot Management System.
 
-All models strictly follow the DDL v2.2 (lot_management_ddl_v2_2_id.sql).
-Legacy models have been removed.
+All models strictly follow the DDL v2.2
+(lot_management_ddl_v2_2_id.sql). Legacy models have been removed.
 """
 
 from .assignments.assignment_models import UserSupplierAssignment

@@ -1,8 +1,5 @@
 # backend/app/core/errors.py
-"""
-グローバル例外ハンドラ
-ドメイン例外をHTTPレスポンスに変換（Problem+JSON準拠）.
-"""
+"""グローバル例外ハンドラ ドメイン例外をHTTPレスポンスに変換（Problem+JSON準拠）."""
 
 import logging
 import traceback
@@ -120,8 +117,7 @@ DOMAIN_EXCEPTION_MAP: dict[type[DomainError], int] = {
 
 
 def _problem_json(title: str, status_code: int, detail: str, instance: str, **kwargs) -> dict:
-    """
-    Problem+JSON形式のレスポンスを生成.
+    """Problem+JSON形式のレスポンスを生成.
 
     RFC 7807: https://tools.ietf.org/html/rfc7807
     """
@@ -137,8 +133,7 @@ def _problem_json(title: str, status_code: int, detail: str, instance: str, **kw
 
 
 async def domain_exception_handler(request: Request, exc: DomainError) -> JSONResponse:
-    """
-    ドメイン例外をHTTPレスポンスに変換.
+    """ドメイン例外をHTTPレスポンスに変換.
 
     Args:
         request: FastAPIリクエスト
@@ -199,8 +194,7 @@ async def domain_exception_handler(request: Request, exc: DomainError) -> JSONRe
 
 
 async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
-    """
-    HTTPExceptionをProblem+JSON形式に変換.
+    """HTTPExceptionをProblem+JSON形式に変換.
 
     Args:
         request: FastAPIリクエスト
@@ -238,8 +232,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException) 
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    """
-    バリデーションエラーをProblem+JSON形式に変換.
+    """バリデーションエラーをProblem+JSON形式に変換.
 
     Args:
         request: FastAPIリクエスト
@@ -287,8 +280,7 @@ async def validation_exception_handler(
 
 
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """
-    予期しない例外をProblem+JSON形式に変換.
+    """予期しない例外をProblem+JSON形式に変換.
 
     Args:
         request: FastAPIリクエスト

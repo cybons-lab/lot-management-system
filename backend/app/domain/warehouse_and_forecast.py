@@ -1,8 +1,5 @@
 # backend/app/domain/warehouse/__init__.py
-"""
-Warehouse Domain Layer
-倉庫配分ロジック、倉庫間移動ルール.
-"""
+"""Warehouse Domain Layer 倉庫配分ロジック、倉庫間移動ルール."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -51,8 +48,7 @@ class AllocationPolicy:
     def validate_total_quantity(
         allocations: list[WarehouseAllocation], required_quantity: float
     ) -> None:
-        """
-        配分合計が要求数量と一致するかチェック.
+        """配分合計が要求数量と一致するかチェック.
 
         Args:
             allocations: 倉庫配分のリスト
@@ -69,8 +65,7 @@ class AllocationPolicy:
 
     @staticmethod
     def validate_positive_quantities(allocations: list[WarehouseAllocation]) -> None:
-        """
-        すべての配分数量が正であるかチェック.
+        """すべての配分数量が正であるかチェック.
 
         Args:
             allocations: 倉庫配分のリスト
@@ -147,8 +142,7 @@ class ForecastDomainService:
 
     @staticmethod
     def calculate_date_key(target_date: date) -> str:
-        """
-        日付からキーを生成.
+        """日付からキーを生成.
 
         Args:
             target_date: 対象日付
@@ -160,8 +154,7 @@ class ForecastDomainService:
 
     @staticmethod
     def calculate_match_confidence(order_date: date, forecast_date: date) -> float:
-        """
-        マッチングの信頼度を計算.
+        """マッチングの信頼度を計算.
 
         Args:
             order_date: 受注日
@@ -190,8 +183,7 @@ class ForecastValidator:
 
     @staticmethod
     def validate_forecast_quantity(quantity: float) -> None:
-        """
-        フォーキャスト数量のバリデーション.
+        """フォーキャスト数量のバリデーション.
 
         Args:
             quantity: 数量

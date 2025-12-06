@@ -37,8 +37,7 @@ class VCustomerDailyProduct(Base):
 
 
 class VLotAvailableQty(Base):
-    """
-    v_lot_available_qty ビュー（読み取り専用）.
+    """v_lot_available_qty ビュー（読み取り専用）.
 
     利用可能なロットの数量情報を提供するビュー。
     - 期限切れのロットを除外
@@ -59,8 +58,7 @@ class VLotAvailableQty(Base):
 
 
 class VOrderLineContext(Base):
-    """
-    v_order_line_context ビュー（読み取り専用）.
+    """v_order_line_context ビュー（読み取り専用）.
 
     注文行のコンテキスト情報を提供するビュー。
     """
@@ -123,11 +121,9 @@ class VProductCodeToId(Base):
 
 
 class VCandidateLotsByOrderLine(Base):
-    """
-    v_candidate_lots_by_order_line ビュー（読み取り専用）.
+    """v_candidate_lots_by_order_line ビュー（読み取り専用）.
 
-    注文行ごとの候補ロット一覧を提供するビュー。
-    FEFO（先入先出）順にソートされている。
+    注文行ごとの候補ロット一覧を提供するビュー。 FEFO（先入先出）順にソートされている。
     """
 
     __tablename__ = "v_candidate_lots_by_order_line"
@@ -144,8 +140,7 @@ class VCandidateLotsByOrderLine(Base):
 
 
 class VLotDetails(Base):
-    """
-    v_lot_details ビュー（読み取り専用）.
+    """v_lot_details ビュー（読み取り専用）.
 
     ロット詳細情報を提供するビュー。
     - lots テーブルをベースに、products, warehouses, suppliers を JOIN
@@ -184,8 +179,7 @@ LotDetails = VLotDetails
 
 
 class VOrderLineDetails(Base):
-    """
-    v_order_line_details ビュー（読み取り専用）.
+    """v_order_line_details ビュー（読み取り専用）.
 
     受注明細の詳細情報ビュー。
     - 受注、顧客、商品、納入先、仕入元、引当情報を含む
@@ -233,8 +227,7 @@ class VOrderLineDetails(Base):
 
 
 class VInventorySummary(Base):
-    """
-    v_inventory_summary ビュー（読み取り専用）.
+    """v_inventory_summary ビュー（読み取り専用）.
 
     在庫集計ビュー。
     - 商品・倉庫ごとの在庫総数、引当済数、有効在庫数を集計

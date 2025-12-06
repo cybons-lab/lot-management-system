@@ -1,5 +1,4 @@
-"""
-Pydantic schemas package.
+"""Pydantic schemas package.
 
 Organized into feature-based subpackages:
 - common/ - Base schemas and common utilities (2 files)

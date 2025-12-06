@@ -1,5 +1,4 @@
-"""
-Allocation actions service.
+"""Allocation actions service.
 
 Handles execution of allocations:
 - Commit FEFO allocation
@@ -33,8 +32,7 @@ from app.services.allocations.utils import (
 
 
 def validate_commit_eligibility(order: Order) -> None:
-    """
-    Validate order status for commit operation.
+    """Validate order status for commit operation.
 
     Args:
         order: Order entity
@@ -53,8 +51,7 @@ def persist_allocation_entities(
     line_plan: FefoLinePlan,
     created: list[Allocation],
 ) -> None:
-    """
-    Persist allocation entities with pessimistic locking.
+    """Persist allocation entities with pessimistic locking.
 
     Args:
         db: Database session
@@ -117,8 +114,7 @@ def persist_allocation_entities(
 
 
 def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
-    """
-    FEFO引当確定（状態: open|part_allocated のみ許容）.
+    """FEFO引当確定（状態: open|part_allocated のみ許容）.
 
     Args:
         db: データベースセッション
@@ -160,8 +156,7 @@ def allocate_manually(
     *,
     commit_db: bool = True,
 ) -> Allocation:
-    """
-    手動引当実行 (Drag & Assign).
+    """手動引当実行 (Drag & Assign).
 
     Args:
         db: データベースセッション
@@ -244,8 +239,7 @@ def allocate_manually(
 
 
 def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True) -> None:
-    """
-    引当をキャンセル.
+    """引当をキャンセル.
 
     Args:
         db: データベースセッション
@@ -290,8 +284,7 @@ def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True
 
 
 def bulk_cancel_allocations(db: Session, allocation_ids: list[int]) -> tuple[list[int], list[int]]:
-    """
-    引当を一括キャンセル.
+    """引当を一括キャンセル.
 
     Args:
         db: データベースセッション
@@ -322,8 +315,7 @@ def preempt_soft_allocations_for_hard(
     required_qty: Decimal,
     hard_demand_id: int,
 ) -> list[dict]:
-    """
-    Hard引当時に同ロットのSoft引当を自動解除.
+    """Hard引当時に同ロットのSoft引当を自動解除.
 
     優先度: KANBAN > ORDER > FORECAST (優先度の低いものから解除)
 
@@ -429,8 +421,7 @@ def confirm_hard_allocation(
     quantity: Decimal | None = None,
     commit_db: bool = True,
 ) -> tuple[Allocation, Allocation | None]:
-    """
-    Soft引当をHard引当に確定（Soft → Hard変換）.
+    """Soft引当をHard引当に確定（Soft → Hard変換）.
 
     Args:
         db: データベースセッション
@@ -568,8 +559,7 @@ def confirm_hard_allocations_batch(
     *,
     confirmed_by: str | None = None,
 ) -> tuple[list[int], list[dict]]:
-    """
-    複数の引当を一括でHard確定.
+    """複数の引当を一括でHard確定.
 
     Args:
         db: データベースセッション
@@ -631,8 +621,7 @@ def auto_allocate_line(
     db: Session,
     order_line_id: int,
 ) -> list[Allocation]:
-    """
-    受注明細に対してFEFO戦略で自動引当を実行.
+    """受注明細に対してFEFO戦略で自動引当を実行.
 
     Args:
         db: データベースセッション
@@ -715,8 +704,7 @@ def auto_allocate_bulk(
     order_type: str | None = None,
     skip_already_allocated: bool = True,
 ) -> dict:
-    """
-    複数受注明細に対して一括でFEFO自動引当を実行.
+    """複数受注明細に対して一括でFEFO自動引当を実行.
 
     フィルタリング条件を指定して対象を絞り込み可能。
     フォーキャストグループ、個別受注、全受注への一括引当に対応。
@@ -814,8 +802,7 @@ def _auto_allocate_line_no_commit(
     order_line_id: int,
     required_qty: Decimal,
 ) -> list[Allocation]:
-    """
-    auto_allocate_line の内部版（コミットなし）.
+    """auto_allocate_line の内部版（コミットなし）.
 
     Args:
         db: データベースセッション

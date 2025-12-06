@@ -181,6 +181,10 @@ export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
   received_date?: string | null;
   document_date?: string | null;
   status?: string | null; // Legacy field
+  locked_by_user_id?: number | null; // Editor user ID (optimistic lock)
+  locked_by_user_name?: string | null; // Editor display name
+  locked_by?: string | null; // Fallback: some APIs may return a simple string
+  locked_at?: string | null; // Locked timestamp (ISO)
   lines?: OrderLine[];
 };
 
@@ -200,6 +204,10 @@ export type OrderWithLinesResponse = Omit<ApiOrderWithLinesResponse, "lines"> & 
   received_date?: string | null;
   document_date?: string | null;
   status?: string | null; // Legacy field
+  locked_by_user_id?: number | null; // Editor user ID (optimistic lock)
+  locked_by_user_name?: string | null; // Editor display name
+  locked_by?: string | null; // Fallback: some APIs may return a simple string
+  locked_at?: string | null; // Locked timestamp (ISO)
   lines?: OrderLine[];
 };
 

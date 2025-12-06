@@ -1,8 +1,5 @@
 # backend/app/api/deps.py
-"""
-API 依存性注入ヘルパー（UnitOfWork DI追加版）
-共通の依存関係とユーティリティ.
-"""
+"""API 依存性注入ヘルパー（UnitOfWork DI追加版） 共通の依存関係とユーティリティ."""
 
 from collections.abc import Generator
 
@@ -13,8 +10,7 @@ from app.services.common.uow_service import UnitOfWork
 
 
 def get_db() -> Generator[Session]:
-    """
-    データベースセッションの依存性注入（読み取り専用用）.
+    """データベースセッションの依存性注入（読み取り専用用）.
 
     Yields:
         Session: SQLAlchemyセッション
@@ -30,8 +26,7 @@ def get_db() -> Generator[Session]:
 
 
 def get_uow() -> Generator[UnitOfWork]:
-    """
-    UnitOfWorkの依存性注入（更新系用）.
+    """UnitOfWorkの依存性注入（更新系用）.
 
     Note:
         - トランザクション管理が必要な更新系エンドポイントで使用

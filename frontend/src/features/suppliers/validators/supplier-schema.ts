@@ -17,6 +17,7 @@ export const supplierSchema = z.object({
 });
 
 export type Supplier = {
+  id: number;
   supplier_code: string;
   supplier_name: string;
   address?: string | null;

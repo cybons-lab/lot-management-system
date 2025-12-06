@@ -40,18 +40,24 @@ def get_recent_logs(
     db: Session = Depends(get_db),
 ):
     """Get recent system logs (Admin only ideally)."""
-    # For now just check login
-    logs = db.query(ClientLog).order_by(desc(ClientLog.created_at)).limit(limit).all()
+    # Join User to get username
+    logs = (
+        db.query(ClientLog, User)
+        .outerjoin(User, ClientLog.user_id == User.id)
+        .order_by(desc(ClientLog.created_at))
+        .limit(limit)
+        .all()
+    )
 
     return [
         {
-            "id": l.id,
-            "user_id": l.user_id,
-            "username": l.user_id,  # TODO: Join user to get name if needed, simple mapping for now
-            "level": l.level,
-            "message": l.message,
-            "user_agent": l.user_agent,
-            "created_at": l.created_at,
+            "id": log.id,
+            "user_id": log.user_id,
+            "username": user.username if user else None,
+            "level": log.level,
+            "message": log.message,
+            "user_agent": log.user_agent,
+            "created_at": log.created_at,
         }
-        for l in logs
+        for log, user in logs
     ]

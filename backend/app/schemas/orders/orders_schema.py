@@ -1,7 +1,8 @@
 """Order management Pydantic schemas (DDL v2.2 compliant).
 
 All schemas strictly follow the DDL as the single source of truth.
-Legacy fields (sap_*, customer_order_no, delivery_mode, etc.) have been removed.
+Legacy fields (sap_*, customer_order_no, delivery_mode, etc.) have been
+removed.
 """
 
 from __future__ import annotations

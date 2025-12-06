@@ -16,8 +16,7 @@ from .utils import (
 
 
 def validate_preview_eligibility(order: Order) -> None:
-    """
-    Validate order status for preview operation.
+    """Validate order status for preview operation.
 
     Args:
         order: Order entity
@@ -33,8 +32,7 @@ def validate_preview_eligibility(order: Order) -> None:
 
 
 def load_order_for_preview(db: Session, order_id: int) -> Order:
-    """
-    Load order with validation for preview.
+    """Load order with validation for preview.
 
     Args:
         db: Database session
@@ -57,8 +55,7 @@ def calculate_line_allocations(
     order: Order,
     available_per_lot: dict[int, float],
 ) -> FefoLinePlan:
-    """
-    Calculate FEFO allocations for a single order line.
+    """Calculate FEFO allocations for a single order line.
 
     Args:
         db: Database session
@@ -186,8 +183,7 @@ def build_preview_result(
     order_id: int,
     line_plans: list[FefoLinePlan],
 ) -> FefoPreviewResult:
-    """
-    Build preview result from line plans.
+    """Build preview result from line plans.
 
     Args:
         order_id: Order ID
@@ -204,8 +200,7 @@ def build_preview_result(
 
 
 def preview_fefo_allocation(db: Session, order_id: int) -> FefoPreviewResult:
-    """
-    FEFO引当プレビュー（状態: draft|open|part_allocated|allocated 許容）.
+    """FEFO引当プレビュー（状態: draft|open|part_allocated|allocated 許容）.
 
     Args:
         db: データベースセッション

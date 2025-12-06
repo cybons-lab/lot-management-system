@@ -20,8 +20,7 @@ class InboundService:
     """Business logic for inbound planning and receiving."""
 
     def __init__(self, db: Session):
-        """
-        Initialize inbound service.
+        """Initialize inbound service.
 
         Args:
             db: Database session
@@ -39,8 +38,7 @@ class InboundService:
         status: str | None = None,
         primary_supplier_ids: list[int] | None = None,
     ) -> tuple[list[InboundPlan], int]:
-        """
-        Get inbound plans with optional filtering.
+        """Get inbound plans with optional filtering.
 
         Args:
             skip: Number of records to skip (pagination)
@@ -99,8 +97,7 @@ class InboundService:
         return plans, total
 
     def get_inbound_plan_by_id(self, plan_id: int) -> InboundPlanDetailResponse | None:
-        """
-        Get inbound plan by ID with associated lines and expected lots.
+        """Get inbound plan by ID with associated lines and expected lots.
 
         Args:
             plan_id: Inbound plan ID
@@ -132,8 +129,7 @@ class InboundService:
         )
 
     def create_inbound_plan(self, plan: InboundPlanCreate) -> InboundPlanDetailResponse:
-        """
-        Create inbound plan (with optional lines and expected lots).
+        """Create inbound plan (with optional lines and expected lots).
 
         Args:
             plan: Inbound plan creation data
@@ -183,8 +179,7 @@ class InboundService:
     def update_inbound_plan(
         self, plan_id: int, plan: InboundPlanUpdate
     ) -> InboundPlanResponse | None:
-        """
-        Update inbound plan.
+        """Update inbound plan.
 
         Args:
             plan_id: Inbound plan ID
@@ -220,8 +215,7 @@ class InboundService:
         )
 
     def delete_inbound_plan(self, plan_id: int) -> bool:
-        """
-        Delete inbound plan (cascade delete lines and expected lots).
+        """Delete inbound plan (cascade delete lines and expected lots).
 
         Args:
             plan_id: Inbound plan ID
@@ -242,8 +236,7 @@ class InboundService:
     # ===== Inbound Plan Line Operations =====
 
     def get_lines_by_plan(self, plan_id: int) -> list[InboundPlanLineResponse]:
-        """
-        Get all inbound plan lines for a plan.
+        """Get all inbound plan lines for a plan.
 
         Args:
             plan_id: Inbound plan ID
@@ -255,8 +248,7 @@ class InboundService:
         return line_service.get_lines_by_plan(plan_id)
 
     def create_line(self, plan_id: int, line: InboundPlanLineCreate) -> InboundPlanLineResponse:
-        """
-        Create inbound plan line.
+        """Create inbound plan line.
 
         Args:
             plan_id: Inbound plan ID

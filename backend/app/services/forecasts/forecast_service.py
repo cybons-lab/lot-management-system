@@ -44,7 +44,9 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         delivery_place_id: int | None = None,
         product_id: int | None = None,
     ) -> ForecastListResponse:
-        """Get current forecasts grouped by customer × delivery_place × product."""
+        """Get current forecasts grouped by customer × delivery_place ×
+        product.
+        """
         query = self.db.query(ForecastCurrent).options(
             joinedload(ForecastCurrent.customer),
             joinedload(ForecastCurrent.delivery_place),

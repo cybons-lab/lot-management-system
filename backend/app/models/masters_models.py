@@ -1,7 +1,8 @@
-"""Master data models matching the DDL v2.2 schema (lot_management_ddl_v2_2_id.sql).
+"""Master data models matching the DDL v2.2 schema
+(lot_management_ddl_v2_2_id.sql).
 
-All models strictly follow the DDL as the single source of truth.
-Legacy columns (address, created_by, deleted_at, etc.) have been removed.
+All models strictly follow the DDL as the single source of truth. Legacy
+columns (address, created_by, deleted_at, etc.) have been removed.
 """
 
 from __future__ import annotations

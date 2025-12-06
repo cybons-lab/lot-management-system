@@ -32,8 +32,7 @@ class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate, int]
         job_type: str | None = None,
         status: str | None = None,
     ) -> tuple[list[BatchJob], int]:
-        """
-        Get all batch jobs with filtering and pagination.
+        """Get all batch jobs with filtering and pagination.
 
         Returns:
             tuple: (list of jobs, total count)
@@ -82,8 +81,7 @@ class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate, int]
         return db_job
 
     def execute(self, job_id: int, parameters: dict | None = None) -> BatchJob | None:
-        """
-        Execute a batch job.
+        """Execute a batch job.
 
         Args:
             job_id: Job ID to execute

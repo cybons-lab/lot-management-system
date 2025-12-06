@@ -1,7 +1,7 @@
 """Alert collection service.
 
-Provides functions to detect and collect various types of alerts
-from the database, including order, inventory, lot, and forecast alerts.
+Provides functions to detect and collect various types of alerts from
+the database, including order, inventory, lot, and forecast alerts.
 """
 
 from datetime import datetime, timedelta

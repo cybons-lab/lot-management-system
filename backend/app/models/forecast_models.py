@@ -1,4 +1,6 @@
-"""Forecast models for v2.4 schema with forecast_current and forecast_history tables."""
+"""Forecast models for v2.4 schema with forecast_current and forecast_history
+tables.
+"""
 
 from __future__ import annotations
 
@@ -20,8 +22,9 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
 class ForecastCurrent(Base):
     """Current active forecast data.
 
-    Each row represents a single forecast entry for customer × delivery_place × product × date.
-    When a new snapshot is imported, existing rows are moved to forecast_history.
+    Each row represents a single forecast entry for customer ×
+    delivery_place × product × date. When a new snapshot is imported,
+    existing rows are moved to forecast_history.
     """
 
     __tablename__ = "forecast_current"
@@ -90,7 +93,8 @@ class ForecastCurrent(Base):
 class ForecastHistory(Base):
     """Historical forecast data archived when new snapshots are imported.
 
-    Structure mirrors forecast_current with additional archived_at timestamp.
+    Structure mirrors forecast_current with additional archived_at
+    timestamp.
     """
 
     __tablename__ = "forecast_history"

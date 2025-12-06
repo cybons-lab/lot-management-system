@@ -15,8 +15,7 @@ class InventoryService:
     """Business logic for inventory items (aggregated summary from lots)."""
 
     def __init__(self, db: Session):
-        """
-        Initialize inventory service.
+        """Initialize inventory service.
 
         Args:
             db: Database session
@@ -30,8 +29,8 @@ class InventoryService:
         product_id: int | None = None,
         warehouse_id: int | None = None,
     ) -> list[InventoryItemResponse]:
-        """
-        Get inventory items from v_inventory_summary view with product and warehouse names.
+        """Get inventory items from v_inventory_summary view with product and
+        warehouse names.
 
         Args:
             skip: Number of records to skip (pagination)
@@ -155,8 +154,7 @@ class InventoryService:
     def get_inventory_item_by_product_warehouse(
         self, product_id: int, warehouse_id: int
     ) -> InventoryItemResponse | None:
-        """
-        Get inventory item by product ID and warehouse ID with names.
+        """Get inventory item by product ID and warehouse ID with names.
 
         Args:
             product_id: Product ID
@@ -232,8 +230,7 @@ class InventoryService:
         )
 
     def get_inventory_by_supplier(self) -> list[dict]:
-        """
-        Get inventory aggregated by supplier.
+        """Get inventory aggregated by supplier.
 
         Returns:
             List of dictionaries matching InventoryBySupplierResponse
@@ -268,8 +265,7 @@ class InventoryService:
         ]
 
     def get_inventory_by_warehouse(self) -> list[dict]:
-        """
-        Get inventory aggregated by warehouse.
+        """Get inventory aggregated by warehouse.
 
         Returns:
             List of dictionaries matching InventoryByWarehouseResponse
@@ -304,8 +300,7 @@ class InventoryService:
         ]
 
     def get_inventory_by_product(self) -> list[dict]:
-        """
-        Get inventory aggregated by product (across all warehouses).
+        """Get inventory aggregated by product (across all warehouses).
 
         Returns:
             List of dictionaries matching InventoryByProductResponse

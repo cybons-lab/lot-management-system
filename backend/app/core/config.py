@@ -1,8 +1,5 @@
 # backend/app/core/config.py
-"""
-アプリケーション設定
-環境変数と定数の管理.
-"""
+"""アプリケーション設定 環境変数と定数の管理."""
 
 import os
 from pathlib import Path

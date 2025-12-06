@@ -1,5 +1,4 @@
-"""
-Test data generator service.
+"""Test data generator service.
 
 Refactored: Split into smaller modules for better maintainability.
 """

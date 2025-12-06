@@ -1,8 +1,5 @@
 # backend/app/repositories/order_repository.py
-"""
-受注リポジトリ
-DBアクセスのみを責務とする.
-"""
+"""受注リポジトリ DBアクセスのみを責務とする."""
 
 from datetime import date
 from typing import cast
@@ -21,8 +18,7 @@ class OrderRepository:
         self.db = db
 
     def find_by_id(self, order_id: int, with_lines: bool = False) -> Order | None:
-        """
-        IDで受注を取得.
+        """IDで受注を取得.
 
         Args:
             order_id: 受注ID
@@ -39,8 +35,7 @@ class OrderRepository:
         return cast(Order | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_by_order_no(self, order_no: str) -> Order | None:
-        """
-        受注番号で受注を取得.
+        """受注番号で受注を取得.
 
         Args:
             order_no: 受注番号
@@ -60,8 +55,7 @@ class OrderRepository:
         date_from: date | None = None,
         date_to: date | None = None,
     ) -> list[Order]:
-        """
-        受注一覧を取得.
+        """受注一覧を取得.
 
         Args:
             skip: スキップ件数
@@ -96,8 +90,7 @@ class OrderRepository:
     def create(
         self, order_no: str, customer_code: str, order_date: date, status: str = "open"
     ) -> Order:
-        """
-        受注を作成.
+        """受注を作成.
 
         Args:
             order_no: 受注番号
@@ -116,8 +109,7 @@ class OrderRepository:
         return order
 
     def update_status(self, order: Order, new_status: str) -> None:
-        """
-        受注ステータスを更新.
+        """受注ステータスを更新.
 
         Args:
             order: 受注エンティティ
@@ -127,8 +119,7 @@ class OrderRepository:
         # NOTE: commitはservice層で行う
 
     def delete(self, order: Order) -> None:
-        """
-        受注を削除.
+        """受注を削除.
 
         Args:
             order: 受注エンティティ
@@ -144,8 +135,7 @@ class OrderLineRepository:
         self.db = db
 
     def find_by_id(self, order_line_id: int) -> OrderLine | None:
-        """
-        IDで受注明細を取得.
+        """IDで受注明細を取得.
 
         Args:
             order_line_id: 受注明細ID
@@ -162,8 +152,7 @@ class OrderLineRepository:
         return cast(OrderLine | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_by_order_id(self, order_id: int) -> list[OrderLine]:
-        """
-        受注IDで受注明細を取得.
+        """受注IDで受注明細を取得.
 
         Args:
             order_id: 受注ID
@@ -183,8 +172,7 @@ class OrderLineRepository:
         unit: str,
         due_date: date | None = None,
     ) -> OrderLine:
-        """
-        受注明細を作成.
+        """受注明細を作成.
 
         Args:
             order_id: 受注ID
@@ -210,8 +198,7 @@ class OrderLineRepository:
         return order_line
 
     def update_status(self, order_line: OrderLine, new_status: str) -> None:
-        """
-        受注明細ステータスを更新.
+        """受注明細ステータスを更新.
 
         Args:
             order_line: 受注明細エンティティ

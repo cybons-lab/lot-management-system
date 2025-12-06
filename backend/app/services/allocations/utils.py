@@ -16,8 +16,7 @@ from app.models import (
 
 
 def _load_order(db: Session, order_id: int | None = None, order_number: str | None = None) -> Order:
-    """
-    注文を取得（ID/コード両対応）.
+    """注文を取得（ID/コード両対応）.
 
     Args:
         db: データベースセッション
@@ -75,8 +74,9 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
         if product_code:
             stmt = select(Product).where(Product.product_code == product_code)  # type: ignore[attr-defined]
             product = db.execute(stmt).scalar_one_or_none()
-    if product and getattr(product, "next_div", None):
-        return product.next_div, None
+    next_div = getattr(product, "next_div", None) if product else None
+    if next_div:
+        return next_div, None
 
     product_code = getattr(line, "product_code", None)
     if not product_code and product:
@@ -86,8 +86,7 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
 
 
 def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
-    """
-    FEFO候補ロットを取得.
+    """FEFO候補ロットを取得.
 
     v2.2: Lot モデルから直接利用可能在庫を計算。
 
@@ -111,8 +110,7 @@ def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
 
 
 def update_order_line_status(db: Session, order_line_id: int) -> None:
-    """
-    Update OrderLine status based on allocation completion.
+    """Update OrderLine status based on allocation completion.
 
     Args:
         db: Database session
@@ -149,8 +147,7 @@ def update_order_line_status(db: Session, order_line_id: int) -> None:
 
 
 def update_order_allocation_status(db: Session, order_id: int) -> None:
-    """
-    Update order status based on allocation completion.
+    """Update order status based on allocation completion.
 
     Args:
         db: Database session

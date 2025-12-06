@@ -1,3 +1,4 @@
+// ダイアログのフォームとUIを一箇所にまとめるため分割しない
 /* eslint-disable max-lines-per-function */
 import { useState } from "react";
 import { useForm } from "react-hook-form";

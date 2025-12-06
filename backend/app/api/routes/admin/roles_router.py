@@ -17,8 +17,7 @@ def list_roles(
     limit: int = Query(100, ge=1, le=1000),
     db: Session = Depends(get_db),
 ):
-    """
-    ロール一覧取得.
+    """ロール一覧取得.
 
     Args:
         skip: スキップ件数
@@ -34,8 +33,7 @@ def list_roles(
 
 @router.get("/{role_id}", response_model=RoleResponse)
 def get_role(role_id: int, db: Session = Depends(get_db)):
-    """
-    ロール詳細取得.
+    """ロール詳細取得.
 
     Args:
         role_id: ロールID
@@ -56,8 +54,7 @@ def get_role(role_id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=RoleResponse, status_code=status.HTTP_201_CREATED)
 def create_role(role: RoleCreate, db: Session = Depends(get_db)):
-    """
-    ロール作成.
+    """ロール作成.
 
     Args:
         role: 作成するロール情報
@@ -81,8 +78,7 @@ def create_role(role: RoleCreate, db: Session = Depends(get_db)):
 
 @router.put("/{role_id}", response_model=RoleResponse)
 def update_role(role_id: int, role: RoleUpdate, db: Session = Depends(get_db)):
-    """
-    ロール更新.
+    """ロール更新.
 
     Args:
         role_id: ロールID
@@ -104,8 +100,7 @@ def update_role(role_id: int, role: RoleUpdate, db: Session = Depends(get_db)):
 
 @router.delete("/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_role(role_id: int, db: Session = Depends(get_db)):
-    """
-    ロール削除.
+    """ロール削除.
 
     Args:
         role_id: ロールID

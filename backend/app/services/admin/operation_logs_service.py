@@ -25,8 +25,7 @@ class OperationLogService:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> tuple[list[OperationLog], int]:
-        """
-        Get operation logs with filtering and pagination.
+        """Get operation logs with filtering and pagination.
 
         Returns:
             tuple: (list of logs, total count)
@@ -83,8 +82,7 @@ class MasterChangeLogService:
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> tuple[list[MasterChangeLog], int]:
-        """
-        Get master change logs with filtering and pagination.
+        """Get master change logs with filtering and pagination.
 
         Returns:
             tuple: (list of logs, total count)

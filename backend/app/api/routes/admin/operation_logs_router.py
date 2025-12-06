@@ -29,8 +29,7 @@ def list_operation_logs(
     end_date: datetime | None = Query(None, description="終了日時（この日時以前）"),
     db: Session = Depends(get_db),
 ):
-    """
-    操作ログ一覧取得.
+    """操作ログ一覧取得.
 
     Args:
         skip: スキップ件数
@@ -68,8 +67,7 @@ def list_operation_logs(
 
 @router.get("/operation-logs/{log_id}", response_model=OperationLogResponse)
 def get_operation_log(log_id: int, db: Session = Depends(get_db)):
-    """
-    操作ログ詳細取得.
+    """操作ログ詳細取得.
 
     Args:
         log_id: ログID
@@ -101,8 +99,7 @@ def list_master_change_logs(
     end_date: datetime | None = Query(None, description="終了日時（この日時以前）"),
     db: Session = Depends(get_db),
 ):
-    """
-    マスタ変更履歴一覧取得.
+    """マスタ変更履歴一覧取得.
 
     Args:
         skip: スキップ件数
@@ -142,8 +139,7 @@ def list_master_change_logs(
 
 @router.get("/master-change-logs/{change_log_id}", response_model=MasterChangeLogResponse)
 def get_master_change_log(change_log_id: int, db: Session = Depends(get_db)):
-    """
-    マスタ変更履歴詳細取得.
+    """マスタ変更履歴詳細取得.
 
     Args:
         change_log_id: 変更ログID
@@ -174,8 +170,7 @@ def get_master_change_logs_by_record(
     record_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    特定レコードのマスタ変更履歴取得.
+    """特定レコードのマスタ変更履歴取得.
 
     Args:
         table_name: テーブル名

@@ -1,7 +1,8 @@
 """SAP integration service for fetching purchase orders (mock implementation).
 
-This module provides a mock implementation of SAP purchase order integration.
-In the future, this will be replaced with actual SAP RFC/API calls.
+This module provides a mock implementation of SAP purchase order
+integration. In the future, this will be replaced with actual SAP
+RFC/API calls.
 """
 
 from __future__ import annotations

@@ -1,6 +1,7 @@
 /**
  * Customer Item CSV Utilities
  */
+// CSVパース処理で複数のバリデーション分岐があるため抑制
 /* eslint-disable complexity */
 import type { CustomerItemBulkRow } from "../types/bulk-operation";
 

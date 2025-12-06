@@ -16,6 +16,7 @@ export const warehouseSchema = z.object({
 });
 
 export type Warehouse = {
+  id: number;
   warehouse_code: string;
   warehouse_name: string;
   address?: string | null;

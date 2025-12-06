@@ -24,11 +24,12 @@ import {
 import { LotAllocationPanel } from "@/features/allocations/components/lots/LotAllocationPanel";
 import * as ordersApi from "@/features/orders/api";
 import { OrderStatusBadge } from "@/shared/components/data/StatusBadge";
-import type { OrderLine } from "@/shared/types/aliases";
+import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
-/* eslint-disable @typescript-eslint/no-explicit-any, max-lines-per-function */
+// 受注詳細ページのUIを一箇所にまとめるため分割しない
+/* eslint-disable max-lines-per-function */
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const id = Number(orderId);
@@ -169,7 +170,7 @@ function AllocationDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   line: OrderLine | null;
-  order: any;
+  order: OrderWithLinesResponse;
   onSuccess: () => void;
 }) {
   const {

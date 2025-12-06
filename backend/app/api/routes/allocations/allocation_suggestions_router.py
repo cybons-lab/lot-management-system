@@ -24,8 +24,7 @@ def preview_allocation_suggestions(
     request: AllocationSuggestionRequest,
     db: Session = Depends(get_db),
 ):
-    """
-    引当推奨の生成・プレビュー.
+    """引当推奨の生成・プレビュー.
 
     Mode:
     - forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）
@@ -109,8 +108,7 @@ def get_allocation_suggestions_by_group(
     forecast_period: str | None = Query(None, description="期間 (YYYY-MM)"),
     db: Session = Depends(get_db),
 ):
-    """
-    フォーキャストグループ別の計画引当サマリを取得.
+    """フォーキャストグループ別の計画引当サマリを取得.
 
     allocation_suggestions テーブルから該当グループのデータを集計して返す。
     """

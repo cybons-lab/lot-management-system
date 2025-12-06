@@ -64,7 +64,9 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         customer_id: int | None = None,
         product_id: int | None = None,
     ) -> list[dict]:
-        """Get all customer item mappings with optional filtering and enriched data."""
+        """Get all customer item mappings with optional filtering and enriched
+        data.
+        """
         from sqlalchemy import select
 
         from app.models.masters_models import Customer, Product, Supplier
@@ -163,7 +165,8 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         return True
 
     def bulk_upsert(self, rows: list[CustomerItemBulkRow]) -> BulkUpsertResponse:
-        """Bulk upsert customer items by composite key (customer_code, external_product_code).
+        """Bulk upsert customer items by composite key (customer_code,
+        external_product_code).
 
         Args:
             rows: List of customer item rows to upsert

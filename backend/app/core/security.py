@@ -1,6 +1,7 @@
 """Security utilities (JWT)."""
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import jwt  # type: ignore[import-not-found]
 
@@ -24,10 +25,10 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
-def decode_access_token(token: str) -> dict | None:
+def decode_access_token(token: str) -> dict[str, Any] | None:
     """Decode and verify JWT."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload: dict[str, Any] = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.PyJWTError:
         return None

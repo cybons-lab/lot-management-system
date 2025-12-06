@@ -6,12 +6,21 @@ import * as ordersApi from "@/features/orders/api";
 import type { OrderLine } from "@/shared/types/aliases";
 import type { CandidateLotItem } from "@/shared/types/schema";
 
+interface Allocation {
+  id?: number;
+  lot_id: number;
+  allocated_quantity?: number | string;
+  quantity?: number;
+  allocation_type?: string;
+}
+
 interface UseOrderLineAllocationProps {
   orderLine: OrderLine | null;
   onSuccess?: () => void;
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any, max-lines-per-function */
+// 引当関連の状態と処理を一箇所にまとめるため分割しない
+/* eslint-disable max-lines-per-function */
 export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAllocationProps) {
   const [candidateLots, setCandidateLots] = useState<CandidateLotItem[]>([]);
   const [lotAllocations, setLotAllocations] = useState<Record<number, number>>({});
@@ -20,11 +29,11 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
 
   // Calculate totals
   const hardAllocatedDb = useMemo(() => {
-    const allocations = orderLine?.allocations || orderLine?.allocated_lots || [];
+    const allocations = (orderLine?.allocations || orderLine?.allocated_lots || []) as Allocation[];
     if (!Array.isArray(allocations)) return 0;
     return allocations
-      .filter((a: any) => a.allocation_type === "hard")
-      .reduce((sum: number, a: any) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
+      .filter((a) => a.allocation_type === "hard")
+      .reduce((sum, a) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
   }, [orderLine]);
 
   const totalAllocated = useMemo(() => {
@@ -55,7 +64,7 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
         const existingAllocations = orderLine.allocations || orderLine.allocated_lots || [];
 
         if (Array.isArray(existingAllocations)) {
-          existingAllocations.forEach((alloc: any) => {
+          (existingAllocations as Allocation[]).forEach((alloc) => {
             if (alloc.lot_id) {
               initialAllocations[alloc.lot_id] = Number(
                 alloc.allocated_quantity || alloc.quantity || 0,
@@ -137,7 +146,8 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     }
     setIsSaving(true);
     try {
-      const ids = orderLine.allocations.map((a: any) => a.id);
+      const allocations = orderLine.allocations as Allocation[];
+      const ids = allocations.map((a) => a.id).filter((id): id is number => id !== undefined);
       if (ids.length === 0) {
         toast.error("確定対象の引当がありません");
         return;

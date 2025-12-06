@@ -3,13 +3,14 @@
  * Form component for creating inventory adjustments
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import type { CreateAdjustmentRequest, AdjustmentType } from "../api";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import { useAuth } from "@/features/auth/AuthContext";
 
 interface AdjustmentFormProps {
   onSubmit: (data: CreateAdjustmentRequest) => void;
@@ -18,13 +19,22 @@ interface AdjustmentFormProps {
 }
 
 export function AdjustmentForm({ onSubmit, onCancel, isSubmitting = false }: AdjustmentFormProps) {
+  const { user } = useAuth();
+
   const [formData, setFormData] = useState<CreateAdjustmentRequest>({
     lot_id: 0,
     adjustment_type: "physical_count",
     adjusted_quantity: 0,
     reason: "",
-    adjusted_by: 1, // TODO: Get from auth context
+    adjusted_by: user?.id ?? 1,
   });
+
+  // ユーザーが変わったらadjusted_byを更新
+  useEffect(() => {
+    if (user?.id) {
+      setFormData((prev) => ({ ...prev, adjusted_by: user.id }));
+    }
+  }, [user?.id]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 

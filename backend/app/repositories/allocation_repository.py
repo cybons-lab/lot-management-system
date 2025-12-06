@@ -1,7 +1,5 @@
 # backend/app/repositories/allocation_repository.py
-"""
-引当リポジトリ
-DBアクセスのみを責務とし、ビジネスロジックは含まない.
+"""引当リポジトリ DBアクセスのみを責務とし、ビジネスロジックは含まない.
 
 v2.2: lot_current_stock ビューは廃止。lots テーブルを直接使用。
 """
@@ -22,8 +20,7 @@ class AllocationRepository:
         self.db = db
 
     def find_by_id(self, allocation_id: int) -> Allocation | None:
-        """
-        IDで引当を取得.
+        """IDで引当を取得.
 
         Args:
             allocation_id: 引当ID
@@ -40,8 +37,7 @@ class AllocationRepository:
         return cast(Allocation | None, self.db.execute(stmt).scalar_one_or_none())
 
     def find_by_order_line_id(self, order_line_id: int) -> list[Allocation]:
-        """
-        受注明細IDで引当を取得.
+        """受注明細IDで引当を取得.
 
         Args:
             order_line_id: 受注明細ID
@@ -58,8 +54,7 @@ class AllocationRepository:
         return list(self.db.execute(stmt).scalars().all())
 
     def find_active_by_lot_id(self, lot_id: int) -> list[Allocation]:
-        """
-        ロットIDでアクティブな引当を取得.
+        """ロットIDでアクティブな引当を取得.
 
         Args:
             lot_id: ロットID
@@ -77,8 +72,7 @@ class AllocationRepository:
     def create(
         self, order_line_id: int, lot_id: int, allocated_qty: float, status: str = "reserved"
     ) -> Allocation:
-        """
-        引当を作成.
+        """引当を作成.
 
         Args:
             order_line_id: 受注明細ID
@@ -101,8 +95,7 @@ class AllocationRepository:
         return allocation
 
     def update_status(self, allocation: Allocation, new_status: str) -> None:
-        """
-        引当ステータスを更新.
+        """引当ステータスを更新.
 
         Args:
             allocation: 引当エンティティ
@@ -113,8 +106,7 @@ class AllocationRepository:
         # NOTE: commitはservice層で行う
 
     def delete(self, allocation: Allocation) -> None:
-        """
-        引当を削除.
+        """引当を削除.
 
         Args:
             allocation: 引当エンティティ
@@ -123,8 +115,7 @@ class AllocationRepository:
         # NOTE: commitはservice層で行う
 
     def get_lot(self, lot_id: int) -> Lot | None:
-        """
-        ロットを取得.
+        """ロットを取得.
 
         v2.2: lot_current_stock の代わりに lots テーブルを直接参照。
 
@@ -138,8 +129,7 @@ class AllocationRepository:
         return cast(Lot | None, self.db.execute(stmt).scalar_one_or_none())
 
     def update_lot_quantities(self, lot_id: int, quantity_delta: float) -> None:
-        """
-        ロット在庫数量を更新.
+        """ロット在庫数量を更新.
 
         v2.2: lots.current_quantity を直接更新。
 
@@ -160,8 +150,7 @@ class AllocationRepository:
         # NOTE: commitはservice層で行う
 
     def update_lot_allocated_quantity(self, lot_id: int, allocated_delta: float) -> None:
-        """
-        ロットの引当数量を更新.
+        """ロットの引当数量を更新.
 
         v2.2: lots.allocated_quantity を直接更新。
 

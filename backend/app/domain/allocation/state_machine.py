@@ -1,8 +1,5 @@
 # backend/app/domain/allocation/state_machine.py
-"""
-引当状態遷移マシン
-引当ステータスの遷移ルールを集約管理.
-"""
+"""引当状態遷移マシン 引当ステータスの遷移ルールを集約管理."""
 
 from enum import Enum
 
@@ -18,8 +15,7 @@ class AllocationStatus(Enum):
 
 
 class AllocationStateMachine:
-    """
-    引当状態遷移マシン.
+    """引当状態遷移マシン.
 
     状態遷移ルール:
     - active -> shipped (出荷時)
@@ -39,8 +35,7 @@ class AllocationStateMachine:
     def can_transition(
         cls, from_status: str | AllocationStatus, to_status: str | AllocationStatus
     ) -> bool:
-        """
-        指定された状態遷移が可能かチェック.
+        """指定された状態遷移が可能かチェック.
 
         Args:
             from_status: 遷移元ステータス
@@ -67,8 +62,7 @@ class AllocationStateMachine:
     def validate_transition(
         cls, from_status: str | AllocationStatus, to_status: str | AllocationStatus
     ) -> None:
-        """
-        状態遷移をバリデーション（不正な場合は例外）.
+        """状態遷移をバリデーション（不正な場合は例外）.
 
         Args:
             from_status: 遷移元ステータス

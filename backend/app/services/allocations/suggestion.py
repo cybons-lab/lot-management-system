@@ -27,8 +27,7 @@ class AllocationSuggestionService:
     def regenerate_for_periods(
         self, forecast_periods: list[str]
     ) -> AllocationSuggestionPreviewResponse:
-        """
-        Regenerate allocation suggestions for specified forecast periods.
+        """Regenerate allocation suggestions for specified forecast periods.
 
         Args:
             forecast_periods: List of forecast periods (e.g. ["2025-11", "2025-12"])
@@ -183,7 +182,9 @@ class AllocationSuggestionService:
         )
 
     def preview_for_order(self, order_line_id: int) -> AllocationSuggestionPreviewResponse:
-        """Generate allocation suggestions for a specific order line (preview only, no save)."""
+        """Generate allocation suggestions for a specific order line (preview
+        only, no save).
+        """
         order_line = self.db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
         if not order_line:
             return AllocationSuggestionPreviewResponse(

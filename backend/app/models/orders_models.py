@@ -1,8 +1,10 @@
-"""Order management models aligned with DDL v2.2 (lot_management_ddl_v2_2_id.sql).
+"""Order management models aligned with DDL v2.2
+(lot_management_ddl_v2_2_id.sql).
 
-All models strictly follow the DDL as the single source of truth.
-Legacy tables (order_line_warehouse_allocation, purchase_requests, sap_sync_logs) removed.
-Legacy columns (sap_*, customer_order_no, delivery_mode, etc.) removed.
+All models strictly follow the DDL as the single source of truth. Legacy
+tables (order_line_warehouse_allocation, purchase_requests,
+sap_sync_logs) removed. Legacy columns (sap_*, customer_order_no,
+delivery_mode, etc.) removed.
 """
 
 from __future__ import annotations

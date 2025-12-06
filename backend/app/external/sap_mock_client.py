@@ -1,7 +1,7 @@
 """Mock SAP client for inventory synchronization.
 
-This is a mock implementation for testing and development.
-In production, replace with actual SAP API client.
+This is a mock implementation for testing and development. In
+production, replace with actual SAP API client.
 """
 
 import random

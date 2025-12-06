@@ -89,8 +89,8 @@ def get_product(product_code: str, db: Session = Depends(get_db)):
 def get_product_suppliers(product_code: str, db: Session = Depends(get_db)):
     """Fetch suppliers for a product by its code.
 
-    Returns a list of suppliers associated with this product,
-    indicating which supplier is the primary one.
+    Returns a list of suppliers associated with this product, indicating
+    which supplier is the primary one.
     """
     from sqlalchemy import select
 
