@@ -10,7 +10,7 @@ type UserSupplierAssignmentResponse = components["schemas"]["UserSupplierAssignm
  * ユーザーの担当仕入先一覧を取得
  */
 export async function getUserSuppliers(userId: number): Promise<UserSupplierAssignmentResponse[]> {
-  return fetchApi.get<UserSupplierAssignmentResponse[]>(`/assignments/user/${userId}/suppliers`);
+  return fetchApi.get<UserSupplierAssignmentResponse[]>(`assignments/user/${userId}/suppliers`);
 }
 
 /**
@@ -20,7 +20,7 @@ export async function getSupplierUsers(
   supplierId: number,
 ): Promise<UserSupplierAssignmentResponse[]> {
   return fetchApi.get<UserSupplierAssignmentResponse[]>(
-    `/assignments/supplier/${supplierId}/users`,
+    `assignments/supplier/${supplierId}/users`,
   );
 }
 
@@ -30,7 +30,7 @@ export async function getSupplierUsers(
 export async function createAssignment(
   data: UserSupplierAssignmentCreate,
 ): Promise<UserSupplierAssignmentResponse> {
-  return fetchApi.post<UserSupplierAssignmentResponse>("/assignments/", data);
+  return fetchApi.post<UserSupplierAssignmentResponse>("assignments/", data);
 }
 
 /**
@@ -40,14 +40,14 @@ export async function updateAssignment(
   assignmentId: number,
   data: UserSupplierAssignmentUpdate,
 ): Promise<UserSupplierAssignmentResponse> {
-  return fetchApi.put<UserSupplierAssignmentResponse>(`/assignments/${assignmentId}`, data);
+  return fetchApi.put<UserSupplierAssignmentResponse>(`assignments/${assignmentId}`, data);
 }
 
 /**
  * 担当割り当てを削除
  */
 export async function deleteAssignment(assignmentId: number): Promise<void> {
-  return fetchApi.delete(`/assignments/${assignmentId}`);
+  return fetchApi.delete(`assignments/${assignmentId}`);
 }
 
 /**
@@ -58,6 +58,6 @@ export async function setPrimaryUser(
   userId: number,
 ): Promise<UserSupplierAssignmentResponse> {
   return fetchApi.post<UserSupplierAssignmentResponse>(
-    `/assignments/supplier/${supplierId}/set-primary/${userId}`,
+    `assignments/supplier/${supplierId}/set-primary/${userId}`,
   );
 }
