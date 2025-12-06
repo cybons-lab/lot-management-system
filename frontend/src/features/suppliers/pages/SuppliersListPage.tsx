@@ -17,6 +17,7 @@ import * as styles from "./styles";
 import { Button, Input } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function SuppliersListPage() {
@@ -27,7 +28,7 @@ export function SuppliersListPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const { useList, useCreate } = useSuppliers();
-  const { data: suppliers = [], isLoading } = useList();
+  const { data: suppliers = [], isLoading, isError, error, refetch } = useList();
   const { mutate: createSupplier, isPending: isCreating } = useCreate();
 
   const filteredSuppliers = useMemo(() => {
@@ -65,6 +66,18 @@ export function SuppliersListPage() {
     },
     [createSupplier],
   );
+
+  if (isError) {
+    return (
+      <div className={styles.root}>
+        <PageHeader
+          title="仕入先マスタ"
+          subtitle="仕入先の作成・編集・削除、一括インポート/エクスポート"
+        />
+        <QueryErrorFallback error={error} resetError={refetch} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.root}>
