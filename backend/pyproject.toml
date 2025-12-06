@@ -88,4 +88,5 @@ dev = [
     "mypy>=1.14.0",
     "types-passlib>=1.7.7",
     "types-python-jose>=3.3.4",
+    "types-pyyaml>=6.0.12.20250915",
 ]
