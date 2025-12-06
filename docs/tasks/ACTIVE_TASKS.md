@@ -31,13 +31,19 @@
 
 ### 認証・権限管理（テスト・監査対応）
 
-- [ ] **簡易認証とユーザー切り替え**
-    - [ ] Login UI / Debug User Switcher
-    - [ ] Auth Context (Frontend) & `current_user` logic (Backend)
-- [ ] **権限による表示制御**
-    - [ ] Role-based Menu Display (Admin vs User)
+- [x] **簡易認証とユーザー切り替え**
+    - [x] Login UI / Debug User Switcher
+    - [x] Auth Context (Frontend) & `current_user` logic (Backend)
+- [x] **権限による表示制御**
+    - [x] Role-based Menu Display (Admin vs User)
+    - [x] AdminGuard for protected routes
 
 ### システム基盤・デバッグ
+
+- [ ] **システムログ表示機能**
+    - [ ] 管理メニュー → システムログ一覧画面
+    - [ ] Backend: system_logs テーブルの読み取りAPI
+    - [ ] Frontend: ログ閲覧コンポーネント（フィルタ・検索機能付き）
 
 - [ ] **クライアントログ収集・閲覧機能**
     - [ ] Backend: `client_logs` テーブル設計 & `POST /system/logs` API

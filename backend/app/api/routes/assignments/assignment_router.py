@@ -15,6 +15,32 @@ from app.services.assignments.assignment_service import UserSupplierAssignmentSe
 router = APIRouter(prefix="/assignments", tags=["assignments"])
 
 
+@router.get("", response_model=list[UserSupplierAssignmentResponse])
+def get_all_assignments(
+    db: Session = Depends(get_db),
+) -> list[UserSupplierAssignmentResponse]:
+    """全ての担当割り当てを取得."""
+    service = UserSupplierAssignmentService(db)
+    assignments = service.get_all()
+
+    return [
+        UserSupplierAssignmentResponse(
+            id=a.id,
+            user_id=a.user_id,
+            supplier_id=a.supplier_id,
+            is_primary=a.is_primary,
+            assigned_at=a.assigned_at,
+            created_at=a.created_at,
+            updated_at=a.updated_at,
+            username=a.user.username if a.user else None,
+            user_display_name=a.user.display_name if a.user else None,
+            supplier_code=a.supplier.supplier_code if a.supplier else None,
+            supplier_name=a.supplier.supplier_name if a.supplier else None,
+        )
+        for a in assignments
+    ]
+
+
 @router.get("/user/{user_id}/suppliers", response_model=list[UserSupplierAssignmentResponse])
 def get_user_suppliers(
     user_id: int,

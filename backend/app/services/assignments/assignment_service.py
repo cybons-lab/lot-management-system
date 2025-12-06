@@ -32,6 +32,23 @@ class UserSupplierAssignmentService(
     def __init__(self, db: Session):
         super().__init__(db=db, model=UserSupplierAssignment)
 
+    def get_all(self) -> list[UserSupplierAssignment]:
+        """Get all user-supplier assignments with related data."""
+        stmt = (
+            select(UserSupplierAssignment)
+            .options(
+                joinedload(UserSupplierAssignment.user),
+                joinedload(UserSupplierAssignment.supplier),
+            )
+            .order_by(
+                UserSupplierAssignment.supplier_id,
+                UserSupplierAssignment.is_primary.desc(),
+            )
+        )
+        result = self.db.execute(stmt)
+        return list(result.unique().scalars().all())
+
+
     def get_user_suppliers(self, user_id: int) -> list[UserSupplierAssignment]:
         """Get all supplier assignments for a user."""
         stmt = (
