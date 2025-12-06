@@ -1,9 +1,12 @@
 """Assignment management API routes."""
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.api.routes.auth.auth_router import get_current_user
+from app.models.auth_models import User
 from app.schemas.assignments.assignment_schema import (
     UserSupplierAssignmentCreate,
     UserSupplierAssignmentResponse,
@@ -13,6 +16,59 @@ from app.services.assignments.assignment_service import UserSupplierAssignmentSe
 
 
 router = APIRouter(prefix="/assignments", tags=["assignments"])
+
+
+class MySuppliersResponse(BaseModel):
+    """現在のユーザーの担当仕入先ID一覧."""
+
+    user_id: int
+    primary_supplier_ids: list[int]
+    all_supplier_ids: list[int]
+
+
+@router.get("/my-suppliers", response_model=MySuppliersResponse)
+def get_my_suppliers(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> MySuppliersResponse:
+    """現在ログイン中のユーザーの担当仕入先ID一覧を取得."""
+    service = UserSupplierAssignmentService(db)
+    assignments = service.get_user_suppliers(current_user.id)
+
+    primary_ids = [a.supplier_id for a in assignments if a.is_primary]
+    all_ids = [a.supplier_id for a in assignments]
+
+    return MySuppliersResponse(
+        user_id=current_user.id,
+        primary_supplier_ids=primary_ids,
+        all_supplier_ids=all_ids,
+    )
+
+
+@router.get("", response_model=list[UserSupplierAssignmentResponse])
+def get_all_assignments(
+    db: Session = Depends(get_db),
+) -> list[UserSupplierAssignmentResponse]:
+    """全ての担当割り当てを取得."""
+    service = UserSupplierAssignmentService(db)
+    assignments = service.get_all()
+
+    return [
+        UserSupplierAssignmentResponse(
+            id=a.id,
+            user_id=a.user_id,
+            supplier_id=a.supplier_id,
+            is_primary=a.is_primary,
+            assigned_at=a.assigned_at,
+            created_at=a.created_at,
+            updated_at=a.updated_at,
+            username=a.user.username if a.user else None,
+            user_display_name=a.user.display_name if a.user else None,
+            supplier_code=a.supplier.supplier_code if a.supplier else None,
+            supplier_name=a.supplier.supplier_name if a.supplier else None,
+        )
+        for a in assignments
+    ]
 
 
 @router.get("/user/{user_id}/suppliers", response_model=list[UserSupplierAssignmentResponse])

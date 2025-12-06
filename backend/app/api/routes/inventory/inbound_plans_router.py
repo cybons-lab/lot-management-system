@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.api.routes.auth.auth_router import get_current_user_optional
+from app.models.auth_models import User
 from app.schemas.inventory.inbound_schema import (
     InboundPlanCreate,
     InboundPlanDetailResponse,
@@ -17,6 +19,7 @@ from app.schemas.inventory.inbound_schema import (
     SAPSyncRequest,
     SAPSyncResponse,
 )
+from app.services.assignments.assignment_service import UserSupplierAssignmentService
 from app.services.inventory.inbound_receiving_service import InboundReceivingService
 from app.services.inventory.inbound_service import InboundService
 from app.services.sap.sap_service import SAPService
@@ -35,6 +38,8 @@ def list_inbound_plans(
     supplier_id: int | None = None,
     product_id: int | None = None,
     status: str | None = None,
+    prioritize_primary: bool = True,
+    current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """
@@ -46,11 +51,20 @@ def list_inbound_plans(
         supplier_id: 仕入先IDでフィルタ
         product_id: 商品IDでフィルタ
         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
+        prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+        current_user: 現在のログインユーザー（主担当仕入先取得に使用）
         db: データベースセッション
 
     Returns:
         入荷予定リスト
     """
+    # 主担当の仕入先IDを取得
+    primary_supplier_ids: list[int] | None = None
+    if prioritize_primary and current_user:
+        assignment_service = UserSupplierAssignmentService(db)
+        assignments = assignment_service.get_user_suppliers(current_user.id)
+        primary_supplier_ids = [a.supplier_id for a in assignments if a.is_primary]
+
     service = InboundService(db)
     plans, total = service.get_inbound_plans(
         skip=skip,
@@ -58,6 +72,7 @@ def list_inbound_plans(
         supplier_id=supplier_id,
         product_id=product_id,
         status=status,
+        primary_supplier_ids=primary_supplier_ids,
     )
 
     return InboundPlanListResponse(
@@ -74,6 +89,7 @@ def list_inbound_plans(
                 total_quantity=sum(line.planned_quantity for line in plan.lines)
                 if plan.lines
                 else None,  # type: ignore[arg-type]
+                is_primary_supplier=plan.supplier_id in (primary_supplier_ids or []),
             )
             for plan in plans
         ],

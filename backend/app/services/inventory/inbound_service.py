@@ -37,6 +37,7 @@ class InboundService:
         supplier_id: int | None = None,
         product_id: int | None = None,
         status: str | None = None,
+        primary_supplier_ids: list[int] | None = None,
     ) -> tuple[list[InboundPlan], int]:
         """
         Get inbound plans with optional filtering.
@@ -47,10 +48,13 @@ class InboundService:
             supplier_id: Filter by supplier ID
             product_id: Filter by product ID
             status: Filter by status (planned/partially_received/received/cancelled)
+            primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
 
         Returns:
             Tuple of (list of inbound plans, total count)
         """
+        from sqlalchemy import case
+
         query = self.db.query(InboundPlan).options(joinedload(InboundPlan.lines))
 
         if supplier_id is not None:
@@ -80,7 +84,16 @@ class InboundService:
             count_query = count_query.filter(InboundPlan.status == status)
         total = count_query.count()
 
-        query = query.order_by(InboundPlan.planned_arrival_date.desc())
+        # ソート: 主担当優先 → 入荷予定日
+        if primary_supplier_ids:
+            priority_case = case(
+                (InboundPlan.supplier_id.in_(primary_supplier_ids), 0),
+                else_=1,
+            )
+            query = query.order_by(priority_case, InboundPlan.planned_arrival_date.desc())
+        else:
+            query = query.order_by(InboundPlan.planned_arrival_date.desc())
+
         plans = query.offset(skip).limit(limit).all()
 
         return plans, total

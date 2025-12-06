@@ -107,6 +107,23 @@ const products = await http.get<Product[]>("masters/products");
 import { http } from "@/services/http";
 ```
 
+### ⚠️ URLパスの注意点（重要）
+
+**kyの`prefixUrl`を使用しているため、APIパスは先頭に`/`を付けないでください。**
+
+```typescript
+// Good ✅ - スラッシュなし
+http.get("masters/products");
+http.post("assignments/", data);
+http.delete(`assignments/${id}`);
+
+// Bad ❌ - 先頭にスラッシュあり（エラーになる）
+http.get("/masters/products");
+http.post("/assignments/", data);
+http.delete(`/assignments/${id}`);
+// → エラー: "input must not begin with a slash when using prefixUrl"
+```
+
 ### レガシーコード
 
 `@/services/http` (axios) は段階的に移行中です。新しいコードでは使用しないでください。

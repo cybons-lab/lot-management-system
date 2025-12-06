@@ -372,3 +372,33 @@ export interface BulkAutoAllocateResponse {
 export const bulkAutoAllocate = (data: BulkAutoAllocateRequest) => {
   return http.post<BulkAutoAllocateResponse>("allocations/bulk-auto-allocate", data);
 };
+
+// ===== Order Auto-Allocate (Batch) =====
+
+export interface BatchAutoOrderRequest {
+  order_ids: number[];
+  dry_run?: boolean;
+}
+
+export interface BatchAutoOrderResult {
+  order_id: number;
+  success: boolean;
+  message?: string;
+  created_allocation_ids: number[];
+}
+
+export interface BatchAutoOrderResponse {
+  results: BatchAutoOrderResult[];
+  total_orders: number;
+  success_count: number;
+  failure_count: number;
+  message: string;
+}
+
+/**
+ * Auto-allocate for multiple orders (Single Lot Fit + FEFO)
+ * @endpoint POST /allocations/auto-orders
+ */
+export const autoAllocateOrders = (data: BatchAutoOrderRequest) => {
+  return http.post<BatchAutoOrderResponse>("allocations/auto-orders", data);
+};

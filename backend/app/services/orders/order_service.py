@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import cast
 
-from sqlalchemy import select
+from sqlalchemy import case, exists, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.domain.order import (
@@ -21,6 +21,7 @@ from app.models import (
     Order,
     OrderLine,
     Product,
+    ProductSupplier,
 )
 from app.schemas.orders.orders_schema import (
     OrderCreate,
@@ -44,6 +45,7 @@ class OrderService:
         date_from: date | None = None,
         date_to: date | None = None,
         order_type: str | None = None,
+        primary_supplier_ids: list[int] | None = None,
     ) -> list[OrderWithLinesResponse]:
         stmt = select(Order).options(  # type: ignore[assignment]
             selectinload(Order.order_lines)
@@ -67,7 +69,27 @@ class OrderService:
         if order_type:
             stmt = stmt.where(Order.order_lines.any(OrderLine.order_type == order_type))
 
-        stmt = stmt.order_by(Order.order_date.desc()).offset(skip).limit(limit)
+        # Primary supplier priority sort
+        if primary_supplier_ids:
+            # Create a subquery to check if any order line's product is associated
+            # with the user's primary suppliers
+            has_primary_product = exists(
+                select(OrderLine.id)
+                .join(ProductSupplier, ProductSupplier.product_id == OrderLine.product_id)
+                .where(
+                    OrderLine.order_id == Order.id,
+                    ProductSupplier.supplier_id.in_(primary_supplier_ids),
+                )
+            )
+            priority_score = case(
+                (has_primary_product, 0),
+                else_=1,
+            )
+            stmt = stmt.order_by(priority_score, Order.order_date.desc())
+        else:
+            stmt = stmt.order_by(Order.order_date.desc())
+
+        stmt = stmt.offset(skip).limit(limit)
         orders = self.db.execute(stmt).scalars().all()
 
         # Convert to Pydantic models

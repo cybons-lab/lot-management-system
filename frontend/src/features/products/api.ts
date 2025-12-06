@@ -5,6 +5,7 @@
  * This file contains:
  * - Type definitions (Product, ProductCreate, ProductUpdate)
  * - Bulk import/export operations
+ * - Product-Supplier relationship operations
  */
 
 import type { BulkUpsertResponse, ProductBulkRow } from "./types/bulk-operation";
@@ -20,7 +21,25 @@ export type Product = components["schemas"]["ProductOut"];
 export type ProductCreate = components["schemas"]["ProductCreate"];
 export type ProductUpdate = components["schemas"]["ProductUpdate"];
 
+// Product-Supplier relationship type
+export interface ProductSupplier {
+  id: number;
+  supplier_id: number;
+  supplier_code: string;
+  supplier_name: string;
+  is_primary: boolean;
+  lead_time_days: number | null;
+}
+
 const BASE_PATH = "masters/products";
+
+// ============================================
+// Product-Supplier Operations
+// ============================================
+
+export async function getProductSuppliers(productCode: string): Promise<ProductSupplier[]> {
+  return http.get<ProductSupplier[]>(`${BASE_PATH}/${productCode}/suppliers`);
+}
 
 // ============================================
 // Bulk Operations

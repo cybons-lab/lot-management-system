@@ -16,7 +16,7 @@ export function SAPRegistrationButton() {
 
   return (
     <Button
-      className="fixed top-20 right-4 z-50 gap-2 shadow-lg"
+      className="fixed right-4 bottom-4 z-30 gap-2 shadow-lg"
       onClick={() => navigate("/confirmed-lines")}
     >
       <Send className="h-4 w-4" />

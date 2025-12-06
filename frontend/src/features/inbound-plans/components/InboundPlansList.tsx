@@ -1,6 +1,9 @@
+import { Crown } from "lucide-react";
+
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import { Badge } from "@/components/ui";
 import { formatDate } from "@/shared/utils/date";
 
 // ============================================
@@ -15,6 +18,7 @@ export interface InboundPlan {
   planned_arrival_date: string;
   status: "planned" | "partially_received" | "received" | "cancelled";
   created_at: string;
+  is_primary_supplier?: boolean;
 }
 
 export interface InboundPlansFilters {
@@ -178,6 +182,15 @@ export function InboundPlansList({
                       >
                         {plan.supplier_name || `ID: ${plan.supplier_id}`}
                       </span>
+                      {plan.is_primary_supplier && (
+                        <Badge
+                          variant="outline"
+                          className="mt-1 gap-1 border-amber-300 bg-amber-50 text-amber-600"
+                        >
+                          <Crown className="h-3 w-3" />
+                          主担当
+                        </Badge>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm">{formatDate(plan.planned_arrival_date)}</td>
                     <td className="px-4 py-3 text-sm">

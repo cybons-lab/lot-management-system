@@ -7,6 +7,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import type { ProductUpdate } from "../api";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
+import { ProductSupplierSection } from "../components/ProductSupplierSection";
 import { useProducts } from "../hooks/useProducts";
 
 import * as styles from "./styles";
@@ -165,6 +166,9 @@ export function ProductDetailPage() {
           </div>
         )}
       </div>
+
+      {/* 仕入先セクション (編集中は非表示) */}
+      {!isEditing && productCode && <ProductSupplierSection productCode={productCode} />}
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

@@ -1,7 +1,8 @@
-import { Database, Users, Warehouse, Package, Building2 } from "lucide-react";
+import { Database, Users, Warehouse, Package, Building2, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { ROUTES } from "@/constants/routes";
+import { useAuth } from "@/features/auth/AuthContext";
 
 interface MasterLink {
   title: string;
@@ -9,6 +10,7 @@ interface MasterLink {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   color: string;
+  requireAdmin?: boolean;
 }
 
 const masterLinks: MasterLink[] = [
@@ -62,15 +64,29 @@ const masterLinks: MasterLink[] = [
     color: "bg-indigo-50 text-indigo-600 hover:bg-indigo-100",
   },
   {
-    title: "主担当者",
-    description: "ユーザー情報を管理",
+    title: "主担当設定",
+    description: "仕入先ごとの主担当者を設定",
+    href: "/masters/primary-assignments",
+    icon: UserCheck,
+    color: "bg-amber-50 text-amber-600 hover:bg-amber-100",
+  },
+  {
+    title: "ユーザー管理",
+    description: "ユーザーアカウントを管理",
     href: ROUTES.SETTINGS.USERS,
     icon: Users,
     color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
+    requireAdmin: true,
   },
 ];
 
 export function MastersPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("admin");
+
+  // 管理者でない場合は管理者専用リンクを除外
+  const visibleLinks = masterLinks.filter((link) => !link.requireAdmin || isAdmin);
+
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
       {/* ヘッダー */}
@@ -81,7 +97,7 @@ export function MastersPage() {
 
       {/* マスタリンクグリッド */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {masterLinks.map((master) => {
+        {visibleLinks.map((master) => {
           const Icon = master.icon;
           return (
             <Link

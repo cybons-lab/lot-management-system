@@ -1,3 +1,4 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PackageSearch, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -6,6 +7,7 @@ import { useLotAllocationForOrder } from "../../hooks/useLotAllocationForOrder";
 import { OrderSummaryRow } from "./OrderSummaryRow";
 
 import { Button } from "@/components/ui";
+import { autoAllocateOrders } from "@/features/allocations/api";
 import type { ForecastGroup } from "@/features/forecasts/api";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
@@ -22,11 +24,28 @@ export function RelatedOrdersSection({
 }: RelatedOrdersSectionProps) {
   const { group_key } = group;
   const orders = group.related_orders || [];
+  const queryClient = useQueryClient();
 
-  // 自動引当（未実装）
+  const { mutate: executeAutoAllocate, isPending } = useMutation({
+    mutationFn: autoAllocateOrders,
+    onSuccess: (data) => {
+      if (data.failure_count > 0) {
+        toast.warning(data.message);
+      } else {
+        toast.success(data.message);
+      }
+      queryClient.invalidateQueries({ queryKey: ["forecasts"] });
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+    onError: (error) => {
+      toast.error("自動引当に失敗しました: " + (error as Error).message);
+    },
+  });
+
   const handleAutoAllocate = () => {
-    console.log("TODO: Implement auto-allocation for all orders");
-    toast.info("一括自動引当機能は現在開発中です。各行を展開して個別に引当を行ってください。");
+    if (orders.length === 0) return;
+    const orderIds = orders.map((o) => o.id);
+    executeAutoAllocate({ order_ids: orderIds });
   };
 
   if (!orders || orders.length === 0) {
@@ -50,7 +69,8 @@ export function RelatedOrdersSection({
           size="sm"
           className="h-7 gap-1 text-xs"
           onClick={handleAutoAllocate}
-          title="このフォーキャストグループの全受注に対して自動引当を実行します（未実装）"
+          disabled={isPending}
+          title="このフォーキャストグループの全受注に対して自動引当を実行します"
         >
           <Wand2 className="h-3 w-3" />
           自動引当

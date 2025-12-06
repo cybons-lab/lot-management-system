@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python 3.12 → 3.13 へ更新
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
 
+## [2025-12-06]
+
+### Added
+- **[Schema] Product Suppliers Table**: `product_suppliers`テーブルを追加し、製品と仕入先のN:N関係を管理
+  - `is_primary`フラグで主要仕入先を識別
+  - 既存lotsデータから初期データ投入（在庫数量ベースで主要仕入先を決定）
+- **[Backend] Primary Supplier Priority Sort**: 受注一覧で主担当仕入先の製品を優先表示
+  - `OrderService.get_orders`にprimary_supplier_ids引数追加
+  - `orders_router`に`prioritize_primary`クエリパラメータ追加
+  - `assignment_service`に`get_primary_supplier_ids`メソッド追加
+- **[Backend] Product Suppliers API**: `GET /products/{code}/suppliers`エンドポイント追加
+- **[Frontend] Product Supplier Section**: 製品詳細画面に仕入先セクション追加
+
+### Changed
+- `generate_test_data.py`を更新し、`product_suppliers`テーブルのクリアと生成を追加
+- `docs/schema.adoc`を更新し、`product_suppliers`テーブルのドキュメント追加
+
 ## [2025-12-05]
 
 ### Fixed
@@ -21,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HTTPクライアントを `shared/api/http-client.ts` に統合済み確認
 - ドキュメント整理: ACTIVE_TASKS.md, remaining_issues.adoc 更新
 - 実装済み/不要なドキュメントの削除 (forecast-order-integration-plan.md, forecast_allocation_actions.md, spec-allocation.md)
+- **[Backend] Refactoring**: `lots_router.py`, `inbound_service.py` の責務分割と整理
+- **[Feature] Order Auto-Allocation**: `fefo.py` のロジック刷新 (Single Lot Fit), Batch API 実装, Frontend 連携(LineService分離)
+
+### Added
+- Forecast Auto-Allocation実装 (v0: Single Lot Fit + FEFO)
+- Frontend: Order Lineでのマルチロット引当内訳表示
+- Backend: `allocator.py` (共通引当ロジック)
 
 ### Verified (以前に実装済みと確認)
 - Template download API - 全マスタ（products, customers, warehouses, suppliers）

@@ -3,7 +3,9 @@ from datetime import date
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from app.api.routes.auth.auth_router import get_current_user_optional
 from app.core.database import get_db
+from app.models.auth_models import User
 from app.schemas.inventory.inventory_schema import (
     LotCreate,
     LotLock,
@@ -12,6 +14,7 @@ from app.schemas.inventory.inventory_schema import (
     StockMovementCreate,
     StockMovementResponse,
 )
+from app.services.assignments.assignment_service import UserSupplierAssignmentService
 from app.services.inventory.lot_service import LotService
 
 
@@ -29,6 +32,8 @@ def list_lots(
     expiry_from: date | None = None,
     expiry_to: date | None = None,
     with_stock: bool = True,
+    prioritize_primary: bool = True,
+    current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
     """
@@ -44,6 +49,8 @@ def list_lots(
         expiry_from: 有効期限開始日
         expiry_to: 有効期限終了日
         with_stock: 在庫ありのみ取得するかどうか
+        prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+        current_user: 現在のログインユーザー（主担当仕入先取得に使用）
         db: データベースセッション
 
     ロット一覧取得（v_lots_with_master ビュー使用）.
@@ -51,6 +58,13 @@ def list_lots(
     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.
     FEFO (先入先出) 順に並べて返す.
     """
+    # 主担当の仕入先IDを取得
+    primary_supplier_ids: list[int] | None = None
+    if prioritize_primary and current_user:
+        assignment_service = UserSupplierAssignmentService(db)
+        assignments = assignment_service.get_user_suppliers(current_user.id)
+        primary_supplier_ids = [a.supplier_id for a in assignments if a.is_primary]
+
     service = LotService(db)
     return service.list_lots(
         skip=skip,
@@ -62,6 +76,7 @@ def list_lots(
         expiry_from=expiry_from,
         expiry_to=expiry_to,
         with_stock=with_stock,
+        primary_supplier_ids=primary_supplier_ids,
     )
 
 

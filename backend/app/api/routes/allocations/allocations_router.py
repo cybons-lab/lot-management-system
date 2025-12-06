@@ -13,6 +13,11 @@ from app.schemas.allocations.allocations_schema import (
     AllocationCommitResponse,
     AutoAllocateRequest,
     AutoAllocateResponse,
+    # vvv Imports vvv
+    BatchAutoOrderRequest,
+    BatchAutoOrderResponse,
+    BatchAutoOrderResult,
+    # ^^^ Imports ^^^
     BulkAutoAllocateFailedLine,
     BulkAutoAllocateRequest,
     BulkAutoAllocateResponse,
@@ -354,6 +359,65 @@ def bulk_auto_allocate(request: BulkAutoAllocateRequest, db: Session = Depends(g
             BulkAutoAllocateFailedLine(line_id=f["line_id"], error=f["error"])
             for f in result["failed_lines"]
         ],
+        message=message,
+    )
+
+
+@router.post("/auto-orders", response_model=BatchAutoOrderResponse)
+def auto_allocate_orders(request: BatchAutoOrderRequest, db: Session = Depends(get_db)):
+    """
+    複数受注に対して一括で自動引当（Single Lot Fit + FEFO）を実行・確定する.
+
+    - v0アルゴリズム (allocator.py) を使用
+    - 成功/失敗を個別に記録
+    - dry_run=True の場合は保存しない（未実装、今回はFalse前提）
+
+    Args:
+        request: 対象受注IDリスト
+        db: DBセッション
+
+    Returns:
+        BatchAutoOrderResponse: 実行結果
+    """
+    results = []
+    success_count = 0
+    failure_count = 0
+
+    for order_id in request.order_ids:
+        try:
+            # 既存のcommit_fefo_allocationを利用 (内部でpreview_fefo_allocation -> allocator.py を呼ぶ)
+            commit_result = commit_fefo_allocation(db, order_id)
+
+            created_ids = [a.id for a in commit_result.created_allocations]
+            results.append(
+                BatchAutoOrderResult(
+                    order_id=order_id,
+                    success=True,
+                    message=f"Created {len(created_ids)} allocations",
+                    created_allocation_ids=created_ids,
+                )
+            )
+            success_count += 1
+        except Exception as e:
+            # 個別の失敗は全体を止めない
+            logger.warning(f"Failed to auto-allocate order {order_id}: {e}")
+            results.append(
+                BatchAutoOrderResult(
+                    order_id=order_id,
+                    success=False,
+                    message=str(e),
+                )
+            )
+            failure_count += 1
+
+    message = f"Processed {len(request.order_ids)} orders: {success_count} success, {failure_count} failed"
+    logger.info(f"Batch Auto-Order: {message}")
+
+    return BatchAutoOrderResponse(
+        results=results,
+        total_orders=len(request.order_ids),
+        success_count=success_count,
+        failure_count=failure_count,
         message=message,
     )
 

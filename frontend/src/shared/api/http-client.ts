@@ -98,11 +98,8 @@ export const apiClient: KyInstance = ky.create({
   hooks: {
     beforeRequest: [
       (request) => {
-        // Add common headers
-        request.headers.set("Content-Type", "application/json");
-
         // Add auth token if available
-        const token = localStorage.getItem("auth_token");
+        const token = localStorage.getItem("token");
         if (token) {
           request.headers.set("Authorization", `Bearer ${token}`);
         }

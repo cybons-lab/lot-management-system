@@ -187,6 +187,32 @@ class BulkAutoAllocateResponse(BaseSchema):
     message: str
 
 
+class BatchAutoOrderRequest(BaseSchema):
+    """Batch auto-allocate request for orders."""
+
+    order_ids: list[int] = Field(..., min_length=1, description="引当対象の受注ID一覧")
+    dry_run: bool = Field(default=False, description="Trueならプレビューのみ（DB保存しない）")
+
+
+class BatchAutoOrderResult(BaseSchema):
+    """Result for a single order in batch auto-allocation."""
+
+    order_id: int
+    success: bool
+    message: str | None = None
+    created_allocation_ids: list[int] = Field(default_factory=list)
+
+
+class BatchAutoOrderResponse(BaseSchema):
+    """Batch auto-allocate response."""
+
+    results: list[BatchAutoOrderResult] = Field(default_factory=list)
+    total_orders: int
+    success_count: int
+    failure_count: int
+    message: str
+
+
 # ============================================================
 # Candidate Lots (候補ロット)
 # ============================================================

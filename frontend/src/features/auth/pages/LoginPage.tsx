@@ -1,87 +1,107 @@
-import { useAtom } from "jotai";
-import { useState } from "react";
+import { Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { authAtom } from "../store/atoms";
-
-import { Button, Input, Label, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
+import { useAuth } from "@/features/auth/AuthContext";
 import { http } from "@/shared/api/http-client";
 
-interface TokenResponse {
-  access_token: string;
-  token_type: string;
+// Minimal User Type for Selection (API returns user_id, not id)
+interface UserSummary {
+  user_id: number;
+  username: string;
+  display_name: string;
 }
 
 export function LoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserSummary[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [, setAuth] = useAtom(authAtom);
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  // Load users for selection
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const data = await http.get<UserSummary[]>("users");
+        setUsers(data);
+      } catch (error) {
+        console.error("Failed to fetch users", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    if (!selectedUserId) return;
+
+    const userId = parseInt(selectedUserId, 10);
+    const selectedUser = users.find((u) => u.user_id === userId);
+
     setIsLoading(true);
-
     try {
-      const formData = new URLSearchParams();
-      formData.append("username", username);
-      formData.append("password", password);
-
-      const response = await http.post<TokenResponse>("login", formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
-
-      setAuth({
-        token: response.access_token,
-        username: username,
-      });
-
+      await login(userId, selectedUser?.username);
       navigate("/");
-    } catch (err) {
-      console.error("Login failed:", err);
-      setError("ユーザー名またはパスワードが間違っています");
+    } catch (error) {
+      console.error("Login failed", error);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">ログイン</CardTitle>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
+      <Card className="w-full max-w-md shadow-lg">
+        <CardHeader className="space-y-1 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+            <Users className="h-6 w-6 text-blue-600" />
+          </div>
+          <CardTitle className="text-2xl font-bold">ログイン</CardTitle>
+          <p className="text-sm text-gray-500">開発用簡易ログイン（ユーザーを選択してください）</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">ユーザー名</Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-                required
-                disabled={isLoading}
-              />
+              <label
+                htmlFor="user-select"
+                className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                ユーザー選択
+              </label>
+              <Select value={selectedUserId} onValueChange={setSelectedUserId} disabled={isLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder="ユーザーを選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((u) => (
+                    <SelectItem key={u.user_id} value={String(u.user_id)}>
+                      {u.display_name} ({u.username})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">パスワード</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || !selectedUserId}>
               {isLoading ? "ログイン中..." : "ログイン"}
             </Button>
           </form>

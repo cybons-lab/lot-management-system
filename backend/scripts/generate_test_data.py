@@ -60,6 +60,7 @@ def clear_database(db: Session):
     db.execute(text("DELETE FROM order_lines"))
     db.execute(text("DELETE FROM orders"))
     db.execute(text("DELETE FROM lots"))
+    db.execute(text("DELETE FROM product_suppliers"))
     db.execute(text("DELETE FROM forecast_current"))
     db.execute(text("DELETE FROM customer_items"))
     db.execute(text("DELETE FROM products"))
@@ -435,10 +436,43 @@ def generate_test_data():
                 lot_id += 1
         db.flush()
 
+        # Generate product_suppliers from lots data
+        print("\n🔗 Generating product_suppliers from lots...")
+        # For each unique product-supplier pair in lots, create a product_supplier record
+        # The supplier with the most inventory for each product becomes primary
+        db.execute(
+            text("""
+                WITH product_supplier_stock AS (
+                    SELECT 
+                        product_id,
+                        supplier_id,
+                        SUM(current_quantity) as total_stock,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY product_id 
+                            ORDER BY SUM(current_quantity) DESC
+                        ) as rank
+                    FROM lots
+                    WHERE product_id IS NOT NULL AND supplier_id IS NOT NULL
+                    GROUP BY product_id, supplier_id
+                )
+                INSERT INTO product_suppliers (product_id, supplier_id, is_primary, created_at, updated_at)
+                SELECT 
+                    product_id,
+                    supplier_id,
+                    (rank = 1) as is_primary,
+                    NOW(),
+                    NOW()
+                FROM product_supplier_stock
+                ON CONFLICT (product_id, supplier_id) DO NOTHING;
+            """)
+        )
+        product_supplier_count = db.execute(text("SELECT COUNT(*) FROM product_suppliers")).scalar()
+        print(f"✓ Generated {product_supplier_count} product_suppliers records")
+
         # Commit forecast and lot data before generating orders
         # This ensures orders can query forecast_current table
         db.commit()
-        print("✓ Committed forecast and lot data")
+        print("✓ Committed forecast, lot, and product_suppliers data")
 
         # Create orders based on forecasts (80%) and random (20%)
         print("\n📋 Generating orders...")

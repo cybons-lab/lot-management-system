@@ -198,8 +198,27 @@ class LotService:
         expiry_from: date | None = None,
         expiry_to: date | None = None,
         with_stock: bool = True,
+        primary_supplier_ids: list[int] | None = None,
     ) -> list[LotResponse]:
-        """List lots using VLotDetails view."""
+        """List lots using VLotDetails view.
+
+        Args:
+            skip: スキップ件数
+            limit: 取得件数
+            product_id: 製品ID
+            product_code: 製品コード
+            supplier_code: 仕入先コード
+            warehouse_code: 倉庫コード
+            expiry_from: 有効期限開始日
+            expiry_to: 有効期限終了日
+            with_stock: 在庫ありのみ取得するかどうか
+            primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
+
+        Returns:
+            LotResponseのリスト
+        """
+        from sqlalchemy import case
+
         query = self.db.query(VLotDetails)
 
         if product_id is not None:
@@ -229,11 +248,24 @@ class LotService:
         if with_stock:
             query = query.filter(VLotDetails.available_quantity > 0)
 
-        query = query.order_by(
-            VLotDetails.maker_part_code.asc(),
-            VLotDetails.supplier_name.asc(),
-            VLotDetails.expiry_date.asc().nullslast(),
-        )
+        # ソート: 主担当優先 → 製品コード → 仕入先 → 有効期限(FEFO)
+        if primary_supplier_ids:
+            priority_case = case(
+                (VLotDetails.supplier_id.in_(primary_supplier_ids), 0),
+                else_=1,
+            )
+            query = query.order_by(
+                priority_case,
+                VLotDetails.maker_part_code.asc(),
+                VLotDetails.supplier_name.asc(),
+                VLotDetails.expiry_date.asc().nullslast(),
+            )
+        else:
+            query = query.order_by(
+                VLotDetails.maker_part_code.asc(),
+                VLotDetails.supplier_name.asc(),
+                VLotDetails.expiry_date.asc().nullslast(),
+            )
 
         lot_views = query.offset(skip).limit(limit).all()
 
@@ -260,6 +292,9 @@ class LotService:
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
                 last_updated=lot_view.updated_at,
+                is_primary_supplier=bool(
+                    primary_supplier_ids and lot_view.supplier_id in primary_supplier_ids
+                ),
             )
             responses.append(response)
         return responses
