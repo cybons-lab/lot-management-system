@@ -11,13 +11,21 @@ from app.schemas.auth.auth_schemas import LoginRequest, TokenResponse, UserRespo
 
 router = APIRouter()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
 
 
 def get_current_user_optional(
-    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+    token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ) -> User | None:
-    """Get current user from token (Optional)."""
+    """Get current user from token (Optional).
+    
+    Returns None if:
+    - No token is provided
+    - Token is invalid
+    - User not found
+    """
+    if not token:
+        return None
     payload = decode_access_token(token)
     if not payload:
         return None
