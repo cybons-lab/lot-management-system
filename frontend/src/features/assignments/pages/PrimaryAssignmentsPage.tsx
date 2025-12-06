@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 
 import { AddAssignmentDialog } from "../components/AddAssignmentDialog";
 import { SupplierAssignmentEditDialog } from "../components/SupplierAssignmentEditDialog";
+import type { SupplierGroup, SupplierAssignment } from "../types";
 
 import {
   Button,
@@ -31,26 +32,6 @@ import {
 } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { http } from "@/shared/api/http-client";
-
-interface SupplierAssignment {
-  id: number;
-  supplier_id: number;
-  supplier_code: string;
-  supplier_name: string;
-  user_id: number;
-  username: string;
-  display_name: string;
-  is_primary: boolean;
-  assigned_at: string;
-}
-
-export interface SupplierGroup {
-  supplier_id: number;
-  supplier_code: string;
-  supplier_name: string;
-  assignments: SupplierAssignment[];
-  primaryUser: SupplierAssignment | null;
-}
 
 // eslint-disable-next-line max-lines-per-function
 export function PrimaryAssignmentsPage() {

@@ -10,7 +10,7 @@ import { Crown, Trash2, User } from "lucide-react";
 import { useState } from "react";
 
 import { useAssignmentMutations } from "../hooks/useAssignments";
-import type { SupplierGroup } from "../pages/PrimaryAssignmentsPage";
+import type { SupplierGroup } from "../types";
 
 import {
   AlertDialog,
