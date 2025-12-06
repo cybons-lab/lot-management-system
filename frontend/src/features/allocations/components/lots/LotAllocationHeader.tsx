@@ -1,11 +1,10 @@
 import { LotAllocationHeaderView } from "./LotAllocationHeaderView";
 
-import type { OrderLine } from "@/shared/types/aliases";
+import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate, formatDateTime } from "@/shared/utils/date";
 
 interface LotAllocationHeaderProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  order: any;
+  order?: OrderWithLinesResponse;
   orderLine: OrderLine;
   customerName: string;
   productName: string;

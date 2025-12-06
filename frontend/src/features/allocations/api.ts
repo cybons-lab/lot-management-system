@@ -94,7 +94,6 @@ export const getAllocationCandidates = (params: {
  * Create manual allocation suggestion (preview only)
  * @endpoint POST /allocation-suggestions/manual
  */
-// TODO: Use generated types once available
 export const createManualAllocationSuggestion = (data: ManualAllocationRequest) => {
   return http.post<ManualAllocationResponse>("allocation-suggestions/manual", data);
 };
@@ -141,8 +140,7 @@ export const confirmAllocationsBatch = (data: {
   allocation_ids: number[];
   confirmed_by?: string;
 }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return http.post<{ confirmed_ids: number[]; failed_items: any[] }>(
+  return http.post<{ confirmed_ids: number[]; failed_items: { id: number; error: string }[] }>(
     "allocations/confirm-batch",
     data,
   );
