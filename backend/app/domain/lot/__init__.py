@@ -24,7 +24,7 @@ class LotNotFoundError(LotDomainError):
     """ロット不在エラー."""
 
     def __init__(self, lot_id: int):
-        message = f"Lot not found: {lot_id}"
+        message = f"ロットが見つかりません: ID={lot_id}"
         super().__init__(message, code="LOT_NOT_FOUND")
 
 
@@ -32,9 +32,7 @@ class InsufficientLotStockError(LotDomainError):
     """ロット在庫不足エラー."""
 
     def __init__(self, lot_id: int, required: float, available: float):
-        message = (
-            f"Insufficient lot stock: lot={lot_id}, required={required}, available={available}"
-        )
+        message = f"在庫不足: ロット={lot_id}, 必要数量={required}, 利用可能={available}"
         super().__init__(message, code="INSUFFICIENT_LOT_STOCK")
 
 
@@ -42,8 +40,49 @@ class ExpiredLotError(LotDomainError):
     """期限切れロットエラー."""
 
     def __init__(self, lot_id: int, expiry_date: date):
-        message = f"Lot {lot_id} has expired: {expiry_date}"
+        message = f"ロット {lot_id} は期限切れです: {expiry_date}"
         super().__init__(message, code="EXPIRED_LOT")
+
+
+class LotValidationError(LotDomainError):
+    """ロット関連のバリデーションエラー."""
+
+    def __init__(self, message: str):
+        super().__init__(message, code="LOT_VALIDATION_ERROR")
+
+
+class LotProductNotFoundError(LotDomainError):
+    """ロット作成時に製品が見つからないエラー."""
+
+    def __init__(self, product_id: int):
+        message = f"製品が見つかりません: ID={product_id}"
+        super().__init__(message, code="PRODUCT_NOT_FOUND")
+
+
+class LotSupplierNotFoundError(LotDomainError):
+    """ロット作成時に仕入先が見つからないエラー."""
+
+    def __init__(self, supplier_code: str):
+        message = f"仕入先が見つかりません: コード={supplier_code}"
+        super().__init__(message, code="SUPPLIER_NOT_FOUND")
+
+
+class LotWarehouseNotFoundError(LotDomainError):
+    """ロット作成時に倉庫が見つからないエラー."""
+
+    def __init__(self, identifier: str | int):
+        message = f"倉庫が見つかりません: {identifier}"
+        super().__init__(message, code="WAREHOUSE_NOT_FOUND")
+
+
+class LotDatabaseError(LotDomainError):
+    """ロット関連のデータベースエラー."""
+
+    def __init__(self, operation: str, original_error: Exception | None = None):
+        message = f"データベースエラー: {operation}"
+        if original_error:
+            message += f" ({original_error!s})"
+        super().__init__(message, code="LOT_DATABASE_ERROR")
 
 
 # ===== FEFOロジック =====
@@ -182,6 +221,11 @@ __all__ = [
     "LotNotFoundError",
     "InsufficientLotStockError",
     "ExpiredLotError",
+    "LotValidationError",
+    "LotProductNotFoundError",
+    "LotSupplierNotFoundError",
+    "LotWarehouseNotFoundError",
+    "LotDatabaseError",
     # FEFO
     "LotCandidate",
     "FefoPolicy",

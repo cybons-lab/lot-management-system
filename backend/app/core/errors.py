@@ -28,8 +28,13 @@ from app.domain.order import (
 from app.domain.lot import (
     ExpiredLotError,
     InsufficientLotStockError,
+    LotDatabaseError,
     LotDomainError,
     LotNotFoundError,
+    LotProductNotFoundError,
+    LotSupplierNotFoundError,
+    LotValidationError,
+    LotWarehouseNotFoundError,
 )
 
 # Allocation domain
@@ -67,8 +72,13 @@ DOMAIN_EXCEPTION_MAP: dict[type[DomainError], int] = {
     OrderDomainError: status.HTTP_400_BAD_REQUEST,
     # === Lot Domain ===
     LotNotFoundError: status.HTTP_404_NOT_FOUND,
+    LotProductNotFoundError: status.HTTP_404_NOT_FOUND,
+    LotSupplierNotFoundError: status.HTTP_404_NOT_FOUND,
+    LotWarehouseNotFoundError: status.HTTP_404_NOT_FOUND,
     InsufficientLotStockError: status.HTTP_400_BAD_REQUEST,
     ExpiredLotError: status.HTTP_400_BAD_REQUEST,
+    LotValidationError: status.HTTP_422_UNPROCESSABLE_ENTITY,
+    LotDatabaseError: status.HTTP_400_BAD_REQUEST,
     LotDomainError: status.HTTP_400_BAD_REQUEST,
     # === Allocation Domain ===
     AllocationNotFoundError: status.HTTP_404_NOT_FOUND,
