@@ -17,6 +17,38 @@
 
 ---
 
+## 📋 抑制コメント まとめ
+
+| 種類 | 件数 | カテゴリ |
+|------|------|----------|
+| eslint-disable | 43件 | Frontend Lint |
+| @ts-ignore | 0件 | Frontend TypeScript |
+| type: ignore | 81件 | Backend Mypy |
+| noqa | 42件 | Backend Ruff/Flake8 |
+| pragma: no cover | 5件 | テストカバレッジ除外（正常） |
+| TODO | 11件 | 未完了タスク |
+
+### 🔴 要対応: TODO コメント（11件）
+
+| ファイル | 内容 |
+|----------|------|
+| `CustomerBulkImportDialog.tsx` | Backend import未実装 |
+| `ProductBulkImportDialog.tsx` | Backend import未実装 |
+| `allocations/api.ts` | Use generated types once available |
+| `useWarehouseData.ts` | 入荷予定を倉庫別に集約 (P2-23) |
+| `useAllocationMutations.ts` | バックエンドAPI実装待ち（2件） |
+| `system_router.py` | ユーザー名取得にJoin必要 |
+| `sap_service.py` | 本番SAP API統合 |
+| `suggestion.py` | 削除範囲の最適化 |
+
+### 🟡 許容範囲:
+- `noqa: F401 / F403` - 意図的なre-export（問題なし）
+- `noqa: E712` - SQLAlchemyのブール比較（正常）
+- `pragma: no cover` - TYPE_CHECKING ブロック（正常）
+- `eslint-disable max-lines-per-function` - 関数分割を検討
+
+---
+
 ## P2 - 中優先度
 
 ### テストデータ生成の改善
@@ -51,7 +83,7 @@ APScheduler または Celery Beat の導入検討。
 - SAP受注登録: ✅ モック実装済み
 - 本番SAP API接続: ❌ 未実装
 
-関連TODO: `sap_service.py:60` - Replace with actual SAP API integration
+関連TODO: `sap_service.py:61` - Replace with actual SAP API integration
 
 ### Bulk Import API (マスタ一括登録)
 
@@ -60,7 +92,6 @@ APScheduler または Celery Beat の導入検討。
 関連TODO:
 - `CustomerBulkImportDialog.tsx` - Backend import未実装
 - `ProductBulkImportDialog.tsx` - Backend import未実装
-- `**/bulk-operation.ts` - bulk-upsert API未実装
 
 ### 担当者ロック表示（排他制御）のバックエンド実装
 
