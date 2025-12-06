@@ -584,13 +584,13 @@ def save_manual_allocations(..., db: Session = Depends(get_db)):
    - 新規例外: `LotValidationError`, `LotProductNotFoundError`, `LotSupplierNotFoundError`, `LotWarehouseNotFoundError`, `LotDatabaseError`
    - 34箇所の HTTPException を置換
 
-### Phase 3: 低優先度 🔲 未着手
-1. 🔲 **Backend:** 全 Router の try-catch パターン統一
+### Phase 3: 低優先度 ✅ 完了
+1. ✅ **Backend:** 全 Router の try-catch パターン統一
    - 対象: `orders_router.py`, その他のルーター
    - 推奨パターン: グローバルハンドラに委譲
-2. 🔲 **Frontend:** 全 Mutation hooks のデフォルトエラー処理統一
+2. ✅ **Frontend:** 全 Mutation hooks のデフォルトエラー処理統一
    - 対象: `hooks/mutations/*.ts`
-   - 推奨: `useMutationWithToast` パターンの適用
+   - 推奨: `useMutationWithToast` パターンの適用（または MutationCache グローバルハンドラへの委譲）
 
 ---
 
