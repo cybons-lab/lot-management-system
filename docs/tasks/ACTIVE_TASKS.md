@@ -12,25 +12,12 @@
 | 優先度 | 件数 | 状態 |
 |--------|------|------|
 | P1（高） | 0 | 完了 |
-| P2（中） | 4 | 対応中 |
+| P2（中） | 2 | 対応中 |
 | P3（低） | 3 | 将来対応 |
 
 ---
 
 ## P2 - 中優先度
-
-### フィルタをID検索から名前検索に変更
-
-**ステータス:** 未着手
-
-各一覧画面のフィルタで、IDによる検索を名前（部分一致）検索に変更する。
-
-対象:
-- [ ] 得意先フィルタ
-- [ ] 納入先フィルタ
-- [ ] 製品フィルタ
-- [ ] 仕入先フィルタ
-- [ ] 倉庫フィルタ
 
 ### テストデータ生成の改善
 
@@ -45,19 +32,6 @@
 残タスク:
 - [ ] 全製品に最低1ロット確保
 - [ ] エッジケーステスト用データパターン追加
-
-### コード品質課題
-
-**ESLint (43件):**
-- max-lines-per-function 違反: 約20件
-- complexity 違反: 約8件
-- @typescript-eslint/no-explicit-any: 約6件
-
-**Mypy (約81箇所):**
-要注意ファイル:
-- `backend/app/services/allocations/utils.py`
-- `backend/app/services/inventory/inbound_service.py`
-- `backend/app/api/routes/inventory/lots_router.py`
 
 ### 定期バッチジョブのスケジューラ設定
 
@@ -111,6 +85,13 @@ APScheduler または Celery Beat の導入検討。
 - [x] `confirm_hard_allocation` 実装
 - [x] `confirm_hard_allocations_batch` バッチAPI
 - [x] Soft/Hard 分割表示（在庫一覧）
+
+### コード品質改善（2025-12-07）
+
+- [x] フィルタをID検索から名前検索に変更（SearchableSelect導入）
+- [x] ESLint: 0エラー/0ワーニング
+- [x] Mypy: 0エラー（types-PyYAML追加、型アノテーション修正）
+- [x] pre-commit設定改善（docformatter削除、ruff統一）
 
 ---
 
