@@ -20,6 +20,7 @@ import { Link } from "react-router-dom";
 
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/shared/libs/utils";
+import { useAuth } from "@/features/auth/AuthContext";
 
 // ============================================
 // 型定義
@@ -109,6 +110,7 @@ interface GlobalNavigationProps {
 }
 
 export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
+  const { user } = useAuth();
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
       <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
@@ -161,10 +163,23 @@ export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
 
           {/* 右側のユーザー情報など */}
           <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
-            <div className="hidden items-center gap-2 rounded-full bg-gray-100 px-3 py-1 md:flex">
-              <div className="h-2 w-2 rounded-full bg-green-500" />
-              <span className="text-xs font-medium text-gray-700">オンライン</span>
-            </div>
+            {user ? (
+              <div className="hidden flex-col items-end justify-center md:flex">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500" />
+                  <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Online</span>
+                </div>
+                <div className="text-sm font-bold text-gray-900 leading-none mt-0.5">{user.display_name}</div>
+              </div>
+            ) : (
+              <Link to="/login" className="hidden flex-col items-end justify-center hover:opacity-80 transition-opacity md:flex">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-gray-300" />
+                  <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Guest</span>
+                </div>
+                <div className="text-sm font-medium text-gray-500 leading-none mt-0.5">ゲスト</div>
+              </Link>
+            )}
             <button className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900">
               <Settings className="h-5 w-5" />
             </button>

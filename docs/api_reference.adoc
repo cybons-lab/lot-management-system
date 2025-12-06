@@ -175,6 +175,20 @@
 | `DELETE` | `/alerts/{id}` | アラート削除
 |===
 
+== Authentication API
+
+ユーザー認証、ログイン機能を提供します。
+
+**ベースパス**: `/api/auth`
+
+[cols="1,2,2", options="header"]
+|===
+| メソッド | エンドポイント | 説明
+
+| `POST` | `/login` | ログイン (JWT発行)
+| `GET` | `/me` | 自身のユーザー情報取得
+|===
+
 == Admin & System API
 
 ユーザー管理、システム設定、ログ、テストデータ等の管理機能です。
@@ -198,6 +212,10 @@
 | `POST` | `/roles` | ロール作成
 | `GET` | `/roles/{id}` | ロール詳細取得
 | `PUT` | `/roles/{id}` | ロール更新
+
+.2+| **System Logs**
+| `POST` | `/system/logs/client` | クライアントログ送信
+| `GET` | `/system/logs/recent` | 直近ログ参照
 
 .2+| **Operation Logs**
 | `GET` | `/operation-logs` | 操作ログ一覧取得

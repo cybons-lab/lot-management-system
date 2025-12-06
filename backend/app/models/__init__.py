@@ -31,6 +31,7 @@ from .masters_models import (
     Warehouse,
 )
 from .orders_models import Allocation, Order, OrderLine
+from .system_models import ClientLog
 from .seed_snapshot_model import SeedSnapshot
 from .system_config_model import SystemConfig
 from .views_models import (

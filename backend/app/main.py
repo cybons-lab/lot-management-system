@@ -37,7 +37,8 @@ from app.api.routes import (
     warehouse_alloc_router,
 )
 from app.api.routes.assignments.assignment_router import router as assignment_router
-from app.api.routes.auth_router import router as auth_router
+from app.api.routes.auth.auth_router import router as auth_router
+from app.api.routes.system.system_router import router as system_router
 from app.api.routes.masters import (
     customer_items_router,
     customers_router,
@@ -189,7 +190,8 @@ app.include_router(
 )
 
 # User & Role management
-app.include_router(auth_router, prefix=settings.API_PREFIX)
+app.include_router(auth_router, prefix=settings.API_PREFIX + "/auth")
+app.include_router(system_router, prefix=settings.API_PREFIX + "/system")
 app.include_router(users_router, prefix=settings.API_PREFIX)
 app.include_router(roles_router, prefix=settings.API_PREFIX)
 app.include_router(

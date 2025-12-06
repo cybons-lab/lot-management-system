@@ -27,12 +27,22 @@
 
 ## P2 - 中優先度
 
-### 認証関連（保留: アクセス制限不要のため）
+## P2 - 中優先度
 
-- [ ] **認証機能の実装** - ユーザー識別用のみ
-- [ ] **Auth context統合** - `adjusted_by` フィールドのハードコード解消
+### 認証・権限管理（テスト・監査対応）
 
-### 機能追加
+- [ ] **簡易認証とユーザー切り替え**
+    - [ ] Login UI / Debug User Switcher
+    - [ ] Auth Context (Frontend) & `current_user` logic (Backend)
+- [ ] **権限による表示制御**
+    - [ ] Role-based Menu Display (Admin vs User)
+
+### システム基盤・デバッグ
+
+- [ ] **クライアントログ収集・閲覧機能**
+    - [ ] Backend: `client_logs` テーブル設計 & `POST /system/logs` API
+    - [ ] Frontend: `Logger` ユーティリティ実装 & API連携
+    - [ ] UI: システム管理 - ログ閲覧画面の実装
 
 - [ ] (完了) **全受注の自動引当実装** -> CHANGELOGへ移動
 

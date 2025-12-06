@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
+import { AuthProvider } from "@/features/auth/AuthContext";
 // Pages - all imported from features (Phase A cleanup)
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
 import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
@@ -80,110 +81,112 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <SAPRegistrationButton />
-      <SystemStatus />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="*"
-          element={
-            <TopNavLayout>
-              <Routes>
-                {/* Root */}
-                <Route path={ROUTES.ROOT} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
-                <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
+      <AuthProvider>
+        <SAPRegistrationButton />
+        <SystemStatus />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="*"
+            element={
+              <TopNavLayout>
+                <Routes>
+                  {/* Root */}
+                  <Route path={ROUTES.ROOT} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+                  <Route path={ROUTES.DASHBOARD} element={<DashboardPage />} />
 
-                {/* Orders */}
-                <Route path={ROUTES.ORDERS.LIST} element={<OrdersListPage />} />
-                <Route path="/orders/:orderId" element={<OrderDetailPage />} />
-                <Route path="/confirmed-lines" element={<ConfirmedLinesPage />} />
+                  {/* Orders */}
+                  <Route path={ROUTES.ORDERS.LIST} element={<OrdersListPage />} />
+                  <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+                  <Route path="/confirmed-lines" element={<ConfirmedLinesPage />} />
 
-                {/* Allocations - Redirected to Orders (functionality integrated) */}
-                <Route path="/allocations" element={<Navigate to="/orders" replace />} />
-                <Route
-                  path="/allocations/suggestions"
-                  element={<Navigate to="/orders" replace />}
-                />
+                  {/* Allocations - Redirected to Orders (functionality integrated) */}
+                  <Route path="/allocations" element={<Navigate to="/orders" replace />} />
+                  <Route
+                    path="/allocations/suggestions"
+                    element={<Navigate to="/orders" replace />}
+                  />
 
-                {/* Forecasts - New structure (v2.2 - Phase B) */}
-                <Route path={ROUTES.FORECASTS.LIST} element={<ForecastListPage />} />
-                <Route path={ROUTES.FORECASTS.NEW} element={<ForecastCreatePage />} />
-                <Route path="/forecasts/:id" element={<ForecastDetailPage />} />
-                <Route path="/forecasts/:forecastId/edit" element={<ForecastEditPage />} />
-                <Route path={ROUTES.FORECASTS.IMPORT} element={<ForecastImportPage />} />
+                  {/* Forecasts - New structure (v2.2 - Phase B) */}
+                  <Route path={ROUTES.FORECASTS.LIST} element={<ForecastListPage />} />
+                  <Route path={ROUTES.FORECASTS.NEW} element={<ForecastCreatePage />} />
+                  <Route path="/forecasts/:id" element={<ForecastDetailPage />} />
+                  <Route path="/forecasts/:forecastId/edit" element={<ForecastEditPage />} />
+                  <Route path={ROUTES.FORECASTS.IMPORT} element={<ForecastImportPage />} />
 
-                {/* Legacy forecast routes - Redirect to new structure */}
-                <Route
-                  path={LEGACY_ROUTES.FORECAST}
-                  element={<Navigate to={ROUTES.FORECASTS.IMPORT} replace />}
-                />
-                <Route
-                  path={LEGACY_ROUTES.FORECAST_LIST}
-                  element={<Navigate to={ROUTES.FORECASTS.LIST} replace />}
-                />
+                  {/* Legacy forecast routes - Redirect to new structure */}
+                  <Route
+                    path={LEGACY_ROUTES.FORECAST}
+                    element={<Navigate to={ROUTES.FORECASTS.IMPORT} replace />}
+                  />
+                  <Route
+                    path={LEGACY_ROUTES.FORECAST_LIST}
+                    element={<Navigate to={ROUTES.FORECASTS.LIST} replace />}
+                  />
 
-                {/* Inbound Plans - New (v2.2 - Phase C) */}
-                <Route path={ROUTES.INBOUND_PLANS.LIST} element={<InboundPlansListPage />} />
-                <Route path={ROUTES.INBOUND_PLANS.NEW} element={<InboundPlanCreatePage />} />
-                <Route path="/inbound-plans/:id" element={<InboundPlanDetailPage />} />
-                <Route path="/inbound-plans/:planId/edit" element={<InboundPlanEditPage />} />
+                  {/* Inbound Plans - New (v2.2 - Phase C) */}
+                  <Route path={ROUTES.INBOUND_PLANS.LIST} element={<InboundPlansListPage />} />
+                  <Route path={ROUTES.INBOUND_PLANS.NEW} element={<InboundPlanCreatePage />} />
+                  <Route path="/inbound-plans/:id" element={<InboundPlanDetailPage />} />
+                  <Route path="/inbound-plans/:planId/edit" element={<InboundPlanEditPage />} />
 
-                {/* Inventory routes */}
-                <Route path={ROUTES.INVENTORY.ROOT} element={<InventoryLayout />}>
-                  <Route index element={<InventoryPage />} />
-                  <Route path="summary" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
-                  <Route path="lots" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
-                  <Route path="moves" element={<MovesPage />} />
-                  <Route path="adjustments" element={<AdjustmentsListPage />} />
-                  <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
-                </Route>
+                  {/* Inventory routes */}
+                  <Route path={ROUTES.INVENTORY.ROOT} element={<InventoryLayout />}>
+                    <Route index element={<InventoryPage />} />
+                    <Route path="summary" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
+                    <Route path="lots" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
+                    <Route path="moves" element={<MovesPage />} />
+                    <Route path="adjustments" element={<AdjustmentsListPage />} />
+                    <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
+                  </Route>
 
-                {/* Inventory Item Detail & Lot Detail (outside nested routes) */}
-                <Route
-                  path="/inventory/items/:productId/:warehouseId"
-                  element={<InventoryItemDetailPage />}
-                />
-                <Route path="/inventory/lots/:lotId" element={<LotDetailPage />} />
+                  {/* Inventory Item Detail & Lot Detail (outside nested routes) */}
+                  <Route
+                    path="/inventory/items/:productId/:warehouseId"
+                    element={<InventoryItemDetailPage />}
+                  />
+                  <Route path="/inventory/lots/:lotId" element={<LotDetailPage />} />
 
-                {/* Masters - Phase G-1 */}
-                <Route path="/masters" element={<MastersPage />} />
-                <Route path="/masters/supplier-products" element={<SupplierProductsPage />} />
-                <Route path="/masters/uom-conversions" element={<UomConversionsPage />} />
-                <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
-                <Route path="/warehouses/:warehouseCode" element={<WarehouseDetailPage />} />
-                <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />
-                <Route path="/suppliers/:supplierCode" element={<SupplierDetailPage />} />
-                <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersListPage />} />
-                <Route path="/customers/:customerCode" element={<CustomerDetailPage />} />
-                <Route path={ROUTES.MASTERS.PRODUCTS} element={<ProductsListPage />} />
-                <Route path="/products/:makerPartCode" element={<ProductDetailPage />} />
-                <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
-                <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
+                  {/* Masters - Phase G-1 */}
+                  <Route path="/masters" element={<MastersPage />} />
+                  <Route path="/masters/supplier-products" element={<SupplierProductsPage />} />
+                  <Route path="/masters/uom-conversions" element={<UomConversionsPage />} />
+                  <Route path={ROUTES.MASTERS.WAREHOUSES} element={<WarehousesListPage />} />
+                  <Route path="/warehouses/:warehouseCode" element={<WarehouseDetailPage />} />
+                  <Route path={ROUTES.MASTERS.SUPPLIERS} element={<SuppliersListPage />} />
+                  <Route path="/suppliers/:supplierCode" element={<SupplierDetailPage />} />
+                  <Route path={ROUTES.MASTERS.CUSTOMERS} element={<CustomersListPage />} />
+                  <Route path="/customers/:customerCode" element={<CustomerDetailPage />} />
+                  <Route path={ROUTES.MASTERS.PRODUCTS} element={<ProductsListPage />} />
+                  <Route path="/products/:makerPartCode" element={<ProductDetailPage />} />
+                  <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
+                  <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
 
-                {/* Settings - Phase G-2 */}
-                <Route path={ROUTES.SETTINGS.USERS} element={<UsersListPage />} />
-                <Route path="/settings/users/:id" element={<UserDetailPage />} />
-                <Route path={ROUTES.SETTINGS.ROLES} element={<RolesListPage />} />
+                  {/* Settings - Phase G-2 */}
+                  <Route path={ROUTES.SETTINGS.USERS} element={<UsersListPage />} />
+                  <Route path="/settings/users/:id" element={<UserDetailPage />} />
+                  <Route path={ROUTES.SETTINGS.ROLES} element={<RolesListPage />} />
 
-                {/* Admin - Phase H */}
-                <Route path={ROUTES.ADMIN.INDEX} element={<AdminPage />} />
-                <Route path={ROUTES.ADMIN.OPERATION_LOGS} element={<OperationLogsPage />} />
-                <Route path={ROUTES.ADMIN.BUSINESS_RULES} element={<BusinessRulesPage />} />
-                <Route path={ROUTES.ADMIN.BATCH_JOBS} element={<BatchJobsPage />} />
-                <Route path={ROUTES.ADMIN.MASTER_CHANGE_LOGS} element={<MasterChangeLogsPage />} />
-                <Route path={ROUTES.ADMIN.SEED_SNAPSHOTS} element={<SeedSnapshotsPage />} />
+                  {/* Admin - Phase H */}
+                  <Route path={ROUTES.ADMIN.INDEX} element={<AdminPage />} />
+                  <Route path={ROUTES.ADMIN.OPERATION_LOGS} element={<OperationLogsPage />} />
+                  <Route path={ROUTES.ADMIN.BUSINESS_RULES} element={<BusinessRulesPage />} />
+                  <Route path={ROUTES.ADMIN.BATCH_JOBS} element={<BatchJobsPage />} />
+                  <Route path={ROUTES.ADMIN.MASTER_CHANGE_LOGS} element={<MasterChangeLogsPage />} />
+                  <Route path={ROUTES.ADMIN.SEED_SNAPSHOTS} element={<SeedSnapshotsPage />} />
 
-                {/* RPA */}
-                <Route path={ROUTES.RPA} element={<RPAPage />} />
+                  {/* RPA */}
+                  <Route path={ROUTES.RPA} element={<RPAPage />} />
 
-                {/* Catch all - redirect to dashboard */}
-                <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
-              </Routes>
-              <Toaster position="top-right" richColors closeButton />
-            </TopNavLayout>
-          }
-        />
-      </Routes>
+                  {/* Catch all - redirect to dashboard */}
+                  <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+                </Routes>
+                <Toaster position="top-right" richColors closeButton />
+              </TopNavLayout>
+            }
+          />
+        </Routes>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

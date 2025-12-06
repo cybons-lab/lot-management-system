@@ -43,7 +43,14 @@ class User(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     username: Mapped[str] = mapped_column(String(50), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Auth fields
+    auth_provider: Mapped[str] = mapped_column(
+        String(50), nullable=False, server_default=text("'local'")
+    )
+    azure_object_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, unique=True
+    )
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     display_name: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -59,6 +66,8 @@ class User(Base):
         UniqueConstraint("email", name="uq_users_email"),
         Index("idx_users_username", "username"),
         Index("idx_users_email", "email"),
+        Index("idx_users_auth_provider", "auth_provider"),
+        Index("idx_users_azure_oid", "azure_object_id", unique=True),
         Index(
             "idx_users_active",
             "is_active",
