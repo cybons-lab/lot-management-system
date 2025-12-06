@@ -17,7 +17,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
 
@@ -36,9 +36,7 @@ class ClientLog(Base):
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    level: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default=text("'info'")
-    )
+    level: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'info'"))
     message: Mapped[str] = mapped_column(Text, nullable=False)
     user_agent: Mapped[str | None] = mapped_column(String(255), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

@@ -140,9 +140,7 @@ def calculate_line_allocations(
             # We want allocator to see `available = current_tracked_available`
             # logic: available = current - allocated - temp
             # => temp = current - allocated - target_available
-            real_avail_db = (
-                lot.current_quantity - lot.allocated_quantity
-            )  # Max theoretical
+            real_avail_db = lot.current_quantity - lot.allocated_quantity  # Max theoretical
             # Use Decimal for precision in calc
             target_avail = Decimal(str(current_tracked_available))
             temp_allocated = real_avail_db - target_avail
@@ -171,7 +169,8 @@ def calculate_line_allocations(
 
             # Update availability tracker
             current_avail = available_per_lot.get(
-                allocated_lot.id, float(real_available_qty or 0.0)  # type: ignore
+                allocated_lot.id,
+                float(real_available_qty or 0.0),  # type: ignore
             )
             available_per_lot[allocated_lot.id] = current_avail - allocated_qty_float
             remaining -= allocated_qty_float

@@ -47,9 +47,7 @@ class User(Base):
     auth_provider: Mapped[str] = mapped_column(
         String(50), nullable=False, server_default=text("'local'")
     )
-    azure_object_id: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, unique=True
-    )
+    azure_object_id: Mapped[str | None] = mapped_column(String(100), nullable=True, unique=True)
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     display_name: Mapped[str] = mapped_column(String(100), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))

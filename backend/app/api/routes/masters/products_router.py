@@ -88,17 +88,18 @@ def get_product(product_code: str, db: Session = Depends(get_db)):
 @router.get("/{product_code}/suppliers")
 def get_product_suppliers(product_code: str, db: Session = Depends(get_db)):
     """Fetch suppliers for a product by its code.
-    
+
     Returns a list of suppliers associated with this product,
     indicating which supplier is the primary one.
     """
-    from app.models import ProductSupplier, Supplier
     from sqlalchemy import select
-    
+
+    from app.models import ProductSupplier, Supplier
+
     service = ProductService(db)
     product = service.get_by_code(product_code)
     assert product is not None
-    
+
     stmt = (
         select(ProductSupplier, Supplier)
         .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
@@ -106,7 +107,7 @@ def get_product_suppliers(product_code: str, db: Session = Depends(get_db)):
         .order_by(ProductSupplier.is_primary.desc(), Supplier.supplier_name)
     )
     results = db.execute(stmt).all()
-    
+
     return [
         {
             "id": ps.id,

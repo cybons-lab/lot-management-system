@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -9,6 +9,7 @@ from app.core.security import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token, 
 from app.models.auth_models import User
 from app.schemas.auth.auth_schemas import LoginRequest, TokenResponse, UserResponse
 
+
 router = APIRouter()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
@@ -18,7 +19,7 @@ def get_current_user_optional(
     token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ) -> User | None:
     """Get current user from token (Optional).
-    
+
     Returns None if:
     - No token is provided
     - Token is invalid
@@ -76,7 +77,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="User not found or inactive")
 
     # Update last login
-    user.last_login_at = datetime.now(timezone.utc)
+    user.last_login_at = datetime.now(UTC)
     db.commit()
 
     # Create Token

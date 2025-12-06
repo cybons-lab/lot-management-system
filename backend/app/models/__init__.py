@@ -32,9 +32,9 @@ from .masters_models import (
 )
 from .orders_models import Allocation, Order, OrderLine
 from .product_supplier_models import ProductSupplier
-from .system_models import ClientLog
 from .seed_snapshot_model import SeedSnapshot
 from .system_config_model import SystemConfig
+from .system_models import ClientLog
 from .views_models import (
     LotCurrentStock,
     LotDetails,
@@ -95,6 +95,7 @@ __all__ = [
     "MasterChangeLog",
     "BusinessRule",
     "BatchJob",
+    "ClientLog",
     # System
     "SystemConfig",
     "SeedSnapshot",

@@ -36,6 +36,7 @@ interface SupplierAssignmentEditDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function SupplierAssignmentEditDialog({
   group,
   open,

@@ -4,18 +4,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+from app.api.routes.auth.auth_router import get_current_user_optional
+from app.models.auth_models import User
 from app.schemas.inventory.inventory_schema import (
     InventoryByProductResponse,
     InventoryBySupplierResponse,
     InventoryByWarehouseResponse,
     InventoryItemResponse,
 )
-from app.services.inventory.inventory_service import InventoryService
 from app.services.assignments.assignment_service import (
     UserSupplierAssignmentService,
 )
-from app.models.auth_models import User
-from app.api.routes.auth.auth_router import get_current_user_optional
+from app.services.inventory.inventory_service import InventoryService
 
 
 router = APIRouter(prefix="/inventory-items", tags=["inventory-items"])
@@ -103,7 +103,7 @@ def list_inventory_by_supplier(
         assignment_service = UserSupplierAssignmentService(db)
         assignments = assignment_service.get_user_suppliers(current_user.id)
         primary_supplier_ids = {a.supplier_id for a in assignments if a.is_primary}
-        
+
         for item in items:
             item["is_primary_supplier"] = item["supplier_id"] in primary_supplier_ids
 

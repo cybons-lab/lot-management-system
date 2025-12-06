@@ -52,6 +52,7 @@ export interface SupplierGroup {
   primaryUser: SupplierAssignment | null;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function PrimaryAssignmentsPage() {
   const { user: currentUser } = useAuth();
   const [assignments, setAssignments] = useState<SupplierAssignment[]>([]);

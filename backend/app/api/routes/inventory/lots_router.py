@@ -3,8 +3,8 @@ from datetime import date
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.core.database import get_db
 from app.api.routes.auth.auth_router import get_current_user_optional
+from app.core.database import get_db
 from app.models.auth_models import User
 from app.schemas.inventory.inventory_schema import (
     LotCreate,

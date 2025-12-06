@@ -205,7 +205,7 @@ class LotService:
         Args:
             primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
         """
-        from sqlalchemy import case, desc
+        from sqlalchemy import case
 
         query = self.db.query(VLotDetails)
 
@@ -281,8 +281,7 @@ class LotService:
                 updated_at=lot_view.updated_at,
                 last_updated=lot_view.updated_at,
                 is_primary_supplier=bool(
-                    primary_supplier_ids
-                    and lot_view.supplier_id in primary_supplier_ids
+                    primary_supplier_ids and lot_view.supplier_id in primary_supplier_ids
                 ),
             )
             responses.append(response)
