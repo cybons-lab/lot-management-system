@@ -32,7 +32,7 @@ def get_current_user_optional(
     user_id = payload.get("sub")
     if user_id is None:
         return None
-    return db.query(User).filter(User.id == user_id).first()
+    return db.query(User).filter(User.id == int(user_id)).first()
 
 
 def get_current_user(
@@ -70,7 +70,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     roles = [ur.role.role_code for ur in user.user_roles]
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "username": user.username, "roles": roles},
+        data={"sub": str(user.id), "username": user.username, "roles": roles},
         expires_delta=access_token_expires,
     )
 
