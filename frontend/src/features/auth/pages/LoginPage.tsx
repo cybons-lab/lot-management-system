@@ -2,7 +2,18 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users } from "lucide-react";
 
-import { Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { http } from "@/shared/api/http-client";
 
@@ -45,7 +56,7 @@ export function LoginPage() {
     if (!selectedUserId) return;
 
     const userId = parseInt(selectedUserId, 10);
-    const selectedUser = users.find(u => u.user_id === userId);
+    const selectedUser = users.find((u) => u.user_id === userId);
 
     setIsLoading(true);
     try {
@@ -66,14 +77,12 @@ export function LoginPage() {
             <Users className="h-6 w-6 text-blue-600" />
           </div>
           <CardTitle className="text-2xl font-bold">ログイン</CardTitle>
-          <p className="text-sm text-gray-500">
-            開発用簡易ログイン（ユーザーを選択してください）
-          </p>
+          <p className="text-sm text-gray-500">開発用簡易ログイン（ユーザーを選択してください）</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 ユーザー選択
               </label>
               <Select value={selectedUserId} onValueChange={setSelectedUserId} disabled={isLoading}>
@@ -89,11 +98,7 @@ export function LoginPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isLoading || !selectedUserId}
-            >
+            <Button type="submit" className="w-full" disabled={isLoading || !selectedUserId}>
               {isLoading ? "ログイン中..." : "ログイン"}
             </Button>
           </form>

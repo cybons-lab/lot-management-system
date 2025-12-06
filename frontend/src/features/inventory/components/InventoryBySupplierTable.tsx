@@ -44,7 +44,7 @@ export function InventoryBySupplierTable({ data, onRowClick }: InventoryBySuppli
                   {row.is_primary_supplier && (
                     <Badge
                       variant="outline"
-                      className="gap-1 border-amber-300 bg-amber-50 text-amber-600 px-1 py-0 text-[10px]"
+                      className="gap-1 border-amber-300 bg-amber-50 px-1 py-0 text-[10px] text-amber-600"
                     >
                       <Crown className="h-3 w-3" />
                       主担当

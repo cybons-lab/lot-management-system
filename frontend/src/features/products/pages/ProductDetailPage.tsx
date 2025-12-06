@@ -168,9 +168,7 @@ export function ProductDetailPage() {
       </div>
 
       {/* 仕入先セクション (編集中は非表示) */}
-      {!isEditing && productCode && (
-        <ProductSupplierSection productCode={productCode} />
-      )}
+      {!isEditing && productCode && <ProductSupplierSection productCode={productCode} />}
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>

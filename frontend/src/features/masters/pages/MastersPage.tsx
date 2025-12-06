@@ -85,9 +85,7 @@ export function MastersPage() {
   const isAdmin = user?.roles?.includes("admin");
 
   // 管理者でない場合は管理者専用リンクを除外
-  const visibleLinks = masterLinks.filter(
-    (link) => !link.requireAdmin || isAdmin
-  );
+  const visibleLinks = masterLinks.filter((link) => !link.requireAdmin || isAdmin);
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">

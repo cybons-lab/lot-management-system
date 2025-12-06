@@ -135,7 +135,10 @@ function App() {
                   {/* Inventory routes */}
                   <Route path={ROUTES.INVENTORY.ROOT} element={<InventoryLayout />}>
                     <Route index element={<InventoryPage />} />
-                    <Route path="summary" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
+                    <Route
+                      path="summary"
+                      element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />}
+                    />
                     <Route path="lots" element={<Navigate to={ROUTES.INVENTORY.ROOT} replace />} />
                     <Route path="moves" element={<MovesPage />} />
                     <Route path="adjustments" element={<AdjustmentsListPage />} />
@@ -166,17 +169,80 @@ function App() {
                   <Route path="/masters/primary-assignments" element={<PrimaryAssignmentsPage />} />
 
                   {/* Settings - Phase G-2 (Admin Only) */}
-                  <Route path={ROUTES.SETTINGS.USERS} element={<AdminGuard><UsersListPage /></AdminGuard>} />
-                  <Route path="/settings/users/:id" element={<AdminGuard><UserDetailPage /></AdminGuard>} />
-                  <Route path={ROUTES.SETTINGS.ROLES} element={<AdminGuard><RolesListPage /></AdminGuard>} />
+                  <Route
+                    path={ROUTES.SETTINGS.USERS}
+                    element={
+                      <AdminGuard>
+                        <UsersListPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path="/settings/users/:id"
+                    element={
+                      <AdminGuard>
+                        <UserDetailPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path={ROUTES.SETTINGS.ROLES}
+                    element={
+                      <AdminGuard>
+                        <RolesListPage />
+                      </AdminGuard>
+                    }
+                  />
 
                   {/* Admin - Phase H (Admin Only) */}
-                  <Route path={ROUTES.ADMIN.INDEX} element={<AdminGuard><AdminPage /></AdminGuard>} />
-                  <Route path={ROUTES.ADMIN.OPERATION_LOGS} element={<AdminGuard><OperationLogsPage /></AdminGuard>} />
-                  <Route path={ROUTES.ADMIN.BUSINESS_RULES} element={<AdminGuard><BusinessRulesPage /></AdminGuard>} />
-                  <Route path={ROUTES.ADMIN.BATCH_JOBS} element={<AdminGuard><BatchJobsPage /></AdminGuard>} />
-                  <Route path={ROUTES.ADMIN.MASTER_CHANGE_LOGS} element={<AdminGuard><MasterChangeLogsPage /></AdminGuard>} />
-                  <Route path={ROUTES.ADMIN.SEED_SNAPSHOTS} element={<AdminGuard><SeedSnapshotsPage /></AdminGuard>} />
+                  <Route
+                    path={ROUTES.ADMIN.INDEX}
+                    element={
+                      <AdminGuard>
+                        <AdminPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path={ROUTES.ADMIN.OPERATION_LOGS}
+                    element={
+                      <AdminGuard>
+                        <OperationLogsPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path={ROUTES.ADMIN.BUSINESS_RULES}
+                    element={
+                      <AdminGuard>
+                        <BusinessRulesPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path={ROUTES.ADMIN.BATCH_JOBS}
+                    element={
+                      <AdminGuard>
+                        <BatchJobsPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path={ROUTES.ADMIN.MASTER_CHANGE_LOGS}
+                    element={
+                      <AdminGuard>
+                        <MasterChangeLogsPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path={ROUTES.ADMIN.SEED_SNAPSHOTS}
+                    element={
+                      <AdminGuard>
+                        <SeedSnapshotsPage />
+                      </AdminGuard>
+                    }
+                  />
 
                   {/* RPA */}
                   <Route path={ROUTES.RPA} element={<RPAPage />} />

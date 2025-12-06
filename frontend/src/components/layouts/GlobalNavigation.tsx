@@ -126,7 +126,7 @@ export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
           {/* ナビゲーション */}
           <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
             {navItems
-              .filter((item) => !item.requireAdmin || user?.roles?.includes('admin'))
+              .filter((item) => !item.requireAdmin || user?.roles?.includes("admin"))
               .map((item) => {
                 const Icon = item.icon;
                 const isActive =
@@ -163,38 +163,47 @@ export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
                 <div className="hidden flex-col items-end justify-center md:flex">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-green-500" />
-                    <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Online</span>
+                    <span className="text-[10px] font-medium tracking-wider text-gray-500 uppercase">
+                      Online
+                    </span>
                     {/* ロールバッジ */}
-                    {user.roles?.includes('admin') ? (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 rounded">
+                    {user.roles?.includes("admin") ? (
+                      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase">
                         管理者
                       </span>
                     ) : (
-                      <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 rounded">
+                      <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
                         一般
                       </span>
                     )}
                   </div>
-                  <div className="text-sm font-bold text-gray-900 leading-none mt-0.5">{user.display_name}</div>
+                  <div className="mt-0.5 text-sm leading-none font-bold text-gray-900">
+                    {user.display_name}
+                  </div>
                 </div>
                 {/* ログアウトボタン */}
                 <button
                   onClick={() => {
                     logout();
-                    window.location.href = '/login';
+                    window.location.href = "/login";
                   }}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                  className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
                 >
                   ログアウト
                 </button>
               </>
             ) : (
-              <Link to="/login" className="hidden flex-col items-end justify-center hover:opacity-80 transition-opacity md:flex">
+              <Link
+                to="/login"
+                className="hidden flex-col items-end justify-center transition-opacity hover:opacity-80 md:flex"
+              >
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-gray-300" />
-                  <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Guest</span>
+                  <span className="text-[10px] font-medium tracking-wider text-gray-400 uppercase">
+                    Guest
+                  </span>
                 </div>
-                <div className="text-sm font-medium text-gray-500 leading-none mt-0.5">ゲスト</div>
+                <div className="mt-0.5 text-sm leading-none font-medium text-gray-500">ゲスト</div>
               </Link>
             )}
             <button className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900">

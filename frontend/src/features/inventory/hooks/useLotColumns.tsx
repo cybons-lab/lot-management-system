@@ -150,4 +150,3 @@ export function useLotColumns({
 
   return viewMode === "grouped" ? baseColumns : flatColumns;
 }
-
