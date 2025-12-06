@@ -1,0 +1,4 @@
+backend/app/services/rpa/rpa_service.py:12: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+backend/app/services/rpa/rpa_service.py:13: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+backend/app/services/common/job_tracker.py:93: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+Success: no issues found in 199 source files

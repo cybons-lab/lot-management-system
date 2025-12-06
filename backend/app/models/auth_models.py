@@ -28,7 +28,7 @@ from .base_model import Base
 
 # For type checking only
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .assignment_models import UserSupplierAssignment
+    from .assignments.assignment_models import UserSupplierAssignment
 
 
 class User(Base):

@@ -72,19 +72,7 @@ APScheduler または Celery Beat の導入検討。
 
 現在はSoft Allocation（推奨引当）のみ。
 
-=== 7. 在庫管理ページ Soft/Hard 引当表示
 
-**ステータス:** 未実装 +
-**追加日:** 2025-12-05
-
-在庫管理ページで「引当済」を「仮引当(Soft)」と「確定引当(Hard)」に分割表示する。
-バックエンドAPIの拡張が必要。
-
-**サブタスク:**
-
-. `InventoryItemResponse` に `soft_allocated_quantity`, `hard_allocated_quantity` 追加
-. `InventoryService.get_inventory_items()` で allocations テーブル集計
-. フロントエンド `InventoryTable` 列追加
 
 === 8. テストデータ生成の改善
 
@@ -103,13 +91,9 @@ APScheduler または Celery Beat の導入検討。
 * 全製品に最低1ロット確保
 * エッジケーステスト用データパターン追加
 
-=== 9. レガシー AllocationService の削除
 
-`backend/app/services/allocations/core.py` は孤立コード。
 
-=== 10. mypy attr-defined エラー
 
-17件残（MetricsCollector関連15件、Enum2件）
 
 ---
 

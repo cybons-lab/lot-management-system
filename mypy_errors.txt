@@ -1,0 +1,29 @@
+backend/app/decorators/__init__.py:4: error: Cannot find implementation or library stub for module named "app.decorators.logging"  [import-not-found]
+backend/app/services/rpa/rpa_service.py:12: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+backend/app/services/rpa/rpa_service.py:13: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+backend/app/core/security.py:5: error: Cannot find implementation or library stub for module named "jwt"  [import-not-found]
+backend/app/core/security.py:5: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+backend/app/services/common/job_tracker.py:93: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+backend/app/models/auth_models.py:31: error: Cannot find implementation or library stub for module named "app.models.assignment_models"  [import-not-found]
+backend/app/models/masters_models.py:34: error: Cannot find implementation or library stub for module named "app.models.assignment_models"  [import-not-found]
+backend/app/services/common/export_service.py:70: error: Library stubs not installed for "pandas"  [import-untyped]
+backend/app/services/common/export_service.py:70: note: Hint: "python3 -m pip install pandas-stubs"
+backend/app/services/common/export_service.py:70: note: (or run "mypy --install-types" to install all missing stub packages)
+backend/app/services/common/export_service.py:91: error: Library stubs not installed for "openpyxl"  [import-untyped]
+backend/app/services/common/export_service.py:91: note: Hint: "python3 -m pip install types-openpyxl"
+backend/app/services/forecasts/forecast_generator.py:24: error: Library stubs not installed for "dateutil.relativedelta"  [import-untyped]
+backend/app/services/forecasts/forecast_generator.py:24: note: Hint: "python3 -m pip install types-python-dateutil"
+backend/app/services/allocations/utils.py:79: error: Item "Product" of "Product | Any" has no attribute "next_div"  [union-attr]
+backend/app/services/inventory/lot_service.py:328: error: Argument 1 to "LotSupplierNotFoundError" has incompatible type "str | None"; expected "str"  [arg-type]
+backend/app/api/routes/allocations/allocations_router.py:158: error: Argument 1 to "OrderNotFoundError" has incompatible type "str"; expected "int"  [arg-type]
+backend/app/api/routes/allocations/allocations_router.py:188: error: Argument 1 to "OrderNotFoundError" has incompatible type "str"; expected "int"  [arg-type]
+backend/app/api/routes/allocations/allocations_router.py:311: error: Argument 1 to "OrderNotFoundError" has incompatible type "str"; expected "int"  [arg-type]
+backend/app/services/assignments/assignment_service.py:35: error: Signature of "get_all" incompatible with supertype "app.services.common.base_service.BaseService"  [override]
+backend/app/services/assignments/assignment_service.py:35: note:      Superclass:
+backend/app/services/assignments/assignment_service.py:35: note:          def get_all(self, skip: int = ..., limit: int = ...) -> list[UserSupplierAssignment]
+backend/app/services/assignments/assignment_service.py:35: note:      Subclass:
+backend/app/services/assignments/assignment_service.py:35: note:          def get_all(self) -> list[UserSupplierAssignment]
+backend/app/services/auth/auth_service.py:35: error: Argument 2 to "verify_password" of "UserService" has incompatible type "str | None"; expected "str"  [arg-type]
+backend/app/api/routes/assignments/assignment_router.py:172: error: Argument 1 to "OrderNotFoundError" has incompatible type "str"; expected "int"  [arg-type]
+backend/app/api/routes/assignments/assignment_router.py:192: error: Argument 1 to "OrderNotFoundError" has incompatible type "str"; expected "int"  [arg-type]
+Found 16 errors in 12 files (checked 199 source files)

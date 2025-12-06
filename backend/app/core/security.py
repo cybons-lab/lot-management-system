@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 
-import jwt
+import jwt  # type: ignore[import-not-found]
 
 
 # Hardcoded secret for dev (In prod, load from env)

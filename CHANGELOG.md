@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `assignment_service`に`get_primary_supplier_ids`メソッド追加
 - **[Backend] Product Suppliers API**: `GET /products/{code}/suppliers`エンドポイント追加
 - **[Frontend] Product Supplier Section**: 製品詳細画面に仕入先セクション追加
+- **[Frontend] Inventory Allocation Split**: 在庫一覧に「仮引当 (Soft)」と「確定引当 (Hard)」を分割表示
+- **[Backend] Allocation Aggregation**: `InventoryService`の集計ロジックを更新し、引当種別ごとの数量を計算
+
+### Fixed
+- **[Backend] Mypy Errors**: 17件あったMypyエラーを解決 (レガシーコード削除、Import整理、ロジック修正)
 
 ### Changed
 - `generate_test_data.py`を更新し、`product_suppliers`テーブルのクリアと生成を追加

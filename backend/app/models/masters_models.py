@@ -31,7 +31,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
-    from .assignment_models import UserSupplierAssignment
+    from .assignments.assignment_models import UserSupplierAssignment
     from .forecast_models import ForecastCurrent
     from .inbound_models import InboundPlan, InboundPlanLine
     from .inventory_models import Lot

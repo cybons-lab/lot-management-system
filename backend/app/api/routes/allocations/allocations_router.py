@@ -86,9 +86,7 @@ def drag_assign(request: DragAssignRequest, db: Session = Depends(get_db)):
             remaining_lot_qty=remaining,
         )
     except ValueError as e:
-        from app.domain.order import OrderValidationError
-
-        raise OrderValidationError(str(e)) from e
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except AllocationCommitError:
         raise  # Let global handler handle it
 
@@ -155,7 +153,7 @@ def preview_allocations(request: FefoPreviewRequest, db: Session = Depends(get_d
     except ValueError as e:
         from app.domain.order import OrderNotFoundError
 
-        raise OrderNotFoundError(str(e)) from e
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.post("/commit", response_model=AllocationCommitResponse)
@@ -181,12 +179,10 @@ def commit_allocation(request: AllocationCommitRequest, db: Session = Depends(ge
         # 既存のFEFO確定サービスを再利用
         result = commit_fefo_allocation(db, request.order_id)
     except ValueError as exc:
-        from app.domain.order import OrderNotFoundError, OrderValidationError
-
         message = str(exc)
         if "not found" in message.lower():
-            raise OrderNotFoundError(message) from exc
-        raise OrderValidationError(message) from exc
+            raise HTTPException(status_code=404, detail=message) from exc
+        raise HTTPException(status_code=400, detail=message) from exc
     except AllocationCommitError:
         raise  # Let global handler handle it
 
@@ -308,7 +304,7 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
     except ValueError as e:
         from app.domain.order import OrderNotFoundError
 
-        raise OrderNotFoundError(str(e)) from e
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
 
 @router.post("/bulk-auto-allocate", response_model=BulkAutoAllocateResponse)

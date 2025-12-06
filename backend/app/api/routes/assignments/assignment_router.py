@@ -1,6 +1,6 @@
 """Assignment management API routes."""
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -167,9 +167,7 @@ def update_assignment(
             updated_at=assignment.updated_at,
         )
     except ValueError as e:
-        from app.domain.order import OrderNotFoundError
-
-        raise OrderNotFoundError(str(e)) from e
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         from app.domain.order import OrderValidationError
 
@@ -187,9 +185,7 @@ def delete_assignment(
         service.delete_assignment(assignment_id)
         return {"message": "Assignment deleted successfully"}
     except ValueError as e:
-        from app.domain.order import OrderNotFoundError
-
-        raise OrderNotFoundError(str(e)) from e
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         from app.domain.order import OrderValidationError
 
