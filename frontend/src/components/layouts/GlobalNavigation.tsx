@@ -14,7 +14,6 @@ import {
   TrendingUp,
   PackagePlus,
   Database,
-  Users,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -32,6 +31,7 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   color?: string;
   activeColor?: string;
+  requireAdmin?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -70,7 +70,6 @@ const navItems: NavItem[] = [
     color: "text-gray-600",
     activeColor: "text-green-600 bg-green-50",
   },
-
   {
     title: "RPA",
     href: ROUTES.RPA,
@@ -79,18 +78,12 @@ const navItems: NavItem[] = [
     activeColor: "text-indigo-600 bg-indigo-50",
   },
   {
-    title: "設定",
-    href: ROUTES.SETTINGS.USERS,
-    icon: Users,
-    color: "text-gray-600",
-    activeColor: "text-amber-600 bg-amber-50",
-  },
-  {
     title: "管理",
     href: ROUTES.ADMIN.INDEX,
     icon: Settings,
     color: "text-gray-600",
     activeColor: "text-red-600 bg-red-50",
+    requireAdmin: true,
   },
   {
     title: "マスタ",
@@ -110,7 +103,7 @@ interface GlobalNavigationProps {
 }
 
 export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white shadow-sm">
       <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8">
@@ -132,45 +125,69 @@ export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
 
           {/* ナビゲーション */}
           <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive =
-                currentPath === item.href ||
-                (item.href !== "/dashboard" && currentPath.startsWith(item.href));
+            {navItems
+              .filter((item) => !item.requireAdmin || user?.roles?.includes('admin'))
+              .map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  currentPath === item.href ||
+                  (item.href !== "/dashboard" && currentPath.startsWith(item.href));
 
-              return (
-                <Link
-                  key={item.href}
-                  to={item.href}
-                  className={cn(
-                    "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200",
-                    isActive
-                      ? "bg-gray-100 text-gray-900"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                  )}
-                >
-                  <Icon
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
                     className={cn(
-                      "h-4 w-4 transition-colors",
-                      isActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
+                      "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200",
+                      isActive
+                        ? "bg-gray-100 text-gray-900"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
                     )}
-                  />
-                  <span className="hidden lg:inline">{item.title}</span>
-                </Link>
-              );
-            })}
+                  >
+                    <Icon
+                      className={cn(
+                        "h-4 w-4 transition-colors",
+                        isActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
+                      )}
+                    />
+                    <span className="hidden lg:inline">{item.title}</span>
+                  </Link>
+                );
+              })}
           </nav>
 
           {/* 右側のユーザー情報など */}
           <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
             {user ? (
-              <div className="hidden flex-col items-end justify-center md:flex">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                  <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Online</span>
+              <>
+                <div className="hidden flex-col items-end justify-center md:flex">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500" />
+                    <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">Online</span>
+                    {/* ロールバッジ */}
+                    {user.roles?.includes('admin') ? (
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-red-100 text-red-700 rounded">
+                        管理者
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 rounded">
+                        一般
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm font-bold text-gray-900 leading-none mt-0.5">{user.display_name}</div>
                 </div>
-                <div className="text-sm font-bold text-gray-900 leading-none mt-0.5">{user.display_name}</div>
-              </div>
+                {/* ログアウトボタン */}
+                <button
+                  onClick={() => {
+                    logout();
+                    window.location.href = '/login';
+                  }}
+                  className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                >
+                  ログアウト
+                </button>
+              </>
             ) : (
               <Link to="/login" className="hidden flex-col items-end justify-center hover:opacity-80 transition-opacity md:flex">
                 <div className="flex items-center gap-2">

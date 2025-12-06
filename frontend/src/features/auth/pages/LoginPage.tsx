@@ -6,9 +6,9 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Select, SelectContent
 import { useAuth } from "@/features/auth/AuthContext";
 import { http } from "@/shared/api/http-client";
 
-// Minimal User Type for Selection
+// Minimal User Type for Selection (API returns user_id, not id)
 interface UserSummary {
-  id: number;
+  user_id: number;
   username: string;
   display_name: string;
 }
@@ -44,9 +44,12 @@ export function LoginPage() {
     e.preventDefault();
     if (!selectedUserId) return;
 
+    const userId = parseInt(selectedUserId, 10);
+    const selectedUser = users.find(u => u.user_id === userId);
+
     setIsLoading(true);
     try {
-      await login(Number(selectedUserId));
+      await login(userId, selectedUser?.username);
       navigate("/");
     } catch (error) {
       console.error("Login failed", error);
@@ -79,7 +82,7 @@ export function LoginPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((u) => (
-                    <SelectItem key={u.id} value={String(u.id)}>
+                    <SelectItem key={u.user_id} value={String(u.user_id)}>
                       {u.display_name} ({u.username})
                     </SelectItem>
                   ))}

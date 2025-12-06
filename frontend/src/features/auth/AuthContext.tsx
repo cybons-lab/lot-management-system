@@ -12,7 +12,7 @@ export interface User {
 interface AuthContextType {
     user: User | null;
     token: string | null;
-    login: (userId: number) => Promise<void>;
+    login: (userId: number, username?: string) => Promise<void>;
     logout: () => void;
     isLoading: boolean;
 }
@@ -25,33 +25,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Restore session
+        // Restore session on initial mount only
         const initAuth = async () => {
-            if (token) {
+            const storedToken = localStorage.getItem('token');
+            if (storedToken) {
                 try {
-                    // We need to implement client.setToken logic or passing header
-                    // For now, assume client handles it or we set it here if client is configurable?
-                    // Actually, we should configure KY hooks.
-                    // Let's assume we fetch /auth/me
                     const response = await http.get<User>('auth/me', {
-                        headers: { Authorization: `Bearer ${token}` }
+                        headers: { Authorization: `Bearer ${storedToken}` }
                     });
+                    setToken(storedToken);
                     setUser(response);
                 } catch (error) {
                     console.warn('Failed to restore session', error);
-                    logout();
+                    localStorage.removeItem('token');
                 }
             }
             setIsLoading(false);
         };
         initAuth();
-    }, [token]);
+    }, []); // Only run on mount
 
-    const login = async (userId: number) => {
+    const login = async (userId: number, username?: string) => {
         const response = await http.post<{
             access_token: string;
             user: User;
-        }>('auth/login', { user_id: userId });
+        }>('auth/login', { user_id: userId, username });
 
         setToken(response.access_token);
         setUser(response.user);
