@@ -148,7 +148,7 @@ export function useLotColumns({
       },
       ...baseColumns.slice(1), // current_quantity以降
     ],
-    [baseColumns, primarySupplierIds, isPrimary],
+    [baseColumns, isPrimary],
   );
 
   return viewMode === "grouped" ? baseColumns : flatColumns;

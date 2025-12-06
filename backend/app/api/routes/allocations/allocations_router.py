@@ -151,8 +151,6 @@ def preview_allocations(request: FefoPreviewRequest, db: Session = Depends(get_d
         result = preview_fefo_allocation(db, request.order_id)
         return _to_preview_response(result)
     except ValueError as e:
-        from app.domain.order import OrderNotFoundError
-
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 
@@ -302,8 +300,6 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
         )
 
     except ValueError as e:
-        from app.domain.order import OrderNotFoundError
-
         raise HTTPException(status_code=404, detail=str(e)) from e
 
 

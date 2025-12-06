@@ -1,4 +1,4 @@
-import { ForecastListResponse } from "@/features/forecasts/api";
+import type { ForecastListResponse } from "@/features/forecasts/api";
 import { fmt } from "@/shared/utils/number";
 
 interface ForecastGroupListProps {

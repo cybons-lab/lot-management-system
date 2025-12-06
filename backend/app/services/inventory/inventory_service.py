@@ -4,6 +4,8 @@ This service aggregates inventory data from the lots table in real-time,
 providing product × warehouse summary information.
 """
 
+from decimal import Decimal
+
 from sqlalchemy.orm import Session
 
 from app.schemas.inventory.inventory_schema import InventoryItemResponse
