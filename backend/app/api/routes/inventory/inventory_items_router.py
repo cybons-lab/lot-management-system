@@ -11,10 +11,10 @@ from app.schemas.inventory.inventory_schema import (
     InventoryItemResponse,
 )
 from app.services.inventory.inventory_service import InventoryService
-from app.services.assignments.user_supplier_assignment_service import (
+from app.services.assignments.assignment_service import (
     UserSupplierAssignmentService,
 )
-from app.schemas.auth.auth_schemas import User
+from app.models.auth_models import User
 from app.api.routes.auth.auth_router import get_current_user_optional
 
 
