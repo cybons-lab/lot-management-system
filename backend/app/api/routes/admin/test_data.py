@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -18,4 +18,7 @@ def generate_test_data_endpoint(db: Session = Depends(get_db)):
         generate_all_test_data(db)
         return {"success": True, "message": "Test data generated successfully"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import logging
+
+        logging.getLogger(__name__).exception(f"Test data generation failed: {e}")
+        raise  # Let global handler format the response

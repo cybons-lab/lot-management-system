@@ -163,10 +163,10 @@ def sync_from_sap(
             skipped_count=skipped_count,
         )
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"SAP同期エラー: {str(e)}",
-        )
+        import logging
+
+        logging.getLogger(__name__).exception(f"SAP同期エラー: {e}")
+        raise  # Let global handler format the response
 
 
 @router.get("/{plan_id}", response_model=InboundPlanDetailResponse)
@@ -337,7 +337,6 @@ def receive_inbound_plan(
         result = service.receive_inbound_plan(plan_id, request)
         return result
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
+        from app.domain.errors import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e

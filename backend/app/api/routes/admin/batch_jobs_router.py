@@ -84,10 +84,10 @@ def execute_inventory_sync_direct(db: Session = Depends(get_db)):
             "data": result,
         }
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"SAP在庫チェック実行中にエラーが発生しました: {str(e)}",
-        )
+        import logging
+
+        logging.getLogger(__name__).exception(f"SAP在庫チェック実行中にエラー: {e}")
+        raise  # Let global handler format the response
 
 
 @router.get("/{job_id}", response_model=BatchJobResponse)

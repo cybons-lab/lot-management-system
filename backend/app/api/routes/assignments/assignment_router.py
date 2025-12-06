@@ -1,6 +1,6 @@
 """Assignment management API routes."""
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -142,7 +142,9 @@ def create_assignment(
             updated_at=assignment.updated_at,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        from app.domain.errors import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e
 
 
 @router.put("/{assignment_id}", response_model=UserSupplierAssignmentResponse)
@@ -165,9 +167,13 @@ def update_assignment(
             updated_at=assignment.updated_at,
         )
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        from app.domain.order import OrderNotFoundError
+
+        raise OrderNotFoundError(str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        from app.domain.errors import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e
 
 
 @router.delete("/{assignment_id}")
@@ -181,9 +187,13 @@ def delete_assignment(
         service.delete_assignment(assignment_id)
         return {"message": "Assignment deleted successfully"}
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e)) from e
+        from app.domain.order import OrderNotFoundError
+
+        raise OrderNotFoundError(str(e)) from e
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        from app.domain.errors import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e
 
 
 @router.post(
@@ -208,4 +218,6 @@ def set_primary_user(
             updated_at=assignment.updated_at,
         )
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        from app.domain.errors import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e

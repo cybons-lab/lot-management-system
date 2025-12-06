@@ -1,7 +1,6 @@
 """管理機能のAPIエンドポイント - サンプルデータ投入修正版（パッチ適用済）."""
 
 import logging
-import traceback
 from datetime import date
 from typing import cast
 
@@ -104,9 +103,8 @@ def reset_database(db: Session = Depends(get_db)):
 
     except Exception as e:
         db.rollback()
-        raise HTTPException(
-            status_code=500, detail=f"DBリセット失敗: {e}\n{traceback.format_exc()}"
-        )
+        logger.exception(f"DBリセット失敗: {e}")
+        raise  # Let global handler format the response
 
 
 # NOTE: Test data generation is now handled by /api/admin/generate-test-data
@@ -328,9 +326,9 @@ def get_allocatable_lots(
         return CandidateLotsResponse(items=items, total=len(items))  # type: ignore[arg-type]
 
     except Exception as e:
-        logger.error(f"診断API実行エラー: {e}")
+        logger.exception(f"診断API実行エラー: {e}")
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"診断API実行エラー: {str(e)}")
+        raise  # Let global handler format the response
 
 
 @router.get("/metrics")

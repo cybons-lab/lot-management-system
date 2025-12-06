@@ -34,10 +34,9 @@ def create_adjustment(
     try:
         return service.create_adjustment(adjustment)
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
+        from app.domain.errors import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e
 
 
 @router.get("", response_model=list[AdjustmentResponse])
