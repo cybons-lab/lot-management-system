@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **[Frontend] Inventory Allocation Split**: 在庫一覧に「仮引当 (Soft)」と「確定引当 (Hard)」を分割表示
 - **[Backend] Allocation Aggregation**: `InventoryService`の集計ロジックを更新し、引当種別ごとの数量を計算
 - **[Frontend] UI Layout**: 各種テーブル(製品別、仕入先別、倉庫別、確定明細)での長い文字列の省略表示とツールチップ対応
+- **[Code Quality] Backend Services**: `WarehouseService`, `CustomerService`の継承型定義を修正し、無理な型無視(`type: ignore`)を解消
+- **[Code Quality] Frontend Types**: `ForecastSummaryCards`, `ForecastGroupList`での`any`型使用を廃止し、正しい型定義(`ForecastListResponse`)を適用
+- **[Code Quality] React Hooks**: `useLotColumns`での`exhaustive-deps`警告を`useCallback`で正しく解消
 
 ### Fixed
 - **[Backend] Mypy Errors**: 17件あったMypyエラーを解決 (レガシーコード削除、Import整理、ロジック修正)

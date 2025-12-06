@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ForecastListResponse } from "@/features/forecasts/api";
 import { fmt } from "@/shared/utils/number";
 
 interface ForecastGroupListProps {
-  forecastData: any;
+  forecastData: ForecastListResponse;
 }
 
 export function ForecastGroupList({ forecastData }: ForecastGroupListProps) {
@@ -10,7 +10,7 @@ export function ForecastGroupList({ forecastData }: ForecastGroupListProps) {
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <h4 className="mb-3 font-semibold">予測グループ一覧</h4>
       <div className="space-y-2">
-        {forecastData.items.slice(0, 5).map((group: any, idx: number) => (
+        {forecastData.items.slice(0, 5).map((group, idx) => (
           <div
             key={idx}
             className="flex items-center justify-between border-b border-gray-100 pb-2"
@@ -28,7 +28,7 @@ export function ForecastGroupList({ forecastData }: ForecastGroupListProps) {
             <div className="text-sm font-semibold text-blue-600">
               {fmt(
                 (group.forecasts ?? []).reduce(
-                  (s: any, f: any) => s + Number(f.forecast_quantity),
+                  (s, f) => s + Number(f.forecast_quantity),
                   0,
                 ),
               )}
