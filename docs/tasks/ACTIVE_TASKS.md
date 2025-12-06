@@ -21,8 +21,7 @@
 
 ### Backend コード品質
 
-- [x] **lots_router.py 分割** - 533行 → 300行制限（3時間）
-- [x] **inbound_service.py 分割** - 411行 → 300行制限（2時間）
+- [ ] (なし)
 
 ---
 
@@ -35,9 +34,7 @@
 
 ### 機能追加
 
-- [x] **予測グループの自動引当実装** - v0アルゴリズム(Single Lot Fit + FEFO)実装
-- [ ] **全受注の自動引当実装** - 現在console.log出力のみ
-- [x] **[Frontend] マルチロット引当の表示対応** - `allocation_suggestions` の `forecast_id` / `priority` 対応
+- [ ] (完了) **全受注の自動引当実装** -> CHANGELOGへ移動
 
 ---
 

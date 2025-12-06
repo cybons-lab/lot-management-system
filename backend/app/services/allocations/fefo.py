@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal
+
 from sqlalchemy.orm import Session
 
 from app.models import Order, OrderLine, Product
@@ -121,31 +123,58 @@ def calculate_line_allocations(
     if next_div_warning:
         line_plan.warnings.append(next_div_warning)
 
-    # Allocate lots using FEFO strategy
+    # Allocate lots using unified allocator (Single Lot Fit + FEFO)
     if remaining > 0:
-        for lot, available_qty in _lot_candidates(db, product_id):
-            available = available_per_lot.get(lot.id, float(available_qty or 0.0))
-            if available <= 0:
+        from app.services.allocations.allocator import allocate_soft_for_forecast
+
+        # Prepare candidates with correct availability context
+        candidates = []
+        for lot, real_available_qty in _lot_candidates(db, product_id):
+            current_tracked_available = available_per_lot.get(
+                lot.id, float(real_available_qty or 0.0)
+            )
+            if current_tracked_available <= 0:
                 continue
 
-            allocate_qty = min(remaining, available)
-            if allocate_qty <= 0:
-                continue
+            # Bridge: allocator uses _temp_allocated to determine availability.
+            # We want allocator to see `available = current_tracked_available`
+            # logic: available = current - allocated - temp
+            # => temp = current - allocated - target_available
+            real_avail_db = (
+                lot.current_quantity - lot.allocated_quantity
+            )  # Max theoretical
+            # Use Decimal for precision in calc
+            target_avail = Decimal(str(current_tracked_available))
+            temp_allocated = real_avail_db - target_avail
+
+            lot._temp_allocated = temp_allocated  # type: ignore[attr-defined]
+            candidates.append(lot)
+
+        # Execute allocation
+        results = allocate_soft_for_forecast(Decimal(str(remaining)), candidates)
+
+        for res in results:
+            # Map back to FefoLotPlan
+            # Find the lot object (candidates has it)
+            allocated_lot = next(l for l in candidates if l.id == res.lot_id)
+            allocated_qty_float = float(res.quantity)
 
             line_plan.allocations.append(
                 FefoLotPlan(
-                    lot_id=lot.id,
-                    allocate_qty=float(allocate_qty),
-                    expiry_date=lot.expiry_date,
-                    receipt_date=lot.received_date,
-                    lot_number=lot.lot_number,
+                    lot_id=allocated_lot.id,
+                    allocate_qty=allocated_qty_float,
+                    expiry_date=allocated_lot.expiry_date,
+                    receipt_date=allocated_lot.received_date,
+                    lot_number=allocated_lot.lot_number,
                 )
             )
-            available_per_lot[lot.id] = available - allocate_qty
-            remaining -= allocate_qty
 
-            if remaining <= 0:
-                break
+            # Update availability tracker
+            current_avail = available_per_lot.get(
+                allocated_lot.id, float(real_available_qty or 0.0)  # type: ignore
+            )
+            available_per_lot[allocated_lot.id] = current_avail - allocated_qty_float
+            remaining -= allocated_qty_float
 
     if remaining > 0:
         message = f"在庫不足: 製品 {product_code} に対して {remaining:.2f} 足りません"

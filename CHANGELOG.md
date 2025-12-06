@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HTTPクライアントを `shared/api/http-client.ts` に統合済み確認
 - ドキュメント整理: ACTIVE_TASKS.md, remaining_issues.adoc 更新
 - 実装済み/不要なドキュメントの削除 (forecast-order-integration-plan.md, forecast_allocation_actions.md, spec-allocation.md)
+- **[Backend] Refactoring**: `lots_router.py`, `inbound_service.py` の責務分割と整理
+- **[Feature] Order Auto-Allocation**: `fefo.py` のロジック刷新 (Single Lot Fit), Batch API 実装, Frontend 連携(LineService分離)
+
+### Added
+- Forecast Auto-Allocation実装 (v0: Single Lot Fit + FEFO)
+- Frontend: Order Lineでのマルチロット引当内訳表示
+- Backend: `allocator.py` (共通引当ロジック)
 
 ### Verified (以前に実装済みと確認)
 - Template download API - 全マスタ（products, customers, warehouses, suppliers）
