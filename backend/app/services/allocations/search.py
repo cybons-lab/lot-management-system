@@ -27,8 +27,7 @@ def build_candidate_lot_filter(
     warehouse_id: int | None = None,
     order_line_id: int | None = None,
 ) -> dict:
-    """
-    Build filter parameters for candidate lot query.
+    """Build filter parameters for candidate lot query.
 
     Args:
         product_id: Filter by product ID
@@ -46,8 +45,7 @@ def build_candidate_lot_filter(
 
 
 def _apply_fefo_ordering(query: Query) -> Query:
-    """
-    Apply FEFO (First Expiry First Out) ordering to query.
+    """Apply FEFO (First Expiry First Out) ordering to query.
 
     Args:
         query: SQLAlchemy query to order
@@ -63,8 +61,7 @@ def _apply_fefo_ordering(query: Query) -> Query:
 
 
 def _get_delivery_place_name(db: Session, delivery_place_id: int | None) -> str | None:
-    """
-    Get delivery place name by ID.
+    """Get delivery place name by ID.
 
     Args:
         db: Database session
@@ -85,8 +82,7 @@ def _get_delivery_place_name(db: Session, delivery_place_id: int | None) -> str 
 
 
 def _query_lots_from_view(db: Session, product_id: int, strategy: str, limit: int) -> list[Any]:
-    """
-    Query lots from VLotAvailableQty view.
+    """Query lots from VLotAvailableQty view.
 
     Args:
         db: Database session
@@ -109,8 +105,7 @@ def _query_lots_from_view(db: Session, product_id: int, strategy: str, limit: in
 
 
 def _query_lots_with_fallback(db: Session, product_id: int, strategy: str, limit: int) -> list[Any]:
-    """
-    Query lots with fallback to Lot model if view returns no results.
+    """Query lots with fallback to Lot model if view returns no results.
 
     Args:
         db: Database session
@@ -146,8 +141,7 @@ def _convert_to_candidate_item(
     delivery_place_id: int | None = None,
     delivery_place_name: str | None = None,
 ) -> CandidateLotItem:
-    """
-    Convert lot view or model to CandidateLotItem.
+    """Convert lot view or model to CandidateLotItem.
 
     Args:
         lot_view: Lot from view or Lot model
@@ -188,8 +182,7 @@ def _convert_to_candidate_item(
 
 
 def _enrich_lot_details(db: Session, candidates: list[CandidateLotItem]) -> None:
-    """
-    Enrich candidates with lot details (lot_number, quantities, status).
+    """Enrich candidates with lot details (lot_number, quantities, status).
 
     Args:
         db: Database session
@@ -215,8 +208,7 @@ def _enrich_lot_details(db: Session, candidates: list[CandidateLotItem]) -> None
 
 
 def _enrich_warehouse_names(db: Session, candidates: list[CandidateLotItem]) -> None:
-    """
-    Enrich candidates with warehouse names.
+    """Enrich candidates with warehouse names.
 
     Args:
         db: Database session
@@ -237,8 +229,7 @@ def _enrich_warehouse_names(db: Session, candidates: list[CandidateLotItem]) -> 
 
 
 def _enrich_product_units(db: Session, candidates: list[CandidateLotItem]) -> None:
-    """
-    Enrich candidates with product unit information.
+    """Enrich candidates with product unit information.
 
     Args:
         db: Database session
@@ -263,8 +254,8 @@ def _enrich_product_units(db: Session, candidates: list[CandidateLotItem]) -> No
 
 
 def _enrich_candidate_details(db: Session, candidates: list[CandidateLotItem]) -> None:
-    """
-    Enrich candidates with missing details from Lot, Warehouse, and Product models.
+    """Enrich candidates with missing details from Lot, Warehouse, and Product
+    models.
 
     Modifies candidates in place.
 
@@ -288,8 +279,7 @@ def execute_candidate_lot_query(
     strategy: str = "fefo",
     limit: int = 200,
 ) -> list[CandidateLotItem]:
-    """
-    Execute candidate lot query with FEFO ordering.
+    """Execute candidate lot query with FEFO ordering.
 
     v2.6 Refactored: Simplified using extracted helper functions.
     Uses v_lot_available_qty as the main source with fallback to Lot model.

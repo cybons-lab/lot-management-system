@@ -13,8 +13,7 @@ class RPALockManager:
         self._current_user: str | None = None
 
     def acquire_lock(self, user: str = "system", duration_seconds: int = 60) -> bool:
-        """
-        ロックを取得.
+        """ロックを取得.
 
         Args:
             user: 実行ユーザー
@@ -35,8 +34,7 @@ class RPALockManager:
         return True
 
     def is_locked(self) -> bool:
-        """
-        ロック状態を確認.
+        """ロック状態を確認.
 
         Returns:
             ロック中の場合True
@@ -48,8 +46,7 @@ class RPALockManager:
         return now < self._lock_until
 
     def get_remaining_seconds(self) -> int:
-        """
-        残りロック時間を取得.
+        """残りロック時間を取得.
 
         Returns:
             残り秒数（ロックされていない場合は0）
@@ -75,8 +72,7 @@ class RPAService:
     """RPA実行サービス."""
 
     def __init__(self, lock_manager: RPALockManager):
-        """
-        初期化.
+        """初期化.
 
         Args:
             lock_manager: ロックマネージャー
@@ -86,8 +82,7 @@ class RPAService:
     def execute_material_delivery_document(
         self, start_date: str, end_date: str, user: str = "system"
     ) -> dict:
-        """
-        素材納品書発行を実行（モック）.
+        """素材納品書発行を実行（モック）.
 
         Args:
             start_date: 開始日

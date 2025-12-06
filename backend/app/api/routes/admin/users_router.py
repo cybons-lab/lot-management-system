@@ -25,8 +25,7 @@ def list_users(
     is_active: bool | None = Query(None, description="有効フラグでフィルタ"),
     db: Session = Depends(get_db),
 ):
-    """
-    ユーザー一覧取得.
+    """ユーザー一覧取得.
 
     Args:
         skip: スキップ件数
@@ -43,8 +42,7 @@ def list_users(
 
 @router.get("/{user_id}", response_model=UserWithRoles)
 def get_user(user_id: int, db: Session = Depends(get_db)):
-    """
-    ユーザー詳細取得.
+    """ユーザー詳細取得.
 
     Args:
         user_id: ユーザーID
@@ -71,8 +69,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    """
-    ユーザー作成.
+    """ユーザー作成.
 
     Args:
         user: 作成するユーザー情報
@@ -101,8 +98,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 
 @router.put("/{user_id}", response_model=UserResponse)
 def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
-    """
-    ユーザー更新.
+    """ユーザー更新.
 
     Args:
         user_id: ユーザーID
@@ -124,8 +120,7 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
-    """
-    ユーザー削除.
+    """ユーザー削除.
 
     Args:
         user_id: ユーザーID
@@ -141,8 +136,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/{user_id}/roles", response_model=UserWithRoles)
 def assign_user_roles(user_id: int, assignment: UserRoleAssignment, db: Session = Depends(get_db)):
-    """
-    ユーザーへのロール割当.
+    """ユーザーへのロール割当.
 
     Args:
         user_id: ユーザーID

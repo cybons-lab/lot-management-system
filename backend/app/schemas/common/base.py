@@ -1,8 +1,5 @@
 # backend/app/schemas/base.py
-"""
-Pydantic Base Schemas
-共通の基底スキーマ.
-"""
+"""Pydantic Base Schemas 共通の基底スキーマ."""
 
 from datetime import datetime
 

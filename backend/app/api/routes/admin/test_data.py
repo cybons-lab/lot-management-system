@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.post("/generate")
 def generate_test_data_endpoint(db: Session = Depends(get_db)):
-    """
-    Generate test data for development.
+    """Generate test data for development.
+
     WARNING: This will DELETE all existing data in related tables.
     """
     try:

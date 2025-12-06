@@ -99,7 +99,8 @@ class UomConversionService(
         self.db.commit()
 
     def bulk_upsert(self, rows: list[UomConversionBulkRow]) -> BulkUpsertResponse:
-        """Bulk upsert UOM conversions by composite key (product_code, external_unit).
+        """Bulk upsert UOM conversions by composite key (product_code,
+        external_unit).
 
         Args:
             rows: List of UOM conversion rows to upsert

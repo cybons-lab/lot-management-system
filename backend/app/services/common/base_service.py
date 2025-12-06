@@ -1,8 +1,8 @@
 """Base service class with common CRUD operations.
 
-This module provides a generic base service that eliminates code duplication
-across 26+ service classes by providing common CRUD operations, transaction
-management, and error handling.
+This module provides a generic base service that eliminates code
+duplication across 26+ service classes by providing common CRUD
+operations, transaction management, and error handling.
 """
 
 from typing import Any, Generic, TypeVar, cast

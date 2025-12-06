@@ -1,8 +1,5 @@
 # backend/app/api/routes/orders/orders_router.py
-"""
-受注エンドポイント（全修正版）
-I/O整形のみを責務とし、例外変換はグローバルハンドラに委譲.
-"""
+"""受注エンドポイント（全修正版） I/O整形のみを責務とし、例外変換はグローバルハンドラに委譲."""
 
 import logging
 from datetime import date
@@ -157,10 +154,10 @@ def save_manual_allocations(
 
 @router.post("/refresh-all-statuses", status_code=200)
 def refresh_all_order_line_statuses(db: Session = Depends(get_db)):
-    """
-    全受注明細および受注のステータスを再計算・更新.
+    """全受注明細および受注のステータスを再計算・更新.
 
-    既存の allocations データに基づいて OrderLine.status と Order.status を正しい値に更新します。
+    既存の allocations データに基づいて OrderLine.status と Order.status
+    を正しい値に更新します。
     """
     try:
         from app.services.allocations.utils import (

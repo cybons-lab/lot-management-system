@@ -8,8 +8,7 @@ from app.schemas.masters.products_schema import ProductCreate
 
 
 class FullSampleDataRequest(BaseModel):
-    """
-    一括サンプルデータ投入リクエスト.
+    """一括サンプルデータ投入リクエスト.
 
     注意: 投入順序が重要 (マスタ -> ロット -> 受注)
     """

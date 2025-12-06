@@ -42,8 +42,7 @@ def list_inbound_plans(
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
-    """
-    入荷予定一覧取得.
+    """入荷予定一覧取得.
 
     Args:
         skip: スキップ件数（ページネーション用）
@@ -106,8 +105,7 @@ def create_inbound_plan(
     plan: InboundPlanCreate,
     db: Session = Depends(get_db),
 ):
-    """
-    入荷予定登録（明細も同時登録可能）.
+    """入荷予定登録（明細も同時登録可能）.
 
     Args:
         plan: 入荷予定作成データ（明細含む）
@@ -174,8 +172,7 @@ def get_inbound_plan(
     plan_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    入荷予定詳細取得（明細含む）.
+    """入荷予定詳細取得（明細含む）.
 
     Args:
         plan_id: 入荷予定ID
@@ -203,8 +200,7 @@ def update_inbound_plan(
     plan: InboundPlanUpdate,
     db: Session = Depends(get_db),
 ):
-    """
-    入荷予定更新.
+    """入荷予定更新.
 
     Args:
         plan_id: 入荷予定ID
@@ -232,8 +228,7 @@ def delete_inbound_plan(
     plan_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    入荷予定削除（カスケード削除：明細も削除される）.
+    """入荷予定削除（カスケード削除：明細も削除される）.
 
     Args:
         plan_id: 入荷予定ID
@@ -263,8 +258,7 @@ def list_inbound_plan_lines(
     plan_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    入荷予定明細一覧取得.
+    """入荷予定明細一覧取得.
 
     Args:
         plan_id: 入荷予定ID
@@ -287,8 +281,7 @@ def create_inbound_plan_line(
     line: InboundPlanLineCreate,
     db: Session = Depends(get_db),
 ):
-    """
-    入荷予定明細追加.
+    """入荷予定明細追加.
 
     Args:
         plan_id: 入荷予定ID
@@ -318,8 +311,7 @@ def receive_inbound_plan(
     request: InboundPlanReceiveRequest,
     db: Session = Depends(get_db),
 ):
-    """
-    入荷実績登録（ロット自動生成）.
+    """入荷実績登録（ロット自動生成）.
 
     Args:
         plan_id: 入荷予定ID

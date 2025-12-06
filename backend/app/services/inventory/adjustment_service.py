@@ -23,8 +23,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
     """
 
     def __init__(self, db: Session):
-        """
-        Initialize adjustment service.
+        """Initialize adjustment service.
 
         Args:
             db: Database session
@@ -38,8 +37,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         lot_id: int | None = None,
         adjustment_type: str | None = None,
     ) -> list[AdjustmentResponse]:
-        """
-        Get adjustment records with optional filtering.
+        """Get adjustment records with optional filtering.
 
         Args:
             skip: Number of records to skip (pagination)
@@ -76,8 +74,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         ]
 
     def get_adjustment_by_id(self, adjustment_id: int) -> AdjustmentResponse | None:
-        """
-        Get adjustment by ID.
+        """Get adjustment by ID.
 
         Args:
             adjustment_id: Adjustment ID
@@ -101,8 +98,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         )
 
     def create_adjustment(self, adjustment: AdjustmentCreate) -> AdjustmentResponse:
-        """
-        Create inventory adjustment.
+        """Create inventory adjustment.
 
         Args:
             adjustment: Adjustment creation data

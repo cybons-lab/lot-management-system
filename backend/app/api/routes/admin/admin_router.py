@@ -32,11 +32,10 @@ logger = logging.getLogger(__name__)
 
 @router.get("/stats", response_model=DashboardStatsResponse)
 def get_dashboard_stats(db: Session = Depends(get_db)):
-    """
-    ダッシュボード用の統計情報を返す.
+    """ダッシュボード用の統計情報を返す.
 
-    在庫総数は lots.current_quantity の合計値を使用。
-    lot_current_stock ビューは使用しない（v2.2 以降は廃止）。
+    在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
+    ビューは使用しない（v2.2 以降は廃止）。
     """
     try:
         # lots テーブルから直接在庫を集計
@@ -78,8 +77,8 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
 
 @router.post("/reset-database", response_model=ResponseBase)
 def reset_database(db: Session = Depends(get_db)):
-    """
-    データベースリセット（開発環境のみ）
+    """データベースリセット（開発環境のみ）.
+
     - テーブル構造は保持したまま、全データを削除
     - alembic_versionは保持（マイグレーション履歴を維持）
     - TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.
@@ -243,8 +242,7 @@ def get_allocatable_lots(
     limit: int = 100,
     db: Session = Depends(get_db),
 ):
-    """
-    診断API: 引当可能ロット一覧（読み取り専用）.
+    """診断API: 引当可能ロット一覧（読み取り専用）.
 
     v2.2: v_lot_details ビューを使用して在庫情報を取得。
     lot_current_stock ビューは廃止。
@@ -333,8 +331,7 @@ def get_allocatable_lots(
 
 @router.get("/metrics")
 def get_metrics():
-    """
-    パフォーマンスメトリクスを取得.
+    """パフォーマンスメトリクスを取得.
 
     APIエンドポイントごとのリクエスト数、エラー率、レスポンスタイムなどを返す。
     """
@@ -346,8 +343,7 @@ def get_metrics():
 
 @router.post("/metrics/reset")
 def reset_metrics():
-    """
-    パフォーマンスメトリクスをリセット.
+    """パフォーマンスメトリクスをリセット.
 
     開発環境でのテスト用。
     """

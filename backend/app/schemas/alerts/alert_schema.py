@@ -1,7 +1,7 @@
 """Alert management Pydantic schemas.
 
-Provides type definitions for the alert system including severity levels,
-categories, and alert items with their targets.
+Provides type definitions for the alert system including severity
+levels, categories, and alert items with their targets.
 """
 
 from datetime import datetime

@@ -33,8 +33,7 @@ class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, Business
         rule_type: str | None = None,
         is_active: bool | None = None,
     ) -> tuple[list[BusinessRule], int]:
-        """
-        Get all business rules with filtering and pagination.
+        """Get all business rules with filtering and pagination.
 
         Returns:
             tuple: (list of rules, total count)

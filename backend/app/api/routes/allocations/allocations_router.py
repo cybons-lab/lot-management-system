@@ -137,8 +137,7 @@ def _to_preview_response(service_result) -> FefoPreviewResponse:
 
 @router.post("/preview", response_model=FefoPreviewResponse)
 def preview_allocations(request: FefoPreviewRequest, db: Session = Depends(get_db)):
-    """
-    FEFO引当シミュレーション実行.
+    """FEFO引当シミュレーション実行.
 
     Args:
         request: プレビューリクエスト（order_id）
@@ -156,8 +155,7 @@ def preview_allocations(request: FefoPreviewRequest, db: Session = Depends(get_d
 
 @router.post("/commit", response_model=AllocationCommitResponse)
 def commit_allocation(request: AllocationCommitRequest, db: Session = Depends(get_db)):
-    """
-    引当確定（v2.2.1準拠）.
+    """引当確定（v2.2.1準拠）.
 
     FEFO・手動いずれかで作成された仮引当案を元に、実績の allocations を生成し、在庫を確定させる。
 
@@ -204,8 +202,7 @@ def commit_allocation(request: AllocationCommitRequest, db: Session = Depends(ge
 
 @router.post("/bulk-cancel", response_model=BulkCancelResponse)
 def bulk_cancel(request: BulkCancelRequest, db: Session = Depends(get_db)):
-    """
-    引当一括取消.
+    """引当一括取消.
 
     複数の引当を一度に取り消す。部分的な失敗を許容する。
 
@@ -239,8 +236,7 @@ def bulk_cancel(request: BulkCancelRequest, db: Session = Depends(get_db)):
 
 @router.post("/auto-allocate", response_model=AutoAllocateResponse)
 def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
-    """
-    受注明細に対してFEFO戦略で自動引当を実行.
+    """受注明細に対してFEFO戦略で自動引当を実行.
 
     Args:
         request: 自動引当リクエスト（order_line_id, strategy）
@@ -305,8 +301,7 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
 
 @router.post("/bulk-auto-allocate", response_model=BulkAutoAllocateResponse)
 def bulk_auto_allocate(request: BulkAutoAllocateRequest, db: Session = Depends(get_db)):
-    """
-    複数受注明細に対して一括でFEFO自動引当を実行.
+    """複数受注明細に対して一括でFEFO自動引当を実行.
 
     フィルタリング条件を指定して対象を絞り込み可能。
     フォーキャストグループ、個別受注、全受注への一括引当に対応。
@@ -366,8 +361,7 @@ def bulk_auto_allocate(request: BulkAutoAllocateRequest, db: Session = Depends(g
 
 @router.post("/auto-orders", response_model=BatchAutoOrderResponse)
 def auto_allocate_orders(request: BatchAutoOrderRequest, db: Session = Depends(get_db)):
-    """
-    複数受注に対して一括で自動引当（Single Lot Fit + FEFO）を実行・確定する.
+    """複数受注に対して一括で自動引当（Single Lot Fit + FEFO）を実行・確定する.
 
     - v0アルゴリズム (allocator.py) を使用
     - 成功/失敗を個別に記録
@@ -432,8 +426,7 @@ def confirm_allocation_hard(
     request: HardAllocationConfirmRequest,
     db: Session = Depends(get_db),
 ):
-    """
-    Soft引当をHard引当に確定（Soft → Hard変換）.
+    """Soft引当をHard引当に確定（Soft → Hard変換）.
 
     - 在庫をロックし、他オーダーからは引当不可にする
     - 部分確定も可能（quantity パラメータ指定時）
@@ -505,8 +498,7 @@ def confirm_allocations_batch(
     request: HardAllocationBatchConfirmRequest,
     db: Session = Depends(get_db),
 ):
-    """
-    複数のSoft引当を一括でHard確定.
+    """複数のSoft引当を一括でHard確定.
 
     部分的な失敗を許容し、成功・失敗をそれぞれ返す。
 

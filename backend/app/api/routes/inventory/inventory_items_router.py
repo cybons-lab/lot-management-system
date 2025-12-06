@@ -29,8 +29,7 @@ def list_inventory_items(
     warehouse_id: int | None = None,
     db: Session = Depends(get_db),
 ):
-    """
-    在庫サマリ一覧取得.
+    """在庫サマリ一覧取得.
 
     Args:
         skip: スキップ件数（ページネーション用）
@@ -60,8 +59,7 @@ def get_inventory_item(
     warehouse_id: int,
     db: Session = Depends(get_db),
 ):
-    """
-    在庫サマリ詳細取得（製品ID + 倉庫ID単位）.
+    """在庫サマリ詳細取得（製品ID + 倉庫ID単位）.
 
     Args:
         product_id: 製品ID
@@ -90,8 +88,7 @@ def list_inventory_by_supplier(
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
-    """
-    在庫サマリ（仕入先別集計）取得.
+    """在庫サマリ（仕入先別集計）取得.
 
     Returns:
         仕入先ごとの在庫集計リスト
@@ -112,8 +109,7 @@ def list_inventory_by_supplier(
 
 @router.get("/by-warehouse", response_model=list[InventoryByWarehouseResponse])
 def list_inventory_by_warehouse(db: Session = Depends(get_db)):
-    """
-    在庫サマリ（倉庫別集計）取得.
+    """在庫サマリ（倉庫別集計）取得.
 
     Returns:
         倉庫ごとの在庫集計リスト
@@ -124,8 +120,7 @@ def list_inventory_by_warehouse(db: Session = Depends(get_db)):
 
 @router.get("/by-product", response_model=list[InventoryByProductResponse])
 def list_inventory_by_product(db: Session = Depends(get_db)):
-    """
-    在庫サマリ（製品別集計）取得.
+    """在庫サマリ（製品別集計）取得.
 
     Returns:
         製品ごとの在庫集計リスト（全倉庫合計）

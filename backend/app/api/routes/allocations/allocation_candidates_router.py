@@ -22,8 +22,7 @@ def get_allocation_candidates(
     limit: int = 200,
     db: Session = Depends(get_db),
 ):
-    """
-    候補ロット一覧取得（v2.5準拠）.
+    """候補ロット一覧取得（v2.5準拠）.
 
     指定された受注明細に対して、利用可能なロット候補を返却する（プレビューのみ、DB保存なし）。
 

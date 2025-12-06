@@ -1,6 +1,5 @@
 # backend/app/middleware/metrics.py
-"""
-メトリクス収集ミドルウェア.
+"""メトリクス収集ミドルウェア.
 
 APIパフォーマンスメトリクスを収集。
 """

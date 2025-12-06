@@ -17,8 +17,7 @@ router = APIRouter(prefix="/admin/healthcheck", tags=["admin"])
 
 @router.get("/db-counts")
 def get_db_counts(db: Session = Depends(get_db)):
-    """
-    各テーブルのレコード件数を返す.
+    """各テーブルのレコード件数を返す.
 
     Returns:
         dict: テーブル名をキー、件数を値とする辞書
@@ -69,8 +68,7 @@ def get_db_counts(db: Session = Depends(get_db)):
 
 @router.get("/masters")
 def get_masters_health(db: Session = Depends(get_db)):
-    """
-    マスタテーブルのヘルスチェック.
+    """マスタテーブルのヘルスチェック.
 
     Returns:
         dict: 各マスタテーブルの件数とサンプルデータ（先頭5件のコード）

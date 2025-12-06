@@ -15,8 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_profiles(path: str | Path) -> dict[str, Any]:
-    """
-    YAMLファイルからプロファイルを読み込む.
+    """YAMLファイルからプロファイルを読み込む.
 
     Args:
         path: YAMLファイルのパス
@@ -45,8 +44,7 @@ def load_profiles(path: str | Path) -> dict[str, Any]:
 
 
 def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
-    """
-    2つの辞書を深くマージする（overrideがbaseを上書き）.
+    """2つの辞書を深くマージする（overrideがbaseを上書き）.
 
     Args:
         base: ベース辞書
@@ -69,8 +67,7 @@ def resolve_profile(
     profiles: dict[str, Any],
     _visited: set[str] | None = None,
 ) -> dict[str, Any]:
-    """
-    プロファイルを解決する（inherits継承を処理）.
+    """プロファイルを解決する（inherits継承を処理）.
 
     Args:
         name: プロファイル名
@@ -116,8 +113,7 @@ def resolve_profile(
 
 
 def _validate_profile(name: str, profile: dict[str, Any]) -> None:
-    """
-    プロファイルの妥当性をバリデーション.
+    """プロファイルの妥当性をバリデーション.
 
     Args:
         name: プロファイル名
@@ -173,7 +169,7 @@ def _validate_profile(name: str, profile: dict[str, Any]) -> None:
     if "case_mix" in profile:
         case_mix = profile["case_mix"]
         if isinstance(case_mix, dict):
-            total = sum(v for v in case_mix.values() if isinstance(v, (int, float)))
+            total = sum(v for v in case_mix.values() if isinstance(v, int | float))
             if total > 1.0:
                 raise ValueError(
                     f"Profile '{name}': 'case_mix' total ({total}) must not exceed 1.0"
@@ -181,8 +177,7 @@ def _validate_profile(name: str, profile: dict[str, Any]) -> None:
 
 
 def get_profile(profile_name: str | None = None) -> dict[str, Any]:
-    """
-    プロファイルを取得する（デフォルトパスから）.
+    """プロファイルを取得する（デフォルトパスから）.
 
     Args:
         profile_name: プロファイル名（Noneの場合はデフォルト値を返す）

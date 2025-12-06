@@ -24,8 +24,7 @@ def list_order_lines(
     date_to: date | None = None,
     db: Session = Depends(get_db),
 ):
-    """
-    受注明細一覧取得.
+    """受注明細一覧取得.
 
     受注ヘッダ情報や製品情報などを結合したフラットな明細リストを返します。
     """

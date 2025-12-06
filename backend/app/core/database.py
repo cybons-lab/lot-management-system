@@ -32,8 +32,7 @@ def get_db() -> Generator[Session]:
 
 # --- Schema lifecycle -----------------------------------------------------
 def init_db() -> None:
-    """
-    Disable Alembic migrations at startup.
+    """Disable Alembic migrations at startup.
 
     現在は SQL / ダンプでスキーマを復元するため、ここでは何もしない。
     """
@@ -44,10 +43,7 @@ def init_db() -> None:
 
 
 def _drop_dependent_views() -> None:
-    """
-    テーブル依存のVIEWを先にDROPする。
-    依存で落ちる代表VIEWをここへ列挙。存在しない場合はスキップ。.
-    """
+    """テーブル依存のVIEWを先にDROPする。 依存で落ちる代表VIEWをここへ列挙。存在しない場合はスキップ。."""
     dependent_views: list[str] = [
         # v2.2: lot_current_stock ビューは廃止（lots テーブルに統合済み）
         # 追加のVIEWがあればここに追記
@@ -64,8 +60,8 @@ def _drop_dependent_views() -> None:
 
 
 def truncate_all_tables() -> None:
-    """
-    全テーブルのデータを削除（開発/検証用途）
+    """全テーブルのデータを削除（開発/検証用途）.
+
     - テーブル構造は保持
     - alembic_versionは除外してマイグレーション履歴を保持
     - TRUNCATE ... RESTART IDENTITY CASCADEで外部キー制約を無視.
@@ -103,9 +99,7 @@ def truncate_all_tables() -> None:
 
 
 def drop_db() -> None:
-    """
-    データベースの削除（開発/検証用途）
-    スキーマ public を CASCADE で落として再作成.
+    """データベースの削除（開発/検証用途） スキーマ public を CASCADE で落として再作成.
 
     ⚠️ 推奨: データのみをリセットする場合は truncate_all_tables() を使用してください
     """

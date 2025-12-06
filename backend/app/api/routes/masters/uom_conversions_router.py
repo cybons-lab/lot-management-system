@@ -92,7 +92,8 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
 def bulk_upsert_uom_conversions(
     request: UomConversionBulkUpsertRequest, db: Session = Depends(get_db)
 ):
-    """Bulk upsert UOM conversions by composite key (product_id, external_unit).
+    """Bulk upsert UOM conversions by composite key (product_id,
+    external_unit).
 
     - If a UOM conversion with the same composite key exists, it will be updated
     - If not, a new UOM conversion will be created

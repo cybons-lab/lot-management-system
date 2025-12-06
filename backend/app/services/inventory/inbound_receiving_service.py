@@ -19,8 +19,7 @@ class InboundReceivingService:
     """Business logic for inbound receiving and lot generation."""
 
     def __init__(self, db: Session):
-        """
-        Initialize inbound receiving service.
+        """Initialize inbound receiving service.
 
         Args:
             db: Database session
@@ -30,8 +29,7 @@ class InboundReceivingService:
     def receive_inbound_plan(
         self, plan_id: int, request: InboundPlanReceiveRequest
     ) -> InboundPlanReceiveResponse:
-        """
-        Process inbound receipt and generate lots.
+        """Process inbound receipt and generate lots.
 
         Args:
             plan_id: Inbound plan ID
@@ -152,8 +150,7 @@ class InboundReceivingService:
         )
 
     def _generate_lot_number(self, plan_number: str, product_id: int) -> str:
-        """
-        Generate a unique lot number.
+        """Generate a unique lot number.
 
         Args:
             plan_number: Inbound plan number

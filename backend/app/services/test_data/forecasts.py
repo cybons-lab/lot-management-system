@@ -17,7 +17,8 @@ def generate_forecasts(
     products: list[Product],
     delivery_places: list[DeliveryPlace],
 ) -> tuple[list[Product], dict[int, int]]:
-    """Generate forecasts (daily, dekad, monthly) and return products with forecasts + totals.
+    """Generate forecasts (daily, dekad, monthly) and return products with
+    forecasts + totals.
 
     Forecast Types:
     - Daily (日別): forecast_date is set, no dekad/monthly indicator
@@ -130,7 +131,8 @@ def generate_forecasts(
 def generate_reservations(db: Session):
     """Generate reservations (AllocationSuggestion) by copying from forecasts.
 
-    This must be called AFTER lots are created, since reservations require lot_id.
+    This must be called AFTER lots are created, since reservations
+    require lot_id.
     """
     # Get all forecasts
     forecasts = db.query(ForecastCurrent).all()

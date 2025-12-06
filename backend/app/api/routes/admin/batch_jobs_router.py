@@ -25,8 +25,7 @@ def list_batch_jobs(
     status: str | None = Query(None, description="ステータスでフィルタ"),
     db: Session = Depends(get_db),
 ):
-    """
-    バッチジョブ一覧取得.
+    """バッチジョブ一覧取得.
 
     Args:
         skip: スキップ件数
@@ -53,8 +52,7 @@ def list_batch_jobs(
 
 @router.post("/inventory-sync/execute")
 def execute_inventory_sync_direct(db: Session = Depends(get_db)):
-    """
-    SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
+    """SAP在庫同期を即座に実行する（バッチジョブ経由なし）.
 
     管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。
     バッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。
@@ -92,8 +90,7 @@ def execute_inventory_sync_direct(db: Session = Depends(get_db)):
 
 @router.get("/{job_id}", response_model=BatchJobResponse)
 def get_batch_job(job_id: int, db: Session = Depends(get_db)):
-    """
-    バッチジョブ詳細取得.
+    """バッチジョブ詳細取得.
 
     Args:
         job_id: ジョブID
@@ -115,8 +112,7 @@ def get_batch_job(job_id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=BatchJobResponse, status_code=status.HTTP_201_CREATED)
 def create_batch_job(job: BatchJobCreate, db: Session = Depends(get_db)):
-    """
-    バッチジョブ作成.
+    """バッチジョブ作成.
 
     Args:
         job: 作成するバッチジョブ情報
@@ -136,8 +132,7 @@ def execute_batch_job(
     request: BatchJobExecuteRequest | None = None,
     db: Session = Depends(get_db),
 ):
-    """
-    バッチジョブ実行.
+    """バッチジョブ実行.
 
     注意: これはスタブ実装です。本番環境では、非同期ジョブキュー（Celery、RQ等）を使用してください。
 
@@ -169,8 +164,7 @@ def execute_batch_job(
 
 @router.post("/{job_id}/cancel", response_model=BatchJobResponse)
 def cancel_batch_job(job_id: int, db: Session = Depends(get_db)):
-    """
-    バッチジョブキャンセル.
+    """バッチジョブキャンセル.
 
     Args:
         job_id: ジョブID
@@ -196,8 +190,7 @@ def cancel_batch_job(job_id: int, db: Session = Depends(get_db)):
 
 @router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_batch_job(job_id: int, db: Session = Depends(get_db)):
-    """
-    バッチジョブ削除.
+    """バッチジョブ削除.
 
     Args:
         job_id: ジョブID

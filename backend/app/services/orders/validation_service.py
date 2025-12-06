@@ -50,8 +50,7 @@ class OrderValidationService:
         demands: Iterable[OrderLineDemand],
         date: date | None = None,
     ) -> ValidationResult:
-        """
-        Validate order demands against available stock (facade method).
+        """Validate order demands against available stock (facade method).
 
         Args:
             db: Database session.

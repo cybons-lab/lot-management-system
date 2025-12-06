@@ -1,8 +1,5 @@
 # backend/app/api/__init__.py
-"""
-API Package
-APIルーティングの集約.
-"""
+"""API Package APIルーティングの集約."""
 
 from .routes import (
     admin_router,

@@ -1,7 +1,5 @@
 # app/api/routes/__init__.py
-"""
-API Routes Package
-全ルーターのエクスポート（サブパッケージ構造対応版）.
+"""API Routes Package 全ルーターのエクスポート（サブパッケージ構造対応版）.
 
 Organized into feature-based subpackages:
 - masters/ - Master data management (5 routers)

@@ -1,5 +1,4 @@
-"""
-Lot repository and service utilities with FEFO support.
+"""Lot repository and service utilities with FEFO support.
 
 v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
 """
@@ -66,8 +65,7 @@ class LotRepository:
         warehouse_code: str | None = None,
         min_quantity: float = 0.0,
     ) -> Sequence[Lot]:
-        """
-        Fetch lots that have stock remaining for a product.
+        """Fetch lots that have stock remaining for a product.
 
         v2.2: Uses Lot.current_quantity - Lot.allocated_quantity directly.
         """
@@ -151,8 +149,7 @@ class LotService:
         warehouse_code: str | None = None,
         exclude_expired: bool = True,
     ) -> list[LotCandidate]:
-        """
-        Get FEFO candidate lots.
+        """Get FEFO candidate lots.
 
         v2.2: Uses Lot.current_quantity - Lot.allocated_quantity for available quantity.
         """
@@ -182,8 +179,7 @@ class LotService:
         return FefoPolicy.sort_lots_by_fefo(candidates)
 
     def validate_lot_availability(self, lot_id: int, required_qty: float) -> None:
-        """
-        Validate lot availability.
+        """Validate lot availability.
 
         v2.2: Uses Lot.current_quantity - Lot.allocated_quantity directly.
         """
@@ -565,7 +561,9 @@ class LotService:
         return movements  # type: ignore[return-value]
 
     def _build_lot_response(self, lot_id: int) -> LotResponse:
-        """Helper to build LotResponse from Lot model definition (joined load)."""
+        """Helper to build LotResponse from Lot model definition (joined
+        load).
+        """
         db_lot = (
             self.db.query(Lot)
             .options(joinedload(Lot.product), joinedload(Lot.warehouse), joinedload(Lot.supplier))

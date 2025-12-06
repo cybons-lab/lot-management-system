@@ -24,8 +24,7 @@ def list_business_rules(
     is_active: bool | None = Query(None, description="有効フラグでフィルタ"),
     db: Session = Depends(get_db),
 ):
-    """
-    業務ルール一覧取得.
+    """業務ルール一覧取得.
 
     Args:
         skip: スキップ件数
@@ -48,8 +47,7 @@ def list_business_rules(
 
 @router.get("/{rule_id}", response_model=BusinessRuleResponse)
 def get_business_rule(rule_id: int, db: Session = Depends(get_db)):
-    """
-    業務ルール詳細取得（ID指定）.
+    """業務ルール詳細取得（ID指定）.
 
     Args:
         rule_id: ルールID
@@ -71,8 +69,7 @@ def get_business_rule(rule_id: int, db: Session = Depends(get_db)):
 
 @router.get("/code/{rule_code}", response_model=BusinessRuleResponse)
 def get_business_rule_by_code(rule_code: str, db: Session = Depends(get_db)):
-    """
-    業務ルール詳細取得（コード指定）.
+    """業務ルール詳細取得（コード指定）.
 
     Args:
         rule_code: ルールコード
@@ -94,8 +91,7 @@ def get_business_rule_by_code(rule_code: str, db: Session = Depends(get_db)):
 
 @router.post("", response_model=BusinessRuleResponse, status_code=status.HTTP_201_CREATED)
 def create_business_rule(rule: BusinessRuleCreate, db: Session = Depends(get_db)):
-    """
-    業務ルール作成.
+    """業務ルール作成.
 
     Args:
         rule: 作成する業務ルール情報
@@ -127,8 +123,7 @@ def update_business_rule(
     rule: BusinessRuleUpdate,
     db: Session = Depends(get_db),
 ):
-    """
-    業務ルール更新（ID指定）.
+    """業務ルール更新（ID指定）.
 
     Args:
         rule_id: ルールID
@@ -155,8 +150,7 @@ def update_business_rule_by_code(
     rule: BusinessRuleUpdate,
     db: Session = Depends(get_db),
 ):
-    """
-    業務ルール更新（コード指定）.
+    """業務ルール更新（コード指定）.
 
     Args:
         rule_code: ルールコード
@@ -179,8 +173,7 @@ def update_business_rule_by_code(
 
 @router.delete("/{rule_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_business_rule(rule_id: int, db: Session = Depends(get_db)):
-    """
-    業務ルール削除.
+    """業務ルール削除.
 
     Args:
         rule_id: ルールID
@@ -197,8 +190,7 @@ def delete_business_rule(rule_id: int, db: Session = Depends(get_db)):
 
 @router.patch("/{rule_id}/toggle", response_model=BusinessRuleResponse)
 def toggle_business_rule_active(rule_id: int, db: Session = Depends(get_db)):
-    """
-    業務ルール有効/無効切り替え.
+    """業務ルール有効/無効切り替え.
 
     Args:
         rule_id: ルールID

@@ -16,8 +16,7 @@ def allocate_soft_for_forecast(
     required_qty: Decimal,
     candidate_lots: list[Lot],
 ) -> list[SoftAllocationResult]:
-    """
-    Allocate lots for a forecast line using the "v0" algorithm.
+    """Allocate lots for a forecast line using the "v0" algorithm.
 
     Algorithm:
     1. Sort lots by Expiry (ASC), Received (ASC), ID (ASC).

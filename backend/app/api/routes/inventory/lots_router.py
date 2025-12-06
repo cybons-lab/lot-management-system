@@ -36,8 +36,7 @@ def list_lots(
     current_user: User | None = Depends(get_current_user_optional),
     db: Session = Depends(get_db),
 ):
-    """
-    ロット一覧取得.
+    """ロット一覧取得.
 
     Args:
         skip: スキップ件数
@@ -82,8 +81,7 @@ def list_lots(
 
 @router.post("", response_model=LotResponse, status_code=201)
 def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
-    """
-    ロット新規登録.
+    """ロット新規登録.
 
     - ロットマスタ登録
     - 現在在庫テーブル初期化
@@ -188,8 +186,7 @@ def list_lot_movements(lot_id: int, db: Session = Depends(get_db)):
 
 @router.post("/movements", response_model=StockMovementResponse, status_code=201)
 def create_stock_movement(movement: StockMovementCreate, db: Session = Depends(get_db)):
-    """
-    在庫変動記録.
+    """在庫変動記録.
 
     - 在庫変動履歴追加
     - 現在在庫更新

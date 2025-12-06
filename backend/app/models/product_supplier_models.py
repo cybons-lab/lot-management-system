@@ -20,8 +20,7 @@ from app.models.base_model import Base
 class ProductSupplier(Base):
     """製品-仕入先の関連テーブル.
 
-    1製品に対して複数の仕入先を紐づけ可能。
-    is_primary=True の仕入先が主要仕入先（1製品につき1つ）。
+    1製品に対して複数の仕入先を紐づけ可能。 is_primary=True の仕入先が主要仕入先（1製品につき1つ）。
     """
 
     __tablename__ = "product_suppliers"

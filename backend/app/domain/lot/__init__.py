@@ -1,8 +1,5 @@
 # backend/app/domain/lot/__init__.py
-"""
-Lot Domain Layer
-FEFOロジック、在庫チェック、ロット状態管理.
-"""
+"""Lot Domain Layer FEFOロジック、在庫チェック、ロット状態管理."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -108,15 +105,11 @@ class LotCandidate:
 
 
 class FefoPolicy:
-    """
-    FEFO（先入先出）ポリシー
-    有効期限が近いロットから優先的に割り当て.
-    """
+    """FEFO（先入先出）ポリシー 有効期限が近いロットから優先的に割り当て."""
 
     @staticmethod
     def sort_lots_by_fefo(lots: list[LotCandidate]) -> list[LotCandidate]:
-        """
-        ロットをFEFO順にソート.
+        """ロットをFEFO順にソート.
 
         優先順位:
         1. 有効期限が近いもの（expiryDateの昇順）
@@ -151,8 +144,7 @@ class FefoPolicy:
     def filter_expired_lots(
         lots: list[LotCandidate], reference_date: date | None = None
     ) -> tuple[list[LotCandidate], list[LotCandidate]]:
-        """
-        期限切れロットを除外.
+        """期限切れロットを除外.
 
         Args:
             lots: ロット候補のリスト
@@ -180,8 +172,7 @@ class StockValidator:
 
     @staticmethod
     def validate_sufficient_stock(lot_id: int, required_qty: float, available_qty: float) -> None:
-        """
-        十分な在庫があるかチェック.
+        """十分な在庫があるかチェック.
 
         Args:
             lot_id: ロットID
@@ -198,8 +189,7 @@ class StockValidator:
     def validate_not_expired(
         lot_id: int, expiry_date: date | None, reference_date: date | None = None
     ) -> None:
-        """
-        期限切れでないかチェック.
+        """期限切れでないかチェック.
 
         Args:
             lot_id: ロットID

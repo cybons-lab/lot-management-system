@@ -23,8 +23,7 @@ class OrderStatus(Enum):
 
     @classmethod
     def from_str(cls, status: str) -> "OrderStatus":
-        """
-        文字列からEnumに変換.
+        """文字列からEnumに変換.
 
         Args:
             status: ステータス文字列
@@ -41,8 +40,7 @@ class OrderStatus(Enum):
             raise ValueError(f"Invalid order status: {status}") from e
 
     def to_str(self) -> str:
-        """
-        EnumからDB保存用の文字列に変換.
+        """EnumからDB保存用の文字列に変換.
 
         Returns:
             str: ステータス文字列
@@ -51,8 +49,7 @@ class OrderStatus(Enum):
 
 
 class OrderStateMachine:
-    """
-    受注状態遷移マシン.
+    """受注状態遷移マシン.
 
     状態遷移ルール:
     - draft -> open (受注確定時)
@@ -119,8 +116,7 @@ class OrderStateMachine:
         to_status: str | OrderStatus,
         operation: str = "transition",
     ) -> None:
-        """
-        状態遷移をバリデーション（Enum推奨）.
+        """状態遷移をバリデーション（Enum推奨）.
 
         Args:
             from_status: 遷移元ステータス（Enum推奨、str互換）

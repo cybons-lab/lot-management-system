@@ -1,7 +1,7 @@
 """Inventory and stock management models (DDL v2.2).
 
-All models strictly follow the DDL as the single source of truth.
-Legacy models (ExpiryRule) have been removed.
+All models strictly follow the DDL as the single source of truth. Legacy
+models (ExpiryRule) have been removed.
 """
 
 from __future__ import annotations

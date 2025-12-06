@@ -26,8 +26,7 @@ def list_customer_items(
     product_id: int | None = Query(None, description="製品IDでフィルタ"),
     db: Session = Depends(get_db),
 ):
-    """
-    得意先品番マッピング一覧取得.
+    """得意先品番マッピング一覧取得.
 
     Args:
         skip: スキップ件数
@@ -45,8 +44,7 @@ def list_customer_items(
 
 @router.get("/{customer_id}", response_model=list[CustomerItemResponse])
 def list_customer_items_by_customer(customer_id: int, db: Session = Depends(get_db)):
-    """
-    特定得意先の品番マッピング一覧取得.
+    """特定得意先の品番マッピング一覧取得.
 
     Args:
         customer_id: 得意先ID
@@ -61,8 +59,7 @@ def list_customer_items_by_customer(customer_id: int, db: Session = Depends(get_
 
 @router.post("", response_model=CustomerItemResponse, status_code=status.HTTP_201_CREATED)
 def create_customer_item(item: CustomerItemCreate, db: Session = Depends(get_db)):
-    """
-    得意先品番マッピング登録.
+    """得意先品番マッピング登録.
 
     Args:
         item: 登録する品番マッピング情報
@@ -94,8 +91,7 @@ def update_customer_item(
     item: CustomerItemUpdate,
     db: Session = Depends(get_db),
 ):
-    """
-    得意先品番マッピング更新.
+    """得意先品番マッピング更新.
 
     Args:
         customer_id: 得意先ID
@@ -123,8 +119,7 @@ def update_customer_item(
 def delete_customer_item(
     customer_id: int, external_product_code: str, db: Session = Depends(get_db)
 ):
-    """
-    得意先品番マッピング削除.
+    """得意先品番マッピング削除.
 
     Args:
         customer_id: 得意先ID
@@ -159,7 +154,8 @@ def export_customer_items(format: str = "csv", db: Session = Depends(get_db)):
 def bulk_upsert_customer_items(
     request: CustomerItemBulkUpsertRequest, db: Session = Depends(get_db)
 ):
-    """Bulk upsert customer items by composite key (customer_id, external_product_code).
+    """Bulk upsert customer items by composite key (customer_id,
+    external_product_code).
 
     - If a customer item with the same composite key exists, it will be updated
     - If not, a new customer item will be created

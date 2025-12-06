@@ -25,8 +25,7 @@ class StockRepository:
         ship_date: date | None,
         for_update: bool = True,
     ) -> list[Lot]:
-        """
-        Fetch candidate lots in FIFO order with optional row locking.
+        """Fetch candidate lots in FIFO order with optional row locking.
 
         v2.2: Updated to use product_id and warehouse_id (DDL compliant).
         Removed joinedload(Lot.current_stock) - no longer needed.
@@ -65,8 +64,7 @@ class StockRepository:
 
     @staticmethod
     def calc_available_qty(lot: Lot) -> int:
-        """
-        Calculate allocatable quantity for a lot.
+        """Calculate allocatable quantity for a lot.
 
         v2.2: Use Lot model directly - current_quantity - allocated_quantity.
         """
