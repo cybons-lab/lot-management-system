@@ -87,6 +87,7 @@ function OptionsList({
   );
 }
 
+// UIコンポーネントの状態管理とレンダリングを一箇所にまとめるため分割しない
 // eslint-disable-next-line complexity, max-lines-per-function
 export function SearchableSelect({
   options,

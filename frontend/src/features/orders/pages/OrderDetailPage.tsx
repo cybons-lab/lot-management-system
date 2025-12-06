@@ -28,6 +28,7 @@ import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
+// 受注詳細ページのUIを一箇所にまとめるため分割しない
 /* eslint-disable max-lines-per-function */
 export function OrderDetailPage() {
   const { orderId } = useParams<{ orderId: string }>();

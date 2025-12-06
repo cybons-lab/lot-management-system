@@ -19,6 +19,7 @@ interface UseOrderLineAllocationProps {
   onSuccess?: () => void;
 }
 
+// 引当関連の状態と処理を一箇所にまとめるため分割しない
 /* eslint-disable max-lines-per-function */
 export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAllocationProps) {
   const [candidateLots, setCandidateLots] = useState<CandidateLotItem[]>([]);

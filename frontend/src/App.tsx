@@ -55,6 +55,7 @@ import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { TopNavLayout } from "@/layouts/TopNavLayout";
 import { logError } from "@/services/error-logger";
 
+// ルート定義を一箇所にまとめるため分割しない
 // eslint-disable-next-line max-lines-per-function
 function App() {
   // Global error handlers

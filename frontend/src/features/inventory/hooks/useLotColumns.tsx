@@ -1,3 +1,4 @@
+// テーブルカラム定義を一箇所にまとめるため分割しない
 /* eslint-disable max-lines-per-function */
 import { format } from "date-fns";
 import { Lock } from "lucide-react";
