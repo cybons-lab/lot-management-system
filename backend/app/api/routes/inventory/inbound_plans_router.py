@@ -52,6 +52,7 @@ def list_inbound_plans(
         product_id: 商品IDでフィルタ
         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+        current_user: 現在のログインユーザー（主担当仕入先取得に使用）
         db: データベースセッション
 
     Returns:

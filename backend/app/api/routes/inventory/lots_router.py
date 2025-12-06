@@ -50,6 +50,7 @@ def list_lots(
         expiry_to: 有効期限終了日
         with_stock: 在庫ありのみ取得するかどうか
         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+        current_user: 現在のログインユーザー（主担当仕入先取得に使用）
         db: データベースセッション
 
     ロット一覧取得（v_lots_with_master ビュー使用）.

@@ -80,8 +80,9 @@ export function ProductSupplierSection({ productCode }: ProductSupplierSectionPr
             {suppliers.map((supplier: ProductSupplier) => (
               <div
                 key={supplier.id}
-                className={`flex items-center justify-between rounded-lg border p-3 ${supplier.is_primary ? "border-amber-300 bg-amber-50" : "bg-white"
-                  }`}
+                className={`flex items-center justify-between rounded-lg border p-3 ${
+                  supplier.is_primary ? "border-amber-300 bg-amber-50" : "bg-white"
+                }`}
               >
                 <div className="flex items-center gap-3">
                   {supplier.is_primary && (

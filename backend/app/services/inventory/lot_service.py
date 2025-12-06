@@ -203,7 +203,19 @@ class LotService:
         """List lots using VLotDetails view.
 
         Args:
+            skip: スキップ件数
+            limit: 取得件数
+            product_id: 製品ID
+            product_code: 製品コード
+            supplier_code: 仕入先コード
+            warehouse_code: 倉庫コード
+            expiry_from: 有効期限開始日
+            expiry_to: 有効期限終了日
+            with_stock: 在庫ありのみ取得するかどうか
             primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
+
+        Returns:
+            LotResponseのリスト
         """
         from sqlalchemy import case
 
