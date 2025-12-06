@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Python 3.12 → 3.13 へ更新
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
-- `remaining_issues.adoc`のコード品質数値を更新、削除済みファイル参照を削除
+- タスク管理ドキュメントを統一：`remaining_issues.adoc`を削除し、`ACTIVE_TASKS.md`に一元化
 
 ## [2025-12-06]
 

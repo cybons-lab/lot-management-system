@@ -241,23 +241,7 @@
 
 == 残課題
 
-詳細は `remaining_issues.adoc` を参照
-
-=== 🔴 高優先度
-
-* 認証機能の本格実装
-* 排他制御（担当者ロック表示）
-
-=== 🟡 中優先度
-
-* SAP連携の本番化
-* 定期バッチスケジューラ
-* UIレイアウト総点検
-
-=== 🔵 低優先度
-
-* 入荷予定手動作成
-* Hard Allocation本格運用
+詳細は `docs/tasks/ACTIVE_TASKS.md` を参照
 
 == 参照ドキュメント
 
@@ -265,4 +249,4 @@
 * **API仕様:** `api_reference.adoc`
 * **DB設計:** `schema.adoc`
 * **フロー図:** `system_diagrams.html`
-* **残課題:** `remaining_issues.adoc`
+* **タスク管理:** `docs/tasks/ACTIVE_TASKS.md`
