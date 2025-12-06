@@ -11,6 +11,7 @@ import { useAtom } from "jotai";
 import { selectedOrderIdAtom, selectedLineIdAtom } from "../../store/atoms";
 
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
+import { formatDateTime } from "@/shared/utils/date";
 // type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
 // type OrderLineResponse = components["schemas"]["OrderLineResponse"];
 
@@ -110,6 +111,9 @@ interface OrderCardProps {
 }
 
 function OrderCard({ order, isSelected, onSelect }: OrderCardProps) {
+  const lockedBy = order.locked_by_user_name ?? order.locked_by ?? null;
+  const lockedAt = order.locked_at ? formatDateTime(order.locked_at) : null;
+
   return (
     <div
       className={`cursor-pointer rounded-lg border p-3 transition ${
@@ -128,6 +132,13 @@ function OrderCard({ order, isSelected, onSelect }: OrderCardProps) {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
+          {lockedBy && (
+            <div className="mb-2 inline-flex items-center gap-1 rounded border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] font-medium text-amber-800">
+              <span className="i-lucide-lock h-3 w-3" />
+              {lockedBy}さんが編集中
+              {lockedAt ? <span className="text-amber-700">（{lockedAt}）</span> : null}
+            </div>
+          )}
           <p className="truncate text-sm font-semibold text-gray-900">{order.order_number}</p>
           <p className="mt-1 text-xs text-gray-600">納期: {order.order_date}</p>
           <div className="mt-1 flex items-center gap-2">

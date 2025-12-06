@@ -1,7 +1,7 @@
 import { LotAllocationHeaderView } from "./LotAllocationHeaderView";
 
 import type { OrderLine } from "@/shared/types/aliases";
-import { formatDate } from "@/shared/utils/date";
+import { formatDate, formatDateTime } from "@/shared/utils/date";
 
 interface LotAllocationHeaderProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +54,8 @@ export function LotAllocationHeader({
   const orderQuantity = Number(orderLine.order_quantity ?? orderLine.quantity ?? 0);
   const orderUnit = orderLine.unit || orderLine.product_external_unit || "";
   const inventoryUnit = orderLine.product_internal_unit || orderUnit;
+  const lockedBy = order?.locked_by_user_name ?? order?.locked_by ?? null;
+  const lockedAt = order?.locked_at ? formatDateTime(order.locked_at) : null;
 
   // Removed justSaved state and useEffect as isSaving is no longer a prop
 
@@ -83,6 +85,8 @@ export function LotAllocationHeader({
       hasCandidates={hasCandidates ?? false}
       // Removed onAutoAllocate, onClearAllocations, onSaveAllocations, onConfirmHard, canSave
       supplierName={orderLine.supplier_name || undefined}
+      lockedBy={lockedBy || undefined}
+      lockedAt={lockedAt || undefined}
       allocationCount={allocationCount}
       hasExpiryWarning={hasExpiryWarning}
       hasExpiredError={hasExpiredError}
