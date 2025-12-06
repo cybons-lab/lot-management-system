@@ -198,8 +198,15 @@ class LotService:
         expiry_from: date | None = None,
         expiry_to: date | None = None,
         with_stock: bool = True,
+        primary_supplier_ids: list[int] | None = None,
     ) -> list[LotResponse]:
-        """List lots using VLotDetails view."""
+        """List lots using VLotDetails view.
+
+        Args:
+            primary_supplier_ids: 主担当の仕入先IDリスト。指定された場合、これらを優先表示。
+        """
+        from sqlalchemy import case, desc
+
         query = self.db.query(VLotDetails)
 
         if product_id is not None:
@@ -229,11 +236,24 @@ class LotService:
         if with_stock:
             query = query.filter(VLotDetails.available_quantity > 0)
 
-        query = query.order_by(
-            VLotDetails.maker_part_code.asc(),
-            VLotDetails.supplier_name.asc(),
-            VLotDetails.expiry_date.asc().nullslast(),
-        )
+        # ソート: 主担当優先 → 製品コード → 仕入先 → 有効期限(FEFO)
+        if primary_supplier_ids:
+            priority_case = case(
+                (VLotDetails.supplier_id.in_(primary_supplier_ids), 0),
+                else_=1,
+            )
+            query = query.order_by(
+                priority_case,
+                VLotDetails.maker_part_code.asc(),
+                VLotDetails.supplier_name.asc(),
+                VLotDetails.expiry_date.asc().nullslast(),
+            )
+        else:
+            query = query.order_by(
+                VLotDetails.maker_part_code.asc(),
+                VLotDetails.supplier_name.asc(),
+                VLotDetails.expiry_date.asc().nullslast(),
+            )
 
         lot_views = query.offset(skip).limit(limit).all()
 
