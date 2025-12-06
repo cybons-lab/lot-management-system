@@ -12,7 +12,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.domain.errors import DomainError
+from app.domain.errors import DomainError, InsufficientStockError
+
+# Order domain
 from app.domain.order import (
     DuplicateOrderError,
     InvalidOrderStatusError,
@@ -22,19 +24,70 @@ from app.domain.order import (
     ProductNotFoundError,
 )
 
+# Lot domain
+from app.domain.lot import (
+    ExpiredLotError,
+    InsufficientLotStockError,
+    LotDomainError,
+    LotNotFoundError,
+)
+
+# Allocation domain
+from app.domain.allocation.exceptions import (
+    AlreadyAllocatedError,
+    ConflictError,
+    InvalidTransitionError,
+    NotFoundError as AllocationNotFoundError,
+    ValidationError as AllocationValidationError,
+)
+
+# Warehouse & Forecast domain (combined file)
+from app.domain.warehouse_and_forecast import (
+    ForecastDomainError,
+    ForecastNotFoundError,
+    InvalidAllocationError,
+    InvalidForecastError,
+    WarehouseDomainError,
+    WarehouseNotFoundError,
+)
+
 
 logger = logging.getLogger(__name__)
 
 
 # ドメイン例外 → HTTPステータスコードのマッピング
+# Note: より具体的な例外を先に定義（サブクラスが優先されるよう）
 DOMAIN_EXCEPTION_MAP: dict[type[DomainError], int] = {
-    DomainError: status.HTTP_400_BAD_REQUEST,  # ← 既定
+    # === Order Domain ===
     OrderNotFoundError: status.HTTP_404_NOT_FOUND,
     ProductNotFoundError: status.HTTP_404_NOT_FOUND,
     DuplicateOrderError: status.HTTP_409_CONFLICT,
     InvalidOrderStatusError: status.HTTP_400_BAD_REQUEST,
     OrderValidationError: status.HTTP_422_UNPROCESSABLE_ENTITY,
     OrderDomainError: status.HTTP_400_BAD_REQUEST,
+    # === Lot Domain ===
+    LotNotFoundError: status.HTTP_404_NOT_FOUND,
+    InsufficientLotStockError: status.HTTP_400_BAD_REQUEST,
+    ExpiredLotError: status.HTTP_400_BAD_REQUEST,
+    LotDomainError: status.HTTP_400_BAD_REQUEST,
+    # === Allocation Domain ===
+    AllocationNotFoundError: status.HTTP_404_NOT_FOUND,
+    AlreadyAllocatedError: status.HTTP_409_CONFLICT,
+    ConflictError: status.HTTP_409_CONFLICT,
+    InvalidTransitionError: status.HTTP_400_BAD_REQUEST,
+    AllocationValidationError: status.HTTP_422_UNPROCESSABLE_ENTITY,
+    # === Warehouse Domain ===
+    WarehouseNotFoundError: status.HTTP_404_NOT_FOUND,
+    InvalidAllocationError: status.HTTP_400_BAD_REQUEST,
+    WarehouseDomainError: status.HTTP_400_BAD_REQUEST,
+    # === Forecast Domain ===
+    ForecastNotFoundError: status.HTTP_404_NOT_FOUND,
+    InvalidForecastError: status.HTTP_400_BAD_REQUEST,
+    ForecastDomainError: status.HTTP_400_BAD_REQUEST,
+    # === Common ===
+    InsufficientStockError: status.HTTP_400_BAD_REQUEST,
+    # === Base (fallback) ===
+    DomainError: status.HTTP_400_BAD_REQUEST,
 }
 
 
