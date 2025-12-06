@@ -280,6 +280,10 @@ class LotService:
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
                 last_updated=lot_view.updated_at,
+                is_primary_supplier=bool(
+                    primary_supplier_ids
+                    and lot_view.supplier_id in primary_supplier_ids
+                ),
             )
             responses.append(response)
         return responses

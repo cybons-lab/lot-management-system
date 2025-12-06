@@ -88,6 +88,7 @@ def list_inbound_plans(
                 total_quantity=sum(line.planned_quantity for line in plan.lines)
                 if plan.lines
                 else None,  # type: ignore[arg-type]
+                is_primary_supplier=plan.supplier_id in (primary_supplier_ids or []),
             )
             for plan in plans
         ],

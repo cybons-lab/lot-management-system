@@ -9,6 +9,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { fmt } from "@/shared/utils/number";
+import { Badge } from "@/components/ui";
+import { Crown } from "lucide-react";
 
 interface InventoryBySupplierTableProps {
   data: InventoryBySupplierResponse[];
@@ -36,7 +38,20 @@ export function InventoryBySupplierTable({ data, onRowClick }: InventoryBySuppli
               onClick={onRowClick ? () => onRowClick(row.supplier_code) : undefined}
             >
               <TableCell className="font-medium">{row.supplier_code}</TableCell>
-              <TableCell>{row.supplier_name}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {row.supplier_name}
+                  {row.is_primary_supplier && (
+                    <Badge
+                      variant="outline"
+                      className="gap-1 border-amber-300 bg-amber-50 text-amber-600 px-1 py-0 text-[10px]"
+                    >
+                      <Crown className="h-3 w-3" />
+                      主担当
+                    </Badge>
+                  )}
+                </div>
+              </TableCell>
               <TableCell className="text-right font-mono">{fmt(row.total_quantity)}</TableCell>
               <TableCell className="text-right font-mono">{row.product_count}</TableCell>
               <TableCell className="text-right font-mono">{row.lot_count}</TableCell>

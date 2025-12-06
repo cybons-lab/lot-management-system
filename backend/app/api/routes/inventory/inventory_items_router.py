@@ -11,6 +11,11 @@ from app.schemas.inventory.inventory_schema import (
     InventoryItemResponse,
 )
 from app.services.inventory.inventory_service import InventoryService
+from app.services.assignments.user_supplier_assignment_service import (
+    UserSupplierAssignmentService,
+)
+from app.schemas.auth.auth_schemas import User
+from app.api.routes.auth.auth_router import get_current_user_optional
 
 
 router = APIRouter(prefix="/inventory-items", tags=["inventory-items"])
@@ -80,7 +85,11 @@ def get_inventory_item(
 
 
 @router.get("/by-supplier", response_model=list[InventoryBySupplierResponse])
-def list_inventory_by_supplier(db: Session = Depends(get_db)):
+def list_inventory_by_supplier(
+    prioritize_primary: bool = True,
+    current_user: User | None = Depends(get_current_user_optional),
+    db: Session = Depends(get_db),
+):
     """
     在庫サマリ（仕入先別集計）取得.
 
@@ -88,7 +97,17 @@ def list_inventory_by_supplier(db: Session = Depends(get_db)):
         仕入先ごとの在庫集計リスト
     """
     service = InventoryService(db)
-    return service.get_inventory_by_supplier()
+    items = service.get_inventory_by_supplier()
+
+    if prioritize_primary and current_user:
+        assignment_service = UserSupplierAssignmentService(db)
+        assignments = assignment_service.get_user_suppliers(current_user.id)
+        primary_supplier_ids = {a.supplier_id for a in assignments if a.is_primary}
+        
+        for item in items:
+            item["is_primary_supplier"] = item["supplier_id"] in primary_supplier_ids
+
+    return items
 
 
 @router.get("/by-warehouse", response_model=list[InventoryByWarehouseResponse])

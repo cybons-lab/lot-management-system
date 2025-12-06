@@ -87,6 +87,7 @@ class LotResponse(LotBase, TimestampMixin):
     product_name: str
     product_code: str
     supplier_name: str
+    is_primary_supplier: bool = False
 
     # Optional joined fields
     warehouse_name: str | None = None
@@ -200,6 +201,7 @@ class InventoryBySupplierResponse(BaseSchema):
     supplier_id: int
     supplier_name: str
     supplier_code: str
+    is_primary_supplier: bool = False
     total_quantity: Decimal
     lot_count: int
     product_count: int

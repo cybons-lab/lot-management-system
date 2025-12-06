@@ -5,6 +5,7 @@ export interface InventoryBySupplierResponse {
   total_quantity: number;
   lot_count: number;
   product_count: number;
+  is_primary_supplier?: boolean;
 }
 
 export interface InventoryByWarehouseResponse {

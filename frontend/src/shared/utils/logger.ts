@@ -1,4 +1,4 @@
-import { api } from '@/shared/api/client';
+import api from '@/shared/api/http-client';
 
 export class Logger {
     static async info(message: string, userAgent?: string) {

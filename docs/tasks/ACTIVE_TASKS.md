@@ -34,9 +34,23 @@
 - [x] **簡易認証とユーザー切り替え**
     - [x] Login UI / Debug User Switcher
     - [x] Auth Context (Frontend) & `current_user` logic (Backend)
+    - [x] Session Persistence & Error Handling (Fixed)
 - [x] **権限による表示制御**
     - [x] Role-based Menu Display (Admin vs User)
     - [x] AdminGuard for protected routes
+
+### 主担当機能（現在進行中）
+
+- [x] **データ基盤・基本表示**
+    - [x] `product_suppliers` テーブル・リレーション
+    - [x] 製品詳細画面での仕入先表示
+    - [x] バックエンドの優先ソートロジック
+- [x] **一覧画面での主担当表示**
+    - [x] 入荷予定一覧へのバッジ表示
+    - [x] ロット一覧への主担当表示適用（APIのみ）
+    - [x] 在庫一覧（仕入先別）へのバッジ表示
+- [ ] **主担当設定ページの機能完成**
+    - [ ] 担当追加・編集・削除機能の実装
 
 ### システム基盤・デバッグ
 
