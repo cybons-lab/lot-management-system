@@ -21,31 +21,29 @@
 
 | 種類 | 件数 | カテゴリ |
 |------|------|----------|
-| eslint-disable | 43件 | Frontend Lint |
-| @ts-ignore | 0件 | Frontend TypeScript |
-| type: ignore | 81件 | Backend Mypy |
-| noqa | 42件 | Backend Ruff/Flake8 |
+| eslint-disable | 39件 | Frontend Lint |
+| @typescript-eslint/no-explicit-any | 1件 | (external-modules.d.tsのみ) |
+| type: ignore | 0件 | Backend Mypy ✅ |
+| noqa | 42件 | Backend Ruff (意図的) |
 | pragma: no cover | 5件 | テストカバレッジ除外（正常） |
-| TODO | 11件 | 未完了タスク |
+| TODO | 9件 | 未完了タスク（バックエンド待ち） |
 
-### 🔴 要対応: TODO コメント（11件）
+### � eslint-disable (39件) 内訳:
+- `max-lines-per-function`: 約25件（関数分割を検討）
+- `complexity`: 約8件
+- `max-params`: 1件
+- `jsx-a11y`: 1件
 
-| ファイル | 内容 |
-|----------|------|
-| `CustomerBulkImportDialog.tsx` | Backend import未実装 |
-| `ProductBulkImportDialog.tsx` | Backend import未実装 |
-| `allocations/api.ts` | Use generated types once available |
-| `useWarehouseData.ts` | 入荷予定を倉庫別に集約 (P2-23) |
-| `useAllocationMutations.ts` | バックエンドAPI実装待ち（2件） |
-| `system_router.py` | ユーザー名取得にJoin必要 |
-| `sap_service.py` | 本番SAP API統合 |
-| `suggestion.py` | 削除範囲の最適化 |
+### 🔴 残りのTODO（9件）- 全てバックエンド待ち
 
-### 🟡 許容範囲:
-- `noqa: F401 / F403` - 意図的なre-export（問題なし）
-- `noqa: E712` - SQLAlchemyのブール比較（正常）
-- `pragma: no cover` - TYPE_CHECKING ブロック（正常）
-- `eslint-disable max-lines-per-function` - 関数分割を検討
+| ファイル | 内容 | 対応時期 |
+|----------|------|----------|
+| `CustomerBulkImportDialog.tsx` | Backend import未実装 | P3 |
+| `ProductBulkImportDialog.tsx` | Backend import未実装 | P3 |
+| `useWarehouseData.ts` | 入荷予定を倉庫別に集約 | P2-23 |
+| `useAllocationMutations.ts` (2件) | バックエンドAPI待ち | 将来 |
+| `sap_service.py` | 本番SAP API統合 | P3 |
+| `suggestion.py` | 削除範囲の最適化 | 将来 |
 
 ---
 
@@ -83,22 +81,13 @@ APScheduler または Celery Beat の導入検討。
 - SAP受注登録: ✅ モック実装済み
 - 本番SAP API接続: ❌ 未実装
 
-関連TODO: `sap_service.py:61` - Replace with actual SAP API integration
-
 ### Bulk Import API (マスタ一括登録)
 
 **ステータス:** UI実装済み、Backend未実装
 
-関連TODO:
-- `CustomerBulkImportDialog.tsx` - Backend import未実装
-- `ProductBulkImportDialog.tsx` - Backend import未実装
-
 ### 担当者ロック表示（排他制御）のバックエンド実装
 
 **ステータス:** UI実装済み、バックエンド未実装
-
-別ユーザーが編集中の場合、「🔒 田中太郎さんが編集中」と表示。
-バックエンドでのロック管理（Redis等）が必要。
 
 ---
 
@@ -123,6 +112,8 @@ APScheduler または Celery Beat の導入検討。
 - [x] ESLint: 0エラー/0ワーニング
 - [x] Mypy: 0エラー（types-PyYAML追加、型アノテーション修正）
 - [x] pre-commit設定改善（docformatter削除、ruff統一）
+- [x] no-explicit-any: 5件 → 1件（external-modules.d.tsのみ）
+- [x] system_router.py: ユーザー名をJoinで取得
 
 ---
 
