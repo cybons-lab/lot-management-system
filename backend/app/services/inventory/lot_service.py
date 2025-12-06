@@ -437,9 +437,7 @@ class LotService:
             raise LotValidationError("ロック数量は0以上である必要があります")
 
         if quantity_to_lock > available_qty:
-            raise InsufficientLotStockError(
-                lot_id, float(quantity_to_lock), float(available_qty)
-            )
+            raise InsufficientLotStockError(lot_id, float(quantity_to_lock), float(available_qty))
 
         db_lot.locked_quantity = locked_qty + quantity_to_lock
         if lock_data.reason:

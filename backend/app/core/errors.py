@@ -12,17 +12,19 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.domain.errors import DomainError, InsufficientStockError
-
-# Order domain
-from app.domain.order import (
-    DuplicateOrderError,
-    InvalidOrderStatusError,
-    OrderDomainError,
-    OrderNotFoundError,
-    OrderValidationError,
-    ProductNotFoundError,
+# Allocation domain
+from app.domain.allocation.exceptions import (
+    AlreadyAllocatedError,
+    ConflictError,
+    InvalidTransitionError,
 )
+from app.domain.allocation.exceptions import (
+    NotFoundError as AllocationNotFoundError,
+)
+from app.domain.allocation.exceptions import (
+    ValidationError as AllocationValidationError,
+)
+from app.domain.errors import DomainError, InsufficientStockError
 
 # Lot domain
 from app.domain.lot import (
@@ -37,13 +39,14 @@ from app.domain.lot import (
     LotWarehouseNotFoundError,
 )
 
-# Allocation domain
-from app.domain.allocation.exceptions import (
-    AlreadyAllocatedError,
-    ConflictError,
-    InvalidTransitionError,
-    NotFoundError as AllocationNotFoundError,
-    ValidationError as AllocationValidationError,
+# Order domain
+from app.domain.order import (
+    DuplicateOrderError,
+    InvalidOrderStatusError,
+    OrderDomainError,
+    OrderNotFoundError,
+    OrderValidationError,
+    ProductNotFoundError,
 )
 
 # Warehouse & Forecast domain (combined file)
