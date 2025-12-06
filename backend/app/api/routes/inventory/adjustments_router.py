@@ -34,7 +34,7 @@ def create_adjustment(
     try:
         return service.create_adjustment(adjustment)
     except ValueError as e:
-        from app.domain.errors import OrderValidationError
+        from app.domain.order import OrderValidationError
 
         raise OrderValidationError(str(e)) from e
 

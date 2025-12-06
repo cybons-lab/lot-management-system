@@ -142,7 +142,7 @@ def create_assignment(
             updated_at=assignment.updated_at,
         )
     except Exception as e:
-        from app.domain.errors import OrderValidationError
+        from app.domain.order import OrderValidationError
 
         raise OrderValidationError(str(e)) from e
 
@@ -171,7 +171,7 @@ def update_assignment(
 
         raise OrderNotFoundError(str(e)) from e
     except Exception as e:
-        from app.domain.errors import OrderValidationError
+        from app.domain.order import OrderValidationError
 
         raise OrderValidationError(str(e)) from e
 
@@ -191,7 +191,7 @@ def delete_assignment(
 
         raise OrderNotFoundError(str(e)) from e
     except Exception as e:
-        from app.domain.errors import OrderValidationError
+        from app.domain.order import OrderValidationError
 
         raise OrderValidationError(str(e)) from e
 
@@ -218,6 +218,6 @@ def set_primary_user(
             updated_at=assignment.updated_at,
         )
     except Exception as e:
-        from app.domain.errors import OrderValidationError
+        from app.domain.order import OrderValidationError
 
         raise OrderValidationError(str(e)) from e

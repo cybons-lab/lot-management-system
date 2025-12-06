@@ -146,7 +146,7 @@ def save_manual_allocations(
         logger.error(f"Validation error during allocation save: {e}")
         db.rollback()
         # Re-raise as DomainError for global handler
-        from app.domain.errors import OrderValidationError
+        from app.domain.order import OrderValidationError
 
         raise OrderValidationError(str(e)) from e
     except Exception as e:

@@ -86,7 +86,7 @@ def drag_assign(request: DragAssignRequest, db: Session = Depends(get_db)):
             remaining_lot_qty=remaining,
         )
     except ValueError as e:
-        from app.domain.errors import OrderValidationError
+        from app.domain.order import OrderValidationError
 
         raise OrderValidationError(str(e)) from e
     except AllocationCommitError:
@@ -181,8 +181,7 @@ def commit_allocation(request: AllocationCommitRequest, db: Session = Depends(ge
         # 既存のFEFO確定サービスを再利用
         result = commit_fefo_allocation(db, request.order_id)
     except ValueError as exc:
-        from app.domain.errors import OrderValidationError
-        from app.domain.order import OrderNotFoundError
+        from app.domain.order import OrderNotFoundError, OrderValidationError
 
         message = str(exc)
         if "not found" in message.lower():
