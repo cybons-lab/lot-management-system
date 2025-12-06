@@ -83,21 +83,21 @@ export function ProductSupplierSection({ productCode }: ProductSupplierSectionPr
                                         <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                                     )}
                                     <div>
-                                        <p className="font-medium">
+                                        <span className="font-medium">
                                             {supplier.supplier_name}
                                             {supplier.is_primary && (
                                                 <Badge variant="default" className="ml-2 bg-amber-500">
                                                     主要仕入先
                                                 </Badge>
                                             )}
-                                        </p>
+                                        </span>
                                         <p className="text-sm text-gray-500">{supplier.supplier_code}</p>
                                     </div>
                                 </div>
                                 {supplier.lead_time_days !== null && (
                                     <div className="text-right text-sm text-gray-600">
                                         <span className="font-medium">{supplier.lead_time_days}</span>日
-                                        <p className="text-xs text-gray-400">リードタイム</p>
+                                        <span className="block text-xs text-gray-400">リードタイム</span>
                                     </div>
                                 )}
                             </div>
