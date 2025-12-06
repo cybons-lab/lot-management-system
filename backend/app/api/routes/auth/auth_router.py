@@ -43,6 +43,8 @@ def get_current_user(
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     """Simple login by User ID or Username."""
+    # Debug log
+    print(f"[DEBUG] Login request: user_id={request.user_id}, username={request.username}")
     query = db.query(User).filter(User.is_active.is_(True))
     if request.user_id:
         user = query.filter(User.id == request.user_id).first()
