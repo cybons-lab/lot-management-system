@@ -16,6 +16,7 @@ import {
   Checkbox,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -88,6 +89,9 @@ export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogP
       <DialogContent>
         <DialogHeader>
           <DialogTitle>担当割り当ての追加</DialogTitle>
+          <DialogDescription>
+            ユーザーと仕入先を選択して担当割り当てを作成します
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

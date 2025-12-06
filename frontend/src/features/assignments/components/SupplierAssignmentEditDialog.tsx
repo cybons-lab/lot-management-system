@@ -24,6 +24,7 @@ import {
   Button,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   Badge,
@@ -73,6 +74,9 @@ export function SupplierAssignmentEditDialog({
             <DialogTitle>
               {group.supplier_name} ({group.supplier_code}) の担当者編集
             </DialogTitle>
+            <DialogDescription>
+              主担当者の変更や担当者の削除を行えます
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-4">
