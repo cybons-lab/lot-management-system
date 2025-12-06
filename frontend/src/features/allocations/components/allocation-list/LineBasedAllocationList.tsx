@@ -21,6 +21,7 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
  * ユーザーの要望により、Order Cardのデザイン（ヘッダー情報など）を維持したまま、
  * 明細行ごとにカードを分けて表示する（非正規化表示）。
  */
+// 仮想スクロールリストとグルーピングロジックを一箇所にまとめるため分割しない
 // eslint-disable-next-line max-lines-per-function
 export function LineBasedAllocationList({
   orders,

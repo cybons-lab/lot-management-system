@@ -16,6 +16,7 @@ interface LotInfoSectionProps {
   freeQty: number;
 }
 
+// ロット情報の表示条件分岐が多いため抑制
 // eslint-disable-next-line complexity
 export function LotInfoSection({
   lot,

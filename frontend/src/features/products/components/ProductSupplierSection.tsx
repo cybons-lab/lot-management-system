@@ -13,6 +13,7 @@ interface ProductSupplierSectionProps {
   productCode: string;
 }
 
+// セクションのUIとローディング/エラー状態を一箇所にまとめるため分割しない
 // eslint-disable-next-line max-lines-per-function
 export function ProductSupplierSection({ productCode }: ProductSupplierSectionProps) {
   const {

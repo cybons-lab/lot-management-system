@@ -33,6 +33,7 @@ import {
 import { useAuth } from "@/features/auth/AuthContext";
 import { http } from "@/shared/api/http-client";
 
+// ページのUIとデータ処理を一箇所にまとめるため分割しない
 // eslint-disable-next-line max-lines-per-function
 export function PrimaryAssignmentsPage() {
   const { user: currentUser } = useAuth();

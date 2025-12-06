@@ -15,6 +15,7 @@ import type { OrderLine } from "@/shared/types/aliases";
  * @param line - Order line object
  * @returns Order quantity as number
  */
+// 複数の単位変換パターンを網羅するため条件分岐が多い
 // eslint-disable-next-line complexity
 export function getOrderQuantity(line: OrderLine): number {
   if (line.converted_quantity != null && line.converted_quantity !== "") {

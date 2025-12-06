@@ -46,6 +46,7 @@ interface FormValues {
   isPrimary: boolean;
 }
 
+// ダイアログのフォームとUIを一箇所にまとめるため分割しない
 // eslint-disable-next-line max-lines-per-function
 export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogProps) {
   const [open, setOpen] = useState(false);

@@ -34,6 +34,7 @@ interface AllocationInputSectionProps {
   handleClearAllocation: () => void;
 }
 
+// 入力フィールドとアクションボタンのUIを一箇所にまとめるため分割しない
 // eslint-disable-next-line max-lines-per-function, complexity
 export function AllocationInputSection({
   lot,

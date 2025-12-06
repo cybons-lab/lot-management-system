@@ -36,6 +36,7 @@ interface SupplierAssignmentEditDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// ダイアログのUIと操作ロジックを一箇所にまとめるため分割しない
 // eslint-disable-next-line max-lines-per-function
 export function SupplierAssignmentEditDialog({
   group,
