@@ -1,10 +1,10 @@
 import { Box, Home, List, Plus, Truck } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
-import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { InventoryByProductTable } from "@/features/inventory/components/InventoryByProductTable";
 import { InventoryBySupplierTable } from "@/features/inventory/components/InventoryBySupplierTable";
 import { InventoryByWarehouseTable } from "@/features/inventory/components/InventoryByWarehouseTable";
@@ -19,6 +19,7 @@ import {
   useInventoryBySupplier,
   useInventoryByWarehouse,
 } from "@/hooks/api";
+import { useProductsQuery, useWarehousesQuery } from "@/hooks/api/useMastersQuery";
 import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import { FormDialog } from "@/shared/components/form";
@@ -59,6 +60,29 @@ export function InventoryPage() {
 
   // Stats
   const stats = useInventoryStats(inventoryItems);
+
+  // Master data for filter options
+  const { data: products = [] } = useProductsQuery();
+  const { data: warehouses = [] } = useWarehousesQuery();
+
+  // Generate filter options
+  const productOptions = useMemo(
+    () =>
+      products.map((p) => ({
+        value: String(p.id),
+        label: `${p.product_code} - ${p.product_name}`,
+      })),
+    [products],
+  );
+
+  const warehouseOptions = useMemo(
+    () =>
+      warehouses.map((w) => ({
+        value: String(w.id),
+        label: `${w.warehouse_code} - ${w.warehouse_name}`,
+      })),
+    [warehouses],
+  );
 
   // Lot creation mutation
   const createLotMutation = useCreateLot({
@@ -181,21 +205,21 @@ export function InventoryPage() {
           <Section>
             <div className="grid grid-cols-4 gap-4">
               <div>
-                <Label className="mb-2 block text-sm font-medium">製品ID</Label>
-                <Input
-                  type="number"
+                <Label className="mb-2 block text-sm font-medium">製品</Label>
+                <SearchableSelect
+                  options={productOptions}
                   value={filters.product_id}
-                  onChange={(e) => setFilters({ ...filters, product_id: e.target.value })}
-                  placeholder="製品IDで絞り込み"
+                  onChange={(value) => setFilters({ ...filters, product_id: value })}
+                  placeholder="製品を検索..."
                 />
               </div>
               <div>
-                <Label className="mb-2 block text-sm font-medium">倉庫ID</Label>
-                <Input
-                  type="number"
+                <Label className="mb-2 block text-sm font-medium">倉庫</Label>
+                <SearchableSelect
+                  options={warehouseOptions}
                   value={filters.warehouse_id}
-                  onChange={(e) => setFilters({ ...filters, warehouse_id: e.target.value })}
-                  placeholder="倉庫IDで絞り込み"
+                  onChange={(value) => setFilters({ ...filters, warehouse_id: value })}
+                  placeholder="倉庫を検索..."
                 />
               </div>
             </div>

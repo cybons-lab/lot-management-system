@@ -8,6 +8,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import type { Customer } from "@/features/customers/validators/customer-schema";
 import type { Product } from "@/features/products/validators/product-schema";
+import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 import type { Warehouse } from "@/features/warehouses/validators/warehouse-schema";
 import { QUERY_KEYS } from "@/services/api/query-keys";
 import { http } from "@/shared/api/http-client";
@@ -76,6 +77,24 @@ export function useWarehousesQuery(options?: {
   return useQuery({
     queryKey: QUERY_KEYS.masters.warehouses(),
     queryFn: () => http.get<Warehouse[]>("masters/warehouses"),
+    staleTime: options?.staleTime ?? 300000, // 5分
+    enabled: options?.enabled ?? true,
+  });
+}
+
+/**
+ * 仕入先マスタ一覧を取得するフック
+ *
+ * @param options - React Query オプション
+ * @returns 仕入先一覧のクエリ結果
+ */
+export function useSuppliersQuery(options?: {
+  enabled?: boolean;
+  staleTime?: number;
+}): UseQueryResult<Supplier[], Error> {
+  return useQuery({
+    queryKey: ["masters", "suppliers"],
+    queryFn: () => http.get<Supplier[]>("masters/suppliers"),
     staleTime: options?.staleTime ?? 300000, // 5分
     enabled: options?.enabled ?? true,
   });

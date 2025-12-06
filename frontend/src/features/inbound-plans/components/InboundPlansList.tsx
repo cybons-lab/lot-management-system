@@ -1,9 +1,13 @@
 import { Crown } from "lucide-react";
+import { useMemo } from "react";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { Badge } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
+import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
+import { useSuppliersQuery } from "@/hooks/api/useMastersQuery";
 import { formatDate } from "@/shared/utils/date";
 
 // ============================================
@@ -58,6 +62,17 @@ export function InboundPlansList({
   onSyncFromSAP,
   isSyncing,
 }: InboundPlansListProps) {
+  // Master data for filter options
+  const { data: suppliers = [] } = useSuppliersQuery();
+
+  const supplierOptions = useMemo(
+    () =>
+      suppliers.map((s: Supplier) => ({
+        value: String(s.id),
+        label: `${s.supplier_code} - ${s.supplier_name}`,
+      })),
+    [suppliers],
+  );
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
@@ -77,12 +92,12 @@ export function InboundPlansList({
       <div className="rounded-lg border bg-white p-4">
         <div className="grid gap-4 md:grid-cols-4">
           <div>
-            <Label className="mb-2 block text-sm font-medium">仕入先ID</Label>
-            <Input
-              type="number"
+            <Label className="mb-2 block text-sm font-medium">仕入先</Label>
+            <SearchableSelect
+              options={supplierOptions}
               value={filters.supplier_id}
-              onChange={(e) => onFilterChange({ ...filters, supplier_id: e.target.value })}
-              placeholder="仕入先IDで絞り込み"
+              onChange={(value) => onFilterChange({ ...filters, supplier_id: value })}
+              placeholder="仕入先を検索..."
             />
           </div>
           <div>
