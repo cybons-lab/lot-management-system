@@ -26,12 +26,7 @@ export function ForecastGroupList({ forecastData }: ForecastGroupListProps) {
               </span>
             </div>
             <div className="text-sm font-semibold text-blue-600">
-              {fmt(
-                (group.forecasts ?? []).reduce(
-                  (s, f) => s + Number(f.forecast_quantity),
-                  0,
-                ),
-              )}
+              {fmt((group.forecasts ?? []).reduce((s, f) => s + Number(f.forecast_quantity), 0))}
             </div>
           </div>
         ))}

@@ -32,7 +32,9 @@ class AuthService:
         user = self.user_service.get_by_username(username)
         if not user:
             return None
-        if not user.password_hash or not self.user_service.verify_password(password, user.password_hash):
+        if not user.password_hash or not self.user_service.verify_password(
+            password, user.password_hash
+        ):
             return None
         return user
 

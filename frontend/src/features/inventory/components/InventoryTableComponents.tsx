@@ -217,8 +217,12 @@ export function InventoryRow({
         </td>
         <td className={styles.table.tdRight}>{lots.length}</td>
         <td className={styles.table.tdRight}>{fmt(item.total_quantity)}</td>
-        <td className={`${styles.table.tdRight} text-orange-600`}>{fmt(item.soft_allocated_quantity)}</td>
-        <td className={`${styles.table.tdRight} text-red-600 font-medium`}>{fmt(item.hard_allocated_quantity)}</td>
+        <td className={`${styles.table.tdRight} text-orange-600`}>
+          {fmt(item.soft_allocated_quantity)}
+        </td>
+        <td className={`${styles.table.tdRight} font-medium text-red-600`}>
+          {fmt(item.hard_allocated_quantity)}
+        </td>
         <td className={styles.table.tdRightGreen}>{fmt(item.available_quantity)}</td>
         <td className={styles.table.tdGray}>
           {new Date(item.last_updated).toLocaleString("ja-JP")}

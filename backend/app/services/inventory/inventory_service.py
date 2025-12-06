@@ -87,9 +87,9 @@ class InventoryService:
         # We need to filter exactly the items we found in the first page
         found_products = [r.product_id for r in result]
         found_warehouses = [r.warehouse_id for r in result]
-        
+
         if not found_products:
-             return []
+            return []
 
         alloc_query = """
             SELECT 
@@ -105,13 +105,13 @@ class InventoryService:
               AND l.warehouse_id IN :warehouse_ids
             GROUP BY l.product_id, l.warehouse_id, a.allocation_type
         """
-        
+
         alloc_rows = self.db.execute(
-            text(alloc_query), 
+            text(alloc_query),
             {
-                "product_ids": tuple(set(found_products)), 
-                "warehouse_ids": tuple(set(found_warehouses))
-            }
+                "product_ids": tuple(set(found_products)),
+                "warehouse_ids": tuple(set(found_warehouses)),
+            },
         ).fetchall()
 
         # Map results for O(1) lookup
@@ -121,7 +121,7 @@ class InventoryService:
             key = (row.product_id, row.warehouse_id)
             if key not in alloc_map:
                 alloc_map[key] = {"soft": 0.0, "hard": 0.0}
-            
+
             atype = row.allocation_type  # 'soft' or 'hard'
             if atype in alloc_map[key]:
                 alloc_map[key][atype] += float(row.qty)
@@ -131,7 +131,7 @@ class InventoryService:
         for idx, row in enumerate(result):
             key = (row.product_id, row.warehouse_id)
             allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
-            
+
             responses.append(
                 InventoryItemResponse(
                     id=idx + 1,
@@ -149,7 +149,7 @@ class InventoryService:
                     warehouse_code=row.warehouse_code,
                 )
             )
-            
+
         return responses
 
     def get_inventory_item_by_product_warehouse(
@@ -204,16 +204,15 @@ class InventoryService:
             GROUP BY a.allocation_type
         """
         alloc_rows = self.db.execute(
-            text(alloc_query),
-            {"product_id": product_id, "warehouse_id": warehouse_id}
+            text(alloc_query), {"product_id": product_id, "warehouse_id": warehouse_id}
         ).fetchall()
-        
+
         soft_qty = 0.0
         hard_qty = 0.0
         for ar in alloc_rows:
-            if ar.allocation_type == 'soft':
+            if ar.allocation_type == "soft":
                 soft_qty += float(ar.qty)
-            elif ar.allocation_type == 'hard':
+            elif ar.allocation_type == "hard":
                 hard_qty += float(ar.qty)
 
         return InventoryItemResponse(

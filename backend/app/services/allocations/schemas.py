@@ -84,9 +84,7 @@ class InsufficientStockError(DomainError):
         available: Available quantity
     """
 
-    def __init__(
-        self, lot_id: int, lot_number: str, required: float, available: float
-    ):
+    def __init__(self, lot_id: int, lot_number: str, required: float, available: float):
         self.lot_id = lot_id
         self.lot_number = lot_number
         self.required = required
@@ -96,4 +94,3 @@ class InsufficientStockError(DomainError):
             f"(必要: {self.required}, 利用可能: {self.available})"
         )
         super().__init__(message)
-

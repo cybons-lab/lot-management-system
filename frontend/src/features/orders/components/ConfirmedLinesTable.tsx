@@ -63,7 +63,10 @@ function TableRow({ line, isSelected, onToggle }: TableRowProps) {
         />
       </td>
       <td className="px-4 py-3">
-        <div className="max-w-[150px] truncate font-medium text-slate-900" title={line.order_number}>
+        <div
+          className="max-w-[150px] truncate font-medium text-slate-900"
+          title={line.order_number}
+        >
           {line.order_number}
         </div>
       </td>
@@ -73,7 +76,10 @@ function TableRow({ line, isSelected, onToggle }: TableRowProps) {
         </div>
       </td>
       <td className="px-4 py-3">
-        <div className="max-w-[120px] truncate font-mono text-sm text-slate-900" title={line.product_code}>
+        <div
+          className="max-w-[120px] truncate font-mono text-sm text-slate-900"
+          title={line.product_code}
+        >
           {line.product_code}
         </div>
       </td>
