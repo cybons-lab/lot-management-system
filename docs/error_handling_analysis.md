@@ -567,19 +567,30 @@ def save_manual_allocations(..., db: Session = Depends(get_db)):
 
 ---
 
-## 5. 実装優先度
+## 5. 実装優先度と進捗
 
-### Phase 1: 高優先度（即時対応）
-1. **Frontend:** `query-client.ts` にグローバルエラーハンドラー追加
-2. **Backend:** `core/errors.py` に不足している Domain Exception マッピング追加
+### Phase 1: 高優先度 ✅ 完了
+1. ✅ **Frontend:** `query-client.ts` にグローバルエラーハンドラー追加
+   - `QueryCache.onError`: リフェッチ失敗時のtoast + ログ
+   - `MutationCache.onError`: 全ミューテーションエラーのtoast + ログ
+2. ✅ **Backend:** `core/errors.py` に不足している Domain Exception マッピング追加
+   - Lot, Allocation, Warehouse, Forecast ドメインの例外を追加
 
-### Phase 2: 中優先度（1-2週間）
-1. **Frontend:** `QueryErrorFallback` コンポーネント作成・適用
-2. **Backend:** `lot_service.py` の HTTPException を Domain Exception に置換
+### Phase 2: 中優先度 ✅ 完了
+1. ✅ **Frontend:** `QueryErrorFallback` コンポーネント作成
+   - `shared/components/feedback/QueryErrorFallback.tsx`
+   - 通常モードとコンパクトモードをサポート
+2. ✅ **Backend:** `lot_service.py` の HTTPException を Domain Exception に置換
+   - 新規例外: `LotValidationError`, `LotProductNotFoundError`, `LotSupplierNotFoundError`, `LotWarehouseNotFoundError`, `LotDatabaseError`
+   - 34箇所の HTTPException を置換
 
-### Phase 3: 低優先度（リファクタリング）
-1. **Backend:** 全 Router の try-catch パターン統一
-2. **Frontend:** 全 Mutation hooks のデフォルトエラー処理統一
+### Phase 3: 低優先度 🔲 未着手
+1. 🔲 **Backend:** 全 Router の try-catch パターン統一
+   - 対象: `orders_router.py`, その他のルーター
+   - 推奨パターン: グローバルハンドラに委譲
+2. 🔲 **Frontend:** 全 Mutation hooks のデフォルトエラー処理統一
+   - 対象: `hooks/mutations/*.ts`
+   - 推奨: `useMutationWithToast` パターンの適用
 
 ---
 
