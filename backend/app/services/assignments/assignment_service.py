@@ -48,6 +48,18 @@ class UserSupplierAssignmentService(
         result = self.db.execute(stmt)
         return list(result.unique().scalars().all())
 
+    def get_primary_supplier_ids(self, user_id: int) -> list[int]:
+        """Get list of primary supplier IDs for a user.
+
+        Returns the supplier_id for each assignment where is_primary=True.
+        Used for primary supplier priority sorting in lists.
+        """
+        stmt = select(UserSupplierAssignment.supplier_id).where(
+            UserSupplierAssignment.user_id == user_id,
+            UserSupplierAssignment.is_primary == True,  # noqa: E712
+        )
+        result = self.db.execute(stmt)
+        return list(result.scalars().all())
 
     def get_user_suppliers(self, user_id: int) -> list[UserSupplierAssignment]:
         """Get all supplier assignments for a user."""

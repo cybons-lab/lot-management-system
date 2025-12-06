@@ -12,12 +12,14 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_uow
-from app.models import Allocation, OrderLine  # 追加
+from app.api.routes.auth.auth_router import get_current_user_optional
+from app.models import Allocation, OrderLine, User
 from app.schemas.orders.orders_schema import (
     OrderCreate,
     OrderWithLinesResponse,
 )
 from app.services.allocations.actions import allocate_manually, cancel_allocation  # 追加
+from app.services.assignments.assignment_service import UserSupplierAssignmentService
 from app.services.common.uow_service import UnitOfWork
 from app.services.orders.order_service import OrderService
 
@@ -35,9 +37,19 @@ def list_orders(
     date_from: date | None = None,
     date_to: date | None = None,
     order_type: str | None = None,
+    prioritize_primary: bool = True,
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     """受注一覧取得（読み取り専用）."""
+    # Get primary supplier IDs for sorting
+    primary_supplier_ids: list[int] | None = None
+    if prioritize_primary and current_user:
+        assignment_service = UserSupplierAssignmentService(db)
+        primary_supplier_ids = assignment_service.get_primary_supplier_ids(
+            current_user.id
+        )
+
     service = OrderService(db)
     return service.get_orders(
         skip=skip,
@@ -47,6 +59,7 @@ def list_orders(
         date_from=date_from,
         date_to=date_to,
         order_type=order_type,
+        primary_supplier_ids=primary_supplier_ids,
     )
 
 

@@ -85,6 +85,41 @@ def get_product(product_code: str, db: Session = Depends(get_db)):
     return _to_product_out(product)
 
 
+@router.get("/{product_code}/suppliers")
+def get_product_suppliers(product_code: str, db: Session = Depends(get_db)):
+    """Fetch suppliers for a product by its code.
+    
+    Returns a list of suppliers associated with this product,
+    indicating which supplier is the primary one.
+    """
+    from app.models import ProductSupplier, Supplier
+    from sqlalchemy import select
+    
+    service = ProductService(db)
+    product = service.get_by_code(product_code)
+    assert product is not None
+    
+    stmt = (
+        select(ProductSupplier, Supplier)
+        .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
+        .where(ProductSupplier.product_id == product.id)
+        .order_by(ProductSupplier.is_primary.desc(), Supplier.supplier_name)
+    )
+    results = db.execute(stmt).all()
+    
+    return [
+        {
+            "id": ps.id,
+            "supplier_id": ps.supplier_id,
+            "supplier_code": supplier.supplier_code,
+            "supplier_name": supplier.supplier_name,
+            "is_primary": ps.is_primary,
+            "lead_time_days": ps.lead_time_days,
+        }
+        for ps, supplier in results
+    ]
+
+
 @router.post("", response_model=ProductOut, status_code=201)
 def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     """Create a new product."""

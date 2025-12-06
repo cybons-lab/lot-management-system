@@ -31,6 +31,7 @@ from .masters_models import (
     Warehouse,
 )
 from .orders_models import Allocation, Order, OrderLine
+from .product_supplier_models import ProductSupplier
 from .system_models import ClientLog
 from .seed_snapshot_model import SeedSnapshot
 from .system_config_model import SystemConfig
@@ -88,6 +89,7 @@ __all__ = [
     "Role",
     "UserRole",
     "UserSupplierAssignment",
+    "ProductSupplier",
     # Logs
     "OperationLog",
     "MasterChangeLog",

@@ -36,6 +36,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .inbound_models import InboundPlan, InboundPlanLine
     from .inventory_models import Lot
     from .orders_models import Order, OrderLine
+    from .product_supplier_models import ProductSupplier
 
 
 class Warehouse(Base):
@@ -106,6 +107,9 @@ class Supplier(Base):
     )
     user_assignments: Mapped[list[UserSupplierAssignment]] = relationship(
         "UserSupplierAssignment", back_populates="supplier", cascade="all, delete-orphan"
+    )
+    product_suppliers: Mapped[list[ProductSupplier]] = relationship(
+        "ProductSupplier", back_populates="supplier", cascade="all, delete-orphan"
     )
 
 
@@ -244,6 +248,9 @@ class Product(Base):
     )
     uom_conversions: Mapped[list[ProductUomConversion]] = relationship(
         "ProductUomConversion", back_populates="product"
+    )
+    product_suppliers: Mapped[list[ProductSupplier]] = relationship(
+        "ProductSupplier", back_populates="product", cascade="all, delete-orphan"
     )
 
 

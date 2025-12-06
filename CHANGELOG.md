@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python 3.12 → 3.13 へ更新
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
 
+## [2025-12-06]
+
+### Added
+- **[Schema] Product Suppliers Table**: `product_suppliers`テーブルを追加し、製品と仕入先のN:N関係を管理
+  - `is_primary`フラグで主要仕入先を識別
+  - 既存lotsデータから初期データ投入（在庫数量ベースで主要仕入先を決定）
+- **[Backend] Primary Supplier Priority Sort**: 受注一覧で主担当仕入先の製品を優先表示
+  - `OrderService.get_orders`にprimary_supplier_ids引数追加
+  - `orders_router`に`prioritize_primary`クエリパラメータ追加
+  - `assignment_service`に`get_primary_supplier_ids`メソッド追加
+- **[Backend] Product Suppliers API**: `GET /products/{code}/suppliers`エンドポイント追加
+- **[Frontend] Product Supplier Section**: 製品詳細画面に仕入先セクション追加
+
+### Changed
+- `generate_test_data.py`を更新し、`product_suppliers`テーブルのクリアと生成を追加
+- `docs/schema.adoc`を更新し、`product_suppliers`テーブルのドキュメント追加
+
 ## [2025-12-05]
 
 ### Fixed
