@@ -59,6 +59,17 @@ from app.domain.warehouse_and_forecast import (
     WarehouseNotFoundError,
 )
 
+# Allocation service errors (now DomainError subclasses)
+from app.services.allocations.schemas import (
+    AllocationCommitError,
+)
+from app.services.allocations.schemas import (
+    AllocationNotFoundError as ServiceAllocationNotFoundError,
+)
+from app.services.allocations.schemas import (
+    InsufficientStockError as ServiceInsufficientStockError,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +110,10 @@ DOMAIN_EXCEPTION_MAP: dict[type[DomainError], int] = {
     ForecastDomainError: status.HTTP_400_BAD_REQUEST,
     # === Common ===
     InsufficientStockError: status.HTTP_400_BAD_REQUEST,
+    # === Service Layer Errors (now DomainError subclasses) ===
+    AllocationCommitError: status.HTTP_400_BAD_REQUEST,
+    ServiceAllocationNotFoundError: status.HTTP_404_NOT_FOUND,
+    ServiceInsufficientStockError: status.HTTP_409_CONFLICT,
     # === Base (fallback) ===
     DomainError: status.HTTP_400_BAD_REQUEST,
 }
