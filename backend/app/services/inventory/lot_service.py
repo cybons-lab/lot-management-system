@@ -11,12 +11,22 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import cast
 
-from fastapi import HTTPException
 from sqlalchemy import Select, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
-from app.domain.lot import FefoPolicy, LotCandidate, LotNotFoundError, StockValidator
+from app.domain.lot import (
+    FefoPolicy,
+    InsufficientLotStockError,
+    LotCandidate,
+    LotDatabaseError,
+    LotNotFoundError,
+    LotProductNotFoundError,
+    LotSupplierNotFoundError,
+    LotValidationError,
+    LotWarehouseNotFoundError,
+    StockValidator,
+)
 from app.models import (
     Lot,
     Product,
@@ -303,13 +313,11 @@ class LotService:
         """Create a new lot."""
         # Validation
         if not lot_create.product_id:
-            raise HTTPException(status_code=400, detail="product_id は必須です")
+            raise LotValidationError("product_id は必須です")
 
         product = self.db.query(Product).filter(Product.id == lot_create.product_id).first()
         if not product:
-            raise HTTPException(
-                status_code=404, detail=f"製品ID '{lot_create.product_id}' が見つかりません"
-            )
+            raise LotProductNotFoundError(lot_create.product_id)
 
         supplier = (
             self.db.query(Supplier)
@@ -317,10 +325,7 @@ class LotService:
             .first()
         )
         if not supplier:
-            raise HTTPException(
-                status_code=404,
-                detail=f"仕入先コード '{lot_create.supplier_code}' が見つかりません",
-            )
+            raise LotSupplierNotFoundError(lot_create.supplier_code)
 
         warehouse_id: int | None = None
         if lot_create.warehouse_id is not None:
@@ -328,10 +333,7 @@ class LotService:
                 self.db.query(Warehouse).filter(Warehouse.id == lot_create.warehouse_id).first()
             )
             if not warehouse:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"倉庫ID '{lot_create.warehouse_id}' が見つかりません",
-                )
+                raise LotWarehouseNotFoundError(f"ID={lot_create.warehouse_id}")
             warehouse_id = warehouse.id
         elif lot_create.warehouse_code:
             warehouse = (
@@ -340,16 +342,10 @@ class LotService:
                 .first()
             )
             if not warehouse:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"倉庫コード '{lot_create.warehouse_code}' が見つかりません",
-                )
+                raise LotWarehouseNotFoundError(f"コード={lot_create.warehouse_code}")
             warehouse_id = warehouse.id
         else:
-            raise HTTPException(
-                status_code=400,
-                detail="倉庫コードまたは倉庫IDを指定してください",
-            )
+            raise LotValidationError("倉庫コードまたは倉庫IDを指定してください")
 
         lot_payload = lot_create.model_dump()
         lot_payload["warehouse_id"] = warehouse_id
@@ -362,10 +358,10 @@ class LotService:
             self.db.refresh(db_lot)
         except IntegrityError as exc:
             self.db.rollback()
-            raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
+            raise LotDatabaseError("ロット作成時のDB整合性エラー", exc) from exc
         except SQLAlchemyError as exc:
             self.db.rollback()
-            raise HTTPException(status_code=400, detail="DBエラーが発生しました") from exc
+            raise LotDatabaseError("ロット作成時のDBエラー", exc) from exc
 
         # Response Construction
         return self._build_lot_response(db_lot.id)
@@ -374,7 +370,7 @@ class LotService:
         """Update an existing lot."""
         db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
         if not db_lot:
-            raise HTTPException(status_code=404, detail="ロットが見つかりません")
+            raise LotNotFoundError(lot_id)
 
         updates = lot_update.model_dump(exclude_unset=True)
 
@@ -383,9 +379,7 @@ class LotService:
                 self.db.query(Warehouse).filter(Warehouse.id == updates["warehouse_id"]).first()
             )
             if not warehouse:
-                raise HTTPException(
-                    status_code=404, detail=f"倉庫ID '{updates['warehouse_id']}' が見つかりません"
-                )
+                raise LotWarehouseNotFoundError(f"ID={updates['warehouse_id']}")
         elif "warehouse_code" in updates:
             warehouse = (
                 self.db.query(Warehouse)
@@ -393,10 +387,7 @@ class LotService:
                 .first()
             )
             if not warehouse:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"倉庫コード '{updates['warehouse_code']}' が見つかりません",
-                )
+                raise LotWarehouseNotFoundError(f"コード={updates['warehouse_code']}")
             updates["warehouse_id"] = warehouse.id
 
         updates.pop("warehouse_code", None)
@@ -411,10 +402,10 @@ class LotService:
             self.db.refresh(db_lot)
         except IntegrityError as exc:
             self.db.rollback()
-            raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
+            raise LotDatabaseError("ロット更新時のDB整合性エラー", exc) from exc
         except SQLAlchemyError as exc:
             self.db.rollback()
-            raise HTTPException(status_code=400, detail="DBエラーが発生しました") from exc
+            raise LotDatabaseError("ロット更新時のDBエラー", exc) from exc
 
         return self._build_lot_response(db_lot.id)
 
@@ -422,7 +413,7 @@ class LotService:
         """Delete a lot."""
         db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
         if not db_lot:
-            raise HTTPException(status_code=404, detail="ロットが見つかりません")
+            raise LotNotFoundError(lot_id)
 
         self.db.delete(db_lot)
         self.db.commit()
@@ -431,7 +422,7 @@ class LotService:
         """Lock lot quantity."""
         db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
         if not db_lot:
-            raise HTTPException(status_code=404, detail="ロットが見つかりません")
+            raise LotNotFoundError(lot_id)
 
         quantity_to_lock = lock_data.quantity
         current_qty = db_lot.current_quantity or Decimal(0)
@@ -443,13 +434,10 @@ class LotService:
             quantity_to_lock = available_qty
 
         if quantity_to_lock < 0:
-            raise HTTPException(status_code=400, detail="ロック数量は0以上である必要があります")
+            raise LotValidationError("ロック数量は0以上である必要があります")
 
         if quantity_to_lock > available_qty:
-            raise HTTPException(
-                status_code=400,
-                detail=f"ロック数量({quantity_to_lock})が有効在庫({available_qty})を超えています",
-            )
+            raise InsufficientLotStockError(lot_id, float(quantity_to_lock), float(available_qty))
 
         db_lot.locked_quantity = locked_qty + quantity_to_lock
         if lock_data.reason:
@@ -462,7 +450,7 @@ class LotService:
             self.db.refresh(db_lot)
         except IntegrityError as exc:
             self.db.rollback()
-            raise HTTPException(status_code=400, detail="DB整合性エラーが発生しました") from exc
+            raise LotDatabaseError("ロットロック時のDB整合性エラー", exc) from exc
 
         # Return view-based response
         lot_view = self.db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
@@ -475,7 +463,7 @@ class LotService:
         """Unlock lot quantity."""
         db_lot = self.db.query(Lot).filter(Lot.id == lot_id).first()
         if not db_lot:
-            raise HTTPException(status_code=404, detail="ロットが見つかりません")
+            raise LotNotFoundError(lot_id)
 
         quantity_to_unlock = unlock_data.quantity if unlock_data else None
         locked_qty = db_lot.locked_quantity or Decimal(0)
@@ -488,11 +476,10 @@ class LotService:
                 db_lot.status = "active"
         else:
             if quantity_to_unlock < 0:
-                raise HTTPException(status_code=400, detail="解除数量は0以上である必要があります")
+                raise LotValidationError("解除数量は0以上である必要があります")
             if quantity_to_unlock > locked_qty:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"解除数量({quantity_to_unlock})がロック済み数量({locked_qty})を超えています",
+                raise LotValidationError(
+                    f"解除数量({quantity_to_unlock})がロック済み数量({locked_qty})を超えています"
                 )
             db_lot.locked_quantity = locked_qty - quantity_to_unlock
 
@@ -510,7 +497,7 @@ class LotService:
         if movement.lot_id is not None:
             lot = self.db.query(Lot).filter(Lot.id == movement.lot_id).first()
             if not lot:
-                raise HTTPException(status_code=404, detail="ロットが見つかりません")
+                raise LotNotFoundError(movement.lot_id)
 
         # StockHistory does not store product/warehouse directly, but we validate lot link
 
@@ -522,8 +509,7 @@ class LotService:
             lot_id=movement.lot_id,
             transaction_type=movement.transaction_type,
             quantity_change=movement.quantity_change,
-            quantity_after=movement.quantity_after,  # We will overwrite this after calc if needed, or trust input?
-            # Better to calculate it to ensure consistency.
+            quantity_after=movement.quantity_after,  # We will overwrite this after calc if needed
             reference_type=movement.reference_type,
             reference_id=movement.reference_id,
         )
@@ -538,22 +524,19 @@ class LotService:
 
             if not lot:
                 self.db.rollback()
-                raise HTTPException(status_code=404, detail="ロットが見つかりません")
+                raise LotNotFoundError(movement.lot_id)
 
             # Calculate new quantity based on change
             # movement.quantity_change should be signed (+ or -)
-            projected_quantity = float(lot.current_quantity or 0.0) + float(
-                movement.quantity_change
-            )
+            current_qty = float(lot.current_quantity or 0.0)
+            projected_quantity = current_qty + float(movement.quantity_change)
 
             if projected_quantity < 0:
                 self.db.rollback()
-                raise HTTPException(
-                    status_code=400,
-                    detail=(
-                        f"在庫不足: 現在在庫 {lot.current_quantity or 0}, "
-                        f"変動 {movement.quantity_change}"
-                    ),
+                raise InsufficientLotStockError(
+                    movement.lot_id,
+                    abs(float(movement.quantity_change)),
+                    current_qty,
                 )
 
             lot.current_quantity = Decimal(str(projected_quantity))
@@ -588,7 +571,7 @@ class LotService:
             .first()
         )
         if not db_lot:
-            raise HTTPException(status_code=404, detail="Lot not found")
+            raise LotNotFoundError(lot_id)
 
         response = LotResponse.model_validate(db_lot)
 

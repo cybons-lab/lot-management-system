@@ -80,5 +80,5 @@ def get_allocation_candidates(
         return CandidateLotsResponse(items=items, total=len(items))
 
     except Exception as e:
-        logger.error(f"候補ロット取得エラー (order_line_id={order_line_id}): {e}")
-        raise HTTPException(status_code=500, detail=f"候補ロット取得エラー: {str(e)}")
+        logger.exception(f"候補ロット取得エラー (order_line_id={order_line_id}): {e}")
+        raise  # Let global handler format the response

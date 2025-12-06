@@ -19,7 +19,7 @@ export function useCreateSupplier() {
       queryClient.invalidateQueries({ queryKey: suppliersQueryKey });
       toast.success("仕入先を登録しました");
     },
-    onError: () => toast.error("仕入先の登録に失敗しました"),
+    // onError is handled by global MutationCache
   });
 }
 
@@ -32,7 +32,7 @@ export function useUpdateSupplier() {
       queryClient.invalidateQueries({ queryKey: suppliersQueryKey });
       toast.success("仕入先を更新しました");
     },
-    onError: () => toast.error("仕入先の更新に失敗しました"),
+    // onError is handled by global MutationCache
   });
 }
 
@@ -44,7 +44,7 @@ export function useDeleteSupplier() {
       queryClient.invalidateQueries({ queryKey: suppliersQueryKey });
       toast.success("仕入先を削除しました");
     },
-    onError: () => toast.error("仕入先の削除に失敗しました"),
+    // onError is handled by global MutationCache
   });
 }
 
@@ -63,6 +63,6 @@ export function useBulkUpsertSuppliers() {
         toast.error("すべての処理が失敗しました");
       }
     },
-    onError: () => toast.error("一括処理に失敗しました"),
+    // onError is handled by global MutationCache
   });
 }

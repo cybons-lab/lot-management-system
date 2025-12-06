@@ -17,6 +17,7 @@ import * as styles from "./styles";
 import { Button, Input } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function ProductsListPage() {
@@ -27,8 +28,11 @@ export function ProductsListPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const { useList, useCreate } = useProducts();
-  const { data: products = [], isLoading } = useList();
+  const { data: products = [], isLoading, isError, error, refetch } = useList();
   const { mutate: createProduct, isPending: isCreating } = useCreate();
+
+  // エラー時は簡易表示
+  // Note: hooksの呼び出し順序を維持するため、条件分岐は後で行う
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
@@ -66,6 +70,18 @@ export function ProductsListPage() {
     },
     [createProduct],
   );
+
+  if (isError) {
+    return (
+      <div className={styles.root}>
+        <PageHeader
+          title="商品マスタ"
+          subtitle="商品の作成・編集・削除、一括インポート/エクスポート"
+        />
+        <QueryErrorFallback error={error} resetError={refetch} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.root}>

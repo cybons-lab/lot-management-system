@@ -17,6 +17,7 @@ import * as styles from "./styles";
 import { Button, Input } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function WarehousesListPage() {
@@ -27,7 +28,7 @@ export function WarehousesListPage() {
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const { useList, useCreate } = useWarehouses();
-  const { data: warehouses = [], isLoading } = useList();
+  const { data: warehouses = [], isLoading, isError, error, refetch } = useList();
   const { mutate: createWarehouse, isPending: isCreating } = useCreate();
 
   const filteredWarehouses = useMemo(() => {
@@ -65,6 +66,18 @@ export function WarehousesListPage() {
     },
     [createWarehouse],
   );
+
+  if (isError) {
+    return (
+      <div className={styles.root}>
+        <PageHeader
+          title="倉庫マスタ"
+          subtitle="倉庫の作成・編集・削除、一括インポート/エクスポート"
+        />
+        <QueryErrorFallback error={error} resetError={refetch} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.root}>

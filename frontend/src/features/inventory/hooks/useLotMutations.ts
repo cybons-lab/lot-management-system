@@ -19,7 +19,7 @@ export function useLotMutations(allLots: LotUI[]) {
       toast.success("ロットを作成しました");
       createDialog.close();
     },
-    onError: (error) => toast.error(`作成に失敗しました: ${error.message}`),
+    // onError is handled by global MutationCache
   });
 
   const updateLotMutation = useUpdateLot(selectedLot?.id ?? 0, {
@@ -28,7 +28,7 @@ export function useLotMutations(allLots: LotUI[]) {
       editDialog.close();
       setSelectedLot(null);
     },
-    onError: (error) => toast.error(`更新に失敗しました: ${error.message}`),
+    // onError is handled by global MutationCache
   });
 
   const lockLotMutation = useLockLot({
@@ -37,14 +37,14 @@ export function useLotMutations(allLots: LotUI[]) {
       lockDialog.close();
       setSelectedLot(null);
     },
-    onError: (error) => toast.error(`ロックに失敗しました: ${error.message}`),
+    // onError is handled by global MutationCache
   });
 
   const unlockLotMutation = useUnlockLot({
     onSuccess: () => {
       toast.success("ロットのロックを解除しました");
     },
-    onError: (error) => toast.error(`ロック解除に失敗しました: ${error.message}`),
+    // onError is handled by global MutationCache
   });
 
   const handleEdit = useCallback(

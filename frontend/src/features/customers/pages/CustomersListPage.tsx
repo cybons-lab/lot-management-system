@@ -19,6 +19,7 @@ import * as styles from "./styles";
 import { Button, Input } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 // ============================================
@@ -36,7 +37,7 @@ export function CustomersListPage() {
 
   // Data
   const { useList, useCreate } = useCustomers();
-  const { data: customers = [], isLoading } = useList();
+  const { data: customers = [], isLoading, isError, error, refetch } = useList();
   const { mutate: createCustomer, isPending: isCreating } = useCreate();
 
   // フィルタリング
@@ -94,6 +95,18 @@ export function CustomersListPage() {
     }),
     [customers.length, filteredCustomers.length],
   );
+
+  if (isError) {
+    return (
+      <div className={styles.root}>
+        <PageHeader
+          title="得意先マスタ"
+          subtitle="得意先の作成・編集・削除、一括インポート/エクスポート"
+        />
+        <QueryErrorFallback error={error} resetError={refetch} />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.root}>
