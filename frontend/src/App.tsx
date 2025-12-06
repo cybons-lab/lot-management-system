@@ -2,11 +2,10 @@ import { useEffect } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
 
-import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
 import { AdminGuard } from "@/components/auth/AdminGuard";
+import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { ROUTES, LEGACY_ROUTES } from "@/constants/routes";
-import { AuthProvider } from "@/features/auth/AuthContext";
 // Pages - all imported from features (Phase A cleanup)
 import { AdjustmentCreatePage } from "@/features/adjustments/pages/AdjustmentCreatePage";
 import { AdjustmentsListPage } from "@/features/adjustments/pages/AdjustmentsListPage";
@@ -14,10 +13,12 @@ import { AdminPage } from "@/features/admin/pages/AdminPage";
 import { MasterChangeLogsPage } from "@/features/admin/pages/MasterChangeLogsPage";
 import { SeedSnapshotsPage } from "@/features/admin/pages/SeedSnapshotsPage";
 import { PrimaryAssignmentsPage } from "@/features/assignments/pages/PrimaryAssignmentsPage";
+import { AuthProvider } from "@/features/auth/AuthContext";
 // Allocation pages removed - integrated into OrderDetailPage
 import { LoginPage } from "@/features/auth/pages/LoginPage";
 import { BatchJobsPage } from "@/features/batch-jobs/pages/BatchJobsPage";
 import { BusinessRulesPage } from "@/features/business-rules/pages/BusinessRulesPage";
+import { ClientLogsPage } from "@/features/client-logs";
 import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
 import { CustomersListPage, CustomerDetailPage } from "@/features/customers";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
@@ -240,6 +241,14 @@ function App() {
                     element={
                       <AdminGuard>
                         <SeedSnapshotsPage />
+                      </AdminGuard>
+                    }
+                  />
+                  <Route
+                    path="/admin/client-logs"
+                    element={
+                      <AdminGuard>
+                        <ClientLogsPage />
                       </AdminGuard>
                     }
                   />

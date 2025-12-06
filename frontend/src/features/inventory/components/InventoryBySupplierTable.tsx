@@ -1,5 +1,8 @@
+import { Crown } from "lucide-react";
+
 import type { InventoryBySupplierResponse } from "../types/InventoryAggregationTypes";
 
+import { Badge } from "@/components/ui";
 import {
   Table,
   TableBody,
@@ -9,8 +12,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { fmt } from "@/shared/utils/number";
-import { Badge } from "@/components/ui";
-import { Crown } from "lucide-react";
 
 interface InventoryBySupplierTableProps {
   data: InventoryBySupplierResponse[];

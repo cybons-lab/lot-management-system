@@ -19,9 +19,7 @@ export async function getUserSuppliers(userId: number): Promise<UserSupplierAssi
 export async function getSupplierUsers(
   supplierId: number,
 ): Promise<UserSupplierAssignmentResponse[]> {
-  return fetchApi.get<UserSupplierAssignmentResponse[]>(
-    `assignments/supplier/${supplierId}/users`,
-  );
+  return fetchApi.get<UserSupplierAssignmentResponse[]>(`assignments/supplier/${supplierId}/users`);
 }
 
 /**

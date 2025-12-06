@@ -1,37 +1,61 @@
-import api from "@/shared/api/http-client";
+/**
+ * Logger ユーティリティ
+ *
+ * フロントエンドのログをサーバーに送信するユーティリティ。
+ * サーバーに送信できない場合はコンソールにフォールバック。
+ */
+
+import { http } from "@/shared/api/http-client";
+
+export type LogLevel = "info" | "warning" | "error";
+
+interface LogPayload {
+  level: LogLevel;
+  message: string;
+  user_agent: string;
+}
 
 export class Logger {
-  static async info(message: string, userAgent?: string) {
-    this.send("info", message, userAgent);
+  /**
+   * INFOレベルのログを送信
+   */
+  static info(message: string): void {
+    this.send("info", message);
   }
 
-  static async error(message: string, userAgent?: string) {
-    this.send("error", message, userAgent);
+  /**
+   * WARNINGレベルのログを送信
+   */
+  static warning(message: string): void {
+    this.send("warning", message);
   }
 
-  private static async send(level: string, message: string, userAgent?: string) {
-    // Simple console fallback
-    console.log(`[Logger][${level}]`, message);
+  /**
+   * ERRORレベルのログを送信
+   */
+  static error(message: string): void {
+    this.send("error", message);
+  }
 
-    try {
-      // We use a relative import or absolute depending on project structure
-      // Assuming api client is available
-      const token = localStorage.getItem("token");
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
+  /**
+   * ログをサーバーに送信
+   */
+  private static send(level: LogLevel, message: string): void {
+    // コンソールにも出力
+    const consoleMethod =
+      level === "error" ? console.error : level === "warning" ? console.warn : console.log;
+    consoleMethod(`[Logger][${level}]`, message);
 
-      await api.post("system/logs/client", {
-        json: {
-          level,
-          message,
-          user_agent: userAgent || navigator.userAgent,
-        },
-        headers,
-      });
-    } catch (e) {
-      console.error("Failed to send log", e);
-    }
+    // サーバーに送信（非同期、失敗しても続行）
+    const payload: LogPayload = {
+      level,
+      message,
+      user_agent: navigator.userAgent,
+    };
+
+    http.post("system/logs/client", payload).catch((e) => {
+      // サーバー送信失敗時はコンソールに出力するのみ（無限ループ防止）
+      console.warn("Failed to send log to server:", e);
+    });
   }
 }

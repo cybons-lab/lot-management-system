@@ -5,9 +5,9 @@
  * ユーザーと仕入先を選択して担当を作成
  */
 
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Plus } from "lucide-react";
 
 import { useAssignmentMutations } from "../hooks/useAssignments";
 
@@ -89,9 +89,7 @@ export function AddAssignmentDialog({ trigger, onSuccess }: AddAssignmentDialogP
       <DialogContent>
         <DialogHeader>
           <DialogTitle>担当割り当ての追加</DialogTitle>
-          <DialogDescription>
-            ユーザーと仕入先を選択して担当割り当てを作成します
-          </DialogDescription>
+          <DialogDescription>ユーザーと仕入先を選択して担当割り当てを作成します</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

@@ -1,8 +1,8 @@
 /**
  * ProductSupplierSection - 製品に紐づく仕入先一覧を表示
  */
-import { Store, Star } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Store, Star } from "lucide-react";
 
 import { getProductSuppliers, type ProductSupplier } from "../api";
 

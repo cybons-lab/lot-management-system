@@ -128,7 +128,6 @@ http.delete(`/assignments/${id}`);
 
 `@/services/http` (axios) は段階的に移行中です。新しいコードでは使用しないでください。
 
-
 ## React Query
 
 ### キャッシュキー

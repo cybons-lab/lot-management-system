@@ -6,8 +6,8 @@
  * - 担当者の削除
  */
 
-import { useState } from "react";
 import { Crown, Trash2, User } from "lucide-react";
+import { useState } from "react";
 
 import { useAssignmentMutations } from "../hooks/useAssignments";
 import type { SupplierGroup } from "../pages/PrimaryAssignmentsPage";
@@ -74,9 +74,7 @@ export function SupplierAssignmentEditDialog({
             <DialogTitle>
               {group.supplier_name} ({group.supplier_code}) の担当者編集
             </DialogTitle>
-            <DialogDescription>
-              主担当者の変更や担当者の削除を行えます
-            </DialogDescription>
+            <DialogDescription>主担当者の変更や担当者の削除を行えます</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-4">

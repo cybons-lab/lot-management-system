@@ -1,5 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
@@ -150,8 +151,8 @@ export function AdminPage() {
             <Button variant="outline" className="w-full justify-start">
               ユーザー管理
             </Button>
-            <Button variant="outline" className="w-full justify-start">
-              システムログ表示
+            <Button variant="outline" className="w-full justify-start" asChild>
+              <Link to="/admin/client-logs">クライアントログ表示</Link>
             </Button>
           </div>
         </div>

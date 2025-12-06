@@ -9,8 +9,11 @@
  * - 受注時の主担当者確認
  */
 
-import { useEffect, useState } from "react";
 import { UserCheck, Crown, User, Edit } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { AddAssignmentDialog } from "../components/AddAssignmentDialog";
+import { SupplierAssignmentEditDialog } from "../components/SupplierAssignmentEditDialog";
 
 import {
   Button,
@@ -26,10 +29,8 @@ import {
   TableRow,
   Badge,
 } from "@/components/ui";
-import { http } from "@/shared/api/http-client";
 import { useAuth } from "@/features/auth/AuthContext";
-import { AddAssignmentDialog } from "../components/AddAssignmentDialog";
-import { SupplierAssignmentEditDialog } from "../components/SupplierAssignmentEditDialog";
+import { http } from "@/shared/api/http-client";
 
 interface SupplierAssignment {
   id: number;

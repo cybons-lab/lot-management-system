@@ -54,15 +54,13 @@ class ErrorLogger {
       logMethod(`[${level.toUpperCase()}] ${source}:`, error, context);
     }
 
-    // Optional: Send to backend (disabled by default)
-    // To enable backend logging, uncomment the following code:
-    // if (level === "error") {
-    //   fetch("/api/frontend-errors", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(entry),
-    //   }).catch(err => console.warn("Failed to send error to backend:", err));
-    // }
+    // Send to backend for error level
+    if (level === "error") {
+      import("@/shared/utils/logger").then(({ Logger }) => {
+        const contextStr = context ? ` | Context: ${JSON.stringify(context)}` : "";
+        Logger.error(`[${source}] ${entry.message}${contextStr}`);
+      });
+    }
   }
 
   /**
