@@ -7,7 +7,7 @@ I/O整形のみを責務とし、例外変換はグローバルハンドラに�
 import logging
 from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -145,11 +145,14 @@ def save_manual_allocations(
     except ValueError as e:
         logger.error(f"Validation error during allocation save: {e}")
         db.rollback()
-        raise HTTPException(status_code=400, detail=str(e))
+        # Re-raise as DomainError for global handler
+        from app.domain.errors import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e
     except Exception as e:
-        logger.error(f"System error during allocation save: {e}")
+        logger.exception(f"System error during allocation save: {e}")
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to save allocations: {str(e)}")
+        raise  # Let global handler format the response
 
 
 @router.post("/refresh-all-statuses", status_code=200)
@@ -209,6 +212,6 @@ def refresh_all_order_line_statuses(db: Session = Depends(get_db)):
         }
 
     except Exception as e:
-        logger.error(f"Failed to refresh statuses: {e}")
+        logger.exception(f"Failed to refresh statuses: {e}")
         db.rollback()
-        raise HTTPException(status_code=500, detail=f"Failed to refresh statuses: {str(e)}")
+        raise  # Let global handler format the response

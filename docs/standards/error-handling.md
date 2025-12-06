@@ -39,7 +39,7 @@ Exception
 ### Best Practices
 
 ```python
-# ✅ DO: Catch DB errors, raise domain errors
+# ✅ DO: Catch DB errors, raise domain errors (Service Layer)
 from app.domain.errors import DuplicateOrderError
 from sqlalchemy.exc import IntegrityError
 
@@ -58,6 +58,49 @@ try:
 except Exception:
     pass  # Silent failure
 ```
+
+### Router Layer Guidelines
+
+**推奨パターン: グローバルハンドラに委譲**
+
+```python
+# ✅ 推奨: シンプルなエンドポイント - try-catch不要
+@router.get("/{order_id}", response_model=OrderResponse)
+def get_order(order_id: int, db: Session = Depends(get_db)):
+    service = OrderService(db)
+    return service.get_order_detail(order_id)  # DomainError → Global Handler
+
+# ✅ 許容: トランザクション制御が必要な場合のみ明示的try-catch
+@router.post("/{order_line_id}/allocations", status_code=200)
+def save_manual_allocations(..., db: Session = Depends(get_db)):
+    try:
+        # 複数のDB操作
+        ...
+        db.commit()
+        return result
+    except DomainError:
+        db.rollback()
+        raise  # Re-raise for global handler
+    except Exception as e:
+        db.rollback()
+        logging.exception("Unexpected error")
+        raise  # Re-raise for generic handler
+
+# ❌ 非推奨: HTTPException を直接 raise（サービス層で）
+def create_lot(self, lot_create: LotCreate) -> LotResponse:
+    if not product:
+        raise HTTPException(status_code=404, detail="製品が見つかりません")  # NG
+    # 代わりに:
+    if not product:
+        raise ProductNotFoundError(lot_create.product_id)  # OK
+```
+
+**例外の変換ルール:**
+| Service層の例外 | 変換先 |
+|----------------|--------|
+| `ValueError` | `DomainError` subclass |
+| `IntegrityError` | `DuplicateXxxError` |
+| 一般 `Exception` | re-raise（グローバルハンドラへ）|
 
 ### Problem+JSON Format (RFC 7807)
 

@@ -86,9 +86,11 @@ def drag_assign(request: DragAssignRequest, db: Session = Depends(get_db)):
             remaining_lot_qty=remaining,
         )
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except AllocationCommitError as e:
-        raise HTTPException(status_code=409, detail=str(e))
+        from app.domain.errors import OrderValidationError
+
+        raise OrderValidationError(str(e)) from e
+    except AllocationCommitError:
+        raise  # Let global handler handle it
 
 
 @router.delete("/{allocation_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -151,7 +153,9 @@ def preview_allocations(request: FefoPreviewRequest, db: Session = Depends(get_d
         result = preview_fefo_allocation(db, request.order_id)
         return _to_preview_response(result)
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        from app.domain.order import OrderNotFoundError
+
+        raise OrderNotFoundError(str(e)) from e
 
 
 @router.post("/commit", response_model=AllocationCommitResponse)
@@ -177,11 +181,15 @@ def commit_allocation(request: AllocationCommitRequest, db: Session = Depends(ge
         # 既存のFEFO確定サービスを再利用
         result = commit_fefo_allocation(db, request.order_id)
     except ValueError as exc:
+        from app.domain.errors import OrderValidationError
+        from app.domain.order import OrderNotFoundError
+
         message = str(exc)
-        status_code = 404 if "not found" in message.lower() else 400
-        raise HTTPException(status_code=status_code, detail=message)
-    except AllocationCommitError as exc:
-        raise HTTPException(status_code=409, detail=str(exc))
+        if "not found" in message.lower():
+            raise OrderNotFoundError(message) from exc
+        raise OrderValidationError(message) from exc
+    except AllocationCommitError:
+        raise  # Let global handler handle it
 
     # プレビュー結果をレスポンススキーマに変換
     preview_response = _to_preview_response(result.preview)
@@ -299,7 +307,9 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
         )
 
     except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        from app.domain.order import OrderNotFoundError
+
+        raise OrderNotFoundError(str(e)) from e
 
 
 @router.post("/bulk-auto-allocate", response_model=BulkAutoAllocateResponse)
