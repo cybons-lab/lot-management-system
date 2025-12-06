@@ -30,9 +30,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const storedToken = localStorage.getItem('token');
             if (storedToken) {
                 try {
-                    const response = await http.get<User>('auth/me', {
-                        headers: { Authorization: `Bearer ${storedToken}` }
-                    });
+                    // http-client's beforeRequest hook automatically adds Authorization header
+                    const response = await http.get<User>('auth/me');
                     setToken(storedToken);
                     setUser(response);
                 } catch (error) {
