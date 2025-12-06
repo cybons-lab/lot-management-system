@@ -82,7 +82,7 @@ export function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label htmlFor="user-select" className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 ユーザー選択
               </label>
               <Select value={selectedUserId} onValueChange={setSelectedUserId} disabled={isLoading}>

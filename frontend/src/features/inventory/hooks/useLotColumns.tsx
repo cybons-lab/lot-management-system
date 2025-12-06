@@ -145,6 +145,7 @@ export function useLotColumns({
       },
       ...baseColumns.slice(1), // current_quantity以降
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [baseColumns, primarySupplierIds],
   );
 

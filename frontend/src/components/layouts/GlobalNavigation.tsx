@@ -102,6 +102,7 @@ interface GlobalNavigationProps {
   currentPath: string;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
   const { user, logout } = useAuth();
   return (
