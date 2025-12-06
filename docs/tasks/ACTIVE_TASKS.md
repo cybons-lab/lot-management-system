@@ -11,35 +11,33 @@
 
 | 優先度 | 件数 | 状態 |
 |--------|------|------|
-| P1（高） | 2 | ブロッカーあり |
-| P2（中） | 2 | 実施可能 |
+| P1（高） | 1 | 認証依存 |
+| P2（中） | 3 | 実施可能 |
 | P3（低） | 3 | 将来対応 |
 
 ---
 
 ## P1 - 高優先度
 
-### 認証機能（ユーザー識別用）
-
-**ステータス:** 保留（アクセス制限不要のため優先度降格）
-
-社内システムのためログイン必須ではないが、「誰が操作したか」の記録があると便利。
-
-**サブタスク:**
-- [ ] ユーザー識別方法の決定
-- [ ] Auth context 実装
-- [ ] 操作ログへのユーザー関連付け
-
 ### 担当者ロック表示（排他制御）
 
 **ステータス:** 未実装  
-**ブロッカー:** 認証機能の実装
+**ブロッカー:** 認証機能との連携
 
 別ユーザーが編集中の場合、「🔒 田中太郎さんが編集中」と表示。
 
 ---
 
 ## P2 - 中優先度
+
+### 操作ログへのユーザー関連付け
+
+**ステータス:** 一部実装済み
+
+認証機能は実装完了（AuthService, AuthContext, AdminGuard）。
+
+残タスク:
+- [ ] 各操作（引当、入荷確定など）で `current_user` を使ってログ記録
 
 ### SAP連携の本番化
 
@@ -91,6 +89,20 @@ APScheduler または Celery Beat の導入検討。
   - `backend/app/services/allocations/utils.py`
   - `backend/app/services/inventory/inbound_service.py`
   - `backend/app/api/routes/inventory/lots_router.py`
+
+---
+
+## ✅ 完了済み（CHANGELOG.mdへ移動済み）
+
+### 認証・権限管理（2025-12）
+
+- [x] **簡易認証とユーザー切り替え**
+    - [x] Login UI / Debug User Switcher
+    - [x] Auth Context (Frontend) & `current_user` logic (Backend)
+    - [x] Session Persistence & Error Handling
+- [x] **権限による表示制御**
+    - [x] Role-based Menu Display (Admin vs User)
+    - [x] AdminGuard for protected routes
 
 ---
 
