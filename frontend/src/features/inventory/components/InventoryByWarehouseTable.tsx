@@ -35,8 +35,16 @@ export function InventoryByWarehouseTable({ data, onRowClick }: InventoryByWareh
               className={onRowClick ? "hover:bg-muted/50 cursor-pointer" : ""}
               onClick={onRowClick ? () => onRowClick(row.warehouse_code) : undefined}
             >
-              <TableCell className="font-medium">{row.warehouse_code}</TableCell>
-              <TableCell>{row.warehouse_name}</TableCell>
+              <TableCell className="font-medium">
+                <div className="max-w-[120px] truncate" title={row.warehouse_code}>
+                  {row.warehouse_code}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="max-w-[200px] truncate" title={row.warehouse_name}>
+                  {row.warehouse_name}
+                </div>
+              </TableCell>
               <TableCell className="text-right font-mono">{fmt(row.total_quantity)}</TableCell>
               <TableCell className="text-right font-mono">{row.product_count}</TableCell>
               <TableCell className="text-right font-mono">{row.lot_count}</TableCell>

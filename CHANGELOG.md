@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Python 3.12 → 3.13 へ更新
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
+- タスク管理ドキュメントを統一：`remaining_issues.adoc`を削除し、`ACTIVE_TASKS.md`に一元化
 
 ## [2025-12-06]
 
@@ -22,7 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `orders_router`に`prioritize_primary`クエリパラメータ追加
   - `assignment_service`に`get_primary_supplier_ids`メソッド追加
 - **[Backend] Product Suppliers API**: `GET /products/{code}/suppliers`エンドポイント追加
-- **[Frontend] Product Supplier Section**: 製品詳細画面に仕入先セクション追加
+- **[Frontend] Inventory Allocation Split**: 在庫一覧に「仮引当 (Soft)」と「確定引当 (Hard)」を分割表示
+- **[Backend] Allocation Aggregation**: `InventoryService`の集計ロジックを更新し、引当種別ごとの数量を計算
+- **[Frontend] UI Layout**: 各種テーブル(製品別、仕入先別、倉庫別、確定明細)での長い文字列の省略表示とツールチップ対応
+- **[Code Quality] Backend Services**: `WarehouseService`, `CustomerService`の継承型定義を修正し、無理な型無視(`type: ignore`)を解消
+- **[Code Quality] Frontend Types**: `ForecastSummaryCards`, `ForecastGroupList`での`any`型使用を廃止し、正しい型定義(`ForecastListResponse`)を適用
+- **[Code Quality] React Hooks**: `useLotColumns`での`exhaustive-deps`警告を`useCallback`で正しく解消
+
+### Fixed
+- **[Backend] Mypy Errors**: 17件あったMypyエラーを解決 (レガシーコード削除、Import整理、ロジック修正)
 
 ### Changed
 - `generate_test_data.py`を更新し、`product_suppliers`テーブルのクリアと生成を追加

@@ -55,7 +55,8 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
               <th className={styles.table.th}>倉庫</th>
               <th className={styles.table.thRight}>ロット数</th>
               <th className={styles.table.thRight}>総在庫数</th>
-              <th className={styles.table.thRight}>引当済</th>
+              <th className={styles.table.thRight}>仮引当</th>
+              <th className={styles.table.thRight}>確定引当</th>
               <th className={styles.table.thRight}>利用可能</th>
               <th className={styles.table.th}>最終更新</th>
               <th className={styles.table.thRight}>アクション</th>

@@ -2,80 +2,123 @@
 
 **最終更新:** 2025-12-06
 
-> このドキュメントは**現在進行中のタスクのみ**を管理します。
+> このドキュメントは**現在進行中のタスクと残課題**を一元管理します。
 > 完了したタスクは `CHANGELOG.md` に記録され、このファイルから削除されます。
 
 ---
 
 ## 📊 サマリー
 
-| 優先度 | 件数 | ステータス |
-|--------|------|-----------|
-| P1（高） | 0 | 完了 |
-| P2（中） | 3 | 実施可能 |
-| P3（低） | 3 | 将来対応 |
+| 優先度 | 件数 | 状態 |
+|--------|------|------|
+| P1（高） | 1 | 認証依存 |
+| P2（中） | 4 | 明日対応予定 |
+| P3（低） | 2 | 将来対応 |
 
 ---
 
 ## P1 - 高優先度
 
-### Backend コード品質
+### 担当者ロック表示（排他制御）
 
-- (なし)
+**ステータス:** 未実装  
+**ブロッカー:** 認証機能との連携
+
+別ユーザーが編集中の場合、「🔒 田中太郎さんが編集中」と表示。
 
 ---
 
 ## P2 - 中優先度
 
-### 認証・権限管理（テスト・監査対応）
+### 操作ログへのユーザー関連付け
 
-- [x] **簡易認証とユーザー切り替え**
-    - [x] Login UI / Debug User Switcher
-    - [x] Auth Context (Frontend) & `current_user` logic (Backend)
-    - [x] Session Persistence & Error Handling (Fixed)
-- [x] **権限による表示制御**
-    - [x] Role-based Menu Display (Admin vs User)
-    - [x] AdminGuard for protected routes
+**ステータス:** 一部実装済み
 
-### 主担当機能（完了）
+認証機能は実装完了（AuthService, AuthContext, AdminGuard）。
 
-- [x] **データ基盤・基本表示**
-    - [x] `product_suppliers` テーブル・リレーション
-    - [x] 製品詳細画面での仕入先表示
-    - [x] バックエンドの優先ソートロジック
-- [x] **一覧画面での主担当表示**
-    - [x] 入荷予定一覧へのバッジ表示
-    - [x] ロット一覧への主担当表示適用（APIのみ）
-    - [x] 在庫一覧（仕入先別）へのバッジ表示
-- [x] **主担当設定ページの機能完成**
-    - [x] 担当追加ダイアログの実装
-    - [x] 編集機能（主担当変更、担当削除）の実装
+残タスク:
+- [ ] 各操作（引当、入荷確定など）で `current_user` を使ってログ記録
 
-### システム基盤・デバッグ
+関連TODO:
+- `AdjustmentForm.tsx:26` - `adjusted_by: 1` → auth contextから取得
+- `rpa_router.py:36` - ログインユーザーを使用
 
-- [x] **ログ機能統合（完了）**
-    - [x] `Logger`クラス改善（ky形式、warningレベル追加）
-    - [x] `error-logger`バックエンド送信有効化
-    - [x] クライアントログ閲覧画面（/admin/client-logs）
+### テストデータ生成の改善
 
-### UI/UX改善
+**ステータス:** 一部完了
 
-- [x] **SAP受注登録ボタンの配置見直し**
-    - [x] 右下に移動して他ボタンとの重なりを解消
+対応済み:
+- ✅ 在庫量: フォーキャストの70-90%（制約発生）
+- ✅ ロット: 60% 1ロット、30% 2ロット、10% 3ロット
+- ✅ フォーキャスト種別: 50% 日別、30% 旬別、20% 月別
+- ✅ 受注: 90%がフォーキャスト一致、10%のみ変動
+
+残タスク:
+- [ ] 全製品に最低1ロット確保
+- [ ] エッジケーステスト用データパターン追加
+
+### コード品質課題
+
+**ESLint (43件):**
+- max-lines-per-function 違反: 約20件
+- complexity 違反: 約8件
+- @typescript-eslint/no-explicit-any: 約6件
+
+**Mypy (約81箇所):**
+要注意ファイル:
+- `backend/app/services/allocations/utils.py`
+- `backend/app/services/inventory/inbound_service.py`
+- `backend/app/api/routes/inventory/lots_router.py`
+
+### 定期バッチジョブのスケジューラ設定
+
+**ステータス:** 手動実行のみ
+
+APScheduler または Celery Beat の導入検討。
 
 ---
 
 ## P3 - 低優先度（将来対応）
 
-- [ ] **SAP API統合の本番化** - 現在モック実装
-- [ ] **定期バッチジョブのスケジューラ設定** - 手動実行のみ
-- [ ] **担当者ロック表示（排他制御）** - 認証機能依存
-- [x] **エラーハンドリング改善** - try-catchの適切な範囲とログ化の見直し
+### SAP連携の本番化
+
+**ステータス:** モック実装済み
+
+- SAP在庫チェック: ✅ モック実装済み
+- SAP受注登録: ✅ モック実装済み
+- 本番SAP API接続: ❌ 未実装
+
+関連TODO: `sap_service.py:60` - Replace with actual SAP API integration
+
+### Bulk Import API (マスタ一括登録)
+
+**ステータス:** UI実装済み、Backend未実装
+
+関連TODO:
+- `CustomerBulkImportDialog.tsx` - Backend import未実装
+- `ProductBulkImportDialog.tsx` - Backend import未実装
+- `**/bulk-operation.ts` - bulk-upsert API未実装
+
+---
+
+## ✅ 完了済み（CHANGELOG.mdへ移動済み）
+
+### 認証・権限管理（2025-12）
+
+- [x] Login UI / Debug User Switcher
+- [x] Auth Context (Frontend) & `current_user` logic (Backend)
+- [x] Role-based Menu Display, AdminGuard
+
+### Hard Allocation（2025-12）
+
+- [x] `confirm_hard_allocation` 実装
+- [x] `confirm_hard_allocations_batch` バッチAPI
+- [x] Soft/Hard 分割表示（在庫一覧）
 
 ---
 
 ## 参照
 
 - **変更履歴:** `CHANGELOG.md`
-- **残課題詳細:** `docs/remaining_issues.adoc`
+- **完了機能:** `docs/COMPLETED_FEATURES.adoc`
 - **開発ガイド:** `CLAUDE.md`

@@ -13,7 +13,7 @@ from app.schemas.masters.masters_schema import (
 from app.services.common.base_service import BaseService
 
 
-class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]):
+class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]):
     """Service for managing customers."""
 
     def __init__(self, db: Session):
@@ -37,13 +37,13 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, str]
         """Update customer by customer_code."""
         customer = self.get_by_code(code)
         assert customer is not None  # raise_404=True ensures this
-        return self.update(customer.id, payload)  # type: ignore[arg-type]
+        return self.update(customer.id, payload)
 
     def delete_by_code(self, code: str) -> None:
         """Delete customer by customer_code."""
         customer = self.get_by_code(code)
         assert customer is not None  # raise_404=True ensures this
-        self.delete(customer.id)  # type: ignore[arg-type]
+        self.delete(customer.id)
 
     def bulk_upsert(self, rows: list[CustomerBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert customers by customer_code.

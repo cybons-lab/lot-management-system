@@ -1,7 +1,7 @@
 /* eslint-disable max-lines-per-function */
 import { format } from "date-fns";
 import { Lock } from "lucide-react";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 import { PrimaryBadge } from "@/features/assignments/components/PrimaryBadge";
 import { LotActionCell } from "@/features/inventory/components/LotActionCell";
@@ -26,10 +26,13 @@ export function useLotColumns({
   onUnlock,
   primarySupplierIds,
 }: UseLotColumnsProps) {
-  const isPrimary = (supplierId: number | undefined | null): boolean => {
-    if (!supplierId || !primarySupplierIds) return false;
-    return primarySupplierIds.includes(supplierId);
-  };
+  const isPrimary = useCallback(
+    (supplierId: number | undefined | null): boolean => {
+      if (!supplierId || !primarySupplierIds) return false;
+      return primarySupplierIds.includes(supplierId);
+    },
+    [primarySupplierIds],
+  );
 
   const baseColumns: Column<LotUI>[] = useMemo(
     () => [
@@ -145,8 +148,7 @@ export function useLotColumns({
       },
       ...baseColumns.slice(1), // current_quantity以降
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [baseColumns, primarySupplierIds],
+    [baseColumns, isPrimary],
   );
 
   return viewMode === "grouped" ? baseColumns : flatColumns;

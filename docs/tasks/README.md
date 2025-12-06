@@ -44,7 +44,6 @@ tasks/
 - `../reports/2025-11/todo-priorities-2025-11-30.md` - TODOコメント分析
 - `../reports/2025-11/code-quality-report-2025-11-30.md` - コード品質レポート
 - `../reports/2025-11/audit-report-2025-11-30.md` - 孤立ファイル検出
-- `../remaining_issues.adoc` - 残課題リスト
 
 ### 完了履歴
 - `../archive/COMPLETED_CODE_CLEANUP_20251130.md` - 完了済みクリーンアップタスク

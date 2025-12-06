@@ -63,16 +63,30 @@ function TableRow({ line, isSelected, onToggle }: TableRowProps) {
         />
       </td>
       <td className="px-4 py-3">
-        <span className="font-medium text-slate-900">{line.order_number}</span>
+        <div
+          className="max-w-[150px] truncate font-medium text-slate-900"
+          title={line.order_number}
+        >
+          {line.order_number}
+        </div>
       </td>
       <td className="px-4 py-3">
-        <span className="text-sm text-slate-600">{line.customer_name}</span>
+        <div className="max-w-[150px] truncate text-sm text-slate-600" title={line.customer_name}>
+          {line.customer_name}
+        </div>
       </td>
       <td className="px-4 py-3">
-        <span className="font-mono text-sm text-slate-900">{line.product_code}</span>
+        <div
+          className="max-w-[120px] truncate font-mono text-sm text-slate-900"
+          title={line.product_code}
+        >
+          {line.product_code}
+        </div>
       </td>
       <td className="px-4 py-3">
-        <span className="text-sm text-slate-600">{line.product_name}</span>
+        <div className="max-w-[200px] truncate text-sm text-slate-600" title={line.product_name}>
+          {line.product_name}
+        </div>
       </td>
       <td className="px-4 py-3 text-right">
         <span className="font-medium text-slate-900">

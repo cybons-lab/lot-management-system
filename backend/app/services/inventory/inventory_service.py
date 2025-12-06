@@ -4,6 +4,8 @@ This service aggregates inventory data from the lots table in real-time,
 providing product × warehouse summary information.
 """
 
+from decimal import Decimal
+
 from sqlalchemy.orm import Session
 
 from app.schemas.inventory.inventory_schema import InventoryItemResponse
@@ -74,24 +76,81 @@ class InventoryService:
 
         from sqlalchemy import text
 
+        # 1. Base Summary Query
         result = self.db.execute(text(query), params).fetchall()
 
-        return [
-            InventoryItemResponse(
-                id=idx + 1,  # Dummy ID
-                product_id=row.product_id,
-                warehouse_id=row.warehouse_id,
-                total_quantity=row.total_quantity,
-                allocated_quantity=row.allocated_quantity,
-                available_quantity=row.available_quantity,
-                last_updated=row.last_updated,
-                product_name=row.product_name,
-                product_code=row.product_code,
-                warehouse_name=row.warehouse_name,
-                warehouse_code=row.warehouse_code,
+        if not result:
+            return []
+
+        # 2. Detail Allocation Aggregation Query
+        # Fetch detailed allocation breakdown for these products/warehouses
+        # We need to filter exactly the items we found in the first page
+        found_products = [r.product_id for r in result]
+        found_warehouses = [r.warehouse_id for r in result]
+
+        if not found_products:
+            return []
+
+        alloc_query = """
+            SELECT 
+                l.product_id,
+                l.warehouse_id,
+                a.allocation_type,
+                SUM(a.allocated_quantity) as qty
+            FROM allocations a
+            JOIN lots l ON a.lot_id = l.id
+            WHERE 1=1
+              AND a.status IN ('allocated', 'provisional')
+              AND l.product_id IN :product_ids
+              AND l.warehouse_id IN :warehouse_ids
+            GROUP BY l.product_id, l.warehouse_id, a.allocation_type
+        """
+
+        alloc_rows = self.db.execute(
+            text(alloc_query),
+            {
+                "product_ids": tuple(set(found_products)),
+                "warehouse_ids": tuple(set(found_warehouses)),
+            },
+        ).fetchall()
+
+        # Map results for O(1) lookup
+        # key: (product_id, warehouse_id) -> { 'soft': 0.0, 'hard': 0.0 }
+        alloc_map = {}
+        for row in alloc_rows:
+            key = (row.product_id, row.warehouse_id)
+            if key not in alloc_map:
+                alloc_map[key] = {"soft": 0.0, "hard": 0.0}
+
+            atype = row.allocation_type  # 'soft' or 'hard'
+            if atype in alloc_map[key]:
+                alloc_map[key][atype] += float(row.qty)
+
+        # 3. Construct Response
+        responses = []
+        for idx, row in enumerate(result):
+            key = (row.product_id, row.warehouse_id)
+            allocs = alloc_map.get(key, {"soft": 0.0, "hard": 0.0})
+
+            responses.append(
+                InventoryItemResponse(
+                    id=idx + 1,
+                    product_id=row.product_id,
+                    warehouse_id=row.warehouse_id,
+                    total_quantity=row.total_quantity,
+                    allocated_quantity=row.allocated_quantity,
+                    available_quantity=row.available_quantity,
+                    soft_allocated_quantity=Decimal(str(allocs["soft"])),
+                    hard_allocated_quantity=Decimal(str(allocs["hard"])),
+                    last_updated=row.last_updated,
+                    product_name=row.product_name,
+                    product_code=row.product_code,
+                    warehouse_name=row.warehouse_name,
+                    warehouse_code=row.warehouse_code,
+                )
             )
-            for idx, row in enumerate(result)
-        ]
+
+        return responses
 
     def get_inventory_item_by_product_warehouse(
         self, product_id: int, warehouse_id: int
@@ -132,6 +191,30 @@ class InventoryService:
         if not row:
             return None
 
+        # Get Allocation breakdown
+        alloc_query = """
+            SELECT 
+                a.allocation_type,
+                SUM(a.allocated_quantity) as qty
+            FROM allocations a
+            JOIN lots l ON a.lot_id = l.id
+            WHERE a.status IN ('allocated', 'provisional')
+              AND l.product_id = :product_id
+              AND l.warehouse_id = :warehouse_id
+            GROUP BY a.allocation_type
+        """
+        alloc_rows = self.db.execute(
+            text(alloc_query), {"product_id": product_id, "warehouse_id": warehouse_id}
+        ).fetchall()
+
+        soft_qty = 0.0
+        hard_qty = 0.0
+        for ar in alloc_rows:
+            if ar.allocation_type == "soft":
+                soft_qty += float(ar.qty)
+            elif ar.allocation_type == "hard":
+                hard_qty += float(ar.qty)
+
         return InventoryItemResponse(
             id=1,  # Dummy ID
             product_id=row.product_id,
@@ -139,6 +222,8 @@ class InventoryService:
             total_quantity=row.total_quantity,
             allocated_quantity=row.allocated_quantity,
             available_quantity=row.available_quantity,
+            soft_allocated_quantity=Decimal(str(soft_qty)),
+            hard_allocated_quantity=Decimal(str(hard_qty)),
             last_updated=row.last_updated,
             product_name=row.product_name,
             product_code=row.product_code,

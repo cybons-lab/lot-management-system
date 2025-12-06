@@ -1,14 +1,28 @@
 # リポジトリ直下の .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/PyCQA/docformatter
-    rev: v1.7.7 # 手元のインストールと合わせてOK（v1.7.5でも可）
+  # Frontend - Prettier
+  - repo: local
     hooks:
-      - id: docformatter # ← こっち！ (-venv ではない)
+      - id: prettier
+        name: Prettier (Frontend)
+        entry: bash -c 'cd frontend && npx prettier --write "$@"' --
+        language: system
+        files: ^frontend/src/.*\.(ts|tsx|js|jsx|json|css)$
+        pass_filenames: true
+
+  # Backend - Docformatter
+  - repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.7
+    hooks:
+      - id: docformatter
         args: ["-r", "-i", "backend/app"]
 
+  # Backend - Ruff
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.8.2
     hooks:
       - id: ruff
-        args: ["--fix", "--select=E,F,I,UP,B", "backend/app"]
+        args: ["--fix"]
+        files: ^backend/
       - id: ruff-format
+        files: ^backend/

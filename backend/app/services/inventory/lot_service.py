@@ -325,6 +325,8 @@ class LotService:
             .first()
         )
         if not supplier:
+            if not lot_create.supplier_code:
+                raise LotValidationError("supplier_code is required")
             raise LotSupplierNotFoundError(lot_create.supplier_code)
 
         warehouse_id: int | None = None

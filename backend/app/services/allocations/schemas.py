@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
+from app.domain.errors import DomainError
 from app.models import Allocation
 
 
@@ -42,7 +43,7 @@ class FefoCommitResult:
     created_allocations: list[Allocation]
 
 
-class AllocationCommitError(RuntimeError):
+class AllocationCommitError(DomainError):
     """Raised when FEFO allocation cannot be committed."""
 
     def __init__(self, error_code_or_message: str, message: str | None = None):
@@ -67,14 +68,13 @@ class AllocationCommitError(RuntimeError):
         super().__init__(self.message)
 
 
-class AllocationNotFoundError(Exception):
+class AllocationNotFoundError(DomainError):
     """Raised when the specified allocation is not found in DB."""
 
     pass
 
 
-@dataclass
-class InsufficientStockError(Exception):
+class InsufficientStockError(DomainError):
     """Raised when there is not enough stock to confirm allocation.
 
     Attributes:
@@ -84,13 +84,13 @@ class InsufficientStockError(Exception):
         available: Available quantity
     """
 
-    lot_id: int
-    lot_number: str
-    required: float
-    available: float
-
-    def __str__(self) -> str:
-        return (
+    def __init__(self, lot_id: int, lot_number: str, required: float, available: float):
+        self.lot_id = lot_id
+        self.lot_number = lot_number
+        self.required = required
+        self.available = available
+        message = (
             f"ロット {self.lot_number} の在庫が不足しています "
             f"(必要: {self.required}, 利用可能: {self.available})"
         )
+        super().__init__(message)

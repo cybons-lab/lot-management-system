@@ -31,6 +31,8 @@ export interface InventoryItem {
   total_quantity: number;
   allocated_quantity: number;
   available_quantity: number;
+  soft_allocated_quantity: number;
+  hard_allocated_quantity: number;
   last_updated: string;
   // Joined data (optional)
   product_code?: string;
