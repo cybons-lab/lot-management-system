@@ -2,6 +2,7 @@ import type { CandidateLotItem } from "../../../api";
 import { getOrderQuantity } from "../../../utils/allocationCalculations";
 import { getLineAllocationStatus } from "../FlatAllocationList";
 
+// フィルタ関数で複数のステータス判定に依存するため引数が多い
 /* eslint-disable max-params */
 import type { FilterStatus, LineWithOrderInfo } from "./types";
 

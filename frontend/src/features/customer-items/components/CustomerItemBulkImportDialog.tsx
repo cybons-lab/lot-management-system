@@ -33,6 +33,7 @@ interface CustomerItemBulkImportDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// 一括インポートダイアログのフォームとプレビューUIを一箇所にまとめるため分割しない
 /* eslint-disable max-lines-per-function, complexity */
 export function CustomerItemBulkImportDialog({
   open,
