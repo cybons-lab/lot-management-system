@@ -2,7 +2,7 @@
 :toc: left
 :toc-title: 目次
 
-**最終更新:** 2025-12-05
+**最終更新:** 2025-12-06
 
 == 概要
 
@@ -95,7 +95,7 @@ APScheduler または Celery Beat の導入検討。
 
 **Critical:** ✅ 全完了（2025-12-05）
 
-**eslint-disable コメント:** 38件
+**eslint-disable コメント:** 43件
 
 一時的にLintエラーを無視しているファイル。
 将来的にリファクタリングして削除する。
@@ -110,7 +110,7 @@ grep -rn "eslint-disable" --include="*.tsx" --include="*.ts" frontend/src/
 
 * max-lines-per-function 違反: 約20件
 * complexity 違反: 約8件
-* @typescript-eslint/no-explicit-any: 約8件
+* @typescript-eslint/no-explicit-any: 約6件 (改善: Forecast関連コンポーネント修正により減少)
 * jsx-a11y: 2件
 
 **High（将来対応）:**
@@ -121,7 +121,7 @@ grep -rn "eslint-disable" --include="*.tsx" --include="*.ts" frontend/src/
 
 === Backend Type Checks (Mypy)
 
-**# type: ignore 使用箇所:** 約30ファイル
+**# type: ignore 使用箇所:** 約81箇所 (改善: Service層のジェネリクス修正により減少)
 
 主な要因:
 * 動的な属性アクセス (SQLAlchemy/Pydantic)
@@ -129,7 +129,6 @@ grep -rn "eslint-disable" --include="*.tsx" --include="*.ts" frontend/src/
 * 外部ライブラリの型定義不足
 
 **要注意ファイル:**
-* `backend/app/services/allocations/core.py` (レガシーコード?)
 * `backend/app/services/allocations/utils.py`
 * `backend/app/services/inventory/inbound_service.py`
 * `backend/app/api/routes/inventory/lots_router.py`
@@ -141,6 +140,9 @@ grep -rn "eslint-disable" --include="*.tsx" --include="*.ts" frontend/src/
 [cols="1,2"]
 |===
 | 日付 | 内容
+
+| 2025-12-06
+| コード品質課題の数値を更新（eslint-disable: 43件、type: ignore: 約81箇所）
 
 | 2025-12-05
 | ドキュメント構造整理。完了済み課題をCHANGELOGへ移動。
