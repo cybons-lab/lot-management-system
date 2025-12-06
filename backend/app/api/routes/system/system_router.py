@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
-from app.api.routes.auth.auth_router import get_current_user_optional, get_current_user
+from app.api.routes.auth.auth_router import get_current_user_optional, get_current_admin
 from app.core.database import get_db
 from app.models.auth_models import User
 from app.models.system_models import ClientLog
@@ -35,7 +35,7 @@ def create_client_log(
 @router.get("/logs/recent", response_model=list[ClientLogResponse])
 def get_recent_logs(
     limit: int = 100,
-    current_user: User = Depends(get_current_user), # Require Auth (Admin check later)
+    current_user: User = Depends(get_current_admin),  # Require Admin
     db: Session = Depends(get_db),
 ):
     """Get recent system logs (Admin only ideally)."""
