@@ -38,14 +38,20 @@ export function InventoryBySupplierTable({ data, onRowClick }: InventoryBySuppli
               className={onRowClick ? "hover:bg-muted/50 cursor-pointer" : ""}
               onClick={onRowClick ? () => onRowClick(row.supplier_code) : undefined}
             >
-              <TableCell className="font-medium">{row.supplier_code}</TableCell>
+              <TableCell className="font-medium">
+                <div className="max-w-[120px] truncate" title={row.supplier_code}>
+                  {row.supplier_code}
+                </div>
+              </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  {row.supplier_name}
+                  <span className="max-w-[200px] truncate" title={row.supplier_name}>
+                    {row.supplier_name}
+                  </span>
                   {row.is_primary_supplier && (
                     <Badge
                       variant="outline"
-                      className="gap-1 border-amber-300 bg-amber-50 px-1 py-0 text-[10px] text-amber-600"
+                      className="gap-1 border-amber-300 bg-amber-50 px-1 py-0 text-[10px] text-amber-600 shrink-0"
                     >
                       <Crown className="h-3 w-3" />
                       主担当
