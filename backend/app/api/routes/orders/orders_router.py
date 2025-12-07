@@ -2,7 +2,7 @@
 """受注エンドポイント（全修正版） I/O整形のみを責務とし、例外変換はグローバルハンドラに委譲."""
 
 import logging
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -225,7 +225,8 @@ def acquire_lock(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    now = datetime.now(UTC)
+    # Use naive datetime for DB consistency (DB stores without timezone)
+    now = datetime.utcnow()
 
     # 既存ロックのチェック
     if order.locked_by_user_id and order.lock_expires_at:

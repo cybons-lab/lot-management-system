@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from app.models import Order
 
@@ -15,10 +15,10 @@ def test_acquire_lock_success(
     order = Order(
         order_number="LOCK-TEST-001",
         customer_id=customer.id,
-        order_date=datetime.now(UTC).date(),
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
     )
     db_session.add(order)
     db_session.commit()
@@ -44,13 +44,13 @@ def test_acquire_lock_renew(
     order = Order(
         order_number="LOCK-TEST-002",
         customer_id=customer.id,
-        order_date=datetime.now(UTC).date(),
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(UTC),
-        lock_expires_at=datetime.now(UTC) + timedelta(minutes=5),
+        locked_at=datetime.utcnow(),
+        lock_expires_at=datetime.utcnow() + timedelta(minutes=5),
     )
     db_session.add(order)
     db_session.commit()
@@ -69,13 +69,13 @@ def test_acquire_lock_conflict(
     order = Order(
         order_number="LOCK-TEST-003",
         customer_id=customer.id,
-        order_date=datetime.now(UTC).date(),
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(UTC),
-        lock_expires_at=datetime.now(UTC) + timedelta(minutes=10),
+        locked_at=datetime.utcnow(),
+        lock_expires_at=datetime.utcnow() + timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
@@ -96,13 +96,13 @@ def test_acquire_lock_expired(
     order = Order(
         order_number="LOCK-TEST-004",
         customer_id=customer.id,
-        order_date=datetime.now(UTC).date(),
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(UTC) - timedelta(minutes=20),
-        lock_expires_at=datetime.now(UTC) - timedelta(minutes=10),
+        locked_at=datetime.utcnow() - timedelta(minutes=20),
+        lock_expires_at=datetime.utcnow() - timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
@@ -121,13 +121,13 @@ def test_release_lock_success(
     order = Order(
         order_number="LOCK-TEST-005",
         customer_id=customer.id,
-        order_date=datetime.now(UTC).date(),
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(UTC),
-        lock_expires_at=datetime.now(UTC) + timedelta(minutes=10),
+        locked_at=datetime.utcnow(),
+        lock_expires_at=datetime.utcnow() + timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
@@ -148,13 +148,13 @@ def test_release_lock_forbidden(
     order = Order(
         order_number="LOCK-TEST-006",
         customer_id=customer.id,
-        order_date=datetime.now(UTC).date(),
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(UTC),
-        lock_expires_at=datetime.now(UTC) + timedelta(minutes=10),
+        locked_at=datetime.utcnow(),
+        lock_expires_at=datetime.utcnow() + timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
