@@ -9,7 +9,69 @@ import { useClientLogs } from "../hooks";
 
 import { Button, Badge } from "@/components/ui";
 
-// eslint-disable-next-line max-lines-per-function
+type LogLevel = "error" | "warning" | string;
+type BadgeVariant = "destructive" | "secondary" | "outline";
+
+function getLevelBadgeVariant(level: LogLevel): BadgeVariant {
+  switch (level) {
+    case "error":
+      return "destructive";
+    case "warning":
+      return "secondary";
+    default:
+      return "outline";
+  }
+}
+
+interface ClientLog {
+  id: number;
+  level: string;
+  message: string;
+  user_id?: number | null;
+  created_at: string;
+}
+
+function LogsTable({ logs }: { logs: ClientLog[] }) {
+  return (
+    <div className="overflow-x-auto rounded-lg border bg-white">
+      <table className="w-full">
+        <thead className="border-b bg-gray-50">
+          <tr>
+            <th className="w-[60px] px-4 py-3 text-left text-sm font-medium text-gray-700">ID</th>
+            <th className="w-[80px] px-4 py-3 text-left text-sm font-medium text-gray-700">
+              レベル
+            </th>
+            <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">メッセージ</th>
+            <th className="w-[100px] px-4 py-3 text-left text-sm font-medium text-gray-700">
+              ユーザーID
+            </th>
+            <th className="w-[180px] px-4 py-3 text-left text-sm font-medium text-gray-700">
+              日時
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {logs.map((log) => (
+            <tr key={log.id} className="hover:bg-gray-50">
+              <td className="px-4 py-3 text-sm">{log.id}</td>
+              <td className="px-4 py-3 text-sm">
+                <Badge variant={getLevelBadgeVariant(log.level)}>{log.level}</Badge>
+              </td>
+              <td className="max-w-md truncate px-4 py-3 font-mono text-sm" title={log.message}>
+                {log.message}
+              </td>
+              <td className="px-4 py-3 text-sm">{log.user_id ?? "-"}</td>
+              <td className="px-4 py-3 text-sm text-gray-600">
+                {new Date(log.created_at).toLocaleString("ja-JP")}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function ClientLogsPage() {
   const {
     data: logs = [],
@@ -18,17 +80,6 @@ export function ClientLogsPage() {
     refetch,
     isFetching,
   } = useClientLogs({ limit: 100 });
-
-  const getLevelBadgeVariant = (level: string) => {
-    switch (level) {
-      case "error":
-        return "destructive";
-      case "warning":
-        return "secondary";
-      default:
-        return "outline";
-    }
-  };
 
   return (
     <div className="space-y-6 p-6">
@@ -63,51 +114,7 @@ export function ClientLogsPage() {
       ) : (
         <div className="space-y-4">
           <div className="text-sm text-gray-600">{logs.length} 件のログ</div>
-
-          {/* Table */}
-          <div className="overflow-x-auto rounded-lg border bg-white">
-            <table className="w-full">
-              <thead className="border-b bg-gray-50">
-                <tr>
-                  <th className="w-[60px] px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ID
-                  </th>
-                  <th className="w-[80px] px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    レベル
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    メッセージ
-                  </th>
-                  <th className="w-[100px] px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ユーザーID
-                  </th>
-                  <th className="w-[180px] px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    日時
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {logs.map((log) => (
-                  <tr key={log.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{log.id}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <Badge variant={getLevelBadgeVariant(log.level)}>{log.level}</Badge>
-                    </td>
-                    <td
-                      className="max-w-md truncate px-4 py-3 font-mono text-sm"
-                      title={log.message}
-                    >
-                      {log.message}
-                    </td>
-                    <td className="px-4 py-3 text-sm">{log.user_id ?? "-"}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(log.created_at).toLocaleString("ja-JP")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <LogsTable logs={logs} />
         </div>
       )}
     </div>

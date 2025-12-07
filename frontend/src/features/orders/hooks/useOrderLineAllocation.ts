@@ -19,8 +19,7 @@ interface UseOrderLineAllocationProps {
   onSuccess?: () => void;
 }
 
-// 引当関連の状態と処理を一箇所にまとめるため分割しない
-/* eslint-disable max-lines-per-function */
+// eslint-disable-next-line max-lines-per-function -- 引当関連の状態と処理を一箇所にまとめた複合フック
 export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAllocationProps) {
   const [candidateLots, setCandidateLots] = useState<CandidateLotItem[]>([]);
   const [lotAllocations, setLotAllocations] = useState<Record<number, number>>({});

@@ -14,13 +14,48 @@ import type { ConfirmedOrderLine } from "@/hooks/useConfirmedOrderLines";
 import { useSAPBatchRegistration } from "@/hooks/useSAPBatchRegistration";
 import { formatDate } from "@/shared/utils/date";
 
+interface LineItemProps {
+  line: ConfirmedOrderLine;
+  isSelected: boolean;
+  onToggle: () => void;
+}
+
+function LineItem({ line, isSelected, onToggle }: LineItemProps) {
+  return (
+    <label
+      htmlFor={`line-${line.line_id}`}
+      aria-label={`Select ${line.customer_name} - ${line.product_code}`}
+      className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50"
+    >
+      <input
+        id={`line-${line.line_id}`}
+        type="checkbox"
+        checked={isSelected}
+        onChange={onToggle}
+        className="mt-1"
+      />
+      <div className="flex-1">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <span>{line.customer_name}</span>
+          <span className="text-gray-400">|</span>
+          <span className="font-mono text-gray-600">{line.product_code}</span>
+          <span>{line.product_name}</span>
+        </div>
+        <div className="mt-1 text-xs text-gray-500">
+          受注: {line.order_number} | 数量: {line.order_quantity} {line.unit} | 納期:{" "}
+          {formatDate(line.delivery_date)}
+        </div>
+      </div>
+    </label>
+  );
+}
+
 interface SAPRegistrationDialogProps {
   isOpen: boolean;
   onClose: () => void;
   confirmedLines: ConfirmedOrderLine[];
 }
 
-// eslint-disable-next-line max-lines-per-function
 export function SAPRegistrationDialog({
   isOpen,
   onClose,
@@ -72,32 +107,12 @@ export function SAPRegistrationDialog({
 
         <div className="max-h-96 space-y-2 overflow-y-auto">
           {confirmedLines.map((line) => (
-            <label
+            <LineItem
               key={line.line_id}
-              htmlFor={`line-${line.line_id}`}
-              aria-label={`Select ${line.customer_name} - ${line.product_code}`}
-              className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50"
-            >
-              <input
-                id={`line-${line.line_id}`}
-                type="checkbox"
-                checked={selectedIds.includes(line.line_id)}
-                onChange={() => handleToggle(line.line_id)}
-                className="mt-1"
-              />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <span>{line.customer_name}</span>
-                  <span className="text-gray-400">|</span>
-                  <span className="font-mono text-gray-600">{line.product_code}</span>
-                  <span>{line.product_name}</span>
-                </div>
-                <div className="mt-1 text-xs text-gray-500">
-                  受注: {line.order_number} | 数量: {line.order_quantity} {line.unit} | 納期:{" "}
-                  {formatDate(line.delivery_date)}
-                </div>
-              </div>
-            </label>
+              line={line}
+              isSelected={selectedIds.includes(line.line_id)}
+              onToggle={() => handleToggle(line.line_id)}
+            />
           ))}
         </div>
 

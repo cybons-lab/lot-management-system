@@ -22,6 +22,30 @@ type OrderLineFactoryExtras = {
 
 export type OrderLineFactoryResult = OrderLine & OrderLineFactoryExtras;
 
+/** Helper: Resolve delivery date from overrides */
+function resolveDeliveryDate(overrides?: Partial<OrderLineFactoryResult>): string {
+  if (overrides && "delivery_date" in overrides && overrides.delivery_date) {
+    return overrides.delivery_date;
+  }
+  if (overrides && "due_date" in overrides && overrides.due_date) {
+    return overrides.due_date;
+  }
+  return faker.date.soon({ days: 30 }).toISOString().split("T")[0];
+}
+
+/** Helper: Resolve extra fields (product_name, customer_code, customer_name) */
+function resolveExtraFields(overrides?: Partial<OrderLineFactoryResult>) {
+  const productName =
+    overrides && "product_name" in overrides
+      ? (overrides.product_name ?? undefined)
+      : faker.commerce.productName();
+  const customerCode =
+    overrides && "customer_code" in overrides ? (overrides.customer_code ?? undefined) : undefined;
+  const customerName =
+    overrides && "customer_name" in overrides ? (overrides.customer_name ?? undefined) : undefined;
+  return { productName, customerCode, customerName };
+}
+
 /**
  * ランダムな受注データを生成 (DDL v2.2 compliant)
  */
@@ -48,7 +72,6 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 /**
  * 受注明細を生成 (DDL v2.2 compliant)
  */
-// eslint-disable-next-line complexity
 export function createOrderLine(
   overrides?: Partial<OrderLineFactoryResult>,
 ): OrderLineFactoryResult {
@@ -72,22 +95,8 @@ export function createOrderLine(
     overrides?.allocated_quantity ?? overrides?.allocated_qty ?? String(defaultAllocated);
 
   const unit = overrides?.unit ?? faker.helpers.arrayElement(["EA", "CASE", "BOX"]);
-
-  const deliveryDate =
-    overrides && "delivery_date" in overrides && overrides.delivery_date !== null
-      ? overrides.delivery_date
-      : overrides && "due_date" in overrides && overrides.due_date !== null
-        ? overrides.due_date
-        : faker.date.soon({ days: 30 }).toISOString().split("T")[0];
-
-  const productName =
-    overrides && "product_name" in overrides
-      ? (overrides.product_name ?? undefined)
-      : faker.commerce.productName();
-  const customerCode =
-    overrides && "customer_code" in overrides ? (overrides.customer_code ?? undefined) : undefined;
-  const customerName =
-    overrides && "customer_name" in overrides ? (overrides.customer_name ?? undefined) : undefined;
+  const deliveryDate = resolveDeliveryDate(overrides);
+  const { productName, customerCode, customerName } = resolveExtraFields(overrides);
 
   return {
     id: overrides?.id ?? faker.number.int({ min: 1, max: 10000 }),
@@ -99,7 +108,7 @@ export function createOrderLine(
     order_quantity: String(orderQuantity), // DDL v2.2: DECIMAL as string
     allocated_quantity: String(allocatedQuantity ?? 0),
     unit,
-    delivery_date: deliveryDate ?? faker.date.soon({ days: 30 }).toISOString().split("T")[0], // DDL v2.2
+    delivery_date: deliveryDate, // DDL v2.2
     created_at: faker.date.past().toISOString(), // DDL v2.2
     updated_at: faker.date.recent().toISOString(), // DDL v2.2
     order_type: overrides?.order_type || "ORDER", // DDL v2.2
@@ -111,10 +120,7 @@ export function createOrderLine(
     product_code: overrides?.product_code ?? `PRD-${faker.string.alphanumeric(4).toUpperCase()}`,
     quantity: overrides?.quantity ?? orderQuantity,
     status: overrides?.status ?? faker.helpers.arrayElement(["open", "allocated", "shipped"]),
-    due_date:
-      overrides?.due_date ??
-      deliveryDate ??
-      faker.date.soon({ days: 30 }).toISOString().split("T")[0],
+    due_date: overrides?.due_date ?? deliveryDate,
     allocated_qty: overrides?.allocated_qty ?? allocatedQuantity,
     forecast_qty: overrides?.forecast_qty ?? null,
     forecast_version_no: overrides?.forecast_version_no ?? null,
