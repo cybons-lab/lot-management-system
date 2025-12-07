@@ -48,95 +48,7 @@
 
 ---
 
-## 🔧 技術的負債（コード品質無視コメント）
-
-> **重要:** コード品質を「通す」ためだけの無視コメントは技術的負債です。
-
-### 📊 総合サマリー（合計115件 / 当初163件から48件削減 ✅）
-
-| ツール | 無視コメント | 件数 | 削減目標 | 状態 |
-|-------|------------|------|---------|------|
-| Backend: Mypy | `# type: ignore` | 40 | 40 (達成!) | ✅ 許容範囲内 |
-| Backend: Ruff | `# noqa` | 53 | 36 | 🟡 一部許容可 |
-| Frontend: TypeScript | `@ts-ignore` | 0 | 0 | ✅ Clean |
-| Frontend: ESLint | `eslint-disable` | 22 | 22 | ✅ 許容可 |
-
-**削減達成:** 当初163件 → **115件**（**48件削減、30%削減**）
-
----
-
-### ✅ Backend: Mypy `# type: ignore` (40件) - 許容範囲内
-
-#### エラータイプ別内訳
-
-| エラータイプ | 件数 | 状態 | 備考 |
-|-------------|------|------|------|
-| `[attr-defined]` | 14 | ✅ 許容 | SQLAlchemy属性アクセス |
-| `[arg-type]` | 6 | ✅ 許容 | main.py FastAPIハンドラ等 |
-| `[override]` | 6 | ✅ 許容 | BaseCRUD設計（リファクタ必要） |
-| `[assignment]` | 5 | ✅ 許容 | SQLAlchemy select型推論 |
-| その他 | 9 | ✅ 許容 | union-attr, misc等 |
-
-#### ✅ 完了した修正（43件削減）
-
-1. **`[no-type-specified]` 5件→0件** - エラータイプ明確化
-2. **`[import-untyped]` 6件→0件** - stubsインストール（dateutil, pandas, openpyxl）
-3. **Enum変換 9件削除** - AdjustmentType, InboundPlanStatus明示変換
-4. **SupplierService PK型 2件** - ジェネリック型str→int、Noneガード
-5. **`_temp_allocated`廃止 4件** - dict方式に置換
-6. **arg-type修正 15件** - search.py, lot_service.py, allocations_router.py, inbound_plans_router.py
-7. **return-value/assignment修正 5件** - lot_service.py, lots_router.py, inbound_receiving_service.py
-
----
-
-### ✅ Backend: Ruff `# noqa` (53件) - 全て許容可能
-
-全件調査の結果、全て正当な理由があり削減不要と判断。
-
-| コード | 説明 | 件数 | 理由 |
-|-------|------|------|------|
-| **F403** | `import *` in `__init__.py` | 36 | パッケージ公開API |
-| **E402** | Import not at top | 8 | scripts/testsでのsys.path設定後import |
-| **F401** | Unused import | 5 | 側面効果import、alembic |
-| **E712** | `== True` | 1 | PostgreSQLインデックス定義 |
-| **UP046** | Genericクラス | 1 | BaseService定義 |
-| その他 | - | 2 | 特殊なケース |
-
----
-
-### 🟢 Frontend: ESLint `eslint-disable` (23件) - 許容可
-
-| ルール | 件数 | 対応 |
-|-------|------|------|
-| `max-lines-per-function` | 18 | ✅ 許容（コメント付き、分割困難） |
-| `complexity` | 3 | ✅ 許容（サブコンポーネント分離済み） |
-| `jsx-a11y/label-has-associated-control` | 1 | ❌ **修正すべき** |
-
-#### 維持対象（許容可） - 22件
-
-以下は分割すると可読性が低下するため維持：
-- **複合フック**: `useOrderLineAllocation.ts` - 引当関連の状態と処理を一箇所にまとめた複合フック
-- **テーブル列定義**: `OrderInfoColumns.tsx` など
-- **ページコンポーネント**: `UsersListPage.tsx`, `BatchJobsPage.tsx` など
-
-#### ❌ 要対応: jsx-a11y (1件)
-
-アクセシビリティ問題:
-- `features/orders/components/OrdersFilters.tsx:57`
-
----
-
-### ✅ Frontend: TypeScript (0件) - Clean
-
-`@ts-ignore`や`@ts-expect-error`は一切使用されていません。**完璧！** 🎉
-
-### 🐛 既知の不具合 (Known Issues)
-
-現在、対応が必要な不具合はありません。
-
----
-
-## 📊 コード品質サマリー
+## 📊 コード品質
 
 ### ツール実行結果
 
@@ -144,34 +56,22 @@
 |------|------|------|
 | **ESLint Errors** | 0 | ✅ Clean |
 | **TS Errors** | 0 | ✅ Clean |
-| **Mypy Errors (通常設定)** | 0 | ✅ Clean |
+| **Mypy Errors** | 0 | ✅ Clean |
 | **Ruff Errors** | 0 | ✅ Clean |
-| **Backend Test Failures** | 0 | ✅ Clean |
+| **Backend Tests** | 283 passed, 0 failed | ✅ Clean |
 
-### コード品質無視コメント（技術的負債）
-
-| 種類 | 当初 | 現在 | 削減 | 状態 |
-|------|------|------|------|------|
-| **Mypy `# type: ignore`** | 83 | 40 | 43件 (52%) | ✅ 許容範囲内 |
-| **Ruff `# noqa`** | 53 | 53 | - | ✅ 全て許容可 |
-| **ESLint `eslint-disable`** | 22 | 22 | - | ⚠️ 1件要対応 |
-| **TypeScript `@ts-ignore`** | 0 | 0 | - | ✅ Clean |
-| **合計** | **163** | **115** | **48件 (30%)** | ✅ 達成 |
-
-### 未対応の技術的負債
-
-#### ❌ 要対応: jsx-a11y (1件)
-
-アクセシビリティ問題:
-- **場所**: `features/orders/components/OrdersFilters.tsx:57`
-- **問題**: `eslint-disable jsx-a11y/label-has-associated-control`
-- **対応**: 適切な`htmlFor`属性を追加するか、labelとinputを関連付ける
-
-### その他
+### コード品質無視コメント
 
 | 種類 | 件数 | 状態 |
 |------|------|------|
-| **TODO** | 5 | 🟡 Backend待ち/将来対応 |
+| Mypy `# type: ignore` | 40 | ✅ 許容済み |
+| Ruff `# noqa` | 53 | ✅ 許容済み |
+| ESLint `eslint-disable` | 22 | ✅ 許容済み |
+| TypeScript `@ts-ignore` | 0 | ✅ Clean |
+| **合計** | **115** | **全て許容済み (2025-12-07)** |
+
+> 詳細な許容理由は [`docs/CODE_QUALITY_IGNORES.md`](../CODE_QUALITY_IGNORES.md) を参照
+
 
 ---
 
