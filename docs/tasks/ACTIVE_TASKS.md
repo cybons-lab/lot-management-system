@@ -61,20 +61,18 @@
 
 ## 🔧 技術的負債（リファクタリング候補）
 
-### 残り 9件 (eslint-disable)
+### 残り 7件 (eslint-disable)
 
 以下のファイルに `eslint-disable` が残っていますが、機能には影響しないため優先度は低です。
 
-#### `max-lines-per-function` (6件)
+#### `max-lines-per-function` (5件)
 - `frontend/src/features/orders/hooks/useOrderLineAllocation.ts`
-- `frontend/src/features/customer-items/hooks/useCustomerItemsPage.ts`
 - `frontend/src/features/forecasts/components/ForecastDetailCard/useLotCandidateRow.ts`
 - `frontend/src/features/forecasts/components/ForecastDetailCard/PlanningAllocationPanel.tsx`
 - `frontend/src/features/client-logs/pages/ClientLogsPage.tsx`
 - `frontend/src/components/common/SAPRegistrationDialog.tsx`
 
-#### `complexity` (3件)
-- `frontend/src/features/customer-items/utils/customer-item-csv.ts`
+#### `complexity` (2件)
 - `frontend/src/components/ui/form/SearchableSelect.tsx`
 - `frontend/src/factories/order-factory.ts`
 
@@ -98,7 +96,7 @@
 | **ESLint Errors** | 0 | ✅ Clean |
 | **TS Errors** | 0 | ✅ Clean |
 | **Mypy Errors** | 0 | ✅ Clean |
-| **eslint-disable** | 9 | 🟡 Low Priority |
+| **eslint-disable** | 7 | 🟡 Low Priority |
 | **TODO** | 5 | 🟡 Backend待ち/将来対応 |
 
 ---
