@@ -2,16 +2,15 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.main import app
 from app.models.auth_models import User
 from app.services.auth.auth_service import AuthService
 from app.services.auth.user_service import UserService
 
 
 @pytest.fixture
-def test_user(db_session: Session):
+def test_user(db: Session):
     """Create a test user."""
-    user_service = UserService(db_session)
+    user_service = UserService(db)
     # Check if user exists first
     existing = user_service.get_by_username("testuser")
     if existing:
@@ -29,19 +28,12 @@ def test_user(db_session: Session):
     return user_service.create(user_in)
 
 
-@pytest.fixture
-def client(db_session: Session):
-    """Test client with overridden dependency."""
-    from app.core.database import get_db
-
-    app.dependency_overrides[get_db] = lambda: db_session
-    yield TestClient(app)
-    app.dependency_overrides.clear()
+# Note: client fixture is provided by conftest.py
 
 
-def test_hash_password(db_session: Session):
+def test_hash_password(db: Session):
     """Test password hashing."""
-    service = UserService(db_session)
+    service = UserService(db)
     password = "secret"
     hashed = service._hash_password(password)
     assert hashed != password
@@ -70,9 +62,9 @@ def test_login_failure(client: TestClient):
     assert response.status_code == 401
 
 
-def test_token_generation(db_session: Session, test_user: User):
+def test_token_generation(db: Session, test_user: User):
     """Test token generation and validation."""
-    auth_service = AuthService(db_session)
+    auth_service = AuthService(db)
     token = auth_service.create_access_token(data={"sub": test_user.username})
 
     # Verify we can decode it

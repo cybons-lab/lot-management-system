@@ -225,12 +225,15 @@ def db_session(db) -> Generator[Session]:
 @pytest.fixture(scope="function")
 def client(db) -> Generator[TestClient]:
     """Create FastAPI TestClient."""
-    from app.api.deps import get_db
+    # Override both get_db functions since different modules import from different locations
+    from app.api import deps as api_deps
+    from app.core import database as core_database
 
     def override_get_db():
         yield db
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[api_deps.get_db] = override_get_db
+    app.dependency_overrides[core_database.get_db] = override_get_db
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
