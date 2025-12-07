@@ -2,8 +2,10 @@
 
 **最終更新:** 2025-12-07
 
-> このドキュメントは**現在進行中および未着手のタスク**を管理します。
-> 完了したタスクは `CHANGELOG.md` に記録され、このファイルから削除されます。
+> **このドキュメントの目的**: 
+> - **未対応**または**進行中**のタスクのみを記載
+> - **完了したタスク**は`CHANGELOG.md`に記録され、このファイルからは削除される
+> - 常に「今やるべきこと」だけが載っている状態を維持
 
 ---
 
@@ -17,28 +19,18 @@
 
 ## 🔜 近い将来対応予定
 
-### ✅ P2-1: SAP在庫同期機能の完成（モック環境対応完了）
+### P2-1: SAP在庫同期 - 本番API接続待ち
 
-**ページ:** `/admin/batch-jobs` (実装完了)
+**現状**: モック実装完了、UI実装完了
 
-**実装完了:**
-- ✅ `InventorySyncService`: SAP在庫とローカルDB在庫の差異チェック（モック対応）
-- ✅ `/api/batch-jobs/inventory-sync/execute`: 手動実行API
-- ✅ `/api/batch-jobs/inventory-sync/alerts`: 差異アラート取得API
-- ✅ `BatchJobsPage`: SAP在庫同期専用UI
-  - ワンクリック実行ボタン
-  - 差異アラート一覧表示（商品ID、ローカル/SAP在庫、差異率、最終チェック日時）
-  - アクティブアラート/全履歴切り替え
-- ✅ `BatchJobsPage`: 汎用バッチジョブ管理UI（ジョブ一覧・実行・削除）
-
-**残タスク（本番SAP接続が必要）:**
+**残タスク**（本番SAP接続が必要）:
 - ❌ **本番SAP API接続**（現在はモック: `SAPMockClient`）
   - `backend/app/external/sap_mock_client.py` を実際のSAP APIクライアントに置き換え
 - ❌ **定期実行設定**（オプション）
   - APScheduler または Celery Beat による自動スケジュール実行
   - 実行頻度設定UI
 
-> **Note**: モック環境で実装可能な部分は全て完了。本番SAP環境が準備できたら残タスクに着手。
+> **Note**: モック環境で実装可能な部分（UI、API、差異検出ロジック）は全て完了。本番SAP環境準備後に対応。
 
 
 ---
@@ -140,67 +132,7 @@
 
 ### 🐛 既知の不具合 (Known Issues)
 
-#### ✅ Backend Test Failures - **完全解決**
-
-| 指標 | 修正前 (2025-12-07 開始時) | 修正後 (2025-12-07 完了) |
-|------|---------------------------|-------------------------|
-| **Failed** | 25 | **0** ✅ |
-| **Passed** | 259 | **283** ✅ |
-| **XFailed** | 3 | **0** ✅ |
-| **Skipped** | 1 | 1 |
-
-**🎉 全テストが正常にパスする状態を達成！**
-
-##### 修正した問題カテゴリ
-
-| カテゴリ | 件数 | 原因と対応 |
-|---------|------|-----------|
-| FK制約/必須フィールド | 8件 | `customer_id`, `warehouse_id`, `order_date`等のハードコーディング → `master_data` fixture使用に統一 |
-| 認証/セッション問題 | 12件 | `get_db`が2箇所に存在 → 両方をオーバーライド、`auth_service`の`username`解析修正、ユーザーfixture commitに変更 |
-| アサーション修正 | 5件 | ステータスコード(409→400等)、`rule_type`フィルタ、既存データを考慮したテストに修正 |
-| 統合テスト | 1件 | `test_order_flow.py`を現行APIスキーマに合わせて全面書き直し |
-
-##### コミット履歴 (14件)
-
-```
-(最新) fix(tests): Resolve all test_order_locks.py session issues
-b55a64f docs: Add test_order_locks fix design document
-acca041 fix(tests): Refactor test_order_flow.py to use current API schemas
-fc1ef74 docs: Update ACTIVE_TASKS.md with test fix completion status
-563f494 fix(tests): Fix remaining test issues (products and order filtering)
-205b6c8 fix(tests): Fix session conflicts and get_db override issues
-cff0730 fix(tests): Fix test_bulk_cancel FK constraints and add xfail for view-dependent tests
-d0e2ee0 fix(auth): Fix auth_service to use username field in JWT payload
-a4a3d39 fix(tests): Fix error scenario tests and update integration test
-be1d204 fix(tests): Fix expected HTTP status codes in error scenario tests
-e03bd51 fix(tests): Fix test_inventory_sync_service rule_type and assertions
-54d03fb fix(domain): Pass details to DomainError.__init__ in InsufficientStockError
-9a725e8 fix(orders): Use datetime.utcnow() for DB-compatible datetime comparisons
-8d747b9 fix(inbound): Add flush() after creating ExpectedLots for id/timestamps
-9e4a4a6 fix(tests): Fix test_auth, test_routes, db_error_parser, and partial test_order_locks
-```
-
-##### 主要な根本原因と対応
-
-1. **複数の`get_db`関数問題**
-   - 原因: `app.api.deps.get_db`と`app.core.database.get_db`が別々に存在
-   - 対応: `conftest.py`で両方をオーバーライドするよう修正
-
-2. **FK制約違反**
-   - 原因: テストでハードコーディングされた`customer_id=1`等
-   - 対応: `master_data` fixtureを使用して有効なFKを設定
-
-3. **JWT sub/username不一致**
-   - 原因: トークンのsubフィールドがIDで、auth_serviceはusernameを期待
-   - 対応: auth_serviceが`username`フィールドを優先取得するよう修正
-
-4. **セッション管理問題（test_order_locks.py）**
-   - 原因: ユーザーfixture が`db.flush()`のみでコミットせず、APIリクエスト時に別セッションから見えない
-   - 対応: `normal_user`, `superuser` fixtureを`db.commit()`に変更し、yieldパターンでクリーンアップ追加
-
-5. **統合テストのスキーマ不一致（test_order_flow.py）**
-   - 原因: APIレスポンススキーマが変更され、`product_code`, `next_div`等のフィールドが存在しない
-   - 対応: `product_id`ベースのアサーションに書き直し、柔軟なテストに変更
+現在、対応が必要な不具合はありません。
 
 ---
 
@@ -222,16 +154,24 @@ e03bd51 fix(tests): Fix test_inventory_sync_service rule_type and assertions
 |------|------|------|------|------|
 | **Mypy `# type: ignore`** | 83 | 40 | 43件 (52%) | ✅ 許容範囲内 |
 | **Ruff `# noqa`** | 53 | 53 | - | ✅ 全て許容可 |
-| **ESLint `eslint-disable`** | 22 | 22 | - | ✅ 許容可 |
+| **ESLint `eslint-disable`** | 22 | 22 | - | ⚠️ 1件要対応 |
 | **TypeScript `@ts-ignore`** | 0 | 0 | - | ✅ Clean |
 | **合計** | **163** | **115** | **48件 (30%)** | ✅ 達成 |
+
+### 未対応の技術的負債
+
+#### ❌ 要対応: jsx-a11y (1件)
+
+アクセシビリティ問題:
+- **場所**: `features/orders/components/OrdersFilters.tsx:57`
+- **問題**: `eslint-disable jsx-a11y/label-has-associated-control`
+- **対応**: 適切な`htmlFor`属性を追加するか、labelとinputを関連付ける
 
 ### その他
 
 | 種類 | 件数 | 状態 |
 |------|------|------|
 | **TODO** | 5 | 🟡 Backend待ち/将来対応 |
-| **Backend Test Failures** | 0 | ✅ **全て解決済み** |
 
 ---
 
