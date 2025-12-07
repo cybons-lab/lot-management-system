@@ -16,6 +16,7 @@ from app.api.routes.admin import (
     batch_jobs_router,
     business_rules_router,
     health_router,
+    master_import_router,
     operation_logs_router,
     roles_router,
     test_data_router,
@@ -93,6 +94,7 @@ __all__ = [
     "roles_router",
     "users_router",
     "test_data_router",
+    "master_import_router",
     # Integration (1)
     "sap_router",
     # RPA (1)

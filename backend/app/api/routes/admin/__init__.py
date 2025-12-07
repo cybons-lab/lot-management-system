@@ -7,6 +7,7 @@ from app.api.routes.admin.admin_router import router as admin_router
 from app.api.routes.admin.batch_jobs_router import router as batch_jobs_router
 from app.api.routes.admin.business_rules_router import router as business_rules_router
 from app.api.routes.admin.health_router import router as health_router
+from app.api.routes.admin.master_import_router import router as master_import_router
 from app.api.routes.admin.operation_logs_router import router as operation_logs_router
 from app.api.routes.admin.roles_router import router as roles_router
 from app.api.routes.admin.test_data import router as test_data_router
@@ -19,6 +20,7 @@ __all__ = [
     "batch_jobs_router",
     "business_rules_router",
     "health_router",
+    "master_import_router",
     "operation_logs_router",
     "roles_router",
     "users_router",
