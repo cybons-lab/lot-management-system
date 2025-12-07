@@ -17,7 +17,7 @@ import * as styles from "./styles";
 
 import { Button, Input } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
-import { ROUTES } from "@/constants/routes";
+import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -25,8 +25,6 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 // ============================================
 // Component
 // ============================================
-
-import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 
 export function CustomersListPage() {
   const navigate = useNavigate();

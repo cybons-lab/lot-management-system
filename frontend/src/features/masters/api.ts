@@ -46,13 +46,6 @@ export async function getMasterImportTemplate(group: TemplateGroup): Promise<Mas
     .json<MasterImportTemplate>();
 }
 
-/**
- * Reset database (development only)
- */
-export async function resetDatabase(): Promise<{ success: boolean; message: string }> {
-  return apiClient.post("admin/reset-database").json<{ success: boolean; message: string }>();
-}
-
 // ============================================================
 // Database Reset API (Phase 3: Initialization)
 // ============================================================

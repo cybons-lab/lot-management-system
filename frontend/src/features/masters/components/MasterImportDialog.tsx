@@ -6,14 +6,14 @@ import type { TemplateGroup } from "../types";
 import { ImportResultCard } from "./ImportResultCard";
 import { UploadCard } from "./UploadCard";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui";
 
 interface MasterImportDialogProps {
   open: boolean;
