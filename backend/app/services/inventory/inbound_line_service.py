@@ -113,4 +113,5 @@ class InboundLineService:
                 created_expected_lots.append(db_expected_lot)
 
         db_line.expected_lots = created_expected_lots
+        self.db.flush()  # Get expected lot IDs and timestamps
         return self.map_line_to_response(db_line)
