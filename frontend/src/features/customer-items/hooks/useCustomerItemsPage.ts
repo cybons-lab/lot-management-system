@@ -33,13 +33,10 @@ function useCustomerItemDialogs() {
 }
 
 export function useCustomerItemsPage() {
-  const { searchQuery, setSearchQuery, filters, setFilters, queryParams } = useCustomerItemFilters();
-  const {
-    isCreateDialogOpen,
-    setIsCreateDialogOpen,
-    isImportDialogOpen,
-    setIsImportDialogOpen,
-  } = useCustomerItemDialogs();
+  const { searchQuery, setSearchQuery, filters, setFilters, queryParams } =
+    useCustomerItemFilters();
+  const { isCreateDialogOpen, setIsCreateDialogOpen, isImportDialogOpen, setIsImportDialogOpen } =
+    useCustomerItemDialogs();
 
   const { data: customerItems = [], isLoading } = useCustomerItems(queryParams);
   const { mutate: createCustomerItem, isPending: isCreating } = useCreateCustomerItem();
@@ -71,7 +68,7 @@ export function useCustomerItemsPage() {
         },
       });
     },
-    [createCustomerItem],
+    [createCustomerItem, setIsCreateDialogOpen],
   );
 
   // Delete handler
