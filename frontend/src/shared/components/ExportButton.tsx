@@ -3,7 +3,7 @@
  *
  * Backend APIの `/export/download?format=csv|xlsx` エンドポイントを使用する共通コンポーネント
  */
-import { FileSpreadsheet, FileText } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -38,7 +38,7 @@ export function ExportButton({
 }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleExport = async (format: "csv" | "xlsx") => {
+  const handleExport = async (format: "xlsx" = "xlsx") => {
     try {
       setIsExporting(true);
       const filename = `${filePrefix}_${new Date().toISOString().slice(0, 10)}.${format}`;
@@ -52,29 +52,16 @@ export function ExportButton({
   };
 
   return (
-    <div className={`flex gap-2 ${className || ""}`}>
-      <Button
-        key="csv"
-        variant="outline"
-        size={size}
-        onClick={() => handleExport("csv")}
-        disabled={isExporting}
-        title="CSV形式でダウンロード"
-      >
-        <FileText className="mr-2 h-4 w-4" />
-        CSV
-      </Button>
-      <Button
-        key="xlsx"
-        variant="outline"
-        size={size}
-        onClick={() => handleExport("xlsx")}
-        disabled={isExporting}
-        title="Excel形式でダウンロード"
-      >
-        <FileSpreadsheet className="mr-2 h-4 w-4" />
-        Excel
-      </Button>
-    </div>
+    <Button
+      variant="outline"
+      size={size}
+      onClick={() => handleExport("xlsx")}
+      disabled={isExporting}
+      title="Excel形式でダウンロード"
+      className={className}
+    >
+      <FileSpreadsheet className="mr-2 h-4 w-4" />
+      Excelエクスポート
+    </Button>
   );
 }

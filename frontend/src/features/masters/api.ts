@@ -31,21 +31,26 @@ export async function uploadMasterImport(
 /**
  * Import master data directly from JSON
  */
-export async function importMasterJson(
-  data: MasterImportRequest,
-): Promise<MasterImportResponse> {
+export async function importMasterJson(data: MasterImportRequest): Promise<MasterImportResponse> {
   return apiClient.post(BASE_PATH + "/json", { json: data }).json<MasterImportResponse>();
 }
 
 /**
  * Download import template
  */
-export async function getMasterImportTemplate(
-  group: TemplateGroup,
-): Promise<MasterImportTemplate> {
-  return apiClient.get(BASE_PATH + "/template", {
-    searchParams: { group },
-  }).json<MasterImportTemplate>();
+export async function getMasterImportTemplate(group: TemplateGroup): Promise<MasterImportTemplate> {
+  return apiClient
+    .get(BASE_PATH + "/template", {
+      searchParams: { group },
+    })
+    .json<MasterImportTemplate>();
+}
+
+/**
+ * Reset database (development only)
+ */
+export async function resetDatabase(): Promise<{ success: boolean; message: string }> {
+  return apiClient.post("admin/reset-database").json<{ success: boolean; message: string }>();
 }
 
 // ============================================================

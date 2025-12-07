@@ -79,7 +79,11 @@ function FileUploadArea(props: {
   );
 }
 
-function DryRunCheckbox(props: { dryRun: boolean; isUploading: boolean; onChange: (v: boolean) => void }) {
+function DryRunCheckbox(props: {
+  dryRun: boolean;
+  isUploading: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <div className="flex items-center space-x-2">
       <Checkbox
@@ -104,7 +108,11 @@ function ActionButtons(props: {
 }) {
   return (
     <div className="flex gap-2">
-      <Button onClick={props.onImport} disabled={!props.file || props.isUploading} className="flex-1">
+      <Button
+        onClick={props.onImport}
+        disabled={!props.file || props.isUploading}
+        className="flex-1"
+      >
         {props.isUploading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

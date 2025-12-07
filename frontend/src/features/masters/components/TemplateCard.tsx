@@ -44,7 +44,11 @@ export function TemplateCard(props: TemplateCardProps) {
             <TemplateInfo
               title="得意先系データ"
               description="得意先マスタ、配送先、得意先商品マッピングを一括登録"
-              items={["customers (得意先)", "delivery_places (配送先)", "customer_items (得意先商品)"]}
+              items={[
+                "customers (得意先)",
+                "delivery_places (配送先)",
+                "customer_items (得意先商品)",
+              ]}
               isDownloading={props.isDownloading}
               onDownload={() => props.onDownload("customer")}
             />

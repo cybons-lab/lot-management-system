@@ -12,6 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
 - タスク管理ドキュメントを統一：`remaining_issues.adoc`を削除し、`ACTIVE_TASKS.md`に一元化
 
+### Added
+- **[Feature] Master Import Phase 3 & 4 (Unified UI & Individual Imports)**
+  - **DB Reset**: データベース初期化機能とUI (`ResetCard`) を実装
+  - **Individual Imports**: 各マスタ一覧ページ（仕入先, 得意先, 仕入先商品）にインポートダイアログ (`MasterImportDialog`) を復元・実装
+  - **Excel Export**: CSVエクスポートを廃止し、Excel形式 (`.xlsx`) に完全統一
+  - **Navigation**: マスタ一括インポートページへのナビゲーション統合 (`MastersBulkLoadPage`)
+
 ### Fixed
 - **[Backend Tests] 全25件のテスト失敗を解決（283 passed, 0 failed達成）**
   - FK制約違反（8件）: `customer_id`, `warehouse_id`等のハードコーディングを`master_data` fixture使用に変更

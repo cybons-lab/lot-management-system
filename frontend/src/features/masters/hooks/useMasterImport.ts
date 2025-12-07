@@ -39,7 +39,9 @@ export function useMasterImport() {
       setResult(response);
 
       if (response.status === "success") {
-        toast.success(dryRun ? "検証が完了しました。問題はありません。" : "インポートが完了しました。");
+        toast.success(
+          dryRun ? "検証が完了しました。問題はありません。" : "インポートが完了しました。",
+        );
       } else if (response.status === "partial") {
         toast.warning("一部のデータでエラーが発生しました。");
       } else {

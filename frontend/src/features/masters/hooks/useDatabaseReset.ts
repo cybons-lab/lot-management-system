@@ -1,8 +1,9 @@
 /**
- * useDatabaseReset - データベースリセット機能のカスタムフック
+ * useDatabaseReset.ts
+ * データベースリセット機能のカスタムフック
  */
 
-import { useCallback, useState } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
 import { resetDatabase } from "../api";
@@ -10,19 +11,19 @@ import { resetDatabase } from "../api";
 export function useDatabaseReset() {
   const [isResetting, setIsResetting] = useState(false);
 
-  const handleResetDatabase = useCallback(async () => {
+  const handleReset = useCallback(async () => {
     setIsResetting(true);
     try {
-      const response = await resetDatabase();
-      if (response.success) {
-        toast.success(response.message);
-      } else {
-        toast.error(response.message || "リセットに失敗しました");
-      }
-      return response.success;
+      const result = await resetDatabase();
+      toast.success("初期化完了", {
+        description: result.message,
+      });
+      return true;
     } catch (error) {
-      const message = error instanceof Error ? error.message : "データベースリセット中にエラーが発生しました";
-      toast.error(message);
+      console.error("Database reset error:", error);
+      toast.error("初期化失敗", {
+        description: "データベースのリセットに失敗しました。",
+      });
       return false;
     } finally {
       setIsResetting(false);
@@ -31,6 +32,6 @@ export function useDatabaseReset() {
 
   return {
     isResetting,
-    handleResetDatabase,
+    handleReset,
   };
 }

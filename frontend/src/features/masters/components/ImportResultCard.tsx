@@ -7,14 +7,7 @@ import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 import type { ImportResultDetail, MasterImportResponse } from "../types";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui";
 
 interface ImportResultCardProps {
   result: MasterImportResponse;

@@ -5,7 +5,7 @@
 
 import { Plus, Upload, Users } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import type { Customer, CustomerCreate } from "../api";
 import { CustomerExportButton } from "../components/CustomerExportButton";
@@ -26,6 +26,8 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 // Component
 // ============================================
 
+import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
+
 export function CustomersListPage() {
   const navigate = useNavigate();
 
@@ -33,6 +35,7 @@ export function CustomersListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "customer_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   // Data
   const { useList, useCreate } = useCustomers();
@@ -115,11 +118,9 @@ export function CustomersListPage() {
         actions={
           <div className={styles.actionBar}>
             <CustomerExportButton size="sm" />
-            <Button variant="outline" size="sm" asChild>
-              <Link to={ROUTES.MASTERS.BULK_LOAD}>
-                <Upload className="mr-2 h-4 w-4" />
-                一括インポート
-              </Link>
+            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              インポート
             </Button>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -183,6 +184,12 @@ export function CustomersListPage() {
         </DialogContent>
       </Dialog>
 
+      <MasterImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        title="得意先マスタ インポート"
+        group="customer"
+      />
     </div>
   );
 }
