@@ -113,7 +113,6 @@ app.add_middleware(RequestIdMiddleware)
 
 # ルーター登録
 # Core endpoints
-# Core endpoints
 app.include_router(lots_router, prefix=settings.API_PREFIX)
 app.include_router(
     confirmed_lines_router, prefix=settings.API_PREFIX

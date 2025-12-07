@@ -13,6 +13,7 @@ from app.models import (
     OrderLine,
     Product,
 )
+from app.schemas.inventory.inventory_schema import LotStatus
 
 
 def _load_order(db: Session, order_id: int | None = None, order_number: str | None = None) -> Order:
@@ -98,7 +99,7 @@ def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
         .where(
             Lot.product_id == product_id,
             (Lot.current_quantity - Lot.allocated_quantity) > 0,
-            Lot.status == "active",
+            Lot.status == LotStatus.ACTIVE.value,
         )
         .order_by(
             nulls_last(Lot.expiry_date.asc()),

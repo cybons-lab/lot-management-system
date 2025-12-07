@@ -5,6 +5,8 @@
 
 from decimal import Decimal
 
+from app.schemas.inventory.inventory_schema import LotStatus
+
 from .types import AllocationDecision, AllocationRequest, AllocationResult, LotCandidate
 
 
@@ -48,7 +50,7 @@ def calculate_allocation(
             continue
 
         # ステータスチェック（active以外は引当不可）
-        if lot.status != "active":
+        if lot.status != LotStatus.ACTIVE.value:
             decision = AllocationDecision(
                 lot_id=lot.lot_id,
                 lot_number=lot.lot_number,
