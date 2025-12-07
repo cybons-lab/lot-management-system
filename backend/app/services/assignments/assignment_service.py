@@ -57,7 +57,7 @@ class UserSupplierAssignmentService(
         """
         stmt = select(UserSupplierAssignment.supplier_id).where(
             UserSupplierAssignment.user_id == user_id,
-            UserSupplierAssignment.is_primary == True,  # noqa: E712
+            UserSupplierAssignment.is_primary.is_(True),
         )
         result = self.db.execute(stmt)
         return list(result.scalars().all())
@@ -108,7 +108,7 @@ class UserSupplierAssignmentService(
         # Remove existing primary for this supplier
         stmt = select(UserSupplierAssignment).where(
             UserSupplierAssignment.supplier_id == supplier_id,
-            UserSupplierAssignment.is_primary == True,  # noqa: E712
+            UserSupplierAssignment.is_primary.is_(True),
         )
         existing_primary = cast(
             UserSupplierAssignment | None, self.db.execute(stmt).scalar_one_or_none()
