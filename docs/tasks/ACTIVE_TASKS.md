@@ -97,28 +97,18 @@
 
 ---
 
-### 🟡 Backend: Ruff `# noqa` (53件) - 一部許容可
+### ✅ Backend: Ruff `# noqa` (53件) - 全て許容可能
 
-| コード | 説明 | 件数 | 対応 |
+全件調査の結果、全て正当な理由があり削減不要と判断。
+
+| コード | 説明 | 件数 | 理由 |
 |-------|------|------|------|
-| **F403** | `import *` in `__init__.py` | 36 | ✅ 許容（パッケージ公開API） |
-| **E402** | Import not at top | 8 | 🟡 テスト・スクリプトのみ許容 |
-| **F401** | Unused import | 5 | 🟡 側面効果importで許容 |
-| ~~E712~~ | ~~`== True` comparison~~ | ~~5~~ →1 | ✅ 4件修正済み（残1はインデックス定義で許容） |
-| その他 | - | 3 | 🟡 確認要 |
-
-#### ✅ 完了: E712 (5件→1件、4件修正)
-
-**E712 (5件):** 冗長な`== True`比較
-```python
-# 修正前
-.filter(Product.is_primary == True)  # noqa: E712
-
-# 修正後
-.filter(Product.is_primary)
-```
-
-**F401 (5件):** 未使用インポート → 削除
+| **F403** | `import *` in `__init__.py` | 36 | パッケージ公開API |
+| **E402** | Import not at top | 8 | scripts/testsでのsys.path設定後import |
+| **F401** | Unused import | 5 | 側面効果import、alembic |
+| **E712** | `== True` | 1 | PostgreSQLインデックス定義 |
+| **UP046** | Genericクラス | 1 | BaseService定義 |
+| その他 | - | 2 | 特殊なケース |
 
 ---
 
