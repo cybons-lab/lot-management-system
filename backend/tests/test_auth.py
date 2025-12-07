@@ -52,9 +52,8 @@ def test_hash_password(db_session: Session):
 def test_login_success(client: TestClient, test_user: User):
     """Test successful login."""
     response = client.post(
-        "/api/login",
-        data={"username": "testuser", "password": "testpassword"},
-        headers={"content-type": "application/x-www-form-urlencoded"},
+        "/api/auth/login",
+        json={"username": "testuser"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -65,9 +64,8 @@ def test_login_success(client: TestClient, test_user: User):
 def test_login_failure(client: TestClient):
     """Test failed login."""
     response = client.post(
-        "/api/login",
-        data={"username": "wronguser", "password": "wrongpassword"},
-        headers={"content-type": "application/x-www-form-urlencoded"},
+        "/api/auth/login",
+        json={"username": "nonexistent_user"},
     )
     assert response.status_code == 401
 
