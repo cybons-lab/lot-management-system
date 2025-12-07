@@ -22,7 +22,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
 
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return str(encoded_jwt)
 
 
 def decode_access_token(token: str) -> dict[str, Any] | None:
