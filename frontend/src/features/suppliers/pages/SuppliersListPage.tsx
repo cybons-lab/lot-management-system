@@ -6,7 +6,6 @@ import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import type { Supplier, SupplierCreate } from "../api";
-import { SupplierBulkImportDialog } from "../components/SupplierBulkImportDialog";
 import { SupplierExportButton } from "../components/SupplierExportButton";
 import { SupplierForm } from "../components/SupplierForm";
 import { useSuppliers } from "../hooks";
@@ -16,6 +15,7 @@ import * as styles from "./styles";
 
 import { Button, Input } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -149,7 +149,12 @@ export function SuppliersListPage() {
         </DialogContent>
       </Dialog>
 
-      <SupplierBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+      <MasterImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        title="仕入先マスタ インポート"
+        group="supply"
+      />
     </div>
   );
 }

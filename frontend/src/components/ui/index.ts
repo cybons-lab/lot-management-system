@@ -17,3 +17,6 @@ export * from "./display";
 
 // Layout components
 export * from "./layout";
+
+// Feedback components
+export * from "./feedback";

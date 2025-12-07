@@ -1,11 +1,11 @@
 import { Package, Building2, Upload } from "lucide-react";
 import { useState } from "react";
 
-import { SupplierProductBulkImportDialog } from "../components/SupplierProductBulkImportDialog";
 import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
 import { useSupplierProducts } from "../hooks/useSupplierProducts";
 
 import { Button } from "@/components/ui";
+import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 
 interface SupplierProduct {
   supplier_code: string;
@@ -121,9 +121,11 @@ export function SupplierProductsPage() {
 
       <div className="text-sm text-slate-600">{products.length} 件の仕入先商品</div>
 
-      <SupplierProductBulkImportDialog
+      <MasterImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
+        title="仕入先商品 インポート"
+        group="supply"
       />
     </div>
   );

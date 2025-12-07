@@ -1,4 +1,12 @@
-import { Database, Users, Warehouse, Package, Building2, UserCheck } from "lucide-react";
+import {
+  Database,
+  Users,
+  Warehouse,
+  Package,
+  Building2,
+  UserCheck,
+  FilePenLine,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { ROUTES } from "@/constants/routes";
@@ -76,6 +84,14 @@ const masterLinks: MasterLink[] = [
     href: ROUTES.SETTINGS.USERS,
     icon: Users,
     color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
+    requireAdmin: true,
+  },
+  {
+    title: "一括インポート・初期化",
+    description: "マスタデータの一括登録とDB初期化",
+    href: ROUTES.MASTERS.BULK_LOAD,
+    icon: FilePenLine,
+    color: "bg-rose-50 text-rose-600 hover:bg-rose-100",
     requireAdmin: true,
   },
 ];
