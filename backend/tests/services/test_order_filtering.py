@@ -22,9 +22,12 @@ def order_filtering_data(db: Session):
     )
     db.add(product)
 
+    # Flush to get IDs before creating related records
+    db.flush()
+
     delivery_place = DeliveryPlace(
-        delivery_place_code="DP-FILTER", delivery_place_name="Filter Place", customer_id=1
-    )  # dummy fk
+        delivery_place_code="DP-FILTER", delivery_place_name="Filter Place", customer_id=customer.id
+    )
     db.add(delivery_place)
 
     db.flush()
