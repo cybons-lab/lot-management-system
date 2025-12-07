@@ -25,6 +25,7 @@ from app.api.routes import (
     inbound_plans_router,
     inventory_items_router,
     lots_router,
+    master_import_router,
     operation_logs_router,
     order_lines_router,
     orders_router,
@@ -203,6 +204,7 @@ app.include_router(
 app.include_router(admin_router, prefix=settings.API_PREFIX)
 app.include_router(admin_healthcheck_router, prefix=settings.API_PREFIX)
 app.include_router(test_data_router, prefix=settings.API_PREFIX + "/admin/test-data")
+app.include_router(master_import_router, prefix=settings.API_PREFIX + "/admin")
 app.include_router(health_router, prefix=settings.API_PREFIX)
 
 # Operation logs, business rules, batch jobs
