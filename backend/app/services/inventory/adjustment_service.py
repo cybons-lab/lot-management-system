@@ -6,7 +6,11 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.models.inventory_models import Adjustment, Lot, StockHistory, StockTransactionType
-from app.schemas.inventory.inventory_schema import AdjustmentCreate, AdjustmentResponse
+from app.schemas.inventory.inventory_schema import (
+    AdjustmentCreate,
+    AdjustmentResponse,
+    AdjustmentType,
+)
 from app.services.common.base_service import BaseService
 
 
@@ -64,7 +68,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
             AdjustmentResponse(
                 id=adj.id,
                 lot_id=adj.lot_id,
-                adjustment_type=adj.adjustment_type,  # type: ignore[arg-type]
+                adjustment_type=AdjustmentType(adj.adjustment_type),
                 adjusted_quantity=adj.adjusted_quantity,
                 reason=adj.reason,
                 adjusted_by=adj.adjusted_by,
@@ -90,7 +94,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         return AdjustmentResponse(
             id=adjustment.id,
             lot_id=adjustment.lot_id,
-            adjustment_type=adjustment.adjustment_type,  # type: ignore[arg-type]
+            adjustment_type=AdjustmentType(adjustment.adjustment_type),
             adjusted_quantity=adjustment.adjusted_quantity,
             reason=adjustment.reason,
             adjusted_by=adjustment.adjusted_by,
@@ -167,7 +171,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         return AdjustmentResponse(
             id=db_adjustment.id,
             lot_id=db_adjustment.lot_id,
-            adjustment_type=db_adjustment.adjustment_type,  # type: ignore[arg-type]
+            adjustment_type=AdjustmentType(db_adjustment.adjustment_type),
             adjusted_quantity=db_adjustment.adjusted_quantity,
             reason=db_adjustment.reason,
             adjusted_by=db_adjustment.adjusted_by,
