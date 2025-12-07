@@ -67,7 +67,7 @@ class ExportService:
     def export_to_csv(data: list[Any], filename: str = "export") -> StreamingResponse:
         """Export data to CSV."""
         try:
-            import pandas as pd  # type: ignore[import-untyped]
+            import pandas as pd
         except ImportError:
             raise ImportError("pandas is required for export. Please install it.")
 
@@ -88,8 +88,8 @@ class ExportService:
     def export_to_excel(data: list[Any], filename: str = "export") -> StreamingResponse:
         """Export data to Excel (xlsx)."""
         try:
-            import openpyxl  # type: ignore[import-untyped]  # noqa: F401
-            import pandas as pd  # type: ignore[import-untyped]
+            import openpyxl  # noqa: F401
+            import pandas as pd
         except ImportError:
             raise ImportError("pandas and openpyxl are required for export. Please install them.")
 
@@ -159,12 +159,13 @@ class ExportService:
     def _export_template_excel(data: list[list[str]], filename: str) -> StreamingResponse:
         """Export template data as Excel."""
         try:
-            from openpyxl import Workbook  # type: ignore[import-untyped]
+            from openpyxl import Workbook
         except ImportError:
             raise ImportError("openpyxl is required for Excel export. Please install it.")
 
         wb = Workbook()
         ws = wb.active
+        assert ws is not None, "Workbook should have an active worksheet"
         ws.title = "Template"
 
         for row_idx, row_data in enumerate(data, 1):

@@ -21,7 +21,7 @@ import sys
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
+from dateutil.relativedelta import relativedelta
 from dotenv import load_dotenv
 from hypothesis import strategies as st
 from sqlalchemy import text
