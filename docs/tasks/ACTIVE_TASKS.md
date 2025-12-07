@@ -144,7 +144,7 @@
 | type: ignore | 0件 | ✅ 完了 |
 | noqa | 42件 | ✅ 意図的（Backend Ruff） |
 | pragma: no cover | 5件 | ✅ テストカバレッジ除外（正常） |
-| TODO | 9件 | 🟡 全てBackend待ち/将来対応 |
+| TODO | 5件 | 🟡 全てBackend待ち/将来対応 |
 
 ---
 
