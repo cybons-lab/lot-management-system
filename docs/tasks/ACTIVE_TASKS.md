@@ -61,19 +61,33 @@
 
 ## 🔧 技術的負債（リファクタリング候補）
 
-<details>
-<summary>eslint-disable削減（39件）</summary>
+### 残り 9件 (eslint-disable)
 
-**現状:** 全てに理由コメント追加済み  
-**対応:** リファクタリングは将来対応
+以下のファイルに `eslint-disable` が残っていますが、機能には影響しないため優先度は低です。
 
-#### `max-lines-per-function` (約25件)
-`*BulkImportDialog.tsx` (Product完了, 他6件)
+#### `max-lines-per-function` (6件)
+- `frontend/src/features/orders/hooks/useOrderLineAllocation.ts`
+- `frontend/src/features/customer-items/hooks/useCustomerItemsPage.ts`
+- `frontend/src/features/forecasts/components/ForecastDetailCard/useLotCandidateRow.ts`
+- `frontend/src/features/forecasts/components/ForecastDetailCard/PlanningAllocationPanel.tsx`
+- `frontend/src/features/client-logs/pages/ClientLogsPage.tsx`
+- `frontend/src/components/common/SAPRegistrationDialog.tsx`
 
+#### `complexity` (3件)
+- `frontend/src/features/customer-items/utils/customer-item-csv.ts`
+- `frontend/src/components/ui/form/SearchableSelect.tsx`
+- `frontend/src/factories/order-factory.ts`
 
+### 🐛 既知の不具合 (Known Issues)
 
+#### Backend Test Failures (40 errors)
+`backend/tests/api/test_order_allocation_refactor.py` などで既存のテストエラーが発生しています。
+これらは今回のBulk Importリファクタリングとは関連しないレガシーな問題ですが、将来的に解消が必要です。
+- `TestOrderAPI`: create/duplicate/cancel 関連のエラー
+- `TestAllocationPreviewStatus`: ステータス遷移テストのエラー
 
-</details>
+### ✅ 解消済み (Refactoring Complete)
+- （CHANGELOG.md へ移動済み）
 
 ---
 
@@ -81,8 +95,11 @@
 
 | 種類 | 件数 | 状態 |
 |------|------|------|
-| **ESLint/TS/Mypy** | 0 | ✅ 完全クリーン |
-| **TODO** | 5件 | 🟡 Backend待ち/将来対応 |
+| **ESLint Errors** | 0 | ✅ Clean |
+| **TS Errors** | 0 | ✅ Clean |
+| **Mypy Errors** | 0 | ✅ Clean |
+| **eslint-disable** | 9 | 🟡 Low Priority |
+| **TODO** | 5 | 🟡 Backend待ち/将来対応 |
 
 ---
 

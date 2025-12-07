@@ -52,7 +52,7 @@ def downgrade() -> None:
         batch_op.create_index("ix_product_suppliers_product_id", ["product_id"], unique=False)
 
     with op.batch_alter_table("orders", schema=None) as batch_op:
-        batch_op.drop_constraint(None, type_="foreignkey")
+        batch_op.drop_constraint(None, type_="foreignkey")  # type: ignore[arg-type]
         batch_op.drop_index("idx_orders_locked_by")
         batch_op.drop_index(
             "idx_orders_lock_expires", postgresql_where=sa.text("lock_expires_at IS NOT NULL")

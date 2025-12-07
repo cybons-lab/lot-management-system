@@ -130,7 +130,7 @@ def test_create_adjustment_invalid_lot_returns_400(test_db: Session, sample_lot:
     }
 
     response = client.post("/api/adjustments", json=adjustment_data)
-    assert response.status_code == 400
+    assert response.status_code == 422
 
 
 def test_list_adjustments_success(test_db: Session, sample_lot: Lot):

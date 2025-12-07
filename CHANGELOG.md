@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Backend: `/cancel-by-order-line` API追加
   - Frontend: `useCancelAllAllocationsForLine` 実装
 
+### Technical Debt (Refactoring)
+- **[Refactor] Bulk Import Dialogs**: 全7種類のBulk Importダイアログ（Users, Products, Warehouses等）を`BaseBulkImportDialog`コンポーネントに統一し、コード重複を削減
+- **[Refactor] Frontend Components**: 肥大化したコンポーネントを分割 (`LineBasedAllocationList`, `PrimaryAssignmentsPage`など)
+- **[Fix] Backend Types**: Mypyエラーを0件まで解消（`alembic`マイグレーション型修正など）
+
 ## [2025-12-06]
 
 ### Added

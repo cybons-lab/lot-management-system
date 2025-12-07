@@ -64,6 +64,7 @@ export async function parseUomConversionCsv(
     }
 
     rows.push({
+      OPERATION: "UPD",
       product_code: rowData["product_code"] ?? "",
       external_unit: rowData["external_unit"] ?? "",
       factor: Number(rowData["factor"]),
