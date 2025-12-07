@@ -126,6 +126,7 @@ def calculate_line_allocations(
 
         # Prepare candidates with correct availability context
         candidates = []
+        temp_allocations: dict[int, Decimal] = {}
         for lot, real_available_qty in _lot_candidates(db, product_id):
             current_tracked_available = available_per_lot.get(
                 lot.id, float(real_available_qty or 0.0)
@@ -133,20 +134,17 @@ def calculate_line_allocations(
             if current_tracked_available <= 0:
                 continue
 
-            # Bridge: allocator uses _temp_allocated to determine availability.
-            # We want allocator to see `available = current_tracked_available`
-            # logic: available = current - allocated - temp
-            # => temp = current - allocated - target_available
+            # Calculate temporary allocated quantity to pass to allocator
+            # allocator sees: available = current - allocated - temp_allocations[lot_id]
+            # We want allocator to see: available = current_tracked_available
+            # => temp_allocations[lot_id] = current - allocated - target_available
             real_avail_db = lot.current_quantity - lot.allocated_quantity  # Max theoretical
-            # Use Decimal for precision in calc
             target_avail = Decimal(str(current_tracked_available))
-            temp_allocated = real_avail_db - target_avail
-
-            lot._temp_allocated = temp_allocated  # type: ignore[attr-defined]
+            temp_allocations[lot.id] = real_avail_db - target_avail
             candidates.append(lot)
 
-        # Execute allocation
-        results = allocate_soft_for_forecast(Decimal(str(remaining)), candidates)
+        # Execute allocation with temp_allocations dict
+        results = allocate_soft_for_forecast(Decimal(str(remaining)), candidates, temp_allocations)
 
         for res in results:
             # Map back to FefoLotPlan

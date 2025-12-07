@@ -71,6 +71,9 @@ class AllocationSuggestionService:
             product_ids = list({f.product_id for f in forecasts})
         lots_by_product = self._fetch_available_lots(product_ids)
 
+        # Track temporary allocations per lot_id across all forecast iterations
+        temp_allocations: dict[int, Decimal] = {}
+
         # 3. Process each forecast row
         for f in forecasts:
             needed = f.forecast_quantity
@@ -84,7 +87,7 @@ class AllocationSuggestionService:
             # FEFO Allocation Logic (Delegated to allocator)
             from app.services.allocations.allocator import allocate_soft_for_forecast
 
-            alloc_results = allocate_soft_for_forecast(needed, lots)
+            alloc_results = allocate_soft_for_forecast(needed, lots, temp_allocations)
 
             priority_counter = 1  # Reset or continue? Usually per forecast line => starts at 1
 
@@ -110,10 +113,9 @@ class AllocationSuggestionService:
                 needed -= res.quantity
                 allocated_for_row += res.quantity
 
-                # Update temp allocation on lot for subsequent iterations in this loop
-                if not hasattr(allocated_lot, "_temp_allocated"):
-                    allocated_lot._temp_allocated = Decimal("0")  # type: ignore[attr-defined]
-                allocated_lot._temp_allocated += res.quantity  # type: ignore[attr-defined]
+                # Update temp_allocations dict for subsequent iterations
+                current_temp = temp_allocations.get(allocated_lot.id, Decimal("0"))
+                temp_allocations[allocated_lot.id] = current_temp + res.quantity
 
                 priority_counter += 1
 

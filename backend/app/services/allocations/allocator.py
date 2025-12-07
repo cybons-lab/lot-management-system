@@ -15,6 +15,7 @@ class SoftAllocationResult(NamedTuple):
 def allocate_soft_for_forecast(
     required_qty: Decimal,
     candidate_lots: list[Lot],
+    temp_allocations: dict[int, Decimal] | None = None,
 ) -> list[SoftAllocationResult]:
     """Allocate lots for a forecast line using the "v0" algorithm.
 
@@ -29,24 +30,16 @@ def allocate_soft_for_forecast(
     Args:
         required_qty: The quantity required by the forecast line.
         candidate_lots: List of available Lot objects.
-                        NOTE: Function expects `lot.available_quantity` or equivalent logic
-                        to be handled by caller or pre-calculated.
-                        However, usually `lot` object has `current_quantity` and `allocated_quantity`.
-                        This function calculates strictly based on (current - allocated).
-                        If temporary allocation tracking is needed (e.g. within a loop),
-                        candidate_lots should ideally be objects with updated state, or
-                        we calculate assuming provided lots are fresh candidates.
-                        **Assumption**: `lot._temp_allocated` might be used in the service layer Loop.
-                        To make this function PURE, we should perhaps receive structs with "available_qty".
-                        But to keep it simple with ORM models, we'll access properties, but be careful.
-
-                        Actually, looking at previous `suggestion.py` logic, checks `_temp_allocated`.
-                        To make this robust and reusable:
-                        We will respect `_temp_allocated` if present on the Lot object.
+        temp_allocations: Optional dict mapping lot_id -> temporary allocated quantity.
+                         Used to track allocations within a calculation session
+                         without modifying the Lot objects.
 
     Returns:
         List of SoftAllocationResult.
     """
+    if temp_allocations is None:
+        temp_allocations = {}
+
     if required_qty <= 0:
         return []
 
@@ -70,8 +63,8 @@ def allocate_soft_for_forecast(
     lot_availability: dict[int, Decimal] = {}
     for lot in sorted_lots:
         allocated = lot.allocated_quantity
-        if hasattr(lot, "_temp_allocated"):
-            allocated += lot._temp_allocated  # type: ignore[attr-defined]
+        # Use temp_allocations dict instead of dynamic attribute
+        allocated += temp_allocations.get(lot.id, Decimal("0"))
 
         available = lot.current_quantity - allocated
         lot_availability[lot.id] = max(Decimal("0"), available)
