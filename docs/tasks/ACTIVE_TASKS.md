@@ -54,9 +54,6 @@
 **関連TODO:**
 - `backend/app/services/sap/sap_service.py:L61`
 
-### ✅ 2. Bulk Import API（完了済み）
-- CHANGELOG.mdを参照
-
 ---
 
 ## 🔧 技術的負債（リファクタリング候補）
@@ -72,14 +69,6 @@
 #### `complexity` (1件)
 - `frontend/src/components/ui/form/SearchableSelect.tsx` - 複雑性13で1つ超過、サブコンポーネント分離済み
 
-### ✅ リファクタリング完了 (2025-12-07)
-以下のファイルは eslint-disable を削除し、サブコンポーネント/ヘルパー関数を抽出してリファクタリング完了：
-- `frontend/src/factories/order-factory.ts` - ヘルパー関数 `resolveDeliveryDate`, `resolveExtraFields` 抽出
-- `frontend/src/features/forecasts/components/ForecastDetailCard/PlanningAllocationPanel.tsx` - `LotBreakdownSection`, `PeriodSection` 分離
-- `frontend/src/features/client-logs/pages/ClientLogsPage.tsx` - `LogsTable`, `getLevelBadgeVariant` 分離
-- `frontend/src/components/common/SAPRegistrationDialog.tsx` - `LineItem` コンポーネント分離
-- `frontend/src/components/ui/form/SearchableSelect.tsx` - `ClearButton`, `SearchInput` 分離（max-lines-per-function解消）
-
 ### 🐛 既知の不具合 (Known Issues)
 
 #### Backend Test Failures (40 errors)
@@ -87,9 +76,6 @@
 これらは今回のBulk Importリファクタリングとは関連しないレガシーな問題ですが、将来的に解消が必要です。
 - `TestOrderAPI`: create/duplicate/cancel 関連のエラー
 - `TestAllocationPreviewStatus`: ステータス遷移テストのエラー
-
-### ✅ 解消済み (Refactoring Complete)
-- （CHANGELOG.md へ移動済み）
 
 ---
 
