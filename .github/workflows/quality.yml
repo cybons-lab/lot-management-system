@@ -116,6 +116,5 @@ jobs:
 
       # Diff Check
       - name: Check for Uncommitted Changes
-        continue-on-error: true
         run: |
-          git diff --exit-code frontend/src/shared/types/openapi.d.ts || (echo "⚠️ Warning: Frontend type definitions may be out of sync with Backend schema. Please run 'npm run typegen' in frontend directory and commit the changes." && exit 1)
+          git diff --exit-code frontend/src/types/api.d.ts || (echo "⚠️ Frontend type definitions are out of sync with Backend schema. Please run 'npm run typegen' in frontend directory and commit the changes." && exit 1)
