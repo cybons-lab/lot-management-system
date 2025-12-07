@@ -7,7 +7,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
-from app.models.inbound_models import InboundPlan, InboundPlanLine
+from app.models.inbound_models import InboundPlan, InboundPlanLine, InboundPlanStatus
 from app.models.inventory_models import Lot, StockHistory, StockTransactionType
 from app.schemas.inventory.inbound_schema import (
     InboundPlanReceiveRequest,
@@ -138,7 +138,7 @@ class InboundReceivingService:
                 created_lot_ids.append(db_lot.id)
 
         # Update plan status
-        plan.status = "received"  # type: ignore[assignment]
+        plan.status = InboundPlanStatus.RECEIVED
         plan.updated_at = datetime.now()
 
         self.db.commit()

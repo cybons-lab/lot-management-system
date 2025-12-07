@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -142,7 +143,7 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
         response.supplier_name = lot.supplier.supplier_name
         response.supplier_code = lot.supplier.supplier_code
 
-    response.current_quantity = float(lot.current_quantity or 0.0)  # type: ignore[assignment]
+    response.current_quantity = lot.current_quantity or Decimal("0")
     response.last_updated = lot.updated_at
     return response
 

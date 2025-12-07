@@ -546,7 +546,7 @@ class LotService:
 
         self.db.commit()
         self.db.refresh(db_movement)
-        return db_movement  # type: ignore[return-value]
+        return StockMovementResponse.model_validate(db_movement)
 
     def list_lot_movements(self, lot_id: int) -> list[StockMovementResponse]:
         """List movements for a lot."""
@@ -556,10 +556,7 @@ class LotService:
             .order_by(StockMovement.transaction_date.desc())
             .all()
         )
-        # Assuming Pydantic v2 validation or direct mapping happens at router,
-        # but here we return ORM objects which FastAPI handles if return_type is set.
-        # However, to be strict we might want to validate here.
-        return movements  # type: ignore[return-value]
+        return [StockMovementResponse.model_validate(m) for m in movements]
 
     def _build_lot_response(self, lot_id: int) -> LotResponse:
         """Helper to build LotResponse from Lot model definition (joined
@@ -588,6 +585,6 @@ class LotService:
             response.supplier_name = db_lot.supplier.supplier_name
             response.supplier_code = db_lot.supplier.supplier_code
 
-        response.current_quantity = float(db_lot.current_quantity or 0.0)  # type: ignore[assignment]
+        response.current_quantity = db_lot.current_quantity or Decimal("0")
         response.last_updated = db_lot.updated_at
         return response
