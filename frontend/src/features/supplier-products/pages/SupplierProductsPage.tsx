@@ -1,11 +1,11 @@
 import { Package, Building2, Upload } from "lucide-react";
-import { useState } from "react";
+import { Link } from "react-router-dom";
 
-import { SupplierProductBulkImportDialog } from "../components/SupplierProductBulkImportDialog";
 import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
 import { useSupplierProducts } from "../hooks/useSupplierProducts";
 
 import { Button } from "@/components/ui";
+import { ROUTES } from "@/constants/routes";
 
 interface SupplierProduct {
   supplier_code: string;
@@ -73,7 +73,6 @@ function SupplierProductTableRow({ product }: { product: SupplierProduct }) {
 export function SupplierProductsPage() {
   const { useList } = useSupplierProducts();
   const { data: products = [], isLoading, error, isError } = useList();
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   if (isLoading) {
     return <div className="p-6">読み込み中...</div>;
@@ -101,9 +100,11 @@ export function SupplierProductsPage() {
         </div>
         <div className="flex gap-2">
           <SupplierProductExportButton size="sm" />
-          <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" />
-            インポート
+          <Button variant="outline" size="sm" asChild>
+            <Link to={ROUTES.MASTERS.BULK_LOAD}>
+              <Upload className="mr-2 h-4 w-4" />
+              一括インポート
+            </Link>
           </Button>
         </div>
       </div>
@@ -120,11 +121,6 @@ export function SupplierProductsPage() {
       </div>
 
       <div className="text-sm text-slate-600">{products.length} 件の仕入先商品</div>
-
-      <SupplierProductBulkImportDialog
-        open={isImportDialogOpen}
-        onOpenChange={setIsImportDialogOpen}
-      />
     </div>
   );
 }

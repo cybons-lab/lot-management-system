@@ -5,10 +5,9 @@
 
 import { Plus, Upload, Users } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import type { Customer, CustomerCreate } from "../api";
-import { CustomerBulkImportDialog } from "../components/CustomerBulkImportDialog";
 import { CustomerExportButton } from "../components/CustomerExportButton";
 import { CustomerForm } from "../components/CustomerForm";
 import { useCustomers } from "../hooks";
@@ -18,6 +17,7 @@ import * as styles from "./styles";
 
 import { Button, Input } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { ROUTES } from "@/constants/routes";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -33,7 +33,6 @@ export function CustomersListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "customer_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   // Data
   const { useList, useCreate } = useCustomers();
@@ -116,9 +115,11 @@ export function CustomersListPage() {
         actions={
           <div className={styles.actionBar}>
             <CustomerExportButton size="sm" />
-            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              インポート
+            <Button variant="outline" size="sm" asChild>
+              <Link to={ROUTES.MASTERS.BULK_LOAD}>
+                <Upload className="mr-2 h-4 w-4" />
+                一括インポート
+              </Link>
             </Button>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -182,8 +183,6 @@ export function CustomersListPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 一括インポートダイアログ */}
-      <CustomerBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
     </div>
   );
 }

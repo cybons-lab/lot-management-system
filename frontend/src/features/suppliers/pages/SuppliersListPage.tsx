@@ -3,10 +3,9 @@
  */
 import { Plus, Upload, Truck } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import type { Supplier, SupplierCreate } from "../api";
-import { SupplierBulkImportDialog } from "../components/SupplierBulkImportDialog";
 import { SupplierExportButton } from "../components/SupplierExportButton";
 import { SupplierForm } from "../components/SupplierForm";
 import { useSuppliers } from "../hooks";
@@ -16,6 +15,7 @@ import * as styles from "./styles";
 
 import { Button, Input } from "@/components/ui";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { ROUTES } from "@/constants/routes";
 import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -25,7 +25,6 @@ export function SuppliersListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "supplier_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const { useList, useCreate } = useSuppliers();
   const { data: suppliers = [], isLoading, isError, error, refetch } = useList();
@@ -87,9 +86,11 @@ export function SuppliersListPage() {
         actions={
           <div className={styles.actionBar}>
             <SupplierExportButton size="sm" />
-            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              インポート
+            <Button variant="outline" size="sm" asChild>
+              <Link to={ROUTES.MASTERS.BULK_LOAD}>
+                <Upload className="mr-2 h-4 w-4" />
+                一括インポート
+              </Link>
             </Button>
             <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
@@ -149,7 +150,6 @@ export function SuppliersListPage() {
         </DialogContent>
       </Dialog>
 
-      <SupplierBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
     </div>
   );
 }
