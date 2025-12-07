@@ -73,7 +73,13 @@ function LogsTable({ logs }: { logs: ClientLog[] }) {
 }
 
 export function ClientLogsPage() {
-  const { data: logs = [], isLoading, isError, refetch, isFetching } = useClientLogs({ limit: 100 });
+  const {
+    data: logs = [],
+    isLoading,
+    isError,
+    refetch,
+    isFetching,
+  } = useClientLogs({ limit: 100 });
 
   return (
     <div className="space-y-6 p-6">
