@@ -13,6 +13,8 @@ import {
   executeBatchJob,
   cancelBatchJob,
   deleteBatchJob,
+  getInventorySyncAlerts,
+  executeInventorySync,
 } from "../api";
 
 // ===== Query Keys =====
@@ -107,6 +109,39 @@ export const useDeleteBatchJob = () => {
     mutationFn: (jobId: number) => deleteBatchJob(jobId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: batchJobKeys.lists() });
+    },
+  });
+};
+
+// ===== SAP Inventory Sync Hooks =====
+
+export const inventorySyncKeys = {
+  all: ["inventorySync"] as const,
+  alerts: (activeOnly?: boolean) => [...inventorySyncKeys.all, "alerts", activeOnly] as const,
+};
+
+/**
+ * Get inventory sync alerts
+ */
+export const useInventorySyncAlerts = (activeOnly: boolean = true) => {
+  return useQuery({
+    queryKey: inventorySyncKeys.alerts(activeOnly),
+    queryFn: () => getInventorySyncAlerts(activeOnly),
+    staleTime: 1000 * 30, // 30 seconds
+  });
+};
+
+/**
+ * Execute inventory sync
+ */
+export const useExecuteInventorySync = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => executeInventorySync(),
+    onSuccess: () => {
+      // Invalidate alerts to refresh after sync
+      queryClient.invalidateQueries({ queryKey: inventorySyncKeys.all });
     },
   });
 };

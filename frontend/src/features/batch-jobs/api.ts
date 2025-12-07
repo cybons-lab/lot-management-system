@@ -117,3 +117,66 @@ export const cancelBatchJob = (jobId: number) => {
 export const deleteBatchJob = (jobId: number) => {
   return http.delete(`batch-jobs/${jobId}`);
 };
+
+// ===== SAP Inventory Sync =====
+
+/**
+ * Inventory Sync Alert
+ */
+export interface InventorySyncAlert {
+  rule_id: number;
+  rule_code: string;
+  rule_name: string;
+  rule_type: string;
+  rule_parameters: {
+    product_id: number;
+    local_qty: number;
+    sap_qty: number;
+    diff_pct: number;
+    diff_amount: number;
+    checked_at: string;
+  };
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Inventory Sync Alerts Response
+ */
+export interface InventorySyncAlertsResponse {
+  alerts: InventorySyncAlert[];
+  total: number;
+}
+
+/**
+ * Inventory Sync Execute Response
+ */
+export interface InventorySyncExecuteResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    checked_products: number;
+    discrepancies_found: number;
+    alerts_created: number;
+    details: unknown[];
+  };
+}
+
+/**
+ * Get inventory sync alerts
+ * @endpoint GET /batch-jobs/inventory-sync/alerts
+ */
+export const getInventorySyncAlerts = (activeOnly: boolean = true) => {
+  return http.get<InventorySyncAlertsResponse>(
+    `batch-jobs/inventory-sync/alerts?active_only=${activeOnly}`,
+  );
+};
+
+/**
+ * Execute inventory sync
+ * @endpoint POST /batch-jobs/inventory-sync/execute
+ */
+export const executeInventorySync = () => {
+  return http.post<InventorySyncExecuteResponse>("batch-jobs/inventory-sync/execute", {});
+};

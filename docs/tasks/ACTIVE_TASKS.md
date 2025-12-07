@@ -17,25 +17,29 @@
 
 ## 🔜 近い将来対応予定
 
-### P2-1: SAP在庫同期機能の完成
+### ✅ P2-1: SAP在庫同期機能の完成（モック環境対応完了）
 
-**ページ:** `/admin/batch-jobs` (実装済み、GlobalNavigation「管理」メニュー配下)
+**ページ:** `/admin/batch-jobs` (実装完了)
 
-**実装済み:**
-- ✅ `InventorySyncService`: SAP在庫とローカルDB在庫の差異チェック
+**実装完了:**
+- ✅ `InventorySyncService`: SAP在庫とローカルDB在庫の差異チェック（モック対応）
 - ✅ `/api/batch-jobs/inventory-sync/execute`: 手動実行API
-- ✅ `BatchJobsPage`: バッチジョブ一覧・実行・削除UI
+- ✅ `/api/batch-jobs/inventory-sync/alerts`: 差異アラート取得API
+- ✅ `BatchJobsPage`: SAP在庫同期専用UI
+  - ワンクリック実行ボタン
+  - 差異アラート一覧表示（商品ID、ローカル/SAP在庫、差異率、最終チェック日時）
+  - アクティブアラート/全履歴切り替え
+- ✅ `BatchJobsPage`: 汎用バッチジョブ管理UI（ジョブ一覧・実行・削除）
 
-**未実装（残タスク）:**
-- ❌ **SAP在庫同期の専用UI**（ワンクリック実行ボタン + 実行履歴表示）
-- ❌ **定期実行設定**（APScheduler または Celery Beat による自動実行）
+**残タスク（本番SAP接続が必要）:**
 - ❌ **本番SAP API接続**（現在はモック: `SAPMockClient`）
+  - `backend/app/external/sap_mock_client.py` を実際のSAP APIクライアントに置き換え
+- ❌ **定期実行設定**（オプション）
+  - APScheduler または Celery Beat による自動スケジュール実行
+  - 実行頻度設定UI
 
-**提案する実装:**
-1. BatchJobsPageにSAP在庫同期専用セクションを追加
-2. 実行履歴と結果をテーブル表示
-3. 定期実行スケジュールの設定UI
-4. `sap_service.py`のモックを本番API呼び出しに置き換え
+> **Note**: モック環境で実装可能な部分は全て完了。本番SAP環境が準備できたら残タスクに着手。
+
 
 ---
 
