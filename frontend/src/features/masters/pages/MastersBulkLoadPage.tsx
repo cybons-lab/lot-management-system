@@ -1,31 +1,50 @@
 /**
- * MastersBulkLoadPage - マスタ一括登録
- * Skeleton implementation
+ * MastersBulkLoadPage - マスタ一括インポート
+ * Excel, JSON, YAMLファイルからマスタデータを一括登録
  */
 
-import { Button } from "@/components/ui";
+import { ImportResultCard } from "../components/ImportResultCard";
+import { TemplateCard } from "../components/TemplateCard";
+import { UploadCard } from "../components/UploadCard";
+import { useMasterImport } from "../hooks/useMasterImport";
 
 export function MastersBulkLoadPage() {
+  const {
+    file,
+    dryRun,
+    setDryRun,
+    isUploading,
+    result,
+    isDownloadingTemplate,
+    handleFileChange,
+    handleImport,
+    handleDownloadTemplate,
+    handleClear,
+  } = useMasterImport();
+
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">マスタ一括登録</h2>
-        <p className="mt-1 text-gray-600">CSVファイルからマスタデータを一括登録</p>
+        <h2 className="text-3xl font-bold tracking-tight">マスタ一括インポート</h2>
+        <p className="mt-1 text-gray-600">
+          Excel, JSON, YAMLファイルからマスタデータを一括登録・更新
+        </p>
       </div>
 
-      {/* Coming Soon */}
-      <div className="rounded-lg border bg-white p-8 text-center">
-        <p className="text-lg text-gray-500">Coming Soon</p>
-        <p className="mt-2 text-sm text-gray-400">
-          ファイルアップロード、プレビュー、登録実行機能を実装予定
-        </p>
-        <div className="mt-4">
-          <Button variant="outline" disabled>
-            CSVテンプレートダウンロード
-          </Button>
-        </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <UploadCard
+          file={file}
+          dryRun={dryRun}
+          isUploading={isUploading}
+          onFileChange={handleFileChange}
+          onDryRunChange={setDryRun}
+          onImport={handleImport}
+          onClear={handleClear}
+        />
+        <TemplateCard isDownloading={isDownloadingTemplate} onDownload={handleDownloadTemplate} />
       </div>
+
+      {result && <ImportResultCard result={result} />}
     </div>
   );
 }
