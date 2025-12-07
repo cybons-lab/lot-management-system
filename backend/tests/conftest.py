@@ -225,12 +225,15 @@ def db_session(db) -> Generator[Session]:
 @pytest.fixture(scope="function")
 def client(db) -> Generator[TestClient]:
     """Create FastAPI TestClient."""
-    from app.api.deps import get_db
+    # Override both get_db functions since different modules import from different locations
+    from app.api import deps as api_deps
+    from app.core import database as core_database
 
     def override_get_db():
         yield db
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[api_deps.get_db] = override_get_db
+    app.dependency_overrides[core_database.get_db] = override_get_db
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
@@ -316,8 +319,12 @@ def normal_user(db):
         is_active=True,
     )
     db.add(user)
-    db.flush()
-    return user
+    db.commit()
+    db.refresh(user)
+    yield user
+    # Cleanup
+    db.delete(user)
+    db.commit()
 
 
 @pytest.fixture
@@ -333,8 +340,12 @@ def superuser(db):
         is_active=True,
     )
     db.add(user)
-    db.flush()
-    return user
+    db.commit()
+    db.refresh(user)
+    yield user
+    # Cleanup
+    db.delete(user)
+    db.commit()
 
 
 @pytest.fixture
@@ -342,6 +353,7 @@ def normal_user_token_headers(normal_user) -> dict[str, str]:
     """Create auth headers for normal user."""
     from app.core.security import create_access_token
 
+    # Include both user_id (as sub) and username for different auth checks
     token = create_access_token(data={"sub": str(normal_user.id), "username": normal_user.username})
     return {"Authorization": f"Bearer {token}"}
 
@@ -351,5 +363,6 @@ def superuser_token_headers(superuser) -> dict[str, str]:
     """Create auth headers for superuser."""
     from app.core.security import create_access_token
 
+    # Include both user_id (as sub) and username for different auth checks
     token = create_access_token(data={"sub": str(superuser.id), "username": superuser.username})
     return {"Authorization": f"Bearer {token}"}

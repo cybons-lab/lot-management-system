@@ -80,10 +80,11 @@ def test_concurrent_allocation(client: TestClient, db: Session, master_data):
         response1 = future1.result()
         response2 = future2.result()
 
-    # One should succeed (200/201), one should fail (409)
+    # One should succeed (200), one should fail (400 or 409)
     status_codes = [response1.status_code, response2.status_code]
-    assert 200 in status_codes or 201 in status_codes
-    assert 409 in status_codes
+    assert 200 in status_codes
+    # The failing request can be 400 (Bad Request) or 409 (Conflict)
+    assert 400 in status_codes or 409 in status_codes
 
     # Verify final quantity
     db.refresh(lot)

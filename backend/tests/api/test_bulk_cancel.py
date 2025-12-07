@@ -6,8 +6,12 @@ from sqlalchemy.orm import Session
 from app.models import Allocation, Lot, Order, OrderLine, Product
 
 
-def test_cancel_by_order_line(client, db: Session, normal_user_token_headers):
-    # Setup Data
+def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, master_data):
+    # Setup Data - use master_data for foreign keys
+    warehouse = master_data["warehouse"]
+    supplier = master_data["supplier"]
+    customer = master_data["customer"]
+
     product = Product(maker_part_code="P-CANCEL", product_name="Cancel Test", base_unit="EA")
     db.add(product)
     db.commit()
@@ -15,21 +19,37 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers):
     lot = Lot(
         lot_number="LOT-CANCEL",
         product_id=product.id,
+        warehouse_id=warehouse.id,
+        supplier_id=supplier.id,
         current_quantity=Decimal("100"),
         allocated_quantity=Decimal("0"),
         status="active",
         received_date=date.today(),
         expiry_date=date.today(),
+        unit="EA",
     )
     db.add(lot)
     db.commit()
 
-    order = Order(order_number="ORD-CANCEL", customer_id=1, status="open")
+    order = Order(
+        order_number="ORD-CANCEL",
+        customer_id=customer.id,
+        order_date=date.today(),
+        status="open",
+    )
     db.add(order)
     db.commit()
 
+    delivery_place = master_data["delivery_place"]
+
     line = OrderLine(
-        order_id=order.id, product_id=product.id, order_quantity=Decimal("50"), status="pending"
+        order_id=order.id,
+        product_id=product.id,
+        order_quantity=Decimal("50"),
+        delivery_date=date.today(),
+        delivery_place_id=delivery_place.id,
+        unit="EA",
+        status="pending",
     )
     db.add(line)
     db.commit()
@@ -43,7 +63,13 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers):
     )
     # Different line allocation (should not be cancelled)
     line2 = OrderLine(
-        order_id=order.id, product_id=product.id, order_quantity=Decimal("10"), status="pending"
+        order_id=order.id,
+        product_id=product.id,
+        order_quantity=Decimal("10"),
+        delivery_date=date.today(),
+        delivery_place_id=delivery_place.id,
+        unit="EA",
+        status="pending",
     )
     db.add(line2)
     db.commit()

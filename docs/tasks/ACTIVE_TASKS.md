@@ -2,8 +2,10 @@
 
 **最終更新:** 2025-12-07
 
-> このドキュメントは**現在進行中および未着手のタスク**を管理します。
-> 完了したタスクは `CHANGELOG.md` に記録され、このファイルから削除されます。
+> **このドキュメントの目的**: 
+> - **未対応**または**進行中**のタスクのみを記載
+> - **完了したタスク**は`CHANGELOG.md`に記録され、このファイルからは削除される
+> - 常に「今やるべきこと」だけが載っている状態を維持
 
 ---
 
@@ -17,28 +19,18 @@
 
 ## 🔜 近い将来対応予定
 
-### ✅ P2-1: SAP在庫同期機能の完成（モック環境対応完了）
+### P2-1: SAP在庫同期 - 本番API接続待ち
 
-**ページ:** `/admin/batch-jobs` (実装完了)
+**現状**: モック実装完了、UI実装完了
 
-**実装完了:**
-- ✅ `InventorySyncService`: SAP在庫とローカルDB在庫の差異チェック（モック対応）
-- ✅ `/api/batch-jobs/inventory-sync/execute`: 手動実行API
-- ✅ `/api/batch-jobs/inventory-sync/alerts`: 差異アラート取得API
-- ✅ `BatchJobsPage`: SAP在庫同期専用UI
-  - ワンクリック実行ボタン
-  - 差異アラート一覧表示（商品ID、ローカル/SAP在庫、差異率、最終チェック日時）
-  - アクティブアラート/全履歴切り替え
-- ✅ `BatchJobsPage`: 汎用バッチジョブ管理UI（ジョブ一覧・実行・削除）
-
-**残タスク（本番SAP接続が必要）:**
+**残タスク**（本番SAP接続が必要）:
 - ❌ **本番SAP API接続**（現在はモック: `SAPMockClient`）
   - `backend/app/external/sap_mock_client.py` を実際のSAP APIクライアントに置き換え
 - ❌ **定期実行設定**（オプション）
   - APScheduler または Celery Beat による自動スケジュール実行
   - 実行頻度設定UI
 
-> **Note**: モック環境で実装可能な部分は全て完了。本番SAP環境が準備できたら残タスクに着手。
+> **Note**: モック環境で実装可能な部分（UI、API、差異検出ロジック）は全て完了。本番SAP環境準備後に対応。
 
 
 ---
@@ -56,164 +48,7 @@
 
 ---
 
-## 🔧 技術的負債（コード品質無視コメント）
-
-> **重要:** コード品質を「通す」ためだけの無視コメントは技術的負債です。
-
-### 📊 総合サマリー（合計115件 / 当初163件から48件削減 ✅）
-
-| ツール | 無視コメント | 件数 | 削減目標 | 状態 |
-|-------|------------|------|---------|------|
-| Backend: Mypy | `# type: ignore` | 40 | 40 (達成!) | ✅ 許容範囲内 |
-| Backend: Ruff | `# noqa` | 53 | 36 | 🟡 一部許容可 |
-| Frontend: TypeScript | `@ts-ignore` | 0 | 0 | ✅ Clean |
-| Frontend: ESLint | `eslint-disable` | 22 | 22 | ✅ 許容可 |
-
-**削減達成:** 当初163件 → **115件**（**48件削減、30%削減**）
-
----
-
-### ✅ Backend: Mypy `# type: ignore` (40件) - 許容範囲内
-
-#### エラータイプ別内訳
-
-| エラータイプ | 件数 | 状態 | 備考 |
-|-------------|------|------|------|
-| `[attr-defined]` | 14 | ✅ 許容 | SQLAlchemy属性アクセス |
-| `[arg-type]` | 6 | ✅ 許容 | main.py FastAPIハンドラ等 |
-| `[override]` | 6 | ✅ 許容 | BaseCRUD設計（リファクタ必要） |
-| `[assignment]` | 5 | ✅ 許容 | SQLAlchemy select型推論 |
-| その他 | 9 | ✅ 許容 | union-attr, misc等 |
-
-#### ✅ 完了した修正（43件削減）
-
-1. **`[no-type-specified]` 5件→0件** - エラータイプ明確化
-2. **`[import-untyped]` 6件→0件** - stubsインストール（dateutil, pandas, openpyxl）
-3. **Enum変換 9件削除** - AdjustmentType, InboundPlanStatus明示変換
-4. **SupplierService PK型 2件** - ジェネリック型str→int、Noneガード
-5. **`_temp_allocated`廃止 4件** - dict方式に置換
-6. **arg-type修正 15件** - search.py, lot_service.py, allocations_router.py, inbound_plans_router.py
-7. **return-value/assignment修正 5件** - lot_service.py, lots_router.py, inbound_receiving_service.py
-
----
-
-### ✅ Backend: Ruff `# noqa` (53件) - 全て許容可能
-
-全件調査の結果、全て正当な理由があり削減不要と判断。
-
-| コード | 説明 | 件数 | 理由 |
-|-------|------|------|------|
-| **F403** | `import *` in `__init__.py` | 36 | パッケージ公開API |
-| **E402** | Import not at top | 8 | scripts/testsでのsys.path設定後import |
-| **F401** | Unused import | 5 | 側面効果import、alembic |
-| **E712** | `== True` | 1 | PostgreSQLインデックス定義 |
-| **UP046** | Genericクラス | 1 | BaseService定義 |
-| その他 | - | 2 | 特殊なケース |
-
----
-
-### 🟢 Frontend: ESLint `eslint-disable` (23件) - 許容可
-
-| ルール | 件数 | 対応 |
-|-------|------|------|
-| `max-lines-per-function` | 18 | ✅ 許容（コメント付き、分割困難） |
-| `complexity` | 3 | ✅ 許容（サブコンポーネント分離済み） |
-| `jsx-a11y/label-has-associated-control` | 1 | ❌ **修正すべき** |
-
-#### 維持対象（許容可） - 22件
-
-以下は分割すると可読性が低下するため維持：
-- **複合フック**: `useOrderLineAllocation.ts` - 引当関連の状態と処理を一箇所にまとめた複合フック
-- **テーブル列定義**: `OrderInfoColumns.tsx` など
-- **ページコンポーネント**: `UsersListPage.tsx`, `BatchJobsPage.tsx` など
-
-#### ❌ 要対応: jsx-a11y (1件)
-
-アクセシビリティ問題:
-- `features/orders/components/OrdersFilters.tsx:57`
-
----
-
-### ✅ Frontend: TypeScript (0件) - Clean
-
-`@ts-ignore`や`@ts-expect-error`は一切使用されていません。**完璧！** 🎉
-
-### 🐛 既知の不具合 (Known Issues)
-
-#### Backend Test Failures (25 failed / 259 passed)
-
-**最終テスト実行:** 2025-12-07
-
-##### ✅ 修正済み: テストfixture問題 (conftest.py)
-
-以下のfixtureを `backend/tests/conftest.py` に追加して解消済み:
-- `db_session`: `db` fixtureのエイリアス
-- `normal_user`: テスト用通常ユーザー
-- `superuser`: テスト用管理者ユーザー
-- `normal_user_token_headers`: Authorization header (Bearer token)
-- `superuser_token_headers`: Authorization header (Bearer token)
-
-##### ❌ 未解決: 25件のテスト失敗（既存問題）
-
-| カテゴリ | 件数 | 主な原因 |
-|---------|------|----------|
-| Auth/Login | 2 | `auth_router` がAPIに未登録 |
-| Order Locks | 6 | SQLAlchemy session問題 |
-| Service Tests | 7 | Pydantic validation / assertion |
-| Integration | 4 | DB環境・データ問題 |
-| Unit Tests | 3 | 仕様変更による期待値不一致 |
-| その他 | 3 | 複合的な問題 |
-
-##### 🔴 要対応: Auth Router未登録問題
-
-**症状:** `/api/login` が 404 Not Found を返す
-
-**原因:** `app/api/routes/auth/auth_router.py` が `app/api/routes/__init__.py` でexportされておらず、メインルーターに登録されていない
-
-**修正方法:**
-1. `app/api/routes/__init__.py` に以下を追加:
-   ```python
-   from app.api.routes.auth.auth_router import router as auth_router
-   ```
-2. `__all__` リストに `"auth_router"` を追加
-3. `app/main.py` または `app/api/__init__.py` でルーター登録を確認
-
-**影響するテスト:**
-- `tests/test_auth.py::test_login_success`
-- `tests/test_auth.py::test_login_failure`
-
-##### 🟡 要調査: SQLAlchemy関連エラー
-
-**影響するテスト:**
-- `tests/api/test_order_locks.py` (6件全て)
-- `tests/api/test_bulk_cancel.py::test_cancel_by_order_line`
-
-**症状:** `sqlalchemy.exc.InterfaceError` または session 競合
-
-**考えられる原因:**
-- テスト内でのセッション管理問題
-- FK制約違反（customer_id=1 が存在しない等）
-
-##### 🟡 要調査: Pydantic Validation / Service Tests
-
-**影響するテスト:**
-- `tests/services/test_inbound_service.py` (2件)
-- `tests/services/test_inventory_sync_service.py` (3件)
-- `tests/services/test_order_validation.py` (1件)
-- `tests/services/test_products_service.py` (1件)
-
-**症状:** `pydantic_core.ValidationError` または assertion failure
-
-##### 🟡 その他の失敗
-
-- `tests/error_scenarios/` - ビジネスルール違反テスト
-- `tests/integration/test_order_flow.py` - 統合テスト
-- `tests/unit/test_db_error_parser.py` - ユニットテスト
-- `tests/test_routes_registered.py` - ルート登録テスト
-
----
-
-## 📊 コード品質サマリー
+## 📊 コード品質
 
 ### ツール実行結果
 
@@ -221,25 +56,22 @@
 |------|------|------|
 | **ESLint Errors** | 0 | ✅ Clean |
 | **TS Errors** | 0 | ✅ Clean |
-| **Mypy Errors (通常設定)** | 0 | ✅ Clean |
+| **Mypy Errors** | 0 | ✅ Clean |
 | **Ruff Errors** | 0 | ✅ Clean |
+| **Backend Tests** | 283 passed, 0 failed | ✅ Clean |
 
-### コード品質無視コメント（技術的負債）
-
-| 種類 | 当初 | 現在 | 削減 | 状態 |
-|------|------|------|------|------|
-| **Mypy `# type: ignore`** | 83 | 40 | 43件 (52%) | ✅ 許容範囲内 |
-| **Ruff `# noqa`** | 53 | 53 | - | ✅ 全て許容可 |
-| **ESLint `eslint-disable`** | 22 | 22 | - | ✅ 許容可 |
-| **TypeScript `@ts-ignore`** | 0 | 0 | - | ✅ Clean |
-| **合計** | **163** | **115** | **48件 (30%)** | ✅ 達成 |
-
-### その他
+### コード品質無視コメント
 
 | 種類 | 件数 | 状態 |
 |------|------|------|
-| **TODO** | 5 | 🟡 Backend待ち/将来対応 |
-| **Backend Test Failures** | 25 | 🟡 既存問題（詳細は上記参照） |
+| Mypy `# type: ignore` | 40 | ✅ 許容済み |
+| Ruff `# noqa` | 53 | ✅ 許容済み |
+| ESLint `eslint-disable` | 22 | ✅ 許容済み |
+| TypeScript `@ts-ignore` | 0 | ✅ Clean |
+| **合計** | **115** | **全て許容済み (2025-12-07)** |
+
+> 詳細な許容理由は [`docs/CODE_QUALITY_IGNORES.md`](../CODE_QUALITY_IGNORES.md) を参照
+
 
 ---
 

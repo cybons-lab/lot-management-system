@@ -30,6 +30,8 @@ def test_masters_routes_loaded():
     # Check that at least some masters endpoints are loaded
     # This validates the dynamic import mechanism
     masters_paths = [
-        path for r in app.routes if (path := getattr(r, "path", "")).startswith("/api/products")
+        path
+        for r in app.routes
+        if (path := getattr(r, "path", "")).startswith("/api/masters/products")
     ]
     assert len(masters_paths) > 0, "No masters routes were loaded"

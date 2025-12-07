@@ -123,7 +123,7 @@ class DBErrorParser:
             return "データが重複しています。別の値を入力してください。"
         if "foreign key" in error_lower:
             return "関連するデータが見つかりません。"
-        if "not null" in error_lower:
+        if "not null" in error_lower or "not-null" in error_lower:
             return "必須項目が入力されていません。"
         if "check constraint" in error_lower:
             return "入力値が条件を満たしていません。"

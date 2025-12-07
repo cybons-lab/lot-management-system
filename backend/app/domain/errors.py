@@ -45,4 +45,4 @@ class InsufficientStockError(DomainError):
             f"Insufficient stock for {self.product_code}: "
             f"required={self.required}, available={self.available}"
         )
-        DomainError.__init__(self, message, code=self.default_code)
+        DomainError.__init__(self, message, code=self.default_code, details=self.details)

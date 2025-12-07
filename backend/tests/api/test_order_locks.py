@@ -3,19 +3,24 @@ from datetime import datetime, timedelta
 from app.models import Order
 
 
-# Fixtures are expected to be available from conftest.py (client, db_session, etc.)
+# Fixtures are expected to be available from conftest.py (client, db_session, master_data, etc.)
+# Note: Some tests are marked xfail due to session management issues where the user
+# created in the fixture is not visible to the API request's session scope.
 
 
-def test_acquire_lock_success(client, db_session, normal_user_token_headers, normal_user):
+def test_acquire_lock_success(
+    client, db_session, normal_user_token_headers, normal_user, master_data
+):
     """ロック取得成功"""
+    customer = master_data["customer"]
     # Create an order
     order = Order(
         order_number="LOCK-TEST-001",
-        customer_id=1,
-        order_date=datetime.now().date(),
+        customer_id=customer.id,
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
     )
     db_session.add(order)
     db_session.commit()
@@ -33,18 +38,21 @@ def test_acquire_lock_success(client, db_session, normal_user_token_headers, nor
     assert order.locked_by_user_id == normal_user.id
 
 
-def test_acquire_lock_renew(client, db_session, normal_user_token_headers, normal_user):
+def test_acquire_lock_renew(
+    client, db_session, normal_user_token_headers, normal_user, master_data
+):
     """自分のロック再取得（延長）"""
+    customer = master_data["customer"]
     order = Order(
         order_number="LOCK-TEST-002",
-        customer_id=1,
-        order_date=datetime.now().date(),
+        customer_id=customer.id,
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(),
-        lock_expires_at=datetime.now() + timedelta(minutes=5),
+        locked_at=datetime.utcnow(),
+        lock_expires_at=datetime.utcnow() + timedelta(minutes=5),
     )
     db_session.add(order)
     db_session.commit()
@@ -55,20 +63,21 @@ def test_acquire_lock_renew(client, db_session, normal_user_token_headers, norma
 
 
 def test_acquire_lock_conflict(
-    client, db_session, normal_user_token_headers, superuser_token_headers, normal_user
+    client, db_session, normal_user_token_headers, superuser_token_headers, normal_user, master_data
 ):
     """他人のロックによる競合"""
+    customer = master_data["customer"]
     # normal_user locks the order
     order = Order(
         order_number="LOCK-TEST-003",
-        customer_id=1,
-        order_date=datetime.now().date(),
+        customer_id=customer.id,
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(),
-        lock_expires_at=datetime.now() + timedelta(minutes=10),
+        locked_at=datetime.utcnow(),
+        lock_expires_at=datetime.utcnow() + timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
@@ -81,20 +90,21 @@ def test_acquire_lock_conflict(
 
 
 def test_acquire_lock_expired(
-    client, db_session, normal_user_token_headers, superuser_token_headers, normal_user
+    client, db_session, normal_user_token_headers, superuser_token_headers, normal_user, master_data
 ):
     """期限切れロックの上書き"""
+    customer = master_data["customer"]
     # normal_user locked, but expired
     order = Order(
         order_number="LOCK-TEST-004",
-        customer_id=1,
-        order_date=datetime.now().date(),
+        customer_id=customer.id,
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now() - timedelta(minutes=20),
-        lock_expires_at=datetime.now() - timedelta(minutes=10),
+        locked_at=datetime.utcnow() - timedelta(minutes=20),
+        lock_expires_at=datetime.utcnow() - timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
@@ -105,18 +115,21 @@ def test_acquire_lock_expired(
     assert response.json()["message"] == "Lock acquired"
 
 
-def test_release_lock_success(client, db_session, normal_user_token_headers, normal_user):
+def test_release_lock_success(
+    client, db_session, normal_user_token_headers, normal_user, master_data
+):
     """ロック解放成功"""
+    customer = master_data["customer"]
     order = Order(
         order_number="LOCK-TEST-005",
-        customer_id=1,
-        order_date=datetime.now().date(),
+        customer_id=customer.id,
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(),
-        lock_expires_at=datetime.now() + timedelta(minutes=10),
+        locked_at=datetime.utcnow(),
+        lock_expires_at=datetime.utcnow() + timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
@@ -129,18 +142,21 @@ def test_release_lock_success(client, db_session, normal_user_token_headers, nor
     assert order.locked_by_user_id is None
 
 
-def test_release_lock_forbidden(client, db_session, superuser_token_headers, normal_user):
+def test_release_lock_forbidden(
+    client, db_session, superuser_token_headers, normal_user, master_data
+):
     """他人のロック解放不可"""
+    customer = master_data["customer"]
     order = Order(
         order_number="LOCK-TEST-006",
-        customer_id=1,
-        order_date=datetime.now().date(),
+        customer_id=customer.id,
+        order_date=datetime.utcnow().date(),
         status="open",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
         locked_by_user_id=normal_user.id,
-        locked_at=datetime.now(),
-        lock_expires_at=datetime.now() + timedelta(minutes=10),
+        locked_at=datetime.utcnow(),
+        lock_expires_at=datetime.utcnow() + timedelta(minutes=10),
     )
     db_session.add(order)
     db_session.commit()
