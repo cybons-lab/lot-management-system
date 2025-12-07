@@ -8,6 +8,17 @@ import type { FilterStatus, GroupedOrder, LineWithOrderInfo } from "./types";
 
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
+interface UseLineDataProps {
+  orders: OrderWithLinesResponse[];
+  customerMap: Record<number, string>;
+  filterStatus: FilterStatus;
+  selectedLineIds: Set<number>;
+  getLineAllocations: (lineId: number) => Record<number, number>;
+  getCandidateLots: (lineId: number) => CandidateLotItem[];
+  isOverAllocated: (lineId: number) => boolean;
+  viewMode: "line" | "order";
+}
+
 export function useLineData({
   orders,
   customerMap,
@@ -17,16 +28,7 @@ export function useLineData({
   getCandidateLots,
   isOverAllocated,
   viewMode,
-}: {
-  orders: OrderWithLinesResponse[];
-  customerMap: Record<number, string>;
-  filterStatus: FilterStatus;
-  selectedLineIds: Set<number>;
-  getLineAllocations: (lineId: number) => Record<number, number>;
-  getCandidateLots: (lineId: number) => CandidateLotItem[];
-  isOverAllocated: (lineId: number) => boolean;
-  viewMode: "line" | "order";
-}) {
+}: UseLineDataProps) {
   // 1. 全明細をフラット化し、Order情報を付与
   const allFlatLines: LineWithOrderInfo[] = useMemo(() => {
     return orders.flatMap((order) => {
@@ -51,7 +53,13 @@ export function useLineData({
   // 2. フィルタリング
   const filteredLines = useMemo(() => {
     return allFlatLines.filter((item) =>
-      shouldShowLine(item, filterStatus, getLineAllocations, getCandidateLots, isOverAllocated),
+      shouldShowLine({
+        item,
+        filterStatus,
+        getLineAllocations,
+        getCandidateLots,
+        isOverAllocated,
+      }),
     );
   }, [allFlatLines, filterStatus, getLineAllocations, getCandidateLots, isOverAllocated]);
 

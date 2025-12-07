@@ -152,6 +152,9 @@ export function AdminPage() {
               ユーザー管理
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
+              <Link to="/admin/batch-jobs">バッチジョブ管理</Link>
+            </Button>
+            <Button variant="outline" className="w-full justify-start" asChild>
               <Link to="/admin/client-logs">クライアントログ表示</Link>
             </Button>
           </div>

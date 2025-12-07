@@ -397,44 +397,129 @@ def generate_test_data():
         print(f"✓ Generated {forecast_count} forecasts (daily + jyun + monthly sets)")
 
         # Create scenario-based lots per product
+        # Requirement: Every product must have at least 1 lot
         print("\n🎯 Generating lots per product...")
 
         lot_id = 1
-        for product in products:
-            # Decide scenario for this product
-            # 70% Normal, 10% Shortage, 10% Expiring, 5% Expired, 5% Depleted
+        total_products = len(products)
 
-            scenario = random.choices(
-                ["normal", "shortage", "expiring", "expired", "depleted"],
-                weights=[70, 10, 10, 5, 5],
-                k=1,
-            )[0]
+        # Reserve some products for specific edge case scenarios
+        # Edge case products: first 3 products get explicit edge case assignments
+        edge_case_assignments = {
+            0: "mixed_expiry",  # Multiple lots with 1 valid, others expired
+            1: "single_expiring_soon",  # Single lot expiring within 7 days
+            2: "multi_lot_fefo",  # 3+ lots with varying expiry dates for FEFO testing
+        }
 
-            # Decide number of lots (1-3)
-            if scenario == "depleted":
-                num_lots = 0
+        for idx, product in enumerate(products):
+            warehouse = random.choice(warehouses)
+            supplier = random.choice(suppliers)
+
+            # Check if this product has an edge case assignment
+            if idx in edge_case_assignments:
+                edge_case = edge_case_assignments[idx]
+
+                if edge_case == "mixed_expiry":
+                    # Edge case: 3 lots - 1 active, 1 expired, 1 depleted
+                    # Active lot
+                    lot = scenario_lot_strategy(
+                        lot_id=lot_id,
+                        product_id=product.id,
+                        warehouse_id=warehouse.id,
+                        supplier_id=supplier.id,
+                        scenario="normal",
+                    ).example()
+                    lot.unit = product.internal_unit
+                    db.add(lot)
+                    lot_id += 1
+
+                    # Expired lot
+                    lot = scenario_lot_strategy(
+                        lot_id=lot_id,
+                        product_id=product.id,
+                        warehouse_id=random.choice(warehouses).id,
+                        supplier_id=random.choice(suppliers).id,
+                        scenario="expired",
+                    ).example()
+                    lot.unit = product.internal_unit
+                    db.add(lot)
+                    lot_id += 1
+
+                    # Depleted lot (0 quantity)
+                    lot = scenario_lot_strategy(
+                        lot_id=lot_id,
+                        product_id=product.id,
+                        warehouse_id=random.choice(warehouses).id,
+                        supplier_id=random.choice(suppliers).id,
+                        scenario="depleted",
+                    ).example()
+                    lot.unit = product.internal_unit
+                    db.add(lot)
+                    lot_id += 1
+
+                elif edge_case == "single_expiring_soon":
+                    # Edge case: Single lot expiring within 7 days
+                    lot = scenario_lot_strategy(
+                        lot_id=lot_id,
+                        product_id=product.id,
+                        warehouse_id=warehouse.id,
+                        supplier_id=supplier.id,
+                        scenario="expiring",
+                    ).example()
+                    # Override expiry to be within 7 days
+                    lot.expiry_date = date.today() + timedelta(days=random.randint(1, 7))
+                    lot.unit = product.internal_unit
+                    db.add(lot)
+                    lot_id += 1
+
+                elif edge_case == "multi_lot_fefo":
+                    # Edge case: 4 lots with staggered expiry dates for FEFO testing
+                    expiry_offsets = [10, 30, 60, 90]  # Days from today
+                    for offset in expiry_offsets:
+                        lot = scenario_lot_strategy(
+                            lot_id=lot_id,
+                            product_id=product.id,
+                            warehouse_id=random.choice(warehouses).id,
+                            supplier_id=random.choice(suppliers).id,
+                            scenario="normal",
+                        ).example()
+                        lot.expiry_date = date.today() + timedelta(days=offset)
+                        lot.unit = product.internal_unit
+                        db.add(lot)
+                        lot_id += 1
+
             else:
-                num_lots = random.choices([1, 2, 3], weights=[40, 40, 20], k=1)[0]
+                # Standard random scenario assignment
+                # 60% Normal, 15% Shortage, 15% Expiring, 5% Expired, 5% Depleted
+                scenario = random.choices(
+                    ["normal", "shortage", "expiring", "expired", "depleted"],
+                    weights=[60, 15, 15, 5, 5],
+                    k=1,
+                )[0]
 
-            for _ in range(num_lots):
-                warehouse = random.choice(warehouses)
-                supplier = random.choice(suppliers)
+                # Decide number of lots: 60% single, 30% double, 10% triple
+                num_lots = random.choices([1, 2, 3], weights=[60, 30, 10], k=1)[0]
 
-                # Generate lot
-                lot = scenario_lot_strategy(
-                    lot_id=lot_id,
-                    product_id=product.id,
-                    warehouse_id=warehouse.id,
-                    supplier_id=supplier.id,
-                    scenario=scenario,
-                ).example()
+                # Ensure at least 1 lot per product (even if depleted scenario)
+                # For depleted, create a lot with 0 quantity
+                for _ in range(num_lots):
+                    lot = scenario_lot_strategy(
+                        lot_id=lot_id,
+                        product_id=product.id,
+                        warehouse_id=random.choice(warehouses).id,
+                        supplier_id=random.choice(suppliers).id,
+                        scenario=scenario,
+                    ).example()
 
-                # Ensure unit matches product
-                lot.unit = product.internal_unit
+                    # Ensure unit matches product
+                    lot.unit = product.internal_unit
 
-                db.add(lot)
-                lot_id += 1
+                    db.add(lot)
+                    lot_id += 1
+
         db.flush()
+        print(f"✓ Generated {lot_id - 1} lots for {total_products} products (100% coverage)")
+        print(f"  - Edge cases: {len(edge_case_assignments)} products with specific scenarios")
 
         # Generate product_suppliers from lots data
         print("\n🔗 Generating product_suppliers from lots...")

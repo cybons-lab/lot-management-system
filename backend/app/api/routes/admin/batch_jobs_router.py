@@ -88,6 +88,41 @@ def execute_inventory_sync_direct(db: Session = Depends(get_db)):
         raise  # Let global handler format the response
 
 
+@router.get("/inventory-sync/alerts")
+def get_inventory_sync_alerts(
+    active_only: bool = Query(True, description="アクティブなアラートのみ取得"),
+    db: Session = Depends(get_db),
+):
+    """SAP在庫差異アラート一覧取得.
+
+    BusinessRuleテーブルから在庫差異アラート（inventory_sync_alert）を取得。
+
+    Args:
+        active_only: Trueの場合、is_active=Trueのアラートのみ取得
+        db: データベースセッション
+
+    Returns:
+        dict: アラート一覧
+            - alerts: アラートのリスト
+            - total: 総件数
+    """
+    from app.models.logs_models import BusinessRule
+    from app.schemas.system.business_rules_schema import BusinessRuleResponse
+
+    query = db.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert")
+
+    if active_only:
+        query = query.filter(BusinessRule.is_active == True)  # noqa: E712
+
+    # 最新のアラートから順に取得
+    alerts = query.order_by(BusinessRule.updated_at.desc()).all()
+
+    return {
+        "alerts": [BusinessRuleResponse.model_validate(alert) for alert in alerts],
+        "total": len(alerts),
+    }
+
+
 @router.get("/{job_id}", response_model=BatchJobResponse)
 def get_batch_job(job_id: int, db: Session = Depends(get_db)):
     """バッチジョブ詳細取得.

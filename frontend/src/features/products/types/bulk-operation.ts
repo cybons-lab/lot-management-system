@@ -35,7 +35,6 @@ export interface ProductBulkRow extends BulkRowBase {
 
 /**
  * Product一括リクエスト
- * TODO: backend: bulk-upsert API未実装
  */
 export interface ProductBulkUpsertRequest {
   rows: ProductBulkRow[];

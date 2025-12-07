@@ -200,7 +200,10 @@ def test_preview_allocation_suggestions_order_mode_missing_line_id(test_db: Sess
 
 
 # NOTE: Forecast mode tests temporarily disabled - ForecastHeader/ForecastLine models not in current codebase
-# TODO: Re-enable when forecast models are available
+# TODO(将来): Re-enable when forecast models are available
+# Forecast機能は現在スコープ外。ForecastHeader/ForecastLineモデル実装後に以下のテストを再有効化:
+# - test_preview_allocation_suggestions_forecast_mode_success
+# - test_preview_allocation_suggestions_forecast_mode_missing_forecast_id
 
 
 # ============================================================

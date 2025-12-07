@@ -23,7 +23,6 @@ export interface SupplierBulkRow extends BulkRowBase {
 
 /**
  * Supplier一括リクエスト
- * TODO: backend: bulk-upsert API未実装
  */
 export interface SupplierBulkUpsertRequest {
   rows: SupplierBulkRow[];

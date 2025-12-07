@@ -2,17 +2,24 @@ import type { CandidateLotItem } from "../../../api";
 import { getOrderQuantity } from "../../../utils/allocationCalculations";
 import { getLineAllocationStatus } from "../FlatAllocationList";
 
-// フィルタ関数で複数のステータス判定に依存するため引数が多い
-/* eslint-disable max-params */
+// フィルタ判定に必要なパラメータをオブジェクト化
 import type { FilterStatus, LineWithOrderInfo } from "./types";
 
-export function shouldShowLine(
-  item: LineWithOrderInfo,
-  filterStatus: FilterStatus,
-  getLineAllocations: (lineId: number) => Record<number, number>,
-  getCandidateLots: (lineId: number) => CandidateLotItem[],
-  isOverAllocated: (lineId: number) => boolean,
-): boolean {
+interface ShouldShowLineParams {
+  item: LineWithOrderInfo;
+  filterStatus: FilterStatus;
+  getLineAllocations: (lineId: number) => Record<number, number>;
+  getCandidateLots: (lineId: number) => CandidateLotItem[];
+  isOverAllocated: (lineId: number) => boolean;
+}
+
+export function shouldShowLine({
+  item,
+  filterStatus,
+  getLineAllocations,
+  getCandidateLots,
+  isOverAllocated,
+}: ShouldShowLineParams): boolean {
   if (filterStatus === "all") return true;
 
   const line = item.line;

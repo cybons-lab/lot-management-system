@@ -12,6 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
 - タスク管理ドキュメントを統一：`remaining_issues.adoc`を削除し、`ACTIVE_TASKS.md`に一元化
 
+### Fixed
+- **[Test Data] 全製品に最低1ロット確保**: `generate_test_data.py`を修正し、depletedシナリオでもロットを生成するよう変更
+- **[Test Data] エッジケーステスト用データパターン追加**: 3種類のエッジケースシナリオを導入
+  - `mixed_expiry`: 1製品に有効/期限切れ/枯渇ロットを混在させる
+  - `single_expiring_soon`: 7日以内に期限切れとなるロット
+  - `multi_lot_fefo`: 4ロット（10/30/60/90日後期限）でFEFOアルゴリズムのテスト用
+
+### Added
+- **[Feature] User Lock (P3-3)**: 担当者ロック表示（排他制御）機能
+  - Backend: `locked_by_user_id`カラム追加、`/lock` API実装
+  - Frontend: `useOrderLock`フック、受注詳細画面へのアラート表示
+- **[Feature] Auto Allocation (P4-1)**: 自動引当機能のFrontend有効化
+  - Backendの`/api/allocations/auto-allocate`と連携
+- **[Feature] Bulk Cancel (P4-2)**: 受注明細単位の一括取消機能
+  - Backend: `/cancel-by-order-line` API追加
+  - Frontend: `useCancelAllAllocationsForLine` 実装
+
 ## [2025-12-06]
 
 ### Added

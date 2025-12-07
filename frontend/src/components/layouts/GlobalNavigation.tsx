@@ -18,7 +18,7 @@ import {
 import { Link } from "react-router-dom";
 
 import { ROUTES } from "@/constants/routes";
-import { useAuth } from "@/features/auth/AuthContext";
+import { type User, useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/shared/libs/utils";
 
 // ============================================
@@ -98,12 +98,111 @@ const navItems: NavItem[] = [
 // メインコンポーネント
 // ============================================
 
+// --- Sub-components ---
+
+function NavItems({ currentPath, user }: { currentPath: string; user: User | null }) {
+  return (
+    <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
+      {navItems
+        .filter((item) => !item.requireAdmin || user?.roles?.includes("admin"))
+        .map((item) => {
+          const Icon = item.icon;
+          const isActive =
+            currentPath === item.href ||
+            (item.href !== "/dashboard" && currentPath.startsWith(item.href));
+
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              className={cn(
+                "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200",
+                isActive
+                  ? "bg-gray-100 text-gray-900"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
+              )}
+            >
+              <Icon
+                className={cn(
+                  "h-4 w-4 transition-colors",
+                  isActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
+                )}
+              />
+              <span className="hidden lg:inline">{item.title}</span>
+            </Link>
+          );
+        })}
+    </nav>
+  );
+}
+
+function UserMenu({ user, logout }: { user: User | null; logout: () => void }) {
+  return (
+    <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
+      {user ? (
+        <>
+          <div className="hidden flex-col items-end justify-center md:flex">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-green-500" />
+              <span className="text-[10px] font-medium tracking-wider text-gray-500 uppercase">
+                Online
+              </span>
+              {/* ロールバッジ */}
+              {user.roles?.includes("admin") ? (
+                <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase">
+                  管理者
+                </span>
+              ) : (
+                <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
+                  一般
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 text-sm leading-none font-bold text-gray-900">
+              {user.display_name}
+            </div>
+          </div>
+          {/* ログアウトボタン */}
+          <button
+            onClick={() => {
+              logout();
+              window.location.href = "/login";
+            }}
+            className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+          >
+            ログアウト
+          </button>
+        </>
+      ) : (
+        <Link
+          to="/login"
+          className="hidden flex-col items-end justify-center transition-opacity hover:opacity-80 md:flex"
+        >
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-gray-300" />
+            <span className="text-[10px] font-medium tracking-wider text-gray-400 uppercase">
+              Guest
+            </span>
+          </div>
+          <div className="mt-0.5 text-sm leading-none font-medium text-gray-500">ゲスト</div>
+        </Link>
+      )}
+      <button className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900">
+        <Settings className="h-5 w-5" />
+      </button>
+    </div>
+  );
+}
+
+// ============================================
+// メインコンポーネント
+// ============================================
+
 interface GlobalNavigationProps {
   currentPath: string;
 }
 
 // ナビゲーション項目とレイアウトを一箇所にまとめるため分割しない
-// eslint-disable-next-line max-lines-per-function
 export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
   const { user, logout } = useAuth();
   return (
@@ -125,93 +224,8 @@ export function GlobalNavigation({ currentPath }: GlobalNavigationProps) {
             </div>
           </div>
 
-          {/* ナビゲーション */}
-          <nav className="flex flex-1 items-center gap-1 overflow-x-auto px-2">
-            {navItems
-              .filter((item) => !item.requireAdmin || user?.roles?.includes("admin"))
-              .map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  currentPath === item.href ||
-                  (item.href !== "/dashboard" && currentPath.startsWith(item.href));
-
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    className={cn(
-                      "group flex flex-shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors duration-200",
-                      isActive
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                    )}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-4 w-4 transition-colors",
-                        isActive ? "text-gray-900" : "text-gray-500 group-hover:text-gray-900",
-                      )}
-                    />
-                    <span className="hidden lg:inline">{item.title}</span>
-                  </Link>
-                );
-              })}
-          </nav>
-
-          {/* 右側のユーザー情報など */}
-          <div className="flex items-center gap-3 border-l border-gray-200 pl-3">
-            {user ? (
-              <>
-                <div className="hidden flex-col items-end justify-center md:flex">
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-green-500" />
-                    <span className="text-[10px] font-medium tracking-wider text-gray-500 uppercase">
-                      Online
-                    </span>
-                    {/* ロールバッジ */}
-                    {user.roles?.includes("admin") ? (
-                      <span className="rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-red-700 uppercase">
-                        管理者
-                      </span>
-                    ) : (
-                      <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-blue-700 uppercase">
-                        一般
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-0.5 text-sm leading-none font-bold text-gray-900">
-                    {user.display_name}
-                  </div>
-                </div>
-                {/* ログアウトボタン */}
-                <button
-                  onClick={() => {
-                    logout();
-                    window.location.href = "/login";
-                  }}
-                  className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                >
-                  ログアウト
-                </button>
-              </>
-            ) : (
-              <Link
-                to="/login"
-                className="hidden flex-col items-end justify-center transition-opacity hover:opacity-80 md:flex"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-gray-300" />
-                  <span className="text-[10px] font-medium tracking-wider text-gray-400 uppercase">
-                    Guest
-                  </span>
-                </div>
-                <div className="mt-0.5 text-sm leading-none font-medium text-gray-500">ゲスト</div>
-              </Link>
-            )}
-            <button className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900">
-              <Settings className="h-5 w-5" />
-            </button>
-          </div>
+          <NavItems currentPath={currentPath} user={user} />
+          <UserMenu user={user} logout={logout} />
         </div>
       </div>
     </header>

@@ -41,6 +41,7 @@ from app.services.allocations.actions import (
     auto_allocate_line,
     bulk_cancel_allocations,
     cancel_allocation,
+    cancel_allocations_for_order_line,
     commit_fefo_allocation,
     confirm_hard_allocation,
     confirm_hard_allocations_batch,
@@ -232,6 +233,36 @@ def bulk_cancel(request: BulkCancelRequest, db: Session = Depends(get_db)):
         failed_ids=failed_ids,
         message=message,
     )
+
+
+@router.post("/cancel-by-order-line", status_code=200)
+def cancel_by_order_line(
+    request: dict,  # Assuming { "order_line_id": int }
+    db: Session = Depends(get_db),
+):
+    """受注明細に紐づく全ての引当を一括キャンセル.
+
+    Args:
+        request: { "order_line_id": int }
+        db: DB Session
+
+    Returns:
+        { "success": bool, "message": str, "cancelled_ids": list[int] }
+    """
+    order_line_id = request.get("order_line_id")
+    if not order_line_id:
+        raise HTTPException(status_code=400, detail="order_line_id is required")
+
+    try:
+        cancelled_ids = cancel_allocations_for_order_line(db, order_line_id)
+        return {
+            "success": True,
+            "message": f"{len(cancelled_ids)} allocations cancelled",
+            "cancelled_ids": cancelled_ids,
+        }
+    except Exception as e:
+        logger.exception(f"Failed to cancel allocations for line {order_line_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/auto-allocate", response_model=AutoAllocateResponse)

@@ -34,6 +34,7 @@ from .base_model import Base
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
+    from .auth_models import User
     from .forecast_models import ForecastCurrent
     from .inventory_models import Lot
     from .masters_models import Customer, Product
@@ -67,10 +68,25 @@ class Order(Base):
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
 
+    # Optimistic Locking
+    locked_by_user_id: Mapped[int | None] = mapped_column(
+        Integer,
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    locked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    lock_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     __table_args__ = (
         UniqueConstraint("order_number", name="uq_orders_order_number"),
         Index("idx_orders_customer", "customer_id"),
         Index("idx_orders_date", "order_date"),
+        Index("idx_orders_locked_by", "locked_by_user_id"),
+        Index(
+            "idx_orders_lock_expires",
+            "lock_expires_at",
+            postgresql_where=text("lock_expires_at IS NOT NULL"),
+        ),
     )
 
     # Relationships
@@ -78,6 +94,12 @@ class Order(Base):
     order_lines: Mapped[list[OrderLine]] = relationship(
         "OrderLine", back_populates="order", cascade="all, delete-orphan"
     )
+    locked_by_user: Mapped[User | None] = relationship("User", foreign_keys=[locked_by_user_id])
+
+    @property
+    def locked_by_user_name(self) -> str | None:
+        """Flattened locked_by_user display_name for API response."""
+        return self.locked_by_user.display_name if self.locked_by_user else None
 
 
 class OrderLine(Base):

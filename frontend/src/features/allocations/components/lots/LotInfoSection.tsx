@@ -16,8 +16,26 @@ interface LotInfoSectionProps {
   freeQty: number;
 }
 
-// ロット情報の表示条件分岐が多いため抑制
-// eslint-disable-next-line complexity
+function RankBadge({ rank }: { rank: number }) {
+  if (!rank) return null;
+
+  return (
+    <div className="shrink-0">
+      <Badge
+        className={cn(
+          "hover:bg-opacity-90 h-6 w-8 justify-center rounded px-0 text-xs font-bold",
+          rank === 1 && "bg-blue-600 text-white hover:bg-blue-700",
+          rank === 2 && "bg-blue-400 text-white hover:bg-blue-500",
+          rank === 3 && "bg-blue-300 text-white hover:bg-blue-400",
+          rank > 3 && "bg-gray-100 text-gray-500 hover:bg-gray-200",
+        )}
+      >
+        #{rank}
+      </Badge>
+    </div>
+  );
+}
+
 export function LotInfoSection({
   lot,
   rank,
@@ -31,21 +49,7 @@ export function LotInfoSection({
   return (
     <div className="flex min-w-0 flex-grow items-center gap-x-4">
       {/* Rank Badge */}
-      {rank && (
-        <div className="shrink-0">
-          <Badge
-            className={cn(
-              "hover:bg-opacity-90 h-6 w-8 justify-center rounded px-0 text-xs font-bold",
-              rank === 1 && "bg-blue-600 text-white hover:bg-blue-700",
-              rank === 2 && "bg-blue-400 text-white hover:bg-blue-500",
-              rank === 3 && "bg-blue-300 text-white hover:bg-blue-400",
-              rank > 3 && "bg-gray-100 text-gray-500 hover:bg-gray-200",
-            )}
-          >
-            #{rank}
-          </Badge>
-        </div>
-      )}
+      <RankBadge rank={rank} />
 
       <div className="min-w-[120px] shrink-0">
         <div className="flex items-center gap-2">

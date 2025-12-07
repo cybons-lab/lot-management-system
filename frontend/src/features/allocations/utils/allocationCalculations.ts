@@ -15,22 +15,35 @@ import type { OrderLine } from "@/shared/types/aliases";
  * @param line - Order line object
  * @returns Order quantity as number
  */
-// 複数の単位変換パターンを網羅するため条件分岐が多い
-// eslint-disable-next-line complexity
-export function getOrderQuantity(line: OrderLine): number {
+function getLegacyConvertedQuantity(line: OrderLine): number | null {
   if (line.converted_quantity != null && line.converted_quantity !== "") {
     const converted = Number(line.converted_quantity);
     if (Number.isFinite(converted) && converted > 0) {
       return converted;
     }
   }
+  return null;
+}
 
-  const baseQuantity = Number(line.order_quantity ?? line.quantity ?? 0);
+interface UnitInfo {
+  internalUnit: string | null;
+  externalUnit: string | null;
+  orderUnit: string | null;
+  qtyPerInternalUnit: number;
+}
+
+function resolveUnitInfo(line: OrderLine): UnitInfo {
   const internalUnit = line.product_internal_unit ?? line.unit ?? null;
   const externalUnit = line.product_external_unit ?? null;
   const orderUnit = line.unit ?? externalUnit ?? internalUnit ?? null;
   const qtyPerInternalUnit = Number(line.product_qty_per_internal_unit ?? 0);
+  return { internalUnit, externalUnit, orderUnit, qtyPerInternalUnit };
+}
 
+function calculateUnitConvertedQuantity(line: OrderLine, baseQuantity: number): number {
+  const { internalUnit, externalUnit, orderUnit, qtyPerInternalUnit } = resolveUnitInfo(line);
+
+  // Checks for invalid conversion config
   if (!internalUnit || !Number.isFinite(qtyPerInternalUnit) || qtyPerInternalUnit <= 0) {
     return baseQuantity;
   }
@@ -46,6 +59,18 @@ export function getOrderQuantity(line: OrderLine): number {
   }
 
   return baseQuantity;
+}
+
+export function getOrderQuantity(line: OrderLine): number {
+  // 1. Try legacy converted quantity first
+  const legacyConverted = getLegacyConvertedQuantity(line);
+  if (legacyConverted !== null) {
+    return legacyConverted;
+  }
+
+  // 2. Calculate based on units
+  const baseQuantity = Number(line.order_quantity ?? line.quantity ?? 0);
+  return calculateUnitConvertedQuantity(line, baseQuantity);
 }
 
 /**
