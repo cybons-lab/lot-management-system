@@ -1,5 +1,7 @@
 """Inbound plan API endpoints."""
 
+from decimal import Decimal
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -15,6 +17,7 @@ from app.schemas.inventory.inbound_schema import (
     InboundPlanReceiveRequest,
     InboundPlanReceiveResponse,
     InboundPlanResponse,
+    InboundPlanStatus,
     InboundPlanUpdate,
     SAPSyncRequest,
     SAPSyncResponse,
@@ -81,13 +84,13 @@ def list_inbound_plans(
                 plan_number=plan.plan_number,
                 supplier_id=plan.supplier_id,
                 planned_arrival_date=plan.planned_arrival_date,
-                status=plan.status,  # type: ignore[arg-type]
+                status=InboundPlanStatus(plan.status),
                 notes=plan.notes,
                 created_at=plan.created_at,
                 updated_at=plan.updated_at,
-                total_quantity=sum(line.planned_quantity for line in plan.lines)
+                total_quantity=Decimal(str(sum(line.planned_quantity for line in plan.lines)))
                 if plan.lines
-                else None,  # type: ignore[arg-type]
+                else Decimal("0"),
                 is_primary_supplier=plan.supplier_id in (primary_supplier_ids or []),
             )
             for plan in plans

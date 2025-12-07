@@ -297,16 +297,19 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
         remaining = max(Decimal("0"), Decimal(str(line.order_quantity)) - total_line_allocated)
 
         # レスポンス作成
-        allocated_lots = [
-            FefoLotAllocation(
-                lot_id=a.lot_id,  # type: ignore[arg-type]
-                lot_number=db.query(Lot).filter(Lot.id == a.lot_id).first().lot_number,  # type: ignore[union-attr]
-                allocated_quantity=a.allocated_quantity,
-                expiry_date=db.query(Lot).filter(Lot.id == a.lot_id).first().expiry_date,  # type: ignore[union-attr]
-                received_date=db.query(Lot).filter(Lot.id == a.lot_id).first().received_date,  # type: ignore[union-attr]
-            )
-            for a in allocations
-        ]
+        allocated_lots = []
+        for a in allocations:
+            lot = db.query(Lot).filter(Lot.id == a.lot_id).first()
+            if lot and a.lot_id is not None:
+                allocated_lots.append(
+                    FefoLotAllocation(
+                        lot_id=a.lot_id,
+                        lot_number=lot.lot_number,
+                        allocated_quantity=a.allocated_quantity,
+                        expiry_date=lot.expiry_date,
+                        received_date=lot.received_date,
+                    )
+                )
 
         if allocations:
             message = f"{len(allocations)}件のロットに引当しました"
@@ -321,7 +324,7 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
         return AutoAllocateResponse(
             order_line_id=request.order_line_id,
             allocated_lots=allocated_lots,
-            total_allocated=total_allocated,  # type: ignore[arg-type]
+            total_allocated=Decimal(str(total_allocated)),
             remaining_quantity=remaining,
             message=message,
         )
@@ -488,14 +491,18 @@ def confirm_allocation_hard(
             f"lot_id={allocation.lot_id}, qty={allocation.allocated_quantity}"
         )
 
+        # lot_idとconfirmed_atは確定済みなら存在するはず
+        assert allocation.lot_id is not None, "lot_id should not be None for confirmed allocation"
+        assert allocation.confirmed_at is not None, "confirmed_at should not be None"
+
         return HardAllocationConfirmResponse(
             id=allocation.id,
             order_line_id=allocation.order_line_id,
-            lot_id=allocation.lot_id,  # type: ignore[arg-type]
+            lot_id=allocation.lot_id,
             allocated_quantity=allocation.allocated_quantity,
             allocation_type=allocation.allocation_type,
             status=allocation.status,
-            confirmed_at=allocation.confirmed_at,  # type: ignore[arg-type]
+            confirmed_at=allocation.confirmed_at,
             confirmed_by=allocation.confirmed_by,
         )
 

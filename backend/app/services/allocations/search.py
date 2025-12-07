@@ -7,6 +7,7 @@ Refactored: Uses database views (v2.5) for simplified logic and better performan
 from __future__ import annotations
 
 import logging
+from decimal import Decimal
 from typing import Any, cast
 
 from sqlalchemy.orm import Query, Session
@@ -172,9 +173,9 @@ def _convert_to_candidate_item(
         warehouse_id=lot_view.warehouse_id,
         received_date=received_date,
         expiry_date=lot_view.expiry_date,
-        current_quantity=0.0,  # type: ignore[arg-type]  # Will be enriched later
-        allocated_quantity=0.0,  # type: ignore[arg-type]  # Will be enriched later
-        available_quantity=available_qty,  # type: ignore[arg-type]
+        current_quantity=Decimal("0"),  # Will be enriched later
+        allocated_quantity=Decimal("0"),  # Will be enriched later
+        available_quantity=Decimal(str(available_qty)),
         delivery_place_id=delivery_place_id,
         delivery_place_name=delivery_place_name,
         status=status,
@@ -314,8 +315,11 @@ def execute_candidate_lot_query(
             f"order_line_id={order_line_id}"
         )
 
+        if context.product_id is None:
+            return candidates
+
         # Query lots with fallback
-        results = _query_lots_with_fallback(db, context.product_id, strategy, limit)  # type: ignore[arg-type]
+        results = _query_lots_with_fallback(db, context.product_id, strategy, limit)
 
         # Get delivery place name
         delivery_place_name = _get_delivery_place_name(db, context.delivery_place_id)

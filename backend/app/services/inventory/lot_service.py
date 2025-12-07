@@ -38,6 +38,7 @@ from app.schemas.inventory.inventory_schema import (
     LotCreate,
     LotLock,
     LotResponse,
+    LotStatus,
     LotUpdate,
     StockMovementCreate,
     StockMovementResponse,
@@ -281,20 +282,20 @@ class LotService:
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,
                 product_id=lot_view.product_id,
-                product_code=lot_view.maker_part_code,  # type: ignore[arg-type]
+                product_code=lot_view.maker_part_code or "",
                 product_name=lot_view.product_name,
                 supplier_id=lot_view.supplier_id,
                 supplier_code=lot_view.supplier_code,
-                supplier_name=lot_view.supplier_name,  # type: ignore[arg-type]
+                supplier_name=lot_view.supplier_name or "",
                 warehouse_id=lot_view.warehouse_id,
                 warehouse_code=lot_view.warehouse_code,
                 warehouse_name=lot_view.warehouse_name,
-                current_quantity=float(lot_view.current_quantity),  # type: ignore[arg-type]
-                allocated_quantity=float(lot_view.allocated_quantity),  # type: ignore[arg-type]
+                current_quantity=lot_view.current_quantity or Decimal("0"),
+                allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
                 unit=lot_view.unit,
                 received_date=lot_view.received_date,
                 expiry_date=lot_view.expiry_date,
-                status=lot_view.status,  # type: ignore[arg-type]
+                status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
                 last_updated=lot_view.updated_at,
