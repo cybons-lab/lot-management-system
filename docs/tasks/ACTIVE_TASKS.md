@@ -54,15 +54,19 @@
 **関連TODO:**
 - `backend/app/services/sap/sap_service.py:L61`
 
-### 2. Bulk Import API（マスタ一括登録）
+### ✅ 2. Bulk Import API（完了済み）
 
 **現状:**
-- ✅ UI実装済み
-- ❌ Backend API未実装
+- ✅ UI実装済み: 7種類（Product, Customer, Warehouse, Supplier, SupplierProduct, UomConversion, CustomerItem）
+- ✅ Backend API実装済み: 全種類で`bulk-upsert`および`template/download`エンドポイント実装済み
+- ✅ CSV解析・生成ユーティリティ: 全種類実装済み
 
-**関連TODO:**
-- `CustomerBulkImportDialog.tsx` (2件): bulk-upsert/template API
-- `ProductBulkImportDialog.tsx` (2件): bulk-upsert/template API
+**完了内容:**
+- ✅ ProductBulkImportDialog有効化（コミット f7ada36）
+- ✅ CustomerBulkImportDialog有効化（コミット 1807bb7）  
+- ✅ 残り5種類（Warehouse、Supplier、SupplierProduct、UomConversion、CustomerItem）は既に完全実装済みと確認
+
+> **Note**: TODOコメント「Backend API未実装」は誤り。全てのBackend APIは実装済みだった。
 
 ### 3. 担当者ロック表示（排他制御）のバックエンド実装
 
