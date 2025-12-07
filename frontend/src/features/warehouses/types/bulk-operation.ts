@@ -25,7 +25,6 @@ export interface WarehouseBulkRow extends BulkRowBase {
 
 /**
  * Warehouse一括リクエスト
- * TODO: backend: bulk-upsert API未実装
  */
 export interface WarehouseBulkUpsertRequest {
   rows: WarehouseBulkRow[];

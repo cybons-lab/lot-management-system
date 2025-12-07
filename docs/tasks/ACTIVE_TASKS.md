@@ -28,16 +28,20 @@
 | pragma: no cover | 5件 | ✅ テストカバレッジ除外（正常） |
 | TODO | 9件 | 🟡 バックエンド待ち |
 
-### 残りのTODO（9件）- 全てバックエンド待ち
+### 残りのTODO（9件）- 全てバックエンド待ち/将来対応
 
-| ファイル | 内容 | 対応時期 |
-|----------|------|----------|
-| `CustomerBulkImportDialog.tsx` (2件) | Backend import未実装 | P3 |
-| `ProductBulkImportDialog.tsx` (2件) | Backend import未実装 | P3 |
-| `useWarehouseData.ts` | 入荷予定を倉庫別に集約 | P2-23 |
-| `useAllocationMutations.ts` (2件) | バックエンドAPI待ち | 将来 |
-| `sap_service.py` | 本番SAP API統合 | P3 |
-| `suggestion.py` | 削除範囲の最適化 | 将来 |
+| ファイル | 内容 | 優先度 | 対応時期 |
+|----------|------|--------|----------|
+| `CustomerBulkImportDialog.tsx` (2件) | Backend bulk-upsert/template API未実装 | P3 | 将来 |
+| `ProductBulkImportDialog.tsx` (2件) | Backend bulk-upsert/template API未実装 | P3 | 将来 |
+| `useAllocationMutations.ts` (2件) | 一括取消/自動引当API未実装 | 将来 | 将来 |
+| `test_allocation_suggestions.py` | Forecast機能テスト（スコープ外） | 将来 | 将来 |
+| `suggestion.py` | 削除範囲の最適化 | 将来 | 将来 |
+| `sap_service.py` | 本番SAP API統合 | P3 | 将来 |
+
+**変更履歴 (2025-12-07):**
+- Type定義ファイルの不要なTODO 4件を削除 (suppliers/products/customers/warehouses)
+- 残りのTODOに優先度と詳細情報を追加し明確化
 
 ---
 

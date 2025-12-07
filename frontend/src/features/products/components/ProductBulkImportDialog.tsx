@@ -53,7 +53,9 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
     setFile(f);
     setResult(null);
 
-    // TODO: Backend import implementation
+    // TODO(P3): Backend bulk-upsert API未実装 - /api/products/bulk-upsert
+    // 優先度: P3 (将来対応)
+    // 現状: parseProductCsv + bulkUpsertProductsでフロントエンド実装済み、Backend待ち
     toast.info("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
     /*
     const reader = new FileReader();
@@ -80,7 +82,9 @@ export function ProductBulkImportDialog({ open, onOpenChange }: Props) {
   }, [parsedRows, bulkUpsert, onOpenChange]);
 
   const handleDownloadTemplate = useCallback(() => {
-    // TODO: Backend template download
+    // TODO(P3): Backend template download API未実装 - /api/products/template
+    // 優先度: P3 (将来対応)
+    // 現状: generateProductTemplateCsv でフロントエンド実装済み、Backend待ち
     toast.info("現在バックエンドインポート機能へ移行中です。");
     /*
     const csv = generateProductTemplateCsv();

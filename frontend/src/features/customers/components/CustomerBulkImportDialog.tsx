@@ -73,7 +73,9 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
     setFile(selectedFile);
     setImportResult(null);
 
-    // TODO: Backend import implementation
+    // TODO(P3): Backend bulk-upsert API未実装 - /api/customers/bulk-upsert
+    // 優先度: P3 (将来対応)
+    // 現状: parseCustomerCsv + bulkUpsertCustomersでフロントエンド実装済み、Backend待ち
     toast.info("現在バックエンドインポート機能へ移行中です。この機能は一時的に利用できません。");
     /*
     const { rows, errors } = await parseCustomerCsv(selectedFile);
@@ -92,7 +94,9 @@ export function CustomerBulkImportDialog({ open, onOpenChange }: CustomerBulkImp
 
   // テンプレートダウンロード
   const handleDownloadTemplate = useCallback(() => {
-    // TODO: Backend template download
+    // TODO(P3): Backend template download API未実装 - /api/customers/template
+    // 優先度: P3 (将来対応)
+    // 現状: generateEmptyTemplate でフロントエンド実装済み、Backend待ち
     toast.info("現在バックエンドインポート機能へ移行中です。");
     /*
     const template = generateEmptyTemplate();

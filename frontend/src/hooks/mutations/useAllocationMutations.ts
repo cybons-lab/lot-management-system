@@ -172,7 +172,9 @@ export function useCancelAllAllocationsForLine(
 
   return useMutation({
     mutationFn: async () => {
-      // TODO: バックエンドに受注明細単位の一括取消APIが実装されたら置き換え
+      // TODO(将来): バックエンドに受注明細単位の一括取消APIが実装されたら置き換え
+      // API: POST /api/allocations/cancel-by-order-line
+      // 優先度: 将来対応 (現状は個別キャンセルで対応可能)
       // 現状は個別に取り消す必要がある
 
       // 一旦、受注詳細を取得して引当IDを集める必要があるが、
@@ -231,7 +233,9 @@ export function useAutoAllocate(options?: {
       product_code: _product_code,
       quantity: _quantity,
     }) => {
-      // TODO: バックエンドに自動引当APIが実装されたら置き換え
+      // TODO(将来): バックエンドに自動引当APIが実装されたら置き換え
+      // API: POST /api/allocations/auto-allocate (FEFO方式)
+      // 優先度: 将来対応 (現状は手動引当で対応可能)
       // 現状は手動で候補ロットを取得してFEFO方式で引当を実行する
 
       throw new Error("自動引当機能は未実装です");
