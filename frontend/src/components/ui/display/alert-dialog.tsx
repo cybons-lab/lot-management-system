@@ -13,14 +13,13 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/layout/dialog";
 import { cn } from "@/shared/libs/utils";
 
 const AlertDialog = Dialog;
 
-const AlertDialogTrigger = ({ children, ...props }: React.ComponentPropsWithoutRef<"button">) => (
-  <button {...props}>{children}</button>
-);
+const AlertDialogTrigger = DialogTrigger;
 
 const AlertDialogContent = React.forwardRef<
   HTMLDivElement,
