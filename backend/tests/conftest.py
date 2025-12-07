@@ -342,6 +342,7 @@ def normal_user_token_headers(normal_user) -> dict[str, str]:
     """Create auth headers for normal user."""
     from app.core.security import create_access_token
 
+    # Include both user_id (as sub) and username for different auth checks
     token = create_access_token(data={"sub": str(normal_user.id), "username": normal_user.username})
     return {"Authorization": f"Bearer {token}"}
 
@@ -351,5 +352,6 @@ def superuser_token_headers(superuser) -> dict[str, str]:
     """Create auth headers for superuser."""
     from app.core.security import create_access_token
 
+    # Include both user_id (as sub) and username for different auth checks
     token = create_access_token(data={"sub": str(superuser.id), "username": superuser.username})
     return {"Authorization": f"Bearer {token}"}

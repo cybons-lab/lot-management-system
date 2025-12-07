@@ -61,14 +61,14 @@ class AuthService:
         )
         try:
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            username: str | None = payload.get("sub")
+            # Prefer "username" field if present, otherwise fall back to "sub"
+            username: str | None = payload.get("username") or payload.get("sub")
             if username is None:
                 raise credentials_exception
         except JWTError:
             raise credentials_exception
 
         user_service = UserService(db)
-        # username is guaranteed to be str after the None check above
         user = user_service.get_by_username(username=username)
         if user is None:
             raise credentials_exception
@@ -100,7 +100,8 @@ class AuthService:
 
         try:
             payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-            username: str | None = payload.get("sub")
+            # Prefer "username" field if present, otherwise fall back to "sub"
+            username: str | None = payload.get("username") or payload.get("sub")
             if username is None:
                 return None
         except JWTError:
