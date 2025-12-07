@@ -204,7 +204,11 @@ def test_create_alerts(db_session: Session, setup_inventory_sync_test_data):
     assert len(alerts) == 2
 
     # データベースに記録されているか確認
-    db_alerts = db_session.query(BusinessRule).filter(BusinessRule.rule_type == "other").all()
+    db_alerts = (
+        db_session.query(BusinessRule)
+        .filter(BusinessRule.rule_type == "inventory_sync_alert")
+        .all()
+    )
     assert len(db_alerts) == 2
 
     # アラートの内容を確認
@@ -225,7 +229,7 @@ def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_invento
     old_alert = BusinessRule(
         rule_code=f"inv_sync_alert_{products[0].id}",
         rule_name="Old Alert",
-        rule_type="other",
+        rule_type="inventory_sync_alert",
         rule_parameters={"old": "data"},
         is_active=True,
     )
@@ -251,18 +255,19 @@ def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_invento
     assert old_alert.is_active is True
     assert old_alert.rule_parameters["diff_pct"] > 0
 
-    # 新しいアラートが作成されているか
+    # 既存アラートが更新されたので、アラートは1件のまま
     active_alerts = (
         db_session.query(BusinessRule)
         .filter(
-            BusinessRule.rule_type == "other",
+            BusinessRule.rule_type == "inventory_sync_alert",
             BusinessRule.rule_code == f"inv_sync_alert_{products[0].id}",
             BusinessRule.is_active.is_(True),
         )
         .all()
     )
     assert len(active_alerts) == 1
-    assert active_alerts[0].id != old_alert.id
+    # 既存アラートが更新されて再利用されている（同じID）
+    assert active_alerts[0].id == old_alert.id
 
 
 @patch("app.services.batch.inventory_sync_service.SAPMockClient")
@@ -309,5 +314,9 @@ def test_check_inventory_totals_integration(
     assert disc["sap_qty"] == 220.0
 
     # アラートがDBに記録されているか
-    alerts = db_session.query(BusinessRule).filter(BusinessRule.rule_type == "other").all()
+    alerts = (
+        db_session.query(BusinessRule)
+        .filter(BusinessRule.rule_type == "inventory_sync_alert")
+        .all()
+    )
     assert len(alerts) == 1
