@@ -257,7 +257,7 @@ def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_invento
         .filter(
             BusinessRule.rule_type == "other",
             BusinessRule.rule_code == f"inv_sync_alert_{products[0].id}",
-            BusinessRule.is_active == True,  # noqa: E712
+            BusinessRule.is_active.is_(True),
         )
         .all()
     )

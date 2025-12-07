@@ -112,7 +112,7 @@ def get_inventory_sync_alerts(
     query = db.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert")
 
     if active_only:
-        query = query.filter(BusinessRule.is_active == True)  # noqa: E712
+        query = query.filter(BusinessRule.is_active.is_(True))
 
     # 最新のアラートから順に取得
     alerts = query.order_by(BusinessRule.updated_at.desc()).all()

@@ -217,6 +217,12 @@ def db(db_engine) -> Generator[Session]:
 
 
 @pytest.fixture(scope="function")
+def db_session(db) -> Generator[Session]:
+    """Alias for db fixture for backward compatibility."""
+    yield db
+
+
+@pytest.fixture(scope="function")
 def client(db) -> Generator[TestClient]:
     """Create FastAPI TestClient."""
     from app.api.deps import get_db
@@ -295,3 +301,55 @@ def master_data(db):
         "delivery_place": delivery_place,
         "user": user,
     }
+
+
+@pytest.fixture
+def normal_user(db):
+    """Create a normal test user."""
+    from app.models.auth_models import User
+
+    user = User(
+        username="test_user_normal",
+        email="normal@example.com",
+        password_hash="dummy_hash",
+        display_name="Normal Test User",
+        is_active=True,
+    )
+    db.add(user)
+    db.flush()
+    return user
+
+
+@pytest.fixture
+def superuser(db):
+    """Create a superuser for testing."""
+    from app.models.auth_models import User
+
+    user = User(
+        username="test_superuser",
+        email="super@example.com",
+        password_hash="dummy_hash",
+        display_name="Super Test User",
+        is_active=True,
+    )
+    db.add(user)
+    db.flush()
+    return user
+
+
+@pytest.fixture
+def normal_user_token_headers(normal_user) -> dict[str, str]:
+    """Create auth headers for normal user."""
+    from app.core.security import create_access_token
+
+    token = create_access_token(data={"sub": str(normal_user.id), "username": normal_user.username})
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def superuser_token_headers(superuser) -> dict[str, str]:
+    """Create auth headers for superuser."""
+    from app.core.security import create_access_token
+
+    token = create_access_token(data={"sub": str(superuser.id), "username": superuser.username})
+    return {"Authorization": f"Bearer {token}"}

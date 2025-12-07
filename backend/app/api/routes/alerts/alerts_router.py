@@ -52,7 +52,7 @@ def list_alerts(
     if severity:
         valid_severities: set[AlertSeverity] = {"critical", "warning", "info"}
         severity_filter = [
-            s.strip()  # type: ignore
+            s.strip()  # type: ignore[misc]
             for s in severity.split(",")
             if s.strip() in valid_severities
         ]
@@ -62,7 +62,7 @@ def list_alerts(
     if category:
         valid_categories: set[AlertCategory] = {"order", "inventory", "lot", "forecast"}
         category_filter = [
-            c.strip()  # type: ignore
+            c.strip()  # type: ignore[misc]
             for c in category.split(",")
             if c.strip() in valid_categories
         ]

@@ -38,6 +38,7 @@ from app.schemas.inventory.inventory_schema import (
     LotCreate,
     LotLock,
     LotResponse,
+    LotStatus,
     LotUpdate,
     StockMovementCreate,
     StockMovementResponse,
@@ -281,20 +282,20 @@ class LotService:
                 id=lot_view.lot_id,
                 lot_number=lot_view.lot_number,
                 product_id=lot_view.product_id,
-                product_code=lot_view.maker_part_code,  # type: ignore[arg-type]
+                product_code=lot_view.maker_part_code or "",
                 product_name=lot_view.product_name,
                 supplier_id=lot_view.supplier_id,
                 supplier_code=lot_view.supplier_code,
-                supplier_name=lot_view.supplier_name,  # type: ignore[arg-type]
+                supplier_name=lot_view.supplier_name or "",
                 warehouse_id=lot_view.warehouse_id,
                 warehouse_code=lot_view.warehouse_code,
                 warehouse_name=lot_view.warehouse_name,
-                current_quantity=float(lot_view.current_quantity),  # type: ignore[arg-type]
-                allocated_quantity=float(lot_view.allocated_quantity),  # type: ignore[arg-type]
+                current_quantity=lot_view.current_quantity or Decimal("0"),
+                allocated_quantity=lot_view.allocated_quantity or Decimal("0"),
                 unit=lot_view.unit,
                 received_date=lot_view.received_date,
                 expiry_date=lot_view.expiry_date,
-                status=lot_view.status,  # type: ignore[arg-type]
+                status=LotStatus(lot_view.status) if lot_view.status else LotStatus.ACTIVE,
                 created_at=lot_view.created_at,
                 updated_at=lot_view.updated_at,
                 last_updated=lot_view.updated_at,
@@ -545,7 +546,7 @@ class LotService:
 
         self.db.commit()
         self.db.refresh(db_movement)
-        return db_movement  # type: ignore[return-value]
+        return StockMovementResponse.model_validate(db_movement)
 
     def list_lot_movements(self, lot_id: int) -> list[StockMovementResponse]:
         """List movements for a lot."""
@@ -555,10 +556,7 @@ class LotService:
             .order_by(StockMovement.transaction_date.desc())
             .all()
         )
-        # Assuming Pydantic v2 validation or direct mapping happens at router,
-        # but here we return ORM objects which FastAPI handles if return_type is set.
-        # However, to be strict we might want to validate here.
-        return movements  # type: ignore[return-value]
+        return [StockMovementResponse.model_validate(m) for m in movements]
 
     def _build_lot_response(self, lot_id: int) -> LotResponse:
         """Helper to build LotResponse from Lot model definition (joined
@@ -587,6 +585,6 @@ class LotService:
             response.supplier_name = db_lot.supplier.supplier_name
             response.supplier_code = db_lot.supplier.supplier_code
 
-        response.current_quantity = float(db_lot.current_quantity or 0.0)  # type: ignore[assignment]
+        response.current_quantity = db_lot.current_quantity or Decimal("0")
         response.last_updated = db_lot.updated_at
         return response

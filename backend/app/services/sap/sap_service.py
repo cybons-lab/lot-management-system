@@ -167,6 +167,7 @@ class SAPService:
             from app.schemas.inventory.inbound_schema import (
                 InboundPlanDetailResponse,
                 InboundPlanLineResponse,
+                InboundPlanStatus,
             )
 
             created_plans.append(
@@ -175,7 +176,7 @@ class SAPService:
                     plan_number=db_plan.plan_number,
                     supplier_id=db_plan.supplier_id,
                     planned_arrival_date=db_plan.planned_arrival_date,
-                    status=db_plan.status,  # type: ignore[arg-type]
+                    status=InboundPlanStatus(db_plan.status),
                     notes=db_plan.notes,
                     created_at=db_plan.created_at,
                     updated_at=db_plan.updated_at,

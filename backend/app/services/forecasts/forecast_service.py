@@ -219,7 +219,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         self.db.commit()
         self.db.refresh(db_forecast)
 
-        return self.get_forecast_by_id(db_forecast.id)  # type: ignore
+        return self.get_forecast_by_id(db_forecast.id)  # type: ignore[return-value]
 
     def update_forecast(self, forecast_id: int, data: ForecastUpdate) -> ForecastResponse | None:
         """Update a forecast entry."""

@@ -33,6 +33,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **[Refactor] Bulk Import Dialogs**: 全7種類のBulk Importダイアログ（Users, Products, Warehouses等）を`BaseBulkImportDialog`コンポーネントに統一し、コード重複を削減
 - **[Refactor] Frontend Components**: 肥大化したコンポーネントを分割 (`LineBasedAllocationList`, `PrimaryAssignmentsPage`など)
 - **[Fix] Backend Types**: Mypyエラーを0件まで解消（`alembic`マイグレーション型修正など）
+- **[Refactor] ESLint Disable Reduction (2025-12-07)**: eslint-disableを7件→3件に削減
+  - `order-factory.ts`: ヘルパー関数 `resolveDeliveryDate`, `resolveExtraFields` 抽出
+  - `PlanningAllocationPanel.tsx`: `LotBreakdownSection`, `PeriodSection` サブコンポーネント分離
+  - `ClientLogsPage.tsx`: `LogsTable`, `getLevelBadgeVariant` コンポーネント・ヘルパー分離
+  - `SAPRegistrationDialog.tsx`: `LineItem` コンポーネント分離
+  - `SearchableSelect.tsx`: `ClearButton`, `SearchInput` 分離 (max-lines-per-function解消)
 
 ## [2025-12-06]
 

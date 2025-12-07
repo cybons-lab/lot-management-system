@@ -11,6 +11,7 @@ from app.schemas.inventory.inbound_schema import (
     InboundPlanLineCreate,
     InboundPlanLineResponse,
     InboundPlanResponse,
+    InboundPlanStatus,
     InboundPlanUpdate,
 )
 from app.services.inventory.inbound_line_service import InboundLineService
@@ -121,7 +122,7 @@ class InboundService:
             plan_number=plan.plan_number,
             supplier_id=plan.supplier_id,
             planned_arrival_date=plan.planned_arrival_date,
-            status=plan.status,  # type: ignore[arg-type]
+            status=InboundPlanStatus(plan.status),
             notes=plan.notes,
             created_at=plan.created_at,
             updated_at=plan.updated_at,
@@ -169,7 +170,7 @@ class InboundService:
             plan_number=db_plan.plan_number,
             supplier_id=db_plan.supplier_id,
             planned_arrival_date=db_plan.planned_arrival_date,
-            status=db_plan.status,  # type: ignore[arg-type]
+            status=InboundPlanStatus(db_plan.status),
             notes=db_plan.notes,
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,
@@ -208,7 +209,7 @@ class InboundService:
             plan_number=db_plan.plan_number,
             supplier_id=db_plan.supplier_id,
             planned_arrival_date=db_plan.planned_arrival_date,
-            status=db_plan.status,  # type: ignore[arg-type]
+            status=InboundPlanStatus(db_plan.status),
             notes=db_plan.notes,
             created_at=db_plan.created_at,
             updated_at=db_plan.updated_at,

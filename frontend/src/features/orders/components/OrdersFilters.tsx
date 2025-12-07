@@ -53,10 +53,14 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
         </div>
 
         <div className="col-span-2 space-y-2">
-          {/* ボタングループのラベルなのでhtmlForで関連付けできない */}
-          {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
-          <label className="text-sm font-medium text-slate-700">需要種別</label>
-          <div className="flex flex-wrap gap-2">
+          <span id="order-type-filter-label" className="text-sm font-medium text-slate-700">
+            需要種別
+          </span>
+          <div
+            className="flex flex-wrap gap-2"
+            role="group"
+            aria-labelledby="order-type-filter-label"
+          >
             {[
               { value: "all", label: "すべて" },
               { value: "FORECAST_LINKED", label: "FC連携" },
