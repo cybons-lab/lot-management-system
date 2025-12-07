@@ -19,6 +19,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `single_expiring_soon`: 7日以内に期限切れとなるロット
   - `multi_lot_fefo`: 4ロット（10/30/60/90日後期限）でFEFOアルゴリズムのテスト用
 
+### Added
+- **[Feature] User Lock (P3-3)**: 担当者ロック表示（排他制御）機能
+  - Backend: `locked_by_user_id`カラム追加、`/lock` API実装
+  - Frontend: `useOrderLock`フック、受注詳細画面へのアラート表示
+- **[Feature] Auto Allocation (P4-1)**: 自動引当機能のFrontend有効化
+  - Backendの`/api/allocations/auto-allocate`と連携
+- **[Feature] Bulk Cancel (P4-2)**: 受注明細単位の一括取消機能
+  - Backend: `/cancel-by-order-line` API追加
+  - Frontend: `useCancelAllAllocationsForLine` 実装
+
 ## [2025-12-06]
 
 ### Added

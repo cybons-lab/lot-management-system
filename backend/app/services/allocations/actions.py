@@ -856,3 +856,44 @@ def _auto_allocate_line_no_commit(
         remaining_qty -= allocate_qty
 
     return created_allocations
+
+
+def cancel_allocations_for_order_line(db: Session, order_line_id: int) -> list[int]:
+    """受注明細に紐づく全ての引当を一括キャンセル.
+
+    Args:
+        db: データベースセッション
+        order_line_id: 受注明細ID
+
+    Returns:
+        list[int]: キャンセルされた引当IDのリスト
+    """
+    # 対象の引当を取得
+    allocations = db.query(Allocation).filter(Allocation.order_line_id == order_line_id).all()
+
+    cancelled_ids: list[int] = []
+    for alloc in allocations:
+        # 既にキャンセル済みでないものだけ処理
+        if alloc.status != "cancelled":
+            try:
+                # 削除（またはキャンセルステータスへ更新）
+                # cancel_allocation 関数は在庫を戻して削除を行う
+                cancel_allocation(db, alloc.id, commit_db=False)
+                cancelled_ids.append(alloc.id)
+            except (AllocationNotFoundError, AllocationCommitError):
+                continue
+
+    if cancelled_ids:
+        # まとめてコミット
+        db.commit()
+
+        # 注文および明細のステータス更新を確実に行う
+        # cancel_allocation(commit_db=False) 内で flush はされているが、
+        # 最後に確実に再計算する
+        line = db.get(OrderLine, order_line_id)
+        if line:
+            update_order_allocation_status(db, line.order_id)
+            update_order_line_status(db, line.id)
+            db.commit()
+
+    return cancelled_ids

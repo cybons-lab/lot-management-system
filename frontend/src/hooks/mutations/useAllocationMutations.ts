@@ -9,6 +9,7 @@ import { useMutation, useQueryClient, type UseMutationResult } from "@tanstack/r
 import {
   createAllocations,
   cancelAllocation,
+  cancelAllocationsByLine,
   type CreateAllocationPayload,
   type AllocationResult,
 } from "@/features/allocations/api";
@@ -161,25 +162,21 @@ export function useBulkCancelAllocations(options?: {
  * @param options - Mutation オプション
  * @returns 全引当取消のMutation結果
  */
-export function useCancelAllAllocationsForLine(
-  _orderLineId: number,
-  options?: {
-    onSuccess?: () => void;
-    onError?: (error: Error) => void;
-  },
-): UseMutationResult<void, Error, void> {
+/**
+ * 受注明細の全引当取消フック
+ *
+ * @param options - Mutation オプション
+ * @returns 全引当取消のMutation結果
+ */
+export function useCancelAllAllocationsForLine(options?: {
+  onSuccess?: () => void;
+  onError?: (error: Error) => void;
+}): UseMutationResult<void, Error, number> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      // TODO(将来): バックエンドに受注明細単位の一括取消APIが実装されたら置き換え
-      // API: POST /api/allocations/cancel-by-order-line
-      // 優先度: 将来対応 (現状は個別キャンセルで対応可能)
-      // 現状は個別に取り消す必要がある
-
-      // 一旦、受注詳細を取得して引当IDを集める必要があるが、
-      // ここでは簡易的にエラーをスローする
-      throw new Error("受注明細単位の一括取消は未実装です");
+    mutationFn: async (orderLineId: number) => {
+      await cancelAllocationsByLine(orderLineId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -220,25 +217,31 @@ export function useCancelAllAllocationsForLine(
 export function useAutoAllocate(options?: {
   onSuccess?: (data: AllocationResult) => void;
   onError?: (error: Error) => void;
-}): UseMutationResult<
-  AllocationResult,
-  Error,
-  { order_line_id: number; product_code: string; quantity: number }
-> {
+}): UseMutationResult<AllocationResult, Error, { order_line_id: number; strategy?: string }> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      order_line_id: _order_line_id,
-      product_code: _product_code,
-      quantity: _quantity,
-    }) => {
-      // TODO(将来): バックエンドに自動引当APIが実装されたら置き換え
-      // API: POST /api/allocations/auto-allocate (FEFO方式)
-      // 優先度: 将来対応 (現状は手動引当で対応可能)
-      // 現状は手動で候補ロットを取得してFEFO方式で引当を実行する
+    mutationFn: async ({ order_line_id, strategy = "fefo" }) => {
+      // Backend API: POST /api/allocations/auto-allocate
+      const response = await fetch("/api/allocations/auto-allocate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_line_id, strategy }),
+      });
 
-      throw new Error("自動引当機能は未実装です");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "自動引当に失敗しました");
+      }
+
+      const data = await response.json();
+
+      // AutoAllocateResponse を AllocationResult 形式に変換
+      return {
+        order_id: data.order_id,
+        created_allocation_ids: data.allocated_lots.map((lot: { lot_id: number }) => lot.lot_id),
+        message: data.message,
+      };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({

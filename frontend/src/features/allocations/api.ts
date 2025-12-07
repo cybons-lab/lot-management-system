@@ -133,6 +133,18 @@ export const cancelAllocation = (allocationId: number) => {
 };
 
 /**
+ * Cancel all allocations for a specific order line
+ * @endpoint POST /allocations/cancel-by-order-line
+ */
+export const cancelAllocationsByLine = (orderLineId: number) => {
+  return http.post<{
+    success: boolean;
+    message: string;
+    cancelled_ids: number[];
+  }>("allocations/cancel-by-order-line", { order_line_id: orderLineId });
+};
+
+/**
  * Confirm allocations (Soft -> Hard)
  * @endpoint POST /allocations/confirm-batch
  */

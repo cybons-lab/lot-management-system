@@ -1,19 +1,12 @@
-import { useWindowVirtualizer, type VirtualItem } from "@tanstack/react-virtual";
-import { useState, useRef } from "react";
+import type { VirtualItem } from "@tanstack/react-virtual";
 
-import type { CandidateLotItem } from "../../api";
-import type { LineStatus } from "../../hooks/useLotAllocation";
-
+import { AllocationListRow } from "./line-based/AllocationListRow";
 import { BulkActionsHeader } from "./line-based/BulkActionsHeader";
 import { FilterBar } from "./line-based/FilterBar";
 import { JumpButtons } from "./line-based/JumpButtons";
-import { LineItem } from "./line-based/LineItem";
-import { OrderGroup } from "./line-based/OrderGroup";
-import type { FilterStatus, ViewMode, LineWithOrderInfo, GroupedOrder } from "./line-based/types";
-import { useLineData } from "./line-based/useLineData";
+import type { AllocationListProps } from "./line-based/types";
+import { useAllocationListLogic } from "./line-based/useAllocationListLogic";
 import * as styles from "./LineBasedAllocationList.styles";
-
-import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 /**
  * LineBasedAllocationList - 明細単位でフラットに表示するコンポーネント
@@ -21,115 +14,31 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
  * ユーザーの要望により、Order Cardのデザイン（ヘッダー情報など）を維持したまま、
  * 明細行ごとにカードを分けて表示する（非正規化表示）。
  */
-// 仮想スクロールリストとグルーピングロジックを一箇所にまとめるため分割しない
-// eslint-disable-next-line max-lines-per-function
-export function LineBasedAllocationList({
-  orders,
-  isLoading,
-  onSaveAllocations,
-  customerMap,
-  productMap,
-  getLineAllocations,
-  getCandidateLots,
-  isOverAllocated,
-  onLotAllocationChange,
-  onAutoAllocate,
-  onClearAllocations,
-  lineStatuses,
-}: {
-  orders: OrderWithLinesResponse[];
-  isLoading: boolean;
-  onSaveAllocations: (lineId: number) => void;
-  customerMap: Record<number, string>;
-  productMap: Record<number, string>;
-  getLineAllocations: (lineId: number) => Record<number, number>;
-  getCandidateLots: (lineId: number) => CandidateLotItem[];
-  isOverAllocated: (lineId: number) => boolean;
-  onLotAllocationChange: (lineId: number, lotId: number, quantity: number) => void;
-  onAutoAllocate: (lineId: number) => void;
-  onClearAllocations: (lineId: number) => void;
-  lineStatuses: Record<number, LineStatus>;
-}) {
-  // 選択状態管理
-  const [selectedLineIds, setSelectedLineIds] = useState<Set<number>>(new Set());
-  // フィルタステータス
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
-  // アクティブな行ID
-  const [activeLineId, setActiveLineId] = useState<number | null>(null);
-  // グルーピング表示モード
-  const [viewMode, setViewMode] = useState<ViewMode>("line");
+export function LineBasedAllocationList(props: AllocationListProps) {
+  const { orders, isLoading } = props;
 
-  // スクロール用ref
-  const checkedSectionRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-
-  const scrollToCheckedSection = () => {
-    checkedSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  // データ処理フック
-  const { allFlatLines, sortedLines, groupedOrders, firstCheckedIndex } = useLineData({
-    orders,
-    customerMap,
-    filterStatus,
+  const {
     selectedLineIds,
-    getLineAllocations,
-    getCandidateLots,
-    isOverAllocated,
+    filterStatus,
+    setFilterStatus,
     viewMode,
-  });
-
-  // 全選択/解除
-  const handleSelectAll = () => {
-    const allIds = new Set(allFlatLines.map((item) => item.id));
-    setSelectedLineIds(allIds);
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedLineIds(new Set());
-  };
-
-  const handleBulkSave = () => {
-    selectedLineIds.forEach((id) => onSaveAllocations(id));
-  };
-
-  const handleCheckChange = (lineId: number, checked: boolean) => {
-    setSelectedLineIds((prev) => {
-      const newSet = new Set(prev);
-      if (checked) {
-        newSet.add(lineId);
-      } else {
-        newSet.delete(lineId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleGroupCheckChange = (groupId: number, checked: boolean) => {
-    setSelectedLineIds((prev) => {
-      const newSet = new Set(prev);
-      const group = groupedOrders.find((g) => g.order_id === groupId);
-      if (!group) return newSet;
-
-      if (checked) {
-        group.lines.forEach((line) => newSet.add(line.id));
-      } else {
-        group.lines.forEach((line) => newSet.delete(line.id));
-      }
-      return newSet;
-    });
-  };
-
-  // 表示データ切り替え
-  const data = viewMode === "line" ? sortedLines : groupedOrders;
-
-  // 仮想スクロール設定
-  const virtualizer = useWindowVirtualizer({
-    count: data.length,
-    estimateSize: () => 300,
-    overscan: 5,
-    scrollMargin: listRef.current?.offsetTop ?? 0,
-  });
+    setViewMode,
+    activeLineId,
+    setActiveLineId,
+    checkedSectionRef,
+    listRef,
+    allFlatLines,
+    sortedLines,
+    data,
+    firstCheckedIndex,
+    handleSelectAll,
+    handleDeselectAll,
+    handleBulkSave,
+    handleCheckChange,
+    handleGroupCheckChange,
+    scrollToCheckedSection,
+    virtualizer,
+  } = useAllocationListLogic(props);
 
   if (isLoading) return <div className="p-8 text-center text-gray-500">データを読み込み中...</div>;
   if (orders.length === 0)
@@ -172,60 +81,32 @@ export function LineBasedAllocationList({
         }}
       >
         {virtualizer.getVirtualItems().map((virtualItem: VirtualItem) => {
-          const isLineMode = viewMode === "line";
           const item = data[virtualItem.index];
 
           return (
-            <div
+            <AllocationListRow
               key={virtualItem.key}
-              data-index={virtualItem.index}
-              ref={virtualizer.measureElement}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-            >
-              {isLineMode ? (
-                <LineItem
-                  item={item as LineWithOrderInfo}
-                  isChecked={selectedLineIds.has((item as LineWithOrderInfo).id)}
-                  isFirstChecked={virtualItem.index === firstCheckedIndex && firstCheckedIndex > 0}
-                  checkedSectionRef={checkedSectionRef}
-                  totalCheckedCount={sortedLines.length - firstCheckedIndex}
-                  productMap={productMap}
-                  onCheckChange={handleCheckChange}
-                  getLineAllocations={getLineAllocations}
-                  onLotAllocationChange={onLotAllocationChange}
-                  onAutoAllocate={onAutoAllocate}
-                  onClearAllocations={onClearAllocations}
-                  onSaveAllocations={onSaveAllocations}
-                  lineStatuses={lineStatuses}
-                  isOverAllocated={isOverAllocated}
-                  activeLineId={activeLineId}
-                  onActivate={setActiveLineId}
-                />
-              ) : (
-                <OrderGroup
-                  group={item as GroupedOrder}
-                  selectedLineIds={selectedLineIds}
-                  onGroupCheckChange={handleGroupCheckChange}
-                  onLineCheckChange={handleCheckChange}
-                  productMap={productMap}
-                  getLineAllocations={getLineAllocations}
-                  onLotAllocationChange={onLotAllocationChange}
-                  onAutoAllocate={onAutoAllocate}
-                  onClearAllocations={onClearAllocations}
-                  onSaveAllocations={onSaveAllocations}
-                  lineStatuses={lineStatuses}
-                  isOverAllocated={isOverAllocated}
-                  activeLineId={activeLineId}
-                  onActivate={setActiveLineId}
-                />
-              )}
-            </div>
+              virtualItem={virtualItem}
+              virtualizer={virtualizer}
+              item={item}
+              viewMode={viewMode}
+              selectedLineIds={selectedLineIds}
+              firstCheckedIndex={firstCheckedIndex}
+              sortedLinesLength={sortedLines.length}
+              checkedSectionRef={checkedSectionRef}
+              activeLineId={activeLineId}
+              onActivate={setActiveLineId}
+              handleCheckChange={handleCheckChange}
+              handleGroupCheckChange={handleGroupCheckChange}
+              productMap={props.productMap}
+              getLineAllocations={props.getLineAllocations}
+              onLotAllocationChange={props.onLotAllocationChange}
+              onAutoAllocate={props.onAutoAllocate}
+              onClearAllocations={props.onClearAllocations}
+              onSaveAllocations={props.onSaveAllocations}
+              lineStatuses={props.lineStatuses}
+              isOverAllocated={props.isOverAllocated}
+            />
           );
         })}
       </div>

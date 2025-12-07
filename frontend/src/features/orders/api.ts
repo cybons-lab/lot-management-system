@@ -149,3 +149,11 @@ export const updateOrderLineStatus = (orderLineId: number, newStatus: string) =>
     order_line_id: number;
     new_status: string;
   }>(`orders/${orderLineId}/status`, { status: newStatus });
+
+export async function acquireOrderLock(orderId: number): Promise<void> {
+  await http.post(`orders/${orderId}/lock`, {});
+}
+
+export async function releaseOrderLock(orderId: number): Promise<void> {
+  await http.delete(`orders/${orderId}/lock`);
+}

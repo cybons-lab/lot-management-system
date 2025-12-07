@@ -47,6 +47,12 @@ class OrderResponse(OrderBase):
     created_at: datetime
     updated_at: datetime
 
+    # Optimistic Locking
+    locked_by_user_id: int | None = Field(None, description="編集中のユーザーID")
+    locked_by_user_name: str | None = Field(None, description="編集中のユーザー名")
+    locked_at: datetime | None = Field(None, description="ロック取得日時")
+    lock_expires_at: datetime | None = Field(None, description="ロック有効期限")
+
 
 class OrderWithLinesResponse(OrderResponse):
     """Order with lines response."""
