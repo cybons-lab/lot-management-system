@@ -7,24 +7,40 @@ import { toast } from "sonner";
 import type { CreateCustomerItemRequest } from "../api";
 import { useCustomerItems, useCreateCustomerItem, useDeleteCustomerItem } from "../hooks";
 
-// eslint-disable-next-line max-lines-per-function
-export function useCustomerItemsPage() {
-  // State
+function useCustomerItemFilters() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState({
     customer_id: "",
     product_id: "",
   });
+
+  const queryParams = useMemo(
+    () => ({
+      customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
+      product_id: filters.product_id ? Number(filters.product_id) : undefined,
+    }),
+    [filters.customer_id, filters.product_id],
+  );
+
+  return { searchQuery, setSearchQuery, filters, setFilters, queryParams };
+}
+
+function useCustomerItemDialogs() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
-  // Build query params
-  const queryParams = {
-    customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
-    product_id: filters.product_id ? Number(filters.product_id) : undefined,
-  };
+  return { isCreateDialogOpen, setIsCreateDialogOpen, isImportDialogOpen, setIsImportDialogOpen };
+}
 
-  // Data
+export function useCustomerItemsPage() {
+  const { searchQuery, setSearchQuery, filters, setFilters, queryParams } = useCustomerItemFilters();
+  const {
+    isCreateDialogOpen,
+    setIsCreateDialogOpen,
+    isImportDialogOpen,
+    setIsImportDialogOpen,
+  } = useCustomerItemDialogs();
+
   const { data: customerItems = [], isLoading } = useCustomerItems(queryParams);
   const { mutate: createCustomerItem, isPending: isCreating } = useCreateCustomerItem();
   const { mutate: deleteCustomerItem, isPending: isDeleting } = useDeleteCustomerItem();
