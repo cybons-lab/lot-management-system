@@ -14,7 +14,7 @@ interface UseLotCandidateRowProps {
   onSave: () => void;
 }
 
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- 83行で3行超過、分割すると可読性低下
 export function useLotCandidateRow({
   lot,
   line,

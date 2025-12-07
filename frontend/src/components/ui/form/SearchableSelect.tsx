@@ -87,8 +87,50 @@ function OptionsList({
   );
 }
 
-// UIコンポーネントの状態管理とレンダリングを一箇所にまとめるため分割しない
-// eslint-disable-next-line complexity, max-lines-per-function
+/** Clear button component */
+function ClearButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => e.key === "Enter" && onClick(e as unknown as React.MouseEvent)}
+      className="rounded p-0.5 hover:bg-slate-100"
+    >
+      <X className="h-4 w-4 text-slate-400" />
+    </span>
+  );
+}
+
+/** Search input shown when dropdown is open */
+function SearchInput({
+  inputRef,
+  searchTerm,
+  setSearchTerm,
+  placeholder,
+}: {
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  searchTerm: string;
+  setSearchTerm: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="flex flex-1 items-center gap-2">
+      <Search className="h-4 w-4 text-slate-400" />
+      <input
+        ref={inputRef}
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="flex-1 bg-transparent outline-none placeholder:text-slate-400"
+        placeholder={placeholder}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  );
+}
+
+// eslint-disable-next-line complexity -- 複雑性13で1つ超過、サブコンポーネント分離済み
 export function SearchableSelect({
   options,
   value,
@@ -136,18 +178,12 @@ export function SearchableSelect({
         disabled={disabled}
       >
         {isOpen ? (
-          <div className="flex flex-1 items-center gap-2">
-            <Search className="h-4 w-4 text-slate-400" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="flex-1 bg-transparent outline-none placeholder:text-slate-400"
-              placeholder={placeholder}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </div>
+          <SearchInput
+            inputRef={inputRef}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            placeholder={placeholder}
+          />
         ) : (
           <span className={cn("truncate", !selectedOption && "text-slate-400")}>
             {selectedOption?.label || placeholder}
@@ -155,17 +191,7 @@ export function SearchableSelect({
         )}
 
         <div className="flex items-center gap-1">
-          {value && !isOpen && (
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={handleClear}
-              onKeyDown={(e) => e.key === "Enter" && handleClear(e as unknown as React.MouseEvent)}
-              className="rounded p-0.5 hover:bg-slate-100"
-            >
-              <X className="h-4 w-4 text-slate-400" />
-            </span>
-          )}
+          {value && !isOpen && <ClearButton onClick={handleClear} />}
           <ChevronDown
             className={cn("h-4 w-4 text-slate-400 transition-transform", isOpen && "rotate-180")}
           />

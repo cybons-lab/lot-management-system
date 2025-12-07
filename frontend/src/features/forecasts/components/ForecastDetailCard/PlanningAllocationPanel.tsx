@@ -8,13 +8,70 @@ import { Package, AlertTriangle, Loader2 } from "lucide-react";
 import { getPlanningAllocationSummary } from "@/features/allocations/api";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
 
+interface LotBreakdownItem {
+  lot_id: number;
+  lot_number?: string | null;
+  expiry_date?: string | null;
+  planned_quantity: number;
+}
+
+interface PeriodItem {
+  forecast_period: string;
+  planned_quantity: number;
+}
+
+function LotBreakdownSection({ lots }: { lots: LotBreakdownItem[] }) {
+  if (lots.length === 0) return null;
+  return (
+    <div className="space-y-1">
+      <div className="text-xs text-slate-400">ロット別内訳:</div>
+      <div className="max-h-24 overflow-y-auto">
+        {lots.map((lot) => (
+          <div
+            key={lot.lot_id}
+            className="flex items-center justify-between rounded px-2 py-0.5 text-xs hover:bg-slate-50"
+          >
+            <span className="truncate text-slate-600">
+              {lot.lot_number || `Lot #${lot.lot_id}`}
+              {lot.expiry_date && (
+                <span className="ml-1 text-slate-400">(~{lot.expiry_date.substring(0, 10)})</span>
+              )}
+            </span>
+            <span className="ml-2 font-medium text-slate-700">
+              {formatQuantity(lot.planned_quantity, "PCS")}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PeriodSection({ periods }: { periods: PeriodItem[] }) {
+  if (periods.length <= 1) return null;
+  return (
+    <div className="space-y-1">
+      <div className="text-xs text-slate-400">期間別:</div>
+      <div className="flex flex-wrap gap-1">
+        {periods.map((p) => (
+          <span
+            key={p.forecast_period}
+            className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700"
+          >
+            {p.forecast_period}: {formatQuantity(p.planned_quantity, "PCS")}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface PlanningAllocationPanelProps {
   customerId: number;
   deliveryPlaceId: number;
   productId: number;
 }
 
-// eslint-disable-next-line max-lines-per-function
 export function PlanningAllocationPanel({
   customerId,
   deliveryPlaceId,
@@ -73,49 +130,8 @@ export function PlanningAllocationPanel({
         </span>
       </div>
 
-      {/* ロット別内訳 */}
-      {data.lot_breakdown.length > 0 && (
-        <div className="space-y-1">
-          <div className="text-xs text-slate-400">ロット別内訳:</div>
-          <div className="max-h-24 overflow-y-auto">
-            {data.lot_breakdown.map((lot) => (
-              <div
-                key={lot.lot_id}
-                className="flex items-center justify-between rounded px-2 py-0.5 text-xs hover:bg-slate-50"
-              >
-                <span className="truncate text-slate-600">
-                  {lot.lot_number || `Lot #${lot.lot_id}`}
-                  {lot.expiry_date && (
-                    <span className="ml-1 text-slate-400">
-                      (~{lot.expiry_date.substring(0, 10)})
-                    </span>
-                  )}
-                </span>
-                <span className="ml-2 font-medium text-slate-700">
-                  {formatQuantity(lot.planned_quantity, "PCS")}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 期間別 */}
-      {data.by_period.length > 1 && (
-        <div className="space-y-1">
-          <div className="text-xs text-slate-400">期間別:</div>
-          <div className="flex flex-wrap gap-1">
-            {data.by_period.map((p) => (
-              <span
-                key={p.forecast_period}
-                className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700"
-              >
-                {p.forecast_period}: {formatQuantity(p.planned_quantity, "PCS")}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <LotBreakdownSection lots={data.lot_breakdown} />
+      <PeriodSection periods={data.by_period} />
     </div>
   );
 }

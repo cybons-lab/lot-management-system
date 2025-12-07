@@ -61,20 +61,24 @@
 
 ## 🔧 技術的負債（リファクタリング候補）
 
-### 残り 7件 (eslint-disable)
+### 残り 3件 (eslint-disable)
 
-以下のファイルに `eslint-disable` が残っていますが、機能には影響しないため優先度は低です。
+以下のファイルに `eslint-disable` が残っていますが、分割すると可読性が低下するため維持しています。
 
-#### `max-lines-per-function` (5件)
-- `frontend/src/features/orders/hooks/useOrderLineAllocation.ts`
-- `frontend/src/features/forecasts/components/ForecastDetailCard/useLotCandidateRow.ts`
-- `frontend/src/features/forecasts/components/ForecastDetailCard/PlanningAllocationPanel.tsx`
-- `frontend/src/features/client-logs/pages/ClientLogsPage.tsx`
-- `frontend/src/components/common/SAPRegistrationDialog.tsx`
+#### `max-lines-per-function` (2件)
+- `frontend/src/features/orders/hooks/useOrderLineAllocation.ts` - 複合フックのため分割困難
+- `frontend/src/features/forecasts/components/ForecastDetailCard/useLotCandidateRow.ts` - 83行で3行超過
 
-#### `complexity` (2件)
-- `frontend/src/components/ui/form/SearchableSelect.tsx`
-- `frontend/src/factories/order-factory.ts`
+#### `complexity` (1件)
+- `frontend/src/components/ui/form/SearchableSelect.tsx` - 複雑性13で1つ超過、サブコンポーネント分離済み
+
+### ✅ リファクタリング完了 (2025-12-07)
+以下のファイルは eslint-disable を削除し、サブコンポーネント/ヘルパー関数を抽出してリファクタリング完了：
+- `frontend/src/factories/order-factory.ts` - ヘルパー関数 `resolveDeliveryDate`, `resolveExtraFields` 抽出
+- `frontend/src/features/forecasts/components/ForecastDetailCard/PlanningAllocationPanel.tsx` - `LotBreakdownSection`, `PeriodSection` 分離
+- `frontend/src/features/client-logs/pages/ClientLogsPage.tsx` - `LogsTable`, `getLevelBadgeVariant` 分離
+- `frontend/src/components/common/SAPRegistrationDialog.tsx` - `LineItem` コンポーネント分離
+- `frontend/src/components/ui/form/SearchableSelect.tsx` - `ClearButton`, `SearchInput` 分離（max-lines-per-function解消）
 
 ### 🐛 既知の不具合 (Known Issues)
 
@@ -96,7 +100,7 @@
 | **ESLint Errors** | 0 | ✅ Clean |
 | **TS Errors** | 0 | ✅ Clean |
 | **Mypy Errors** | 0 | ✅ Clean |
-| **eslint-disable** | 7 | 🟡 Low Priority |
+| **eslint-disable** | 3 | ✅ 最小限（分割困難なケースのみ） |
 | **TODO** | 5 | 🟡 Backend待ち/将来対応 |
 
 ---
