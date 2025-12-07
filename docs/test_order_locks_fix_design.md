@@ -260,15 +260,30 @@ python3 -m pytest --tb=no -q
 
 ---
 
-## 参考: 関連ファイル
+## 対応結果 (2025-12-07)
 
-| ファイル | 役割 |
-|---------|------|
-| `backend/tests/conftest.py` | テストfixture定義 |
-| `backend/tests/api/test_order_locks.py` | 問題のテスト |
-| `backend/app/services/auth/auth_service.py` | 認証サービス |
-| `backend/app/api/deps.py` | API依存関数（get_db） |
-| `backend/app/core/database.py` | DB接続（別のget_db） |
+### 実施内容
+
+推奨案の**案1（ユーザーをコミットする）**を採用し、以下の修正を行いました。
+
+1. **`backend/tests/conftest.py` の修正**:
+    - `normal_user`, `superuser` fixture を変更し、`db.flush()` ではなく `db.commit()` するようにしました。
+    - `return` を `yield` に変更し、テスト終了後に `db.delete()` と `db.commit()` を実行するクリーンアップ処理を追加しました。
+
+2. **`backend/tests/api/test_order_locks.py` の修正**:
+    - 全てのテストケースから `@pytest.mark.xfail` マーカーを削除しました。
+
+### 検証結果
+
+`test_auth.py` との結合テストを実施し、全てパスすることを確認しました。
+
+```bash
+$ python3 -m pytest tests/test_auth.py tests/api/test_order_locks.py -v
+...
+================= 10 passed in 2.34s =================
+```
+
+また、`test_order_locks.py` 単体実行も成功しています。
 
 ---
 

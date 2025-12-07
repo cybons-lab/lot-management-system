@@ -319,8 +319,12 @@ def normal_user(db):
         is_active=True,
     )
     db.add(user)
-    db.flush()
-    return user
+    db.commit()
+    db.refresh(user)
+    yield user
+    # Cleanup
+    db.delete(user)
+    db.commit()
 
 
 @pytest.fixture
@@ -336,8 +340,12 @@ def superuser(db):
         is_active=True,
     )
     db.add(user)
-    db.flush()
-    return user
+    db.commit()
+    db.refresh(user)
+    yield user
+    # Cleanup
+    db.delete(user)
+    db.commit()
 
 
 @pytest.fixture
