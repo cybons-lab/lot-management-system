@@ -47,3 +47,20 @@ export async function getMasterImportTemplate(
     searchParams: { group },
   }).json<MasterImportTemplate>();
 }
+
+// ============================================================
+// Database Reset API (Phase 3: Initialization)
+// ============================================================
+
+export interface ResetDatabaseResponse {
+  success: boolean;
+  message: string;
+}
+
+/**
+ * Reset database - truncate all data (development/testing only)
+ * Preserves table structure and migration history
+ */
+export async function resetDatabase(): Promise<ResetDatabaseResponse> {
+  return apiClient.post("admin/reset-database").json<ResetDatabaseResponse>();
+}
