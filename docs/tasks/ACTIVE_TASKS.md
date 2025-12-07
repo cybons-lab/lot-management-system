@@ -13,11 +13,13 @@
 
 ### 🚀 機能実装: マスタ一括インポート (Master Import)
 
-**現状**: フェーズ1完了（バックエンド + フロントエンド）
+**現状**: フェーズ2完了（CSV廃止 + 統合インポートへの移行）
 **残タスク**:
 - [x] フェーズ1: バックエンド基盤 ✅
 - [x] フェーズ1: フロントエンド実装 (`MastersBulkLoadPage`) ✅
-- [ ] フェーズ2: CSV廃止 + Excel対応（バックエンドは対応済み）
+- [x] フェーズ2: CSV廃止 + Excel対応 ✅
+  - suppliers, customers, supplier-productsページを統合インポートにリダイレクト
+  - warehouses, uom-conversionsは現行CSV維持（マスタインポートAPI未対応）
 - [ ] フェーズ3: 初期化機能 + 統合UI
 
 
