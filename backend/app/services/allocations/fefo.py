@@ -167,7 +167,7 @@ def calculate_line_allocations(
             # Update availability tracker
             current_avail = available_per_lot.get(
                 allocated_lot.id,
-                float(real_available_qty or 0.0),  # type: ignore
+                float(allocated_lot.current_quantity - allocated_lot.allocated_quantity),
             )
             available_per_lot[allocated_lot.id] = current_avail - allocated_qty_float
             remaining -= allocated_qty_float

@@ -71,7 +71,7 @@ def allocate_soft_for_forecast(
     for lot in sorted_lots:
         allocated = lot.allocated_quantity
         if hasattr(lot, "_temp_allocated"):
-            allocated += lot._temp_allocated  # type: ignore
+            allocated += lot._temp_allocated  # type: ignore[attr-defined]
 
         available = lot.current_quantity - allocated
         lot_availability[lot.id] = max(Decimal("0"), available)
