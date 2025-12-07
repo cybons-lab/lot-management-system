@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - タスク管理ドキュメントを統一：`remaining_issues.adoc`を削除し、`ACTIVE_TASKS.md`に一元化
 
 ### Fixed
+- **[Backend Tests] 全25件のテスト失敗を解決（283 passed, 0 failed達成）**
+  - FK制約違反（8件）: `customer_id`, `warehouse_id`等のハードコーディングを`master_data` fixture使用に変更
+  - 認証/セッション問題（12件）: 
+    - `get_db`の二重定義問題を解決（`app.api.deps`と`app.core.database`両方をオーバーライド）
+    - `auth_service`のJWT username解析修正
+    - `test_order_locks.py`: ユーザーfixtureを`db.commit()`に変更しセッション問題を解決
+  - アサーション修正（5件）: ステータスコード、既存データ考慮など
+  - 統合テスト（1件）: `test_order_flow.py`を現行APIスキーマに合わせて全面書き直し
 - **[Test Data] 全製品に最低1ロット確保**: `generate_test_data.py`を修正し、depletedシナリオでもロットを生成するよう変更
 - **[Test Data] エッジケーステスト用データパターン追加**: 3種類のエッジケースシナリオを導入
   - `mixed_expiry`: 1製品に有効/期限切れ/枯渇ロットを混在させる
