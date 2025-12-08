@@ -42,6 +42,10 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     inspection_date: null,
     inspection_cert_number: null,
 
+    // Origin tracking fields
+    origin_type: "order" as const,
+    origin_reference: null,
+
     // Required fields for LotResponse (extended type)
     product_name: faker.commerce.productName(),
     product_code: `PROD-${faker.string.alphanumeric(6).toUpperCase()}`,
