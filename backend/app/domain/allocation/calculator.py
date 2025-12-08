@@ -5,7 +5,7 @@
 
 from decimal import Decimal
 
-from app.schemas.inventory.inventory_schema import LotStatus
+from app.presentation.schemas.inventory.inventory_schema import LotStatus
 
 from .types import AllocationDecision, AllocationRequest, AllocationResult, LotCandidate
 

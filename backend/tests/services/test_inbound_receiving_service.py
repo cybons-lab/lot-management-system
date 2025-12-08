@@ -4,10 +4,14 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.inbound_models import ExpectedLot, InboundPlan, InboundPlanLine
-from app.models.inventory_models import Lot, StockHistory
-from app.schemas.inventory.inbound_schema import InboundPlanReceiveRequest
-from app.services.inventory.inbound_receiving_service import InboundReceivingService
+from app.application.services.inventory.inbound_receiving_service import InboundReceivingService
+from app.infrastructure.persistence.models.inbound_models import (
+    ExpectedLot,
+    InboundPlan,
+    InboundPlanLine,
+)
+from app.infrastructure.persistence.models.inventory_models import Lot, StockHistory
+from app.presentation.schemas.inventory.inbound_schema import InboundPlanReceiveRequest
 
 
 def test_receive_inbound_plan_with_expected_lots(db: Session, service_master_data):

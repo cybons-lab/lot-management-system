@@ -10,7 +10,8 @@ from decimal import Decimal
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import (
+from app.application.services.allocations.actions import preempt_soft_allocations_for_hard
+from app.infrastructure.persistence.models import (
     Allocation,
     Customer,
     DeliveryPlace,
@@ -21,7 +22,6 @@ from app.models import (
     Product,
     Warehouse,
 )
-from app.services.allocations.actions import preempt_soft_allocations_for_hard
 
 
 def _truncate_all(db: Session):

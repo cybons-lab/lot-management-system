@@ -9,8 +9,8 @@ sys.path.append(str(Path(__file__).parent.parent))
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.models import Product, ProductUomConversion
-from app.services.common.quantity_service import to_internal_qty
+from app.application.services.common.quantity_service import to_internal_qty
+from app.infrastructure.persistence.models import Product, ProductUomConversion
 
 
 async def main():

@@ -16,9 +16,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
-from app.main import app
-from app.models import (
+from app.infrastructure.persistence.models import (
     Allocation,
     Customer,
     DeliveryPlace,
@@ -28,6 +26,8 @@ from app.models import (
     Product,
     Warehouse,
 )
+from app.main import app
+from app.presentation.api.deps import get_db
 
 
 # ---- Test DB session using conftest.py fixtures

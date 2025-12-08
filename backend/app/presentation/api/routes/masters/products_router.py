@@ -1,0 +1,174 @@
+"""Product master CRUD endpoints (standalone)."""
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
+from app.application.services.common.export_service import ExportService
+from app.application.services.masters.products_service import ProductService
+from app.core.database import get_db
+from app.infrastructure.persistence.models.masters_models import Product
+from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse
+from app.presentation.schemas.masters.products_schema import (
+    ProductBulkUpsertRequest,
+    ProductCreate,
+    ProductOut,
+    ProductUpdate,
+)
+
+
+router = APIRouter(prefix="/products", tags=["products"])
+
+
+def _to_product_out(product: Product) -> ProductOut:
+    """Map a Product ORM model to the canonical ProductOut schema."""
+    return ProductOut(
+        id=product.id,
+        product_code=product.maker_part_code,
+        product_name=product.product_name,
+        internal_unit=product.internal_unit,
+        external_unit=product.external_unit,
+        qty_per_internal_unit=float(product.qty_per_internal_unit),
+        customer_part_no=None,
+        maker_item_code=None,
+        is_active=True,
+        created_at=product.created_at,
+        updated_at=product.updated_at,
+    )
+
+
+@router.get("", response_model=list[ProductOut])
+def list_products(
+    skip: int = 0,
+    limit: int = 100,
+    search: str | None = None,
+    db: Session = Depends(get_db),
+):
+    """Return a paginated list of products."""
+    service = ProductService(db)
+    products = service.list_items(skip=skip, limit=limit, search=search)
+    return [_to_product_out(product) for product in products]
+
+
+@router.get("/template/download")
+def download_products_template(format: str = "csv", include_sample: bool = True):
+    """Download product import template.
+
+    Args:
+        format: 'csv' or 'xlsx' (default: csv)
+        include_sample: Whether to include a sample row (default: True)
+
+    Returns:
+        Template file for product import
+    """
+    return ExportService.export_template("products", format=format, include_sample=include_sample)
+
+
+@router.get("/export/download")
+def export_products(format: str = "csv", db: Session = Depends(get_db)):
+    """Export products to CSV or Excel."""
+    service = ProductService(db)
+    products = service.get_all()
+    data = [_to_product_out(p) for p in products]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "products")
+    return ExportService.export_to_csv(data, "products")
+
+
+@router.get("/{product_code}", response_model=ProductOut)
+def get_product(product_code: str, db: Session = Depends(get_db)):
+    """Fetch a product by its code (maker_part_code)."""
+    service = ProductService(db)
+    product = service.get_by_code(product_code)
+    assert product is not None  # raise_404=True ensures this
+    return _to_product_out(product)
+
+
+@router.get("/{product_code}/suppliers")
+def get_product_suppliers(product_code: str, db: Session = Depends(get_db)):
+    """Fetch suppliers for a product by its code.
+
+    Returns a list of suppliers associated with this product, indicating
+    which supplier is the primary one.
+    """
+    from sqlalchemy import select
+
+    from app.infrastructure.persistence.models import ProductSupplier, Supplier
+
+    service = ProductService(db)
+    product = service.get_by_code(product_code)
+    assert product is not None
+
+    stmt = (
+        select(ProductSupplier, Supplier)
+        .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
+        .where(ProductSupplier.product_id == product.id)
+        .order_by(ProductSupplier.is_primary.desc(), Supplier.supplier_name)
+    )
+    results = db.execute(stmt).all()
+
+    return [
+        {
+            "id": ps.id,
+            "supplier_id": ps.supplier_id,
+            "supplier_code": supplier.supplier_code,
+            "supplier_name": supplier.supplier_name,
+            "is_primary": ps.is_primary,
+            "lead_time_days": ps.lead_time_days,
+        }
+        for ps, supplier in results
+    ]
+
+
+@router.post("", response_model=ProductOut, status_code=201)
+def create_product(product: ProductCreate, db: Session = Depends(get_db)):
+    """Create a new product."""
+    service = ProductService(db)
+
+    # Check if exists
+    existing = service.get_by_code(product.product_code, raise_404=False)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Product with this code already exists",
+        )
+
+    try:
+        db_product = service.create(product)
+        return _to_product_out(db_product)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Product with this code already exists",
+        )
+
+
+@router.put("/{product_code}", response_model=ProductOut)
+def update_product(product_code: str, product: ProductUpdate, db: Session = Depends(get_db)):
+    """Update an existing product (by maker_part_code)."""
+    """Update an existing product (by maker_part_code)."""
+    service = ProductService(db)
+    db_product = service.update_by_code(product_code, product)
+    return _to_product_out(db_product)
+
+
+@router.delete("/{product_code}", status_code=204)
+def delete_product(product_code: str, db: Session = Depends(get_db)):
+    """Delete a product by its code (maker_part_code)."""
+    service = ProductService(db)
+    service.delete_by_code(product_code)
+    return None
+
+
+@router.post("/bulk-upsert", response_model=BulkUpsertResponse)
+def bulk_upsert_products(request: ProductBulkUpsertRequest, db: Session = Depends(get_db)):
+    """Bulk upsert products by product_code (maker_part_code).
+
+    - If a product with the same product_code exists, it will be updated
+    - If not, a new product will be created
+
+    Returns summary with counts of created/updated/failed records.
+    """
+    service = ProductService(db)
+    return service.bulk_upsert(request.rows)

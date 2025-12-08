@@ -4,8 +4,8 @@ from decimal import Decimal
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import Customer, DeliveryPlace, Order, OrderLine, Product
-from app.services.orders.order_service import OrderService
+from app.application.services.orders.order_service import OrderService
+from app.infrastructure.persistence.models import Customer, DeliveryPlace, Order, OrderLine, Product
 
 
 @pytest.fixture

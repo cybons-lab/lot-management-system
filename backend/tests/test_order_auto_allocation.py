@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.models import Lot, Order, OrderLine, Product, Warehouse
+from app.infrastructure.persistence.models import Lot, Order, OrderLine, Product, Warehouse
 
 
 def test_order_allocation_single_lot_fit(db: Session):
@@ -60,7 +60,7 @@ def test_order_allocation_single_lot_fit(db: Session):
     db.commit()
 
     # 3. Setup Order Context (Customer, DeliveryPlace)
-    from app.models.masters_models import Customer, DeliveryPlace
+    from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace
 
     customer = Customer(customer_code="CUST-AUTO", customer_name="Auto Customer")
     db.add(customer)
@@ -95,7 +95,7 @@ def test_order_allocation_single_lot_fit(db: Session):
     db.commit()
 
     # 5. Execute Preview (New Logic) [Renumbered]
-    from app.services.allocations.fefo import preview_fefo_allocation
+    from app.application.services.allocations.fefo import preview_fefo_allocation
 
     result = preview_fefo_allocation(db, order.id)
 

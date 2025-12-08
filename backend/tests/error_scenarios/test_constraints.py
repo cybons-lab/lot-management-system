@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import Role
+from app.infrastructure.persistence.models import Role
 
 
 def test_duplicate_role_code(client: TestClient, db: Session):

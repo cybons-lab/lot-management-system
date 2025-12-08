@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import BusinessRule, Lot, Product, Supplier, Warehouse
-from app.services.batch.inventory_sync_service import InventorySyncService
+from app.application.services.batch.inventory_sync_service import InventorySyncService
+from app.infrastructure.persistence.models import BusinessRule, Lot, Product, Supplier, Warehouse
 
 
 @pytest.fixture

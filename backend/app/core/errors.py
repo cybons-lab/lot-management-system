@@ -9,6 +9,17 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+# Allocation service errors (now DomainError subclasses)
+from app.application.services.allocations.schemas import (
+    AllocationCommitError,
+)
+from app.application.services.allocations.schemas import (
+    AllocationNotFoundError as ServiceAllocationNotFoundError,
+)
+from app.application.services.allocations.schemas import (
+    InsufficientStockError as ServiceInsufficientStockError,
+)
+
 # Allocation domain
 from app.domain.allocation.exceptions import (
     AlreadyAllocatedError,
@@ -54,17 +65,6 @@ from app.domain.warehouse_and_forecast import (
     InvalidForecastError,
     WarehouseDomainError,
     WarehouseNotFoundError,
-)
-
-# Allocation service errors (now DomainError subclasses)
-from app.services.allocations.schemas import (
-    AllocationCommitError,
-)
-from app.services.allocations.schemas import (
-    AllocationNotFoundError as ServiceAllocationNotFoundError,
-)
-from app.services.allocations.schemas import (
-    InsufficientStockError as ServiceInsufficientStockError,
 )
 
 

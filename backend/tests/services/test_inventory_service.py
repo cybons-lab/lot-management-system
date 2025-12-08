@@ -2,8 +2,8 @@ from datetime import date
 
 from sqlalchemy.orm import Session
 
-from app.models.inventory_models import Lot
-from app.services.inventory.inventory_service import InventoryService
+from app.application.services.inventory.inventory_service import InventoryService
+from app.infrastructure.persistence.models.inventory_models import Lot
 
 
 def test_get_inventory_items(db: Session, service_master_data):

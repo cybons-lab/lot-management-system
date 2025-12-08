@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import Lot, Order, OrderLine
+from app.infrastructure.persistence.models import Lot, Order, OrderLine
 
 
 def create_order_line_for_concurrency(db: Session, master_data, qty=10):

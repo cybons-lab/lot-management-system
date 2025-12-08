@@ -19,7 +19,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 # app/models/__init__.py が他の全モデルをインポートするため、
 # 'Base.metadata' に全テーブル定義がアタッチされる
 from app.core.config import settings
-from app.models import Base
+from app.infrastructure.persistence.models import Base
 
 
 # --- ▲▲▲ ここまで追加 ▲▲▲ ---

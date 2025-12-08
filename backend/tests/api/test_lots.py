@@ -10,14 +10,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.core.database import get_db
+from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
 from app.main import app
-from app.models import Lot, Product, Supplier, Warehouse
 
 
 def _truncate_all(db: Session):
     """Clean up test data."""
     # Aggressive cleanup to avoid contamination
-    from app.models import Allocation, StockHistory
+    from app.infrastructure.persistence.models import Allocation, StockHistory
 
     try:
         db.query(Allocation).delete()

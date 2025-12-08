@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from app.models import Order
+from app.infrastructure.persistence.models import Order
 
 
 # Fixtures are expected to be available from conftest.py (client, db_session, master_data, etc.)

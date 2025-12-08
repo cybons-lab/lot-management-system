@@ -19,7 +19,6 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # ドメインイベントハンドラを登録（インポート時に自動登録）
 import app.domain.events.handlers  # noqa: F401
-from app.api.routes import register_all_routers
 from app.core import errors
 from app.core.config import settings
 from app.core.database import init_db
@@ -28,6 +27,7 @@ from app.domain.errors import DomainError
 from app.middleware.logging import RequestLoggingMiddleware
 from app.middleware.metrics import MetricsMiddleware
 from app.middleware.request_id import RequestIdMiddleware
+from app.presentation.api.routes import register_all_routers
 
 
 logger = logging.getLogger(__name__)

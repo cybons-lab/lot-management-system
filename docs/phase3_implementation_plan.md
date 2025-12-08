@@ -1,98 +1,99 @@
-# ステップ3: クリーンアーキテクチャ ディレクトリ再配置
+# ステップ3: クリーンアーキテクチャ 全面刷新計画
 
-## 1. 現状分析
-
-### 現在の構造
-```
-backend/app/
-├── api/              # 48ファイル（routes）
-├── core/             # 7ファイル（config, logging, errors）
-├── domain/           # 5サブディレクトリ
-│   ├── allocation/   # FEFO計算ロジック
-│   ├── events/       # ★新規追加
-│   ├── lot/          # ロットポリシー
-│   ├── order/        # 受注ポリシー
-│   └── errors.py
-├── models/           # 16ファイル（SQLAlchemy）
-├── repositories/     # 6ファイル
-├── schemas/          # 41ファイル（Pydantic）
-└── services/         # 65ファイル（18サブディレクトリ）
-    ├── allocations/  # 8ファイル
-    ├── inventory/    # 7ファイル
-    ├── orders/       # 3ファイル
-    └── ...
-```
-
-### 問題点
-1. **services/** にビジネスロジックとDB操作が混在
-2. **リポジトリパターン**が一部のみ適用
-3. **ドメイン層**がSQLAlchemyモデルに依存
+> **アプローチ**: 全面刷新（後方互換性なし）
+> **理由**: 開発中のため、エイリアスを残すより一気に移行した方がクリーン
 
 ---
 
-## 2. 目標構造
+## 1. 目標構造
 
 ```
 backend/app/
 ├── presentation/           # プレゼンテーション層
-│   ├── api/                # FastAPI routes（現api/から移動）
-│   └── schemas/            # リクエスト/レスポンス（現schemas/から移動）
+│   ├── api/                # FastAPI routes
+│   └── schemas/            # リクエスト/レスポンス
 │
 ├── application/            # アプリケーション層
-│   ├── use_cases/          # ユースケース（ワークフロー）
 │   └── services/           # アプリケーションサービス
 │
-├── domain/                 # ドメイン層（純粋なビジネスロジック）
-│   ├── entities/           # ドメインエンティティ（ORMから独立）
-│   ├── value_objects/      # 値オブジェクト
+├── domain/                 # ドメイン層
+│   ├── entities/           # ドメインエンティティ
 │   ├── services/           # ドメインサービス
-│   ├── events/             # ドメインイベント ★完成
+│   ├── events/             # ドメインイベント ✅完成
 │   └── repositories/       # リポジトリインターフェース
 │
-└── infrastructure/         # インフラストラクチャ層
-    ├── persistence/        # SQLAlchemy実装
-    │   ├── models/         # ORMモデル
-    │   └── repositories/   # リポジトリ実装
-    └── external/           # 外部API（SAP等）
+├── infrastructure/         # インフラストラクチャ層
+│   ├── persistence/        # SQLAlchemy
+│   │   ├── models/         # ORMモデル
+│   │   └── repositories/   # リポジトリ実装
+│   └── external/           # 外部API
+│
+└── core/                   # 共通（config, logging, errors）
 ```
 
 ---
 
-## 3. 段階的移行プラン
-
-### フェーズ3-A: 準備（0.5日）
-- [ ] 新ディレクトリ構造を作成
-- [ ] `__init__.py` を配置
-- [ ] インポートパスのエイリアスを設定
-
-### フェーズ3-B: allocation ドメインの移行（1日）
-**最初のパイロット: 引当ドメイン**
+## 2. 移行マッピング
 
 | 現在 | 移行先 |
 |------|--------|
-| `domain/allocation/` | `domain/services/allocation/` |
-| `services/allocations/` | `application/services/allocation/` |
-| `repositories/allocation_repository.py` | `infrastructure/persistence/repositories/` |
+| `api/` | `presentation/api/` |
+| `schemas/` | `presentation/schemas/` |
+| `services/` | `application/services/` |
+| `domain/` | `domain/` (そのまま) |
+| `models/` | `infrastructure/persistence/models/` |
+| `repositories/` | `infrastructure/persistence/repositories/` |
+| `external/` | `infrastructure/external/` |
+| `core/` | `core/` (そのまま) |
 
-タスク:
-- [ ] `domain/repositories/allocation.py` にインターフェース定義
-- [ ] 現 `repositories/allocation_repository.py` を実装として移動
-- [ ] サービスの依存注入を調整
-- [ ] テスト実行
+---
 
-### フェーズ3-C: inventory ドメインの移行（1日）
-| 現在 | 移行先 |
-|------|--------|
-| `domain/lot/` | `domain/services/lot/` |
-| `services/inventory/` | `application/services/inventory/` |
+## 3. 実行ステップ
 
-### フェーズ3-D: 残りのドメイン移行（1〜2日）
-- orders, forecasts, masters
-- 各ドメインで同じパターンを適用
+### Step 1: ディレクトリ作成（5分）
+```bash
+mkdir -p backend/app/{presentation,application,infrastructure/persistence}
+```
 
-### フェーズ3-E: プレゼンテーション層の整理（0.5日）
-- [ ] `api/` → `presentation/api/`
-- [ ] `schemas/` → `presentation/schemas/`
+### Step 2: ファイル移動（10分）
+```bash
+# プレゼンテーション層
+mv backend/app/api backend/app/presentation/
+mv backend/app/schemas backend/app/presentation/
+
+# アプリケーション層
+mv backend/app/services backend/app/application/
+
+# インフラ層
+mkdir -p backend/app/infrastructure/persistence
+mv backend/app/models backend/app/infrastructure/persistence/
+mv backend/app/repositories backend/app/infrastructure/persistence/
+mv backend/app/external backend/app/infrastructure/
+```
+
+### Step 3: インポート一括置換（30分）
+```bash
+# 主要な置換パターン
+find backend -name "*.py" -exec sed -i '' \
+  -e 's/from app\.api\./from app.presentation.api./g' \
+  -e 's/from app\.schemas\./from app.presentation.schemas./g' \
+  -e 's/from app\.services\./from app.application.services./g' \
+  -e 's/from app\.models/from app.infrastructure.persistence.models/g' \
+  -e 's/from app\.repositories\./from app.infrastructure.persistence.repositories./g' \
+  -e 's/from app\.external\./from app.infrastructure.external./g' \
+  {} \;
+```
+
+### Step 4: __init__.py 配置（5分）
+各新ディレクトリに`__init__.py`を作成
+
+### Step 5: main.py 修正（10分）
+インポートパスを更新
+
+### Step 6: テスト実行（20分）
+```bash
+cd backend && uv run pytest -x
+```
 
 ---
 
@@ -100,18 +101,20 @@ backend/app/
 
 | リスク | 対策 |
 |--------|------|
-| インポート破損 | エイリアスで後方互換性維持 |
-| テスト失敗 | 各フェーズ後にテスト実行 |
-| 大規模コンフリクト | 別ブランチで作業、段階的マージ |
+| 大量のインポートエラー | IDE活用で修正 |
+| テスト失敗 | 段階的に修正 |
+| 時間超過 | 1日で完了しなければ翌日継続 |
 
 ---
 
-## 5. 推奨アプローチ
+## 5. 所要時間（推定）
 
-> **Option A（推奨）**: 新規コードのみ新構造で書く
-> 既存コードはそのまま維持し、新機能を追加する際に新構造を適用
-
-> **Option B**: 完全移行
-> 全ファイルを新構造に移動（破壊的変更、3〜5日必要）
-
-**判断ポイント**: チームの状況と優先度に応じて選択
+| ステップ | 時間 |
+|----------|------|
+| ディレクトリ作成 | 5分 |
+| ファイル移動 | 10分 |
+| インポート置換 | 30分 |
+| __init__.py | 5分 |
+| main.py修正 | 10分 |
+| テスト・修正 | 60分 |
+| **合計** | **約2時間** |

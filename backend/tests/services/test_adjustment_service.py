@@ -3,9 +3,9 @@ from datetime import date
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.inventory_models import Lot, StockHistory
-from app.schemas.inventory.inventory_schema import AdjustmentCreate
-from app.services.inventory.adjustment_service import AdjustmentService
+from app.application.services.inventory.adjustment_service import AdjustmentService
+from app.infrastructure.persistence.models.inventory_models import Lot, StockHistory
+from app.presentation.schemas.inventory.inventory_schema import AdjustmentCreate
 
 
 def test_create_adjustment_increase(db: Session, service_master_data):

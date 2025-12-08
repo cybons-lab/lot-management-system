@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy.orm import Session
 
-from app.schemas.masters.products_schema import ProductCreate
-from app.services.masters.products_service import ProductService
+from app.application.services.masters.products_service import ProductService
+from app.presentation.schemas.masters.products_schema import ProductCreate
 
 
 @pytest.fixture
