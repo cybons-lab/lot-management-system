@@ -113,7 +113,34 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     setLotAllocations(newAllocations);
   }, [orderLine, candidateLots]);
 
-  const saveAllocations = async () => {
+  const saveAllocations = async (): Promise<number[] | null> => {
+    if (!orderLine) return null;
+    setIsSaving(true);
+    try {
+      const allocationsList = Object.entries(lotAllocations)
+        .filter(([_, qty]) => qty > 0)
+        .map(([lotId, qty]) => ({
+          lot_id: Number(lotId),
+          quantity: qty,
+        }));
+
+      const result = await ordersApi.createLotAllocations(orderLine.id, {
+        allocations: allocationsList,
+      });
+
+      toast.success("引当を保存しました");
+      if (onSuccess) onSuccess();
+      return result.allocated_ids ?? null;
+    } catch (error) {
+      console.error("Failed to save allocations", error);
+      toast.error("引当の保存に失敗しました");
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveAndConfirmAllocations = async () => {
     if (!orderLine) return;
     setIsSaving(true);
     try {
@@ -124,15 +151,29 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
           quantity: qty,
         }));
 
-      await ordersApi.createLotAllocations(orderLine.id, {
+      // Step 1: Save allocations (creates soft allocations)
+      const result = await ordersApi.createLotAllocations(orderLine.id, {
         allocations: allocationsList,
       });
 
-      toast.success("引当を保存しました");
+      const allocatedIds = result.allocated_ids ?? [];
+
+      if (allocatedIds.length === 0) {
+        toast.success("引当を保存しました（確定対象なし）");
+        if (onSuccess) onSuccess();
+        return;
+      }
+
+      // Step 2: Confirm allocations (soft -> hard)
+      await allocationsApi.confirmAllocationsBatch({
+        allocation_ids: allocatedIds,
+      });
+
+      toast.success("引当を保存・確定しました");
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error("Failed to save allocations", error);
-      toast.error("引当の保存に失敗しました");
+      console.error("Failed to save and confirm allocations", error);
+      toast.error("引当の保存・確定に失敗しました");
     } finally {
       setIsSaving(false);
     }
@@ -178,6 +219,7 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     clearAllocations,
     autoAllocate,
     saveAllocations,
+    saveAndConfirmAllocations,
     confirmAllocations,
   };
 }

@@ -68,22 +68,19 @@ backend/app/
 
 ## 📌 将来対応（P2: 中優先度）
 
-### P2-0: ロット引当ページでのHARD引当同時実行対応
+### ✅ P2-0: ロット引当ページでのHARD引当同時実行対応 - 実装完了
 
 **報告日:** 2025-12-08
+**完了日:** 2025-12-08
 
-**現状の問題:**
-- ロット引当ページでロット引当と同時にHARD引当ができない
-- 一度保存してからもう一度同じ受注を開いてHARD引当を選ばないとダメ
-- かなり面倒くさい操作フロー
+**実装内容:**
+- 「保存 & 確定」ボタンを追加
+- ロット選択後、一括でソフト引当作成 → HARD引当確定を実行可能に
 
-**期待される動作:**
-- ロット選択と同時にHARD引当オプションを選択できる
-- 保存時に一括でソフト引当 → HARD引当を実行
-
-**関連ファイル (推定):**
-- `frontend/src/features/allocations/` 配下のコンポーネント
-- `backend/app/application/services/allocations/` 配下のサービス
+**修正ファイル:**
+- `frontend/src/features/orders/hooks/useOrderLineAllocation.ts` - `saveAndConfirmAllocations` 関数追加
+- `frontend/src/features/allocations/components/lots/LotAllocationPanel.tsx` - 「保存 & 確定」ボタン追加
+- `frontend/src/features/orders/pages/OrderDetailPage.tsx` - 新関数の接続
 
 ---
 

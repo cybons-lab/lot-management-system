@@ -22,6 +22,7 @@ interface LotAllocationPanelProps {
   onAutoAllocate: () => void;
   onClearAllocations: () => void;
   onSaveAllocations?: () => void;
+  onSaveAndConfirm?: () => void;
   onConfirmHard?: () => void;
 
   canSave?: boolean;
@@ -57,6 +58,7 @@ export function LotAllocationPanel({
   onAutoAllocate,
   onClearAllocations,
   onSaveAllocations,
+  onSaveAndConfirm,
   onConfirmHard,
   canSave = false,
   isLoading = false,
@@ -243,12 +245,23 @@ export function LotAllocationPanel({
                   {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   保存
                 </Button>
+                {onSaveAndConfirm && (
+                  <Button
+                    onClick={onSaveAndConfirm}
+                    disabled={!canSave || isSaving}
+                    className="min-w-[6rem] bg-purple-600 font-bold text-white hover:bg-purple-700"
+                    title="保存と同時にHard引当として確定します"
+                  >
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    保存 & 確定
+                  </Button>
+                )}
                 {onConfirmHard && (softAllocated ?? 0) > 0 && (
                   <Button
                     onClick={onConfirmHard}
                     disabled={isSaving}
-                    className="bg-purple-600 font-bold text-white hover:bg-purple-700"
-                    title="Soft引当をHard引当に確定します"
+                    className="bg-green-600 font-bold text-white hover:bg-green-700"
+                    title="既存のSoft引当をHard引当に確定します"
                   >
                     Hard確定
                   </Button>

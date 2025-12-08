@@ -247,6 +247,7 @@ function AllocationDialog({
     clearAllocations,
     autoAllocate,
     saveAllocations,
+    saveAndConfirmAllocations,
     confirmAllocations,
   } = useOrderLineAllocation({
     orderLine: line,
@@ -276,6 +277,7 @@ function AllocationDialog({
             onAutoAllocate={autoAllocate}
             onClearAllocations={clearAllocations}
             onSaveAllocations={saveAllocations}
+            onSaveAndConfirm={saveAndConfirmAllocations}
             onConfirmHard={confirmAllocations}
             isLoading={isLoadingCandidates}
             isSaving={isSaving}
