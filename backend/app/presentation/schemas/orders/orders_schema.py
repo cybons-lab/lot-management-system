@@ -1,8 +1,11 @@
 """Order management Pydantic schemas (DDL v2.2 compliant).
 
 All schemas strictly follow the DDL as the single source of truth.
-Legacy fields (sap_*, customer_order_no, delivery_mode, etc.) have been
-removed.
+
+Updated 2025-12-08: Added business key columns for order management:
+- order_group_id: Reference to order_groups
+- customer_order_no: Customer's 6-digit order number
+- sap_order_no, sap_order_item_no: SAP business keys
 """
 
 from __future__ import annotations
@@ -97,6 +100,15 @@ class OrderLineBase(BaseSchema):
         default="pending",
         pattern="^(pending|allocated|shipped|completed|cancelled)$",
     )
+
+    # 業務キー列
+    order_group_id: int | None = Field(None, gt=0, description="受注グループID")
+    customer_order_no: str | None = Field(
+        None, max_length=6, description="得意先6桁受注番号（業務キー）"
+    )
+    customer_order_line_no: str | None = Field(None, max_length=10, description="得意先側行番号")
+    sap_order_no: str | None = Field(None, max_length=20, description="SAP受注番号（業務キー）")
+    sap_order_item_no: str | None = Field(None, max_length=6, description="SAP明細番号（業務キー）")
 
 
 class OrderLineCreate(OrderLineBase):

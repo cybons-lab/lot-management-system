@@ -6482,6 +6482,31 @@ export interface components {
        * @default pending
        */
       status: string;
+      /**
+       * Order Group Id
+       * @description 受注グループID
+       */
+      order_group_id?: number | null;
+      /**
+       * Customer Order No
+       * @description 得意先6桁受注番号（業務キー）
+       */
+      customer_order_no?: string | null;
+      /**
+       * Customer Order Line No
+       * @description 得意先側行番号
+       */
+      customer_order_line_no?: string | null;
+      /**
+       * Sap Order No
+       * @description SAP受注番号（業務キー）
+       */
+      sap_order_no?: string | null;
+      /**
+       * Sap Order Item No
+       * @description SAP明細番号（業務キー）
+       */
+      sap_order_item_no?: string | null;
     };
     /**
      * OrderLineResponse
@@ -6525,6 +6550,31 @@ export interface components {
        * @default pending
        */
       status: string;
+      /**
+       * Order Group Id
+       * @description 受注グループID
+       */
+      order_group_id?: number | null;
+      /**
+       * Customer Order No
+       * @description 得意先6桁受注番号（業務キー）
+       */
+      customer_order_no?: string | null;
+      /**
+       * Customer Order Line No
+       * @description 得意先側行番号
+       */
+      customer_order_line_no?: string | null;
+      /**
+       * Sap Order No
+       * @description SAP受注番号（業務キー）
+       */
+      sap_order_no?: string | null;
+      /**
+       * Sap Order Item No
+       * @description SAP明細番号（業務キー）
+       */
+      sap_order_item_no?: string | null;
       /** Id */
       id: number;
       /** Order Id */
