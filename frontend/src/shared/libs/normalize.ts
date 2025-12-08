@@ -6,11 +6,11 @@
  */
 
 import type { AllocatedLot } from "@/shared/types/aliases";
-import { formatOrderCode } from "@/shared/utils/order";
 import type {
   OrderLineResponse as OrderLine,
   OrderResponse as OrderResponseAlias,
 } from "@/shared/types/schema";
+import { formatOrderCode } from "@/shared/utils/order";
 import type { components } from "@/types/api";
 
 // ヘルパー関数
