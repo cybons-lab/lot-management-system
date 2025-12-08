@@ -12,18 +12,22 @@ export function formatOrderCode(
   order:
     | Partial<OrderResponse>
     | Partial<OrderLine>
-    | { id?: number | null; order_id?: number | null; customer_order_no?: string | null; order_no?: string | null }
+    | {
+        id?: number | null;
+        order_id?: number | null;
+        customer_order_no?: string | null;
+        order_no?: string | null;
+      }
     | null
     | undefined,
 ): string {
   if (!order) return "-";
 
-  const code =
-    (order as Record<string, unknown>).customer_order_no as string | null | undefined ??
-    (order as Record<string, unknown>).order_no as string | null | undefined;
+  const code = (order as { customer_order_no?: string | null }).customer_order_no;
   if (code && code.trim().length > 0) return code;
 
-  const id = (order as { order_id?: number | null }).order_id ?? (order as { id?: number | null }).id;
+  const id =
+    (order as { order_id?: number | null }).order_id ?? (order as { id?: number | null }).id;
   if (id !== undefined && id !== null) {
     return `#${id}`;
   }

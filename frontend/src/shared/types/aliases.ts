@@ -168,7 +168,7 @@ type ApiOrderResponse = Omit<ApiOrderWithLinesResponse, "lines">;
 
 export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
   // Legacy fields for backward compatibility (will be removed)
-  order_no?: string | null; // Deprecated: use customer_order_no/order_code
+  // order_no?: string | null; // Deprecated: use customer_order_no/order_code
   customer_code?: string | null; // Deprecated: use customer_id lookup
   customer_name?: string | null; // Join field (not in DDL)
   delivery_place?: string | null;
@@ -191,7 +191,7 @@ export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
 
 export type OrderWithLinesResponse = Omit<ApiOrderWithLinesResponse, "lines"> & {
   // Legacy fields for backward compatibility (will be removed)
-  order_no?: string | null; // Deprecated: use customer_order_no/order_code
+  // order_no?: string | null; // Deprecated: use customer_order_no/order_code
   customer_code?: string | null; // Deprecated: use customer_id lookup
   customer_name?: string | null; // Join field (not in DDL)
   delivery_place?: string | null;

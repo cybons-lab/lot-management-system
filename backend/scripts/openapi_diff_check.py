@@ -112,6 +112,9 @@ def generate_openapi_json(output_path: Path) -> None:
     """
     try:
         # FastAPIアプリケーションをインポート
+        import os
+
+        os.environ["DATABASE_URL"] = "sqlite:///:memory:"
         from app.main import app
 
         # OpenAPIスキーマを取得

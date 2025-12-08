@@ -4,7 +4,7 @@
 `orders` テーブルから `order_number` カラムを削除し、`order_groups` への移行を進めるリファクタリング作業の中断時点のステータスです。
 
 ## 現在のステータス
-*   **Backend**: コード修正とDBマイグレーションはほぼ完了。テスト修正が9割完了し、残りわずかなエラーが残っている状態。
+*   **Backend**: コード修正、DBマイグレーション、テスト修正全て完了 (**All Tests Passed**)。
 *   **Frontend**: **未着手**。
 
 ## 完了した作業
@@ -19,17 +19,11 @@
 3.  **Backend Tests**
     *   多くのテストファイル (`test_orders.py`, `test_allocations.py` 等) で `order_number` 引数を削除・修正済み。
     *   `test_allocation_suggestions.py` のインポートエラー修正済み。
+    *   全てのバックエンドテスト (`pytest tests/`) が通過することを確認済み。
 
 ## 残タスク
 
-### 1. Backend Testの修正完了 (High Priority)
-現在 `pytest` を実行すると以下のエラーが発生しています。
-*   **File**: `tests/services/test_preempt_soft_allocations.py`
-*   **Error**: `TypeError: create_order_line() takes 4 positional arguments but 5 were given`
-*   **原因**: テストヘルパー関数 `create_order_line` の呼び出し箇所で引数の数が合っていない（おそらく `order_number` が削除された影響でずれている）。
-*   **Action**: 該当ファイルのヘルパー呼び出しを修正し、全テスト (`pytest tests/`) が **Passed** になることを確認してください。
-
-### 2. Frontend Refactoring (High Priority)
+### 1. Frontend Refactoring (High Priority)
 フロントエンド側の修正は手つかずです。以下の対応が必要です。
 *   **Target**: `frontend/src` 以下のファイル (約24ファイル)。
 *   **Action**:
@@ -38,7 +32,7 @@
     *   特に `InventoryPage.tsx` や `OrderList` 系のコンポーネントは影響が大きいと予想されます。
 *   **Check**: `npm run typecheck` (tsc) が通ること。
 
-### 3. Verification
+### 2. Verification
 *   バックエンド、フロントエンド双方の修正後、E2Eでの動作確認（注文作成、一覧表示、引当など）を推奨。
 
 ## 懸念事項・注意点

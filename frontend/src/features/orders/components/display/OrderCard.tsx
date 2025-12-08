@@ -14,7 +14,7 @@ export function OrderCard({ order, onSelectLine, onReMatch }: Props) {
     <div className="rounded-2xl border p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-lg font-semibold">受注番号: {order.order_no ?? order.id}</div>
+          <div className="text-lg font-semibold">受注ID: #{order.id}</div>
           <div className="text-sm text-gray-500">
             顧客:{" "}
             {formatCodeAndName(
