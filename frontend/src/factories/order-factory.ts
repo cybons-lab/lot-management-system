@@ -54,7 +54,6 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
-    order_number: `ORD-${faker.string.alphanumeric(6).toUpperCase()}`, // DDL v2.2
     order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0],
     customer_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2: FK to customers
 

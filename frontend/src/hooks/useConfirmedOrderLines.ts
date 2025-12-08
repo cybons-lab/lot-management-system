@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
+import { formatOrderCode } from "@/shared/utils/order";
 
 export interface ConfirmedOrderLine {
   line_id: number;
   order_id: number;
-  order_number: string;
+  customer_order_no?: string | null;
+  order_code: string;
   customer_id: number;
   customer_name: string;
   product_id: number;
@@ -22,7 +24,8 @@ export function useConfirmedOrderLines() {
     queryFn: async () => {
       const response = await fetch("/api/orders/confirmed-order-lines");
       if (!response.ok) throw new Error("Failed to fetch confirmed lines");
-      return response.json();
+      const data = (await response.json()) as ConfirmedOrderLine[];
+      return data.map((line) => ({ ...line, order_code: formatOrderCode(line) }));
     },
     refetchInterval: 30000,
   });

@@ -12,7 +12,8 @@ export type PriorityLevel = "urgent" | "warning" | "attention" | "allocated" | "
 
 export interface Order {
   id: number;
-  order_number: string; // DDL v2.2
+  order_code: string; // Display identifier derived from customer_order_no or id
+  customer_order_no?: string | null;
   customer_id: number; // DDL v2.2
   delivery_place_id: number; // DDL v2.2
   order_date: string;

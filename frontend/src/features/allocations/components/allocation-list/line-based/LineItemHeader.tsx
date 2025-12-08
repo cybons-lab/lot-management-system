@@ -25,7 +25,7 @@ export function LineItemHeader({ item, isChecked, onCheckChange }: LineItemHeade
         </div>
         <div className="flex items-baseline gap-2">
           <span className={styles.orderLabel}>ORDER</span>
-          <span className={styles.orderNumber}>{item.order_number}</span>
+          <span className={styles.orderNumber}>{item.order_code}</span>
         </div>
         <div className="h-4 w-px bg-gray-300" />
         <div className="flex items-center gap-2">
