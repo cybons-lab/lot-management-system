@@ -48,6 +48,12 @@ class InboundPlan(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     plan_number: Mapped[str] = mapped_column(String(50), nullable=False)
+    sap_po_number: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        unique=True,
+        comment="SAP購買発注番号（業務キー）",
+    )
     supplier_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("suppliers.id", ondelete="RESTRICT"),

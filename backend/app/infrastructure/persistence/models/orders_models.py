@@ -1,10 +1,12 @@
 """Order management models aligned with DDL v2.2
 (lot_management_ddl_v2_2_id.sql).
 
-All models strictly follow the DDL as the single source of truth. Legacy
-tables (order_line_warehouse_allocation, purchase_requests,
-sap_sync_logs) removed. Legacy columns (sap_*, customer_order_no,
-delivery_mode, etc.) removed.
+All models strictly follow the DDL as the single source of truth.
+
+Updated 2025-12-08: Added business key columns for order management:
+- order_group_id: References order_groups for logical grouping
+- customer_order_no: Customer's 6-digit order number (business key)
+- sap_order_item_no: SAP order item number (business key with sap_order_no)
 """
 
 from __future__ import annotations
@@ -38,6 +40,7 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
     from .inventory_models import Lot
     from .masters_models import Customer, Product
+    from .order_groups_models import OrderGroup
 
 
 class Order(Base):
@@ -118,6 +121,12 @@ class OrderLine(Base):
         ForeignKey("orders.id", ondelete="CASCADE"),
         nullable=False,
     )
+    order_group_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("order_groups.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="受注グループへの参照（得意先×製品×受注日）",
+    )
     product_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("products.id", ondelete="RESTRICT"),
@@ -141,9 +150,20 @@ class OrderLine(Base):
         nullable=False,
     )
 
-    # SAP integration
+    # 得意先側業務キー
+    customer_order_no: Mapped[str | None] = mapped_column(
+        String(6), nullable=True, comment="得意先6桁受注番号（業務キー）"
+    )
+    customer_order_line_no: Mapped[str | None] = mapped_column(
+        String(10), nullable=True, comment="得意先側行番号"
+    )
+
+    # SAP側業務キー
     sap_order_no: Mapped[str | None] = mapped_column(
-        String(100), nullable=True, comment="SAP受注番号（登録済みの場合）"
+        String(20), nullable=True, comment="SAP受注番号（業務キー）"
+    )
+    sap_order_item_no: Mapped[str | None] = mapped_column(
+        String(6), nullable=True, comment="SAP明細番号（業務キー）"
     )
     shipping_document_text: Mapped[str | None] = mapped_column(
         Text, nullable=True, comment="出荷表テキスト"
@@ -176,10 +196,16 @@ class OrderLine(Base):
         Index("idx_order_lines_status", "status"),
         Index("idx_order_lines_order_type", "order_type"),
         Index("idx_order_lines_forecast_id", "forecast_id"),
+        Index("idx_order_lines_order_group", "order_group_id"),
         Index(
             "idx_order_lines_sap_order_no",
             "sap_order_no",
             postgresql_where=text("sap_order_no IS NOT NULL"),
+        ),
+        Index(
+            "idx_order_lines_customer_order_no",
+            "customer_order_no",
+            postgresql_where=text("customer_order_no IS NOT NULL"),
         ),
         CheckConstraint(
             "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled')",
@@ -189,12 +215,21 @@ class OrderLine(Base):
             "order_type IN ('FORECAST_LINKED', 'KANBAN', 'SPOT', 'ORDER')",
             name="chk_order_lines_order_type",
         ),
+        # 業務キー制約: 同一グループ内での得意先受注番号の一意性
+        UniqueConstraint(
+            "order_group_id",
+            "customer_order_no",
+            name="uq_order_lines_customer_key",
+        ),
     )
 
     __mapper_args__ = {"version_id_col": version}
 
     # Relationships
     order: Mapped[Order] = relationship("Order", back_populates="order_lines")
+    order_group: Mapped[OrderGroup | None] = relationship(
+        "OrderGroup", back_populates="order_lines"
+    )
     product: Mapped[Product] = relationship("Product", back_populates="order_lines")
     forecast: Mapped[ForecastCurrent | None] = relationship(
         "ForecastCurrent", back_populates="order_lines"
