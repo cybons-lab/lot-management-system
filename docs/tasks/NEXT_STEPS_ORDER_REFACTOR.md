@@ -5,7 +5,8 @@
 
 ## 現在のステータス
 *   **Backend**: コード修正、DBマイグレーション、テスト修正全て完了 (**All Tests Passed**)。
-*   **Frontend**: **未着手**。
+*   **Frontend**: API型定義同期エラーとビルドエラー(tsc)を解消済。本格的なUIリファクタリングは未着手。
+*   **CI/Scripts**: `export_openapi.py` 等のスクリプトをCI環境で動作するように修正済。
 
 ## 完了した作業
 1.  **Database & Migration**
@@ -19,18 +20,18 @@
 3.  **Backend Tests**
     *   多くのテストファイル (`test_orders.py`, `test_allocations.py` 等) で `order_number` 引数を削除・修正済み。
     *   `test_allocation_suggestions.py` のインポートエラー修正済み。
-    *   全てのバックエンドテスト (`pytest tests/`) が通過することを確認済み。
+    *   API型定義 (`api.d.ts`) の更新と、それに伴う型エラー(`tsc`)の解消 (`order_no` 参照の削除)。
+    *   `export_openapi.py` / `openapi_diff_check.py` の `DATABASE_URL` 未設定エラー修正。
+    *   `BatchJobExecuteRequest` 等の型定義差異（`uv`環境依存）を修正し、Prettierエラーを解消。
 
 ## 残タスク
 
-### 1. Frontend Refactoring (High Priority)
-フロントエンド側の修正は手つかずです。以下の対応が必要です。
-*   **Target**: `frontend/src` 以下のファイル (約24ファイル)。
+### 1. Frontend Refactoring (Continued)
+型チェックは通るようになりましたが、UIの表示内容は未確認です。
+*   **Target**: `OrderList`, `InventoryPage`, その他注文情報を表示するコンポーネント。
 *   **Action**:
-    *   API型定義 (`api.d.ts`) の更新（バックエンドに合わせて再生成が必要）。
-    *   UIコンポーネントで `order_number` を表示している箇所を特定し、`order.id` (ID表示) や `order_lines.customer_order_no` (客先注文番号) など、文脈に合わせて適切なフィールドに置き換える。
-    *   特に `InventoryPage.tsx` や `OrderList` 系のコンポーネントは影響が大きいと予想されます。
-*   **Check**: `npm run typecheck` (tsc) が通ること。
+    *   `OrderCard` では便宜上 `order.id` を表示するように修正しましたが、これが適切か確認してください。
+    *   `customer_order_no` や `sap_order_no` をより強調するUIへの変更が必要かもしれません。
 
 ### 2. Verification
 *   バックエンド、フロントエンド双方の修正後、E2Eでの動作確認（注文作成、一覧表示、引当など）を推奨。

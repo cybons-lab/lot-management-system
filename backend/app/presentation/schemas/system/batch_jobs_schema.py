@@ -1,6 +1,7 @@
 """バッチジョブ関連のPydanticスキーマ."""
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -13,7 +14,11 @@ class BatchJobBase(BaseModel):
         ...,
         description="ジョブ種別（allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation）",
     )
-    parameters: dict | None = Field(None, description="ジョブパラメータ（JSON）")
+    parameters: dict[str, Any] | None = Field(
+        None,
+        description="ジョブパラメータ（JSON）",
+        json_schema_extra={"additionalProperties": True},
+    )
 
 
 class BatchJobCreate(BatchJobBase):
@@ -27,7 +32,11 @@ class BatchJobUpdate(BaseModel):
 
     job_name: str | None = Field(None, description="ジョブ名")
     job_type: str | None = Field(None, description="ジョブ種別")
-    parameters: dict | None = Field(None, description="ジョブパラメータ（JSON）")
+    parameters: dict[str, Any] | None = Field(
+        None,
+        description="ジョブパラメータ（JSON）",
+        json_schema_extra={"additionalProperties": True},
+    )
     status: str | None = Field(None, description="ステータス")
     result_message: str | None = Field(None, description="実行結果メッセージ")
 
@@ -57,7 +66,11 @@ class BatchJobListResponse(BaseModel):
 class BatchJobExecuteRequest(BaseModel):
     """バッチジョブ実行リクエスト."""
 
-    parameters: dict | None = Field(None, description="実行時パラメータ（上書き）")
+    parameters: dict[str, Any] | None = Field(
+        None,
+        description="実行時パラメータ（上書き）",
+        json_schema_extra={"additionalProperties": True},
+    )
 
 
 class BatchJobExecuteResponse(BaseModel):

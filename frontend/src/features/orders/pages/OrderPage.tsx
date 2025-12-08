@@ -84,9 +84,7 @@ export function OrderPage() {
                 return (
                   <TableRow key={order.id}>
                     {/* Prefer customer_order_no when available, fallback to id */}
-                    <TableCell className="font-medium">
-                      {orderCode}
-                    </TableCell>
+                    <TableCell className="font-medium">{orderCode}</TableCell>
                     {/* customer_code is legacy field, not in DDL v2.2 */}
                     <TableCell>{formatCodeAndName(customerCode, undefined)}</TableCell>
                     <TableCell>

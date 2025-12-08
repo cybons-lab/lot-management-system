@@ -52,7 +52,9 @@ function OrderDetailHeader({
       </Link>
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{formatOrderCode(order)}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            {formatOrderCode(order)}
+          </h1>
           <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
             <span>{customerName}</span>
             <span>•</span>
