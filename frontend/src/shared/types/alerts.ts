@@ -10,10 +10,10 @@ export type AlertSeverity = "info" | "warning" | "critical";
 export type AlertCategory = "order" | "inventory" | "lot" | "forecast";
 
 export type AlertTarget =
-  | { resourceType: "order"; id: number }
-  | { resourceType: "inventory_item"; id: number }
-  | { resourceType: "lot"; id: number }
-  | { resourceType: "forecast_daily"; id: number };
+  | { resource_type: "order"; id: number }
+  | { resource_type: "inventory_item"; id: number }
+  | { resource_type: "lot"; id: number }
+  | { resource_type: "forecast_daily"; id: number };
 
 export interface AlertItem {
   id: string;
@@ -35,22 +35,22 @@ export interface AlertSummaryResponse {
 // Helper type guards
 export function isOrderTarget(
   target: AlertTarget,
-): target is { resourceType: "order"; id: number } {
-  return target.resourceType === "order";
+): target is { resource_type: "order"; id: number } {
+  return target.resource_type === "order";
 }
 
-export function isLotTarget(target: AlertTarget): target is { resourceType: "lot"; id: number } {
-  return target.resourceType === "lot";
+export function isLotTarget(target: AlertTarget): target is { resource_type: "lot"; id: number } {
+  return target.resource_type === "lot";
 }
 
 export function isInventoryItemTarget(
   target: AlertTarget,
-): target is { resourceType: "inventory_item"; id: number } {
-  return target.resourceType === "inventory_item";
+): target is { resource_type: "inventory_item"; id: number } {
+  return target.resource_type === "inventory_item";
 }
 
 export function isForecastDailyTarget(
   target: AlertTarget,
-): target is { resourceType: "forecast_daily"; id: number } {
-  return target.resourceType === "forecast_daily";
+): target is { resource_type: "forecast_daily"; id: number } {
+  return target.resource_type === "forecast_daily";
 }
