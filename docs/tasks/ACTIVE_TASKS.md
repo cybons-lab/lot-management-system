@@ -9,13 +9,51 @@
 
 ---
 
-## 🎯 残タスク（今すぐ対応が必要）
+## 🎯 進行中タスク
 
-**現在、緊急で対応すべきタスクはありません。次のステップはSAP本番環境接続です。**
+### P1: フェーズ3 - クリーンアーキテクチャ移行
+
+**方針**: 新規コードのみ新構造で書く（既存コードは維持）
+
+**完了済み:**
+- ✅ ドメインイベント基盤 (`domain/events/`)
+- ✅ イベントハンドラー登録 (`main.py`)
+- ✅ LotService/AllocationServiceにイベント発行統合
+
+**詳細計画**: [`docs/phase3_implementation_plan.md`](../phase3_implementation_plan.md)
 
 ---
 
-## 🔜 近い将来対応予定
+## 🔜 次のステップ（フェーズ3）
+
+### 3-A: ディレクトリ準備（0.5日）
+- [ ] `presentation/`, `application/`, `infrastructure/` ディレクトリ作成
+- [ ] 各ディレクトリに `__init__.py` 配置
+- [ ] インポートエイリアス設定（後方互換性）
+
+### 3-B: allocation ドメイン移行（パイロット, 1日）
+- [ ] `domain/repositories/allocation.py` にリポジトリインターフェース定義
+- [ ] 現 `repositories/allocation_repository.py` をインフラ層に移動
+- [ ] サービスの依存注入を調整
+- [ ] テスト実行・確認
+
+### 3-C: inventory ドメイン移行（1日）
+- [ ] `domain/repositories/lot.py` にリポジトリインターフェース定義
+- [ ] LotService のリファクタリング
+- [ ] テスト実行・確認
+
+### 3-D: 残りドメイン移行（1〜2日）
+- [ ] orders ドメイン
+- [ ] forecasts ドメイン
+- [ ] masters ドメイン
+
+### 3-E: プレゼンテーション層整理（0.5日）
+- [ ] `api/` → `presentation/api/` エイリアス設定
+- [ ] `schemas/` → `presentation/schemas/` エイリアス設定
+
+---
+
+## 📌 将来対応（P2: 中優先度）
 
 ### P2-1: SAP在庫同期 - 本番API接続待ち
 
@@ -29,7 +67,6 @@
   - 実行頻度設定UI
 
 > **Note**: モック環境で実装可能な部分（UI、API、差異検出ロジック）は全て完了。本番SAP環境準備後に対応。
-
 
 ---
 
@@ -63,10 +100,10 @@
 | 種類 | 件数 | 状態 |
 |------|------|------|
 | Mypy `# type: ignore` | 40 | ✅ 許容済み |
-| Ruff `# noqa` | 53 | ✅ 許容済み |
+| Ruff `# noqa` | 54 | ✅ 許容済み |
 | ESLint `eslint-disable` | 22 | ✅ 許容済み |
 | TypeScript `@ts-ignore` | 0 | ✅ Clean |
-| **合計** | **115** | **全て許容済み (2025-12-07)** |
+| **合計** | **116** | **全て許容済み (2025-12-08)** |
 
 > 詳細な許容理由は [`docs/CODE_QUALITY_IGNORES.md`](../CODE_QUALITY_IGNORES.md) を参照
 
@@ -78,3 +115,5 @@
 - **変更履歴:** [`CHANGELOG.md`](../CHANGELOG.md)
 - **完了機能:** [`docs/COMPLETED_FEATURES.adoc`](COMPLETED_FEATURES.adoc)
 - **開発ガイド:** [`CLAUDE.md`](../CLAUDE.md)
+- **フェーズ3計画:** [`docs/phase3_implementation_plan.md`](../phase3_implementation_plan.md)
+
