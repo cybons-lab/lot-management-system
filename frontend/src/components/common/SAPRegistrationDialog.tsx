@@ -42,7 +42,7 @@ function LineItem({ line, isSelected, onToggle }: LineItemProps) {
           <span>{line.product_name}</span>
         </div>
         <div className="mt-1 text-xs text-gray-500">
-          受注: {line.order_number} | 数量: {line.order_quantity} {line.unit} | 納期:{" "}
+          受注: {line.order_code} | 数量: {line.order_quantity} {line.unit} | 納期:{" "}
           {formatDate(line.delivery_date)}
         </div>
       </div>

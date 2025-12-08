@@ -31,7 +31,7 @@ describe("useLotAllocation", () => {
   const mockOrders = [
     {
       id: 1,
-      order_number: "ORD-001",
+      customer_order_no: "ORD-001",
       lines: [
         {
           id: 101,

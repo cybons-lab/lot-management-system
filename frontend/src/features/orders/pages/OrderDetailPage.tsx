@@ -30,6 +30,7 @@ import { OrderStatusBadge } from "@/shared/components/data/StatusBadge";
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
+import { formatOrderCode } from "@/shared/utils/order";
 
 // --- Sub-components ---
 
@@ -51,7 +52,7 @@ function OrderDetailHeader({
       </Link>
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{order.order_number}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">{formatOrderCode(order)}</h1>
           <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
             <span>{customerName}</span>
             <span>•</span>

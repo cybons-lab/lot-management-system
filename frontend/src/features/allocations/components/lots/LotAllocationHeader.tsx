@@ -2,6 +2,7 @@ import { LotAllocationHeaderView } from "./LotAllocationHeaderView";
 
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate, formatDateTime } from "@/shared/utils/date";
+import { formatOrderCode } from "@/shared/utils/order";
 
 interface LotAllocationHeaderProps {
   order?: OrderWithLinesResponse;
@@ -44,7 +45,7 @@ export function LotAllocationHeader({
   hasExpiredError,
   lineStatus,
 }: LotAllocationHeaderProps) {
-  const orderNumber = order?.order_number || "不明な受注";
+  const orderNumber = formatOrderCode(order) || "不明な受注";
   const productCode = orderLine.product_code || "CODE";
   const productName = propProductName || orderLine.product_name || "品名不明"; // Use propProductName here
   const deliveryDate = formatDate(orderLine.delivery_date || orderLine.due_date, {

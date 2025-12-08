@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui";
 import { cn } from "@/shared/libs/utils";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
+import { formatOrderCode } from "@/shared/utils/order";
 
 interface OrdersPaneProps {
   orders: OrderWithLinesResponse[];
@@ -141,7 +142,7 @@ export function OrdersPane({
 
       {orders.map((order) => {
         const isSelected = order.id === selectedOrderId;
-        const orderNumber = order.order_number || order.order_no || `#${order.id}`;
+        const orderNumber = formatOrderCode(order);
         const lineCount = order.lines?.length ?? 0;
         const lineCountLabel = `${lineCount}行`;
         const customerDisplay = getCustomerDisplay(order);

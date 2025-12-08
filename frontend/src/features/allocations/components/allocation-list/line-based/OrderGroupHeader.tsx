@@ -30,7 +30,7 @@ export function OrderGroupHeader({
           className={styles.checkbox}
         />
         <span className={styles.orderLabel}>ORDER</span>
-        <span className={styles.orderNumber}>{group.order_number}</span>
+        <span className={styles.orderNumber}>{group.order_code}</span>
         <div className="h-4 w-px bg-blue-300" />
         <Building2 className="h-4 w-4 text-blue-600" />
         <span className="font-bold text-gray-800">{group.customer_name}</span>

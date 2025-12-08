@@ -65,9 +65,9 @@ function TableRow({ line, isSelected, onToggle }: TableRowProps) {
       <td className="px-4 py-3">
         <div
           className="max-w-[150px] truncate font-medium text-slate-900"
-          title={line.order_number}
+          title={line.order_code}
         >
-          {line.order_number}
+          {line.order_code}
         </div>
       </td>
       <td className="px-4 py-3">

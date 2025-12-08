@@ -10,7 +10,7 @@ export type LineWithOrderInfo = {
   id: number;
   line: OrderLine;
   order: OrderWithLinesResponse;
-  order_number: string;
+  order_code: string;
   customer_name: string;
   order_date: string;
   order_id: number;
@@ -18,7 +18,7 @@ export type LineWithOrderInfo = {
 
 export type GroupedOrder = {
   order_id: number;
-  order_number: string;
+  order_code: string;
   customer_name: string;
   order_date: string;
   lines: LineWithOrderInfo[];

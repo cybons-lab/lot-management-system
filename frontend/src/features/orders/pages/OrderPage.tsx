@@ -6,6 +6,7 @@ import { Button } from "@/components/ui";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui";
 import * as ordersApi from "@/features/orders/api";
 import { formatCodeAndName } from "@/shared/libs/utils";
+import { formatOrderCode } from "@/shared/utils/order";
 
 export function OrderPage() {
   const {
@@ -75,15 +76,16 @@ export function OrderPage() {
               </TableRow>
             ) : (
               orders.map((order) => {
-                // DDL v2.2: OrderResponse only has order_number, use type casting for legacy fields
+                // Build display codes using available fields
                 const orderNo = (order as { order_no?: string }).order_no;
                 const customerCode = (order as { customer_code?: string }).customer_code;
+                const orderCode = formatOrderCode(order) || orderNo || "-";
 
                 return (
                   <TableRow key={order.id}>
-                    {/* DDL v2.2: use order_number (primary) or order_no (legacy fallback) */}
+                    {/* Prefer customer_order_no when available, fallback to id */}
                     <TableCell className="font-medium">
-                      {order.order_number ?? orderNo ?? "-"}
+                      {orderCode}
                     </TableCell>
                     {/* customer_code is legacy field, not in DDL v2.2 */}
                     <TableCell>{formatCodeAndName(customerCode, undefined)}</TableCell>

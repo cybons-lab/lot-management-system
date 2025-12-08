@@ -10,15 +10,16 @@ import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import type { Column } from "@/shared/components/data/DataTable";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
 import { formatDate } from "@/shared/utils/date";
+import { formatOrderCode } from "@/shared/utils/order";
 
 export const orderLineColumns: Column<OrderLineRow>[] = [
   {
-    id: "order_number",
+    id: "order_code",
     header: "受注番号",
     cell: (row: OrderLineRow) => (
       <div className="max-w-[140px]">
         <Link to={`/orders/${row.order_id}`} className="font-medium text-blue-600 hover:underline">
-          {row.order_number}
+          {formatOrderCode(row)}
         </Link>
         {/* 業務キー表示 */}
         {row.customer_order_no && (
