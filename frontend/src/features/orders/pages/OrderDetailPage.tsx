@@ -66,6 +66,7 @@ function OrderDetailHeader({
   );
 }
 
+// eslint-disable-next-line max-lines-per-function -- Table component with multiple columns
 function OrderLinesTable({
   order,
   onSelectLine,
@@ -84,6 +85,8 @@ function OrderLinesTable({
             <TableHead>行No</TableHead>
             <TableHead>製品</TableHead>
             <TableHead>納入先</TableHead>
+            <TableHead>得意先受注No</TableHead>
+            <TableHead>SAP受注No</TableHead>
             <TableHead>数量</TableHead>
             <TableHead>納期</TableHead>
             <TableHead>ステータス</TableHead>
@@ -100,6 +103,30 @@ function OrderLinesTable({
                 <div className="text-xs text-slate-500">{line.product_code}</div>
               </TableCell>
               <TableCell>{line.delivery_place_name}</TableCell>
+              <TableCell>
+                {line.customer_order_no ? (
+                  <div>
+                    <span className="font-medium">{line.customer_order_no}</span>
+                    {line.customer_order_line_no && (
+                      <span className="text-xs text-slate-500">-{line.customer_order_line_no}</span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-slate-400">-</span>
+                )}
+              </TableCell>
+              <TableCell>
+                {line.sap_order_no ? (
+                  <div>
+                    <span className="font-medium">{line.sap_order_no}</span>
+                    {line.sap_order_item_no && (
+                      <span className="text-xs text-slate-500">/{line.sap_order_item_no}</span>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-slate-400">-</span>
+                )}
+              </TableCell>
               <TableCell>
                 {formatQuantity(Number(line.order_quantity), line.unit)} {line.unit}
               </TableCell>
@@ -119,7 +146,7 @@ function OrderLinesTable({
           ))}
           {(!order.lines || order.lines.length === 0) && (
             <TableRow>
-              <TableCell colSpan={8} className="h-24 text-center text-slate-500">
+              <TableCell colSpan={10} className="h-24 text-center text-slate-500">
                 明細がありません
               </TableCell>
             </TableRow>
