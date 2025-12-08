@@ -14610,6 +14610,71 @@
             "pattern": "^(pending|allocated|shipped|completed|cancelled)$",
             "title": "Status",
             "default": "pending"
+          },
+          "order_group_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Group Id",
+            "description": "受注グループID"
+          },
+          "customer_order_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Order No",
+            "description": "得意先6桁受注番号（業務キー）"
+          },
+          "customer_order_line_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Order Line No",
+            "description": "得意先側行番号"
+          },
+          "sap_order_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Order No",
+            "description": "SAP受注番号（業務キー）"
+          },
+          "sap_order_item_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Order Item No",
+            "description": "SAP明細番号（業務キー）"
           }
         },
         "type": "object",
@@ -14690,6 +14755,71 @@
             "pattern": "^(pending|allocated|shipped|completed|cancelled)$",
             "title": "Status",
             "default": "pending"
+          },
+          "order_group_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Group Id",
+            "description": "受注グループID"
+          },
+          "customer_order_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Order No",
+            "description": "得意先6桁受注番号（業務キー）"
+          },
+          "customer_order_line_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Order Line No",
+            "description": "得意先側行番号"
+          },
+          "sap_order_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Order No",
+            "description": "SAP受注番号（業務キー）"
+          },
+          "sap_order_item_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Order Item No",
+            "description": "SAP明細番号（業務キー）"
           },
           "id": {
             "type": "integer",
