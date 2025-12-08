@@ -6,6 +6,7 @@
 - 例外ハンドラの登録
 - ミドルウェアの登録
 - ルーターの登録（register_all_routers経由）
+- ドメインイベントハンドラの登録
 """
 
 import logging
@@ -16,6 +17,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+# ドメインイベントハンドラを登録（インポート時に自動登録）
+import app.domain.events.handlers  # noqa: F401
 from app.api.routes import register_all_routers
 from app.core import errors
 from app.core.config import settings
