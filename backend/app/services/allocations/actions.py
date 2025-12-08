@@ -158,6 +158,8 @@ def allocate_manually(
 ) -> Allocation:
     """手動引当実行 (Drag & Assign).
 
+    v2.3: AllocationCreatedEvent を発行するように拡張。
+
     Args:
         db: データベースセッション
         order_line_id: 受注明細ID
@@ -172,6 +174,8 @@ def allocate_manually(
         AllocationCommitError: 引当に失敗した場合
         ValueError: パラメータが不正な場合
     """
+    from app.domain.events import AllocationCreatedEvent, EventDispatcher
+
     EPSILON = Decimal("1e-6")
 
     # Ensure quantity is Decimal
@@ -234,6 +238,16 @@ def allocate_manually(
     if commit_db:
         db.commit()
         db.refresh(allocation)
+
+        # ドメインイベント発行
+        event = AllocationCreatedEvent(
+            allocation_id=allocation.id,
+            order_line_id=order_line_id,
+            lot_id=lot_id,
+            quantity=quantity,
+            allocation_type="soft",
+        )
+        EventDispatcher.queue(event)
 
     return allocation
 
@@ -549,6 +563,16 @@ def confirm_hard_allocation(
         db.refresh(allocation)
         if remaining_allocation:
             db.refresh(remaining_allocation)
+
+        # ドメインイベント発行
+        from app.domain.events import AllocationConfirmedEvent, EventDispatcher
+
+        event = AllocationConfirmedEvent(
+            allocation_id=allocation.id,
+            lot_id=allocation.lot_id,
+            quantity=confirm_qty,
+        )
+        EventDispatcher.queue(event)
 
     return allocation, remaining_allocation
 
