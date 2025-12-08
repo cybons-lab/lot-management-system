@@ -25,7 +25,8 @@ repos:
     hooks:
       - id: openapi-sync
         name: OpenAPI Schema Sync
-        entry: bash -c 'cd backend && PYTHONPATH=. python scripts/export_openapi.py && cd ../frontend && npm run typegen >/dev/null 2>&1 && git add backend/openapi.json frontend/src/types/api.d.ts'
+        entry: bash -c 'cd backend && uv sync --no-dev -q && PYTHONPATH=. uv run python scripts/export_openapi.py >/dev/null 2>&1 && cd ../frontend && npm run typegen >/dev/null 2>&1 && git add backend/openapi.json frontend/src/types/api.d.ts && cd ../backend && uv sync -q'
         language: system
         files: ^backend/app/presentation/schemas/.*\.py$
         pass_filenames: false
+
