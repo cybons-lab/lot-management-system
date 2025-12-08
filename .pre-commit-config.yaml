@@ -20,3 +20,12 @@ repos:
       - id: ruff-format
         files: ^backend/
 
+  # OpenAPI Schema Sync - regenerate when backend schemas change
+  - repo: local
+    hooks:
+      - id: openapi-sync
+        name: OpenAPI Schema Sync
+        entry: bash -c 'cd backend && PYTHONPATH=. python scripts/export_openapi.py && cd ../frontend && npm run typegen >/dev/null 2>&1 && git add backend/openapi.json frontend/src/types/api.d.ts'
+        language: system
+        files: ^backend/app/presentation/schemas/.*\.py$
+        pass_filenames: false
