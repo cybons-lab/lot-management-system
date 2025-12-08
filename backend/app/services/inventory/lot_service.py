@@ -491,42 +491,34 @@ class LotService:
         return LotResponse.model_validate(lot_view)
 
     def create_stock_movement(self, movement: StockMovementCreate) -> StockMovementResponse:
-        """Create a stock movement (history) and update lot quantity."""
+        """Create a stock movement (history) and update lot quantity.
+
+        v2.3: ドメインイベント(StockChangedEvent)を発行するように拡張。
+        """
+        from app.domain.events import EventDispatcher, StockChangedEvent
+
         lot = None
+        quantity_before = Decimal("0")
+
         if movement.lot_id is not None:
             lot = self.db.query(Lot).filter(Lot.id == movement.lot_id).first()
             if not lot:
                 raise LotNotFoundError(movement.lot_id)
-
-        # StockHistory does not store product/warehouse directly, but we validate lot link
-
-        # We need to map schema fields to model fields correctly
-        # Schema: StockMovementCreate (alias of StockHistoryCreate) -> StockHistoryBase
-        # Fields: transaction_type, quantity_change, quantity_after, reference_type, reference_id
+            quantity_before = lot.current_quantity or Decimal("0")
 
         db_movement = StockMovement(
             lot_id=movement.lot_id,
             transaction_type=movement.transaction_type,
             quantity_change=movement.quantity_change,
-            quantity_after=movement.quantity_after,  # We will overwrite this after calc if needed
+            quantity_after=movement.quantity_after,
             reference_type=movement.reference_type,
             reference_id=movement.reference_id,
         )
-        # Note: product_id, warehouse_id, batch_id, created_by are NOT in StockHistory model.
 
         self.db.add(db_movement)
 
-        if movement.lot_id:
-            # Re-fetch or use lot
-            if not lot:  # Already fetched above
-                lot = self.db.query(Lot).filter(Lot.id == movement.lot_id).first()
-
-            if not lot:
-                self.db.rollback()
-                raise LotNotFoundError(movement.lot_id)
-
-            # Calculate new quantity based on change
-            # movement.quantity_change should be signed (+ or -)
+        quantity_after = quantity_before
+        if movement.lot_id and lot:
             current_qty = float(lot.current_quantity or 0.0)
             projected_quantity = current_qty + float(movement.quantity_change)
 
@@ -540,12 +532,24 @@ class LotService:
 
             lot.current_quantity = Decimal(str(projected_quantity))
             lot.updated_at = datetime.now()
+            quantity_after = lot.current_quantity
 
-            # Update quantity_after in history to match reality
             db_movement.quantity_after = lot.current_quantity
 
         self.db.commit()
         self.db.refresh(db_movement)
+
+        # ドメインイベント発行
+        if movement.lot_id:
+            event = StockChangedEvent(
+                lot_id=movement.lot_id,
+                quantity_before=quantity_before,
+                quantity_after=quantity_after,
+                quantity_change=movement.quantity_change,
+                reason=movement.reference_type or "",
+            )
+            EventDispatcher.queue(event)
+
         return StockMovementResponse.model_validate(db_movement)
 
     def list_lot_movements(self, lot_id: int) -> list[StockMovementResponse]:
