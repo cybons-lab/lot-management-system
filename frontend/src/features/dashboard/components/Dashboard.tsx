@@ -1,24 +1,9 @@
-import {} from // Archive, // Removed: Not used
-// Library, // Removed: Not used
-// AlertCircle, // Removed: Not used
-"lucide-react";
-
-// ============================================
-// 型定義
-// ============================================
-
-// ============================================
-// メインコンポーネント
-// ============================================
-
+import { AlertsWidget } from "./AlertsWidget";
 import { DashboardStats } from "./DashboardStats";
 import { MasterChangeLogWidget } from "./MasterChangeLogWidget";
-import { AlertsWidget } from "./AlertsWidget";
 import * as styles from "./styles";
 
-interface DashboardProps {}
-
-export function Dashboard({}: DashboardProps) {
+export function Dashboard() {
   return (
     <div className="mx-auto max-w-[1600px] px-6 py-6 pb-20">
       <div className={styles.container}>

@@ -3,8 +3,15 @@ import { AlertTriangle, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { http } from "@/shared/api/http-client";
 import { AlertTable } from "@/shared/components/alerts/AlertTable";
-import { AlertItem } from "@/shared/types/alerts";
+import type { AlertItem } from "@/shared/types/alerts";
+
+async function http_get_alerts() {
+  return http.get<AlertItem[]>("alerts", {
+    searchParams: { only_open: true, limit: 10 },
+  });
+}
 
 export function AlertsWidget() {
   const { data: alerts, isLoading } = useQuery({
@@ -37,15 +44,4 @@ export function AlertsWidget() {
       </CardContent>
     </Card>
   );
-}
-
-// Inline fetcher because api properties might be missing typed getAlerts
-// I should verify if api.getAlerts exists.
-// Based on previous search, I didn't see it in api.ts, so I might need to add it or use http directly here.
-import { http } from "@/shared/api/http-client";
-
-async function http_get_alerts() {
-  return http.get<AlertItem[]>("alerts", {
-    searchParams: { only_open: true, limit: 10 },
-  });
 }

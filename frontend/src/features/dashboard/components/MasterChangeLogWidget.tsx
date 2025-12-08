@@ -4,9 +4,10 @@ import { ja } from "date-fns/locale";
 import { ArrowLeftRight, Database, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { api, MasterChangeLog } from "@/services/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { api } from "@/services/api";
+import type { MasterChangeLog } from "@/services/api";
 
 export function MasterChangeLogWidget() {
   const { data, isLoading } = useQuery({
