@@ -24,6 +24,7 @@ import { InboundPlanCreatePage } from "@/features/inbound-plans/pages/InboundPla
 import { InboundPlanDetailPage } from "@/features/inbound-plans/pages/InboundPlanDetailPage";
 import { InboundPlanEditPage } from "@/features/inbound-plans/pages/InboundPlanEditPage";
 import { InboundPlansListPage } from "@/features/inbound-plans/pages/InboundPlansListPage";
+import { AdhocLotCreatePage } from "@/features/inventory/pages/AdhocLotCreatePage";
 import { InventoryItemDetailPage } from "@/features/inventory/pages/InventoryItemDetailPage";
 import { InventoryLayout } from "@/features/inventory/pages/InventoryLayout";
 import { InventoryPage } from "@/features/inventory/pages/InventoryPage";
@@ -58,6 +59,7 @@ function InventoryRoutes() {
         <Route path="moves" element={<MovesPage />} />
         <Route path="adjustments" element={<AdjustmentsListPage />} />
         <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
+        <Route path="adhoc/new" element={<AdhocLotCreatePage />} />
       </Route>
 
       {/* Inventory Item Detail & Lot Detail */}

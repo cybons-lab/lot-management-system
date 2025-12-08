@@ -1,5 +1,6 @@
-import { Box, Home, List, Plus, Truck } from "lucide-react";
+import { Box, Home, List, Package, Plus, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
@@ -29,6 +30,7 @@ import { fmt } from "@/shared/utils/number";
 type OverviewMode = "items" | "product" | "supplier" | "warehouse";
 
 export function InventoryPage() {
+  const navigate = useNavigate();
   // Lot creation dialog
   const createDialog = useDialog();
 
@@ -115,10 +117,16 @@ export function InventoryPage() {
     <div className="mx-auto max-w-[1600px] px-6 py-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">在庫管理</h1>
-        <Button size="sm" onClick={createDialog.open}>
-          <Plus className="mr-2 h-4 w-4" />
-          ロット新規登録
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => navigate("/inventory/adhoc/new")}>
+            <Package className="mr-2 h-4 w-4" />
+            アドホックロット作成
+          </Button>
+          <Button size="sm" onClick={createDialog.open}>
+            <Plus className="mr-2 h-4 w-4" />
+            ロット新規登録
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-6">
