@@ -160,8 +160,64 @@ class OrderLineRepository:
         Returns:
             受注明細エンティティのリスト
         """
-        stmt = select(OrderLine).where(OrderLine.order_id == order_id).order_by(OrderLine.line_no)  # type: ignore[attr-defined]
+        stmt = select(OrderLine).where(OrderLine.order_id == order_id).order_by(OrderLine.id)
         return list(self.db.execute(stmt).scalars().all())
+
+    def find_by_order_group_id(self, order_group_id: int) -> list[OrderLine]:
+        """受注グループIDで受注明細を取得.
+
+        Args:
+            order_group_id: 受注グループID
+
+        Returns:
+            受注明細エンティティのリスト
+        """
+        stmt = (
+            select(OrderLine)
+            .where(OrderLine.order_group_id == order_group_id)
+            .order_by(OrderLine.customer_order_no)
+        )
+        return list(self.db.execute(stmt).scalars().all())
+
+    def find_by_customer_order_key(
+        self,
+        order_group_id: int,
+        customer_order_no: str,
+    ) -> OrderLine | None:
+        """得意先側業務キーで受注明細を取得.
+
+        Args:
+            order_group_id: 受注グループID
+            customer_order_no: 得意先6桁受注番号
+
+        Returns:
+            受注明細エンティティ（存在しない場合はNone）
+        """
+        stmt = select(OrderLine).where(
+            OrderLine.order_group_id == order_group_id,
+            OrderLine.customer_order_no == customer_order_no,
+        )
+        return cast(OrderLine | None, self.db.execute(stmt).scalar_one_or_none())
+
+    def find_by_sap_order_key(
+        self,
+        sap_order_no: str,
+        sap_order_item_no: str,
+    ) -> OrderLine | None:
+        """SAP側業務キーで受注明細を取得.
+
+        Args:
+            sap_order_no: SAP受注番号
+            sap_order_item_no: SAP明細番号
+
+        Returns:
+            受注明細エンティティ（存在しない場合はNone）
+        """
+        stmt = select(OrderLine).where(
+            OrderLine.sap_order_no == sap_order_no,
+            OrderLine.sap_order_item_no == sap_order_item_no,
+        )
+        return cast(OrderLine | None, self.db.execute(stmt).scalar_one_or_none())
 
     def create(
         self,
@@ -205,4 +261,21 @@ class OrderLineRepository:
             new_status: 新しいステータス
         """
         order_line.status = new_status
+        # NOTE: commitはservice層で行う
+
+    def update_sap_order_key(
+        self,
+        order_line: OrderLine,
+        sap_order_no: str,
+        sap_order_item_no: str,
+    ) -> None:
+        """SAP側業務キーを更新（SAP登録後に呼び出す）.
+
+        Args:
+            order_line: 受注明細エンティティ
+            sap_order_no: SAP受注番号
+            sap_order_item_no: SAP明細番号
+        """
+        order_line.sap_order_no = sap_order_no
+        order_line.sap_order_item_no = sap_order_item_no
         # NOTE: commitはservice層で行う
