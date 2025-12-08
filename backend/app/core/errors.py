@@ -34,6 +34,13 @@ from app.domain.allocation.exceptions import (
 )
 from app.domain.errors import DomainError, InsufficientStockError
 
+# Forecast domain
+from app.domain.forecast import (
+    ForecastDomainError,
+    ForecastNotFoundError,
+    InvalidForecastError,
+)
+
 # Lot domain
 from app.domain.lot import (
     ExpiredLotError,
@@ -57,12 +64,9 @@ from app.domain.order import (
     ProductNotFoundError,
 )
 
-# Warehouse & Forecast domain (combined file)
-from app.domain.warehouse_and_forecast import (
-    ForecastDomainError,
-    ForecastNotFoundError,
+# Warehouse domain
+from app.domain.warehouse import (
     InvalidAllocationError,
-    InvalidForecastError,
     WarehouseDomainError,
     WarehouseNotFoundError,
 )
