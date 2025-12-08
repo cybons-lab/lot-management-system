@@ -7058,7 +7058,7 @@ export interface components {
        * @default bearer
        */
       token_type: string;
-      user: components["schemas"]["app__schemas__auth__auth_schemas__UserResponse"];
+      user: components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
     };
     /**
      * UomConversionBulkRow
@@ -7424,7 +7424,7 @@ export interface components {
      * UserResponse
      * @description User response schema.
      */
-    app__schemas__auth__auth_schemas__UserResponse: {
+    app__presentation__schemas__auth__auth_schemas__UserResponse: {
       /** Id */
       id: number;
       /** Username */
@@ -7438,7 +7438,7 @@ export interface components {
      * UserResponse
      * @description Schema for user response (DDL: users).
      */
-    app__schemas__system__users_schema__UserResponse: {
+    app__presentation__schemas__system__users_schema__UserResponse: {
       /**
        * Username
        * @description ユーザー名
@@ -11000,7 +11000,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__schemas__auth__auth_schemas__UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
         };
       };
     };
@@ -11089,7 +11089,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__schemas__system__users_schema__UserResponse"][];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"][];
         };
       };
       /** @description Validation Error */
@@ -11122,7 +11122,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__schemas__system__users_schema__UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
         };
       };
       /** @description Validation Error */
@@ -11188,7 +11188,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["app__schemas__system__users_schema__UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
         };
       };
       /** @description Validation Error */

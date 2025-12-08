@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Lot Management API",
-    "description": "材料ロット管理システム - バックエンドAPI",
+    "description": "\u6750\u6599\u30ed\u30c3\u30c8\u7ba1\u7406\u30b7\u30b9\u30c6\u30e0 - \u30d0\u30c3\u30af\u30a8\u30f3\u30c9API",
     "version": "2.0.0"
   },
   "paths": {
@@ -12,7 +12,7 @@
           "lots"
         ],
         "summary": "List Lots",
-        "description": "ロット一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数\n    product_id: 製品ID\n    product_code: 製品コード\n    supplier_code: 仕入先コード\n    warehouse_code: 倉庫コード\n    expiry_from: 有効期限開始日\n    expiry_to: 有効期限終了日\n    with_stock: 在庫ありのみ取得するかどうか\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nロット一覧取得（v_lots_with_master ビュー使用）.\n\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.\nFEFO (先入先出) 順に並べて返す.",
+        "description": "\u30ed\u30c3\u30c8\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\n    product_id: \u88fd\u54c1ID\n    product_code: \u88fd\u54c1\u30b3\u30fc\u30c9\n    supplier_code: \u4ed5\u5165\u5148\u30b3\u30fc\u30c9\n    warehouse_code: \u5009\u5eab\u30b3\u30fc\u30c9\n    expiry_from: \u6709\u52b9\u671f\u9650\u958b\u59cb\u65e5\n    expiry_to: \u6709\u52b9\u671f\u9650\u7d42\u4e86\u65e5\n    with_stock: \u5728\u5eab\u3042\u308a\u306e\u307f\u53d6\u5f97\u3059\u308b\u304b\u3069\u3046\u304b\n    prioritize_primary: \u4e3b\u62c5\u5f53\u306e\u4ed5\u5165\u5148\u3092\u512a\u5148\u8868\u793a\u3059\u308b\u304b\u3069\u3046\u304b\uff08\u30c7\u30d5\u30a9\u30eb\u30c8: True\uff09\n    current_user: \u73fe\u5728\u306e\u30ed\u30b0\u30a4\u30f3\u30e6\u30fc\u30b6\u30fc\uff08\u4e3b\u62c5\u5f53\u4ed5\u5165\u5148\u53d6\u5f97\u306b\u4f7f\u7528\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\n\u30ed\u30c3\u30c8\u4e00\u89a7\u53d6\u5f97\uff08v_lots_with_master \u30d3\u30e5\u30fc\u4f7f\u7528\uff09.\n\n\u88fd\u54c1\u30b3\u30fc\u30c9\u30fb\u4ed5\u5165\u5148\u30b3\u30fc\u30c9\u30fb\u5009\u5eab\u30b3\u30fc\u30c9\u30fb\u6709\u52b9\u671f\u9650\u7bc4\u56f2\u3067\u30d5\u30a3\u30eb\u30bf\u30ea\u30f3\u30b0\u53ef\u80fd.\nFEFO (\u5148\u5165\u5148\u51fa) \u9806\u306b\u4e26\u3079\u3066\u8fd4\u3059.",
         "operationId": "list_lots_api_lots_get",
         "security": [
           {
@@ -191,7 +191,7 @@
           "lots"
         ],
         "summary": "Create Lot",
-        "description": "ロット新規登録.\n\n- ロットマスタ登録\n- 現在在庫テーブル初期化",
+        "description": "\u30ed\u30c3\u30c8\u65b0\u898f\u767b\u9332.\n\n- \u30ed\u30c3\u30c8\u30de\u30b9\u30bf\u767b\u9332\n- \u73fe\u5728\u5728\u5eab\u30c6\u30fc\u30d6\u30eb\u521d\u671f\u5316",
         "operationId": "create_lot_api_lots_post",
         "requestBody": {
           "required": true,
@@ -233,7 +233,7 @@
           "lots"
         ],
         "summary": "Get Lot",
-        "description": "ロット詳細取得（v2.2: Lot モデルから直接取得）.",
+        "description": "\u30ed\u30c3\u30c8\u8a73\u7d30\u53d6\u5f97\uff08v2.2: Lot \u30e2\u30c7\u30eb\u304b\u3089\u76f4\u63a5\u53d6\u5f97\uff09.",
         "operationId": "get_lot_api_lots__lot_id__get",
         "parameters": [
           {
@@ -274,7 +274,7 @@
           "lots"
         ],
         "summary": "Update Lot",
-        "description": "ロット更新.",
+        "description": "\u30ed\u30c3\u30c8\u66f4\u65b0.",
         "operationId": "update_lot_api_lots__lot_id__put",
         "parameters": [
           {
@@ -325,7 +325,7 @@
           "lots"
         ],
         "summary": "Delete Lot",
-        "description": "ロット削除.",
+        "description": "\u30ed\u30c3\u30c8\u524a\u9664.",
         "operationId": "delete_lot_api_lots__lot_id__delete",
         "parameters": [
           {
@@ -361,7 +361,7 @@
           "lots"
         ],
         "summary": "Lock Lot",
-        "description": "ロットをロックする（数量指定可）.",
+        "description": "\u30ed\u30c3\u30c8\u3092\u30ed\u30c3\u30af\u3059\u308b\uff08\u6570\u91cf\u6307\u5b9a\u53ef\uff09.",
         "operationId": "lock_lot_api_lots__lot_id__lock_post",
         "parameters": [
           {
@@ -414,7 +414,7 @@
           "lots"
         ],
         "summary": "Unlock Lot",
-        "description": "ロットのロックを解除する（数量指定可）.",
+        "description": "\u30ed\u30c3\u30c8\u306e\u30ed\u30c3\u30af\u3092\u89e3\u9664\u3059\u308b\uff08\u6570\u91cf\u6307\u5b9a\u53ef\uff09.",
         "operationId": "unlock_lot_api_lots__lot_id__unlock_post",
         "parameters": [
           {
@@ -474,7 +474,7 @@
           "lots"
         ],
         "summary": "List Lot Movements",
-        "description": "ロットの在庫変動履歴取得.",
+        "description": "\u30ed\u30c3\u30c8\u306e\u5728\u5eab\u5909\u52d5\u5c65\u6b74\u53d6\u5f97.",
         "operationId": "list_lot_movements_api_lots__lot_id__movements_get",
         "parameters": [
           {
@@ -521,7 +521,7 @@
           "lots"
         ],
         "summary": "Create Stock Movement",
-        "description": "在庫変動記録.\n\n- 在庫変動履歴追加\n- 現在在庫更新",
+        "description": "\u5728\u5eab\u5909\u52d5\u8a18\u9332.\n\n- \u5728\u5eab\u5909\u52d5\u5c65\u6b74\u8ffd\u52a0\n- \u73fe\u5728\u5728\u5eab\u66f4\u65b0",
         "operationId": "create_stock_movement_api_lots_movements_post",
         "requestBody": {
           "content": {
@@ -589,7 +589,7 @@
           "orders"
         ],
         "summary": "List Order Lines",
-        "description": "受注明細一覧取得.\n\n受注ヘッダ情報や製品情報などを結合したフラットな明細リストを返します。",
+        "description": "\u53d7\u6ce8\u660e\u7d30\u4e00\u89a7\u53d6\u5f97.\n\n\u53d7\u6ce8\u30d8\u30c3\u30c0\u60c5\u5831\u3084\u88fd\u54c1\u60c5\u5831\u306a\u3069\u3092\u7d50\u5408\u3057\u305f\u30d5\u30e9\u30c3\u30c8\u306a\u660e\u7d30\u30ea\u30b9\u30c8\u3092\u8fd4\u3057\u307e\u3059\u3002",
         "operationId": "list_order_lines_api_orders_lines_get",
         "parameters": [
           {
@@ -729,7 +729,7 @@
           "orders"
         ],
         "summary": "List Orders",
-        "description": "受注一覧取得（読み取り専用）.",
+        "description": "\u53d7\u6ce8\u4e00\u89a7\u53d6\u5f97\uff08\u8aad\u307f\u53d6\u308a\u5c02\u7528\uff09.",
         "operationId": "list_orders_api_orders_get",
         "security": [
           {
@@ -882,7 +882,7 @@
           "orders"
         ],
         "summary": "Create Order",
-        "description": "受注作成.",
+        "description": "\u53d7\u6ce8\u4f5c\u6210.",
         "operationId": "create_order_api_orders_post",
         "requestBody": {
           "required": true,
@@ -924,7 +924,7 @@
           "orders"
         ],
         "summary": "Get Order",
-        "description": "受注詳細取得（読み取り専用、明細含む）.",
+        "description": "\u53d7\u6ce8\u8a73\u7d30\u53d6\u5f97\uff08\u8aad\u307f\u53d6\u308a\u5c02\u7528\u3001\u660e\u7d30\u542b\u3080\uff09.",
         "operationId": "get_order_api_orders__order_id__get",
         "parameters": [
           {
@@ -967,7 +967,7 @@
           "orders"
         ],
         "summary": "Cancel Order",
-        "description": "受注キャンセル.",
+        "description": "\u53d7\u6ce8\u30ad\u30e3\u30f3\u30bb\u30eb.",
         "operationId": "cancel_order_api_orders__order_id__cancel_delete",
         "parameters": [
           {
@@ -1003,7 +1003,7 @@
           "orders"
         ],
         "summary": "Save Manual Allocations",
-        "description": "手動引当保存 (確定) - トランザクション保護版.\n\n既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。\n全ての操作を1つのトランザクションで実行し、エラー時はロールバックします。",
+        "description": "\u624b\u52d5\u5f15\u5f53\u4fdd\u5b58 (\u78ba\u5b9a) - \u30c8\u30e9\u30f3\u30b6\u30af\u30b7\u30e7\u30f3\u4fdd\u8b77\u7248.\n\n\u65e2\u5b58\u306e\u5f15\u5f53\u3092\u4e00\u5ea6\u30af\u30ea\u30a2\u3057\u3001\u30ea\u30af\u30a8\u30b9\u30c8\u3055\u308c\u305f\u5185\u5bb9\u3067\u518d\u4f5c\u6210\u3059\u308b\uff08\u4e0a\u66f8\u304d\u4fdd\u5b58\uff09\u3002\n\u5168\u3066\u306e\u64cd\u4f5c\u30921\u3064\u306e\u30c8\u30e9\u30f3\u30b6\u30af\u30b7\u30e7\u30f3\u3067\u5b9f\u884c\u3057\u3001\u30a8\u30e9\u30fc\u6642\u306f\u30ed\u30fc\u30eb\u30d0\u30c3\u30af\u3057\u307e\u3059\u3002",
         "operationId": "save_manual_allocations_api_orders__order_line_id__allocations_post",
         "parameters": [
           {
@@ -1054,7 +1054,7 @@
           "orders"
         ],
         "summary": "Refresh All Order Line Statuses",
-        "description": "全受注明細および受注のステータスを再計算・更新.\n\n既存の allocations データに基づいて OrderLine.status と Order.status\nを正しい値に更新します。",
+        "description": "\u5168\u53d7\u6ce8\u660e\u7d30\u304a\u3088\u3073\u53d7\u6ce8\u306e\u30b9\u30c6\u30fc\u30bf\u30b9\u3092\u518d\u8a08\u7b97\u30fb\u66f4\u65b0.\n\n\u65e2\u5b58\u306e allocations \u30c7\u30fc\u30bf\u306b\u57fa\u3065\u3044\u3066 OrderLine.status \u3068 Order.status\n\u3092\u6b63\u3057\u3044\u5024\u306b\u66f4\u65b0\u3057\u307e\u3059\u3002",
         "operationId": "refresh_all_order_line_statuses_api_orders_refresh_all_statuses_post",
         "responses": {
           "200": {
@@ -1074,7 +1074,7 @@
           "orders"
         ],
         "summary": "Acquire Lock",
-        "description": "受注の編集ロックを取得.",
+        "description": "\u53d7\u6ce8\u306e\u7de8\u96c6\u30ed\u30c3\u30af\u3092\u53d6\u5f97.",
         "operationId": "acquire_lock_api_orders__order_id__lock_post",
         "security": [
           {
@@ -1118,7 +1118,7 @@
           "orders"
         ],
         "summary": "Release Lock",
-        "description": "受注の編集ロックを解放.",
+        "description": "\u53d7\u6ce8\u306e\u7de8\u96c6\u30ed\u30c3\u30af\u3092\u89e3\u653e.",
         "operationId": "release_lock_api_orders__order_id__lock_delete",
         "security": [
           {
@@ -1164,7 +1164,7 @@
           "allocations"
         ],
         "summary": "Drag Assign",
-        "description": "手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility.",
+        "description": "\u624b\u52d5\u5f15\u5f53\u5b9f\u884c (Drag & Assign) - Deprecated endpoint name but kept for compatibility.",
         "operationId": "drag_assign_api_allocations_drag_assign_post",
         "requestBody": {
           "content": {
@@ -1206,7 +1206,7 @@
           "allocations"
         ],
         "summary": "Delete Allocation",
-        "description": "引当取消（DELETE API, ソフトキャンセル対応）.",
+        "description": "\u5f15\u5f53\u53d6\u6d88\uff08DELETE API, \u30bd\u30d5\u30c8\u30ad\u30e3\u30f3\u30bb\u30eb\u5bfe\u5fdc\uff09.",
         "operationId": "delete_allocation_api_allocations__allocation_id__delete",
         "parameters": [
           {
@@ -1242,7 +1242,7 @@
           "allocations"
         ],
         "summary": "Preview Allocations",
-        "description": "FEFO引当シミュレーション実行.\n\nArgs:\n    request: プレビューリクエスト（order_id）\n    db: データベースセッション\n\nReturns:\n    FefoPreviewResponse: 引当プレビュー結果",
+        "description": "FEFO\u5f15\u5f53\u30b7\u30df\u30e5\u30ec\u30fc\u30b7\u30e7\u30f3\u5b9f\u884c.\n\nArgs:\n    request: \u30d7\u30ec\u30d3\u30e5\u30fc\u30ea\u30af\u30a8\u30b9\u30c8\uff08order_id\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    FefoPreviewResponse: \u5f15\u5f53\u30d7\u30ec\u30d3\u30e5\u30fc\u7d50\u679c",
         "operationId": "preview_allocations_api_allocations_preview_post",
         "requestBody": {
           "content": {
@@ -1284,7 +1284,7 @@
           "allocations"
         ],
         "summary": "Commit Allocation",
-        "description": "引当確定（v2.2.1準拠）.\n\nFEFO・手動いずれかで作成された仮引当案を元に、実績の allocations を生成し、在庫を確定させる。\n\nArgs:\n    request: 引当確定リクエスト（order_id）\n    db: データベースセッション\n\nReturns:\n    AllocationCommitResponse: 確定結果\n\nNote:\n    - allocations テーブルにレコード作成\n    - lots.quantity から実績数量を減算\n    - stock_history への出庫履歴記録",
+        "description": "\u5f15\u5f53\u78ba\u5b9a\uff08v2.2.1\u6e96\u62e0\uff09.\n\nFEFO\u30fb\u624b\u52d5\u3044\u305a\u308c\u304b\u3067\u4f5c\u6210\u3055\u308c\u305f\u4eee\u5f15\u5f53\u6848\u3092\u5143\u306b\u3001\u5b9f\u7e3e\u306e allocations \u3092\u751f\u6210\u3057\u3001\u5728\u5eab\u3092\u78ba\u5b9a\u3055\u305b\u308b\u3002\n\nArgs:\n    request: \u5f15\u5f53\u78ba\u5b9a\u30ea\u30af\u30a8\u30b9\u30c8\uff08order_id\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    AllocationCommitResponse: \u78ba\u5b9a\u7d50\u679c\n\nNote:\n    - allocations \u30c6\u30fc\u30d6\u30eb\u306b\u30ec\u30b3\u30fc\u30c9\u4f5c\u6210\n    - lots.quantity \u304b\u3089\u5b9f\u7e3e\u6570\u91cf\u3092\u6e1b\u7b97\n    - stock_history \u3078\u306e\u51fa\u5eab\u5c65\u6b74\u8a18\u9332",
         "operationId": "commit_allocation_api_allocations_commit_post",
         "requestBody": {
           "content": {
@@ -1326,7 +1326,7 @@
           "allocations"
         ],
         "summary": "Bulk Cancel",
-        "description": "引当一括取消.\n\n複数の引当を一度に取り消す。部分的な失敗を許容する。\n\nArgs:\n    request: 取消対象の引当ID一覧\n    db: データベースセッション\n\nReturns:\n    BulkCancelResponse: 取消結果（成功ID、失敗ID）",
+        "description": "\u5f15\u5f53\u4e00\u62ec\u53d6\u6d88.\n\n\u8907\u6570\u306e\u5f15\u5f53\u3092\u4e00\u5ea6\u306b\u53d6\u308a\u6d88\u3059\u3002\u90e8\u5206\u7684\u306a\u5931\u6557\u3092\u8a31\u5bb9\u3059\u308b\u3002\n\nArgs:\n    request: \u53d6\u6d88\u5bfe\u8c61\u306e\u5f15\u5f53ID\u4e00\u89a7\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    BulkCancelResponse: \u53d6\u6d88\u7d50\u679c\uff08\u6210\u529fID\u3001\u5931\u6557ID\uff09",
         "operationId": "bulk_cancel_api_allocations_bulk_cancel_post",
         "requestBody": {
           "content": {
@@ -1368,7 +1368,7 @@
           "allocations"
         ],
         "summary": "Cancel By Order Line",
-        "description": "受注明細に紐づく全ての引当を一括キャンセル.\n\nArgs:\n    request: { \"order_line_id\": int }\n    db: DB Session\n\nReturns:\n    { \"success\": bool, \"message\": str, \"cancelled_ids\": list[int] }",
+        "description": "\u53d7\u6ce8\u660e\u7d30\u306b\u7d10\u3065\u304f\u5168\u3066\u306e\u5f15\u5f53\u3092\u4e00\u62ec\u30ad\u30e3\u30f3\u30bb\u30eb.\n\nArgs:\n    request: { \"order_line_id\": int }\n    db: DB Session\n\nReturns:\n    { \"success\": bool, \"message\": str, \"cancelled_ids\": list[int] }",
         "operationId": "cancel_by_order_line_api_allocations_cancel_by_order_line_post",
         "requestBody": {
           "content": {
@@ -1410,7 +1410,7 @@
           "allocations"
         ],
         "summary": "Auto Allocate",
-        "description": "受注明細に対してFEFO戦略で自動引当を実行.\n\nArgs:\n    request: 自動引当リクエスト（order_line_id, strategy）\n    db: データベースセッション\n\nReturns:\n    AutoAllocateResponse: 引当結果",
+        "description": "\u53d7\u6ce8\u660e\u7d30\u306b\u5bfe\u3057\u3066FEFO\u6226\u7565\u3067\u81ea\u52d5\u5f15\u5f53\u3092\u5b9f\u884c.\n\nArgs:\n    request: \u81ea\u52d5\u5f15\u5f53\u30ea\u30af\u30a8\u30b9\u30c8\uff08order_line_id, strategy\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    AutoAllocateResponse: \u5f15\u5f53\u7d50\u679c",
         "operationId": "auto_allocate_api_allocations_auto_allocate_post",
         "requestBody": {
           "content": {
@@ -1452,7 +1452,7 @@
           "allocations"
         ],
         "summary": "Bulk Auto Allocate",
-        "description": "複数受注明細に対して一括でFEFO自動引当を実行.\n\nフィルタリング条件を指定して対象を絞り込み可能。\nフォーキャストグループ、個別受注、全受注への一括引当に対応。\n\n- product_id: 製品IDでフィルタ\n- customer_id: 得意先IDでフィルタ\n- delivery_place_id: 納入先IDでフィルタ\n- order_type: 受注タイプでフィルタ (FORECAST_LINKED, KANBAN, SPOT, ORDER)\n\nArgs:\n    request: 一括引当リクエスト\n    db: データベースセッション\n\nReturns:\n    BulkAutoAllocateResponse: 一括引当結果",
+        "description": "\u8907\u6570\u53d7\u6ce8\u660e\u7d30\u306b\u5bfe\u3057\u3066\u4e00\u62ec\u3067FEFO\u81ea\u52d5\u5f15\u5f53\u3092\u5b9f\u884c.\n\n\u30d5\u30a3\u30eb\u30bf\u30ea\u30f3\u30b0\u6761\u4ef6\u3092\u6307\u5b9a\u3057\u3066\u5bfe\u8c61\u3092\u7d5e\u308a\u8fbc\u307f\u53ef\u80fd\u3002\n\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u30b0\u30eb\u30fc\u30d7\u3001\u500b\u5225\u53d7\u6ce8\u3001\u5168\u53d7\u6ce8\u3078\u306e\u4e00\u62ec\u5f15\u5f53\u306b\u5bfe\u5fdc\u3002\n\n- product_id: \u88fd\u54c1ID\u3067\u30d5\u30a3\u30eb\u30bf\n- customer_id: \u5f97\u610f\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf\n- delivery_place_id: \u7d0d\u5165\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf\n- order_type: \u53d7\u6ce8\u30bf\u30a4\u30d7\u3067\u30d5\u30a3\u30eb\u30bf (FORECAST_LINKED, KANBAN, SPOT, ORDER)\n\nArgs:\n    request: \u4e00\u62ec\u5f15\u5f53\u30ea\u30af\u30a8\u30b9\u30c8\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    BulkAutoAllocateResponse: \u4e00\u62ec\u5f15\u5f53\u7d50\u679c",
         "operationId": "bulk_auto_allocate_api_allocations_bulk_auto_allocate_post",
         "requestBody": {
           "content": {
@@ -1494,7 +1494,7 @@
           "allocations"
         ],
         "summary": "Auto Allocate Orders",
-        "description": "複数受注に対して一括で自動引当（Single Lot Fit + FEFO）を実行・確定する.\n\n- v0アルゴリズム (allocator.py) を使用\n- 成功/失敗を個別に記録\n- dry_run=True の場合は保存しない（未実装、今回はFalse前提）\n\nArgs:\n    request: 対象受注IDリスト\n    db: DBセッション\n\nReturns:\n    BatchAutoOrderResponse: 実行結果",
+        "description": "\u8907\u6570\u53d7\u6ce8\u306b\u5bfe\u3057\u3066\u4e00\u62ec\u3067\u81ea\u52d5\u5f15\u5f53\uff08Single Lot Fit + FEFO\uff09\u3092\u5b9f\u884c\u30fb\u78ba\u5b9a\u3059\u308b.\n\n- v0\u30a2\u30eb\u30b4\u30ea\u30ba\u30e0 (allocator.py) \u3092\u4f7f\u7528\n- \u6210\u529f/\u5931\u6557\u3092\u500b\u5225\u306b\u8a18\u9332\n- dry_run=True \u306e\u5834\u5408\u306f\u4fdd\u5b58\u3057\u306a\u3044\uff08\u672a\u5b9f\u88c5\u3001\u4eca\u56de\u306fFalse\u524d\u63d0\uff09\n\nArgs:\n    request: \u5bfe\u8c61\u53d7\u6ce8ID\u30ea\u30b9\u30c8\n    db: DB\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    BatchAutoOrderResponse: \u5b9f\u884c\u7d50\u679c",
         "operationId": "auto_allocate_orders_api_allocations_auto_orders_post",
         "requestBody": {
           "content": {
@@ -1536,7 +1536,7 @@
           "allocations"
         ],
         "summary": "Confirm Allocation Hard",
-        "description": "Soft引当をHard引当に確定（Soft → Hard変換）.\n\n- 在庫をロックし、他オーダーからは引当不可にする\n- 部分確定も可能（quantity パラメータ指定時）\n\nArgs:\n    allocation_id: 確定対象の引当ID\n    request: 確定リクエスト（confirmed_by, quantity）\n    db: データベースセッション\n\nReturns:\n    HardAllocationConfirmResponse: 確定された引当情報\n\nRaises:\n    404: 引当が見つからない\n    400: 既にhard確定済み、または不正なパラメータ\n    409: 在庫不足",
+        "description": "Soft\u5f15\u5f53\u3092Hard\u5f15\u5f53\u306b\u78ba\u5b9a\uff08Soft \u2192 Hard\u5909\u63db\uff09.\n\n- \u5728\u5eab\u3092\u30ed\u30c3\u30af\u3057\u3001\u4ed6\u30aa\u30fc\u30c0\u30fc\u304b\u3089\u306f\u5f15\u5f53\u4e0d\u53ef\u306b\u3059\u308b\n- \u90e8\u5206\u78ba\u5b9a\u3082\u53ef\u80fd\uff08quantity \u30d1\u30e9\u30e1\u30fc\u30bf\u6307\u5b9a\u6642\uff09\n\nArgs:\n    allocation_id: \u78ba\u5b9a\u5bfe\u8c61\u306e\u5f15\u5f53ID\n    request: \u78ba\u5b9a\u30ea\u30af\u30a8\u30b9\u30c8\uff08confirmed_by, quantity\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    HardAllocationConfirmResponse: \u78ba\u5b9a\u3055\u308c\u305f\u5f15\u5f53\u60c5\u5831\n\nRaises:\n    404: \u5f15\u5f53\u304c\u898b\u3064\u304b\u3089\u306a\u3044\n    400: \u65e2\u306bhard\u78ba\u5b9a\u6e08\u307f\u3001\u307e\u305f\u306f\u4e0d\u6b63\u306a\u30d1\u30e9\u30e1\u30fc\u30bf\n    409: \u5728\u5eab\u4e0d\u8db3",
         "operationId": "confirm_allocation_hard_api_allocations__allocation_id__confirm_patch",
         "parameters": [
           {
@@ -1589,7 +1589,7 @@
           "allocations"
         ],
         "summary": "Confirm Allocations Batch",
-        "description": "複数のSoft引当を一括でHard確定.\n\n部分的な失敗を許容し、成功・失敗をそれぞれ返す。\n\nArgs:\n    request: 一括確定リクエスト（allocation_ids, confirmed_by）\n    db: データベースセッション\n\nReturns:\n    HardAllocationBatchConfirmResponse: 確定結果（成功ID一覧、失敗情報一覧）",
+        "description": "\u8907\u6570\u306eSoft\u5f15\u5f53\u3092\u4e00\u62ec\u3067Hard\u78ba\u5b9a.\n\n\u90e8\u5206\u7684\u306a\u5931\u6557\u3092\u8a31\u5bb9\u3057\u3001\u6210\u529f\u30fb\u5931\u6557\u3092\u305d\u308c\u305e\u308c\u8fd4\u3059\u3002\n\nArgs:\n    request: \u4e00\u62ec\u78ba\u5b9a\u30ea\u30af\u30a8\u30b9\u30c8\uff08allocation_ids, confirmed_by\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    HardAllocationBatchConfirmResponse: \u78ba\u5b9a\u7d50\u679c\uff08\u6210\u529fID\u4e00\u89a7\u3001\u5931\u6557\u60c5\u5831\u4e00\u89a7\uff09",
         "operationId": "confirm_allocations_batch_api_allocations_confirm_batch_post",
         "requestBody": {
           "content": {
@@ -1631,7 +1631,7 @@
           "allocation-candidates"
         ],
         "summary": "Get Allocation Candidates",
-        "description": "候補ロット一覧取得（v2.5準拠）.\n\n指定された受注明細に対して、利用可能なロット候補を返却する（プレビューのみ、DB保存なし）。\n\nv2.5 Refactor:\n- forecast に含まれない商品でも、有効在庫があれば候補ロットを返す\n- v_lot_available_qty + v_order_line_context を使用\n\nArgs:\n    order_line_id: 対象の受注明細 ID（必須）\n    strategy: 引当戦略（デフォルト \"fefo\"、将来 \"fifo\" や \"custom\" 拡張を想定）\n    limit: 最大取得件数（デフォルト200）\n    db: データベースセッション\n\nReturns:\n    CandidateLotsResponse: 候補ロット一覧\n\nNote:\n    - available_quantity > 0 のみ返却\n    - ロック済み・期限切れは除外\n    - 並び順: expiry_date NULLS LAST, received_date, lot_id（FEFO戦略の場合）",
+        "description": "\u5019\u88dc\u30ed\u30c3\u30c8\u4e00\u89a7\u53d6\u5f97\uff08v2.5\u6e96\u62e0\uff09.\n\n\u6307\u5b9a\u3055\u308c\u305f\u53d7\u6ce8\u660e\u7d30\u306b\u5bfe\u3057\u3066\u3001\u5229\u7528\u53ef\u80fd\u306a\u30ed\u30c3\u30c8\u5019\u88dc\u3092\u8fd4\u5374\u3059\u308b\uff08\u30d7\u30ec\u30d3\u30e5\u30fc\u306e\u307f\u3001DB\u4fdd\u5b58\u306a\u3057\uff09\u3002\n\nv2.5 Refactor:\n- forecast \u306b\u542b\u307e\u308c\u306a\u3044\u5546\u54c1\u3067\u3082\u3001\u6709\u52b9\u5728\u5eab\u304c\u3042\u308c\u3070\u5019\u88dc\u30ed\u30c3\u30c8\u3092\u8fd4\u3059\n- v_lot_available_qty + v_order_line_context \u3092\u4f7f\u7528\n\nArgs:\n    order_line_id: \u5bfe\u8c61\u306e\u53d7\u6ce8\u660e\u7d30 ID\uff08\u5fc5\u9808\uff09\n    strategy: \u5f15\u5f53\u6226\u7565\uff08\u30c7\u30d5\u30a9\u30eb\u30c8 \"fefo\"\u3001\u5c06\u6765 \"fifo\" \u3084 \"custom\" \u62e1\u5f35\u3092\u60f3\u5b9a\uff09\n    limit: \u6700\u5927\u53d6\u5f97\u4ef6\u6570\uff08\u30c7\u30d5\u30a9\u30eb\u30c8200\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    CandidateLotsResponse: \u5019\u88dc\u30ed\u30c3\u30c8\u4e00\u89a7\n\nNote:\n    - available_quantity > 0 \u306e\u307f\u8fd4\u5374\n    - \u30ed\u30c3\u30af\u6e08\u307f\u30fb\u671f\u9650\u5207\u308c\u306f\u9664\u5916\n    - \u4e26\u3073\u9806: expiry_date NULLS LAST, received_date, lot_id\uff08FEFO\u6226\u7565\u306e\u5834\u5408\uff09",
         "operationId": "get_allocation_candidates_api_allocation_candidates_get",
         "parameters": [
           {
@@ -1694,7 +1694,7 @@
           "allocation-suggestions"
         ],
         "summary": "Preview Allocation Suggestions",
-        "description": "引当推奨の生成・プレビュー.\n\nMode:\n- forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）\n- order: 指定オーダー行に対して引当プレビュー（DB保存なし）",
+        "description": "\u5f15\u5f53\u63a8\u5968\u306e\u751f\u6210\u30fb\u30d7\u30ec\u30d3\u30e5\u30fc.\n\nMode:\n- forecast: \u6307\u5b9a\u671f\u9593\u306eForecast\u306b\u5bfe\u3057\u3066\u5f15\u5f53\u63a8\u5968\u3092\u4e00\u62ec\u518d\u751f\u6210\uff08DB\u4fdd\u5b58\u3042\u308a\uff09\n- order: \u6307\u5b9a\u30aa\u30fc\u30c0\u30fc\u884c\u306b\u5bfe\u3057\u3066\u5f15\u5f53\u30d7\u30ec\u30d3\u30e5\u30fc\uff08DB\u4fdd\u5b58\u306a\u3057\uff09",
         "operationId": "preview_allocation_suggestions_api_allocation_suggestions_preview_post",
         "requestBody": {
           "content": {
@@ -1736,7 +1736,7 @@
           "allocation-suggestions"
         ],
         "summary": "List Allocation Suggestions",
-        "description": "引当推奨一覧取得.",
+        "description": "\u5f15\u5f53\u63a8\u5968\u4e00\u89a7\u53d6\u5f97.",
         "operationId": "list_allocation_suggestions_api_allocation_suggestions_get",
         "parameters": [
           {
@@ -1746,11 +1746,11 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
-              "description": "スキップ件数",
+              "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570",
               "default": 0,
               "title": "Skip"
             },
-            "description": "スキップ件数"
+            "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570"
           },
           {
             "name": "limit",
@@ -1760,11 +1760,11 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
-              "description": "取得件数上限",
+              "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650",
               "default": 100,
               "title": "Limit"
             },
-            "description": "取得件数上限"
+            "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650"
           },
           {
             "name": "forecast_period",
@@ -1779,10 +1779,10 @@
                   "type": "null"
                 }
               ],
-              "description": "期間 (YYYY-MM)",
+              "description": "\u671f\u9593 (YYYY-MM)",
               "title": "Forecast Period"
             },
-            "description": "期間 (YYYY-MM)"
+            "description": "\u671f\u9593 (YYYY-MM)"
           },
           {
             "name": "product_id",
@@ -1797,10 +1797,10 @@
                   "type": "null"
                 }
               ],
-              "description": "製品ID",
+              "description": "\u88fd\u54c1ID",
               "title": "Product Id"
             },
-            "description": "製品ID"
+            "description": "\u88fd\u54c1ID"
           },
           {
             "name": "customer_id",
@@ -1815,10 +1815,10 @@
                   "type": "null"
                 }
               ],
-              "description": "得意先ID",
+              "description": "\u5f97\u610f\u5148ID",
               "title": "Customer Id"
             },
-            "description": "得意先ID"
+            "description": "\u5f97\u610f\u5148ID"
           }
         ],
         "responses": {
@@ -1851,7 +1851,7 @@
           "allocation-suggestions"
         ],
         "summary": "Get Allocation Suggestions By Group",
-        "description": "フォーキャストグループ別の計画引当サマリを取得.\n\nallocation_suggestions テーブルから該当グループのデータを集計して返す。",
+        "description": "\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u30b0\u30eb\u30fc\u30d7\u5225\u306e\u8a08\u753b\u5f15\u5f53\u30b5\u30de\u30ea\u3092\u53d6\u5f97.\n\nallocation_suggestions \u30c6\u30fc\u30d6\u30eb\u304b\u3089\u8a72\u5f53\u30b0\u30eb\u30fc\u30d7\u306e\u30c7\u30fc\u30bf\u3092\u96c6\u8a08\u3057\u3066\u8fd4\u3059\u3002",
         "operationId": "get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get",
         "parameters": [
           {
@@ -1860,10 +1860,10 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "description": "得意先ID",
+              "description": "\u5f97\u610f\u5148ID",
               "title": "Customer Id"
             },
-            "description": "得意先ID"
+            "description": "\u5f97\u610f\u5148ID"
           },
           {
             "name": "delivery_place_id",
@@ -1871,10 +1871,10 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "description": "納入先ID",
+              "description": "\u7d0d\u5165\u5148ID",
               "title": "Delivery Place Id"
             },
-            "description": "納入先ID"
+            "description": "\u7d0d\u5165\u5148ID"
           },
           {
             "name": "product_id",
@@ -1882,10 +1882,10 @@
             "required": true,
             "schema": {
               "type": "integer",
-              "description": "製品ID",
+              "description": "\u88fd\u54c1ID",
               "title": "Product Id"
             },
-            "description": "製品ID"
+            "description": "\u88fd\u54c1ID"
           },
           {
             "name": "forecast_period",
@@ -1900,10 +1900,10 @@
                   "type": "null"
                 }
               ],
-              "description": "期間 (YYYY-MM)",
+              "description": "\u671f\u9593 (YYYY-MM)",
               "title": "Forecast Period"
             },
-            "description": "期間 (YYYY-MM)"
+            "description": "\u671f\u9593 (YYYY-MM)"
           }
         ],
         "responses": {
@@ -1934,7 +1934,7 @@
           "warehouse-alloc"
         ],
         "summary": "List Warehouses",
-        "description": "配分対象の倉庫一覧（新しいwarehouseテーブル）を取得.",
+        "description": "\u914d\u5206\u5bfe\u8c61\u306e\u5009\u5eab\u4e00\u89a7\uff08\u65b0\u3057\u3044warehouse\u30c6\u30fc\u30d6\u30eb\uff09\u3092\u53d6\u5f97.",
         "operationId": "list_warehouses_api_warehouse_alloc_warehouses_get",
         "responses": {
           "200": {
@@ -1956,7 +1956,7 @@
           "forecasts"
         ],
         "summary": "List Forecasts",
-        "description": "フォーキャスト一覧取得（顧客×納入先×製品でグループ化）.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    グループ化されたフォーキャストリスト",
+        "description": "\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u4e00\u89a7\u53d6\u5f97\uff08\u9867\u5ba2\u00d7\u7d0d\u5165\u5148\u00d7\u88fd\u54c1\u3067\u30b0\u30eb\u30fc\u30d7\u5316\uff09.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\uff08\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3\u7528\uff09\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    customer_id: \u5f97\u610f\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf\n    delivery_place_id: \u7d0d\u5165\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf\n    product_id: \u88fd\u54c1ID\u3067\u30d5\u30a3\u30eb\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30b0\u30eb\u30fc\u30d7\u5316\u3055\u308c\u305f\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u30ea\u30b9\u30c8",
         "operationId": "list_forecasts_api_forecasts_get",
         "parameters": [
           {
@@ -2059,7 +2059,7 @@
           "forecasts"
         ],
         "summary": "Create Forecast",
-        "description": "フォーキャスト作成.\n\nArgs:\n    data: フォーキャスト作成データ\n    db: データベースセッション\n\nReturns:\n    作成されたフォーキャスト",
+        "description": "\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u4f5c\u6210.\n\nArgs:\n    data: \u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u4f5c\u6210\u30c7\u30fc\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u4f5c\u6210\u3055\u308c\u305f\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8",
         "operationId": "create_forecast_api_forecasts_post",
         "requestBody": {
           "required": true,
@@ -2101,7 +2101,7 @@
           "forecasts"
         ],
         "summary": "List Forecast History",
-        "description": "フォーキャスト履歴取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    delivery_place_id: 納入先IDでフィルタ\n    product_id: 製品IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    アーカイブ済みフォーキャストリスト",
+        "description": "\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u5c65\u6b74\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    customer_id: \u5f97\u610f\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf\n    delivery_place_id: \u7d0d\u5165\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf\n    product_id: \u88fd\u54c1ID\u3067\u30d5\u30a3\u30eb\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30a2\u30fc\u30ab\u30a4\u30d6\u6e08\u307f\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u30ea\u30b9\u30c8",
         "operationId": "list_forecast_history_api_forecasts_history_get",
         "parameters": [
           {
@@ -2210,7 +2210,7 @@
           "forecasts"
         ],
         "summary": "Get Forecast",
-        "description": "フォーキャスト詳細取得.\n\nArgs:\n    forecast_id: フォーキャストID\n    db: データベースセッション\n\nReturns:\n    フォーキャスト\n\nRaises:\n    HTTPException: 見つからない場合は404",
+        "description": "\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u8a73\u7d30\u53d6\u5f97.\n\nArgs:\n    forecast_id: \u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\n\nRaises:\n    HTTPException: \u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "get_forecast_api_forecasts__forecast_id__get",
         "parameters": [
           {
@@ -2251,7 +2251,7 @@
           "forecasts"
         ],
         "summary": "Update Forecast",
-        "description": "フォーキャスト更新.\n\nArgs:\n    forecast_id: フォーキャストID\n    data: 更新データ\n    db: データベースセッション\n\nReturns:\n    更新後のフォーキャスト\n\nRaises:\n    HTTPException: 見つからない場合は404",
+        "description": "\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u66f4\u65b0.\n\nArgs:\n    forecast_id: \u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8ID\n    data: \u66f4\u65b0\u30c7\u30fc\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u66f4\u65b0\u5f8c\u306e\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\n\nRaises:\n    HTTPException: \u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "update_forecast_api_forecasts__forecast_id__put",
         "parameters": [
           {
@@ -2302,7 +2302,7 @@
           "forecasts"
         ],
         "summary": "Delete Forecast",
-        "description": "フォーキャスト削除.\n\nArgs:\n    forecast_id: フォーキャストID\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: 見つからない場合は404",
+        "description": "\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u524a\u9664.\n\nArgs:\n    forecast_id: \u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    None\n\nRaises:\n    HTTPException: \u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "delete_forecast_api_forecasts__forecast_id__delete",
         "parameters": [
           {
@@ -2338,7 +2338,7 @@
           "forecasts"
         ],
         "summary": "Bulk Import Forecasts",
-        "description": "フォーキャスト一括インポート.\n\nCSVデータからフォーキャストを一括登録します。\nreplace_existing=True の場合、同じ顧客×納入先×製品の既存データを\n履歴テーブルにアーカイブしてから新データを登録します。\n\nArgs:\n    request: インポートリクエスト（items + replace_existing）\n    db: データベースセッション\n\nReturns:\n    インポート結果サマリ",
+        "description": "\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u4e00\u62ec\u30a4\u30f3\u30dd\u30fc\u30c8.\n\nCSV\u30c7\u30fc\u30bf\u304b\u3089\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u3092\u4e00\u62ec\u767b\u9332\u3057\u307e\u3059\u3002\nreplace_existing=True \u306e\u5834\u5408\u3001\u540c\u3058\u9867\u5ba2\u00d7\u7d0d\u5165\u5148\u00d7\u88fd\u54c1\u306e\u65e2\u5b58\u30c7\u30fc\u30bf\u3092\n\u5c65\u6b74\u30c6\u30fc\u30d6\u30eb\u306b\u30a2\u30fc\u30ab\u30a4\u30d6\u3057\u3066\u304b\u3089\u65b0\u30c7\u30fc\u30bf\u3092\u767b\u9332\u3057\u307e\u3059\u3002\n\nArgs:\n    request: \u30a4\u30f3\u30dd\u30fc\u30c8\u30ea\u30af\u30a8\u30b9\u30c8\uff08items + replace_existing\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30a4\u30f3\u30dd\u30fc\u30c8\u7d50\u679c\u30b5\u30de\u30ea",
         "operationId": "bulk_import_forecasts_api_forecasts_bulk_import_post",
         "requestBody": {
           "content": {
@@ -2502,7 +2502,7 @@
           "inbound-plans"
         ],
         "summary": "List Inbound Plans",
-        "description": "入荷予定一覧取得.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    supplier_id: 仕入先IDでフィルタ\n    product_id: 商品IDでフィルタ\n    status: ステータスでフィルタ（planned/partially_received/received/cancelled）\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nReturns:\n    入荷予定リスト",
+        "description": "\u5165\u8377\u4e88\u5b9a\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\uff08\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3\u7528\uff09\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    supplier_id: \u4ed5\u5165\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf\n    product_id: \u5546\u54c1ID\u3067\u30d5\u30a3\u30eb\u30bf\n    status: \u30b9\u30c6\u30fc\u30bf\u30b9\u3067\u30d5\u30a3\u30eb\u30bf\uff08planned/partially_received/received/cancelled\uff09\n    prioritize_primary: \u4e3b\u62c5\u5f53\u306e\u4ed5\u5165\u5148\u3092\u512a\u5148\u8868\u793a\u3059\u308b\u304b\u3069\u3046\u304b\uff08\u30c7\u30d5\u30a9\u30eb\u30c8: True\uff09\n    current_user: \u73fe\u5728\u306e\u30ed\u30b0\u30a4\u30f3\u30e6\u30fc\u30b6\u30fc\uff08\u4e3b\u62c5\u5f53\u4ed5\u5165\u5148\u53d6\u5f97\u306b\u4f7f\u7528\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5165\u8377\u4e88\u5b9a\u30ea\u30b9\u30c8",
         "operationId": "list_inbound_plans_api_inbound_plans_get",
         "security": [
           {
@@ -2620,7 +2620,7 @@
           "inbound-plans"
         ],
         "summary": "Create Inbound Plan",
-        "description": "入荷予定登録（明細も同時登録可能）.\n\nArgs:\n    plan: 入荷予定作成データ（明細含む）\n    db: データベースセッション\n\nReturns:\n    作成された入荷予定（明細含む）",
+        "description": "\u5165\u8377\u4e88\u5b9a\u767b\u9332\uff08\u660e\u7d30\u3082\u540c\u6642\u767b\u9332\u53ef\u80fd\uff09.\n\nArgs:\n    plan: \u5165\u8377\u4e88\u5b9a\u4f5c\u6210\u30c7\u30fc\u30bf\uff08\u660e\u7d30\u542b\u3080\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u4f5c\u6210\u3055\u308c\u305f\u5165\u8377\u4e88\u5b9a\uff08\u660e\u7d30\u542b\u3080\uff09",
         "operationId": "create_inbound_plan_api_inbound_plans_post",
         "requestBody": {
           "required": true,
@@ -2662,7 +2662,7 @@
           "inbound-plans"
         ],
         "summary": "Sync From Sap",
-        "description": "SAP から発注データを取得して入荷予定を作成.\n\nSAP の発注データ（モック）を取得し、入荷予定（InboundPlan）として\nシステムに登録します。既に存在する発注番号はスキップされます。\n\nArgs:\n    request: SAP同期リクエスト（現在パラメータなし）\n    db: データベースセッション\n\nReturns:\n    SAP同期結果（作成された入荷予定リスト、スキップ数）\n\nNote:\n    現在はモック実装です。本番環境では実際のSAP RFC/APIに接続します。",
+        "description": "SAP \u304b\u3089\u767a\u6ce8\u30c7\u30fc\u30bf\u3092\u53d6\u5f97\u3057\u3066\u5165\u8377\u4e88\u5b9a\u3092\u4f5c\u6210.\n\nSAP \u306e\u767a\u6ce8\u30c7\u30fc\u30bf\uff08\u30e2\u30c3\u30af\uff09\u3092\u53d6\u5f97\u3057\u3001\u5165\u8377\u4e88\u5b9a\uff08InboundPlan\uff09\u3068\u3057\u3066\n\u30b7\u30b9\u30c6\u30e0\u306b\u767b\u9332\u3057\u307e\u3059\u3002\u65e2\u306b\u5b58\u5728\u3059\u308b\u767a\u6ce8\u756a\u53f7\u306f\u30b9\u30ad\u30c3\u30d7\u3055\u308c\u307e\u3059\u3002\n\nArgs:\n    request: SAP\u540c\u671f\u30ea\u30af\u30a8\u30b9\u30c8\uff08\u73fe\u5728\u30d1\u30e9\u30e1\u30fc\u30bf\u306a\u3057\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    SAP\u540c\u671f\u7d50\u679c\uff08\u4f5c\u6210\u3055\u308c\u305f\u5165\u8377\u4e88\u5b9a\u30ea\u30b9\u30c8\u3001\u30b9\u30ad\u30c3\u30d7\u6570\uff09\n\nNote:\n    \u73fe\u5728\u306f\u30e2\u30c3\u30af\u5b9f\u88c5\u3067\u3059\u3002\u672c\u756a\u74b0\u5883\u3067\u306f\u5b9f\u969b\u306eSAP RFC/API\u306b\u63a5\u7d9a\u3057\u307e\u3059\u3002",
         "operationId": "sync_from_sap_api_inbound_plans_sync_from_sap_post",
         "requestBody": {
           "content": {
@@ -2704,7 +2704,7 @@
           "inbound-plans"
         ],
         "summary": "Get Inbound Plan",
-        "description": "入荷予定詳細取得（明細含む）.\n\nArgs:\n    plan_id: 入荷予定ID\n    db: データベースセッション\n\nReturns:\n    入荷予定（明細含む）\n\nRaises:\n    HTTPException: 入荷予定が見つからない場合は404",
+        "description": "\u5165\u8377\u4e88\u5b9a\u8a73\u7d30\u53d6\u5f97\uff08\u660e\u7d30\u542b\u3080\uff09.\n\nArgs:\n    plan_id: \u5165\u8377\u4e88\u5b9aID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5165\u8377\u4e88\u5b9a\uff08\u660e\u7d30\u542b\u3080\uff09\n\nRaises:\n    HTTPException: \u5165\u8377\u4e88\u5b9a\u304c\u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "get_inbound_plan_api_inbound_plans__plan_id__get",
         "parameters": [
           {
@@ -2745,7 +2745,7 @@
           "inbound-plans"
         ],
         "summary": "Update Inbound Plan",
-        "description": "入荷予定更新.\n\nArgs:\n    plan_id: 入荷予定ID\n    plan: 更新データ\n    db: データベースセッション\n\nReturns:\n    更新後の入荷予定\n\nRaises:\n    HTTPException: 入荷予定が見つからない場合は404",
+        "description": "\u5165\u8377\u4e88\u5b9a\u66f4\u65b0.\n\nArgs:\n    plan_id: \u5165\u8377\u4e88\u5b9aID\n    plan: \u66f4\u65b0\u30c7\u30fc\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u66f4\u65b0\u5f8c\u306e\u5165\u8377\u4e88\u5b9a\n\nRaises:\n    HTTPException: \u5165\u8377\u4e88\u5b9a\u304c\u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "update_inbound_plan_api_inbound_plans__plan_id__put",
         "parameters": [
           {
@@ -2796,7 +2796,7 @@
           "inbound-plans"
         ],
         "summary": "Delete Inbound Plan",
-        "description": "入荷予定削除（カスケード削除：明細も削除される）.\n\nArgs:\n    plan_id: 入荷予定ID\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: 入荷予定が見つからない場合は404",
+        "description": "\u5165\u8377\u4e88\u5b9a\u524a\u9664\uff08\u30ab\u30b9\u30b1\u30fc\u30c9\u524a\u9664\uff1a\u660e\u7d30\u3082\u524a\u9664\u3055\u308c\u308b\uff09.\n\nArgs:\n    plan_id: \u5165\u8377\u4e88\u5b9aID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    None\n\nRaises:\n    HTTPException: \u5165\u8377\u4e88\u5b9a\u304c\u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "delete_inbound_plan_api_inbound_plans__plan_id__delete",
         "parameters": [
           {
@@ -2832,7 +2832,7 @@
           "inbound-plans"
         ],
         "summary": "List Inbound Plan Lines",
-        "description": "入荷予定明細一覧取得.\n\nArgs:\n    plan_id: 入荷予定ID\n    db: データベースセッション\n\nReturns:\n    入荷予定明細のリスト",
+        "description": "\u5165\u8377\u4e88\u5b9a\u660e\u7d30\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    plan_id: \u5165\u8377\u4e88\u5b9aID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5165\u8377\u4e88\u5b9a\u660e\u7d30\u306e\u30ea\u30b9\u30c8",
         "operationId": "list_inbound_plan_lines_api_inbound_plans__plan_id__lines_get",
         "parameters": [
           {
@@ -2877,7 +2877,7 @@
           "inbound-plans"
         ],
         "summary": "Create Inbound Plan Line",
-        "description": "入荷予定明細追加.\n\nArgs:\n    plan_id: 入荷予定ID\n    line: 明細作成データ\n    db: データベースセッション\n\nReturns:\n    作成された明細\n\nRaises:\n    HTTPException: 入荷予定が見つからない場合は404",
+        "description": "\u5165\u8377\u4e88\u5b9a\u660e\u7d30\u8ffd\u52a0.\n\nArgs:\n    plan_id: \u5165\u8377\u4e88\u5b9aID\n    line: \u660e\u7d30\u4f5c\u6210\u30c7\u30fc\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u4f5c\u6210\u3055\u308c\u305f\u660e\u7d30\n\nRaises:\n    HTTPException: \u5165\u8377\u4e88\u5b9a\u304c\u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "create_inbound_plan_line_api_inbound_plans__plan_id__lines_post",
         "parameters": [
           {
@@ -2930,7 +2930,7 @@
           "inbound-plans"
         ],
         "summary": "Receive Inbound Plan",
-        "description": "入荷実績登録（ロット自動生成）.\n\nArgs:\n    plan_id: 入荷予定ID\n    request: 入荷実績データ\n    db: データベースセッション\n\nReturns:\n    入荷実績登録結果（生成されたロットIDリスト）\n\nRaises:\n    HTTPException: 入荷予定が見つからない場合は404",
+        "description": "\u5165\u8377\u5b9f\u7e3e\u767b\u9332\uff08\u30ed\u30c3\u30c8\u81ea\u52d5\u751f\u6210\uff09.\n\nArgs:\n    plan_id: \u5165\u8377\u4e88\u5b9aID\n    request: \u5165\u8377\u5b9f\u7e3e\u30c7\u30fc\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5165\u8377\u5b9f\u7e3e\u767b\u9332\u7d50\u679c\uff08\u751f\u6210\u3055\u308c\u305f\u30ed\u30c3\u30c8ID\u30ea\u30b9\u30c8\uff09\n\nRaises:\n    HTTPException: \u5165\u8377\u4e88\u5b9a\u304c\u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "receive_inbound_plan_api_inbound_plans__plan_id__receive_post",
         "parameters": [
           {
@@ -2983,7 +2983,7 @@
           "adjustments"
         ],
         "summary": "Create Adjustment",
-        "description": "在庫調整登録.\n\nArgs:\n    adjustment: 在庫調整データ\n    db: データベースセッション\n\nReturns:\n    作成された在庫調整レコード\n\nNote:\n    - ロットの current_quantity を更新\n    - stock_history に履歴を記録",
+        "description": "\u5728\u5eab\u8abf\u6574\u767b\u9332.\n\nArgs:\n    adjustment: \u5728\u5eab\u8abf\u6574\u30c7\u30fc\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u4f5c\u6210\u3055\u308c\u305f\u5728\u5eab\u8abf\u6574\u30ec\u30b3\u30fc\u30c9\n\nNote:\n    - \u30ed\u30c3\u30c8\u306e current_quantity \u3092\u66f4\u65b0\n    - stock_history \u306b\u5c65\u6b74\u3092\u8a18\u9332",
         "operationId": "create_adjustment_api_adjustments_post",
         "requestBody": {
           "required": true,
@@ -3023,7 +3023,7 @@
           "adjustments"
         ],
         "summary": "List Adjustments",
-        "description": "在庫調整履歴取得.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    adjustment_type: 調整タイプでフィルタ\n    db: データベースセッション\n\nReturns:\n    在庫調整レコードのリスト",
+        "description": "\u5728\u5eab\u8abf\u6574\u5c65\u6b74\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\uff08\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3\u7528\uff09\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    lot_id: \u30ed\u30c3\u30c8ID\u3067\u30d5\u30a3\u30eb\u30bf\n    adjustment_type: \u8abf\u6574\u30bf\u30a4\u30d7\u3067\u30d5\u30a3\u30eb\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5728\u5eab\u8abf\u6574\u30ec\u30b3\u30fc\u30c9\u306e\u30ea\u30b9\u30c8",
         "operationId": "list_adjustments_api_adjustments_get",
         "parameters": [
           {
@@ -3116,7 +3116,7 @@
           "adjustments"
         ],
         "summary": "Get Adjustment",
-        "description": "在庫調整詳細取得.\n\nArgs:\n    adjustment_id: 在庫調整ID\n    db: データベースセッション\n\nReturns:\n    在庫調整レコード\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
+        "description": "\u5728\u5eab\u8abf\u6574\u8a73\u7d30\u53d6\u5f97.\n\nArgs:\n    adjustment_id: \u5728\u5eab\u8abf\u6574ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5728\u5eab\u8abf\u6574\u30ec\u30b3\u30fc\u30c9\n\nRaises:\n    HTTPException: \u30ec\u30b3\u30fc\u30c9\u304c\u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "get_adjustment_api_adjustments__adjustment_id__get",
         "parameters": [
           {
@@ -3159,7 +3159,7 @@
           "inventory-items"
         ],
         "summary": "List Inventory Items",
-        "description": "在庫サマリ一覧取得.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    product_id: 製品IDでフィルタ\n    warehouse_id: 倉庫IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    在庫サマリのリスト",
+        "description": "\u5728\u5eab\u30b5\u30de\u30ea\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\uff08\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3\u7528\uff09\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    product_id: \u88fd\u54c1ID\u3067\u30d5\u30a3\u30eb\u30bf\n    warehouse_id: \u5009\u5eabID\u3067\u30d5\u30a3\u30eb\u30bf\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5728\u5eab\u30b5\u30de\u30ea\u306e\u30ea\u30b9\u30c8",
         "operationId": "list_inventory_items_api_inventory_items_get",
         "parameters": [
           {
@@ -3252,7 +3252,7 @@
           "inventory-items"
         ],
         "summary": "Get Inventory Item",
-        "description": "在庫サマリ詳細取得（製品ID + 倉庫ID単位）.\n\nArgs:\n    product_id: 製品ID\n    warehouse_id: 倉庫ID\n    db: データベースセッション\n\nReturns:\n    在庫サマリ\n\nRaises:\n    HTTPException: 在庫サマリが見つからない場合は404",
+        "description": "\u5728\u5eab\u30b5\u30de\u30ea\u8a73\u7d30\u53d6\u5f97\uff08\u88fd\u54c1ID + \u5009\u5eabID\u5358\u4f4d\uff09.\n\nArgs:\n    product_id: \u88fd\u54c1ID\n    warehouse_id: \u5009\u5eabID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5728\u5eab\u30b5\u30de\u30ea\n\nRaises:\n    HTTPException: \u5728\u5eab\u30b5\u30de\u30ea\u304c\u898b\u3064\u304b\u3089\u306a\u3044\u5834\u5408\u306f404",
         "operationId": "get_inventory_item_api_inventory_items__product_id___warehouse_id__get",
         "parameters": [
           {
@@ -3304,7 +3304,7 @@
           "inventory-items"
         ],
         "summary": "List Inventory By Supplier",
-        "description": "在庫サマリ（仕入先別集計）取得.\n\nReturns:\n    仕入先ごとの在庫集計リスト",
+        "description": "\u5728\u5eab\u30b5\u30de\u30ea\uff08\u4ed5\u5165\u5148\u5225\u96c6\u8a08\uff09\u53d6\u5f97.\n\nReturns:\n    \u4ed5\u5165\u5148\u3054\u3068\u306e\u5728\u5eab\u96c6\u8a08\u30ea\u30b9\u30c8",
         "operationId": "list_inventory_by_supplier_api_inventory_items_by_supplier_get",
         "security": [
           {
@@ -3357,7 +3357,7 @@
           "inventory-items"
         ],
         "summary": "List Inventory By Warehouse",
-        "description": "在庫サマリ（倉庫別集計）取得.\n\nReturns:\n    倉庫ごとの在庫集計リスト",
+        "description": "\u5728\u5eab\u30b5\u30de\u30ea\uff08\u5009\u5eab\u5225\u96c6\u8a08\uff09\u53d6\u5f97.\n\nReturns:\n    \u5009\u5eab\u3054\u3068\u306e\u5728\u5eab\u96c6\u8a08\u30ea\u30b9\u30c8",
         "operationId": "list_inventory_by_warehouse_api_inventory_items_by_warehouse_get",
         "responses": {
           "200": {
@@ -3383,7 +3383,7 @@
           "inventory-items"
         ],
         "summary": "List Inventory By Product",
-        "description": "在庫サマリ（製品別集計）取得.\n\nReturns:\n    製品ごとの在庫集計リスト（全倉庫合計）",
+        "description": "\u5728\u5eab\u30b5\u30de\u30ea\uff08\u88fd\u54c1\u5225\u96c6\u8a08\uff09\u53d6\u5f97.\n\nReturns:\n    \u88fd\u54c1\u3054\u3068\u306e\u5728\u5eab\u96c6\u8a08\u30ea\u30b9\u30c8\uff08\u5168\u5009\u5eab\u5408\u8a08\uff09",
         "operationId": "list_inventory_by_product_api_inventory_items_by_product_get",
         "responses": {
           "200": {
@@ -4552,7 +4552,7 @@
           "masters"
         ],
         "summary": "List Supplier Products",
-        "description": "Get supplier products (仕入先商品一覧).\n\nCustomerItem テーブルから supplier_id が NOT NULL のレコードを取得。",
+        "description": "Get supplier products (\u4ed5\u5165\u5148\u5546\u54c1\u4e00\u89a7).\n\nCustomerItem \u30c6\u30fc\u30d6\u30eb\u304b\u3089 supplier_id \u304c NOT NULL \u306e\u30ec\u30b3\u30fc\u30c9\u3092\u53d6\u5f97\u3002",
         "operationId": "list_supplier_products_api_masters_supplier_products_get",
         "parameters": [
           {
@@ -4665,7 +4665,7 @@
           "masters"
         ],
         "summary": "List Uom Conversions",
-        "description": "Get UOM conversions (単位換算一覧).",
+        "description": "Get UOM conversions (\u5358\u4f4d\u63db\u7b97\u4e00\u89a7).",
         "operationId": "list_uom_conversions_api_masters_uom_conversions_get",
         "parameters": [
           {
@@ -5269,7 +5269,7 @@
           "customer-items"
         ],
         "summary": "List Customer Items",
-        "description": "得意先品番マッピング一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    product_id: 製品IDでフィルタ（オプション）\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
+        "description": "\u5f97\u610f\u5148\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    customer_id: \u5f97\u610f\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    product_id: \u88fd\u54c1ID\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5f97\u610f\u5148\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u306e\u30ea\u30b9\u30c8",
         "operationId": "list_customer_items_api_masters_customer_items_get",
         "parameters": [
           {
@@ -5308,10 +5308,10 @@
                   "type": "null"
                 }
               ],
-              "description": "得意先IDでフィルタ",
+              "description": "\u5f97\u610f\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Customer Id"
             },
-            "description": "得意先IDでフィルタ"
+            "description": "\u5f97\u610f\u5148ID\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "product_id",
@@ -5326,10 +5326,10 @@
                   "type": "null"
                 }
               ],
-              "description": "製品IDでフィルタ",
+              "description": "\u88fd\u54c1ID\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Product Id"
             },
-            "description": "製品IDでフィルタ"
+            "description": "\u88fd\u54c1ID\u3067\u30d5\u30a3\u30eb\u30bf"
           }
         ],
         "responses": {
@@ -5364,7 +5364,7 @@
           "customer-items"
         ],
         "summary": "Create Customer Item",
-        "description": "得意先品番マッピング登録.\n\nArgs:\n    item: 登録する品番マッピング情報\n    db: データベースセッション\n\nReturns:\n    登録された品番マッピング\n\nRaises:\n    HTTPException: 既に同じマッピングが存在する場合",
+        "description": "\u5f97\u610f\u5148\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u767b\u9332.\n\nArgs:\n    item: \u767b\u9332\u3059\u308b\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u767b\u9332\u3055\u308c\u305f\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\n\nRaises:\n    HTTPException: \u65e2\u306b\u540c\u3058\u30de\u30c3\u30d4\u30f3\u30b0\u304c\u5b58\u5728\u3059\u308b\u5834\u5408",
         "operationId": "create_customer_item_api_masters_customer_items_post",
         "requestBody": {
           "required": true,
@@ -5406,7 +5406,7 @@
           "customer-items"
         ],
         "summary": "List Customer Items By Customer",
-        "description": "特定得意先の品番マッピング一覧取得.\n\nArgs:\n    customer_id: 得意先ID\n    db: データベースセッション\n\nReturns:\n    該当得意先の品番マッピングリスト",
+        "description": "\u7279\u5b9a\u5f97\u610f\u5148\u306e\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    customer_id: \u5f97\u610f\u5148ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u8a72\u5f53\u5f97\u610f\u5148\u306e\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u30ea\u30b9\u30c8",
         "operationId": "list_customer_items_by_customer_api_masters_customer_items__customer_id__get",
         "parameters": [
           {
@@ -5453,7 +5453,7 @@
           "customer-items"
         ],
         "summary": "Update Customer Item",
-        "description": "得意先品番マッピング更新.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    item: 更新する品番マッピング情報\n    db: データベースセッション\n\nReturns:\n    更新された品番マッピング\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "description": "\u5f97\u610f\u5148\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u66f4\u65b0.\n\nArgs:\n    customer_id: \u5f97\u610f\u5148ID\n    external_product_code: \u5f97\u610f\u5148\u54c1\u756a\n    item: \u66f4\u65b0\u3059\u308b\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u66f4\u65b0\u3055\u308c\u305f\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\n\nRaises:\n    HTTPException: \u30de\u30c3\u30d4\u30f3\u30b0\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "update_customer_item_api_masters_customer_items__customer_id___external_product_code__put",
         "parameters": [
           {
@@ -5513,7 +5513,7 @@
           "customer-items"
         ],
         "summary": "Delete Customer Item",
-        "description": "得意先品番マッピング削除.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "description": "\u5f97\u610f\u5148\u54c1\u756a\u30de\u30c3\u30d4\u30f3\u30b0\u524a\u9664.\n\nArgs:\n    customer_id: \u5f97\u610f\u5148ID\n    external_product_code: \u5f97\u610f\u5148\u54c1\u756a\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nRaises:\n    HTTPException: \u30de\u30c3\u30d4\u30f3\u30b0\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete",
         "parameters": [
           {
@@ -5686,7 +5686,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__schemas__auth__auth_schemas__UserResponse"
+                  "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
                 }
               }
             }
@@ -5797,7 +5797,7 @@
           "users"
         ],
         "summary": "List Users",
-        "description": "ユーザー一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    is_active: 有効フラグでフィルタ（オプション）\n    db: データベースセッション\n\nReturns:\n    ユーザーのリスト",
+        "description": "\u30e6\u30fc\u30b6\u30fc\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    is_active: \u6709\u52b9\u30d5\u30e9\u30b0\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30e6\u30fc\u30b6\u30fc\u306e\u30ea\u30b9\u30c8",
         "operationId": "list_users_api_users_get",
         "parameters": [
           {
@@ -5836,10 +5836,10 @@
                   "type": "null"
                 }
               ],
-              "description": "有効フラグでフィルタ",
+              "description": "\u6709\u52b9\u30d5\u30e9\u30b0\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Is Active"
             },
-            "description": "有効フラグでフィルタ"
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0\u3067\u30d5\u30a3\u30eb\u30bf"
           }
         ],
         "responses": {
@@ -5850,7 +5850,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/app__schemas__system__users_schema__UserResponse"
+                    "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
                   },
                   "title": "Response List Users Api Users Get"
                 }
@@ -5874,7 +5874,7 @@
           "users"
         ],
         "summary": "Create User",
-        "description": "ユーザー作成.\n\nArgs:\n    user: 作成するユーザー情報\n    db: データベースセッション\n\nReturns:\n    作成されたユーザー\n\nRaises:\n    HTTPException: ユーザー名またはメールアドレスが既に存在する場合",
+        "description": "\u30e6\u30fc\u30b6\u30fc\u4f5c\u6210.\n\nArgs:\n    user: \u4f5c\u6210\u3059\u308b\u30e6\u30fc\u30b6\u30fc\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u4f5c\u6210\u3055\u308c\u305f\u30e6\u30fc\u30b6\u30fc\n\nRaises:\n    HTTPException: \u30e6\u30fc\u30b6\u30fc\u540d\u307e\u305f\u306f\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9\u304c\u65e2\u306b\u5b58\u5728\u3059\u308b\u5834\u5408",
         "operationId": "create_user_api_users_post",
         "requestBody": {
           "required": true,
@@ -5892,7 +5892,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__schemas__system__users_schema__UserResponse"
+                  "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
                 }
               }
             }
@@ -5916,7 +5916,7 @@
           "users"
         ],
         "summary": "Get User",
-        "description": "ユーザー詳細取得.\n\nArgs:\n    user_id: ユーザーID\n    db: データベースセッション\n\nReturns:\n    ユーザー詳細（ロール情報含む）\n\nRaises:\n    HTTPException: ユーザーが存在しない場合",
+        "description": "\u30e6\u30fc\u30b6\u30fc\u8a73\u7d30\u53d6\u5f97.\n\nArgs:\n    user_id: \u30e6\u30fc\u30b6\u30fcID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30e6\u30fc\u30b6\u30fc\u8a73\u7d30\uff08\u30ed\u30fc\u30eb\u60c5\u5831\u542b\u3080\uff09\n\nRaises:\n    HTTPException: \u30e6\u30fc\u30b6\u30fc\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "get_user_api_users__user_id__get",
         "parameters": [
           {
@@ -5957,7 +5957,7 @@
           "users"
         ],
         "summary": "Update User",
-        "description": "ユーザー更新.\n\nArgs:\n    user_id: ユーザーID\n    user: 更新するユーザー情報\n    db: データベースセッション\n\nReturns:\n    更新されたユーザー\n\nRaises:\n    HTTPException: ユーザーが存在しない場合",
+        "description": "\u30e6\u30fc\u30b6\u30fc\u66f4\u65b0.\n\nArgs:\n    user_id: \u30e6\u30fc\u30b6\u30fcID\n    user: \u66f4\u65b0\u3059\u308b\u30e6\u30fc\u30b6\u30fc\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u66f4\u65b0\u3055\u308c\u305f\u30e6\u30fc\u30b6\u30fc\n\nRaises:\n    HTTPException: \u30e6\u30fc\u30b6\u30fc\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "update_user_api_users__user_id__put",
         "parameters": [
           {
@@ -5986,7 +5986,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__schemas__system__users_schema__UserResponse"
+                  "$ref": "#/components/schemas/app__presentation__schemas__system__users_schema__UserResponse"
                 }
               }
             }
@@ -6008,7 +6008,7 @@
           "users"
         ],
         "summary": "Delete User",
-        "description": "ユーザー削除.\n\nArgs:\n    user_id: ユーザーID\n    db: データベースセッション\n\nRaises:\n    HTTPException: ユーザーが存在しない場合",
+        "description": "\u30e6\u30fc\u30b6\u30fc\u524a\u9664.\n\nArgs:\n    user_id: \u30e6\u30fc\u30b6\u30fcID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nRaises:\n    HTTPException: \u30e6\u30fc\u30b6\u30fc\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "delete_user_api_users__user_id__delete",
         "parameters": [
           {
@@ -6044,7 +6044,7 @@
           "users"
         ],
         "summary": "Assign User Roles",
-        "description": "ユーザーへのロール割当.\n\nArgs:\n    user_id: ユーザーID\n    assignment: 割り当てるロールID\n    db: データベースセッション\n\nReturns:\n    ロール割り当て後のユーザー情報\n\nRaises:\n    HTTPException: ユーザーが存在しない場合",
+        "description": "\u30e6\u30fc\u30b6\u30fc\u3078\u306e\u30ed\u30fc\u30eb\u5272\u5f53.\n\nArgs:\n    user_id: \u30e6\u30fc\u30b6\u30fcID\n    assignment: \u5272\u308a\u5f53\u3066\u308b\u30ed\u30fc\u30ebID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30ed\u30fc\u30eb\u5272\u308a\u5f53\u3066\u5f8c\u306e\u30e6\u30fc\u30b6\u30fc\u60c5\u5831\n\nRaises:\n    HTTPException: \u30e6\u30fc\u30b6\u30fc\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "assign_user_roles_api_users__user_id__roles_patch",
         "parameters": [
           {
@@ -6139,7 +6139,7 @@
           "roles"
         ],
         "summary": "List Roles",
-        "description": "ロール一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    db: データベースセッション\n\nReturns:\n    ロールのリスト",
+        "description": "\u30ed\u30fc\u30eb\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30ed\u30fc\u30eb\u306e\u30ea\u30b9\u30c8",
         "operationId": "list_roles_api_roles_get",
         "parameters": [
           {
@@ -6198,7 +6198,7 @@
           "roles"
         ],
         "summary": "Create Role",
-        "description": "ロール作成.\n\nArgs:\n    role: 作成するロール情報\n    db: データベースセッション\n\nReturns:\n    作成されたロール\n\nRaises:\n    HTTPException: ロールコードが既に存在する場合",
+        "description": "\u30ed\u30fc\u30eb\u4f5c\u6210.\n\nArgs:\n    role: \u4f5c\u6210\u3059\u308b\u30ed\u30fc\u30eb\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u4f5c\u6210\u3055\u308c\u305f\u30ed\u30fc\u30eb\n\nRaises:\n    HTTPException: \u30ed\u30fc\u30eb\u30b3\u30fc\u30c9\u304c\u65e2\u306b\u5b58\u5728\u3059\u308b\u5834\u5408",
         "operationId": "create_role_api_roles_post",
         "requestBody": {
           "required": true,
@@ -6240,7 +6240,7 @@
           "roles"
         ],
         "summary": "Get Role",
-        "description": "ロール詳細取得.\n\nArgs:\n    role_id: ロールID\n    db: データベースセッション\n\nReturns:\n    ロール詳細\n\nRaises:\n    HTTPException: ロールが存在しない場合",
+        "description": "\u30ed\u30fc\u30eb\u8a73\u7d30\u53d6\u5f97.\n\nArgs:\n    role_id: \u30ed\u30fc\u30ebID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30ed\u30fc\u30eb\u8a73\u7d30\n\nRaises:\n    HTTPException: \u30ed\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "get_role_api_roles__role_id__get",
         "parameters": [
           {
@@ -6281,7 +6281,7 @@
           "roles"
         ],
         "summary": "Update Role",
-        "description": "ロール更新.\n\nArgs:\n    role_id: ロールID\n    role: 更新するロール情報\n    db: データベースセッション\n\nReturns:\n    更新されたロール\n\nRaises:\n    HTTPException: ロールが存在しない場合",
+        "description": "\u30ed\u30fc\u30eb\u66f4\u65b0.\n\nArgs:\n    role_id: \u30ed\u30fc\u30ebID\n    role: \u66f4\u65b0\u3059\u308b\u30ed\u30fc\u30eb\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u66f4\u65b0\u3055\u308c\u305f\u30ed\u30fc\u30eb\n\nRaises:\n    HTTPException: \u30ed\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "update_role_api_roles__role_id__put",
         "parameters": [
           {
@@ -6332,7 +6332,7 @@
           "roles"
         ],
         "summary": "Delete Role",
-        "description": "ロール削除.\n\nArgs:\n    role_id: ロールID\n    db: データベースセッション\n\nRaises:\n    HTTPException: ロールが存在しない場合、またはロールが使用中の場合",
+        "description": "\u30ed\u30fc\u30eb\u524a\u9664.\n\nArgs:\n    role_id: \u30ed\u30fc\u30ebID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nRaises:\n    HTTPException: \u30ed\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408\u3001\u307e\u305f\u306f\u30ed\u30fc\u30eb\u304c\u4f7f\u7528\u4e2d\u306e\u5834\u5408",
         "operationId": "delete_role_api_roles__role_id__delete",
         "parameters": [
           {
@@ -6368,7 +6368,7 @@
           "assignments"
         ],
         "summary": "Get My Suppliers",
-        "description": "現在ログイン中のユーザーの担当仕入先ID一覧を取得.",
+        "description": "\u73fe\u5728\u30ed\u30b0\u30a4\u30f3\u4e2d\u306e\u30e6\u30fc\u30b6\u30fc\u306e\u62c5\u5f53\u4ed5\u5165\u5148ID\u4e00\u89a7\u3092\u53d6\u5f97.",
         "operationId": "get_my_suppliers_api_assignments_my_suppliers_get",
         "responses": {
           "200": {
@@ -6395,7 +6395,7 @@
           "assignments"
         ],
         "summary": "Get All Assignments",
-        "description": "全ての担当割り当てを取得.",
+        "description": "\u5168\u3066\u306e\u62c5\u5f53\u5272\u308a\u5f53\u3066\u3092\u53d6\u5f97.",
         "operationId": "get_all_assignments_api_assignments_get",
         "responses": {
           "200": {
@@ -6421,7 +6421,7 @@
           "assignments"
         ],
         "summary": "Get User Suppliers",
-        "description": "ユーザーの担当仕入先一覧を取得.",
+        "description": "\u30e6\u30fc\u30b6\u30fc\u306e\u62c5\u5f53\u4ed5\u5165\u5148\u4e00\u89a7\u3092\u53d6\u5f97.",
         "operationId": "get_user_suppliers_api_assignments_user__user_id__suppliers_get",
         "parameters": [
           {
@@ -6468,7 +6468,7 @@
           "assignments"
         ],
         "summary": "Get Supplier Users",
-        "description": "仕入先の担当者一覧を取得.",
+        "description": "\u4ed5\u5165\u5148\u306e\u62c5\u5f53\u8005\u4e00\u89a7\u3092\u53d6\u5f97.",
         "operationId": "get_supplier_users_api_assignments_supplier__supplier_id__users_get",
         "parameters": [
           {
@@ -6515,7 +6515,7 @@
           "assignments"
         ],
         "summary": "Create Assignment",
-        "description": "担当割り当てを作成.",
+        "description": "\u62c5\u5f53\u5272\u308a\u5f53\u3066\u3092\u4f5c\u6210.",
         "operationId": "create_assignment_api_assignments__post",
         "requestBody": {
           "content": {
@@ -6557,7 +6557,7 @@
           "assignments"
         ],
         "summary": "Update Assignment",
-        "description": "担当割り当てを更新（主担当の変更など）.",
+        "description": "\u62c5\u5f53\u5272\u308a\u5f53\u3066\u3092\u66f4\u65b0\uff08\u4e3b\u62c5\u5f53\u306e\u5909\u66f4\u306a\u3069\uff09.",
         "operationId": "update_assignment_api_assignments__assignment_id__put",
         "parameters": [
           {
@@ -6608,7 +6608,7 @@
           "assignments"
         ],
         "summary": "Delete Assignment",
-        "description": "担当割り当てを削除.",
+        "description": "\u62c5\u5f53\u5272\u308a\u5f53\u3066\u3092\u524a\u9664.",
         "operationId": "delete_assignment_api_assignments__assignment_id__delete",
         "parameters": [
           {
@@ -6653,7 +6653,7 @@
           "assignments"
         ],
         "summary": "Set Primary User",
-        "description": "仕入先の主担当者を設定.",
+        "description": "\u4ed5\u5165\u5148\u306e\u4e3b\u62c5\u5f53\u8005\u3092\u8a2d\u5b9a.",
         "operationId": "set_primary_user_api_assignments_supplier__supplier_id__set_primary__user_id__post",
         "parameters": [
           {
@@ -6705,7 +6705,7 @@
           "admin"
         ],
         "summary": "Get Dashboard Stats",
-        "description": "ダッシュボード用の統計情報を返す.\n\n在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock\nビューは使用しない（v2.2 以降は廃止）。",
+        "description": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u7528\u306e\u7d71\u8a08\u60c5\u5831\u3092\u8fd4\u3059.\n\n\u5728\u5eab\u7dcf\u6570\u306f lots.current_quantity \u306e\u5408\u8a08\u5024\u3092\u4f7f\u7528\u3002 lot_current_stock\n\u30d3\u30e5\u30fc\u306f\u4f7f\u7528\u3057\u306a\u3044\uff08v2.2 \u4ee5\u964d\u306f\u5ec3\u6b62\uff09\u3002",
         "operationId": "get_dashboard_stats_api_admin_stats_get",
         "responses": {
           "200": {
@@ -6727,7 +6727,7 @@
           "admin"
         ],
         "summary": "Reset Database",
-        "description": "データベースリセット（開発環境のみ）.\n\n- テーブル構造は保持したまま、全データを削除\n- alembic_versionは保持（マイグレーション履歴を維持）\n- TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.",
+        "description": "\u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30ea\u30bb\u30c3\u30c8\uff08\u958b\u767a\u74b0\u5883\u306e\u307f\uff09.\n\n- \u30c6\u30fc\u30d6\u30eb\u69cb\u9020\u306f\u4fdd\u6301\u3057\u305f\u307e\u307e\u3001\u5168\u30c7\u30fc\u30bf\u3092\u524a\u9664\n- alembic_version\u306f\u4fdd\u6301\uff08\u30de\u30a4\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u5c65\u6b74\u3092\u7dad\u6301\uff09\n- TRUNCATE ... RESTART IDENTITY CASCADE\u3067\u9ad8\u901f\u306b\u30c7\u30fc\u30bf\u3092\u30af\u30ea\u30a2.",
         "operationId": "reset_database_api_admin_reset_database_post",
         "responses": {
           "200": {
@@ -6749,7 +6749,7 @@
           "admin"
         ],
         "summary": "Get Allocatable Lots",
-        "description": "診断API: 引当可能ロット一覧（読み取り専用）.\n\nv2.2: v_lot_details ビューを使用して在庫情報を取得。\nlot_current_stock ビューは廃止。\n\nArgs:\n    prod: 製品コード（任意フィルタ）\n    wh: 倉庫コード（任意フィルタ）\n    limit: 最大取得件数（デフォルト100）\n    db: データベースセッション\n\nReturns:\n    CandidateLotsResponse: 引当可能ロット一覧\n\nNote:\n    - 読み取り専用トランザクション\n    - available_quantity > 0 のみ\n    - 期限切れは除外",
+        "description": "\u8a3a\u65adAPI: \u5f15\u5f53\u53ef\u80fd\u30ed\u30c3\u30c8\u4e00\u89a7\uff08\u8aad\u307f\u53d6\u308a\u5c02\u7528\uff09.\n\nv2.2: v_lot_details \u30d3\u30e5\u30fc\u3092\u4f7f\u7528\u3057\u3066\u5728\u5eab\u60c5\u5831\u3092\u53d6\u5f97\u3002\nlot_current_stock \u30d3\u30e5\u30fc\u306f\u5ec3\u6b62\u3002\n\nArgs:\n    prod: \u88fd\u54c1\u30b3\u30fc\u30c9\uff08\u4efb\u610f\u30d5\u30a3\u30eb\u30bf\uff09\n    wh: \u5009\u5eab\u30b3\u30fc\u30c9\uff08\u4efb\u610f\u30d5\u30a3\u30eb\u30bf\uff09\n    limit: \u6700\u5927\u53d6\u5f97\u4ef6\u6570\uff08\u30c7\u30d5\u30a9\u30eb\u30c8100\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    CandidateLotsResponse: \u5f15\u5f53\u53ef\u80fd\u30ed\u30c3\u30c8\u4e00\u89a7\n\nNote:\n    - \u8aad\u307f\u53d6\u308a\u5c02\u7528\u30c8\u30e9\u30f3\u30b6\u30af\u30b7\u30e7\u30f3\n    - available_quantity > 0 \u306e\u307f\n    - \u671f\u9650\u5207\u308c\u306f\u9664\u5916",
         "operationId": "get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get",
         "parameters": [
           {
@@ -6825,7 +6825,7 @@
           "admin"
         ],
         "summary": "Get Metrics",
-        "description": "パフォーマンスメトリクスを取得.\n\nAPIエンドポイントごとのリクエスト数、エラー率、レスポンスタイムなどを返す。",
+        "description": "\u30d1\u30d5\u30a9\u30fc\u30de\u30f3\u30b9\u30e1\u30c8\u30ea\u30af\u30b9\u3092\u53d6\u5f97.\n\nAPI\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3054\u3068\u306e\u30ea\u30af\u30a8\u30b9\u30c8\u6570\u3001\u30a8\u30e9\u30fc\u7387\u3001\u30ec\u30b9\u30dd\u30f3\u30b9\u30bf\u30a4\u30e0\u306a\u3069\u3092\u8fd4\u3059\u3002",
         "operationId": "get_metrics_api_admin_metrics_get",
         "responses": {
           "200": {
@@ -6845,7 +6845,7 @@
           "admin"
         ],
         "summary": "Reset Metrics",
-        "description": "パフォーマンスメトリクスをリセット.\n\n開発環境でのテスト用。",
+        "description": "\u30d1\u30d5\u30a9\u30fc\u30de\u30f3\u30b9\u30e1\u30c8\u30ea\u30af\u30b9\u3092\u30ea\u30bb\u30c3\u30c8.\n\n\u958b\u767a\u74b0\u5883\u3067\u306e\u30c6\u30b9\u30c8\u7528\u3002",
         "operationId": "reset_metrics_api_admin_metrics_reset_post",
         "responses": {
           "200": {
@@ -6865,7 +6865,7 @@
           "admin"
         ],
         "summary": "Get Db Counts",
-        "description": "各テーブルのレコード件数を返す.\n\nReturns:\n    dict: テーブル名をキー、件数を値とする辞書",
+        "description": "\u5404\u30c6\u30fc\u30d6\u30eb\u306e\u30ec\u30b3\u30fc\u30c9\u4ef6\u6570\u3092\u8fd4\u3059.\n\nReturns:\n    dict: \u30c6\u30fc\u30d6\u30eb\u540d\u3092\u30ad\u30fc\u3001\u4ef6\u6570\u3092\u5024\u3068\u3059\u308b\u8f9e\u66f8",
         "operationId": "get_db_counts_api_admin_healthcheck_db_counts_get",
         "responses": {
           "200": {
@@ -6885,7 +6885,7 @@
           "admin"
         ],
         "summary": "Get Masters Health",
-        "description": "マスタテーブルのヘルスチェック.\n\nReturns:\n    dict: 各マスタテーブルの件数とサンプルデータ（先頭5件のコード）",
+        "description": "\u30de\u30b9\u30bf\u30c6\u30fc\u30d6\u30eb\u306e\u30d8\u30eb\u30b9\u30c1\u30a7\u30c3\u30af.\n\nReturns:\n    dict: \u5404\u30de\u30b9\u30bf\u30c6\u30fc\u30d6\u30eb\u306e\u4ef6\u6570\u3068\u30b5\u30f3\u30d7\u30eb\u30c7\u30fc\u30bf\uff08\u5148\u982d5\u4ef6\u306e\u30b3\u30fc\u30c9\uff09",
         "operationId": "get_masters_health_api_admin_healthcheck_masters_get",
         "responses": {
           "200": {
@@ -7121,7 +7121,7 @@
           "logs"
         ],
         "summary": "List Operation Logs",
-        "description": "操作ログ一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    user_id: ユーザーIDでフィルタ（オプション）\n    operation_type: 操作種別でフィルタ（オプション）\n    target_table: 対象テーブル名でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n\nReturns:\n    操作ログのリスト（ページネーション付き）",
+        "description": "\u64cd\u4f5c\u30ed\u30b0\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    user_id: \u30e6\u30fc\u30b6\u30fcID\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    operation_type: \u64cd\u4f5c\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    target_table: \u5bfe\u8c61\u30c6\u30fc\u30d6\u30eb\u540d\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    start_date: \u958b\u59cb\u65e5\u6642\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    end_date: \u7d42\u4e86\u65e5\u6642\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u64cd\u4f5c\u30ed\u30b0\u306e\u30ea\u30b9\u30c8\uff08\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3\u4ed8\u304d\uff09",
         "operationId": "list_operation_logs_api_operation_logs_get",
         "parameters": [
           {
@@ -7131,11 +7131,11 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
-              "description": "スキップ件数",
+              "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570",
               "default": 0,
               "title": "Skip"
             },
-            "description": "スキップ件数"
+            "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570"
           },
           {
             "name": "limit",
@@ -7145,11 +7145,11 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
-              "description": "取得件数上限",
+              "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650",
               "default": 100,
               "title": "Limit"
             },
-            "description": "取得件数上限"
+            "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650"
           },
           {
             "name": "user_id",
@@ -7164,10 +7164,10 @@
                   "type": "null"
                 }
               ],
-              "description": "ユーザーIDでフィルタ",
+              "description": "\u30e6\u30fc\u30b6\u30fcID\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "User Id"
             },
-            "description": "ユーザーIDでフィルタ"
+            "description": "\u30e6\u30fc\u30b6\u30fcID\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "operation_type",
@@ -7182,10 +7182,10 @@
                   "type": "null"
                 }
               ],
-              "description": "操作種別でフィルタ",
+              "description": "\u64cd\u4f5c\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Operation Type"
             },
-            "description": "操作種別でフィルタ"
+            "description": "\u64cd\u4f5c\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "target_table",
@@ -7200,10 +7200,10 @@
                   "type": "null"
                 }
               ],
-              "description": "対象テーブル名でフィルタ",
+              "description": "\u5bfe\u8c61\u30c6\u30fc\u30d6\u30eb\u540d\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Target Table"
             },
-            "description": "対象テーブル名でフィルタ"
+            "description": "\u5bfe\u8c61\u30c6\u30fc\u30d6\u30eb\u540d\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "start_date",
@@ -7219,10 +7219,10 @@
                   "type": "null"
                 }
               ],
-              "description": "開始日時（この日時以降）",
+              "description": "\u958b\u59cb\u65e5\u6642\uff08\u3053\u306e\u65e5\u6642\u4ee5\u964d\uff09",
               "title": "Start Date"
             },
-            "description": "開始日時（この日時以降）"
+            "description": "\u958b\u59cb\u65e5\u6642\uff08\u3053\u306e\u65e5\u6642\u4ee5\u964d\uff09"
           },
           {
             "name": "end_date",
@@ -7238,10 +7238,10 @@
                   "type": "null"
                 }
               ],
-              "description": "終了日時（この日時以前）",
+              "description": "\u7d42\u4e86\u65e5\u6642\uff08\u3053\u306e\u65e5\u6642\u4ee5\u524d\uff09",
               "title": "End Date"
             },
-            "description": "終了日時（この日時以前）"
+            "description": "\u7d42\u4e86\u65e5\u6642\uff08\u3053\u306e\u65e5\u6642\u4ee5\u524d\uff09"
           }
         ],
         "responses": {
@@ -7274,7 +7274,7 @@
           "logs"
         ],
         "summary": "Get Operation Log",
-        "description": "操作ログ詳細取得.\n\nArgs:\n    log_id: ログID\n    db: データベースセッション\n\nReturns:\n    操作ログ詳細\n\nRaises:\n    HTTPException: ログが存在しない場合",
+        "description": "\u64cd\u4f5c\u30ed\u30b0\u8a73\u7d30\u53d6\u5f97.\n\nArgs:\n    log_id: \u30ed\u30b0ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u64cd\u4f5c\u30ed\u30b0\u8a73\u7d30\n\nRaises:\n    HTTPException: \u30ed\u30b0\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "get_operation_log_api_operation_logs__log_id__get",
         "parameters": [
           {
@@ -7317,7 +7317,7 @@
           "logs"
         ],
         "summary": "List Master Change Logs",
-        "description": "マスタ変更履歴一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    table_name: テーブル名でフィルタ（オプション）\n    record_id: レコードIDでフィルタ（オプション）\n    change_type: 変更種別でフィルタ（オプション）\n    changed_by: 変更者でフィルタ（オプション）\n    start_date: 開始日時（オプション）\n    end_date: 終了日時（オプション）\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴のリスト（ページネーション付き）",
+        "description": "\u30de\u30b9\u30bf\u5909\u66f4\u5c65\u6b74\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    table_name: \u30c6\u30fc\u30d6\u30eb\u540d\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    record_id: \u30ec\u30b3\u30fc\u30c9ID\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    change_type: \u5909\u66f4\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    changed_by: \u5909\u66f4\u8005\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    start_date: \u958b\u59cb\u65e5\u6642\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    end_date: \u7d42\u4e86\u65e5\u6642\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30de\u30b9\u30bf\u5909\u66f4\u5c65\u6b74\u306e\u30ea\u30b9\u30c8\uff08\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3\u4ed8\u304d\uff09",
         "operationId": "list_master_change_logs_api_master_change_logs_get",
         "parameters": [
           {
@@ -7327,11 +7327,11 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
-              "description": "スキップ件数",
+              "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570",
               "default": 0,
               "title": "Skip"
             },
-            "description": "スキップ件数"
+            "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570"
           },
           {
             "name": "limit",
@@ -7341,11 +7341,11 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
-              "description": "取得件数上限",
+              "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650",
               "default": 100,
               "title": "Limit"
             },
-            "description": "取得件数上限"
+            "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650"
           },
           {
             "name": "table_name",
@@ -7360,10 +7360,10 @@
                   "type": "null"
                 }
               ],
-              "description": "テーブル名でフィルタ",
+              "description": "\u30c6\u30fc\u30d6\u30eb\u540d\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Table Name"
             },
-            "description": "テーブル名でフィルタ"
+            "description": "\u30c6\u30fc\u30d6\u30eb\u540d\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "record_id",
@@ -7378,10 +7378,10 @@
                   "type": "null"
                 }
               ],
-              "description": "レコードIDでフィルタ",
+              "description": "\u30ec\u30b3\u30fc\u30c9ID\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Record Id"
             },
-            "description": "レコードIDでフィルタ"
+            "description": "\u30ec\u30b3\u30fc\u30c9ID\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "change_type",
@@ -7396,10 +7396,10 @@
                   "type": "null"
                 }
               ],
-              "description": "変更種別でフィルタ",
+              "description": "\u5909\u66f4\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Change Type"
             },
-            "description": "変更種別でフィルタ"
+            "description": "\u5909\u66f4\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "changed_by",
@@ -7414,10 +7414,10 @@
                   "type": "null"
                 }
               ],
-              "description": "変更者でフィルタ",
+              "description": "\u5909\u66f4\u8005\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Changed By"
             },
-            "description": "変更者でフィルタ"
+            "description": "\u5909\u66f4\u8005\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "start_date",
@@ -7433,10 +7433,10 @@
                   "type": "null"
                 }
               ],
-              "description": "開始日時（この日時以降）",
+              "description": "\u958b\u59cb\u65e5\u6642\uff08\u3053\u306e\u65e5\u6642\u4ee5\u964d\uff09",
               "title": "Start Date"
             },
-            "description": "開始日時（この日時以降）"
+            "description": "\u958b\u59cb\u65e5\u6642\uff08\u3053\u306e\u65e5\u6642\u4ee5\u964d\uff09"
           },
           {
             "name": "end_date",
@@ -7452,10 +7452,10 @@
                   "type": "null"
                 }
               ],
-              "description": "終了日時（この日時以前）",
+              "description": "\u7d42\u4e86\u65e5\u6642\uff08\u3053\u306e\u65e5\u6642\u4ee5\u524d\uff09",
               "title": "End Date"
             },
-            "description": "終了日時（この日時以前）"
+            "description": "\u7d42\u4e86\u65e5\u6642\uff08\u3053\u306e\u65e5\u6642\u4ee5\u524d\uff09"
           }
         ],
         "responses": {
@@ -7488,7 +7488,7 @@
           "logs"
         ],
         "summary": "Get Master Change Log",
-        "description": "マスタ変更履歴詳細取得.\n\nArgs:\n    change_log_id: 変更ログID\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴詳細\n\nRaises:\n    HTTPException: ログが存在しない場合",
+        "description": "\u30de\u30b9\u30bf\u5909\u66f4\u5c65\u6b74\u8a73\u7d30\u53d6\u5f97.\n\nArgs:\n    change_log_id: \u5909\u66f4\u30ed\u30b0ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30de\u30b9\u30bf\u5909\u66f4\u5c65\u6b74\u8a73\u7d30\n\nRaises:\n    HTTPException: \u30ed\u30b0\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "get_master_change_log_api_master_change_logs__change_log_id__get",
         "parameters": [
           {
@@ -7531,7 +7531,7 @@
           "logs"
         ],
         "summary": "Get Master Change Logs By Record",
-        "description": "特定レコードのマスタ変更履歴取得.\n\nArgs:\n    table_name: テーブル名\n    record_id: レコードID\n    db: データベースセッション\n\nReturns:\n    マスタ変更履歴のリスト（降順）",
+        "description": "\u7279\u5b9a\u30ec\u30b3\u30fc\u30c9\u306e\u30de\u30b9\u30bf\u5909\u66f4\u5c65\u6b74\u53d6\u5f97.\n\nArgs:\n    table_name: \u30c6\u30fc\u30d6\u30eb\u540d\n    record_id: \u30ec\u30b3\u30fc\u30c9ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30de\u30b9\u30bf\u5909\u66f4\u5c65\u6b74\u306e\u30ea\u30b9\u30c8\uff08\u964d\u9806\uff09",
         "operationId": "get_master_change_logs_by_record_api_master_change_logs_record__table_name___record_id__get",
         "parameters": [
           {
@@ -7587,7 +7587,7 @@
           "business-rules"
         ],
         "summary": "List Business Rules",
-        "description": "業務ルール一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    rule_type: ルール種別でフィルタ（オプション）\n    is_active: 有効フラグでフィルタ（オプション）\n    db: データベースセッション\n\nReturns:\n    業務ルールのリスト",
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    rule_type: \u30eb\u30fc\u30eb\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    is_active: \u6709\u52b9\u30d5\u30e9\u30b0\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u696d\u52d9\u30eb\u30fc\u30eb\u306e\u30ea\u30b9\u30c8",
         "operationId": "list_business_rules_api_business_rules_get",
         "parameters": [
           {
@@ -7597,11 +7597,11 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
-              "description": "スキップ件数",
+              "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570",
               "default": 0,
               "title": "Skip"
             },
-            "description": "スキップ件数"
+            "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570"
           },
           {
             "name": "limit",
@@ -7611,11 +7611,11 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
-              "description": "取得件数上限",
+              "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650",
               "default": 100,
               "title": "Limit"
             },
-            "description": "取得件数上限"
+            "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650"
           },
           {
             "name": "rule_type",
@@ -7630,10 +7630,10 @@
                   "type": "null"
                 }
               ],
-              "description": "ルール種別でフィルタ",
+              "description": "\u30eb\u30fc\u30eb\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Rule Type"
             },
-            "description": "ルール種別でフィルタ"
+            "description": "\u30eb\u30fc\u30eb\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "is_active",
@@ -7648,10 +7648,10 @@
                   "type": "null"
                 }
               ],
-              "description": "有効フラグでフィルタ",
+              "description": "\u6709\u52b9\u30d5\u30e9\u30b0\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Is Active"
             },
-            "description": "有効フラグでフィルタ"
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0\u3067\u30d5\u30a3\u30eb\u30bf"
           }
         ],
         "responses": {
@@ -7682,7 +7682,7 @@
           "business-rules"
         ],
         "summary": "Create Business Rule",
-        "description": "業務ルール作成.\n\nArgs:\n    rule: 作成する業務ルール情報\n    db: データベースセッション\n\nReturns:\n    作成された業務ルール\n\nRaises:\n    HTTPException: ルールコードが重複している場合",
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u4f5c\u6210.\n\nArgs:\n    rule: \u4f5c\u6210\u3059\u308b\u696d\u52d9\u30eb\u30fc\u30eb\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u4f5c\u6210\u3055\u308c\u305f\u696d\u52d9\u30eb\u30fc\u30eb\n\nRaises:\n    HTTPException: \u30eb\u30fc\u30eb\u30b3\u30fc\u30c9\u304c\u91cd\u8907\u3057\u3066\u3044\u308b\u5834\u5408",
         "operationId": "create_business_rule_api_business_rules_post",
         "requestBody": {
           "required": true,
@@ -7724,7 +7724,7 @@
           "business-rules"
         ],
         "summary": "Get Business Rule",
-        "description": "業務ルール詳細取得（ID指定）.\n\nArgs:\n    rule_id: ルールID\n    db: データベースセッション\n\nReturns:\n    業務ルール詳細\n\nRaises:\n    HTTPException: ルールが存在しない場合",
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u8a73\u7d30\u53d6\u5f97\uff08ID\u6307\u5b9a\uff09.\n\nArgs:\n    rule_id: \u30eb\u30fc\u30ebID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u696d\u52d9\u30eb\u30fc\u30eb\u8a73\u7d30\n\nRaises:\n    HTTPException: \u30eb\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "get_business_rule_api_business_rules__rule_id__get",
         "parameters": [
           {
@@ -7765,7 +7765,7 @@
           "business-rules"
         ],
         "summary": "Update Business Rule",
-        "description": "業務ルール更新（ID指定）.\n\nArgs:\n    rule_id: ルールID\n    rule: 更新する業務ルール情報\n    db: データベースセッション\n\nReturns:\n    更新された業務ルール\n\nRaises:\n    HTTPException: ルールが存在しない場合",
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u66f4\u65b0\uff08ID\u6307\u5b9a\uff09.\n\nArgs:\n    rule_id: \u30eb\u30fc\u30ebID\n    rule: \u66f4\u65b0\u3059\u308b\u696d\u52d9\u30eb\u30fc\u30eb\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u66f4\u65b0\u3055\u308c\u305f\u696d\u52d9\u30eb\u30fc\u30eb\n\nRaises:\n    HTTPException: \u30eb\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "update_business_rule_api_business_rules__rule_id__put",
         "parameters": [
           {
@@ -7816,7 +7816,7 @@
           "business-rules"
         ],
         "summary": "Delete Business Rule",
-        "description": "業務ルール削除.\n\nArgs:\n    rule_id: ルールID\n    db: データベースセッション\n\nRaises:\n    HTTPException: ルールが存在しない場合",
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u524a\u9664.\n\nArgs:\n    rule_id: \u30eb\u30fc\u30ebID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nRaises:\n    HTTPException: \u30eb\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "delete_business_rule_api_business_rules__rule_id__delete",
         "parameters": [
           {
@@ -7852,7 +7852,7 @@
           "business-rules"
         ],
         "summary": "Get Business Rule By Code",
-        "description": "業務ルール詳細取得（コード指定）.\n\nArgs:\n    rule_code: ルールコード\n    db: データベースセッション\n\nReturns:\n    業務ルール詳細\n\nRaises:\n    HTTPException: ルールが存在しない場合",
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u8a73\u7d30\u53d6\u5f97\uff08\u30b3\u30fc\u30c9\u6307\u5b9a\uff09.\n\nArgs:\n    rule_code: \u30eb\u30fc\u30eb\u30b3\u30fc\u30c9\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u696d\u52d9\u30eb\u30fc\u30eb\u8a73\u7d30\n\nRaises:\n    HTTPException: \u30eb\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "get_business_rule_by_code_api_business_rules_code__rule_code__get",
         "parameters": [
           {
@@ -7893,7 +7893,7 @@
           "business-rules"
         ],
         "summary": "Update Business Rule By Code",
-        "description": "業務ルール更新（コード指定）.\n\nArgs:\n    rule_code: ルールコード\n    rule: 更新する業務ルール情報\n    db: データベースセッション\n\nReturns:\n    更新された業務ルール\n\nRaises:\n    HTTPException: ルールが存在しない場合",
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u66f4\u65b0\uff08\u30b3\u30fc\u30c9\u6307\u5b9a\uff09.\n\nArgs:\n    rule_code: \u30eb\u30fc\u30eb\u30b3\u30fc\u30c9\n    rule: \u66f4\u65b0\u3059\u308b\u696d\u52d9\u30eb\u30fc\u30eb\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u66f4\u65b0\u3055\u308c\u305f\u696d\u52d9\u30eb\u30fc\u30eb\n\nRaises:\n    HTTPException: \u30eb\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "update_business_rule_by_code_api_business_rules_code__rule_code__put",
         "parameters": [
           {
@@ -7946,7 +7946,7 @@
           "business-rules"
         ],
         "summary": "Toggle Business Rule Active",
-        "description": "業務ルール有効/無効切り替え.\n\nArgs:\n    rule_id: ルールID\n    db: データベースセッション\n\nReturns:\n    更新された業務ルール\n\nRaises:\n    HTTPException: ルールが存在しない場合",
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u6709\u52b9/\u7121\u52b9\u5207\u308a\u66ff\u3048.\n\nArgs:\n    rule_id: \u30eb\u30fc\u30ebID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u66f4\u65b0\u3055\u308c\u305f\u696d\u52d9\u30eb\u30fc\u30eb\n\nRaises:\n    HTTPException: \u30eb\u30fc\u30eb\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "toggle_business_rule_active_api_business_rules__rule_id__toggle_patch",
         "parameters": [
           {
@@ -7989,7 +7989,7 @@
           "batch-jobs"
         ],
         "summary": "List Batch Jobs",
-        "description": "バッチジョブ一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    job_type: ジョブ種別でフィルタ（オプション）\n    status: ステータスでフィルタ（オプション）\n    db: データベースセッション\n\nReturns:\n    バッチジョブのリスト（ページネーション付き）",
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u4e00\u89a7\u53d6\u5f97.\n\nArgs:\n    skip: \u30b9\u30ad\u30c3\u30d7\u4ef6\u6570\n    limit: \u53d6\u5f97\u4ef6\u6570\u4e0a\u9650\n    job_type: \u30b8\u30e7\u30d6\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    status: \u30b9\u30c6\u30fc\u30bf\u30b9\u3067\u30d5\u30a3\u30eb\u30bf\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u306e\u30ea\u30b9\u30c8\uff08\u30da\u30fc\u30b8\u30cd\u30fc\u30b7\u30e7\u30f3\u4ed8\u304d\uff09",
         "operationId": "list_batch_jobs_api_batch_jobs_get",
         "parameters": [
           {
@@ -7999,11 +7999,11 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
-              "description": "スキップ件数",
+              "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570",
               "default": 0,
               "title": "Skip"
             },
-            "description": "スキップ件数"
+            "description": "\u30b9\u30ad\u30c3\u30d7\u4ef6\u6570"
           },
           {
             "name": "limit",
@@ -8013,11 +8013,11 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
-              "description": "取得件数上限",
+              "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650",
               "default": 100,
               "title": "Limit"
             },
-            "description": "取得件数上限"
+            "description": "\u53d6\u5f97\u4ef6\u6570\u4e0a\u9650"
           },
           {
             "name": "job_type",
@@ -8032,10 +8032,10 @@
                   "type": "null"
                 }
               ],
-              "description": "ジョブ種別でフィルタ",
+              "description": "\u30b8\u30e7\u30d6\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Job Type"
             },
-            "description": "ジョブ種別でフィルタ"
+            "description": "\u30b8\u30e7\u30d6\u7a2e\u5225\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           {
             "name": "status",
@@ -8050,10 +8050,10 @@
                   "type": "null"
                 }
               ],
-              "description": "ステータスでフィルタ",
+              "description": "\u30b9\u30c6\u30fc\u30bf\u30b9\u3067\u30d5\u30a3\u30eb\u30bf",
               "title": "Status"
             },
-            "description": "ステータスでフィルタ"
+            "description": "\u30b9\u30c6\u30fc\u30bf\u30b9\u3067\u30d5\u30a3\u30eb\u30bf"
           }
         ],
         "responses": {
@@ -8084,7 +8084,7 @@
           "batch-jobs"
         ],
         "summary": "Create Batch Job",
-        "description": "バッチジョブ作成.\n\nArgs:\n    job: 作成するバッチジョブ情報\n    db: データベースセッション\n\nReturns:\n    作成されたバッチジョブ",
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u4f5c\u6210.\n\nArgs:\n    job: \u4f5c\u6210\u3059\u308b\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u60c5\u5831\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u4f5c\u6210\u3055\u308c\u305f\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6",
         "operationId": "create_batch_job_api_batch_jobs_post",
         "requestBody": {
           "required": true,
@@ -8126,7 +8126,7 @@
           "batch-jobs"
         ],
         "summary": "Execute Inventory Sync Direct",
-        "description": "SAP在庫同期を即座に実行する（バッチジョブ経由なし）.\n\n管理画面から簡単に実行できるよう、直接実行エンドポイントを提供。\nバッチジョブレコードは作成せず、即座に同期処理を実行して結果を返す。\n\nArgs:\n    db: データベースセッション\n\nReturns:\n    dict: 実行結果の詳細\n        - checked_products: チェックした商品数\n        - discrepancies_found: 発見された差異数\n        - alerts_created: 作成されたアラート数\n        - details: 差異の詳細リスト",
+        "description": "SAP\u5728\u5eab\u540c\u671f\u3092\u5373\u5ea7\u306b\u5b9f\u884c\u3059\u308b\uff08\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u7d4c\u7531\u306a\u3057\uff09.\n\n\u7ba1\u7406\u753b\u9762\u304b\u3089\u7c21\u5358\u306b\u5b9f\u884c\u3067\u304d\u308b\u3088\u3046\u3001\u76f4\u63a5\u5b9f\u884c\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3092\u63d0\u4f9b\u3002\n\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u30ec\u30b3\u30fc\u30c9\u306f\u4f5c\u6210\u305b\u305a\u3001\u5373\u5ea7\u306b\u540c\u671f\u51e6\u7406\u3092\u5b9f\u884c\u3057\u3066\u7d50\u679c\u3092\u8fd4\u3059\u3002\n\nArgs:\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    dict: \u5b9f\u884c\u7d50\u679c\u306e\u8a73\u7d30\n        - checked_products: \u30c1\u30a7\u30c3\u30af\u3057\u305f\u5546\u54c1\u6570\n        - discrepancies_found: \u767a\u898b\u3055\u308c\u305f\u5dee\u7570\u6570\n        - alerts_created: \u4f5c\u6210\u3055\u308c\u305f\u30a2\u30e9\u30fc\u30c8\u6570\n        - details: \u5dee\u7570\u306e\u8a73\u7d30\u30ea\u30b9\u30c8",
         "operationId": "execute_inventory_sync_direct_api_batch_jobs_inventory_sync_execute_post",
         "responses": {
           "200": {
@@ -8146,7 +8146,7 @@
           "batch-jobs"
         ],
         "summary": "Get Inventory Sync Alerts",
-        "description": "SAP在庫差異アラート一覧取得.\n\nBusinessRuleテーブルから在庫差異アラート（inventory_sync_alert）を取得。\n\nArgs:\n    active_only: Trueの場合、is_active=Trueのアラートのみ取得\n    db: データベースセッション\n\nReturns:\n    dict: アラート一覧\n        - alerts: アラートのリスト\n        - total: 総件数",
+        "description": "SAP\u5728\u5eab\u5dee\u7570\u30a2\u30e9\u30fc\u30c8\u4e00\u89a7\u53d6\u5f97.\n\nBusinessRule\u30c6\u30fc\u30d6\u30eb\u304b\u3089\u5728\u5eab\u5dee\u7570\u30a2\u30e9\u30fc\u30c8\uff08inventory_sync_alert\uff09\u3092\u53d6\u5f97\u3002\n\nArgs:\n    active_only: True\u306e\u5834\u5408\u3001is_active=True\u306e\u30a2\u30e9\u30fc\u30c8\u306e\u307f\u53d6\u5f97\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    dict: \u30a2\u30e9\u30fc\u30c8\u4e00\u89a7\n        - alerts: \u30a2\u30e9\u30fc\u30c8\u306e\u30ea\u30b9\u30c8\n        - total: \u7dcf\u4ef6\u6570",
         "operationId": "get_inventory_sync_alerts_api_batch_jobs_inventory_sync_alerts_get",
         "parameters": [
           {
@@ -8155,11 +8155,11 @@
             "required": false,
             "schema": {
               "type": "boolean",
-              "description": "アクティブなアラートのみ取得",
+              "description": "\u30a2\u30af\u30c6\u30a3\u30d6\u306a\u30a2\u30e9\u30fc\u30c8\u306e\u307f\u53d6\u5f97",
               "default": true,
               "title": "Active Only"
             },
-            "description": "アクティブなアラートのみ取得"
+            "description": "\u30a2\u30af\u30c6\u30a3\u30d6\u306a\u30a2\u30e9\u30fc\u30c8\u306e\u307f\u53d6\u5f97"
           }
         ],
         "responses": {
@@ -8190,7 +8190,7 @@
           "batch-jobs"
         ],
         "summary": "Get Batch Job",
-        "description": "バッチジョブ詳細取得.\n\nArgs:\n    job_id: ジョブID\n    db: データベースセッション\n\nReturns:\n    バッチジョブ詳細\n\nRaises:\n    HTTPException: ジョブが存在しない場合",
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u8a73\u7d30\u53d6\u5f97.\n\nArgs:\n    job_id: \u30b8\u30e7\u30d6ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u8a73\u7d30\n\nRaises:\n    HTTPException: \u30b8\u30e7\u30d6\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "get_batch_job_api_batch_jobs__job_id__get",
         "parameters": [
           {
@@ -8231,7 +8231,7 @@
           "batch-jobs"
         ],
         "summary": "Delete Batch Job",
-        "description": "バッチジョブ削除.\n\nArgs:\n    job_id: ジョブID\n    db: データベースセッション\n\nRaises:\n    HTTPException: ジョブが存在しない場合",
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u524a\u9664.\n\nArgs:\n    job_id: \u30b8\u30e7\u30d6ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nRaises:\n    HTTPException: \u30b8\u30e7\u30d6\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "delete_batch_job_api_batch_jobs__job_id__delete",
         "parameters": [
           {
@@ -8267,7 +8267,7 @@
           "batch-jobs"
         ],
         "summary": "Execute Batch Job",
-        "description": "バッチジョブ実行.\n\n注意: これはスタブ実装です。本番環境では、非同期ジョブキュー（Celery、RQ等）を使用してください。\n\nArgs:\n    job_id: ジョブID\n    request: 実行リクエスト（パラメータ上書き可能）\n    db: データベースセッション\n\nReturns:\n    実行結果\n\nRaises:\n    HTTPException: ジョブが存在しない場合",
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u5b9f\u884c.\n\n\u6ce8\u610f: \u3053\u308c\u306f\u30b9\u30bf\u30d6\u5b9f\u88c5\u3067\u3059\u3002\u672c\u756a\u74b0\u5883\u3067\u306f\u3001\u975e\u540c\u671f\u30b8\u30e7\u30d6\u30ad\u30e5\u30fc\uff08Celery\u3001RQ\u7b49\uff09\u3092\u4f7f\u7528\u3057\u3066\u304f\u3060\u3055\u3044\u3002\n\nArgs:\n    job_id: \u30b8\u30e7\u30d6ID\n    request: \u5b9f\u884c\u30ea\u30af\u30a8\u30b9\u30c8\uff08\u30d1\u30e9\u30e1\u30fc\u30bf\u4e0a\u66f8\u304d\u53ef\u80fd\uff09\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u5b9f\u884c\u7d50\u679c\n\nRaises:\n    HTTPException: \u30b8\u30e7\u30d6\u304c\u5b58\u5728\u3057\u306a\u3044\u5834\u5408",
         "operationId": "execute_batch_job_api_batch_jobs__job_id__execute_post",
         "parameters": [
           {
@@ -8327,7 +8327,7 @@
           "batch-jobs"
         ],
         "summary": "Cancel Batch Job",
-        "description": "バッチジョブキャンセル.\n\nArgs:\n    job_id: ジョブID\n    db: データベースセッション\n\nReturns:\n    キャンセルされたバッチジョブ\n\nRaises:\n    HTTPException: ジョブが存在しないか、キャンセルできない状態の場合",
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u30ad\u30e3\u30f3\u30bb\u30eb.\n\nArgs:\n    job_id: \u30b8\u30e7\u30d6ID\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u30ad\u30e3\u30f3\u30bb\u30eb\u3055\u308c\u305f\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\n\nRaises:\n    HTTPException: \u30b8\u30e7\u30d6\u304c\u5b58\u5728\u3057\u306a\u3044\u304b\u3001\u30ad\u30e3\u30f3\u30bb\u30eb\u3067\u304d\u306a\u3044\u72b6\u614b\u306e\u5834\u5408",
         "operationId": "cancel_batch_job_api_batch_jobs__job_id__cancel_post",
         "parameters": [
           {
@@ -8412,7 +8412,7 @@
           "rpa"
         ],
         "summary": "Execute Material Delivery Document",
-        "description": "素材納品書発行を実行.\n\nArgs:\n    request: リクエスト（開始日・終了日）\n    current_user: ログインユーザー（オプション）\n\nReturns:\n    実行結果",
+        "description": "\u7d20\u6750\u7d0d\u54c1\u66f8\u767a\u884c\u3092\u5b9f\u884c.\n\nArgs:\n    request: \u30ea\u30af\u30a8\u30b9\u30c8\uff08\u958b\u59cb\u65e5\u30fb\u7d42\u4e86\u65e5\uff09\n    current_user: \u30ed\u30b0\u30a4\u30f3\u30e6\u30fc\u30b6\u30fc\uff08\u30aa\u30d7\u30b7\u30e7\u30f3\uff09\n\nReturns:\n    \u5b9f\u884c\u7d50\u679c",
         "operationId": "execute_material_delivery_document_api_rpa_material_delivery_document_post",
         "requestBody": {
           "content": {
@@ -8456,7 +8456,7 @@
     "/": {
       "get": {
         "summary": "Root",
-        "description": "ルートエンドポイント.",
+        "description": "\u30eb\u30fc\u30c8\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8.",
         "operationId": "root__get",
         "responses": {
           "200": {
@@ -8655,14 +8655,14 @@
         "example": {
           "category": "order",
           "id": "alert_order_12345_20231124",
-          "message": "受注番号 ORD-12345 はフォーキャストに紐づいておらず、30分以上未処理です。",
+          "message": "\u53d7\u6ce8\u756a\u53f7 ORD-12345 \u306f\u30d5\u30a9\u30fc\u30ad\u30e3\u30b9\u30c8\u306b\u7d10\u3065\u3044\u3066\u304a\u3089\u305a\u300130\u5206\u4ee5\u4e0a\u672a\u51e6\u7406\u3067\u3059\u3002",
           "occurred_at": "2023-11-24T10:30:00Z",
           "severity": "critical",
           "target": {
             "id": 12345,
             "resource_type": "order"
           },
-          "title": "無予測受注が30分以上未処理",
+          "title": "\u7121\u4e88\u6e2c\u53d7\u6ce8\u304c30\u5206\u4ee5\u4e0a\u672a\u51e6\u7406",
           "type": "UNFORECASTED_ORDER_STALE"
         }
       },
@@ -8890,7 +8890,7 @@
             "type": "string",
             "pattern": "^(soft|hard)$",
             "title": "Allocation Type",
-            "description": "soft: 推奨引当, hard: 確定引当",
+            "description": "soft: \u63a8\u5968\u5f15\u5f53, hard: \u78ba\u5b9a\u5f15\u5f53",
             "default": "soft"
           },
           "status": {
@@ -9015,7 +9015,7 @@
           "shortage_quantity"
         ],
         "title": "AllocationGap",
-        "description": "不足情報."
+        "description": "\u4e0d\u8db3\u60c5\u5831."
       },
       "AllocationOptions": {
         "properties": {
@@ -9163,7 +9163,7 @@
           "shortage_quantity"
         ],
         "title": "AllocationStatsPerKey",
-        "description": "キーごとの集計結果."
+        "description": "\u30ad\u30fc\u3054\u3068\u306e\u96c6\u8a08\u7d50\u679c."
       },
       "AllocationStatsSummary": {
         "properties": {
@@ -9198,7 +9198,7 @@
           "per_key"
         ],
         "title": "AllocationStatsSummary",
-        "description": "全体集計."
+        "description": "\u5168\u4f53\u96c6\u8a08."
       },
       "AllocationSuggestionListResponse": {
         "properties": {
@@ -9220,7 +9220,7 @@
           "total"
         ],
         "title": "AllocationSuggestionListResponse",
-        "description": "引当推奨一覧レスポンス."
+        "description": "\u5f15\u5f53\u63a8\u5968\u4e00\u89a7\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "AllocationSuggestionPreviewResponse": {
         "properties": {
@@ -9249,7 +9249,7 @@
           "gaps"
         ],
         "title": "AllocationSuggestionPreviewResponse",
-        "description": "プレビュー/生成結果レスポンス."
+        "description": "\u30d7\u30ec\u30d3\u30e5\u30fc/\u751f\u6210\u7d50\u679c\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "AllocationSuggestionRequest": {
         "properties": {
@@ -9290,40 +9290,40 @@
           "mode"
         ],
         "title": "AllocationSuggestionRequest",
-        "description": "引当推奨生成/プレビューリクエスト."
+        "description": "\u5f15\u5f53\u63a8\u5968\u751f\u6210/\u30d7\u30ec\u30d3\u30e5\u30fc\u30ea\u30af\u30a8\u30b9\u30c8."
       },
       "AllocationSuggestionResponse": {
         "properties": {
           "forecast_period": {
             "type": "string",
             "title": "Forecast Period",
-            "description": "対象期間 (YYYY-MM)"
+            "description": "\u5bfe\u8c61\u671f\u9593 (YYYY-MM)"
           },
           "customer_id": {
             "type": "integer",
             "title": "Customer Id",
-            "description": "得意先ID"
+            "description": "\u5f97\u610f\u5148ID"
           },
           "delivery_place_id": {
             "type": "integer",
             "title": "Delivery Place Id",
-            "description": "納入先ID"
+            "description": "\u7d0d\u5165\u5148ID"
           },
           "product_id": {
             "type": "integer",
             "title": "Product Id",
-            "description": "製品ID"
+            "description": "\u88fd\u54c1ID"
           },
           "lot_id": {
             "type": "integer",
             "title": "Lot Id",
-            "description": "ロットID"
+            "description": "\u30ed\u30c3\u30c8ID"
           },
           "quantity": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity",
-            "description": "引当数量"
+            "description": "\u5f15\u5f53\u6570\u91cf"
           },
           "allocation_type": {
             "type": "string",
@@ -9332,12 +9332,12 @@
               "hard"
             ],
             "title": "Allocation Type",
-            "description": "引当タイプ"
+            "description": "\u5f15\u5f53\u30bf\u30a4\u30d7"
           },
           "source": {
             "type": "string",
             "title": "Source",
-            "description": "発生源 (forecast_import / order_preview)"
+            "description": "\u767a\u751f\u6e90 (forecast_import / order_preview)"
           },
           "order_line_id": {
             "anyOf": [
@@ -9349,7 +9349,7 @@
               }
             ],
             "title": "Order Line Id",
-            "description": "オーダー明細ID (Preview時など)"
+            "description": "\u30aa\u30fc\u30c0\u30fc\u660e\u7d30ID (Preview\u6642\u306a\u3069)"
           },
           "forecast_id": {
             "anyOf": [
@@ -9361,12 +9361,12 @@
               }
             ],
             "title": "Forecast Id",
-            "description": "予測ID (Forecast Link時)"
+            "description": "\u4e88\u6e2cID (Forecast Link\u6642)"
           },
           "priority": {
             "type": "integer",
             "title": "Priority",
-            "description": "引当優先順位 (1=High)",
+            "description": "\u5f15\u5f53\u512a\u5148\u9806\u4f4d (1=High)",
             "default": 0
           },
           "id": {
@@ -9393,7 +9393,7 @@
               }
             ],
             "title": "Lot Number",
-            "description": "ロット番号"
+            "description": "\u30ed\u30c3\u30c8\u756a\u53f7"
           },
           "lot_expiry_date": {
             "anyOf": [
@@ -9406,7 +9406,7 @@
               }
             ],
             "title": "Lot Expiry Date",
-            "description": "ロット有効期限"
+            "description": "\u30ed\u30c3\u30c8\u6709\u52b9\u671f\u9650"
           },
           "warehouse_name": {
             "anyOf": [
@@ -9418,7 +9418,7 @@
               }
             ],
             "title": "Warehouse Name",
-            "description": "倉庫名"
+            "description": "\u5009\u5eab\u540d"
           }
         },
         "type": "object",
@@ -9436,19 +9436,19 @@
           "updated_at"
         ],
         "title": "AllocationSuggestionResponse",
-        "description": "引当推奨レスポンス."
+        "description": "\u5f15\u5f53\u63a8\u5968\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "AutoAllocateRequest": {
         "properties": {
           "order_line_id": {
             "type": "integer",
             "title": "Order Line Id",
-            "description": "対象の受注明細ID"
+            "description": "\u5bfe\u8c61\u306e\u53d7\u6ce8\u660e\u7d30ID"
           },
           "strategy": {
             "type": "string",
             "title": "Strategy",
-            "description": "引当戦略 (fefo)",
+            "description": "\u5f15\u5f53\u6226\u7565 (fefo)",
             "default": "fefo"
           }
         },
@@ -9506,12 +9506,12 @@
             "type": "array",
             "minItems": 1,
             "title": "Order Ids",
-            "description": "引当対象の受注ID一覧"
+            "description": "\u5f15\u5f53\u5bfe\u8c61\u306e\u53d7\u6ce8ID\u4e00\u89a7"
           },
           "dry_run": {
             "type": "boolean",
             "title": "Dry Run",
-            "description": "Trueならプレビューのみ（DB保存しない）",
+            "description": "True\u306a\u3089\u30d7\u30ec\u30d3\u30e5\u30fc\u306e\u307f\uff08DB\u4fdd\u5b58\u3057\u306a\u3044\uff09",
             "default": false
           }
         },
@@ -9600,12 +9600,12 @@
           "job_name": {
             "type": "string",
             "title": "Job Name",
-            "description": "ジョブ名"
+            "description": "\u30b8\u30e7\u30d6\u540d"
           },
           "job_type": {
             "type": "string",
             "title": "Job Type",
-            "description": "ジョブ種別（allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation）"
+            "description": "\u30b8\u30e7\u30d6\u7a2e\u5225\uff08allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation\uff09"
           },
           "parameters": {
             "anyOf": [
@@ -9618,7 +9618,7 @@
               }
             ],
             "title": "Parameters",
-            "description": "ジョブパラメータ（JSON）"
+            "description": "\u30b8\u30e7\u30d6\u30d1\u30e9\u30e1\u30fc\u30bf\uff08JSON\uff09"
           }
         },
         "type": "object",
@@ -9627,7 +9627,7 @@
           "job_type"
         ],
         "title": "BatchJobCreate",
-        "description": "バッチジョブ作成スキーマ."
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u4f5c\u6210\u30b9\u30ad\u30fc\u30de."
       },
       "BatchJobExecuteRequest": {
         "properties": {
@@ -9642,12 +9642,12 @@
               }
             ],
             "title": "Parameters",
-            "description": "実行時パラメータ（上書き）"
+            "description": "\u5b9f\u884c\u6642\u30d1\u30e9\u30e1\u30fc\u30bf\uff08\u4e0a\u66f8\u304d\uff09"
           }
         },
         "type": "object",
         "title": "BatchJobExecuteRequest",
-        "description": "バッチジョブ実行リクエスト."
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u5b9f\u884c\u30ea\u30af\u30a8\u30b9\u30c8."
       },
       "BatchJobExecuteResponse": {
         "properties": {
@@ -9671,7 +9671,7 @@
           "message"
         ],
         "title": "BatchJobExecuteResponse",
-        "description": "バッチジョブ実行レスポンス."
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u5b9f\u884c\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "BatchJobListResponse": {
         "properties": {
@@ -9703,19 +9703,19 @@
           "page_size"
         ],
         "title": "BatchJobListResponse",
-        "description": "バッチジョブ一覧レスポンス."
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u4e00\u89a7\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "BatchJobResponse": {
         "properties": {
           "job_name": {
             "type": "string",
             "title": "Job Name",
-            "description": "ジョブ名"
+            "description": "\u30b8\u30e7\u30d6\u540d"
           },
           "job_type": {
             "type": "string",
             "title": "Job Type",
-            "description": "ジョブ種別（allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation）"
+            "description": "\u30b8\u30e7\u30d6\u7a2e\u5225\uff08allocation_suggestion/allocation_finalize/inventory_sync/data_import/report_generation\uff09"
           },
           "parameters": {
             "anyOf": [
@@ -9728,7 +9728,7 @@
               }
             ],
             "title": "Parameters",
-            "description": "ジョブパラメータ（JSON）"
+            "description": "\u30b8\u30e7\u30d6\u30d1\u30e9\u30e1\u30fc\u30bf\uff08JSON\uff09"
           },
           "job_id": {
             "type": "integer",
@@ -9737,7 +9737,7 @@
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "ステータス（pending/running/completed/failed）"
+            "description": "\u30b9\u30c6\u30fc\u30bf\u30b9\uff08pending/running/completed/failed\uff09"
           },
           "result_message": {
             "anyOf": [
@@ -9749,7 +9749,7 @@
               }
             ],
             "title": "Result Message",
-            "description": "実行結果メッセージ"
+            "description": "\u5b9f\u884c\u7d50\u679c\u30e1\u30c3\u30bb\u30fc\u30b8"
           },
           "started_at": {
             "anyOf": [
@@ -9762,7 +9762,7 @@
               }
             ],
             "title": "Started At",
-            "description": "開始日時"
+            "description": "\u958b\u59cb\u65e5\u6642"
           },
           "completed_at": {
             "anyOf": [
@@ -9775,13 +9775,13 @@
               }
             ],
             "title": "Completed At",
-            "description": "完了日時"
+            "description": "\u5b8c\u4e86\u65e5\u6642"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At",
-            "description": "作成日時"
+            "description": "\u4f5c\u6210\u65e5\u6642"
           }
         },
         "type": "object",
@@ -9793,7 +9793,7 @@
           "created_at"
         ],
         "title": "BatchJobResponse",
-        "description": "バッチジョブレスポンス."
+        "description": "\u30d0\u30c3\u30c1\u30b8\u30e7\u30d6\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "Body_import_from_file_api_admin_master_import_upload_post": {
         "properties": {
@@ -9841,7 +9841,7 @@
               }
             ],
             "title": "Product Id",
-            "description": "製品ID（指定時はその製品のみ対象）"
+            "description": "\u88fd\u54c1ID\uff08\u6307\u5b9a\u6642\u306f\u305d\u306e\u88fd\u54c1\u306e\u307f\u5bfe\u8c61\uff09"
           },
           "customer_id": {
             "anyOf": [
@@ -9853,7 +9853,7 @@
               }
             ],
             "title": "Customer Id",
-            "description": "得意先ID（指定時はその得意先のみ対象）"
+            "description": "\u5f97\u610f\u5148ID\uff08\u6307\u5b9a\u6642\u306f\u305d\u306e\u5f97\u610f\u5148\u306e\u307f\u5bfe\u8c61\uff09"
           },
           "delivery_place_id": {
             "anyOf": [
@@ -9865,7 +9865,7 @@
               }
             ],
             "title": "Delivery Place Id",
-            "description": "納入先ID（指定時はその納入先のみ対象）"
+            "description": "\u7d0d\u5165\u5148ID\uff08\u6307\u5b9a\u6642\u306f\u305d\u306e\u7d0d\u5165\u5148\u306e\u307f\u5bfe\u8c61\uff09"
           },
           "order_type": {
             "anyOf": [
@@ -9878,12 +9878,12 @@
               }
             ],
             "title": "Order Type",
-            "description": "受注タイプでフィルタ"
+            "description": "\u53d7\u6ce8\u30bf\u30a4\u30d7\u3067\u30d5\u30a3\u30eb\u30bf"
           },
           "skip_already_allocated": {
             "type": "boolean",
             "title": "Skip Already Allocated",
-            "description": "既に全量引当済みの明細をスキップ",
+            "description": "\u65e2\u306b\u5168\u91cf\u5f15\u5f53\u6e08\u307f\u306e\u660e\u7d30\u3092\u30b9\u30ad\u30c3\u30d7",
             "default": true
           }
         },
@@ -9896,25 +9896,25 @@
           "processed_lines": {
             "type": "integer",
             "title": "Processed Lines",
-            "description": "処理した受注明細数",
+            "description": "\u51e6\u7406\u3057\u305f\u53d7\u6ce8\u660e\u7d30\u6570",
             "default": 0
           },
           "allocated_lines": {
             "type": "integer",
             "title": "Allocated Lines",
-            "description": "引当を作成した明細数",
+            "description": "\u5f15\u5f53\u3092\u4f5c\u6210\u3057\u305f\u660e\u7d30\u6570",
             "default": 0
           },
           "total_allocations": {
             "type": "integer",
             "title": "Total Allocations",
-            "description": "作成した引当レコード数",
+            "description": "\u4f5c\u6210\u3057\u305f\u5f15\u5f53\u30ec\u30b3\u30fc\u30c9\u6570",
             "default": 0
           },
           "skipped_lines": {
             "type": "integer",
             "title": "Skipped Lines",
-            "description": "スキップした明細数（既に引当済み等）",
+            "description": "\u30b9\u30ad\u30c3\u30d7\u3057\u305f\u660e\u7d30\u6570\uff08\u65e2\u306b\u5f15\u5f53\u6e08\u307f\u7b49\uff09",
             "default": 0
           },
           "failed_lines": {
@@ -9923,7 +9923,7 @@
             },
             "type": "array",
             "title": "Failed Lines",
-            "description": "失敗した明細"
+            "description": "\u5931\u6557\u3057\u305f\u660e\u7d30"
           },
           "message": {
             "type": "string",
@@ -9946,7 +9946,7 @@
             "type": "array",
             "minItems": 1,
             "title": "Allocation Ids",
-            "description": "取消対象の引当ID一覧"
+            "description": "\u53d6\u6d88\u5bfe\u8c61\u306e\u5f15\u5f53ID\u4e00\u89a7"
           }
         },
         "type": "object",
@@ -9964,7 +9964,7 @@
             },
             "type": "array",
             "title": "Cancelled Ids",
-            "description": "取消成功した引当ID"
+            "description": "\u53d6\u6d88\u6210\u529f\u3057\u305f\u5f15\u5f53ID"
           },
           "failed_ids": {
             "items": {
@@ -9972,7 +9972,7 @@
             },
             "type": "array",
             "title": "Failed Ids",
-            "description": "取消失敗した引当ID"
+            "description": "\u53d6\u6d88\u5931\u6557\u3057\u305f\u5f15\u5f53ID"
           },
           "message": {
             "type": "string",
@@ -10051,28 +10051,28 @@
           "rule_code": {
             "type": "string",
             "title": "Rule Code",
-            "description": "ルールコード（一意）"
+            "description": "\u30eb\u30fc\u30eb\u30b3\u30fc\u30c9\uff08\u4e00\u610f\uff09"
           },
           "rule_name": {
             "type": "string",
             "title": "Rule Name",
-            "description": "ルール名"
+            "description": "\u30eb\u30fc\u30eb\u540d"
           },
           "rule_type": {
             "type": "string",
             "title": "Rule Type",
-            "description": "ルール種別（allocation/expiry_warning/kanban/other）"
+            "description": "\u30eb\u30fc\u30eb\u7a2e\u5225\uff08allocation/expiry_warning/kanban/other\uff09"
           },
           "rule_parameters": {
             "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
-            "description": "ルールパラメータ（JSON）"
+            "description": "\u30eb\u30fc\u30eb\u30d1\u30e9\u30e1\u30fc\u30bf\uff08JSON\uff09"
           },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
-            "description": "有効フラグ",
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0",
             "default": true
           }
         },
@@ -10084,7 +10084,7 @@
           "rule_parameters"
         ],
         "title": "BusinessRuleCreate",
-        "description": "業務ルール作成スキーマ."
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u4f5c\u6210\u30b9\u30ad\u30fc\u30de."
       },
       "BusinessRuleListResponse": {
         "properties": {
@@ -10106,35 +10106,35 @@
           "total"
         ],
         "title": "BusinessRuleListResponse",
-        "description": "業務ルール一覧レスポンス."
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u4e00\u89a7\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "BusinessRuleResponse": {
         "properties": {
           "rule_code": {
             "type": "string",
             "title": "Rule Code",
-            "description": "ルールコード（一意）"
+            "description": "\u30eb\u30fc\u30eb\u30b3\u30fc\u30c9\uff08\u4e00\u610f\uff09"
           },
           "rule_name": {
             "type": "string",
             "title": "Rule Name",
-            "description": "ルール名"
+            "description": "\u30eb\u30fc\u30eb\u540d"
           },
           "rule_type": {
             "type": "string",
             "title": "Rule Type",
-            "description": "ルール種別（allocation/expiry_warning/kanban/other）"
+            "description": "\u30eb\u30fc\u30eb\u7a2e\u5225\uff08allocation/expiry_warning/kanban/other\uff09"
           },
           "rule_parameters": {
             "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
-            "description": "ルールパラメータ（JSON）"
+            "description": "\u30eb\u30fc\u30eb\u30d1\u30e9\u30e1\u30fc\u30bf\uff08JSON\uff09"
           },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
-            "description": "有効フラグ",
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0",
             "default": true
           },
           "rule_id": {
@@ -10163,7 +10163,7 @@
           "updated_at"
         ],
         "title": "BusinessRuleResponse",
-        "description": "業務ルールレスポンス."
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "BusinessRuleUpdate": {
         "properties": {
@@ -10177,7 +10177,7 @@
               }
             ],
             "title": "Rule Name",
-            "description": "ルール名"
+            "description": "\u30eb\u30fc\u30eb\u540d"
           },
           "rule_type": {
             "anyOf": [
@@ -10189,7 +10189,7 @@
               }
             ],
             "title": "Rule Type",
-            "description": "ルール種別"
+            "description": "\u30eb\u30fc\u30eb\u7a2e\u5225"
           },
           "rule_parameters": {
             "anyOf": [
@@ -10202,7 +10202,7 @@
               }
             ],
             "title": "Rule Parameters",
-            "description": "ルールパラメータ（JSON）"
+            "description": "\u30eb\u30fc\u30eb\u30d1\u30e9\u30e1\u30fc\u30bf\uff08JSON\uff09"
           },
           "is_active": {
             "anyOf": [
@@ -10214,12 +10214,12 @@
               }
             ],
             "title": "Is Active",
-            "description": "有効フラグ"
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0"
           }
         },
         "type": "object",
         "title": "BusinessRuleUpdate",
-        "description": "業務ルール更新スキーマ."
+        "description": "\u696d\u52d9\u30eb\u30fc\u30eb\u66f4\u65b0\u30b9\u30ad\u30fc\u30de."
       },
       "CandidateLotItem": {
         "properties": {
@@ -10245,7 +10245,7 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity",
-            "description": "引当可能数量"
+            "description": "\u5f15\u5f53\u53ef\u80fd\u6570\u91cf"
           },
           "product_id": {
             "type": "integer",
@@ -10779,18 +10779,18 @@
           "customer_code": {
             "type": "string",
             "title": "Customer Code",
-            "description": "得意先コード"
+            "description": "\u5f97\u610f\u5148\u30b3\u30fc\u30c9"
           },
           "external_product_code": {
             "type": "string",
             "maxLength": 100,
             "title": "External Product Code",
-            "description": "得意先品番"
+            "description": "\u5f97\u610f\u5148\u54c1\u756a"
           },
           "product_code": {
             "type": "string",
             "title": "Product Code",
-            "description": "製品コード"
+            "description": "\u88fd\u54c1\u30b3\u30fc\u30c9"
           },
           "supplier_code": {
             "anyOf": [
@@ -10802,13 +10802,13 @@
               }
             ],
             "title": "Supplier Code",
-            "description": "仕入先コード"
+            "description": "\u4ed5\u5165\u5148\u30b3\u30fc\u30c9"
           },
           "base_unit": {
             "type": "string",
             "maxLength": 20,
             "title": "Base Unit",
-            "description": "基本単位"
+            "description": "\u57fa\u672c\u5358\u4f4d"
           },
           "pack_unit": {
             "anyOf": [
@@ -10821,7 +10821,7 @@
               }
             ],
             "title": "Pack Unit",
-            "description": "梱包単位"
+            "description": "\u68b1\u5305\u5358\u4f4d"
           },
           "pack_quantity": {
             "anyOf": [
@@ -10833,7 +10833,7 @@
               }
             ],
             "title": "Pack Quantity",
-            "description": "梱包数量"
+            "description": "\u68b1\u5305\u6570\u91cf"
           },
           "special_instructions": {
             "anyOf": [
@@ -10845,7 +10845,7 @@
               }
             ],
             "title": "Special Instructions",
-            "description": "特記事項"
+            "description": "\u7279\u8a18\u4e8b\u9805"
           }
         },
         "type": "object",
@@ -10882,18 +10882,18 @@
           "customer_id": {
             "type": "integer",
             "title": "Customer Id",
-            "description": "得意先ID"
+            "description": "\u5f97\u610f\u5148ID"
           },
           "external_product_code": {
             "type": "string",
             "maxLength": 100,
             "title": "External Product Code",
-            "description": "得意先品番"
+            "description": "\u5f97\u610f\u5148\u54c1\u756a"
           },
           "product_id": {
             "type": "integer",
             "title": "Product Id",
-            "description": "製品ID"
+            "description": "\u88fd\u54c1ID"
           },
           "supplier_id": {
             "anyOf": [
@@ -10905,13 +10905,13 @@
               }
             ],
             "title": "Supplier Id",
-            "description": "仕入先ID"
+            "description": "\u4ed5\u5165\u5148ID"
           },
           "base_unit": {
             "type": "string",
             "maxLength": 20,
             "title": "Base Unit",
-            "description": "基本単位"
+            "description": "\u57fa\u672c\u5358\u4f4d"
           },
           "pack_unit": {
             "anyOf": [
@@ -10924,7 +10924,7 @@
               }
             ],
             "title": "Pack Unit",
-            "description": "梱包単位"
+            "description": "\u68b1\u5305\u5358\u4f4d"
           },
           "pack_quantity": {
             "anyOf": [
@@ -10936,7 +10936,7 @@
               }
             ],
             "title": "Pack Quantity",
-            "description": "梱包数量"
+            "description": "\u68b1\u5305\u6570\u91cf"
           },
           "special_instructions": {
             "anyOf": [
@@ -10948,7 +10948,7 @@
               }
             ],
             "title": "Special Instructions",
-            "description": "特記事項"
+            "description": "\u7279\u8a18\u4e8b\u9805"
           }
         },
         "type": "object",
@@ -11048,18 +11048,18 @@
           "customer_id": {
             "type": "integer",
             "title": "Customer Id",
-            "description": "得意先ID"
+            "description": "\u5f97\u610f\u5148ID"
           },
           "external_product_code": {
             "type": "string",
             "maxLength": 100,
             "title": "External Product Code",
-            "description": "得意先品番"
+            "description": "\u5f97\u610f\u5148\u54c1\u756a"
           },
           "product_id": {
             "type": "integer",
             "title": "Product Id",
-            "description": "製品ID"
+            "description": "\u88fd\u54c1ID"
           },
           "supplier_id": {
             "anyOf": [
@@ -11071,13 +11071,13 @@
               }
             ],
             "title": "Supplier Id",
-            "description": "仕入先ID"
+            "description": "\u4ed5\u5165\u5148ID"
           },
           "base_unit": {
             "type": "string",
             "maxLength": 20,
             "title": "Base Unit",
-            "description": "基本単位"
+            "description": "\u57fa\u672c\u5358\u4f4d"
           },
           "pack_unit": {
             "anyOf": [
@@ -11090,7 +11090,7 @@
               }
             ],
             "title": "Pack Unit",
-            "description": "梱包単位"
+            "description": "\u68b1\u5305\u5358\u4f4d"
           },
           "pack_quantity": {
             "anyOf": [
@@ -11102,7 +11102,7 @@
               }
             ],
             "title": "Pack Quantity",
-            "description": "梱包数量"
+            "description": "\u68b1\u5305\u6570\u91cf"
           },
           "special_instructions": {
             "anyOf": [
@@ -11114,22 +11114,22 @@
               }
             ],
             "title": "Special Instructions",
-            "description": "特記事項"
+            "description": "\u7279\u8a18\u4e8b\u9805"
           },
           "customer_code": {
             "type": "string",
             "title": "Customer Code",
-            "description": "得意先コード"
+            "description": "\u5f97\u610f\u5148\u30b3\u30fc\u30c9"
           },
           "customer_name": {
             "type": "string",
             "title": "Customer Name",
-            "description": "得意先名"
+            "description": "\u5f97\u610f\u5148\u540d"
           },
           "product_name": {
             "type": "string",
             "title": "Product Name",
-            "description": "製品名"
+            "description": "\u88fd\u54c1\u540d"
           },
           "supplier_code": {
             "anyOf": [
@@ -11141,7 +11141,7 @@
               }
             ],
             "title": "Supplier Code",
-            "description": "仕入先コード"
+            "description": "\u4ed5\u5165\u5148\u30b3\u30fc\u30c9"
           },
           "supplier_name": {
             "anyOf": [
@@ -11153,7 +11153,7 @@
               }
             ],
             "title": "Supplier Name",
-            "description": "仕入先名"
+            "description": "\u4ed5\u5165\u5148\u540d"
           },
           "created_at": {
             "type": "string",
@@ -11193,7 +11193,7 @@
               }
             ],
             "title": "Product Id",
-            "description": "製品ID"
+            "description": "\u88fd\u54c1ID"
           },
           "supplier_id": {
             "anyOf": [
@@ -11205,7 +11205,7 @@
               }
             ],
             "title": "Supplier Id",
-            "description": "仕入先ID"
+            "description": "\u4ed5\u5165\u5148ID"
           },
           "base_unit": {
             "anyOf": [
@@ -11218,7 +11218,7 @@
               }
             ],
             "title": "Base Unit",
-            "description": "基本単位"
+            "description": "\u57fa\u672c\u5358\u4f4d"
           },
           "pack_unit": {
             "anyOf": [
@@ -11231,7 +11231,7 @@
               }
             ],
             "title": "Pack Unit",
-            "description": "梱包単位"
+            "description": "\u68b1\u5305\u5358\u4f4d"
           },
           "pack_quantity": {
             "anyOf": [
@@ -11243,7 +11243,7 @@
               }
             ],
             "title": "Pack Quantity",
-            "description": "梱包数量"
+            "description": "\u68b1\u5305\u6570\u91cf"
           },
           "special_instructions": {
             "anyOf": [
@@ -11255,7 +11255,7 @@
               }
             ],
             "title": "Special Instructions",
-            "description": "特記事項"
+            "description": "\u7279\u8a18\u4e8b\u9805"
           }
         },
         "type": "object",
@@ -11445,7 +11445,7 @@
           "allocation_rate"
         ],
         "title": "DashboardStatsResponse",
-        "description": "ダッシュボード統計レスポンス."
+        "description": "\u30c0\u30c3\u30b7\u30e5\u30dc\u30fc\u30c9\u7d71\u8a08\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "DeliveryPlaceImportRow": {
         "properties": {
@@ -11691,13 +11691,13 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
-            "description": "受注数量"
+            "description": "\u53d7\u6ce8\u6570\u91cf"
           },
           "already_allocated_quantity": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Already Allocated Quantity",
-            "description": "既存引当数量",
+            "description": "\u65e2\u5b58\u5f15\u5f53\u6570\u91cf",
             "default": "0"
           },
           "allocations": {
@@ -11738,7 +11738,7 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity",
-            "description": "引当数量"
+            "description": "\u5f15\u5f53\u6570\u91cf"
           },
           "expiry_date": {
             "anyOf": [
@@ -12076,7 +12076,7 @@
           "product_id"
         ],
         "title": "ForecastGroupKey",
-        "description": "Group key for customer × delivery_place × product."
+        "description": "Group key for customer \u00d7 delivery_place \u00d7 product."
       },
       "ForecastGroupResponse": {
         "properties": {
@@ -12115,7 +12115,7 @@
           "group_key"
         ],
         "title": "ForecastGroupResponse",
-        "description": "Grouped forecasts by customer × delivery_place × product."
+        "description": "Grouped forecasts by customer \u00d7 delivery_place \u00d7 product."
       },
       "ForecastHistoryResponse": {
         "properties": {
@@ -12466,7 +12466,7 @@
             "type": "array",
             "minItems": 1,
             "title": "Allocation Ids",
-            "description": "確定対象の引当ID一覧"
+            "description": "\u78ba\u5b9a\u5bfe\u8c61\u306e\u5f15\u5f53ID\u4e00\u89a7"
           },
           "confirmed_by": {
             "anyOf": [
@@ -12478,7 +12478,7 @@
               }
             ],
             "title": "Confirmed By",
-            "description": "確定操作を行うユーザーID"
+            "description": "\u78ba\u5b9a\u64cd\u4f5c\u3092\u884c\u3046\u30e6\u30fc\u30b6\u30fcID"
           }
         },
         "type": "object",
@@ -12496,7 +12496,7 @@
             },
             "type": "array",
             "title": "Confirmed",
-            "description": "確定成功した引当ID"
+            "description": "\u78ba\u5b9a\u6210\u529f\u3057\u305f\u5f15\u5f53ID"
           },
           "failed": {
             "items": {
@@ -12504,7 +12504,7 @@
             },
             "type": "array",
             "title": "Failed",
-            "description": "確定失敗した引当"
+            "description": "\u78ba\u5b9a\u5931\u6557\u3057\u305f\u5f15\u5f53"
           }
         },
         "type": "object",
@@ -12547,7 +12547,7 @@
               }
             ],
             "title": "Confirmed By",
-            "description": "確定操作を行うユーザーID"
+            "description": "\u78ba\u5b9a\u64cd\u4f5c\u3092\u884c\u3046\u30e6\u30fc\u30b6\u30fcID"
           },
           "quantity": {
             "anyOf": [
@@ -12564,12 +12564,12 @@
               }
             ],
             "title": "Quantity",
-            "description": "部分確定の場合の数量（未指定で全量確定）"
+            "description": "\u90e8\u5206\u78ba\u5b9a\u306e\u5834\u5408\u306e\u6570\u91cf\uff08\u672a\u6307\u5b9a\u3067\u5168\u91cf\u78ba\u5b9a\uff09"
           }
         },
         "type": "object",
         "title": "HardAllocationConfirmRequest",
-        "description": "Hard allocation confirm request (Soft → Hard)."
+        "description": "Hard allocation confirm request (Soft \u2192 Hard)."
       },
       "HardAllocationConfirmResponse": {
         "properties": {
@@ -14089,7 +14089,7 @@
           "page_size"
         ],
         "title": "MasterChangeLogListResponse",
-        "description": "マスタ変更履歴一覧レスポンス."
+        "description": "\u30de\u30b9\u30bf\u5909\u66f4\u5c65\u6b74\u4e00\u89a7\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "MasterChangeLogResponse": {
         "properties": {
@@ -14100,17 +14100,17 @@
           "table_name": {
             "type": "string",
             "title": "Table Name",
-            "description": "テーブル名"
+            "description": "\u30c6\u30fc\u30d6\u30eb\u540d"
           },
           "record_id": {
             "type": "integer",
             "title": "Record Id",
-            "description": "レコードID"
+            "description": "\u30ec\u30b3\u30fc\u30c9ID"
           },
           "change_type": {
             "type": "string",
             "title": "Change Type",
-            "description": "変更種別（insert/update/delete）"
+            "description": "\u5909\u66f4\u7a2e\u5225\uff08insert/update/delete\uff09"
           },
           "old_values": {
             "anyOf": [
@@ -14123,7 +14123,7 @@
               }
             ],
             "title": "Old Values",
-            "description": "変更前の値（JSON）"
+            "description": "\u5909\u66f4\u524d\u306e\u5024\uff08JSON\uff09"
           },
           "new_values": {
             "anyOf": [
@@ -14136,18 +14136,18 @@
               }
             ],
             "title": "New Values",
-            "description": "変更後の値（JSON）"
+            "description": "\u5909\u66f4\u5f8c\u306e\u5024\uff08JSON\uff09"
           },
           "changed_by": {
             "type": "integer",
             "title": "Changed By",
-            "description": "変更者（ユーザーID）"
+            "description": "\u5909\u66f4\u8005\uff08\u30e6\u30fc\u30b6\u30fcID\uff09"
           },
           "changed_at": {
             "type": "string",
             "format": "date-time",
             "title": "Changed At",
-            "description": "変更日時"
+            "description": "\u5909\u66f4\u65e5\u6642"
           }
         },
         "type": "object",
@@ -14160,7 +14160,7 @@
           "changed_at"
         ],
         "title": "MasterChangeLogResponse",
-        "description": "マスタ変更履歴レスポンス."
+        "description": "\u30de\u30b9\u30bf\u5909\u66f4\u5c65\u6b74\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "MasterImportRequest": {
         "properties": {
@@ -14247,13 +14247,13 @@
             "type": "string",
             "format": "date",
             "title": "Start Date",
-            "description": "開始日"
+            "description": "\u958b\u59cb\u65e5"
           },
           "end_date": {
             "type": "string",
             "format": "date",
             "title": "End Date",
-            "description": "終了日"
+            "description": "\u7d42\u4e86\u65e5"
           }
         },
         "type": "object",
@@ -14262,24 +14262,24 @@
           "end_date"
         ],
         "title": "MaterialDeliveryDocumentRequest",
-        "description": "素材納品書発行リクエスト."
+        "description": "\u7d20\u6750\u7d0d\u54c1\u66f8\u767a\u884c\u30ea\u30af\u30a8\u30b9\u30c8."
       },
       "MaterialDeliveryDocumentResponse": {
         "properties": {
           "status": {
             "type": "string",
             "title": "Status",
-            "description": "実行ステータス (success, locked)"
+            "description": "\u5b9f\u884c\u30b9\u30c6\u30fc\u30bf\u30b9 (success, locked)"
           },
           "message": {
             "type": "string",
             "title": "Message",
-            "description": "メッセージ"
+            "description": "\u30e1\u30c3\u30bb\u30fc\u30b8"
           },
           "execution_time_seconds": {
             "type": "integer",
             "title": "Execution Time Seconds",
-            "description": "実行時間（秒）",
+            "description": "\u5b9f\u884c\u6642\u9593\uff08\u79d2\uff09",
             "default": 60
           }
         },
@@ -14289,7 +14289,7 @@
           "message"
         ],
         "title": "MaterialDeliveryDocumentResponse",
-        "description": "素材納品書発行レスポンス."
+        "description": "\u7d20\u6750\u7d0d\u54c1\u66f8\u767a\u884c\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "MySuppliersResponse": {
         "properties": {
@@ -14319,7 +14319,7 @@
           "all_supplier_ids"
         ],
         "title": "MySuppliersResponse",
-        "description": "現在のユーザーの担当仕入先ID一覧."
+        "description": "\u73fe\u5728\u306e\u30e6\u30fc\u30b6\u30fc\u306e\u62c5\u5f53\u4ed5\u5165\u5148ID\u4e00\u89a7."
       },
       "OperationLogListResponse": {
         "properties": {
@@ -14351,7 +14351,7 @@
           "page_size"
         ],
         "title": "OperationLogListResponse",
-        "description": "操作ログ一覧レスポンス."
+        "description": "\u64cd\u4f5c\u30ed\u30b0\u4e00\u89a7\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "OperationLogResponse": {
         "properties": {
@@ -14373,12 +14373,12 @@
           "operation_type": {
             "type": "string",
             "title": "Operation Type",
-            "description": "操作種別（create/update/delete/login/logout/export）"
+            "description": "\u64cd\u4f5c\u7a2e\u5225\uff08create/update/delete/login/logout/export\uff09"
           },
           "target_table": {
             "type": "string",
             "title": "Target Table",
-            "description": "対象テーブル名"
+            "description": "\u5bfe\u8c61\u30c6\u30fc\u30d6\u30eb\u540d"
           },
           "target_id": {
             "anyOf": [
@@ -14390,7 +14390,7 @@
               }
             ],
             "title": "Target Id",
-            "description": "対象レコードID"
+            "description": "\u5bfe\u8c61\u30ec\u30b3\u30fc\u30c9ID"
           },
           "changes": {
             "anyOf": [
@@ -14403,7 +14403,7 @@
               }
             ],
             "title": "Changes",
-            "description": "変更内容（JSON）"
+            "description": "\u5909\u66f4\u5185\u5bb9\uff08JSON\uff09"
           },
           "ip_address": {
             "anyOf": [
@@ -14415,13 +14415,13 @@
               }
             ],
             "title": "Ip Address",
-            "description": "IPアドレス"
+            "description": "IP\u30a2\u30c9\u30ec\u30b9"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At",
-            "description": "作成日時"
+            "description": "\u4f5c\u6210\u65e5\u6642"
           }
         },
         "type": "object",
@@ -14432,7 +14432,7 @@
           "created_at"
         ],
         "title": "OperationLogResponse",
-        "description": "操作ログレスポンス."
+        "description": "\u64cd\u4f5c\u30ed\u30b0\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "OrderCreate": {
         "properties": {
@@ -14493,7 +14493,7 @@
               }
             ],
             "title": "Order Quantity",
-            "description": "受注数量"
+            "description": "\u53d7\u6ce8\u6570\u91cf"
           },
           "unit": {
             "type": "string",
@@ -14515,7 +14515,7 @@
               }
             ],
             "title": "Converted Quantity",
-            "description": "社内基準単位換算数量"
+            "description": "\u793e\u5185\u57fa\u6e96\u5358\u4f4d\u63db\u7b97\u6570\u91cf"
           },
           "delivery_place_id": {
             "type": "integer",
@@ -14526,7 +14526,7 @@
             "type": "string",
             "pattern": "^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$",
             "title": "Order Type",
-            "description": "需要種別",
+            "description": "\u9700\u8981\u7a2e\u5225",
             "default": "ORDER"
           },
           "forecast_id": {
@@ -14540,7 +14540,7 @@
               }
             ],
             "title": "Forecast Id",
-            "description": "紐づく予測ID"
+            "description": "\u7d10\u3065\u304f\u4e88\u6e2cID"
           },
           "status": {
             "type": "string",
@@ -14576,7 +14576,7 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
-            "description": "受注数量"
+            "description": "\u53d7\u6ce8\u6570\u91cf"
           },
           "unit": {
             "type": "string",
@@ -14595,7 +14595,7 @@
               }
             ],
             "title": "Converted Quantity",
-            "description": "社内基準単位換算数量"
+            "description": "\u793e\u5185\u57fa\u6e96\u5358\u4f4d\u63db\u7b97\u6570\u91cf"
           },
           "delivery_place_id": {
             "type": "integer",
@@ -14606,7 +14606,7 @@
             "type": "string",
             "pattern": "^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$",
             "title": "Order Type",
-            "description": "需要種別",
+            "description": "\u9700\u8981\u7a2e\u5225",
             "default": "ORDER"
           },
           "forecast_id": {
@@ -14620,7 +14620,7 @@
               }
             ],
             "title": "Forecast Id",
-            "description": "紐づく予測ID"
+            "description": "\u7d10\u3065\u304f\u4e88\u6e2cID"
           },
           "status": {
             "type": "string",
@@ -14789,7 +14789,7 @@
               }
             ],
             "title": "Forecast Period",
-            "description": "予測期間（YYYY-MM）"
+            "description": "\u4e88\u6e2c\u671f\u9593\uff08YYYY-MM\uff09"
           },
           "allocations": {
             "items": {
@@ -14802,7 +14802,7 @@
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
-            "description": "引当済数量",
+            "description": "\u5f15\u5f53\u6e08\u6570\u91cf",
             "default": "0"
           }
         },
@@ -14867,7 +14867,7 @@
               }
             ],
             "title": "Locked By User Id",
-            "description": "編集中のユーザーID"
+            "description": "\u7de8\u96c6\u4e2d\u306e\u30e6\u30fc\u30b6\u30fcID"
           },
           "locked_by_user_name": {
             "anyOf": [
@@ -14879,7 +14879,7 @@
               }
             ],
             "title": "Locked By User Name",
-            "description": "編集中のユーザー名"
+            "description": "\u7de8\u96c6\u4e2d\u306e\u30e6\u30fc\u30b6\u30fc\u540d"
           },
           "locked_at": {
             "anyOf": [
@@ -14892,7 +14892,7 @@
               }
             ],
             "title": "Locked At",
-            "description": "ロック取得日時"
+            "description": "\u30ed\u30c3\u30af\u53d6\u5f97\u65e5\u6642"
           },
           "lock_expires_at": {
             "anyOf": [
@@ -14905,7 +14905,7 @@
               }
             ],
             "title": "Lock Expires At",
-            "description": "ロック有効期限"
+            "description": "\u30ed\u30c3\u30af\u6709\u52b9\u671f\u9650"
           },
           "lines": {
             "items": {
@@ -15320,7 +15320,7 @@
           "success"
         ],
         "title": "ResponseBase",
-        "description": "API共通レスポンス."
+        "description": "API\u5171\u901a\u30ec\u30b9\u30dd\u30f3\u30b9."
       },
       "RoleCreate": {
         "properties": {
@@ -15329,14 +15329,14 @@
             "maxLength": 50,
             "minLength": 1,
             "title": "Role Code",
-            "description": "ロールコード"
+            "description": "\u30ed\u30fc\u30eb\u30b3\u30fc\u30c9"
           },
           "role_name": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
             "title": "Role Name",
-            "description": "ロール名"
+            "description": "\u30ed\u30fc\u30eb\u540d"
           },
           "description": {
             "anyOf": [
@@ -15348,7 +15348,7 @@
               }
             ],
             "title": "Description",
-            "description": "説明"
+            "description": "\u8aac\u660e"
           }
         },
         "type": "object",
@@ -15366,14 +15366,14 @@
             "maxLength": 50,
             "minLength": 1,
             "title": "Role Code",
-            "description": "ロールコード"
+            "description": "\u30ed\u30fc\u30eb\u30b3\u30fc\u30c9"
           },
           "role_name": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
             "title": "Role Name",
-            "description": "ロール名"
+            "description": "\u30ed\u30fc\u30eb\u540d"
           },
           "description": {
             "anyOf": [
@@ -15385,7 +15385,7 @@
               }
             ],
             "title": "Description",
-            "description": "説明"
+            "description": "\u8aac\u660e"
           },
           "id": {
             "type": "integer",
@@ -15427,7 +15427,7 @@
               }
             ],
             "title": "Role Name",
-            "description": "ロール名"
+            "description": "\u30ed\u30fc\u30eb\u540d"
           },
           "description": {
             "anyOf": [
@@ -15439,7 +15439,7 @@
               }
             ],
             "title": "Description",
-            "description": "説明"
+            "description": "\u8aac\u660e"
           }
         },
         "type": "object",
@@ -15886,7 +15886,7 @@
             "default": "bearer"
           },
           "user": {
-            "$ref": "#/components/schemas/app__schemas__auth__auth_schemas__UserResponse"
+            "$ref": "#/components/schemas/app__presentation__schemas__auth__auth_schemas__UserResponse"
           }
         },
         "type": "object",
@@ -15902,13 +15902,13 @@
           "product_code": {
             "type": "string",
             "title": "Product Code",
-            "description": "製品コード"
+            "description": "\u88fd\u54c1\u30b3\u30fc\u30c9"
           },
           "external_unit": {
             "type": "string",
             "maxLength": 20,
             "title": "External Unit",
-            "description": "外部単位"
+            "description": "\u5916\u90e8\u5358\u4f4d"
           },
           "factor": {
             "anyOf": [
@@ -15921,7 +15921,7 @@
               }
             ],
             "title": "Factor",
-            "description": "換算係数"
+            "description": "\u63db\u7b97\u4fc2\u6570"
           }
         },
         "type": "object",
@@ -15957,19 +15957,19 @@
           "product_id": {
             "type": "integer",
             "title": "Product Id",
-            "description": "製品ID"
+            "description": "\u88fd\u54c1ID"
           },
           "external_unit": {
             "type": "string",
             "maxLength": 20,
             "title": "External Unit",
-            "description": "外部単位"
+            "description": "\u5916\u90e8\u5358\u4f4d"
           },
           "factor": {
             "type": "string",
             "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Factor",
-            "description": "換算係数"
+            "description": "\u63db\u7b97\u4fc2\u6570"
           },
           "conversion_id": {
             "type": "integer",
@@ -16014,7 +16014,7 @@
               }
             ],
             "title": "Factor",
-            "description": "換算係数"
+            "description": "\u63db\u7b97\u4fc2\u6570"
           }
         },
         "type": "object",
@@ -16028,33 +16028,33 @@
             "maxLength": 50,
             "minLength": 3,
             "title": "Username",
-            "description": "ユーザー名"
+            "description": "\u30e6\u30fc\u30b6\u30fc\u540d"
           },
           "email": {
             "type": "string",
             "maxLength": 255,
             "format": "email",
             "title": "Email",
-            "description": "メールアドレス"
+            "description": "\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9"
           },
           "display_name": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
             "title": "Display Name",
-            "description": "表示名"
+            "description": "\u8868\u793a\u540d"
           },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
-            "description": "有効フラグ",
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0",
             "default": true
           },
           "password": {
             "type": "string",
             "minLength": 8,
             "title": "Password",
-            "description": "パスワード（平文）"
+            "description": "\u30d1\u30b9\u30ef\u30fc\u30c9\uff08\u5e73\u6587\uff09"
           }
         },
         "type": "object",
@@ -16075,7 +16075,7 @@
             },
             "type": "array",
             "title": "Role Ids",
-            "description": "割り当てるロールIDリスト"
+            "description": "\u5272\u308a\u5f53\u3066\u308b\u30ed\u30fc\u30ebID\u30ea\u30b9\u30c8"
           }
         },
         "type": "object",
@@ -16232,7 +16232,7 @@
               }
             ],
             "title": "Email",
-            "description": "メールアドレス"
+            "description": "\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9"
           },
           "display_name": {
             "anyOf": [
@@ -16246,7 +16246,7 @@
               }
             ],
             "title": "Display Name",
-            "description": "表示名"
+            "description": "\u8868\u793a\u540d"
           },
           "is_active": {
             "anyOf": [
@@ -16258,7 +16258,7 @@
               }
             ],
             "title": "Is Active",
-            "description": "有効フラグ"
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0"
           },
           "password": {
             "anyOf": [
@@ -16271,7 +16271,7 @@
               }
             ],
             "title": "Password",
-            "description": "パスワード（平文）"
+            "description": "\u30d1\u30b9\u30ef\u30fc\u30c9\uff08\u5e73\u6587\uff09"
           }
         },
         "type": "object",
@@ -16285,26 +16285,26 @@
             "maxLength": 50,
             "minLength": 3,
             "title": "Username",
-            "description": "ユーザー名"
+            "description": "\u30e6\u30fc\u30b6\u30fc\u540d"
           },
           "email": {
             "type": "string",
             "maxLength": 255,
             "format": "email",
             "title": "Email",
-            "description": "メールアドレス"
+            "description": "\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9"
           },
           "display_name": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
             "title": "Display Name",
-            "description": "表示名"
+            "description": "\u8868\u793a\u540d"
           },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
-            "description": "有効フラグ",
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0",
             "default": true
           },
           "user_id": {
@@ -16339,7 +16339,7 @@
             },
             "type": "array",
             "title": "Role Codes",
-            "description": "割り当てられたロールコード"
+            "description": "\u5272\u308a\u5f53\u3066\u3089\u308c\u305f\u30ed\u30fc\u30eb\u30b3\u30fc\u30c9"
           }
         },
         "type": "object",
@@ -16580,7 +16580,7 @@
         "title": "WarehouseUpdate",
         "description": "Update warehouse request."
       },
-      "app__schemas__auth__auth_schemas__UserResponse": {
+      "app__presentation__schemas__auth__auth_schemas__UserResponse": {
         "properties": {
           "id": {
             "type": "integer",
@@ -16611,33 +16611,33 @@
         "title": "UserResponse",
         "description": "User response schema."
       },
-      "app__schemas__system__users_schema__UserResponse": {
+      "app__presentation__schemas__system__users_schema__UserResponse": {
         "properties": {
           "username": {
             "type": "string",
             "maxLength": 50,
             "minLength": 3,
             "title": "Username",
-            "description": "ユーザー名"
+            "description": "\u30e6\u30fc\u30b6\u30fc\u540d"
           },
           "email": {
             "type": "string",
             "maxLength": 255,
             "format": "email",
             "title": "Email",
-            "description": "メールアドレス"
+            "description": "\u30e1\u30fc\u30eb\u30a2\u30c9\u30ec\u30b9"
           },
           "display_name": {
             "type": "string",
             "maxLength": 100,
             "minLength": 1,
             "title": "Display Name",
-            "description": "表示名"
+            "description": "\u8868\u793a\u540d"
           },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
-            "description": "有効フラグ",
+            "description": "\u6709\u52b9\u30d5\u30e9\u30b0",
             "default": true
           },
           "user_id": {
