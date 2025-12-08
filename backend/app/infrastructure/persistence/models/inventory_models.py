@@ -50,6 +50,16 @@ class StockTransactionType(str, PyEnum):
     RETURN = "return"
 
 
+class LotOriginType(str, PyEnum):
+    """Enumerates valid lot origin types."""
+
+    ORDER = "order"
+    FORECAST = "forecast"
+    SAMPLE = "sample"
+    SAFETY_STOCK = "safety_stock"
+    ADHOC = "adhoc"
+
+
 class Lot(Base):
     """Represents physical inventory lots (ロット在庫).
 
@@ -115,6 +125,12 @@ class Lot(Base):
         onupdate=func.current_timestamp(),
     )
 
+    # Origin tracking fields for non-order lots
+    origin_type: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default=text("'order'")
+    )
+    origin_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
     __table_args__ = (
         CheckConstraint("current_quantity >= 0", name="chk_lots_current_quantity"),
         CheckConstraint("allocated_quantity >= 0", name="chk_lots_allocated_quantity"),
@@ -131,6 +147,10 @@ class Lot(Base):
             "inspection_status IN ('not_required','pending','passed','failed')",
             name="chk_lots_inspection_status",
         ),
+        CheckConstraint(
+            "origin_type IN ('order','forecast','sample','safety_stock','adhoc')",
+            name="chk_lots_origin_type",
+        ),
         UniqueConstraint(
             "lot_number",
             "product_id",
@@ -142,6 +162,7 @@ class Lot(Base):
         Index("idx_lots_status", "status"),
         Index("idx_lots_supplier", "supplier_id"),
         Index("idx_lots_warehouse", "warehouse_id"),
+        Index("idx_lots_origin_type", "origin_type"),
         Index(
             "idx_lots_expiry_date",
             "expiry_date",

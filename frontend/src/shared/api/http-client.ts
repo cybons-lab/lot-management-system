@@ -86,7 +86,6 @@ async function handleApiError(
 /**
  * Default ky instance with common configuration
  */
-console.log("[HTTP] Initializing API Client", { API_BASE_URL });
 export const apiClient: KyInstance = ky.create({
   prefixUrl: API_BASE_URL,
   timeout: API_TIMEOUT,
@@ -103,40 +102,14 @@ export const apiClient: KyInstance = ky.create({
         if (token) {
           request.headers.set("Authorization", `Bearer ${token}`);
         }
-
-        // Log request in development
-        if (import.meta.env.DEV) {
-          console.groupCollapsed(`[HTTP] Request: ${request.method} ${request.url}`);
-          console.log("URL:", request.url);
-          console.log("Method:", request.method);
-          console.log("Headers:", Object.fromEntries(request.headers.entries()));
-          console.groupEnd();
-        }
+        // Note: Request logging removed to reduce console noise
+        // Enable by setting VITE_HTTP_DEBUG=true if needed
       },
     ],
     afterResponse: [
       async (_request, _options, response) => {
-        // Log response in development
-        if (import.meta.env.DEV) {
-          const contentType = response.headers.get("content-type");
-          const isJson = contentType && contentType.includes("application/json");
-
-          console.groupCollapsed(`[HTTP] Response: ${response.status} ${response.url}`);
-          console.log("Status:", response.status);
-          console.log("URL:", response.url);
-
-          if (isJson) {
-            // Clone response to read body without consuming it
-            const clone = response.clone();
-            try {
-              const body = await clone.json();
-              console.log("Body:", body);
-            } catch (e) {
-              console.log("Body: (failed to parse JSON)", e);
-            }
-          }
-          console.groupEnd();
-        }
+        // Note: Response logging removed to reduce console noise
+        // Enable by setting VITE_HTTP_DEBUG=true if needed
         return response;
       },
     ],

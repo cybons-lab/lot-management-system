@@ -6035,6 +6035,10 @@ export interface components {
       inspection_date?: string | null;
       /** Inspection Cert Number */
       inspection_cert_number?: string | null;
+      /** @default order */
+      origin_type: components["schemas"]["LotOriginType"];
+      /** Origin Reference */
+      origin_reference?: string | null;
       /** Product Code */
       product_code?: string | null;
       /** Supplier Code */
@@ -6052,6 +6056,18 @@ export interface components {
       /** Quantity */
       quantity?: number | string | null;
     };
+    /**
+     * LotOriginType
+     * @description Valid lot origin types.
+     *
+     *     - order: Inbound plan / order-linked lots (existing path)
+     *     - forecast: Forecast-based production lots (future)
+     *     - sample: Sample lots (adhoc UI)
+     *     - safety_stock: Safety stock lots (adhoc UI)
+     *     - adhoc: Other adhoc lots (adhoc UI)
+     * @enum {string}
+     */
+    LotOriginType: "order" | "forecast" | "sample" | "safety_stock" | "adhoc";
     /**
      * LotResponse
      * @description API response model for lots.
@@ -6111,6 +6127,10 @@ export interface components {
       inspection_date?: string | null;
       /** Inspection Cert Number */
       inspection_cert_number?: string | null;
+      /** @default order */
+      origin_type: components["schemas"]["LotOriginType"];
+      /** Origin Reference */
+      origin_reference?: string | null;
       /** Lot Id */
       lot_id: number;
       /** Product Name */
@@ -6165,6 +6185,9 @@ export interface components {
       inspection_date?: string | null;
       /** Inspection Cert Number */
       inspection_cert_number?: string | null;
+      origin_type?: components["schemas"]["LotOriginType"] | null;
+      /** Origin Reference */
+      origin_reference?: string | null;
     };
     /** ManualAllocationItem */
     ManualAllocationItem: {

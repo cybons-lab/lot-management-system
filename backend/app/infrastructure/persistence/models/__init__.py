@@ -15,6 +15,7 @@ from .inventory_models import (
     AllocationSuggestion,
     AllocationTrace,
     Lot,
+    LotOriginType,
     StockHistory,
     StockMovement,  # Backward compatibility alias
     StockMovementReason,  # Backward compatibility alias
@@ -65,6 +66,7 @@ __all__ = [
     "CustomerItem",
     # Inventory
     "Lot",
+    "LotOriginType",
     "StockHistory",
     "StockTransactionType",
     "Adjustment",
