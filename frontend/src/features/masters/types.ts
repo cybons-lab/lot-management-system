@@ -57,6 +57,36 @@ export interface CustomerDataImport {
 }
 
 // ============================================================
+// Order/Transaction Data (受注系)
+// ============================================================
+
+export interface OrderLineImportRow {
+  customer_code: string;
+  product_code: string;
+  order_date: string;
+  customer_order_no?: string | null;
+  customer_order_line_no?: string | null;
+  sap_order_no?: string | null;
+  sap_order_item_no?: string | null;
+  delivery_place_code: string;
+  order_quantity: string;
+  unit: string;
+  delivery_date?: string | null;
+}
+
+export interface InboundPlanImportRow {
+  plan_number: string;
+  supplier_code: string;
+  planned_arrival_date: string;
+  sap_po_number?: string | null;
+}
+
+export interface OrderDataImport {
+  order_lines?: OrderLineImportRow[];
+  inbound_plans?: InboundPlanImportRow[];
+}
+
+// ============================================================
 // Unified Import Request/Response
 // ============================================================
 
@@ -65,6 +95,7 @@ export type ImportMode = "upsert" | "replace";
 export interface MasterImportRequest {
   supply_data?: SupplyDataImport | null;
   customer_data?: CustomerDataImport | null;
+  order_data?: OrderDataImport | null;
   mode?: ImportMode;
   dry_run?: boolean;
 }
@@ -90,9 +121,10 @@ export interface MasterImportResponse {
 // Template Types
 // ============================================================
 
-export type TemplateGroup = "supply" | "customer";
+export type TemplateGroup = "supply" | "customer" | "order";
 
 export interface MasterImportTemplate {
   supply_data?: SupplyDataImport;
   customer_data?: CustomerDataImport;
+  order_data?: OrderDataImport;
 }
