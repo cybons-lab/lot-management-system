@@ -17,6 +17,24 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 const API_TIMEOUT = 30000; // 30 seconds
 
 /**
+ * Custom event for authentication errors (401)
+ * Components can listen for this event to handle session expiration
+ */
+export const AUTH_ERROR_EVENT = "auth:unauthorized";
+
+/**
+ * Dispatch authentication error event
+ * This allows React components to react to 401 errors globally
+ */
+function dispatchAuthError(message: string = "セッションの有効期限が切れました"): void {
+  window.dispatchEvent(
+    new CustomEvent(AUTH_ERROR_EVENT, {
+      detail: { message },
+    }),
+  );
+}
+
+/**
  * Handle network errors (no response)
  */
 function handleNetworkError(error: HTTPError, request: Request): HTTPError {
@@ -47,6 +65,41 @@ function extractErrorMessage(body: unknown, defaultMessage: string): string {
 }
 
 /**
+ * Check if request is to a login-related endpoint
+ */
+function isLoginEndpoint(url: string | undefined): boolean {
+  if (!url) return false;
+  return url.includes("/auth/login") || url.includes("/auth/me");
+}
+
+/**
+ * Handle 401 Unauthorized errors
+ */
+function handleUnauthorizedError(request: Request, errorMessage: string): void {
+  if (!isLoginEndpoint(request?.url)) {
+    dispatchAuthError(errorMessage || "セッションの有効期限が切れました");
+  }
+}
+
+/**
+ * Log API error in development mode
+ */
+function logApiErrorDev(
+  status: number,
+  url: string | undefined,
+  message: string,
+  body: unknown,
+): void {
+  if (import.meta.env.DEV) {
+    console.groupCollapsed(`[HTTP] Error: ${status} ${url}`);
+    console.error("Message:", message);
+    console.error("Status:", status);
+    console.error("Body:", body);
+    console.groupEnd();
+  }
+}
+
+/**
  * Handle API errors (with response)
  */
 async function handleApiError(
@@ -64,13 +117,12 @@ async function handleApiError(
     error.message = response.statusText || error.message;
   }
 
-  if (import.meta.env.DEV) {
-    console.groupCollapsed(`[HTTP] Error: ${status} ${request?.url}`);
-    console.error("Message:", error.message);
-    console.error("Status:", status);
-    console.error("Body:", body);
-    console.groupEnd();
+  // Handle 401 Unauthorized - session expired or invalid token
+  if (status === 401) {
+    handleUnauthorizedError(request, error.message);
   }
+
+  logApiErrorDev(status, request?.url, error.message, body);
 
   const apiError = createApiError(status, error.message, body);
   logError("HTTP", apiError, {

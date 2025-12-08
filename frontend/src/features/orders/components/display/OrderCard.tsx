@@ -1,6 +1,7 @@
 // frontend/src/features/orders/components/OrderCard.tsx
 import { formatCodeAndName } from "@/shared/libs/utils";
 import type { OrderWithLinesResponse } from "@/shared/types/legacy";
+import { formatOrderCode } from "@/shared/utils/order";
 
 type Props = {
   order: OrderWithLinesResponse;
@@ -8,13 +9,36 @@ type Props = {
   onReMatch?: () => void;
 };
 
+/**
+ * Get the best display code for an order, checking lines for business keys.
+ */
+function getOrderDisplayCode(order: OrderWithLinesResponse): string {
+  // Try to get business key from first line
+  const firstLine = order.lines?.[0];
+  if (firstLine) {
+    const code = formatOrderCode(firstLine);
+    if (code !== "-" && !code.startsWith("#")) {
+      return code;
+    }
+  }
+  // Fallback to order ID
+  return `#${order.id}`;
+}
+
 // eslint-disable-next-line complexity -- Card with conditional rendering for multiple fields
 export function OrderCard({ order, onSelectLine, onReMatch }: Props) {
+  const displayCode = getOrderDisplayCode(order);
+
   return (
     <div className="rounded-2xl border p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-lg font-semibold">受注ID: #{order.id}</div>
+          <div className="text-lg font-semibold">
+            受注: {displayCode}
+            {displayCode.startsWith("#") && (
+              <span className="ml-2 text-sm font-normal text-gray-400">(ID)</span>
+            )}
+          </div>
           <div className="text-sm text-gray-500">
             顧客:{" "}
             {formatCodeAndName(
@@ -23,17 +47,11 @@ export function OrderCard({ order, onSelectLine, onReMatch }: Props) {
             )}{" "}
             / 作成日: {order.created_at?.slice(0, 10) ?? "-"}
           </div>
-          {/* 業務キー情報 */}
-          {(order.lines?.[0]?.customer_order_no || order.lines?.[0]?.sap_order_no) && (
+          {/* 業務キー情報（両方存在する場合は両方表示） */}
+          {order.lines?.[0]?.customer_order_no && order.lines?.[0]?.sap_order_no && (
             <div className="mt-1 flex gap-4 text-xs">
-              {order.lines?.[0]?.customer_order_no && (
-                <span className="text-blue-600">
-                  得意先受注No: {order.lines[0].customer_order_no}
-                </span>
-              )}
-              {order.lines?.[0]?.sap_order_no && (
-                <span className="text-green-600">SAP: {order.lines[0].sap_order_no}</span>
-              )}
+              <span className="text-blue-600">得意先: {order.lines[0].customer_order_no}</span>
+              <span className="text-green-600">SAP: {order.lines[0].sap_order_no}</span>
             </div>
           )}
         </div>

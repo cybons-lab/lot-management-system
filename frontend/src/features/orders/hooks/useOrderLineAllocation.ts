@@ -35,12 +35,68 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
       .reduce((sum, a) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
   }, [orderLine]);
 
+  // DBに存在するSOFT引当の合計（Hard確定ボタンの表示制御に使用）
+  const softAllocatedDb = useMemo(() => {
+    const allocations = (orderLine?.allocations || orderLine?.allocated_lots || []) as Allocation[];
+    if (!Array.isArray(allocations)) return 0;
+    return allocations
+      .filter((a) => a.allocation_type === "soft")
+      .reduce((sum, a) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
+  }, [orderLine]);
+
   const totalAllocated = useMemo(() => {
     return Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
   }, [lotAllocations]);
 
   const hardAllocated = Math.min(totalAllocated, hardAllocatedDb);
   const softAllocated = Math.max(0, totalAllocated - hardAllocatedDb);
+
+  // 状態判定: DBに引当があるか
+  const hasDbAllocations = hardAllocatedDb + softAllocatedDb > 0;
+
+  // 状態判定: 未保存の変更があるか（ローカル編集がDB状態と異なる）
+  // eslint-disable-next-line complexity -- ローカルとDB状態の比較には複数の条件分岐が必要
+  const hasUnsavedChanges = useMemo(() => {
+    // ローカルの引当が0件ならDBと異なる可能性をチェック
+    const localTotal = Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
+    const dbTotal = hardAllocatedDb + softAllocatedDb;
+
+    // 簡易判定: 合計が異なるか、ローカルに編集があるか
+    if (localTotal !== dbTotal) return true;
+    if (localTotal === 0 && dbTotal === 0) return false;
+
+    // 詳細判定: 各ロットの数量が一致するか
+    const existingAllocations = (orderLine?.allocations ||
+      orderLine?.allocated_lots ||
+      []) as Allocation[];
+    const dbAllocMap = new Map<number, number>();
+    existingAllocations.forEach((a) => {
+      if (a.lot_id) {
+        dbAllocMap.set(a.lot_id, Number(a.allocated_quantity || a.quantity || 0));
+      }
+    });
+
+    // ローカルとDBで各ロットの数量を比較
+    for (const [lotId, qty] of Object.entries(lotAllocations)) {
+      const dbQty = dbAllocMap.get(Number(lotId)) || 0;
+      if (qty !== dbQty) return true;
+    }
+    // DBにあってローカルにないものをチェック
+    for (const [lotId, dbQty] of dbAllocMap.entries()) {
+      const localQty = lotAllocations[lotId] || 0;
+      if (localQty !== dbQty) return true;
+    }
+
+    return false;
+  }, [lotAllocations, hardAllocatedDb, softAllocatedDb, orderLine]);
+
+  // 引当の状態: 'none' | 'soft' | 'hard' | 'mixed'
+  const allocationState = useMemo(() => {
+    if (hardAllocatedDb === 0 && softAllocatedDb === 0) return "none" as const;
+    if (hardAllocatedDb > 0 && softAllocatedDb === 0) return "hard" as const;
+    if (hardAllocatedDb === 0 && softAllocatedDb > 0) return "soft" as const;
+    return "mixed" as const;
+  }, [hardAllocatedDb, softAllocatedDb]);
 
   // Fetch candidates when orderLine changes
   useEffect(() => {
@@ -113,7 +169,34 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     setLotAllocations(newAllocations);
   }, [orderLine, candidateLots]);
 
-  const saveAllocations = async () => {
+  const saveAllocations = async (): Promise<number[] | null> => {
+    if (!orderLine) return null;
+    setIsSaving(true);
+    try {
+      const allocationsList = Object.entries(lotAllocations)
+        .filter(([_, qty]) => qty > 0)
+        .map(([lotId, qty]) => ({
+          lot_id: Number(lotId),
+          quantity: qty,
+        }));
+
+      const result = await ordersApi.createLotAllocations(orderLine.id, {
+        allocations: allocationsList,
+      });
+
+      toast.success("引当を保存しました");
+      if (onSuccess) onSuccess();
+      return result.allocated_ids ?? null;
+    } catch (error) {
+      console.error("Failed to save allocations", error);
+      toast.error("引当の保存に失敗しました");
+      return null;
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const saveAndConfirmAllocations = async () => {
     if (!orderLine) return;
     setIsSaving(true);
     try {
@@ -124,15 +207,29 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
           quantity: qty,
         }));
 
-      await ordersApi.createLotAllocations(orderLine.id, {
+      // Step 1: Save allocations (creates soft allocations)
+      const result = await ordersApi.createLotAllocations(orderLine.id, {
         allocations: allocationsList,
       });
 
-      toast.success("引当を保存しました");
+      const allocatedIds = result.allocated_ids ?? [];
+
+      if (allocatedIds.length === 0) {
+        toast.success("引当を保存しました（確定対象なし）");
+        if (onSuccess) onSuccess();
+        return;
+      }
+
+      // Step 2: Confirm allocations (soft -> hard)
+      await allocationsApi.confirmAllocationsBatch({
+        allocation_ids: allocatedIds,
+      });
+
+      toast.success("引当を保存・確定しました");
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error("Failed to save allocations", error);
-      toast.error("引当の保存に失敗しました");
+      console.error("Failed to save and confirm allocations", error);
+      toast.error("引当の保存・確定に失敗しました");
     } finally {
       setIsSaving(false);
     }
@@ -166,18 +263,46 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     }
   };
 
+  // 全引当をキャンセル
+  const cancelAllAllocations = async () => {
+    if (!orderLine) return;
+    setIsSaving(true);
+    try {
+      await allocationsApi.cancelAllocationsByLine(orderLine.id);
+      setLotAllocations({});
+      toast.success("引当を取り消しました");
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error("Failed to cancel allocations", error);
+      toast.error("引当の取り消しに失敗しました");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return {
     candidateLots,
     lotAllocations,
+    // 状態判定
+    hasUnsavedChanges,
+    hasDbAllocations,
+    allocationState,
+    // 数量関連
     hardAllocated,
     softAllocated,
+    softAllocatedDb,
+    hardAllocatedDb,
     totalAllocated,
+    // ローディング状態
     isLoadingCandidates,
     isSaving,
+    // 操作
     changeAllocation,
     clearAllocations,
     autoAllocate,
     saveAllocations,
+    saveAndConfirmAllocations,
     confirmAllocations,
+    cancelAllAllocations,
   };
 }

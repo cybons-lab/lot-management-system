@@ -241,13 +241,17 @@ function AllocationDialog({
     lotAllocations,
     hardAllocated,
     softAllocated,
+    hasUnsavedChanges,
+    allocationState,
     isLoadingCandidates,
     isSaving,
     changeAllocation,
     clearAllocations,
     autoAllocate,
     saveAllocations,
+    saveAndConfirmAllocations,
     confirmAllocations,
+    cancelAllAllocations,
   } = useOrderLineAllocation({
     orderLine: line,
     onSuccess: () => {
@@ -276,13 +280,17 @@ function AllocationDialog({
             onAutoAllocate={autoAllocate}
             onClearAllocations={clearAllocations}
             onSaveAllocations={saveAllocations}
+            onSaveAndConfirm={saveAndConfirmAllocations}
             onConfirmHard={confirmAllocations}
+            onCancelAllocations={cancelAllAllocations}
             isLoading={isLoadingCandidates}
             isSaving={isSaving}
             canSave={Object.keys(lotAllocations).length > 0}
             isActive={true}
             hardAllocated={hardAllocated}
             softAllocated={softAllocated}
+            hasUnsavedChanges={hasUnsavedChanges}
+            allocationState={allocationState}
           />
         </div>
       </DialogContent>

@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { http } from "@/shared/api/http-client";
+import { http, AUTH_ERROR_EVENT } from "@/shared/api/http-client";
 
 // Types (should be in separate types file ideally)
 export interface User {
@@ -24,6 +25,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [isLoading, setIsLoading] = useState(true);
+
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("token");
+  }, []);
+
+  // Listen for global auth errors (401) from http-client
+  useEffect(() => {
+    const handleAuthError = (event: Event) => {
+      const customEvent = event as CustomEvent<{ message: string }>;
+      const message = customEvent.detail?.message || "セッションの有効期限が切れました";
+
+      // Only show toast and logout if user was previously logged in
+      if (token) {
+        toast.error(message, {
+          description: "再度ログインしてください",
+          duration: 5000,
+        });
+        logout();
+      }
+    };
+
+    window.addEventListener(AUTH_ERROR_EVENT, handleAuthError);
+    return () => {
+      window.removeEventListener(AUTH_ERROR_EVENT, handleAuthError);
+    };
+  }, [token, logout]);
 
   useEffect(() => {
     // Restore session on initial mount only
@@ -54,12 +83,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(response.access_token);
     setUser(response.user);
     localStorage.setItem("token", response.access_token);
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token");
   };
 
   return (

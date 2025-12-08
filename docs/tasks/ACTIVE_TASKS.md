@@ -68,7 +68,38 @@ backend/app/
 
 ## 📌 将来対応（P2: 中優先度）
 
-### P2-1: SAP在庫同期 - 本番API接続待ち
+### ✅ P2-0: ロット引当ページでのHARD引当同時実行対応 - 実装完了
+
+**報告日:** 2025-12-08
+**完了日:** 2025-12-08
+
+**実装内容:**
+- 「保存 & 確定」ボタンを追加
+- ロット選択後、一括でソフト引当作成 → HARD引当確定を実行可能に
+
+**修正ファイル:**
+- `frontend/src/features/orders/hooks/useOrderLineAllocation.ts` - `saveAndConfirmAllocations` 関数追加
+- `frontend/src/features/allocations/components/lots/LotAllocationPanel.tsx` - 「保存 & 確定」ボタン追加
+- `frontend/src/features/orders/pages/OrderDetailPage.tsx` - 新関数の接続
+
+---
+
+### P2-1: 引当ステータスの仮/実区別表示
+
+**報告日:** 2025-12-09
+
+**問題:**
+受注明細の「引当済」ステータスバッジが仮引当（SOFT）と実引当（HARD）を区別していない。
+
+**対応案:**
+- `pending` → 未引当
+- `仮引当` → SOFT引当あり（緑/オレンジ）
+- `確定済` → HARD引当のみ（緑）
+- `引当済(一部仮)` → HARD + SOFT混在
+
+---
+
+### P2-2: SAP在庫同期 - 本番API接続待ち
 
 **現状**: モック実装完了、UI実装完了
 
