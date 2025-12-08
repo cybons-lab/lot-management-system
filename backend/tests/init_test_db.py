@@ -8,8 +8,8 @@ from sqlalchemy.exc import ProgrammingError
 # Add backend directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import app.models  # noqa: F401, E402
-from app.models.base_model import Base  # noqa: E402
+import app.infrastructure.persistence.models  # noqa: F401, E402
+from app.infrastructure.persistence.models.base_model import Base  # noqa: E402
 
 
 def init_single_db(db_url):

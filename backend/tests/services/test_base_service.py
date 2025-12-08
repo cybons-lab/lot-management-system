@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import Session
 
-from app.models.base_model import Base
-from app.services.common.base_service import BaseService
+from app.application.services.common.base_service import BaseService
+from app.infrastructure.persistence.models.base_model import Base
 
 
 # --- Test Models & Schemas ---

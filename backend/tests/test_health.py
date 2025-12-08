@@ -6,8 +6,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_db
 from app.main import app
+from app.presentation.api.deps import get_db
 
 
 @pytest.fixture

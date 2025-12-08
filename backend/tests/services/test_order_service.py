@@ -3,15 +3,15 @@ from datetime import date, timedelta
 import pytest
 from sqlalchemy.orm import Session
 
+from app.application.services.orders.order_service import OrderService
 from app.domain.order import (
     DuplicateOrderError,
     InvalidOrderStatusError,
     OrderNotFoundError,
     OrderValidationError,
 )
-from app.models import Order, OrderLine
-from app.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
-from app.services.orders.order_service import OrderService
+from app.infrastructure.persistence.models import Order, OrderLine
+from app.presentation.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
 
 
 def test_create_order_success(db: Session, service_master_data):

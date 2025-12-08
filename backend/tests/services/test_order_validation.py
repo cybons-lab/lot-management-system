@@ -7,9 +7,12 @@ from datetime import date, timedelta
 
 import pytest
 
+from app.application.services.orders.validation_service import (
+    OrderLineDemand,
+    OrderValidationService,
+)
 from app.domain.errors import InsufficientStockError
-from app.models import Lot, Product, Supplier, Warehouse
-from app.services.orders.validation_service import OrderLineDemand, OrderValidationService
+from app.infrastructure.persistence.models import Lot, Product, Supplier, Warehouse
 
 
 @pytest.fixture()

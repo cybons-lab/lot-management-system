@@ -3,14 +3,14 @@ from datetime import date, timedelta
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.inbound_models import InboundPlan, InboundPlanLine
-from app.schemas.inventory.inbound_schema import (
+from app.application.services.inventory.inbound_service import InboundService
+from app.infrastructure.persistence.models.inbound_models import InboundPlan, InboundPlanLine
+from app.presentation.schemas.inventory.inbound_schema import (
     ExpectedLotCreate,
     InboundPlanCreate,
     InboundPlanLineCreate,
     InboundPlanUpdate,
 )
-from app.services.inventory.inbound_service import InboundService
 
 
 def test_create_inbound_plan_success(db: Session, service_master_data):

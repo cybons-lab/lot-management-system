@@ -1,28 +1,28 @@
-# from app.api.routes.admin_presets import list_presets, load_preset
-# from app.api.routes.masters_bulk_load import bulk_load_masters
-# from app.api.routes.masters_customers import (
+# from app.presentation.api.routes.admin_presets import list_presets, load_preset
+# from app.presentation.api.routes.masters_bulk_load import bulk_load_masters
+# from app.presentation.api.routes.masters_customers import (
 #     create_customer,
 #     delete_customer,
 #     get_customer,
 #     update_customer,
 # )
-# from app.api.routes.masters_products import (
+# from app.presentation.api.routes.masters_products import (
 #     create_product,
 #     get_product,
 #     update_product,
 # )
-# from app.api.routes.masters_suppliers import (
+# from app.presentation.api.routes.masters_suppliers import (
 #     create_supplier,
 #     get_supplier,
 #     update_supplier,
 # )
-# from app.api.routes.masters_warehouses import (
+# from app.presentation.api.routes.masters_warehouses import (
 #     create_warehouse,
 #     delete_warehouse,
 #     get_warehouse,
 #     update_warehouse,
 # )
-# from app.schemas.masters.masters_schema import (
+# from app.presentation.schemas.masters.masters_schema import (
 #     CustomerCreate,
 #     CustomerUpdate,
 #     MasterBulkLoadRequest,
@@ -31,7 +31,7 @@
 #     WarehouseCreate,
 #     WarehouseUpdate,
 # )
-# from app.schemas.masters.products_schema import ProductCreate, ProductUpdate
+# from app.presentation.schemas.masters.products_schema import ProductCreate, ProductUpdate
 
 
 # def test_master_crud_bulk_and_presets(db_session):

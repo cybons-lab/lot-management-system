@@ -1,20 +1,26 @@
 from datetime import date, timedelta
 
-from app.api.routes.allocations.allocations_router import commit_allocation, preview_allocations
-from app.api.routes.masters.customers_router import create_customer
-from app.api.routes.masters.products_router import create_product
-from app.api.routes.masters.suppliers_router import create_supplier
-from app.api.routes.masters.warehouses_router import create_warehouse
-from app.api.routes.orders.orders_router import create_order
-from app.models import Lot, Order, Warehouse
-from app.schemas.allocations.allocations_schema import AllocationCommitRequest, FefoPreviewRequest
-from app.schemas.masters.masters_schema import (
+from app.infrastructure.persistence.models import Lot, Order, Warehouse
+from app.presentation.api.routes.allocations.allocations_router import (
+    commit_allocation,
+    preview_allocations,
+)
+from app.presentation.api.routes.masters.customers_router import create_customer
+from app.presentation.api.routes.masters.products_router import create_product
+from app.presentation.api.routes.masters.suppliers_router import create_supplier
+from app.presentation.api.routes.masters.warehouses_router import create_warehouse
+from app.presentation.api.routes.orders.orders_router import create_order
+from app.presentation.schemas.allocations.allocations_schema import (
+    AllocationCommitRequest,
+    FefoPreviewRequest,
+)
+from app.presentation.schemas.masters.masters_schema import (
     CustomerCreate,
     SupplierCreate,
     WarehouseCreate,
 )
-from app.schemas.masters.products_schema import ProductCreate
-from app.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
+from app.presentation.schemas.masters.products_schema import ProductCreate
+from app.presentation.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
 
 
 def test_order_to_fefo_allocation_flow(db_session):
@@ -63,7 +69,7 @@ def test_order_to_fefo_allocation_flow(db_session):
     )
 
     # 納入先の作成
-    from app.models import DeliveryPlace
+    from app.infrastructure.persistence.models import DeliveryPlace
 
     delivery_place = DeliveryPlace(
         customer_id=customer.id,

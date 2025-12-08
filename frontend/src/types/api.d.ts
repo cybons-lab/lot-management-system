@@ -25,6 +25,8 @@ export interface paths {
      *         expiry_from: 有効期限開始日
      *         expiry_to: 有効期限終了日
      *         with_stock: 在庫ありのみ取得するかどうか
+     *         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用）
      *         db: データベースセッション
      *
      *     ロット一覧取得（v_lots_with_master ビュー使用）.
@@ -168,7 +170,8 @@ export interface paths {
     };
     /**
      * Get Confirmed Order Lines
-     * @description Get all order lines that are fully allocated and not yet registered in SAP.
+     * @description Get all order lines that are fully allocated and not yet registered in
+     *     SAP.
      *
      *     Returns lines where allocated_quantity >= converted_quantity and sap_order_no is NULL.
      *
@@ -306,10 +309,35 @@ export interface paths {
      * Refresh All Order Line Statuses
      * @description 全受注明細および受注のステータスを再計算・更新.
      *
-     *     既存の allocations データに基づいて OrderLine.status と Order.status を正しい値に更新します。
+     *     既存の allocations データに基づいて OrderLine.status と Order.status
+     *     を正しい値に更新します。
      */
     post: operations["refresh_all_order_line_statuses_api_orders_refresh_all_statuses_post"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/orders/{order_id}/lock": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Acquire Lock
+     * @description 受注の編集ロックを取得.
+     */
+    post: operations["acquire_lock_api_orders__order_id__lock_post"];
+    /**
+     * Release Lock
+     * @description 受注の編集ロックを解放.
+     */
+    delete: operations["release_lock_api_orders__order_id__lock_delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -445,6 +473,33 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/allocations/cancel-by-order-line": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel By Order Line
+     * @description 受注明細に紐づく全ての引当を一括キャンセル.
+     *
+     *     Args:
+     *         request: { "order_line_id": int }
+     *         db: DB Session
+     *
+     *     Returns:
+     *         { "success": bool, "message": str, "cancelled_ids": list[int] }
+     */
+    post: operations["cancel_by_order_line_api_allocations_cancel_by_order_line_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/allocations/auto-allocate": {
     parameters: {
       query?: never;
@@ -466,6 +521,72 @@ export interface paths {
      *         AutoAllocateResponse: 引当結果
      */
     post: operations["auto_allocate_api_allocations_auto_allocate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/bulk-auto-allocate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Auto Allocate
+     * @description 複数受注明細に対して一括でFEFO自動引当を実行.
+     *
+     *     フィルタリング条件を指定して対象を絞り込み可能。
+     *     フォーキャストグループ、個別受注、全受注への一括引当に対応。
+     *
+     *     - product_id: 製品IDでフィルタ
+     *     - customer_id: 得意先IDでフィルタ
+     *     - delivery_place_id: 納入先IDでフィルタ
+     *     - order_type: 受注タイプでフィルタ (FORECAST_LINKED, KANBAN, SPOT, ORDER)
+     *
+     *     Args:
+     *         request: 一括引当リクエスト
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         BulkAutoAllocateResponse: 一括引当結果
+     */
+    post: operations["bulk_auto_allocate_api_allocations_bulk_auto_allocate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/auto-orders": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Auto Allocate Orders
+     * @description 複数受注に対して一括で自動引当（Single Lot Fit + FEFO）を実行・確定する.
+     *
+     *     - v0アルゴリズム (allocator.py) を使用
+     *     - 成功/失敗を個別に記録
+     *     - dry_run=True の場合は保存しない（未実装、今回はFalse前提）
+     *
+     *     Args:
+     *         request: 対象受注IDリスト
+     *         db: DBセッション
+     *
+     *     Returns:
+     *         BatchAutoOrderResponse: 実行結果
+     */
+    post: operations["auto_allocate_orders_api_allocations_auto_orders_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -613,6 +734,28 @@ export interface paths {
      * @description 引当推奨一覧取得.
      */
     get: operations["list_allocation_suggestions_api_allocation_suggestions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocation-suggestions/group-summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Allocation Suggestions By Group
+     * @description フォーキャストグループ別の計画引当サマリを取得.
+     *
+     *     allocation_suggestions テーブルから該当グループのデータを集計して返す。
+     */
+    get: operations["get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -873,6 +1016,8 @@ export interface paths {
      *         supplier_id: 仕入先IDでフィルタ
      *         product_id: 商品IDでフィルタ
      *         status: ステータスでフィルタ（planned/partially_received/received/cancelled）
+     *         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用）
      *         db: データベースセッション
      *
      *     Returns:
@@ -1491,6 +1636,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/products/{product_code}/suppliers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Product Suppliers
+     * @description Fetch suppliers for a product by its code.
+     *
+     *     Returns a list of suppliers associated with this product, indicating
+     *     which supplier is the primary one.
+     */
+    get: operations["get_product_suppliers_api_masters_products__product_code__suppliers_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/products/bulk-upsert": {
     parameters: {
       query?: never;
@@ -1733,7 +1901,8 @@ export interface paths {
     put?: never;
     /**
      * Bulk Upsert Uom Conversions
-     * @description Bulk upsert UOM conversions by composite key (product_id, external_unit).
+     * @description Bulk upsert UOM conversions by composite key (product_id,
+     *     external_unit).
      *
      *     - If a UOM conversion with the same composite key exists, it will be updated
      *     - If not, a new UOM conversion will be created
@@ -2053,7 +2222,8 @@ export interface paths {
     put?: never;
     /**
      * Bulk Upsert Customer Items
-     * @description Bulk upsert customer items by composite key (customer_id, external_product_code).
+     * @description Bulk upsert customer items by composite key (customer_id,
+     *     external_product_code).
      *
      *     - If a customer item with the same composite key exists, it will be updated
      *     - If not, a new customer item will be created
@@ -2067,7 +2237,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/login": {
+  "/api/auth/login": {
     parameters: {
       query?: never;
       header?: never;
@@ -2077,17 +2247,17 @@ export interface paths {
     get?: never;
     put?: never;
     /**
-     * Login For Access Token
-     * @description OAuth2 compatible token login, get an access token for future requests.
+     * Login
+     * @description Simple login by User ID or Username.
      */
-    post: operations["login_for_access_token_api_login_post"];
+    post: operations["login_api_auth_login_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/me": {
+  "/api/auth/me": {
     parameters: {
       query?: never;
       header?: never;
@@ -2095,18 +2265,50 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Get Current User Info
-     * @description Get current authenticated user information with assigned suppliers (optional authentication).
-     *
-     *     Returns:
-     *         User information with supplier assignments if authenticated, None if not authenticated
-     *
-     *     Use case:
-     *         - Frontend can check if user is logged in
-     *         - Display user name and assigned suppliers
-     *         - Prioritize user's assigned suppliers in list views
+     * Get Me
+     * @description Get current user info.
      */
-    get: operations["get_current_user_info_api_me_get"];
+    get: operations["get_me_api_auth_me_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/system/logs/client": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Create Client Log
+     * @description Save client-side log.
+     */
+    post: operations["create_client_log_api_system_logs_client_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/system/logs/recent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Recent Logs
+     * @description Get recent system logs (Admin only ideally).
+     */
+    get: operations["get_recent_logs_api_system_logs_recent_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -2363,6 +2565,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/assignments/my-suppliers": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get My Suppliers
+     * @description 現在ログイン中のユーザーの担当仕入先ID一覧を取得.
+     */
+    get: operations["get_my_suppliers_api_assignments_my_suppliers_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/assignments": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get All Assignments
+     * @description 全ての担当割り当てを取得.
+     */
+    get: operations["get_all_assignments_api_assignments_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/assignments/user/{user_id}/suppliers": {
     parameters: {
       query?: never;
@@ -2478,8 +2720,8 @@ export interface paths {
      * Get Dashboard Stats
      * @description ダッシュボード用の統計情報を返す.
      *
-     *     在庫総数は lots.current_quantity の合計値を使用。
-     *     lot_current_stock ビューは使用しない（v2.2 以降は廃止）。
+     *     在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
+     *     ビューは使用しない（v2.2 以降は廃止）。
      */
     get: operations["get_dashboard_stats_api_admin_stats_get"];
     put?: never;
@@ -2501,7 +2743,8 @@ export interface paths {
     put?: never;
     /**
      * Reset Database
-     * @description データベースリセット（開発環境のみ）
+     * @description データベースリセット（開発環境のみ）.
+     *
      *     - テーブル構造は保持したまま、全データを削除
      *     - alembic_versionは保持（マイグレーション履歴を維持）
      *     - TRUNCATE ... RESTART IDENTITY CASCADEで高速にデータをクリア.
@@ -2652,9 +2895,101 @@ export interface paths {
     /**
      * Generate Test Data Endpoint
      * @description Generate test data for development.
+     *
      *     WARNING: This will DELETE all existing data in related tables.
      */
     post: operations["generate_test_data_endpoint_api_admin_test_data_generate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/master-import/upload": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import From File
+     * @description Import master data from uploaded file.
+     *
+     *     Supported formats:
+     *     - Excel (.xlsx) with 'suppliers' and/or 'customers' sheets
+     *     - JSON (.json)
+     *     - YAML (.yaml, .yml)
+     *
+     *     CSV is NOT supported and will return an error.
+     *
+     *     Args:
+     *         file: Upload file
+     *         dry_run: If true, validate only without committing
+     *         db: Database session
+     *
+     *     Returns:
+     *         Import result with status and details per table
+     */
+    post: operations["import_from_file_api_admin_master_import_upload_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/master-import/json": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import From Json
+     * @description Import master data from JSON request body.
+     *
+     *     This endpoint accepts the import data directly as JSON,
+     *     useful for API integrations and testing.
+     *
+     *     Args:
+     *         request: Import request with supply_data and/or customer_data
+     *         db: Database session
+     *
+     *     Returns:
+     *         Import result with status and details per table
+     */
+    post: operations["import_from_json_api_admin_master_import_json_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/admin/master-import/template": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Template
+     * @description Get template structure for imports.
+     *
+     *     Args:
+     *         group: 'supply' for supplier/product data, 'customer' for customer data
+     *
+     *     Returns:
+     *         JSON template structure
+     */
+    get: operations["download_template_api_admin_master_import_template_get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -3116,6 +3451,37 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/batch-jobs/inventory-sync/alerts": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Inventory Sync Alerts
+     * @description SAP在庫差異アラート一覧取得.
+     *
+     *     BusinessRuleテーブルから在庫差異アラート（inventory_sync_alert）を取得。
+     *
+     *     Args:
+     *         active_only: Trueの場合、is_active=Trueのアラートのみ取得
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         dict: アラート一覧
+     *             - alerts: アラートのリスト
+     *             - total: 総件数
+     */
+    get: operations["get_inventory_sync_alerts_api_batch_jobs_inventory_sync_alerts_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/batch-jobs/{job_id}": {
     parameters: {
       query?: never;
@@ -3258,6 +3624,7 @@ export interface paths {
      *
      *     Args:
      *         request: リクエスト（開始日・終了日）
+     *         current_user: ログインユーザー（オプション）
      *
      *     Returns:
      *         実行結果
@@ -3749,6 +4116,17 @@ export interface components {
        * @description オーダー明細ID (Preview時など)
        */
       order_line_id?: number | null;
+      /**
+       * Forecast Id
+       * @description 予測ID (Forecast Link時)
+       */
+      forecast_id?: number | null;
+      /**
+       * Priority
+       * @description 引当優先順位 (1=High)
+       * @default 0
+       */
+      priority: number;
       /** Id */
       id: number;
       /**
@@ -3815,6 +4193,53 @@ export interface components {
       remaining_quantity: string;
       /** Message */
       message: string;
+    };
+    /**
+     * BatchAutoOrderRequest
+     * @description Batch auto-allocate request for orders.
+     */
+    BatchAutoOrderRequest: {
+      /**
+       * Order Ids
+       * @description 引当対象の受注ID一覧
+       */
+      order_ids: number[];
+      /**
+       * Dry Run
+       * @description Trueならプレビューのみ（DB保存しない）
+       * @default false
+       */
+      dry_run: boolean;
+    };
+    /**
+     * BatchAutoOrderResponse
+     * @description Batch auto-allocate response.
+     */
+    BatchAutoOrderResponse: {
+      /** Results */
+      results?: components["schemas"]["BatchAutoOrderResult"][];
+      /** Total Orders */
+      total_orders: number;
+      /** Success Count */
+      success_count: number;
+      /** Failure Count */
+      failure_count: number;
+      /** Message */
+      message: string;
+    };
+    /**
+     * BatchAutoOrderResult
+     * @description Result for a single order in batch auto-allocation.
+     */
+    BatchAutoOrderResult: {
+      /** Order Id */
+      order_id: number;
+      /** Success */
+      success: boolean;
+      /** Message */
+      message?: string | null;
+      /** Created Allocation Ids */
+      created_allocation_ids?: number[];
     };
     /**
      * BatchJobCreate
@@ -3929,29 +4354,93 @@ export interface components {
        */
       created_at: string;
     };
-    /** Body_login_for_access_token_api_login_post */
-    Body_login_for_access_token_api_login_post: {
-      /** Grant Type */
-      grant_type?: string | null;
-      /** Username */
-      username: string;
+    /** Body_import_from_file_api_admin_master_import_upload_post */
+    Body_import_from_file_api_admin_master_import_upload_post: {
       /**
-       * Password
-       * Format: password
+       * File
+       * Format: binary
+       * @description Import file (.xlsx, .json, .yaml, .yml)
        */
-      password: string;
+      file: string;
+    };
+    /**
+     * BulkAutoAllocateFailedLine
+     * @description Failed line in bulk auto-allocate response.
+     */
+    BulkAutoAllocateFailedLine: {
+      /** Line Id */
+      line_id: number;
+      /** Error */
+      error: string;
+    };
+    /**
+     * BulkAutoAllocateRequest
+     * @description Bulk auto-allocate request for group-based FEFO allocation.
+     */
+    BulkAutoAllocateRequest: {
       /**
-       * Scope
-       * @default
+       * Product Id
+       * @description 製品ID（指定時はその製品のみ対象）
        */
-      scope: string;
-      /** Client Id */
-      client_id?: string | null;
+      product_id?: number | null;
       /**
-       * Client Secret
-       * Format: password
+       * Customer Id
+       * @description 得意先ID（指定時はその得意先のみ対象）
        */
-      client_secret?: string | null;
+      customer_id?: number | null;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID（指定時はその納入先のみ対象）
+       */
+      delivery_place_id?: number | null;
+      /**
+       * Order Type
+       * @description 受注タイプでフィルタ
+       */
+      order_type?: string | null;
+      /**
+       * Skip Already Allocated
+       * @description 既に全量引当済みの明細をスキップ
+       * @default true
+       */
+      skip_already_allocated: boolean;
+    };
+    /**
+     * BulkAutoAllocateResponse
+     * @description Bulk auto-allocate response.
+     */
+    BulkAutoAllocateResponse: {
+      /**
+       * Processed Lines
+       * @description 処理した受注明細数
+       * @default 0
+       */
+      processed_lines: number;
+      /**
+       * Allocated Lines
+       * @description 引当を作成した明細数
+       * @default 0
+       */
+      allocated_lines: number;
+      /**
+       * Total Allocations
+       * @description 作成した引当レコード数
+       * @default 0
+       */
+      total_allocations: number;
+      /**
+       * Skipped Lines
+       * @description スキップした明細数（既に引当済み等）
+       * @default 0
+       */
+      skipped_lines: number;
+      /**
+       * Failed Lines
+       * @description 失敗した明細
+       */
+      failed_lines?: components["schemas"]["BulkAutoAllocateFailedLine"][];
+      /** Message */
+      message: string;
     };
     /**
      * BulkCancelRequest
@@ -4192,6 +4681,44 @@ export interface components {
       lock_reason?: string | null;
     };
     /**
+     * ClientLogCreate
+     * @description Client log creation schema.
+     */
+    ClientLogCreate: {
+      /**
+       * Level
+       * @default info
+       */
+      level: string;
+      /** Message */
+      message: string;
+      /** User Agent */
+      user_agent?: string | null;
+    };
+    /**
+     * ClientLogResponse
+     * @description Client log response schema.
+     */
+    ClientLogResponse: {
+      /** Id */
+      id: number;
+      /** User Id */
+      user_id: number | null;
+      /** Username */
+      username?: string | null;
+      /** Level */
+      level: string;
+      /** Message */
+      message: string;
+      /** User Agent */
+      user_agent: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
      * ConfirmedOrderLineResponse
      * @description Confirmed order line for SAP registration.
      */
@@ -4269,6 +4796,43 @@ export interface components {
       phone?: string | null;
       /** Email */
       email?: string | null;
+    };
+    /**
+     * CustomerDataImport
+     * @description Customer-side import data (customers + delivery_places + customer_items).
+     */
+    CustomerDataImport: {
+      /**
+       * Customers
+       * @description List of customers with their data
+       */
+      customers?: components["schemas"]["CustomerImportRow"][];
+    };
+    /**
+     * CustomerImportRow
+     * @description Customer with related data for import.
+     */
+    CustomerImportRow: {
+      /**
+       * Customer Code
+       * @description Customer code (customers.customer_code)
+       */
+      customer_code: string;
+      /**
+       * Customer Name
+       * @description Customer name
+       */
+      customer_name: string;
+      /**
+       * Delivery Places
+       * @description Delivery places for this customer
+       */
+      delivery_places?: components["schemas"]["DeliveryPlaceImportRow"][];
+      /**
+       * Items
+       * @description Customer-specific product mappings
+       */
+      items?: components["schemas"]["CustomerItemImportRow"][];
     };
     /**
      * CustomerItemBulkRow
@@ -4372,6 +4936,47 @@ export interface components {
       /**
        * Special Instructions
        * @description 特記事項
+       */
+      special_instructions?: string | null;
+    };
+    /**
+     * CustomerItemImportRow
+     * @description Customer item mapping for import.
+     */
+    CustomerItemImportRow: {
+      /**
+       * External Product Code
+       * @description Customer's product code
+       */
+      external_product_code: string;
+      /**
+       * Maker Part Code
+       * @description Internal product code (products.maker_part_code)
+       */
+      maker_part_code: string;
+      /**
+       * Supplier Code
+       * @description Supplier code (if specific)
+       */
+      supplier_code?: string | null;
+      /**
+       * Base Unit
+       * @description Base unit
+       */
+      base_unit?: string | null;
+      /**
+       * Pack Unit
+       * @description Pack unit
+       */
+      pack_unit?: string | null;
+      /**
+       * Pack Quantity
+       * @description Pack quantity
+       */
+      pack_quantity?: number | null;
+      /**
+       * Special Instructions
+       * @description Special instructions
        */
       special_instructions?: string | null;
     };
@@ -4551,6 +5156,27 @@ export interface components {
       unallocated_orders: number;
       /** Allocation Rate */
       allocation_rate: number;
+    };
+    /**
+     * DeliveryPlaceImportRow
+     * @description Delivery place for import.
+     */
+    DeliveryPlaceImportRow: {
+      /**
+       * Delivery Place Code
+       * @description Delivery place code
+       */
+      delivery_place_code: string;
+      /**
+       * Delivery Place Name
+       * @description Delivery place name
+       */
+      delivery_place_name: string;
+      /**
+       * Jiku Code
+       * @description Jiku code (SAP)
+       */
+      jiku_code?: string | null;
     };
     /**
      * DragAssignRequest
@@ -5003,6 +5629,31 @@ export interface components {
       confirmed_by?: string | null;
     };
     /**
+     * ImportResultDetail
+     * @description Detail of import result for a single table.
+     */
+    ImportResultDetail: {
+      /** Table Name */
+      table_name: string;
+      /**
+       * Created
+       * @default 0
+       */
+      created: number;
+      /**
+       * Updated
+       * @default 0
+       */
+      updated: number;
+      /**
+       * Failed
+       * @default 0
+       */
+      failed: number;
+      /** Errors */
+      errors?: string[];
+    };
+    /**
      * InboundPlanCreate
      * @description Payload for registering inbound plans.
      */
@@ -5055,6 +5706,11 @@ export interface components {
        * @description Sum of planned_quantity from all lines
        */
       total_quantity?: string | null;
+      /**
+       * Is Primary Supplier
+       * @default false
+       */
+      is_primary_supplier: boolean;
       /** Lines */
       lines?: components["schemas"]["InboundPlanLineResponse"][];
     };
@@ -5156,6 +5812,11 @@ export interface components {
        * @description Sum of planned_quantity from all lines
        */
       total_quantity?: string | null;
+      /**
+       * Is Primary Supplier
+       * @default false
+       */
+      is_primary_supplier: boolean;
     };
     /**
      * InboundPlanStatus
@@ -5207,6 +5868,11 @@ export interface components {
       supplier_name: string;
       /** Supplier Code */
       supplier_code: string;
+      /**
+       * Is Primary Supplier
+       * @default false
+       */
+      is_primary_supplier: boolean;
       /** Total Quantity */
       total_quantity: string;
       /** Lot Count */
@@ -5236,8 +5902,9 @@ export interface components {
      * InventoryItemResponse
      * @description API response model for inventory items (aggregated summary).
      *
-     *     This schema represents a calculated summary of inventory from the lots table,
-     *     aggregated by product and warehouse. It does not map to a physical table.
+     *     This schema represents a calculated summary of inventory from the
+     *     lots table, aggregated by product and warehouse. It does not map to
+     *     a physical table.
      */
     InventoryItemResponse: {
       /** Inventory Item Id */
@@ -5252,6 +5919,16 @@ export interface components {
       allocated_quantity: string;
       /** Available Quantity */
       available_quantity: string;
+      /**
+       * Soft Allocated Quantity
+       * @default 0
+       */
+      soft_allocated_quantity: string;
+      /**
+       * Hard Allocated Quantity
+       * @default 0
+       */
+      hard_allocated_quantity: string;
       /**
        * Last Updated
        * Format: date-time
@@ -5295,6 +5972,16 @@ export interface components {
        * @default 0
        */
       total: number;
+    };
+    /**
+     * LoginRequest
+     * @description Login request (Simplified for dev).
+     */
+    LoginRequest: {
+      /** User Id */
+      user_id?: number | null;
+      /** Username */
+      username?: string | null;
     };
     /**
      * LotCreate
@@ -5348,6 +6035,12 @@ export interface components {
       inspection_date?: string | null;
       /** Inspection Cert Number */
       inspection_cert_number?: string | null;
+      /** Product Code */
+      product_code?: string | null;
+      /** Supplier Code */
+      supplier_code?: string | null;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
     };
     /**
      * LotLock
@@ -5426,6 +6119,11 @@ export interface components {
       product_code: string;
       /** Supplier Name */
       supplier_name: string;
+      /**
+       * Is Primary Supplier
+       * @default false
+       */
+      is_primary_supplier: boolean;
       /** Warehouse Name */
       warehouse_name?: string | null;
       /** Warehouse Code */
@@ -5543,6 +6241,57 @@ export interface components {
       changed_at: string;
     };
     /**
+     * MasterImportRequest
+     * @description Unified master import request.
+     *
+     *     Can contain supply-side data, customer-side data, or both.
+     *     When both are provided, supply-side is processed first.
+     */
+    MasterImportRequest: {
+      /** @description Supply-side data (suppliers, products) */
+      supply_data?: components["schemas"]["SupplyDataImport"] | null;
+      /** @description Customer-side data (customers, delivery places, items) */
+      customer_data?: components["schemas"]["CustomerDataImport"] | null;
+      /**
+       * Mode
+       * @description Import mode: upsert (add/update) or replace (truncate + insert)
+       * @default upsert
+       */
+      mode: string;
+      /**
+       * Dry Run
+       * @description If true, validate only without committing
+       * @default false
+       */
+      dry_run: boolean;
+    };
+    /**
+     * MasterImportResponse
+     * @description Master import result.
+     */
+    MasterImportResponse: {
+      /**
+       * Status
+       * @description success, partial, or failed
+       */
+      status: string;
+      /**
+       * Dry Run
+       * @description Whether this was a dry run
+       */
+      dry_run: boolean;
+      /**
+       * Results
+       * @description Results per table
+       */
+      results?: components["schemas"]["ImportResultDetail"][];
+      /**
+       * Errors
+       * @description Global errors
+       */
+      errors?: string[];
+    };
+    /**
      * MaterialDeliveryDocumentRequest
      * @description 素材納品書発行リクエスト.
      */
@@ -5581,6 +6330,18 @@ export interface components {
        * @default 60
        */
       execution_time_seconds: number;
+    };
+    /**
+     * MySuppliersResponse
+     * @description 現在のユーザーの担当仕入先ID一覧.
+     */
+    MySuppliersResponse: {
+      /** User Id */
+      user_id: number;
+      /** Primary Supplier Ids */
+      primary_supplier_ids: number[];
+      /** All Supplier Ids */
+      all_supplier_ids: number[];
     };
     /**
      * OperationLogListResponse
@@ -5821,6 +6582,26 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Locked By User Id
+       * @description 編集中のユーザーID
+       */
+      locked_by_user_id?: number | null;
+      /**
+       * Locked By User Name
+       * @description 編集中のユーザー名
+       */
+      locked_by_user_name?: string | null;
+      /**
+       * Locked At
+       * @description ロック取得日時
+       */
+      locked_at?: string | null;
+      /**
+       * Lock Expires At
+       * @description ロック有効期限
+       */
+      lock_expires_at?: string | null;
       /** Lines */
       lines?: components["schemas"]["OrderLineResponse"][];
     };
@@ -5927,6 +6708,38 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+    };
+    /**
+     * ProductSupplierImportRow
+     * @description Product-supplier relationship in import data.
+     */
+    ProductSupplierImportRow: {
+      /**
+       * Maker Part Code
+       * @description Product code (products.maker_part_code)
+       */
+      maker_part_code: string;
+      /**
+       * Product Name
+       * @description Product name (for upsert)
+       */
+      product_name?: string | null;
+      /**
+       * Base Unit
+       * @description Base unit (e.g., KG, EA)
+       */
+      base_unit?: string | null;
+      /**
+       * Is Primary
+       * @description Is primary supplier for this product
+       * @default false
+       */
+      is_primary: boolean;
+      /**
+       * Lead Time Days
+       * @description Lead time in days
+       */
+      lead_time_days?: number | null;
     };
     /**
      * ProductUpdate
@@ -6141,32 +6954,6 @@ export interface components {
      */
     StockTransactionType: "inbound" | "allocation" | "shipment" | "adjustment" | "return";
     /**
-     * SupplierAssignmentInfo
-     * @description Schema for supplier assignment information.
-     */
-    SupplierAssignmentInfo: {
-      /**
-       * Supplier Id
-       * @description 仕入先ID
-       */
-      supplier_id: number;
-      /**
-       * Supplier Code
-       * @description 仕入先コード
-       */
-      supplier_code: string;
-      /**
-       * Supplier Name
-       * @description 仕入先名
-       */
-      supplier_name: string;
-      /**
-       * Is Primary
-       * @description 主担当フラグ
-       */
-      is_primary: boolean;
-    };
-    /**
      * SupplierBulkRow
      * @description Single row for supplier bulk upsert.
      */
@@ -6196,6 +6983,27 @@ export interface components {
       supplier_code: string;
       /** Supplier Name */
       supplier_name: string;
+    };
+    /**
+     * SupplierImportRow
+     * @description Supplier with related products for import.
+     */
+    SupplierImportRow: {
+      /**
+       * Supplier Code
+       * @description Supplier code (suppliers.supplier_code)
+       */
+      supplier_code: string;
+      /**
+       * Supplier Name
+       * @description Supplier name
+       */
+      supplier_name: string;
+      /**
+       * Products
+       * @description Products supplied by this supplier
+       */
+      products?: components["schemas"]["ProductSupplierImportRow"][];
     };
     /**
      * SupplierResponse
@@ -6228,14 +7036,29 @@ export interface components {
       supplier_name?: string | null;
     };
     /**
-     * Token
-     * @description JWT Token schema.
+     * SupplyDataImport
+     * @description Supply-side import data (suppliers + products + product_suppliers).
      */
-    Token: {
+    SupplyDataImport: {
+      /**
+       * Suppliers
+       * @description List of suppliers with their products
+       */
+      suppliers?: components["schemas"]["SupplierImportRow"][];
+    };
+    /**
+     * TokenResponse
+     * @description Token response schema.
+     */
+    TokenResponse: {
       /** Access Token */
       access_token: string;
-      /** Token Type */
+      /**
+       * Token Type
+       * @default bearer
+       */
       token_type: string;
+      user: components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
     };
     /**
      * UomConversionBulkRow
@@ -6347,48 +7170,6 @@ export interface components {
        * @description パスワード（平文）
        */
       password: string;
-    };
-    /**
-     * UserResponse
-     * @description Schema for user response (DDL: users).
-     */
-    UserResponse: {
-      /**
-       * Username
-       * @description ユーザー名
-       */
-      username: string;
-      /**
-       * Email
-       * Format: email
-       * @description メールアドレス
-       */
-      email: string;
-      /**
-       * Display Name
-       * @description 表示名
-       */
-      display_name: string;
-      /**
-       * Is Active
-       * @description 有効フラグ
-       * @default true
-       */
-      is_active: boolean;
-      /** User Id */
-      user_id: number;
-      /** Last Login At */
-      last_login_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
     };
     /**
      * UserRoleAssignment
@@ -6537,53 +7318,6 @@ export interface components {
        */
       role_codes?: string[];
     };
-    /**
-     * UserWithSuppliers
-     * @description Schema for user with assigned suppliers (for authentication context).
-     */
-    UserWithSuppliers: {
-      /**
-       * Username
-       * @description ユーザー名
-       */
-      username: string;
-      /**
-       * Email
-       * Format: email
-       * @description メールアドレス
-       */
-      email: string;
-      /**
-       * Display Name
-       * @description 表示名
-       */
-      display_name: string;
-      /**
-       * Is Active
-       * @description 有効フラグ
-       * @default true
-       */
-      is_active: boolean;
-      /** User Id */
-      user_id: number;
-      /** Last Login At */
-      last_login_at?: string | null;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
-      /**
-       * Supplier Assignments
-       * @description 担当仕入先リスト
-       */
-      supplier_assignments?: components["schemas"]["SupplierAssignmentInfo"][];
-    };
     /** ValidationError */
     ValidationError: {
       /** Location */
@@ -6686,6 +7420,62 @@ export interface components {
        */
       warehouse_type?: string | null;
     };
+    /**
+     * UserResponse
+     * @description User response schema.
+     */
+    app__presentation__schemas__auth__auth_schemas__UserResponse: {
+      /** Id */
+      id: number;
+      /** Username */
+      username: string;
+      /** Display Name */
+      display_name: string;
+      /** Roles */
+      roles?: string[];
+    };
+    /**
+     * UserResponse
+     * @description Schema for user response (DDL: users).
+     */
+    app__presentation__schemas__system__users_schema__UserResponse: {
+      /**
+       * Username
+       * @description ユーザー名
+       */
+      username: string;
+      /**
+       * Email
+       * Format: email
+       * @description メールアドレス
+       */
+      email: string;
+      /**
+       * Display Name
+       * @description 表示名
+       */
+      display_name: string;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** User Id */
+      user_id: number;
+      /** Last Login At */
+      last_login_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
   };
   responses: never;
   parameters: never;
@@ -6707,6 +7497,7 @@ export interface operations {
         expiry_from?: string | null;
         expiry_to?: string | null;
         with_stock?: boolean;
+        prioritize_primary?: boolean;
       };
       header?: never;
       path?: never;
@@ -7063,6 +7854,7 @@ export interface operations {
         date_from?: string | null;
         date_to?: string | null;
         order_type?: string | null;
+        prioritize_primary?: boolean;
       };
       header?: never;
       path?: never;
@@ -7238,6 +8030,68 @@ export interface operations {
       };
     };
   };
+  acquire_lock_api_orders__order_id__lock_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  release_lock_api_orders__order_id__lock_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   drag_assign_api_allocations_drag_assign_post: {
     parameters: {
       query?: never;
@@ -7399,6 +8253,41 @@ export interface operations {
       };
     };
   };
+  cancel_by_order_line_api_allocations_cancel_by_order_line_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": {
+          [key: string]: unknown;
+        };
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   auto_allocate_api_allocations_auto_allocate_post: {
     parameters: {
       query?: never;
@@ -7419,6 +8308,72 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AutoAllocateResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_auto_allocate_api_allocations_bulk_auto_allocate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BulkAutoAllocateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkAutoAllocateResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  auto_allocate_orders_api_allocations_auto_orders_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BatchAutoOrderRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BatchAutoOrderResponse"];
         };
       };
       /** @description Validation Error */
@@ -7593,6 +8548,44 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AllocationSuggestionListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get: {
+    parameters: {
+      query: {
+        /** @description 得意先ID */
+        customer_id: number;
+        /** @description 納入先ID */
+        delivery_place_id: number;
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 期間 (YYYY-MM) */
+        forecast_period?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -7923,6 +8916,7 @@ export interface operations {
         supplier_id?: number | null;
         product_id?: number | null;
         status?: string | null;
+        prioritize_primary?: boolean;
       };
       header?: never;
       path?: never;
@@ -8378,7 +9372,9 @@ export interface operations {
   };
   list_inventory_by_supplier_api_inventory_items_by_supplier_get: {
     parameters: {
-      query?: never;
+      query?: {
+        prioritize_primary?: boolean;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -8392,6 +9388,15 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["InventoryBySupplierResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -8904,6 +9909,37 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_product_suppliers_api_masters_products__product_code__suppliers_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
       };
       /** @description Validation Error */
       422: {
@@ -9916,7 +10952,7 @@ export interface operations {
       };
     };
   };
-  login_for_access_token_api_login_post: {
+  login_api_auth_login_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -9925,7 +10961,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/x-www-form-urlencoded": components["schemas"]["Body_login_for_access_token_api_login_post"];
+        "application/json": components["schemas"]["LoginRequest"];
       };
     };
     responses: {
@@ -9935,7 +10971,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["Token"];
+          "application/json": components["schemas"]["TokenResponse"];
         };
       };
       /** @description Validation Error */
@@ -9949,7 +10985,7 @@ export interface operations {
       };
     };
   };
-  get_current_user_info_api_me_get: {
+  get_me_api_auth_me_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -9964,7 +11000,71 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserWithSuppliers"] | null;
+          "application/json": components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
+        };
+      };
+    };
+  };
+  create_client_log_api_system_logs_client_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ClientLogCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_recent_logs_api_system_logs_recent_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ClientLogResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -9989,7 +11089,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"][];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"][];
         };
       };
       /** @description Validation Error */
@@ -10022,7 +11122,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
         };
       };
       /** @description Validation Error */
@@ -10088,7 +11188,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["UserResponse"];
+          "application/json": components["schemas"]["app__presentation__schemas__system__users_schema__UserResponse"];
         };
       };
       /** @description Validation Error */
@@ -10353,6 +11453,46 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_my_suppliers_api_assignments_my_suppliers_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MySuppliersResponse"];
+        };
+      };
+    };
+  };
+  get_all_assignments_api_assignments_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UserSupplierAssignmentResponse"][];
         };
       };
     };
@@ -10721,6 +11861,107 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+    };
+  };
+  import_from_file_api_admin_master_import_upload_post: {
+    parameters: {
+      query?: {
+        dry_run?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_import_from_file_api_admin_master_import_upload_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MasterImportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  import_from_json_api_admin_master_import_json_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MasterImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MasterImportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  download_template_api_admin_master_import_template_get: {
+    parameters: {
+      query?: {
+        group?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -11319,6 +12560,38 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+    };
+  };
+  get_inventory_sync_alerts_api_batch_jobs_inventory_sync_alerts_get: {
+    parameters: {
+      query?: {
+        /** @description アクティブなアラートのみ取得 */
+        active_only?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

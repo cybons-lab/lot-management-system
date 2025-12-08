@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.infrastructure.persistence.models import BusinessRule, Lot, Product, Warehouse
 from app.main import app
-from app.models import BusinessRule, Lot, Product, Warehouse
+from app.presentation.api.deps import get_db
 
 
 # ---- テスト用DBセッションを使う（トランザクションは外側のpytest設定に依存）
@@ -50,7 +50,7 @@ def _setup_test_data(db: Session):
     db.flush()
 
     # サプライヤーを作成
-    from app.models import Supplier
+    from app.infrastructure.persistence.models import Supplier
 
     supplier = Supplier(supplier_code="SUP001", supplier_name="Test Supplier")
     db.add(supplier)
@@ -97,7 +97,9 @@ def test_inventory_sync_execute_success(test_db: Session):
     products = data["products"]
 
     # SAPMockClientのモックを設定
-    with patch("app.services.batch.inventory_sync_service.SAPMockClient") as mock_sap_client_class:
+    with patch(
+        "app.application.services.batch.inventory_sync_service.SAPMockClient"
+    ) as mock_sap_client_class:
         mock_client = MagicMock()
         mock_sap_client_class.return_value = mock_client
 
@@ -121,7 +123,7 @@ def test_inventory_sync_execute_success(test_db: Session):
         }
 
         # サービスを直接呼び出し
-        from app.services.batch.inventory_sync_service import InventorySyncService
+        from app.application.services.batch.inventory_sync_service import InventorySyncService
 
         service = InventorySyncService(db)
         result = service.check_inventory_totals()
@@ -140,7 +142,9 @@ def test_inventory_sync_execute_with_discrepancies(test_db: Session):
     products = data["products"]
 
     # SAPMockClientのモックを設定
-    with patch("app.services.batch.inventory_sync_service.SAPMockClient") as mock_sap_client_class:
+    with patch(
+        "app.application.services.batch.inventory_sync_service.SAPMockClient"
+    ) as mock_sap_client_class:
         mock_client = MagicMock()
         mock_sap_client_class.return_value = mock_client
 
@@ -164,7 +168,7 @@ def test_inventory_sync_execute_with_discrepancies(test_db: Session):
         }
 
         # サービスを直接呼び出し
-        from app.services.batch.inventory_sync_service import InventorySyncService
+        from app.application.services.batch.inventory_sync_service import InventorySyncService
 
         service = InventorySyncService(db)
         result = service.check_inventory_totals()
@@ -202,10 +206,10 @@ def test_inventory_sync_execute_error_handling(test_db: Session):
     import pytest
 
     with patch(
-        "app.services.batch.inventory_sync_service.SAPMockClient",
+        "app.application.services.batch.inventory_sync_service.SAPMockClient",
         side_effect=Exception("SAP connection failed"),
     ):
-        from app.services.batch.inventory_sync_service import InventorySyncService
+        from app.application.services.batch.inventory_sync_service import InventorySyncService
 
         # サービス初期化時にエラーが発生
         with pytest.raises(Exception) as exc_info:
@@ -224,10 +228,10 @@ def test_inventory_sync_multiple_executions(test_db: Session):
     from datetime import datetime
     from decimal import Decimal
 
-    from app.services.batch.inventory_sync_service import InventorySyncService
+    from app.application.services.batch.inventory_sync_service import InventorySyncService
 
     # 1回目の実行（差異あり）
-    with patch("app.services.batch.inventory_sync_service.SAPMockClient") as mock_class:
+    with patch("app.application.services.batch.inventory_sync_service.SAPMockClient") as mock_class:
         mock_client = MagicMock()
         mock_class.return_value = mock_client
         mock_client.get_total_inventory.return_value = {
@@ -261,7 +265,7 @@ def test_inventory_sync_multiple_executions(test_db: Session):
     assert alert1 is not None
 
     # 2回目の実行（同じ商品に差異あり）
-    with patch("app.services.batch.inventory_sync_service.SAPMockClient") as mock_class:
+    with patch("app.application.services.batch.inventory_sync_service.SAPMockClient") as mock_class:
         mock_client = MagicMock()
         mock_class.return_value = mock_client
         mock_client.get_total_inventory.return_value = {

@@ -8,9 +8,9 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.application.services.allocations.suggestion import AllocationSuggestionService
 from app.core.database import get_db
-from app.main import app
-from app.models import (
+from app.infrastructure.persistence.models import (
     AllocationSuggestion,
     Customer,
     DeliveryPlace,
@@ -19,7 +19,7 @@ from app.models import (
     Product,
     Warehouse,
 )
-from app.services.allocations.suggestion import AllocationSuggestionService
+from app.main import app
 
 
 # Setup DB fixture similar to other tests

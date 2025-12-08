@@ -6,9 +6,9 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-import app.models  # Register all models
+import app.infrastructure.persistence.models  # Register all models
+from app.infrastructure.persistence.models.base_model import Base
 from app.main import app
-from app.models.base_model import Base
 
 
 # Load Hypothesis settings
@@ -226,8 +226,8 @@ def db_session(db) -> Generator[Session]:
 def client(db) -> Generator[TestClient]:
     """Create FastAPI TestClient."""
     # Override both get_db functions since different modules import from different locations
-    from app.api import deps as api_deps
     from app.core import database as core_database
+    from app.presentation.api import deps as api_deps
 
     def override_get_db():
         yield db
@@ -242,8 +242,14 @@ def client(db) -> Generator[TestClient]:
 @pytest.fixture
 def master_data(db):
     """Create common master data for tests."""
-    from app.models import Customer, DeliveryPlace, Product, Supplier, Warehouse
-    from app.models.auth_models import User
+    from app.infrastructure.persistence.models import (
+        Customer,
+        DeliveryPlace,
+        Product,
+        Supplier,
+        Warehouse,
+    )
+    from app.infrastructure.persistence.models.auth_models import User
 
     # Create Warehouse
     warehouse = Warehouse(
@@ -309,7 +315,7 @@ def master_data(db):
 @pytest.fixture
 def normal_user(db):
     """Create a normal test user."""
-    from app.models.auth_models import User
+    from app.infrastructure.persistence.models.auth_models import User
 
     user = User(
         username="test_user_normal",
@@ -330,7 +336,7 @@ def normal_user(db):
 @pytest.fixture
 def superuser(db):
     """Create a superuser for testing."""
-    from app.models.auth_models import User
+    from app.infrastructure.persistence.models.auth_models import User
 
     user = User(
         username="test_superuser",

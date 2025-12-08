@@ -4,10 +4,14 @@ from unittest.mock import patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models.inbound_models import ExpectedLot, InboundPlan, InboundPlanLine
-from app.models.inventory_models import Lot, StockHistory
-from app.schemas.inventory.inbound_schema import InboundPlanReceiveRequest
-from app.services.inventory.inbound_receiving_service import InboundReceivingService
+from app.application.services.inventory.inbound_receiving_service import InboundReceivingService
+from app.infrastructure.persistence.models.inbound_models import (
+    ExpectedLot,
+    InboundPlan,
+    InboundPlanLine,
+)
+from app.infrastructure.persistence.models.inventory_models import Lot, StockHistory
+from app.presentation.schemas.inventory.inbound_schema import InboundPlanReceiveRequest
 
 
 def test_receive_inbound_plan_with_expected_lots(db: Session, service_master_data):
@@ -45,7 +49,9 @@ def test_receive_inbound_plan_with_expected_lots(db: Session, service_master_dat
     request = InboundPlanReceiveRequest(received_at=datetime.now())
 
     # Mock settings.DEFAULT_WAREHOUSE_ID
-    with patch("app.services.inventory.inbound_receiving_service.settings") as mock_settings:
+    with patch(
+        "app.application.services.inventory.inbound_receiving_service.settings"
+    ) as mock_settings:
         mock_settings.DEFAULT_WAREHOUSE_ID = warehouse.id
 
         response = service.receive_inbound_plan(plan.id, request)
@@ -95,7 +101,9 @@ def test_receive_inbound_plan_without_expected_lots(db: Session, service_master_
 
     request = InboundPlanReceiveRequest(received_at=datetime.now())
 
-    with patch("app.services.inventory.inbound_receiving_service.settings") as mock_settings:
+    with patch(
+        "app.application.services.inventory.inbound_receiving_service.settings"
+    ) as mock_settings:
         mock_settings.DEFAULT_WAREHOUSE_ID = warehouse.id
 
         response = service.receive_inbound_plan(plan.id, request)

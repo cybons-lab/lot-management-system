@@ -31,8 +31,13 @@ from sqlalchemy.orm import Session
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 load_dotenv(os.path.join(os.path.dirname(__file__), "..", ".env"))
 
+from app.application.services.forecasts.forecast_generator import (  # noqa: E402
+    create_daily_forecasts,
+    create_jyun_forecasts_from_daily,
+    create_monthly_forecasts_from_daily,
+)
 from app.core.database import SessionLocal  # noqa: E402
-from app.models import (  # noqa: E402
+from app.infrastructure.persistence.models import (  # noqa: E402
     Customer,
     CustomerItem,
     DeliveryPlace,
@@ -42,11 +47,6 @@ from app.models import (  # noqa: E402
     Product,
     Supplier,
     Warehouse,
-)
-from app.services.forecasts.forecast_generator import (  # noqa: E402
-    create_daily_forecasts,
-    create_jyun_forecasts_from_daily,
-    create_monthly_forecasts_from_daily,
 )
 
 

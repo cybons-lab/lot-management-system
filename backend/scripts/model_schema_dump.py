@@ -13,7 +13,7 @@ from sqlalchemy.schema import CreateIndex, CreateTable
 
 # プロジェクトに合わせて Base をまとめて import
 # app/models/__init__.py で Base を再エクスポートしている前提
-from app.models.base_model import Base  # ここが異なる場合は適宜修正
+from app.infrastructure.persistence.models.base_model import Base  # ここが異なる場合は適宜修正
 
 
 DATABASE_URL = os.getenv("DATABASE_URL")

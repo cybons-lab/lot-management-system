@@ -9,9 +9,7 @@ from datetime import date, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_db
-from app.main import app
-from app.models import (
+from app.infrastructure.persistence.models import (
     Customer,
     DeliveryPlace,
     Lot,
@@ -21,6 +19,8 @@ from app.models import (
     Supplier,
     Warehouse,
 )
+from app.main import app
+from app.presentation.api.deps import get_db
 
 
 # ✅ 修正: conftest.pyのdb_sessionを使用（独自engineを削除）
@@ -36,8 +36,8 @@ def client(db_session):
         finally:
             pass  # conftest.pyが管理するのでcloseしない
 
-    from app.models.auth_models import User
-    from app.services.auth.auth_service import AuthService
+    from app.application.services.auth.auth_service import AuthService
+    from app.infrastructure.persistence.models.auth_models import User
 
     mock_user = User(
         id=1,
@@ -95,7 +95,7 @@ def setup_test_data(db_session):
 
     # Forecast (APIテスト用にデータを保持)
     # ✅ v2.5: forecast が無くても候補ロットは返されるべき
-    from app.models.forecast_models import ForecastCurrent
+    from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
 
     today = date.today()
     forecast = ForecastCurrent(
@@ -186,7 +186,7 @@ class TestAllocationAPI:
     def test_candidate_lots_without_forecast(self, client, db_session, setup_test_data):
         """forecast に含まれない商品でも、有効在庫があれば候補ロットが返ること"""
         # 新しい商品を作成（forecast 無し）
-        from app.models import Lot, Order, OrderLine, Product
+        from app.infrastructure.persistence.models import Lot, Order, OrderLine, Product
 
         product_no_forecast = Product(
             maker_part_code="PROD-NO-FORECAST",

@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from sqlalchemy.orm import Session
 
-from app.models import BusinessRule, Lot, Product, Supplier, Warehouse
-from app.services.batch.inventory_sync_service import InventorySyncService
+from app.application.services.batch.inventory_sync_service import InventorySyncService
+from app.infrastructure.persistence.models import BusinessRule, Lot, Product, Supplier, Warehouse
 
 
 @pytest.fixture
@@ -270,7 +270,7 @@ def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_invento
     assert active_alerts[0].id == old_alert.id
 
 
-@patch("app.services.batch.inventory_sync_service.SAPMockClient")
+@patch("app.application.services.batch.inventory_sync_service.SAPMockClient")
 def test_check_inventory_totals_integration(
     mock_sap_client_class, db_session: Session, setup_inventory_sync_test_data
 ):

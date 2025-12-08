@@ -7,9 +7,15 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.infrastructure.persistence.models import (
+    InboundPlan,
+    InboundPlanLine,
+    Product,
+    Supplier,
+    Warehouse,
+)
 from app.main import app
-from app.models import InboundPlan, InboundPlanLine, Product, Supplier, Warehouse
+from app.presentation.api.deps import get_db
 
 
 def _truncate_all(db: Session):

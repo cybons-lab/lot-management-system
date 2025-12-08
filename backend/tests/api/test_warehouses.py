@@ -7,8 +7,8 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.infrastructure.persistence.models import Warehouse
 from app.main import app
-from app.models import Warehouse
 
 
 def _truncate_all(db: Session):

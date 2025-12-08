@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.models import Allocation, Lot, Order, OrderLine, Product
+from app.infrastructure.persistence.models import Allocation, Lot, Order, OrderLine, Product
 
 
 def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, master_data):

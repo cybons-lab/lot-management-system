@@ -1,10 +1,16 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from app.models.forecast_models import ForecastCurrent
-from app.models.inventory_models import Lot
-from app.models.masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
-from app.services.allocations.suggestion import AllocationSuggestionService
+from app.application.services.allocations.suggestion import AllocationSuggestionService
+from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.masters_models import (
+    Customer,
+    DeliveryPlace,
+    Product,
+    Supplier,
+    Warehouse,
+)
 
 
 def test_regenerate_for_periods(db):

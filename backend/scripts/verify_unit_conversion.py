@@ -7,11 +7,18 @@ from decimal import Decimal
 # Add backend directory to path
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
+from app.application.services.allocation.allocations_service import preview_fefo_allocation
+from app.application.services.orders.order_service import OrderService
 from app.core.database import SessionLocal
-from app.models import Customer, DeliveryPlace, Lot, OrderLine, Product, Warehouse
-from app.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
-from app.services.allocation.allocations_service import preview_fefo_allocation
-from app.services.orders.order_service import OrderService
+from app.infrastructure.persistence.models import (
+    Customer,
+    DeliveryPlace,
+    Lot,
+    OrderLine,
+    Product,
+    Warehouse,
+)
+from app.presentation.schemas.orders.orders_schema import OrderCreate, OrderLineCreate
 
 
 def verify_unit_conversion():
@@ -115,9 +122,9 @@ def verify_unit_conversion():
         print(f"Order Line: {line.order_quantity} {line.unit}")
         print(f"Converted Qty: {line.converted_quantity} (Expected: 2.0)")
 
-        assert line.converted_quantity == Decimal("2.000"), (
-            f"Conversion failed: {line.converted_quantity} != 2.0"
-        )
+        assert line.converted_quantity == Decimal(
+            "2.000"
+        ), f"Conversion failed: {line.converted_quantity} != 2.0"
         print("✅ Conversion Logic Verified")
 
         # 5. Setup Lot (Internal Unit)
@@ -151,9 +158,9 @@ def verify_unit_conversion():
         line_plan = preview.lines[0]
 
         print(f"Allocation Plan Required Qty: {line_plan.required_qty}")
-        assert line_plan.required_qty == 2.0, (
-            f"Allocation required qty mismatch: {line_plan.required_qty} != 2.0"
-        )
+        assert (
+            line_plan.required_qty == 2.0
+        ), f"Allocation required qty mismatch: {line_plan.required_qty} != 2.0"
 
         allocated_qty = sum(a.allocate_qty for a in line_plan.allocations)
         print(f"Allocated Qty: {allocated_qty}")

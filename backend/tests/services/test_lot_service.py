@@ -8,9 +8,9 @@ from datetime import date, timedelta
 import pytest
 from sqlalchemy.orm import Session
 
+from app.application.services.inventory.lot_service import LotService
 from app.domain.lot import LotCandidate
-from app.models import Lot, LotCurrentStock, Product, Supplier, Warehouse
-from app.services.inventory.lot_service import LotService
+from app.infrastructure.persistence.models import Lot, LotCurrentStock, Product, Supplier, Warehouse
 
 
 @pytest.fixture

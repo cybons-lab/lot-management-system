@@ -6,8 +6,8 @@ from app.main import app
 
 @pytest.mark.asyncio
 async def test_order_validation_error():
-    from app.models.auth_models import User
-    from app.services.auth.auth_service import AuthService
+    from app.application.services.auth.auth_service import AuthService
+    from app.infrastructure.persistence.models.auth_models import User
 
     mock_user = User(
         id=1,

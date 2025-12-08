@@ -2,9 +2,9 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models.auth_models import User
-from app.services.auth.auth_service import AuthService
-from app.services.auth.user_service import UserService
+from app.application.services.auth.auth_service import AuthService
+from app.application.services.auth.user_service import UserService
+from app.infrastructure.persistence.models.auth_models import User
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def test_user(db: Session):
     if existing:
         return existing
 
-    from app.schemas.system.users_schema import UserCreate
+    from app.presentation.schemas.system.users_schema import UserCreate
 
     user_in = UserCreate(
         username="testuser",

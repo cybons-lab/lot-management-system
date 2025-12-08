@@ -17,7 +17,7 @@ from sqlalchemy import create_engine, inspect, text  # noqa: E402
 from app.core.config import settings  # noqa: E402
 
 # Import all models to ensure they're registered
-from app.models import Base  # noqa: F401, E402
+from app.infrastructure.persistence.models import Base  # noqa: F401, E402
 
 
 def check_schema_consistency():

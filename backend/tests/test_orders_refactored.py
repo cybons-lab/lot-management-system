@@ -9,9 +9,9 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.deps import get_db, get_uow
+from app.infrastructure.persistence.models import Customer, DeliveryPlace, Order, OrderLine, Product
 from app.main import app
-from app.models import Customer, DeliveryPlace, Order, OrderLine, Product
+from app.presentation.api.deps import get_db, get_uow
 
 
 # ✅ 修正: conftest.pyのdb_sessionを使用（独自engineを削除）
@@ -44,8 +44,8 @@ def client(db_session):
 
         yield TestUnitOfWork(db_session)
 
-    from app.models.auth_models import User
-    from app.services.auth.auth_service import AuthService
+    from app.application.services.auth.auth_service import AuthService
+    from app.infrastructure.persistence.models.auth_models import User
 
     mock_user = User(
         id=1,
