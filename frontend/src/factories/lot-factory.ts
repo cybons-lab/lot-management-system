@@ -52,6 +52,7 @@ export function createLot(overrides?: Partial<LotResponse>): LotResponse {
     delivery_place_code: null,
     delivery_place_name: null,
     lot_no: null,
+    is_primary_supplier: false,
 
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
