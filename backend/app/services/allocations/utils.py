@@ -89,17 +89,28 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
 def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
     """FEFO候補ロットを取得.
 
-    v2.2: Lot モデルから直接利用可能在庫を計算。
+    v2.3: 利用可能数量にロック数量を考慮し、検査ステータスをフィルタ。
+
+    フィルタ条件:
+    - 製品IDが一致
+    - 利用可能数量（現在数量 - 引当済み - ロック済み）> 0
+    - ステータスが active
+    - 検査ステータスが not_required または passed
 
     Returns:
         List of (Lot, available_quantity) tuples sorted by FEFO order
     """
+    # 利用可能数量 = 現在数量 - 引当済み数量 - ロック数量
+    available_qty_expr = Lot.current_quantity - Lot.allocated_quantity - Lot.locked_quantity
+
     stmt = (  # type: ignore[assignment]
-        select(Lot, (Lot.current_quantity - Lot.allocated_quantity).label("available_qty"))
+        select(Lot, available_qty_expr.label("available_qty"))
         .where(
             Lot.product_id == product_id,
-            (Lot.current_quantity - Lot.allocated_quantity) > 0,
+            available_qty_expr > 0,
             Lot.status == LotStatus.ACTIVE.value,
+            # 検査が必要ないか、検査合格のロットのみ対象
+            Lot.inspection_status.in_(["not_required", "passed"]),
         )
         .order_by(
             nulls_last(Lot.expiry_date.asc()),

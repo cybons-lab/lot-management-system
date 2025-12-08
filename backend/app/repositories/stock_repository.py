@@ -44,6 +44,8 @@ class StockRepository:
             .where(Lot.product_id == product_id)
             .where(Lot.warehouse_id == warehouse_id)
             .where(Lot.status == "active")  # DDL v2.2 compliant
+            # v2.3: 検査合格または検査不要のロットのみ対象
+            .where(Lot.inspection_status.in_(["not_required", "passed"]))
         )
 
         # Filter by expiry date if ship_date is provided
@@ -66,10 +68,11 @@ class StockRepository:
     def calc_available_qty(lot: Lot) -> int:
         """Calculate allocatable quantity for a lot.
 
-        v2.2: Use Lot model directly - current_quantity - allocated_quantity.
+        v2.3: ロック数量を考慮 (current - allocated - locked).
         """
         current_qty = float(getattr(lot, "current_quantity", 0) or 0)
         allocated_qty = float(getattr(lot, "allocated_quantity", 0) or 0)
+        locked_qty = float(getattr(lot, "locked_quantity", 0) or 0)
 
-        available = current_qty - allocated_qty
+        available = current_qty - allocated_qty - locked_qty
         return max(0, int(round(available)))
