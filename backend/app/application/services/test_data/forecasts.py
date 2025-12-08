@@ -106,7 +106,7 @@ def generate_forecasts(
                         db.add(fc)
 
                 else:  # monthly
-                    # Monthly Forecast: single entry with no specific date
+                    # Monthly Forecast: single entry for the month (use 1st day as date)
                     qty = random.randint(100, 300)
                     product_total += qty
 
@@ -114,7 +114,7 @@ def generate_forecasts(
                         customer_id=c.id,
                         delivery_place_id=dp.id,
                         product_id=p.id,
-                        forecast_date=None,  # Monthly = no specific date
+                        forecast_date=next_month,  # Use 1st day of month (NOT NULL constraint)
                         forecast_quantity=Decimal(qty),
                         unit="pcs",
                         forecast_period=forecast_period,
