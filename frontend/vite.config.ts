@@ -43,4 +43,7 @@ export default defineConfig({
       },
     },
   },
+  optimizeDeps: {
+    include: ["@radix-ui/react-scroll-area"],
+  },
 });

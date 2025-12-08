@@ -28,4 +28,35 @@ export const api = {
    * @returns ダッシュボード統計情報
    */
   getDashboardStats: () => http.get<DashboardStats>("admin/stats"),
+
+  /**
+   * マスタ変更履歴を取得
+   * @param params クエリパラメータ
+   * @returns マスタ変更履歴リスト
+   */
+  getMasterChangeLogs: (params?: { page?: number; limit?: number }) =>
+    http.get<MasterChangeLogListResponse>("master-change-logs", {
+      searchParams: {
+        skip: ((params?.page || 1) - 1) * (params?.limit || 10),
+        limit: params?.limit || 10,
+      },
+    }),
 };
+
+export interface MasterChangeLog {
+  change_log_id: number;
+  table_name: string;
+  record_id: number;
+  change_type: "insert" | "update" | "delete";
+  old_values: Record<string, unknown> | null;
+  new_values: Record<string, unknown> | null;
+  changed_by: number;
+  changed_at: string;
+}
+
+export interface MasterChangeLogListResponse {
+  logs: MasterChangeLog[];
+  total: number;
+  page: number;
+  page_size: number;
+}

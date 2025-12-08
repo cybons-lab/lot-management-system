@@ -39,10 +39,10 @@ function AlertRow({ alert, onClick }: AlertRowProps) {
         )}
       </td>
       <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
-        {alert.target.resourceType === "order" && `受注 #${alert.target.id}`}
-        {alert.target.resourceType === "lot" && `ロット #${alert.target.id}`}
-        {alert.target.resourceType === "inventory_item" && `在庫 #${alert.target.id}`}
-        {alert.target.resourceType === "forecast_daily" && `予測 #${alert.target.id}`}
+        {alert.target.resource_type === "order" && `受注 #${alert.target.id}`}
+        {alert.target.resource_type === "lot" && `ロット #${alert.target.id}`}
+        {alert.target.resource_type === "inventory_item" && `在庫 #${alert.target.id}`}
+        {alert.target.resource_type === "forecast_daily" && `予測 #${alert.target.id}`}
       </td>
       <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-500">
         {formatDate(alert.occurred_at)}
@@ -65,7 +65,7 @@ export function AlertTable({ alerts, isLoading = false, onAlertClick }: AlertTab
 
     // Default navigation based on target type
     const { target } = alert;
-    switch (target.resourceType) {
+    switch (target.resource_type) {
       case "order":
         navigate(`/orders/${target.id}`);
         break;

@@ -1,4 +1,9 @@
-type DashboardStats = { total_stock: number; total_orders: number; unallocated_orders: number };
+type DashboardStats = {
+  total_stock: number;
+  total_orders: number;
+  unallocated_orders: number;
+  allocation_rate: number;
+};
 import { useQuery } from "@tanstack/react-query";
 import { Archive, Library, AlertCircle } from "lucide-react";
 
@@ -22,6 +27,7 @@ export function DashboardStats() {
   if (isLoading) {
     return (
       <div className={styles.grid}>
+        <StatCardSkeleton />
         <StatCardSkeleton />
         <StatCardSkeleton />
         <StatCardSkeleton />
@@ -57,6 +63,12 @@ export function DashboardStats() {
         value={stats.total_orders}
         icon={Library}
         colorClass="border-green-500"
+      />
+      <StatCard
+        title="引当率"
+        value={`${stats.allocation_rate}%`}
+        icon={AlertCircle} // Using AlertCircle for now, maybe PieChart would be better but keeping icons consistent
+        colorClass="border-purple-500"
       />
       <StatCard
         title="未引当受注"
