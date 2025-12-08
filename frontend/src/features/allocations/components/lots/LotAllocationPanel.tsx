@@ -24,6 +24,7 @@ interface LotAllocationPanelProps {
   onSaveAllocations?: () => void;
   onSaveAndConfirm?: () => void;
   onConfirmHard?: () => void;
+  onCancelAllocations?: () => void;
 
   canSave?: boolean;
   isOverAllocated?: boolean;
@@ -40,10 +41,11 @@ interface LotAllocationPanelProps {
   isActive?: boolean;
   onActivate?: () => void;
 
-  // New props
+  // Allocation state props
   hardAllocated?: number;
   softAllocated?: number;
-  softAllocatedDb?: number; // DBに存在するSOFT引当（Hard確定ボタン表示制御用）
+  hasUnsavedChanges?: boolean;
+  allocationState?: "none" | "soft" | "hard" | "mixed";
 }
 
 /**
@@ -61,6 +63,7 @@ export function LotAllocationPanel({
   onSaveAllocations,
   onSaveAndConfirm,
   onConfirmHard,
+  onCancelAllocations,
   canSave = false,
   isLoading = false,
   error = null,
@@ -72,8 +75,9 @@ export function LotAllocationPanel({
   isActive = false,
   onActivate,
   hardAllocated,
-  softAllocatedDb,
   softAllocated,
+  hasUnsavedChanges = false,
+  allocationState = "none",
 }: LotAllocationPanelProps & { deliveryPlaceName?: string }) {
   // 数量計算（カスタムフックで集約）
   const calculations = useAllocationCalculations({
@@ -239,34 +243,73 @@ export function LotAllocationPanel({
               />
 
               <div className="mt-6 flex items-center justify-end gap-3 border-t pt-4">
-                <Button
-                  onClick={handleSave}
-                  disabled={!canSave || isSaving}
-                  className="min-w-[6rem] bg-blue-600 font-bold text-white hover:bg-blue-700"
-                >
-                  {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  保存
-                </Button>
-                {onSaveAndConfirm && (
-                  <Button
-                    onClick={onSaveAndConfirm}
-                    disabled={!canSave || isSaving}
-                    className="min-w-[6rem] bg-purple-600 font-bold text-white hover:bg-purple-700"
-                    title="保存と同時にHard引当として確定します"
-                  >
-                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    保存 & 確定
-                  </Button>
+                {/* 未保存の変更がある場合: 仮引当 + 確定 */}
+                {hasUnsavedChanges && (
+                  <>
+                    <Button
+                      onClick={handleSave}
+                      disabled={!canSave || isSaving}
+                      className="min-w-[6rem] bg-blue-600 font-bold text-white hover:bg-blue-700"
+                    >
+                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      仮引当
+                    </Button>
+                    {onSaveAndConfirm && (
+                      <Button
+                        onClick={onSaveAndConfirm}
+                        disabled={!canSave || isSaving}
+                        className="min-w-[6rem] bg-green-600 font-bold text-white hover:bg-green-700"
+                      >
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        確定
+                      </Button>
+                    )}
+                  </>
                 )}
-                {onConfirmHard && (softAllocatedDb ?? 0) > 0 && (
-                  <Button
-                    onClick={onConfirmHard}
-                    disabled={isSaving}
-                    className="bg-green-600 font-bold text-white hover:bg-green-700"
-                    title="既存のSoft引当をHard引当に確定します"
-                  >
-                    Hard確定
-                  </Button>
+
+                {/* SOFT引当保存済み（またはMIXED）: 取消 + 確定 */}
+                {!hasUnsavedChanges &&
+                  (allocationState === "soft" || allocationState === "mixed") && (
+                    <>
+                      {onCancelAllocations && (
+                        <Button
+                          onClick={onCancelAllocations}
+                          disabled={isSaving}
+                          variant="outline"
+                          className="min-w-[6rem] border-red-300 text-red-600 hover:bg-red-50"
+                        >
+                          {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          取消
+                        </Button>
+                      )}
+                      {onConfirmHard && (
+                        <Button
+                          onClick={onConfirmHard}
+                          disabled={isSaving}
+                          className="min-w-[6rem] bg-green-600 font-bold text-white hover:bg-green-700"
+                        >
+                          {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          確定
+                        </Button>
+                      )}
+                    </>
+                  )}
+
+                {/* HARD引当確定済み: 取消のみ */}
+                {!hasUnsavedChanges && allocationState === "hard" && (
+                  <>
+                    {onCancelAllocations && (
+                      <Button
+                        onClick={onCancelAllocations}
+                        disabled={isSaving}
+                        variant="outline"
+                        className="min-w-[6rem] border-red-300 text-red-600 hover:bg-red-50"
+                      >
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        取消
+                      </Button>
+                    )}
+                  </>
                 )}
               </div>
             </>

@@ -51,6 +51,53 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
   const hardAllocated = Math.min(totalAllocated, hardAllocatedDb);
   const softAllocated = Math.max(0, totalAllocated - hardAllocatedDb);
 
+  // 状態判定: DBに引当があるか
+  const hasDbAllocations = hardAllocatedDb + softAllocatedDb > 0;
+
+  // 状態判定: 未保存の変更があるか（ローカル編集がDB状態と異なる）
+  // eslint-disable-next-line complexity -- ローカルとDB状態の比較には複数の条件分岐が必要
+  const hasUnsavedChanges = useMemo(() => {
+    // ローカルの引当が0件ならDBと異なる可能性をチェック
+    const localTotal = Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
+    const dbTotal = hardAllocatedDb + softAllocatedDb;
+
+    // 簡易判定: 合計が異なるか、ローカルに編集があるか
+    if (localTotal !== dbTotal) return true;
+    if (localTotal === 0 && dbTotal === 0) return false;
+
+    // 詳細判定: 各ロットの数量が一致するか
+    const existingAllocations = (orderLine?.allocations ||
+      orderLine?.allocated_lots ||
+      []) as Allocation[];
+    const dbAllocMap = new Map<number, number>();
+    existingAllocations.forEach((a) => {
+      if (a.lot_id) {
+        dbAllocMap.set(a.lot_id, Number(a.allocated_quantity || a.quantity || 0));
+      }
+    });
+
+    // ローカルとDBで各ロットの数量を比較
+    for (const [lotId, qty] of Object.entries(lotAllocations)) {
+      const dbQty = dbAllocMap.get(Number(lotId)) || 0;
+      if (qty !== dbQty) return true;
+    }
+    // DBにあってローカルにないものをチェック
+    for (const [lotId, dbQty] of dbAllocMap.entries()) {
+      const localQty = lotAllocations[lotId] || 0;
+      if (localQty !== dbQty) return true;
+    }
+
+    return false;
+  }, [lotAllocations, hardAllocatedDb, softAllocatedDb, orderLine]);
+
+  // 引当の状態: 'none' | 'soft' | 'hard' | 'mixed'
+  const allocationState = useMemo(() => {
+    if (hardAllocatedDb === 0 && softAllocatedDb === 0) return "none" as const;
+    if (hardAllocatedDb > 0 && softAllocatedDb === 0) return "hard" as const;
+    if (hardAllocatedDb === 0 && softAllocatedDb > 0) return "soft" as const;
+    return "mixed" as const;
+  }, [hardAllocatedDb, softAllocatedDb]);
+
   // Fetch candidates when orderLine changes
   useEffect(() => {
     if (!orderLine) {
@@ -216,20 +263,46 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     }
   };
 
+  // 全引当をキャンセル
+  const cancelAllAllocations = async () => {
+    if (!orderLine) return;
+    setIsSaving(true);
+    try {
+      await allocationsApi.cancelAllocationsByLine(orderLine.id);
+      setLotAllocations({});
+      toast.success("引当を取り消しました");
+      if (onSuccess) onSuccess();
+    } catch (error) {
+      console.error("Failed to cancel allocations", error);
+      toast.error("引当の取り消しに失敗しました");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return {
     candidateLots,
     lotAllocations,
+    // 状態判定
+    hasUnsavedChanges,
+    hasDbAllocations,
+    allocationState,
+    // 数量関連
     hardAllocated,
     softAllocated,
     softAllocatedDb,
+    hardAllocatedDb,
     totalAllocated,
+    // ローディング状態
     isLoadingCandidates,
     isSaving,
+    // 操作
     changeAllocation,
     clearAllocations,
     autoAllocate,
     saveAllocations,
     saveAndConfirmAllocations,
     confirmAllocations,
+    cancelAllAllocations,
   };
 }
