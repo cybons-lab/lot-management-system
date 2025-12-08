@@ -27,15 +27,15 @@ export function OrdersHeader({
         <p className="mt-1 text-sm text-slate-600">受注明細一覧と引当状況を管理します</p>
       </div>
       <div className="flex items-center gap-2">
-        {confirmedLinesCount > 0 && (
-          <Button variant="outline" size="sm" onClick={onNavigateToConfirmed}>
-            <Send className="mr-2 h-4 w-4" />
-            SAP登録
+        <Button variant="outline" size="sm" onClick={onNavigateToConfirmed}>
+          <Send className="mr-2 h-4 w-4" />
+          SAP受注登録
+          {confirmedLinesCount > 0 && (
             <Badge variant="secondary" className="ml-2">
               {confirmedLinesCount}
             </Badge>
-          </Button>
-        )}
+          )}
+        </Button>
         <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
           <RefreshCw className="mr-2 h-4 w-4" />
           更新
