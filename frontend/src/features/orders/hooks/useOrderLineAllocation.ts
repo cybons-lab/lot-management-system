@@ -35,6 +35,15 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
       .reduce((sum, a) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
   }, [orderLine]);
 
+  // DBに存在するSOFT引当の合計（Hard確定ボタンの表示制御に使用）
+  const softAllocatedDb = useMemo(() => {
+    const allocations = (orderLine?.allocations || orderLine?.allocated_lots || []) as Allocation[];
+    if (!Array.isArray(allocations)) return 0;
+    return allocations
+      .filter((a) => a.allocation_type === "soft")
+      .reduce((sum, a) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
+  }, [orderLine]);
+
   const totalAllocated = useMemo(() => {
     return Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
   }, [lotAllocations]);
@@ -212,6 +221,7 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     lotAllocations,
     hardAllocated,
     softAllocated,
+    softAllocatedDb,
     totalAllocated,
     isLoadingCandidates,
     isSaving,

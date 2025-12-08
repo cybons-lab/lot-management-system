@@ -43,6 +43,7 @@ interface LotAllocationPanelProps {
   // New props
   hardAllocated?: number;
   softAllocated?: number;
+  softAllocatedDb?: number; // DBに存在するSOFT引当（Hard確定ボタン表示制御用）
 }
 
 /**
@@ -71,6 +72,7 @@ export function LotAllocationPanel({
   isActive = false,
   onActivate,
   hardAllocated,
+  softAllocatedDb,
   softAllocated,
 }: LotAllocationPanelProps & { deliveryPlaceName?: string }) {
   // 数量計算（カスタムフックで集約）
@@ -256,7 +258,7 @@ export function LotAllocationPanel({
                     保存 & 確定
                   </Button>
                 )}
-                {onConfirmHard && (softAllocated ?? 0) > 0 && (
+                {onConfirmHard && (softAllocatedDb ?? 0) > 0 && (
                   <Button
                     onClick={onConfirmHard}
                     disabled={isSaving}

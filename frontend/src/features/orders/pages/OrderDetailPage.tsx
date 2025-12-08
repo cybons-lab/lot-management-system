@@ -241,6 +241,7 @@ function AllocationDialog({
     lotAllocations,
     hardAllocated,
     softAllocated,
+    softAllocatedDb,
     isLoadingCandidates,
     isSaving,
     changeAllocation,
@@ -285,6 +286,7 @@ function AllocationDialog({
             isActive={true}
             hardAllocated={hardAllocated}
             softAllocated={softAllocated}
+            softAllocatedDb={softAllocatedDb}
           />
         </div>
       </DialogContent>
