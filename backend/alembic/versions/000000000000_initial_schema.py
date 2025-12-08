@@ -1029,6 +1029,37 @@ def upgrade() -> None:
         for statement in statements:
             if statement.strip():
                 op.execute(statement)
+
+    # Seed initial roles and admin user
+    op.execute("""
+        INSERT INTO roles (role_code, role_name, description, created_at, updated_at) 
+        VALUES ('admin', 'Administrator', 'System Administrator', NOW(), NOW()) 
+        ON CONFLICT (role_code) DO NOTHING;
+    """)
+    op.execute("""
+        INSERT INTO roles (role_code, role_name, description, created_at, updated_at) 
+        VALUES ('user', 'General User', 'General User', NOW(), NOW()) 
+        ON CONFLICT (role_code) DO NOTHING;
+    """)
+    op.execute("""
+        INSERT INTO roles (role_code, role_name, description, created_at, updated_at) 
+        VALUES ('viewer', 'Read-only Viewer', 'Read-only Viewer', NOW(), NOW()) 
+        ON CONFLICT (role_code) DO NOTHING;
+    """)
+
+    op.execute("""
+        INSERT INTO users (username, email, password_hash, display_name, is_active, auth_provider, created_at, updated_at)
+        VALUES ('admin', 'admin@example.com', '$2b$12$TuwV8/qk6Y6vISuyQCh8l.VLq3TT36m06j21WFarf29eMwYhQIYmS', 'System Admin', true, 'local', NOW(), NOW())
+        ON CONFLICT (username) DO NOTHING;
+    """)
+
+    op.execute("""
+        INSERT INTO user_roles (user_id, role_id, assigned_at)
+        SELECT u.id, r.id, NOW()
+        FROM users u, roles r
+        WHERE u.username = 'admin' AND r.role_code = 'admin'
+        ON CONFLICT (user_id, role_id) DO NOTHING;
+    """)
     # ### end Alembic commands ###
 
 
