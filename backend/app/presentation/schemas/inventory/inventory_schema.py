@@ -23,6 +23,23 @@ class LotStatus(str, Enum):
     LOCKED = "locked"
 
 
+class LotOriginType(str, Enum):
+    """Valid lot origin types.
+
+    - order: Inbound plan / order-linked lots (existing path)
+    - forecast: Forecast-based production lots (future)
+    - sample: Sample lots (adhoc UI)
+    - safety_stock: Safety stock lots (adhoc UI)
+    - adhoc: Other adhoc lots (adhoc UI)
+    """
+
+    ORDER = "order"
+    FORECAST = "forecast"
+    SAMPLE = "sample"
+    SAFETY_STOCK = "safety_stock"
+    ADHOC = "adhoc"
+
+
 class LotLock(BaseSchema):
     """Payload for locking a lot."""
 
@@ -52,6 +69,10 @@ class LotBase(BaseSchema):
     inspection_date: date | None = None
     inspection_cert_number: str | None = None
 
+    # Origin tracking fields for non-order lots
+    origin_type: LotOriginType = LotOriginType.ORDER
+    origin_reference: str | None = None
+
 
 class LotCreate(LotBase):
     """Payload for creating lots."""
@@ -78,6 +99,10 @@ class LotUpdate(BaseSchema):
     inspection_status: str | None = None
     inspection_date: date | None = None
     inspection_cert_number: str | None = None
+
+    # Origin tracking fields (optional for updates)
+    origin_type: LotOriginType | None = None
+    origin_reference: str | None = None
 
 
 class LotResponse(LotBase, TimestampMixin):

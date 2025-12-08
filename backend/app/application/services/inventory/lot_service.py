@@ -37,6 +37,7 @@ from app.infrastructure.persistence.models import (
 from app.presentation.schemas.inventory.inventory_schema import (
     LotCreate,
     LotLock,
+    LotOriginType,
     LotResponse,
     LotStatus,
     LotUpdate,
@@ -65,10 +66,18 @@ class LotRepository:
         product_code: str,
         warehouse_code: str | None = None,
         min_quantity: float = 0.0,
+        excluded_origin_types: list[str] | None = None,
     ) -> Sequence[Lot]:
         """Fetch lots that have stock remaining for a product.
 
         v2.2: Uses Lot.current_quantity - Lot.allocated_quantity directly.
+        v2.3: Supports origin_type filtering.
+
+        Args:
+            product_code: Product code to filter by
+            warehouse_code: Optional warehouse code filter
+            min_quantity: Minimum available quantity threshold
+            excluded_origin_types: List of origin_types to exclude (e.g., ['sample', 'adhoc'])
         """
         # product_codeからproduct_idに変換
         from app.infrastructure.persistence.models import Product
@@ -82,6 +91,10 @@ class LotRepository:
             Lot.status == "active",
             (Lot.current_quantity - Lot.allocated_quantity) > min_quantity,
         )
+
+        # Filter by origin_type
+        if excluded_origin_types:
+            stmt = stmt.where(Lot.origin_type.not_in(excluded_origin_types))
 
         if warehouse_code:
             from app.infrastructure.persistence.models import Warehouse
@@ -149,15 +162,33 @@ class LotService:
         product_code: str,
         warehouse_code: str | None = None,
         exclude_expired: bool = True,
+        include_sample: bool = False,
+        include_adhoc: bool = False,
     ) -> list[LotCandidate]:
         """Get FEFO candidate lots.
 
         v2.2: Uses Lot.current_quantity - Lot.allocated_quantity for available quantity.
+        v2.3: Filters out sample/adhoc origin types by default.
+
+        Args:
+            product_code: Product code to filter by
+            warehouse_code: Optional warehouse code filter
+            exclude_expired: Whether to exclude expired lots
+            include_sample: Whether to include sample origin lots (default: False)
+            include_adhoc: Whether to include adhoc origin lots (default: False)
         """
+        # Build excluded origin types list
+        excluded_origins: list[str] = []
+        if not include_sample:
+            excluded_origins.append("sample")
+        if not include_adhoc:
+            excluded_origins.append("adhoc")
+
         lots = self.repository.find_available_lots(
             product_code=product_code,
             warehouse_code=warehouse_code,
             min_quantity=0.0,
+            excluded_origin_types=excluded_origins if excluded_origins else None,
         )
 
         candidates = [
@@ -307,7 +338,11 @@ class LotService:
         return responses
 
     def create_lot(self, lot_create: LotCreate) -> LotResponse:
-        """Create a new lot."""
+        """Create a new lot.
+
+        For non-order origin types (sample, safety_stock, adhoc),
+        supplier_code is optional and lot number is auto-generated.
+        """
         # Validation
         if not lot_create.product_id:
             raise LotValidationError("product_id は必須です")
@@ -316,15 +351,23 @@ class LotService:
         if not product:
             raise LotProductNotFoundError(lot_create.product_id)
 
-        supplier = (
-            self.db.query(Supplier)
-            .filter(Supplier.supplier_code == lot_create.supplier_code)
-            .first()
-        )
-        if not supplier:
-            if not lot_create.supplier_code:
-                raise LotValidationError("supplier_code is required")
-            raise LotSupplierNotFoundError(lot_create.supplier_code)
+        # Supplier validation: required only for ORDER origin type
+        supplier = None
+        if lot_create.supplier_code:
+            supplier = (
+                self.db.query(Supplier)
+                .filter(Supplier.supplier_code == lot_create.supplier_code)
+                .first()
+            )
+            if not supplier:
+                raise LotSupplierNotFoundError(lot_create.supplier_code)
+
+        # For ORDER origin type, supplier is mandatory
+        if lot_create.origin_type == LotOriginType.ORDER:
+            if not supplier:
+                raise LotValidationError(
+                    "supplier_code is required for order-linked lots (origin_type=order)"
+                )
 
         warehouse_id: int | None = None
         if lot_create.warehouse_id is not None:
@@ -348,7 +391,17 @@ class LotService:
 
         lot_payload = lot_create.model_dump()
         lot_payload["warehouse_id"] = warehouse_id
+        lot_payload["supplier_id"] = supplier.id if supplier else None
         lot_payload.pop("warehouse_code", None)
+        lot_payload.pop("supplier_code", None)
+        lot_payload.pop("product_code", None)
+
+        # Auto-generate lot number for non-order origin types if not provided or placeholder
+        if lot_create.origin_type != LotOriginType.ORDER:
+            if not lot_payload.get("lot_number") or lot_payload["lot_number"] == "AUTO":
+                lot_payload["lot_number"] = self._generate_adhoc_lot_number(
+                    lot_create.origin_type.value
+                )
 
         try:
             db_lot = Lot(**lot_payload)
@@ -364,6 +417,32 @@ class LotService:
 
         # Response Construction
         return self._build_lot_response(db_lot.id)
+
+    def _generate_adhoc_lot_number(self, origin_type: str) -> str:
+        """Generate lot number for non-order lots.
+
+        Format: {PREFIX}-{YYYYMMDD}-{SEQUENCE}
+        Example: SAF-20250304-0001, SMP-20250304-0001
+        """
+        from sqlalchemy import func
+
+        prefix_map = {
+            "forecast": "FCT",
+            "sample": "SMP",
+            "safety_stock": "SAF",
+            "adhoc": "ADH",
+        }
+        prefix = prefix_map.get(origin_type, "ADH")
+        today = date.today().strftime("%Y%m%d")
+
+        # Get today's sequence count
+        count = (
+            self.db.query(func.count(Lot.id))
+            .filter(Lot.lot_number.like(f"{prefix}-{today}-%"))
+            .scalar()
+        )
+        sequence = (count or 0) + 1
+        return f"{prefix}-{today}-{sequence:04d}"
 
     def update_lot(self, lot_id: int, lot_update: LotUpdate) -> LotResponse:
         """Update an existing lot."""
