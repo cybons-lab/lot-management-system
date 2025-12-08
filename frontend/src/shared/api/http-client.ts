@@ -84,7 +84,12 @@ function handleUnauthorizedError(request: Request, errorMessage: string): void {
 /**
  * Log API error in development mode
  */
-function logApiErrorDev(status: number, url: string | undefined, message: string, body: unknown): void {
+function logApiErrorDev(
+  status: number,
+  url: string | undefined,
+  message: string,
+  body: unknown,
+): void {
   if (import.meta.env.DEV) {
     console.groupCollapsed(`[HTTP] Error: ${status} ${url}`);
     console.error("Message:", message);

@@ -50,9 +50,7 @@ export function OrderCard({ order, onSelectLine, onReMatch }: Props) {
           {/* 業務キー情報（両方存在する場合は両方表示） */}
           {order.lines?.[0]?.customer_order_no && order.lines?.[0]?.sap_order_no && (
             <div className="mt-1 flex gap-4 text-xs">
-              <span className="text-blue-600">
-                得意先: {order.lines[0].customer_order_no}
-              </span>
+              <span className="text-blue-600">得意先: {order.lines[0].customer_order_no}</span>
               <span className="text-green-600">SAP: {order.lines[0].sap_order_no}</span>
             </div>
           )}
