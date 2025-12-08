@@ -4260,7 +4260,9 @@ export interface components {
        * Parameters
        * @description ジョブパラメータ（JSON）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * BatchJobExecuteRequest
@@ -4271,7 +4273,9 @@ export interface components {
        * Parameters
        * @description 実行時パラメータ（上書き）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * BatchJobExecuteResponse
@@ -4318,7 +4322,9 @@ export interface components {
        * Parameters
        * @description ジョブパラメータ（JSON）
        */
-      parameters?: Record<string, never> | null;
+      parameters?: {
+        [key: string]: unknown;
+      } | null;
       /** Job Id */
       job_id: number;
       /**
@@ -4532,7 +4538,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -4574,7 +4582,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -4613,7 +4623,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: Record<string, never> | null;
+      rule_parameters?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -6229,12 +6241,16 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: Record<string, never> | null;
+      old_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: Record<string, never> | null;
+      new_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -6392,7 +6408,9 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: Record<string, never> | null;
+      changes?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -6778,7 +6796,9 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: Record<string, never> | null;
+      data?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * RoleCreate
@@ -8265,7 +8285,9 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": Record<string, never>;
+        "application/json": {
+          [key: string]: unknown;
+        };
       };
     };
     responses: {
@@ -11645,7 +11667,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
@@ -11949,7 +11973,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
