@@ -141,3 +141,39 @@ def download_template(group: str = "supply") -> dict:
             "supply_data": {"suppliers": []},
             "customer_data": {"customers": []},
         }
+
+
+@router.get("/template/order")
+def download_order_template() -> dict:
+    """Get template structure for order data imports.
+
+    Returns:
+        JSON template structure for order lines with SAP business keys
+    """
+    return {
+        "order_data": {
+            "order_lines": [
+                {
+                    "customer_code": "C001",
+                    "product_code": "M001",
+                    "order_date": "2025-01-15",
+                    "customer_order_no": "123456",
+                    "customer_order_line_no": "001",
+                    "sap_order_no": "4500001234",
+                    "sap_order_item_no": "000010",
+                    "delivery_place_code": "DP001",
+                    "order_quantity": "100",
+                    "unit": "PC",
+                    "delivery_date": "2025-01-20",
+                }
+            ],
+            "inbound_plans": [
+                {
+                    "plan_number": "IP-001",
+                    "supplier_code": "V001",
+                    "planned_arrival_date": "2025-01-25",
+                    "sap_po_number": "4500001000",
+                }
+            ],
+        }
+    }

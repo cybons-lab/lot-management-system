@@ -9,6 +9,7 @@ import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 import { type OrderLine } from "@/shared/types/aliases";
 import { formatDate } from "@/shared/utils/date";
 import { formatQuantity } from "@/shared/utils/formatQuantity";
+import { formatOrderCode } from "@/shared/utils/order";
 
 interface OrderSummaryHeaderProps {
   order: OrderWithLinesResponse;
@@ -96,9 +97,7 @@ function HeaderLeftSection({
       </Button>
 
       <div className="flex items-center gap-2 text-sm">
-        <span className="font-mono font-medium text-gray-700">
-          {order.order_number || `ORD-${order.id}`}
-        </span>
+        <span className="font-mono font-medium text-gray-700">{formatOrderCode(order)}</span>
         <span className="hidden text-xs text-gray-500 sm:inline">{order.customer_name}</span>
         <span className="text-xs text-gray-400">|</span>
         <span className={cn("text-xs text-gray-600", isHovered && "font-bold text-gray-900")}>

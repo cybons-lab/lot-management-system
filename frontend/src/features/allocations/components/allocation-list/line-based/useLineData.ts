@@ -7,6 +7,7 @@ import { getCustomerName } from "./helpers";
 import type { FilterStatus, GroupedOrder, LineWithOrderInfo } from "./types";
 
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
+import { formatOrderCode } from "@/shared/utils/order";
 
 interface UseLineDataProps {
   orders: OrderWithLinesResponse[];
@@ -36,11 +37,12 @@ export function useLineData({
       return order.lines
         .map((line) => {
           if (!line.id) return null;
+          const orderCode = formatOrderCode({ ...order, ...line, order_id: order.id });
           return {
             id: line.id,
             line: line,
             order: order,
-            order_number: order.order_number || order.order_no || `#${order.id}`,
+            order_code: orderCode,
             customer_name: getCustomerName(order, customerMap),
             order_date: order.order_date ? String(order.order_date) : "",
             order_id: order.id!,
@@ -84,7 +86,7 @@ export function useLineData({
       if (!orderMap.has(item.order_id)) {
         orderMap.set(item.order_id, {
           order_id: item.order_id,
-          order_number: item.order_number,
+          order_code: item.order_code,
           customer_name: item.customer_name,
           order_date: item.order_date,
           lines: [],

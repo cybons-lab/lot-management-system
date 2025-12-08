@@ -12,6 +12,7 @@ import { selectedOrderIdAtom, selectedLineIdAtom } from "../../store/atoms";
 
 import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 import { formatDateTime } from "@/shared/utils/date";
+import { formatOrderCode } from "@/shared/utils/order";
 // type OrderWithLinesResponse = components["schemas"]["OrderWithLinesResponse"];
 // type OrderLineResponse = components["schemas"]["OrderLineResponse"];
 
@@ -139,7 +140,7 @@ function OrderCard({ order, isSelected, onSelect }: OrderCardProps) {
               {lockedAt ? <span className="text-amber-700">（{lockedAt}）</span> : null}
             </div>
           )}
-          <p className="truncate text-sm font-semibold text-gray-900">{order.order_number}</p>
+          <p className="truncate text-sm font-semibold text-gray-900">{formatOrderCode(order)}</p>
           <p className="mt-1 text-xs text-gray-600">納期: {order.order_date}</p>
           <div className="mt-1 flex items-center gap-2">
             <span

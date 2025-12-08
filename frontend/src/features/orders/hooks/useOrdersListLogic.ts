@@ -6,6 +6,7 @@ import { useOrderLines } from "@/features/orders/hooks/useOrderLines";
 import { useCreateOrder } from "@/hooks/mutations";
 import { useDialog, useFilters, useTable } from "@/hooks/ui";
 import { useConfirmedOrderLines } from "@/hooks/useConfirmedOrderLines";
+import { formatOrderCode } from "@/shared/utils/order";
 
 type ViewMode = "delivery" | "flat" | "order";
 
@@ -14,7 +15,8 @@ type ViewMode = "delivery" | "flat" | "order";
  */
 function applySearchFilter(line: OrderLineRow, searchTerm: string): boolean {
   const searchLower = searchTerm.toLowerCase();
-  const matchOrderNo = (line.order_number || "").toLowerCase().includes(searchLower);
+  const orderCode = formatOrderCode(line);
+  const matchOrderNo = orderCode.toLowerCase().includes(searchLower);
   const matchCustomer =
     (line.customer_name || "").toLowerCase().includes(searchLower) ||
     (line.customer_code || "").toLowerCase().includes(searchLower);

@@ -155,13 +155,11 @@ def test_list_orders_success(test_db: Session, master_data: dict):
 
     # Create 2 orders (explicitly set IDs for SQLite)
     order1 = Order(
-        order_number="ORD-001",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
     )
     order2 = Order(
-        order_number="ORD-002",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="allocated",
@@ -175,8 +173,8 @@ def test_list_orders_success(test_db: Session, master_data: dict):
 
     data = response.json()
     assert len(data) == 2
-    assert data[0]["order_number"] in ["ORD-001", "ORD-002"]
-    assert data[1]["order_number"] in ["ORD-001", "ORD-002"]
+    # assert data[0]["order_number"] in ["ORD-001", "ORD-002"]
+    # assert data[1]["order_number"] in ["ORD-001", "ORD-002"]
 
 
 def test_list_orders_with_status_filter(test_db: Session, master_data: dict):
@@ -185,13 +183,11 @@ def test_list_orders_with_status_filter(test_db: Session, master_data: dict):
 
     # Create orders with different statuses
     order_open = Order(
-        order_number="ORD-OPEN",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
     )
     order_allocated = Order(
-        order_number="ORD-ALLOC",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="allocated",
@@ -205,7 +201,7 @@ def test_list_orders_with_status_filter(test_db: Session, master_data: dict):
 
     data = response.json()
     assert len(data) == 1
-    assert data[0]["order_number"] == "ORD-OPEN"
+    # assert data[0]["order_number"] == "ORD-OPEN"
     assert data[0]["status"] == "open"
 
 
@@ -223,12 +219,10 @@ def test_list_orders_with_customer_filter(test_db: Session, master_data: dict):
 
     # Create orders for different customers
     order1 = Order(
-        order_number="ORD-C1",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
     )
     order2 = Order(
-        order_number="ORD-C2",
         customer_id=customer2.id,
         order_date=date.today(),
     )
@@ -241,7 +235,8 @@ def test_list_orders_with_customer_filter(test_db: Session, master_data: dict):
 
     data = response.json()
     assert len(data) == 1
-    assert data[0]["order_number"] == "ORD-C1"
+    assert len(data) == 1
+    # assert data[0]["order_number"] == "ORD-C1"
 
 
 def test_list_orders_with_date_range_filter(test_db: Session, master_data: dict):
@@ -251,12 +246,10 @@ def test_list_orders_with_date_range_filter(test_db: Session, master_data: dict)
     # Create orders on different dates
     today = date.today()
     order_old = Order(
-        order_number="ORD-OLD",
         customer_id=master_data["customer"].id,
         order_date=today - timedelta(days=10),
     )
     order_recent = Order(
-        order_number="ORD-RECENT",
         customer_id=master_data["customer"].id,
         order_date=today,
     )
@@ -270,7 +263,8 @@ def test_list_orders_with_date_range_filter(test_db: Session, master_data: dict)
 
     data = response.json()
     assert len(data) == 1
-    assert data[0]["order_number"] == "ORD-RECENT"
+    assert len(data) == 1
+    # assert data[0]["order_number"] == "ORD-RECENT"
 
 
 # ============================================================
@@ -284,7 +278,6 @@ def test_get_order_success(test_db: Session, master_data: dict):
 
     # Create order with lines
     order = Order(
-        order_number="ORD-DETAIL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
@@ -310,7 +303,7 @@ def test_get_order_success(test_db: Session, master_data: dict):
 
     data = response.json()
     assert data["id"] == order.id
-    assert data["order_number"] == "ORD-DETAIL"
+    # assert data["order_number"] == "ORD-DETAIL"
     assert data["status"] == "open"
     assert "lines" in data
     assert len(data["lines"]) == 1
@@ -338,7 +331,6 @@ def test_create_order_success(test_db: Session, master_data: dict):
 
     # Prepare order data
     order_data = {
-        "order_number": "ORD-NEW-001",
         "customer_id": master_data["customer"].id,
         "order_date": str(date.today()),
         "lines": [
@@ -358,7 +350,7 @@ def test_create_order_success(test_db: Session, master_data: dict):
     assert response.status_code == 201
 
     data = response.json()
-    assert data["order_number"] == "ORD-NEW-001"
+    # assert data["order_number"] == "ORD-NEW-001"
     assert data["customer_id"] == master_data["customer"].id
     assert "id" in data
     assert len(data["lines"]) == 1
@@ -370,8 +362,8 @@ def test_create_order_with_invalid_customer(test_db: Session, master_data: dict)
 
     # Prepare order data with invalid customer_id
     order_data = {
-        "order_number": "ORD-INVALID",
-        "customer_id": 99999,  # Non-existent
+        # "order_number": "ORD-INVALID",
+        "customer_id": 99999,  # Non-existent customer
         "order_date": str(date.today()),
         "lines": [
             {
@@ -390,33 +382,32 @@ def test_create_order_with_invalid_customer(test_db: Session, master_data: dict)
     assert response.status_code in [400, 404, 422]  # Depending on validation logic
 
 
-def test_create_order_with_duplicate_order_number(test_db: Session, master_data: dict):
-    """Test creating order with duplicate order_number returns 409."""
-    client = TestClient(app)
+# def test_create_order_with_duplicate_order_number(test_db: Session, master_data: dict):
+#     """Test creating order with duplicate order_number returns 409."""
+#     # Create existing order
+#     existing_order = Order(
+#         # order_number="ORD-DUPLICATE",
+#         customer_id=master_data["customer"].id,
+#         order_date=date.today(),
+#         status="open",
+#     )
+#     test_db.add(existing_order)
+#     test_db.commit()
 
-    # Create first order
-    order_data = {
-        "order_number": "ORD-DUPLICATE",
-        "customer_id": master_data["customer"].id,
-        "order_date": str(date.today()),
-        "lines": [
-            {
-                "product_id": master_data["product"].id,
-                "delivery_date": str(date.today() + timedelta(days=7)),
-                "order_quantity": 5.0,
-                "unit": "EA",
-                "delivery_place_id": master_data["delivery_place"].id,
-                "status": "pending",
-            }
-        ],
-    }
+#     # Try to create duplicate
+#     client = TestClient(app)
+#     order_data = {
+#         # "order_number": "ORD-DUPLICATE",
+#         "customer_id": master_data["customer"].id,
+#         "order_date": str(date.today()),
+#         "lines": [],
+#     }
+#     # response = client.post("/api/orders/", json=order_data)
+#     # assert response.status_code == 4091
 
-    response1 = client.post("/api/orders", json=order_data)
-    assert response1.status_code == 201
-
-    # Test: Create order with same order_number
-    response2 = client.post("/api/orders", json=order_data)
-    assert response2.status_code in [400, 409]  # Duplicate constraint violation
+#     # Test: Create order with same order_number
+#     response2 = client.post("/api/orders", json=order_data)
+#     assert response2.status_code in [400, 409]  # Duplicate constraint violation
 
 
 def test_create_order_with_empty_lines(test_db: Session, master_data: dict):
@@ -425,7 +416,7 @@ def test_create_order_with_empty_lines(test_db: Session, master_data: dict):
 
     # Prepare order data with empty lines
     order_data = {
-        "order_number": "ORD-EMPTY",
+        # "order_number": "ORD-EMPTY",
         "customer_id": master_data["customer"].id,
         "order_date": str(date.today()),
         "lines": [],  # Empty lines
@@ -452,7 +443,6 @@ def test_cancel_order_success(test_db: Session, master_data: dict):
 
     # Create order
     order = Order(
-        order_number="ORD-CANCEL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",

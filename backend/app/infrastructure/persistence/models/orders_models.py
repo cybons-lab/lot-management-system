@@ -54,7 +54,6 @@ class Order(Base):
     __tablename__ = "orders"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    order_number: Mapped[str] = mapped_column(String(50), nullable=False)
     customer_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("customers.id", ondelete="RESTRICT"),
@@ -81,7 +80,6 @@ class Order(Base):
     lock_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     __table_args__ = (
-        UniqueConstraint("order_number", name="uq_orders_order_number"),
         Index("idx_orders_customer", "customer_id"),
         Index("idx_orders_date", "order_date"),
         Index("idx_orders_locked_by", "locked_by_user_id"),

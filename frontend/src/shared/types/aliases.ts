@@ -154,7 +154,8 @@ export type OrderLine = ApiOrderLine &
     converted_quantity?: number | string | null; // Internal unit quantity (converted from external unit)
 
     // Flattened Order Info (New)
-    order_number?: string | null;
+    customer_order_no?: string | null;
+    order_code?: string;
     order_date?: string | null;
     customer_id?: number | null;
     order_status?: string | null;
@@ -167,7 +168,7 @@ type ApiOrderResponse = Omit<ApiOrderWithLinesResponse, "lines">;
 
 export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
   // Legacy fields for backward compatibility (will be removed)
-  order_no?: string | null; // Deprecated: use order_number
+  // order_no?: string | null; // Deprecated: use customer_order_no/order_code
   customer_code?: string | null; // Deprecated: use customer_id lookup
   customer_name?: string | null; // Join field (not in DDL)
   delivery_place?: string | null;
@@ -190,7 +191,7 @@ export type OrderResponse = Omit<ApiOrderResponse, "lines"> & {
 
 export type OrderWithLinesResponse = Omit<ApiOrderWithLinesResponse, "lines"> & {
   // Legacy fields for backward compatibility (will be removed)
-  order_no?: string | null; // Deprecated: use order_number
+  // order_no?: string | null; // Deprecated: use customer_order_no/order_code
   customer_code?: string | null; // Deprecated: use customer_id lookup
   customer_name?: string | null; // Join field (not in DDL)
   delivery_place?: string | null;

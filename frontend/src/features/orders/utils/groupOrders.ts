@@ -1,4 +1,5 @@
 import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
+import { formatOrderCode } from "@/shared/utils/order";
 
 export interface GroupedOrderLine {
   deliveryPlaceCode?: string;
@@ -35,10 +36,11 @@ export function groupByDelivery(lines: OrderLineRow[]): GroupedOrderLine[] {
  */
 export function groupByOrder(lines: OrderLineRow[]): GroupedOrderLine[] {
   const grouped = lines.reduce<Record<string, GroupedOrderLine>>((acc, line) => {
-    const key = line.order_number || "unknown";
+    const code = formatOrderCode(line);
+    const key = code || "unknown";
     if (!acc[key]) {
       acc[key] = {
-        orderNumber: line.order_number || undefined,
+        orderNumber: code || undefined,
         customerName: line.customer_name || undefined,
         orderDate: line.order_date || undefined,
         status: line.order_status || undefined,

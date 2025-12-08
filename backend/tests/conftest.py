@@ -136,7 +136,6 @@ def db_engine():
                 CREATE OR REPLACE VIEW v_order_line_details AS
                 SELECT
                     o.id AS order_id,
-                    o.order_number,
                     o.order_date,
                     o.customer_id,
                     c.customer_code,
@@ -148,6 +147,7 @@ def db_engine():
                     ol.unit,
                     ol.delivery_place_id,
                     ol.status AS line_status,
+                    ol.shipping_document_text,
                     p.maker_part_code AS product_code,
                     p.product_name,
                     p.internal_unit AS product_internal_unit,
@@ -155,6 +155,8 @@ def db_engine():
                     p.qty_per_internal_unit AS product_qty_per_internal_unit,
                     dp.delivery_place_code,
                     dp.delivery_place_name,
+                    dp.jiku_code,
+                    ci.external_product_code,
                     s.supplier_name,
                     COALESCE(SUM(a.allocated_quantity), 0) AS allocated_quantity
                 FROM order_lines ol
@@ -166,11 +168,12 @@ def db_engine():
                 LEFT JOIN customer_items ci ON o.customer_id = ci.customer_id AND ol.product_id = ci.product_id
                 LEFT JOIN suppliers s ON ci.supplier_id = s.id
                 GROUP BY
-                    o.id, o.order_number, o.order_date, o.customer_id,
+                    o.id, o.order_date, o.customer_id,
                     c.customer_code, c.customer_name,
-                    ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status,
+                    ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status, ol.shipping_document_text,
                     p.maker_part_code, p.product_name, p.internal_unit, p.external_unit, p.qty_per_internal_unit,
-                    dp.delivery_place_code, dp.delivery_place_name,
+                    dp.delivery_place_code, dp.delivery_place_name, dp.jiku_code,
+                    ci.external_product_code,
                     s.supplier_name
             """)
             )

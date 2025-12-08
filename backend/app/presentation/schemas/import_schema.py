@@ -93,6 +93,60 @@ class CustomerDataImport(BaseSchema):
 
 
 # ============================================================
+# Order/Transaction Data (受注系)
+# ============================================================
+
+
+class OrderLineImportRow(BaseSchema):
+    """Order line for import with business keys."""
+
+    # Business keys for matching
+    customer_code: str = Field(..., description="Customer code")
+    product_code: str = Field(..., description="Product code (maker_part_code)")
+    order_date: str = Field(..., description="Order date (YYYY-MM-DD)")
+
+    # Customer-side business keys
+    customer_order_no: str | None = Field(
+        None, max_length=6, description="Customer's 6-digit order number"
+    )
+    customer_order_line_no: str | None = Field(
+        None, max_length=10, description="Customer's line number"
+    )
+
+    # SAP business keys
+    sap_order_no: str | None = Field(None, max_length=20, description="SAP order number")
+    sap_order_item_no: str | None = Field(None, max_length=6, description="SAP order item number")
+
+    # Order details
+    delivery_place_code: str = Field(..., description="Delivery place code")
+    order_quantity: str = Field(..., description="Order quantity")
+    unit: str = Field(..., max_length=20, description="Unit")
+    delivery_date: str | None = Field(None, description="Delivery date (YYYY-MM-DD)")
+
+
+class InboundPlanImportRow(BaseSchema):
+    """Inbound plan for import with SAP PO number."""
+
+    plan_number: str = Field(..., description="Plan number")
+    supplier_code: str = Field(..., description="Supplier code")
+    planned_arrival_date: str = Field(..., description="Planned arrival date (YYYY-MM-DD)")
+
+    # SAP business key
+    sap_po_number: str | None = Field(None, max_length=20, description="SAP purchase order number")
+
+
+class OrderDataImport(BaseSchema):
+    """Order/Transaction data import."""
+
+    order_lines: list[OrderLineImportRow] = Field(
+        default_factory=list, description="Order lines with business keys"
+    )
+    inbound_plans: list[InboundPlanImportRow] = Field(
+        default_factory=list, description="Inbound plans with SAP PO numbers"
+    )
+
+
+# ============================================================
 # Unified Import Request/Response
 # ============================================================
 
@@ -100,8 +154,8 @@ class CustomerDataImport(BaseSchema):
 class MasterImportRequest(BaseSchema):
     """Unified master import request.
 
-    Can contain supply-side data, customer-side data, or both.
-    When both are provided, supply-side is processed first.
+    Can contain supply-side data, customer-side data, order data, or any combination.
+    Processing order: supply → customer → order
     """
 
     supply_data: SupplyDataImport | None = Field(
@@ -109,6 +163,9 @@ class MasterImportRequest(BaseSchema):
     )
     customer_data: CustomerDataImport | None = Field(
         None, description="Customer-side data (customers, delivery places, items)"
+    )
+    order_data: OrderDataImport | None = Field(
+        None, description="Order/transaction data (order lines with SAP keys, inbound plans)"
     )
     mode: str = Field(
         default="upsert",

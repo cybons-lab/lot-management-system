@@ -54,7 +54,6 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
 
   return {
     id: faker.number.int({ min: 1, max: 10000 }),
-    order_number: `ORD-${faker.string.alphanumeric(6).toUpperCase()}`, // DDL v2.2
     order_date: faker.date.recent({ days: 30 }).toISOString().split("T")[0],
     customer_id: faker.number.int({ min: 1, max: 100 }), // DDL v2.2: FK to customers
 
@@ -62,7 +61,7 @@ export function createOrder(overrides?: Partial<OrderResponse>): OrderResponse {
     created_at: faker.date.past().toISOString(),
     updated_at: faker.date.recent().toISOString(),
     // Legacy fields for backward compatibility
-    order_no: overrides?.order_no ?? `ORD-${faker.string.alphanumeric(6).toUpperCase()}`,
+    // order_no: overrides?.order_no ?? `ORD-${faker.string.alphanumeric(6).toUpperCase()}`,
     customer_code: overrides?.customer_code ?? `CUST-${faker.string.alphanumeric(4).toUpperCase()}`,
     customer_name: overrides?.customer_name ?? faker.company.name(),
     ...overrides,

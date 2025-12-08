@@ -9,7 +9,6 @@ from sqlalchemy import case, exists, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.domain.order import (
-    DuplicateOrderError,
     InvalidOrderStatusError,
     OrderNotFoundError,
     OrderValidationError,
@@ -148,7 +147,6 @@ class OrderService:
             resp = OrderLineResponse.model_validate(line)
             # Manually populate flattened fields from relations
             if line.order:
-                resp.order_number = line.order.order_number
                 resp.customer_id = line.order.customer_id
                 resp.order_date = line.order.order_date
                 if line.order.customer:
@@ -190,21 +188,14 @@ class OrderService:
         return response_order
 
     def create_order(self, order_data: OrderCreate) -> OrderWithLinesResponse:
-        # Validate order_number uniqueness
-        existing_stmt = select(Order).where(Order.order_number == order_data.order_number)
-        existing = self.db.execute(existing_stmt).scalar_one_or_none()
-        if existing:
-            raise DuplicateOrderError(order_data.order_number)
-
         # Validate customer_id exists
         customer_stmt = select(Customer).where(Customer.id == order_data.customer_id)
         customer = self.db.execute(customer_stmt).scalar_one_or_none()
         if not customer:
             raise OrderValidationError(f"Customer not found for ID {order_data.customer_id}")
 
-        # Create order (DDL v2.2 compliant - no legacy fields)
+        # Create order (DDL v2.2 compliant - no order_number)
         order = Order(
-            order_number=order_data.order_number,
             customer_id=order_data.customer_id,
             order_date=order_data.order_date,
         )

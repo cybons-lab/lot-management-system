@@ -18,7 +18,7 @@ describe("useOrders Hooks", () => {
 
   const mockOrderResponse = {
     id: 1,
-    order_number: "ORD-001",
+    customer_order_no: "ORD-001",
     customer_id: 10,
     customer_name: "Test Customer",
     order_date: "2025-01-01",
@@ -81,7 +81,7 @@ describe("useOrders Hooks", () => {
       expect(ordersApi.getOrders).toHaveBeenCalledWith({});
       expect(result.current.data![0]).toMatchObject({
         id: 1,
-        order_number: "ORD-001",
+        order_code: "ORD-001",
         customer_name: "Test Customer",
         lines: expect.arrayContaining([
           expect.objectContaining({
@@ -104,7 +104,7 @@ describe("useOrders Hooks", () => {
       expect(ordersApi.getOrder).toHaveBeenCalledWith(1);
       expect(result.current.data).toMatchObject({
         id: 1,
-        order_number: "ORD-001",
+        order_code: "ORD-001",
         customer_name: "Test Customer",
       });
     });

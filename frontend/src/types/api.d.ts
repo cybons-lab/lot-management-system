@@ -2996,6 +2996,29 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/admin/master-import/template/order": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Order Template
+     * @description Get template structure for order data imports.
+     *
+     *     Returns:
+     *         JSON template structure for order lines with SAP business keys
+     */
+    get: operations["download_order_template_api_admin_master_import_template_order_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/healthz": {
     parameters: {
       query?: never;
@@ -4260,9 +4283,14 @@ export interface components {
        * Parameters
        * @description ジョブパラメータ（JSON）
        */
-      parameters?: {
-        [key: string]: unknown;
-      } | null;
+      parameters?:
+        | {
+            [key: string]: unknown;
+          }
+        | {
+            [key: string]: unknown;
+          }
+        | null;
     };
     /**
      * BatchJobExecuteRequest
@@ -4273,9 +4301,14 @@ export interface components {
        * Parameters
        * @description 実行時パラメータ（上書き）
        */
-      parameters?: {
-        [key: string]: unknown;
-      } | null;
+      parameters?:
+        | {
+            [key: string]: unknown;
+          }
+        | {
+            [key: string]: unknown;
+          }
+        | null;
     };
     /**
      * BatchJobExecuteResponse
@@ -4322,9 +4355,14 @@ export interface components {
        * Parameters
        * @description ジョブパラメータ（JSON）
        */
-      parameters?: {
-        [key: string]: unknown;
-      } | null;
+      parameters?:
+        | {
+            [key: string]: unknown;
+          }
+        | {
+            [key: string]: unknown;
+          }
+        | null;
       /** Job Id */
       job_id: number;
       /**
@@ -4727,8 +4765,8 @@ export interface components {
       line_id: number;
       /** Order Id */
       order_id: number;
-      /** Order Number */
-      order_number: string;
+      /** Customer Order No */
+      customer_order_no?: string | null;
       /** Customer Id */
       customer_id: number;
       /** Customer Name */
@@ -5715,6 +5753,32 @@ export interface components {
       lines?: components["schemas"]["InboundPlanLineResponse"][];
     };
     /**
+     * InboundPlanImportRow
+     * @description Inbound plan for import with SAP PO number.
+     */
+    InboundPlanImportRow: {
+      /**
+       * Plan Number
+       * @description Plan number
+       */
+      plan_number: string;
+      /**
+       * Supplier Code
+       * @description Supplier code
+       */
+      supplier_code: string;
+      /**
+       * Planned Arrival Date
+       * @description Planned arrival date (YYYY-MM-DD)
+       */
+      planned_arrival_date: string;
+      /**
+       * Sap Po Number
+       * @description SAP purchase order number
+       */
+      sap_po_number?: string | null;
+    };
+    /**
      * InboundPlanLineCreate
      * @description Payload for creating inbound plan lines.
      */
@@ -6267,14 +6331,16 @@ export interface components {
      * MasterImportRequest
      * @description Unified master import request.
      *
-     *     Can contain supply-side data, customer-side data, or both.
-     *     When both are provided, supply-side is processed first.
+     *     Can contain supply-side data, customer-side data, order data, or any combination.
+     *     Processing order: supply → customer → order
      */
     MasterImportRequest: {
       /** @description Supply-side data (suppliers, products) */
       supply_data?: components["schemas"]["SupplyDataImport"] | null;
       /** @description Customer-side data (customers, delivery places, items) */
       customer_data?: components["schemas"]["CustomerDataImport"] | null;
+      /** @description Order/transaction data (order lines with SAP keys, inbound plans) */
+      order_data?: components["schemas"]["OrderDataImport"] | null;
       /**
        * Mode
        * @description Import mode: upsert (add/update) or replace (truncate + insert)
@@ -6428,8 +6494,6 @@ export interface components {
      * @description Create order request.
      */
     OrderCreate: {
-      /** Order Number */
-      order_number: string;
       /** Customer Id */
       customer_id: number;
       /**
@@ -6439,6 +6503,22 @@ export interface components {
       order_date: string;
       /** Lines */
       lines?: components["schemas"]["OrderLineCreate"][];
+    };
+    /**
+     * OrderDataImport
+     * @description Order/Transaction data import.
+     */
+    OrderDataImport: {
+      /**
+       * Order Lines
+       * @description Order lines with business keys
+       */
+      order_lines?: components["schemas"]["OrderLineImportRow"][];
+      /**
+       * Inbound Plans
+       * @description Inbound plans with SAP PO numbers
+       */
+      inbound_plans?: components["schemas"]["InboundPlanImportRow"][];
     };
     /**
      * OrderLineCreate
@@ -6507,6 +6587,67 @@ export interface components {
        * @description SAP明細番号（業務キー）
        */
       sap_order_item_no?: string | null;
+    };
+    /**
+     * OrderLineImportRow
+     * @description Order line for import with business keys.
+     */
+    OrderLineImportRow: {
+      /**
+       * Customer Code
+       * @description Customer code
+       */
+      customer_code: string;
+      /**
+       * Product Code
+       * @description Product code (maker_part_code)
+       */
+      product_code: string;
+      /**
+       * Order Date
+       * @description Order date (YYYY-MM-DD)
+       */
+      order_date: string;
+      /**
+       * Customer Order No
+       * @description Customer's 6-digit order number
+       */
+      customer_order_no?: string | null;
+      /**
+       * Customer Order Line No
+       * @description Customer's line number
+       */
+      customer_order_line_no?: string | null;
+      /**
+       * Sap Order No
+       * @description SAP order number
+       */
+      sap_order_no?: string | null;
+      /**
+       * Sap Order Item No
+       * @description SAP order item number
+       */
+      sap_order_item_no?: string | null;
+      /**
+       * Delivery Place Code
+       * @description Delivery place code
+       */
+      delivery_place_code: string;
+      /**
+       * Order Quantity
+       * @description Order quantity
+       */
+      order_quantity: string;
+      /**
+       * Unit
+       * @description Unit
+       */
+      unit: string;
+      /**
+       * Delivery Date
+       * @description Delivery date (YYYY-MM-DD)
+       */
+      delivery_date?: string | null;
     };
     /**
      * OrderLineResponse
@@ -6589,8 +6730,6 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
-      /** Order Number */
-      order_number?: string | null;
       /** Customer Id */
       customer_id?: number | null;
       /** Customer Name */
@@ -6632,8 +6771,6 @@ export interface components {
      * @description Order with lines response.
      */
     OrderWithLinesResponse: {
-      /** Order Number */
-      order_number: string;
       /** Customer Id */
       customer_id: number;
       /**
@@ -12035,6 +12172,28 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  download_order_template_api_admin_master_import_template_order_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
     };

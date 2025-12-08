@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -8,15 +8,16 @@ from app.infrastructure.persistence.models import Lot, Order, OrderLine
 
 def create_order_line(db: Session, master_data, qty=10):
     """Helper to create an order line."""
-    customer = master_data["customer"]
+    # customer = master_data["customer"]
     delivery_place = master_data["delivery_place"]
     product = master_data["product1"]
 
+    # Create valid order
     order = Order(
-        order_number="ORD-ERR-001",
-        customer_id=customer.id,
+        customer_id=master_data["customer"].id,
         order_date=date.today(),
-        status="confirmed",
+        status="open",
+        created_at=datetime.utcnow(),
     )
     db.add(order)
     db.flush()
@@ -127,14 +128,14 @@ def test_allocate_to_wrong_product(client: TestClient, db: Session, master_data)
     db.refresh(lot)
 
     # Order Line is Product 2 (create manually as helper uses product1)
-    customer = master_data["customer"]
+    # customer = master_data["customer"]
     delivery_place = master_data["delivery_place"]
 
     order = Order(
-        order_number="ORD-ERR-002",
-        customer_id=customer.id,
+        customer_id=master_data["customer"].id,
         order_date=date.today(),
-        status="confirmed",
+        status="open",
+        created_at=datetime.utcnow(),
     )
     db.add(order)
     db.flush()

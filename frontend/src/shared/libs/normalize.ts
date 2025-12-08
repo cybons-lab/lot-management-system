@@ -10,6 +10,7 @@ import type {
   OrderLineResponse as OrderLine,
   OrderResponse as OrderResponseAlias,
 } from "@/shared/types/schema";
+import { formatOrderCode } from "@/shared/utils/order";
 import type { components } from "@/types/api";
 
 // ヘルパー関数
@@ -30,6 +31,8 @@ type ProductResponse = components["schemas"]["ProductOut"];
 export interface OrderLineUI extends Record<string, unknown> {
   id: number;
   order_id: number;
+  customer_order_no?: string | null;
+  order_code: string;
   product_id: number;
   product_name: string; // Join field (not in DDL)
   order_quantity: string; // DDL v2.2: DECIMAL(15,3) as string
@@ -60,7 +63,7 @@ export interface OrderLineUI extends Record<string, unknown> {
 // UI用の型定義（すべてnon-nullable）
 export interface OrderUI extends Record<string, unknown> {
   id: number;
-  order_number: string; // DDL v2.2: changed from order_no
+  order_code: string; // Display identifier (customer_order_no or #id)
   customer_id: number; // DDL v2.2: changed from customer_code
   customer_name: string; // Join field (not in DDL)
   order_date: string;
@@ -150,7 +153,7 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
 
   return {
     id: order.id,
-    order_number: S(order.order_number),
+    order_code: formatOrderCode(order),
     customer_id: N(order.customer_id),
     customer_name: S((order as Record<string, unknown>).customer_name as string),
     order_date: S(order.order_date),
@@ -159,7 +162,7 @@ export function normalizeOrder(order: OrderResponse): OrderUI {
     created_at: S(order.created_at),
     updated_at: S(order.updated_at),
     // Legacy fields (for backward compatibility)
-    order_no: S(((order as Record<string, unknown>).order_no as string) ?? order.order_number),
+    order_no: S((order as Record<string, unknown>).order_no as string),
     customer_code: S((order as Record<string, unknown>).customer_code as string),
     due_date: ((order as Record<string, unknown>).due_date as string) ?? null,
     delivery_place: (order as Record<string, unknown>).delivery_place ?? null,
@@ -244,6 +247,8 @@ export function normalizeOrderLine(line: OrderLine): OrderLineUI {
   return {
     id: line.id,
     order_id: N(line.order_id),
+    customer_order_no: (line as Record<string, unknown>).customer_order_no as string | null,
+    order_code: formatOrderCode(line),
     product_id: N(line.product_id),
     product_name: S(line.product_name),
     order_quantity: String(line.order_quantity ?? "0"),

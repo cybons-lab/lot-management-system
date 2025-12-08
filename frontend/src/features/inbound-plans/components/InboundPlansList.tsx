@@ -23,6 +23,7 @@ export interface InboundPlan {
   status: "planned" | "partially_received" | "received" | "cancelled";
   created_at: string;
   is_primary_supplier?: boolean;
+  sap_po_number?: string | null; // SAP購買発注番号
 }
 
 export interface InboundPlansFilters {
@@ -173,6 +174,9 @@ export function InboundPlansList({
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     入荷予定番号
                   </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    SAP発注番号
+                  </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">仕入先</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     入荷予定日
@@ -190,6 +194,13 @@ export function InboundPlansList({
                 {plans.map((plan) => (
                   <tr key={plan.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 text-sm">{plan.plan_number}</td>
+                    <td className="px-4 py-3 text-sm">
+                      {plan.sap_po_number ? (
+                        <span className="font-medium text-blue-600">{plan.sap_po_number}</span>
+                      ) : (
+                        <span className="text-slate-400">–</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-sm">
                       <span
                         className="block max-w-[200px] truncate"

@@ -39,11 +39,11 @@ export async function importMasterJson(data: MasterImportRequest): Promise<Maste
  * Download import template
  */
 export async function getMasterImportTemplate(group: TemplateGroup): Promise<MasterImportTemplate> {
-  return apiClient
-    .get(BASE_PATH + "/template", {
-      searchParams: { group },
-    })
-    .json<MasterImportTemplate>();
+  // orderグループは別エンドポイント
+  const endpoint = group === "order" ? BASE_PATH + "/template/order" : BASE_PATH + "/template";
+  const searchParams = group === "order" ? {} : { group };
+
+  return apiClient.get(endpoint, { searchParams }).json<MasterImportTemplate>();
 }
 
 // ============================================================
