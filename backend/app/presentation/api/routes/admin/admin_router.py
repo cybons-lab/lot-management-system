@@ -9,6 +9,7 @@ from sqlalchemy import func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.application.services.auth.user_service import UserService
 from app.core.config import settings
 from app.core.database import truncate_all_tables
 from app.infrastructure.persistence.models import (
@@ -17,8 +18,9 @@ from app.infrastructure.persistence.models import (
     Lot,
     Order,
     OrderLine,
+    Role,
     Supplier,
-    Warehouse,  # 統合された新Warehouse
+    Warehouse,
 )
 from app.presentation.api.deps import get_db
 from app.presentation.schemas.admin.admin_schema import (
@@ -27,6 +29,7 @@ from app.presentation.schemas.admin.admin_schema import (
 )
 from app.presentation.schemas.allocations.allocations_schema import CandidateLotsResponse
 from app.presentation.schemas.common.base import ResponseBase
+from app.presentation.schemas.system.users_schema import UserCreate
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -98,9 +101,12 @@ def reset_database(db: Session = Depends(get_db)):
         # セッションをリフレッシュ
         db.commit()
 
+        # 初期管理者ユーザーとロールを再作成
+        _seed_admin_user(db)
+
         return ResponseBase(
             success=True,
-            message="データベースをリセットしました（テーブル構造は保持）",
+            message="データベースをリセットしました（テーブル構造は保持・管理者ユーザー再作成済）",
         )
 
     except Exception as e:
@@ -362,3 +368,55 @@ def reset_metrics():
     collector.reset_metrics()
 
     return {"message": "メトリクスをリセットしました"}
+
+
+def _seed_admin_user(db: Session) -> None:
+    """初期管理者ユーザーと必要なロールを作成する."""
+    # 1. ロールの作成（存在しない場合）
+    roles = {
+        "admin": "Administrator",
+        "user": "General User",
+        "viewer": "Read-only Viewer",
+    }
+
+    for code, name in roles.items():
+        role = db.query(Role).filter(Role.role_code == code).first()
+        if not role:
+            role = Role(role_code=code, role_name=name)
+            db.add(role)
+            logger.info(f"ロール '{code}' を作成しました")
+
+    db.commit()
+
+    # 2. 管理者ユーザーの作成
+    user_service = UserService(db)
+    admin_user = user_service.get_by_username("admin")
+
+    if not admin_user:
+        try:
+            admin_user = user_service.create(
+                UserCreate(
+                    username="admin",
+                    email="admin@example.com",
+                    password="admin123",  # UserServiceがハッシュ化
+                    display_name="System Admin",
+                    is_active=True,
+                )
+            )
+            logger.info("管理者ユーザー 'admin' を作成しました")
+        except Exception as e:
+            logger.error(f"管理者ユーザー作成失敗: {e}")
+            return
+
+    # 3. ロールの割り当て
+    current_roles = user_service.get_user_roles(admin_user.id)
+    if "admin" not in current_roles:
+        # adminロールを取得
+        admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+        if admin_role:
+            # 既存のロールをクリアしてadminのみ設定する形になるが、初期化後なので問題ない
+            # UserService.assign_rolesは既存を削除して上書きする仕様
+            from app.presentation.schemas.system.users_schema import UserRoleAssignment
+
+            user_service.assign_roles(admin_user.id, UserRoleAssignment(role_ids=[admin_role.id]))
+            logger.info("ユーザー 'admin' に 'admin' ロールを割り当てました")
