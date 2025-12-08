@@ -5,21 +5,22 @@
  * 受注非連動ロット（サンプル、安全在庫、その他）を作成
  */
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+import { createLot } from "../api";
+import { AdhocLotCreateForm, type AdhocLotCreateData } from "../components/AdhocLotCreateForm";
+
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
 import { useProducts } from "@/features/products/hooks";
 import { useWarehouses } from "@/features/warehouses/hooks";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import { createLot } from "../api";
-import { AdhocLotCreateForm, type AdhocLotCreateData } from "../components/AdhocLotCreateForm";
 
 /**
  * アドホックロット作成ページ
  */
+// eslint-disable-next-line max-lines-per-function -- Page component with data fetching logic
 export function AdhocLotCreatePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
