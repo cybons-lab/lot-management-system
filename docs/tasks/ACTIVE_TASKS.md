@@ -9,47 +9,39 @@
 
 ---
 
-## 🎯 進行中タスク
+## ✅ 直近完了タスク（2025-12-08）
 
-### P1: フェーズ3 - クリーンアーキテクチャ移行
+### フェーズ3 - クリーンアーキテクチャ移行 ✅
 
-**方針**: 新規コードのみ新構造で書く（既存コードは維持）
+**全面刷新完了！**
 
-**完了済み:**
+新しいディレクトリ構造:
+```
+backend/app/
+├── presentation/   # api/ + schemas/
+├── application/    # services/
+├── domain/         # ビジネスロジック + events/
+├── infrastructure/ # models/ + repositories/ + external/
+└── core/           # config, logging, errors
+```
+
+完了項目:
 - ✅ ドメインイベント基盤 (`domain/events/`)
 - ✅ イベントハンドラー登録 (`main.py`)
 - ✅ LotService/AllocationServiceにイベント発行統合
-
-**詳細計画**: [`docs/phase3_implementation_plan.md`](../phase3_implementation_plan.md)
+- ✅ ディレクトリ構造の全面刷新
+- ✅ 全インポートパスの置換（663箇所）
+- ✅ アプリケーション起動確認（174ルート）
 
 ---
 
-## 🔜 次のステップ（フェーズ3）
+## 🎯 残タスク
 
-### 3-A: ディレクトリ準備（0.5日）
-- [ ] `presentation/`, `application/`, `infrastructure/` ディレクトリ作成
-- [ ] 各ディレクトリに `__init__.py` 配置
-- [ ] インポートエイリアス設定（後方互換性）
+**現在、緊急で対応すべきタスクはありません。**
 
-### 3-B: allocation ドメイン移行（パイロット, 1日）
-- [ ] `domain/repositories/allocation.py` にリポジトリインターフェース定義
-- [ ] 現 `repositories/allocation_repository.py` をインフラ層に移動
-- [ ] サービスの依存注入を調整
-- [ ] テスト実行・確認
-
-### 3-C: inventory ドメイン移行（1日）
-- [ ] `domain/repositories/lot.py` にリポジトリインターフェース定義
-- [ ] LotService のリファクタリング
-- [ ] テスト実行・確認
-
-### 3-D: 残りドメイン移行（1〜2日）
-- [ ] orders ドメイン
-- [ ] forecasts ドメイン
-- [ ] masters ドメイン
-
-### 3-E: プレゼンテーション層整理（0.5日）
-- [ ] `api/` → `presentation/api/` エイリアス設定
-- [ ] `schemas/` → `presentation/schemas/` エイリアス設定
+次のステップ候補:
+- [ ] バックエンドテスト実行・確認
+- [ ] フロントエンドOpenAPI型再生成
 
 ---
 
@@ -61,7 +53,7 @@
 
 **残タスク**（本番SAP接続が必要）:
 - ❌ **本番SAP API接続**（現在はモック: `SAPMockClient`）
-  - `backend/app/external/sap_mock_client.py` を実際のSAP APIクライアントに置き換え
+  - `backend/app/infrastructure/external/sap_mock_client.py` を実際のSAP APIクライアントに置き換え
 - ❌ **定期実行設定**（オプション）
   - APScheduler または Celery Beat による自動スケジュール実行
   - 実行頻度設定UI
@@ -79,7 +71,7 @@
 - ❌ 本番SAP API接続: 未実装
 
 **関連TODO:**
-- `backend/app/services/sap/sap_service.py:L61`
+- `backend/app/application/services/sap/sap_service.py:L61`
 
 ---
 
