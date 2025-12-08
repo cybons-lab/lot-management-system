@@ -27,7 +27,6 @@ from app.presentation.schemas.common.base import BaseSchema
 class OrderBase(BaseSchema):
     """Base order schema (DDL: orders)."""
 
-    order_number: str = Field(..., min_length=1, max_length=50)
     customer_id: int = Field(..., gt=0)
     order_date: date
 
@@ -138,7 +137,6 @@ class OrderLineResponse(OrderLineBase):
     updated_at: datetime
 
     # Flattened Order Info
-    order_number: str | None = None
     customer_id: int | None = None
     customer_name: str | None = None
     customer_code: str | None = None

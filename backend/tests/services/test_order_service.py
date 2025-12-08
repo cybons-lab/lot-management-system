@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from app.application.services.orders.order_service import OrderService
 from app.domain.order import (
-    DuplicateOrderError,
     InvalidOrderStatusError,
     OrderNotFoundError,
     OrderValidationError,
@@ -36,10 +35,11 @@ def test_create_order_success(db: Session, service_master_data):
             )
         ],
     )
-
+    # Create order
     order = service.create_order(order_data)
 
-    assert order.order_number == "ORD-SVC-001"
+    assert order.id is not None
+    # assert order.order_number == "ORD-SVC-001"
     assert order.customer_id == customer.id
     assert len(order.lines) == 1
     assert order.lines[0].product_id == product1.id
@@ -73,7 +73,6 @@ def test_create_order_with_unit_conversion(db: Session, service_master_data):
     # converted = 20 / 10 = 2.
 
     order_data = OrderCreate(
-        order_number="ORD-SVC-CONV",
         customer_id=customer.id,
         order_date=date.today(),
         lines=[
@@ -93,28 +92,11 @@ def test_create_order_with_unit_conversion(db: Session, service_master_data):
     assert order.lines[0].converted_quantity == 2.0
 
 
-def test_create_order_duplicate_error(db: Session, service_master_data):
-    """Test creating a duplicate order raises error."""
-    service = OrderService(db)
-    customer = service_master_data["customer"]
-
-    order_data = OrderCreate(
-        order_number="ORD-SVC-DUP", customer_id=customer.id, order_date=date.today(), lines=[]
-    )
-
-    service.create_order(order_data)
-
-    with pytest.raises(DuplicateOrderError):
-        service.create_order(order_data)
-
-
 def test_create_order_customer_not_found(db: Session):
     """Test creating order with non-existent customer."""
     service = OrderService(db)
 
-    order_data = OrderCreate(
-        order_number="ORD-SVC-404", customer_id=99999, order_date=date.today(), lines=[]
-    )
+    order_data = OrderCreate(customer_id=99999, order_date=date.today(), lines=[])
 
     with pytest.raises(OrderValidationError) as exc:
         service.create_order(order_data)
@@ -127,11 +109,8 @@ def test_get_orders_filtering(db: Session, service_master_data):
     customer = service_master_data["customer"]
 
     # Create test orders
-    order1 = Order(
-        order_number="ORD-FILT-1", customer_id=customer.id, order_date=date.today(), status="draft"
-    )
+    order1 = Order(customer_id=customer.id, order_date=date.today(), status="draft")
     order2 = Order(
-        order_number="ORD-FILT-2",
         customer_id=customer.id,
         order_date=date.today() - timedelta(days=1),
         status="confirmed",
@@ -142,13 +121,13 @@ def test_get_orders_filtering(db: Session, service_master_data):
     # Test status filter
     results = service.get_orders(status="draft")
     assert len(results) >= 1
-    assert any(o.order_number == "ORD-FILT-1" for o in results)
-    assert not any(o.order_number == "ORD-FILT-2" for o in results)
+    assert any(o.id == order1.id for o in results)
+    assert not any(o.id == order2.id for o in results)
 
     # Test date filter
     results = service.get_orders(date_from=date.today())
-    assert any(o.order_number == "ORD-FILT-1" for o in results)
-    assert not any(o.order_number == "ORD-FILT-2" for o in results)
+    assert any(o.id == order1.id for o in results)
+    assert not any(o.id == order2.id for o in results)
 
 
 def test_get_order_detail_success(db: Session, service_master_data):
@@ -156,12 +135,11 @@ def test_get_order_detail_success(db: Session, service_master_data):
     service = OrderService(db)
     customer = service_master_data["customer"]
 
-    order = Order(order_number="ORD-DET-1", customer_id=customer.id, order_date=date.today())
+    order = Order(customer_id=customer.id, order_date=date.today())
     db.add(order)
     db.flush()
 
     result = service.get_order_detail(order.id)
-    assert result.order_number == "ORD-DET-1"
     assert result.id == order.id
 
 
@@ -178,9 +156,7 @@ def test_cancel_order_success(db: Session, service_master_data):
     customer = service_master_data["customer"]
     product = service_master_data["product1"]
 
-    order = Order(
-        order_number="ORD-CNCL-1", customer_id=customer.id, order_date=date.today(), status="draft"
-    )
+    order = Order(customer_id=customer.id, order_date=date.today(), status="draft")
     db.add(order)
     db.flush()
 
@@ -211,7 +187,6 @@ def test_cancel_order_shipped_error(db: Session, service_master_data):
     product = service_master_data["product1"]
 
     order = Order(
-        order_number="ORD-CNCL-ERR",
         customer_id=customer.id,
         order_date=date.today(),
         status="confirmed",
@@ -243,7 +218,7 @@ def test_populate_additional_info(db: Session, service_master_data):
     delivery_place = service_master_data["delivery_place"]
 
     # Create order and line
-    order = Order(order_number="ORD-VIEW-1", customer_id=customer.id, order_date=date.today())
+    order = Order(customer_id=customer.id, order_date=date.today())
     db.add(order)
     db.flush()
 

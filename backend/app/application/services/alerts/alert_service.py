@@ -75,9 +75,9 @@ class AlertService:
                     category="order",
                     type="UNFORECASTED_ORDER_STALE",
                     severity="critical",
-                    title=f"無予測受注が30分以上未処理: {order.order_number}",
+                    title=f"無予測受注が30分以上未処理: 受注ID {order.id}",
                     message=(
-                        f"受注番号 {order.order_number} はフォーキャストに紐づいておらず、"
+                        f"受注ID {order.id} はフォーキャストに紐づいておらず、"
                         f"30分以上未処理です。至急対応が必要です。"
                     ),
                     occurred_at=order.created_at,

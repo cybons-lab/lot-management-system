@@ -9,7 +9,7 @@ Tests cover:
 - Error scenarios (validation, not found, conflicts)
 """
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -139,10 +139,10 @@ def test_drag_assign_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        order_number="ORD-001",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -181,10 +181,10 @@ def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        order_number="ORD-DEP",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -219,10 +219,10 @@ def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data:
 
     # Create order with line
     order = Order(
-        order_number="ORD-NO-QTY",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -257,10 +257,10 @@ def test_drag_assign_insufficient_stock_returns_400(test_db: Session, master_dat
 
     # Create order with line
     order = Order(
-        order_number="ORD-INSUF",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -300,10 +300,10 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        order_number="ORD-CANCEL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -365,10 +365,10 @@ def test_preview_allocations_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        order_number="ORD-PREVIEW",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -419,10 +419,10 @@ def test_commit_allocation_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        order_number="ORD-COMMIT",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -474,10 +474,10 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        order_number="ORD-HARD-001",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -535,10 +535,10 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        order_number="ORD-HARD-PART",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -602,10 +602,10 @@ def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data
 
     # Create order with line
     order = Order(
-        order_number="ORD-HARD-DUP",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -651,7 +651,7 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
 
     Scenario: A soft allocation was created when stock was available,
     but since then the stock has decreased (e.g., expiration, adjustment).
-    Now when trying to confirm to hard, there's not enough stock.
+    Now when trying to confirm to hard, there is not enough stock.
 
     NOTE: This test is xfailed because the database constraint
     chk_lots_allocation_limit prevents current_quantity from being
@@ -662,10 +662,10 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
 
     # Create order with line
     order = Order(
-        order_number="ORD-HARD-INSUF",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -737,10 +737,10 @@ def test_confirm_batch_success(test_db: Session, master_data: dict):
 
     # Create order with lines
     order = Order(
-        order_number="ORD-BATCH",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()
@@ -797,10 +797,10 @@ def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
 
     # Create order with line
     order = Order(
-        order_number="ORD-BATCH-FAIL",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()

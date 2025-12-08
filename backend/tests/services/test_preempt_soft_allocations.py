@@ -124,11 +124,9 @@ def create_order_line(
     master_data: dict,
     order_type: str,
     quantity: Decimal,
-    order_number: str,
 ) -> OrderLine:
     """Helper to create an order line with specified order_type."""
     order = Order(
-        order_number=order_number,
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",

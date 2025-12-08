@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -10,7 +10,7 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, ma
     # Setup Data - use master_data for foreign keys
     warehouse = master_data["warehouse"]
     supplier = master_data["supplier"]
-    customer = master_data["customer"]
+    # customer = master_data["customer"]
 
     product = Product(maker_part_code="P-CANCEL", product_name="Cancel Test", base_unit="EA")
     db.add(product)
@@ -32,10 +32,10 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, ma
     db.commit()
 
     order = Order(
-        order_number="ORD-CANCEL",
-        customer_id=customer.id,
+        customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     db.add(order)
     db.commit()

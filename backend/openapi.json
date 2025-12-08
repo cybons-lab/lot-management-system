@@ -12,8 +12,7 @@
           "lots"
         ],
         "summary": "List Lots",
-        "description": "�OpenAPI schema exported to /app/openapi.json
-キップ件数\n    limit: 取得件数\n    product_id: 製品ID\n    product_code: 製品コード\n    supplier_code: 仕入先コード\n    warehouse_code: 倉庫コード\n    expiry_from: 有効期限開始日\n    expiry_to: 有効期限終了日\n    with_stock: 在庫ありのみ取得するかどうか\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nロット一覧取得（v_lots_with_master ビュー使用）.\n\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.\nFEFO (先入先出) 順に並べて返す.",
+        "description": "ロット一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数\n    product_id: 製品ID\n    product_code: 製品コード\n    supplier_code: 仕入先コード\n    warehouse_code: 倉庫コード\n    expiry_from: 有効期限開始日\n    expiry_to: 有効期限終了日\n    with_stock: 在庫ありのみ取得するかどうか\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nロット一覧取得（v_lots_with_master ビュー使用）.\n\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.\nFEFO (先入先出) 順に並べて返す.",
         "operationId": "list_lots_api_lots_get",
         "security": [
           {
@@ -10516,9 +10515,16 @@
             "type": "integer",
             "title": "Order Id"
           },
-          "order_number": {
-            "type": "string",
-            "title": "Order Number"
+          "customer_order_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Order No"
           },
           "customer_id": {
             "type": "integer",
@@ -10572,7 +10578,6 @@
         "required": [
           "line_id",
           "order_id",
-          "order_number",
           "customer_id",
           "customer_name",
           "product_id",
@@ -14575,12 +14580,6 @@
       },
       "OrderCreate": {
         "properties": {
-          "order_number": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Order Number"
-          },
           "customer_id": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
@@ -14601,7 +14600,6 @@
         },
         "type": "object",
         "required": [
-          "order_number",
           "customer_id",
           "order_date"
         ],
@@ -15048,17 +15046,6 @@
             "format": "date-time",
             "title": "Updated At"
           },
-          "order_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Order Number"
-          },
           "customer_id": {
             "anyOf": [
               {
@@ -15225,12 +15212,6 @@
       },
       "OrderWithLinesResponse": {
         "properties": {
-          "order_number": {
-            "type": "string",
-            "maxLength": 50,
-            "minLength": 1,
-            "title": "Order Number"
-          },
           "customer_id": {
             "type": "integer",
             "exclusiveMinimum": 0.0,
@@ -15319,7 +15300,6 @@
         },
         "type": "object",
         "required": [
-          "order_number",
           "customer_id",
           "order_date",
           "id",

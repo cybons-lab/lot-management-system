@@ -191,7 +191,6 @@ class VOrderLineDetails(Base):
 
     # 受注情報
     order_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    order_number: Mapped[str] = mapped_column(String)
     order_date: Mapped[date | None] = mapped_column(Date)
     customer_id: Mapped[int] = mapped_column(Integer)
 

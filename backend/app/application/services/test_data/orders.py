@@ -8,8 +8,6 @@ from app.infrastructure.persistence.models.forecast_models import ForecastCurren
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace, Product
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
 
-from .utils import fake
-
 
 def generate_orders(
     db: Session,
@@ -62,7 +60,6 @@ def generate_orders(
 
         # Create Order
         order = Order(
-            order_number=fake.unique.bothify(text="ORD-########"),
             customer_id=customer_id,
             order_date=date.today(),
         )

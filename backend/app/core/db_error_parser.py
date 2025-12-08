@@ -26,8 +26,6 @@ class DBErrorParser:
         "uq_customers_customer_code": "顧客コード '{value}' は既に登録されています",
         # Lots
         "uq_lots_lot_number": "ロット番号 '{value}' は既に登録されています",
-        # Orders
-        "uq_orders_order_number": "受注番号 '{value}' は既に登録されています",
         # Users
         "uq_users_username": "ユーザー名 '{value}' は既に使用されています",
         "uq_users_email": "メールアドレス '{value}' は既に登録されています",

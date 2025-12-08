@@ -8,7 +8,7 @@ Tests cover:
 """
 
 import os
-from datetime import UTC, date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -156,12 +156,12 @@ def test_preview_allocation_suggestions_order_mode_success(test_db: Session, mas
     """Test preview allocation suggestions in order mode."""
     client = TestClient(app)
 
-    # Create order with line
+    # Create order explicitly for this test
     order = Order(
-        order_number="ORD-001",
         customer_id=master_data["customer"].id,
         order_date=date.today(),
         status="open",
+        created_at=datetime.utcnow(),
     )
     test_db.add(order)
     test_db.commit()

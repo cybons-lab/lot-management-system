@@ -13,7 +13,10 @@ export interface paths {
     };
     /**
      * List Lots
-     * @description �OpenAPI schema exported to /app/openapi.json キップ件数
+     * @description ロット一覧取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
      *         limit: 取得件数
      *         product_id: 製品ID
      *         product_code: 製品コード
@@ -4747,8 +4750,8 @@ export interface components {
       line_id: number;
       /** Order Id */
       order_id: number;
-      /** Order Number */
-      order_number: string;
+      /** Customer Order No */
+      customer_order_no?: string | null;
       /** Customer Id */
       customer_id: number;
       /** Customer Name */
@@ -6476,8 +6479,6 @@ export interface components {
      * @description Create order request.
      */
     OrderCreate: {
-      /** Order Number */
-      order_number: string;
       /** Customer Id */
       customer_id: number;
       /**
@@ -6714,8 +6715,6 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
-      /** Order Number */
-      order_number?: string | null;
       /** Customer Id */
       customer_id?: number | null;
       /** Customer Name */
@@ -6757,8 +6756,6 @@ export interface components {
      * @description Order with lines response.
      */
     OrderWithLinesResponse: {
-      /** Order Number */
-      order_number: string;
       /** Customer Id */
       customer_id: number;
       /**

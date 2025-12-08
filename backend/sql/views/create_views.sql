@@ -125,7 +125,6 @@ ORDER BY
 CREATE VIEW public.v_order_line_details AS
 SELECT
     o.id AS order_id,
-    o.order_number,
     o.order_date,
     o.customer_id,
     c.customer_code,
@@ -158,7 +157,7 @@ LEFT JOIN public.customer_items ci ON ci.customer_id = o.customer_id AND ci.prod
 LEFT JOIN public.suppliers s ON ci.supplier_id = s.id
 LEFT JOIN public.allocations a ON a.order_line_id = ol.id
 GROUP BY
-    o.id, o.order_number, o.order_date, o.customer_id,
+    o.id, o.order_date, o.customer_id,
     c.customer_code, c.customer_name,
     ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status, ol.shipping_document_text,
     p.maker_part_code, p.product_name, p.internal_unit, p.external_unit, p.qty_per_internal_unit,
