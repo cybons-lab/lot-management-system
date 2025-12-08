@@ -12,7 +12,8 @@
           "lots"
         ],
         "summary": "List Lots",
-        "description": "ロット一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数\n    product_id: 製品ID\n    product_code: 製品コード\n    supplier_code: 仕入先コード\n    warehouse_code: 倉庫コード\n    expiry_from: 有効期限開始日\n    expiry_to: 有効期限終了日\n    with_stock: 在庫ありのみ取得するかどうか\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nロット一覧取得（v_lots_with_master ビュー使用）.\n\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.\nFEFO (先入先出) 順に並べて返す.",
+        "description": "�OpenAPI schema exported to /app/openapi.json
+キップ件数\n    limit: 取得件数\n    product_id: 製品ID\n    product_code: 製品コード\n    supplier_code: 仕入先コード\n    warehouse_code: 倉庫コード\n    expiry_from: 有効期限開始日\n    expiry_to: 有効期限終了日\n    with_stock: 在庫ありのみ取得するかどうか\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nロット一覧取得（v_lots_with_master ビュー使用）.\n\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.\nFEFO (先入先出) 順に並べて返す.",
         "operationId": "list_lots_api_lots_get",
         "security": [
           {
@@ -7058,6 +7059,30 @@
         }
       }
     },
+    "/api/admin/master-import/template/order": {
+      "get": {
+        "tags": [
+          "Master Import"
+        ],
+        "summary": "Download Order Template",
+        "description": "Get template structure for order data imports.\n\nReturns:\n    JSON template structure for order lines with SAP business keys",
+        "operationId": "download_order_template_api_admin_master_import_template_order_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Download Order Template Api Admin Master Import Template Order Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/healthz": {
       "get": {
         "tags": [
@@ -12808,6 +12833,46 @@
         "title": "InboundPlanDetailResponse",
         "description": "Inbound plan representation bundled with lines and expected lots."
       },
+      "InboundPlanImportRow": {
+        "properties": {
+          "plan_number": {
+            "type": "string",
+            "title": "Plan Number",
+            "description": "Plan number"
+          },
+          "supplier_code": {
+            "type": "string",
+            "title": "Supplier Code",
+            "description": "Supplier code"
+          },
+          "planned_arrival_date": {
+            "type": "string",
+            "title": "Planned Arrival Date",
+            "description": "Planned arrival date (YYYY-MM-DD)"
+          },
+          "sap_po_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Po Number",
+            "description": "SAP purchase order number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "plan_number",
+          "supplier_code",
+          "planned_arrival_date"
+        ],
+        "title": "InboundPlanImportRow",
+        "description": "Inbound plan for import with SAP PO number."
+      },
       "InboundPlanLineCreate": {
         "properties": {
           "product_id": {
@@ -14249,6 +14314,17 @@
             ],
             "description": "Customer-side data (customers, delivery places, items)"
           },
+          "order_data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OrderDataImport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Order/transaction data (order lines with SAP keys, inbound plans)"
+          },
           "mode": {
             "type": "string",
             "pattern": "^(upsert|replace)$",
@@ -14265,7 +14341,7 @@
         },
         "type": "object",
         "title": "MasterImportRequest",
-        "description": "Unified master import request.\n\nCan contain supply-side data, customer-side data, or both.\nWhen both are provided, supply-side is processed first."
+        "description": "Unified master import request.\n\nCan contain supply-side data, customer-side data, order data, or any combination.\nProcessing order: supply → customer → order"
       },
       "MasterImportResponse": {
         "properties": {
@@ -14532,6 +14608,29 @@
         "title": "OrderCreate",
         "description": "Create order request."
       },
+      "OrderDataImport": {
+        "properties": {
+          "order_lines": {
+            "items": {
+              "$ref": "#/components/schemas/OrderLineImportRow"
+            },
+            "type": "array",
+            "title": "Order Lines",
+            "description": "Order lines with business keys"
+          },
+          "inbound_plans": {
+            "items": {
+              "$ref": "#/components/schemas/InboundPlanImportRow"
+            },
+            "type": "array",
+            "title": "Inbound Plans",
+            "description": "Inbound plans with SAP PO numbers"
+          }
+        },
+        "type": "object",
+        "title": "OrderDataImport",
+        "description": "Order/Transaction data import."
+      },
       "OrderLineCreate": {
         "properties": {
           "product_id": {
@@ -14687,6 +14786,116 @@
         ],
         "title": "OrderLineCreate",
         "description": "Create order line request."
+      },
+      "OrderLineImportRow": {
+        "properties": {
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code",
+            "description": "Customer code"
+          },
+          "product_code": {
+            "type": "string",
+            "title": "Product Code",
+            "description": "Product code (maker_part_code)"
+          },
+          "order_date": {
+            "type": "string",
+            "title": "Order Date",
+            "description": "Order date (YYYY-MM-DD)"
+          },
+          "customer_order_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Order No",
+            "description": "Customer's 6-digit order number"
+          },
+          "customer_order_line_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 10
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Order Line No",
+            "description": "Customer's line number"
+          },
+          "sap_order_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Order No",
+            "description": "SAP order number"
+          },
+          "sap_order_item_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 6
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Order Item No",
+            "description": "SAP order item number"
+          },
+          "delivery_place_code": {
+            "type": "string",
+            "title": "Delivery Place Code",
+            "description": "Delivery place code"
+          },
+          "order_quantity": {
+            "type": "string",
+            "title": "Order Quantity",
+            "description": "Order quantity"
+          },
+          "unit": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Unit",
+            "description": "Unit"
+          },
+          "delivery_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Date",
+            "description": "Delivery date (YYYY-MM-DD)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_code",
+          "product_code",
+          "order_date",
+          "delivery_place_code",
+          "order_quantity",
+          "unit"
+        ],
+        "title": "OrderLineImportRow",
+        "description": "Order line for import with business keys."
       },
       "OrderLineResponse": {
         "properties": {
