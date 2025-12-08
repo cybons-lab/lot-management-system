@@ -270,7 +270,7 @@ def test_create_alerts_deactivates_old_alerts(db_session: Session, setup_invento
     assert active_alerts[0].id == old_alert.id
 
 
-@patch("app.services.batch.inventory_sync_service.SAPMockClient")
+@patch("app.application.services.batch.inventory_sync_service.SAPMockClient")
 def test_check_inventory_totals_integration(
     mock_sap_client_class, db_session: Session, setup_inventory_sync_test_data
 ):

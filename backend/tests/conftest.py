@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-import app.models  # Register all models
+import app.infrastructure.persistence.models  # Register all models
 from app.infrastructure.persistence.models.base_model import Base
 from app.main import app
 
@@ -226,8 +226,8 @@ def db_session(db) -> Generator[Session]:
 def client(db) -> Generator[TestClient]:
     """Create FastAPI TestClient."""
     # Override both get_db functions since different modules import from different locations
-    from app.api import deps as api_deps
     from app.core import database as core_database
+    from app.presentation.api import deps as api_deps
 
     def override_get_db():
         yield db

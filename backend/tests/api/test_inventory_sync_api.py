@@ -97,7 +97,9 @@ def test_inventory_sync_execute_success(test_db: Session):
     products = data["products"]
 
     # SAPMockClientのモックを設定
-    with patch("app.services.batch.inventory_sync_service.SAPMockClient") as mock_sap_client_class:
+    with patch(
+        "app.application.services.batch.inventory_sync_service.SAPMockClient"
+    ) as mock_sap_client_class:
         mock_client = MagicMock()
         mock_sap_client_class.return_value = mock_client
 
@@ -140,7 +142,9 @@ def test_inventory_sync_execute_with_discrepancies(test_db: Session):
     products = data["products"]
 
     # SAPMockClientのモックを設定
-    with patch("app.services.batch.inventory_sync_service.SAPMockClient") as mock_sap_client_class:
+    with patch(
+        "app.application.services.batch.inventory_sync_service.SAPMockClient"
+    ) as mock_sap_client_class:
         mock_client = MagicMock()
         mock_sap_client_class.return_value = mock_client
 
@@ -202,7 +206,7 @@ def test_inventory_sync_execute_error_handling(test_db: Session):
     import pytest
 
     with patch(
-        "app.services.batch.inventory_sync_service.SAPMockClient",
+        "app.application.services.batch.inventory_sync_service.SAPMockClient",
         side_effect=Exception("SAP connection failed"),
     ):
         from app.application.services.batch.inventory_sync_service import InventorySyncService
@@ -227,7 +231,7 @@ def test_inventory_sync_multiple_executions(test_db: Session):
     from app.application.services.batch.inventory_sync_service import InventorySyncService
 
     # 1回目の実行（差異あり）
-    with patch("app.services.batch.inventory_sync_service.SAPMockClient") as mock_class:
+    with patch("app.application.services.batch.inventory_sync_service.SAPMockClient") as mock_class:
         mock_client = MagicMock()
         mock_class.return_value = mock_client
         mock_client.get_total_inventory.return_value = {
@@ -261,7 +265,7 @@ def test_inventory_sync_multiple_executions(test_db: Session):
     assert alert1 is not None
 
     # 2回目の実行（同じ商品に差異あり）
-    with patch("app.services.batch.inventory_sync_service.SAPMockClient") as mock_class:
+    with patch("app.application.services.batch.inventory_sync_service.SAPMockClient") as mock_class:
         mock_client = MagicMock()
         mock_class.return_value = mock_client
         mock_client.get_total_inventory.return_value = {
