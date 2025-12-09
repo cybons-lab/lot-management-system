@@ -363,6 +363,12 @@ def upgrade() -> None:
         sa.Column(
             "status", sa.String(length=20), server_default=sa.text("'planned'"), nullable=False
         ),
+        sa.Column(
+            "sap_po_number",
+            sa.String(length=20),
+            nullable=True,
+            comment="SAP購買発注番号（業務キー）",
+        ),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
@@ -373,6 +379,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["supplier_id"], ["suppliers.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("plan_number", name="inbound_plans_plan_number_key"),
+        sa.UniqueConstraint("sap_po_number", name="uq_inbound_plans_sap_po_number"),
     )
     with op.batch_alter_table("inbound_plans", schema=None) as batch_op:
         batch_op.create_index("idx_inbound_plans_date", ["planned_arrival_date"], unique=False)
@@ -441,9 +448,36 @@ def upgrade() -> None:
         batch_op.create_index("idx_operation_logs_user", ["user_id"], unique=False)
 
     op.create_table(
+        "order_groups",
+        sa.Column("id", sa.BigInteger(), nullable=False),
+        sa.Column("customer_id", sa.BigInteger(), nullable=False),
+        sa.Column("product_id", sa.BigInteger(), nullable=False),
+        sa.Column("order_date", sa.Date(), nullable=False),
+        sa.Column(
+            "source_file_name", sa.String(length=255), nullable=True, comment="取り込み元ファイル名"
+        ),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["customer_id"], ["customers.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "customer_id", "product_id", "order_date", name="uq_order_groups_business_key"
+        ),
+    )
+    with op.batch_alter_table("order_groups", schema=None) as batch_op:
+        batch_op.create_index("idx_order_groups_customer", ["customer_id"], unique=False)
+        batch_op.create_index("idx_order_groups_date", ["order_date"], unique=False)
+        batch_op.create_index("idx_order_groups_product", ["product_id"], unique=False)
+
+    op.create_table(
         "orders",
         sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("order_number", sa.String(length=50), nullable=False),
+        # order_number removed in 1fc6aeb192f2
         sa.Column("customer_id", sa.BigInteger(), nullable=False),
         sa.Column("order_date", sa.Date(), nullable=False),
         sa.Column("status", sa.String(length=20), server_default=sa.text("'open'"), nullable=False),
@@ -459,7 +493,6 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["customer_id"], ["customers.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["locked_by_user_id"], ["users.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("order_number", name="uq_orders_order_number"),
     )
     with op.batch_alter_table("orders", schema=None) as batch_op:
         batch_op.create_index("idx_orders_customer", ["customer_id"], unique=False)
@@ -700,9 +733,9 @@ def upgrade() -> None:
         sa.Column("delivery_place_id", sa.BigInteger(), nullable=False),
         sa.Column(
             "sap_order_no",
-            sa.String(length=100),
+            sa.String(length=20),
             nullable=True,
-            comment="SAP受注番号（登録済みの場合）",
+            comment="SAP受注番号（業務キー）",
         ),
         sa.Column("shipping_document_text", sa.Text(), nullable=True, comment="出荷表テキスト"),
         sa.Column(
@@ -722,6 +755,31 @@ def upgrade() -> None:
             "status", sa.String(length=20), server_default=sa.text("'pending'"), nullable=False
         ),
         sa.Column("version", sa.Integer(), server_default=sa.text("1"), nullable=False),
+        # Added in 77d57966e3f7
+        sa.Column(
+            "order_group_id",
+            sa.BigInteger(),
+            nullable=True,
+            comment="受注グループへの参照（得意先×製品×受注日）",
+        ),
+        sa.Column(
+            "customer_order_no",
+            sa.String(length=6),
+            nullable=True,
+            comment="得意先6桁受注番号（業務キー）",
+        ),
+        sa.Column(
+            "customer_order_line_no",
+            sa.String(length=10),
+            nullable=True,
+            comment="得意先側行番号",
+        ),
+        sa.Column(
+            "sap_order_item_no",
+            sa.String(length=6),
+            nullable=True,
+            comment="SAP明細番号（業務キー）",
+        ),
         sa.CheckConstraint(
             "order_type IN ('FORECAST_LINKED', 'KANBAN', 'SPOT', 'ORDER')",
             name="chk_order_lines_order_type",
@@ -734,7 +792,11 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["forecast_id"], ["forecast_current.id"], ondelete="SET NULL"),
         sa.ForeignKeyConstraint(["order_id"], ["orders.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["order_group_id"], ["order_groups.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "order_group_id", "customer_order_no", name="uq_order_lines_customer_key"
+        ),
     )
     with op.batch_alter_table("order_lines", schema=None) as batch_op:
         batch_op.create_index("idx_order_lines_date", ["delivery_date"], unique=False)
@@ -750,6 +812,13 @@ def upgrade() -> None:
             postgresql_where=sa.text("sap_order_no IS NOT NULL"),
         )
         batch_op.create_index("idx_order_lines_status", ["status"], unique=False)
+        batch_op.create_index(
+            "idx_order_lines_customer_order_no",
+            ["customer_order_no"],
+            unique=False,
+            postgresql_where=sa.text("customer_order_no IS NOT NULL"),
+        )
+        batch_op.create_index("idx_order_lines_order_group", ["order_group_id"], unique=False)
 
     op.create_table(
         "lots",
