@@ -23,7 +23,7 @@ from app.infrastructure.persistence.models import (
     Warehouse,
 )
 from app.presentation.api.deps import get_db
-from app.presentation.api.routes.auth.auth_router import get_current_admin
+from app.presentation.api.routes.auth.auth_router import get_current_admin, get_current_user
 from app.presentation.schemas.admin.admin_schema import (
     DashboardStatsResponse,
     FullSampleDataRequest,
@@ -33,12 +33,15 @@ from app.presentation.schemas.common.base import ResponseBase
 from app.presentation.schemas.system.users_schema import UserCreate
 
 
-router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_current_admin)])
+router = APIRouter(prefix="/admin", tags=["admin"])
 logger = logging.getLogger(__name__)
 
 
 @router.get("/stats", response_model=DashboardStatsResponse)
-def get_dashboard_stats(db: Session = Depends(get_db)):
+def get_dashboard_stats(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),  # Authenticated users can view stats
+):
     """ダッシュボード用の統計情報を返す.
 
     在庫総数は lots.current_quantity の合計値を使用。 lot_current_stock
@@ -83,7 +86,10 @@ def get_dashboard_stats(db: Session = Depends(get_db)):
 
 
 @router.post("/reset-database", response_model=ResponseBase)
-def reset_database(db: Session = Depends(get_db)):
+def reset_database(
+    db: Session = Depends(get_db),
+    current_admin=Depends(get_current_admin),  # Only admin can reset database
+):
     """データベースリセット（開発環境のみ）.
 
     - テーブル構造は保持したまま、全データを削除
@@ -251,6 +257,7 @@ def get_allocatable_lots(
     wh: str | None = None,
     limit: int = 100,
     db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),  # Authenticated users
 ):
     """診断API: 引当可能ロット一覧（読み取り専用）.
 
@@ -262,6 +269,7 @@ def get_allocatable_lots(
         wh: 倉庫コード（任意フィルタ）
         limit: 最大取得件数（デフォルト100）
         db: データベースセッション
+        current_user: 現在のログインユーザー
 
     Returns:
         CandidateLotsResponse: 引当可能ロット一覧
@@ -340,7 +348,9 @@ def get_allocatable_lots(
 
 
 @router.get("/metrics")
-def get_metrics():
+def get_metrics(
+    current_admin=Depends(get_current_admin),  # Only admin can view metrics
+):
     """パフォーマンスメトリクスを取得.
 
     APIエンドポイントごとのリクエスト数、エラー率、レスポンスタイムなどを返す。
@@ -352,7 +362,9 @@ def get_metrics():
 
 
 @router.post("/metrics/reset")
-def reset_metrics():
+def reset_metrics(
+    current_admin=Depends(get_current_admin),  # Only admin can reset metrics
+):
     """パフォーマンスメトリクスをリセット.
 
     開発環境でのテスト用。
