@@ -2,21 +2,19 @@
  * useDeliverySettings Hook
  * 得意先品番-納入先別設定のカスタムフック
  */
-
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-import {
-  createDeliverySetting,
-  deleteDeliverySetting,
-  fetchDeliverySettings,
-  updateDeliverySetting,
-} from "./api";
 
 import type {
   CreateDeliverySettingRequest,
   CustomerItemDeliverySetting,
   UpdateDeliverySettingRequest,
+} from "./api";
+import {
+  createDeliverySetting,
+  deleteDeliverySetting,
+  fetchDeliverySettings,
+  updateDeliverySetting,
 } from "./api";
 
 const QUERY_KEY = "customer-item-delivery-settings";
