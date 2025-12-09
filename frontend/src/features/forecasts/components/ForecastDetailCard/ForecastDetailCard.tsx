@@ -24,6 +24,7 @@ import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
 import { Card, CardContent } from "@/components/ui";
 import { bulkAutoAllocate } from "@/features/allocations/api";
+import { updateForecast } from "@/features/forecasts/api";
 import { cn } from "@/shared/libs/utils";
 
 export function ForecastDetailCard({
@@ -40,8 +41,16 @@ export function ForecastDetailCard({
   const queryClient = useQueryClient();
 
   // Calculate all forecast data using custom hook
-  const { dailyData, unit, targetMonthStartDate, dates, dekadData, monthlyData, targetMonthTotal } =
-    useForecastCalculations(group);
+  const {
+    dailyData,
+    dailyForecastIds,
+    unit,
+    targetMonthStartDate,
+    dates,
+    dekadData,
+    monthlyData,
+    targetMonthTotal,
+  } = useForecastCalculations(group);
 
   // グループ自動引当 mutation
   const autoAllocateMutation = useMutation({
@@ -99,6 +108,24 @@ export function ForecastDetailCard({
     autoAllocateMutation.mutate();
   };
 
+  // フォーキャスト更新 mutation
+  const updateForecastMutation = useMutation({
+    mutationFn: ({ forecastId, quantity }: { forecastId: number; quantity: number }) =>
+      updateForecast(forecastId, { forecast_quantity: quantity }),
+    onSuccess: () => {
+      toast.success("フォーキャストを更新しました");
+      queryClient.invalidateQueries({ queryKey: ["forecasts"] });
+    },
+    onError: (error) => {
+      console.error("Update forecast failed:", error);
+      toast.error("フォーキャストの更新に失敗しました");
+    },
+  });
+
+  const handleUpdateQuantity = async (forecastId: number, newQuantity: number) => {
+    await updateForecastMutation.mutateAsync({ forecastId, quantity: newQuantity });
+  };
+
   return (
     <Card
       className={cn(
@@ -136,11 +163,14 @@ export function ForecastDetailCard({
               <ForecastDailyGrid
                 dates={dates}
                 dailyData={dailyData}
+                dailyForecastIds={dailyForecastIds}
                 targetMonthLabel={targetMonthLabel}
                 todayKey={todayKey}
                 todayStart={todayStart}
                 hoveredDate={hoveredDate}
                 onDateHover={setHoveredDate}
+                onUpdateQuantity={handleUpdateQuantity}
+                isUpdating={updateForecastMutation.isPending}
               />
 
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />

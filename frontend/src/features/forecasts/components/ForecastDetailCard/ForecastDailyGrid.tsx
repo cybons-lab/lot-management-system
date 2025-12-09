@@ -1,5 +1,5 @@
 /**
- * ForecastDailyGrid - Daily forecast grid display
+ * ForecastDailyGrid - Daily forecast grid display with inline editing
  */
 
 import { ForecastDayCell } from "./ForecastDayCell";
@@ -9,15 +9,19 @@ import { formatDateKey, isPastDate } from "./utils/date-utils";
 /**
  * Display daily forecast data in a grid layout
  * Shows all days of the target month with quantities
+ * Supports inline editing of forecast values
  */
 export function ForecastDailyGrid({
   dates,
   dailyData,
+  dailyForecastIds,
   targetMonthLabel,
   todayKey,
   todayStart,
   hoveredDate,
   onDateHover,
+  onUpdateQuantity,
+  isUpdating,
 }: ForecastDailyGridProps) {
   return (
     <div className="space-y-2">
@@ -35,10 +39,13 @@ export function ForecastDailyGrid({
               key={dateKey}
               date={date}
               quantity={dailyData.get(dateKey)}
+              forecastId={dailyForecastIds.get(dateKey)}
               isToday={todayKey === dateKey}
               isPast={isPast}
               hoveredDate={hoveredDate}
               onDateHover={onDateHover}
+              onUpdateQuantity={onUpdateQuantity}
+              isUpdating={isUpdating}
             />
           );
         })}
