@@ -15,6 +15,7 @@ import { getDatesForMonth, getMonthStart } from "../utils/date-utils";
 
 interface UseForecastCalculationsResult {
   dailyData: Map<string, number>;
+  dailyForecastIds: Map<string, number>;
   unit: string;
   targetMonthStartDate: Date;
   dates: Date[];
@@ -82,6 +83,20 @@ export function useForecastCalculations(group: ForecastGroup): UseForecastCalcul
       dataMap.set(forecast.forecast_date, qty);
     }
     return dataMap;
+  }, [dailyForecasts]);
+
+  // Build daily forecast ID map (date -> forecast_id)
+  // Note: Use the same date key format as ForecastDailyGrid
+  const dailyForecastIds = useMemo(() => {
+    const idMap = new Map<string, number>();
+    for (const forecast of dailyForecasts) {
+      // forecast.forecast_date is in YYYY-MM-DD format from API
+      // Use it directly as the key since dailyData also uses it
+      idMap.set(forecast.forecast_date, forecast.id);
+      console.log("[dailyForecastIds] Added:", forecast.forecast_date, "->", forecast.id);
+    }
+    console.log("[dailyForecastIds] Total entries:", idMap.size);
+    return idMap;
   }, [dailyForecasts]);
 
   // Get unit from first forecast
@@ -174,6 +189,7 @@ export function useForecastCalculations(group: ForecastGroup): UseForecastCalcul
 
   return {
     dailyData,
+    dailyForecastIds,
     unit,
     targetMonthStartDate,
     dates,

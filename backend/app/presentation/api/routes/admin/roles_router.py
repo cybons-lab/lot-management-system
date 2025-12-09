@@ -5,10 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.application.services.auth.role_service import RoleService
 from app.core.database import get_db
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.system.roles_schema import RoleCreate, RoleResponse, RoleUpdate
 
 
-router = APIRouter(prefix="/roles", tags=["roles"])
+router = APIRouter(prefix="/roles", tags=["roles"], dependencies=[Depends(get_current_admin)])
 
 
 @router.get("", response_model=list[RoleResponse])

@@ -52,6 +52,7 @@ from .views_models import (
     VOrderLineContext,
     VProductCodeToId,
 )
+from .withdrawal_models import Withdrawal, WithdrawalType
 
 
 __all__ = [
@@ -74,6 +75,8 @@ __all__ = [
     "AdjustmentType",
     "AllocationSuggestion",
     "AllocationTrace",
+    "Withdrawal",
+    "WithdrawalType",
     # Orders
     "Order",
     "OrderLine",

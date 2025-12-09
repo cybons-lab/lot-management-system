@@ -20,6 +20,13 @@ def export_openapi():
     # 出力先: backend/openapi.json
     output_path = Path(__file__).parent.parent / "openapi.json"
 
+    # ルート定義が存在するか確認
+    if not openapi_data.get("paths"):
+        print(
+            "Error: No paths found in OpenAPI schema. Application might not remain initialized correctly."
+        )
+        sys.exit(1)
+
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(openapi_data, f, indent=2, ensure_ascii=False)
 

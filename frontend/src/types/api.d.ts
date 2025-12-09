@@ -1413,6 +1413,85 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/withdrawals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Withdrawals
+     * @description 出庫履歴一覧を取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         lot_id: ロットIDでフィルタ
+     *         customer_id: 得意先IDでフィルタ
+     *         withdrawal_type: 出庫タイプでフィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         出庫履歴一覧
+     */
+    get: operations["list_withdrawals_api_withdrawals_get"];
+    put?: never;
+    /**
+     * Create Withdrawal
+     * @description 出庫を登録.
+     *
+     *     - ロットの現在数量から出庫数量を減算
+     *     - 利用可能数量（current - allocated - locked）以内であること
+     *     - stock_historyにWITHDRAWALトランザクションを記録
+     *
+     *     Args:
+     *         data: 出庫登録リクエスト
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成された出庫レコード
+     *
+     *     Raises:
+     *         HTTPException: バリデーションエラー
+     */
+    post: operations["create_withdrawal_api_withdrawals_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/withdrawals/{withdrawal_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Withdrawal
+     * @description 出庫詳細を取得.
+     *
+     *     Args:
+     *         withdrawal_id: 出庫ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         出庫詳細
+     *
+     *     Raises:
+     *         HTTPException: 出庫が見つからない場合
+     */
+    get: operations["get_withdrawal_api_withdrawals__withdrawal_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/customers": {
     parameters: {
       query?: never;
@@ -1531,6 +1610,26 @@ export interface paths {
      *     Returns summary with counts of created/updated/failed records.
      */
     post: operations["bulk_upsert_customers_api_masters_customers_bulk_upsert_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/delivery-places": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Delivery Places
+     * @description Return delivery places, optionally filtered by customer_id.
+     */
+    get: operations["list_delivery_places_api_masters_delivery_places_get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -2277,6 +2376,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/auth/login-users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Login Users
+     * @description Get list of active users for login page (no auth required).
+     *
+     *     This endpoint is intentionally public to allow the dev login page
+     *     to display a list of users without authentication.
+     *     Only returns minimal user info (id, username, display_name).
+     */
+    get: operations["get_login_users_api_auth_login_users_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/system/logs/client": {
     parameters: {
       query?: never;
@@ -2775,6 +2898,7 @@ export interface paths {
      *         wh: 倉庫コード（任意フィルタ）
      *         limit: 最大取得件数（デフォルト100）
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー
      *
      *     Returns:
      *         CandidateLotsResponse: 引当可能ロット一覧
@@ -4287,9 +4411,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -4305,9 +4427,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -4359,9 +4479,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
       /** Job Id */
       job_id: number;
@@ -4576,9 +4694,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -4620,9 +4736,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -4661,9 +4775,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: {
-        [key: string]: unknown;
-      } | null;
+      rule_parameters?: Record<string, never> | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -6305,16 +6417,12 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: {
-        [key: string]: unknown;
-      } | null;
+      old_values?: Record<string, never> | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: {
-        [key: string]: unknown;
-      } | null;
+      new_values?: Record<string, never> | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -6474,9 +6582,7 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: {
-        [key: string]: unknown;
-      } | null;
+      changes?: Record<string, never> | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -6983,9 +7089,7 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: {
-        [key: string]: unknown;
-      } | null;
+      data?: Record<string, never> | null;
     };
     /**
      * RoleCreate
@@ -7630,6 +7734,136 @@ export interface components {
        */
       warehouse_type?: string | null;
     };
+    /**
+     * WithdrawalCreate
+     * @description 出庫登録リクエスト.
+     */
+    WithdrawalCreate: {
+      /**
+       * Lot Id
+       * @description 出庫対象のロットID
+       */
+      lot_id: number;
+      /**
+       * Quantity
+       * @description 出庫数量（正の値）
+       */
+      quantity: number | string;
+      /** @description 出庫タイプ */
+      withdrawal_type: components["schemas"]["WithdrawalType"];
+      /**
+       * Customer Id
+       * @description 得意先ID
+       */
+      customer_id: number;
+      /**
+       * Delivery Place Id
+       * @description 納入場所ID
+       */
+      delivery_place_id: number;
+      /**
+       * Ship Date
+       * Format: date
+       * @description 出荷日
+       */
+      ship_date: string;
+      /**
+       * Reason
+       * @description 備考
+       */
+      reason?: string | null;
+      /**
+       * Reference Number
+       * @description 参照番号（SAP受注番号など）
+       */
+      reference_number?: string | null;
+      /**
+       * Withdrawn By
+       * @description 出庫実行者ユーザーID
+       */
+      withdrawn_by: number;
+    };
+    /**
+     * WithdrawalListResponse
+     * @description 出庫一覧レスポンス.
+     */
+    WithdrawalListResponse: {
+      /** Withdrawals */
+      withdrawals: components["schemas"]["WithdrawalResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+    };
+    /**
+     * WithdrawalResponse
+     * @description 出庫レスポンス.
+     */
+    WithdrawalResponse: {
+      /** Withdrawal Id */
+      withdrawal_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Lot Number */
+      lot_number: string;
+      /** Product Id */
+      product_id: number;
+      /** Product Name */
+      product_name: string;
+      /** Product Code */
+      product_code: string;
+      /** Quantity */
+      quantity: string;
+      withdrawal_type: components["schemas"]["WithdrawalType"];
+      /**
+       * Withdrawal Type Label
+       * @description 出庫タイプの日本語表示
+       */
+      withdrawal_type_label: string;
+      /** Customer Id */
+      customer_id: number;
+      /** Customer Name */
+      customer_name: string;
+      /** Customer Code */
+      customer_code: string;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Delivery Place Name */
+      delivery_place_name: string;
+      /** Delivery Place Code */
+      delivery_place_code: string;
+      /**
+       * Ship Date
+       * Format: date
+       */
+      ship_date: string;
+      /** Reason */
+      reason: string | null;
+      /** Reference Number */
+      reference_number: string | null;
+      /** Withdrawn By */
+      withdrawn_by: number;
+      /** Withdrawn By Name */
+      withdrawn_by_name?: string | null;
+      /**
+       * Withdrawn At
+       * Format: date-time
+       */
+      withdrawn_at: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * WithdrawalType
+     * @description 出庫タイプ.
+     * @enum {string}
+     */
+    WithdrawalType: "order_manual" | "internal_use" | "disposal" | "return" | "sample" | "other";
     /**
      * UserResponse
      * @description User response schema.
@@ -8472,9 +8706,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          [key: string]: unknown;
-        };
+        "application/json": Record<string, never>;
       };
     };
     responses: {
@@ -9651,6 +9883,110 @@ export interface operations {
       };
     };
   };
+  list_withdrawals_api_withdrawals_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description ロットIDでフィルタ */
+        lot_id?: number | null;
+        /** @description 得意先IDでフィルタ */
+        customer_id?: number | null;
+        /** @description 出庫タイプでフィルタ */
+        withdrawal_type?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WithdrawalListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_withdrawal_api_withdrawals_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WithdrawalCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WithdrawalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_withdrawal_api_withdrawals__withdrawal_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        withdrawal_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WithdrawalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_customers_api_masters_customers_get: {
     parameters: {
       query?: {
@@ -9894,6 +10230,40 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_delivery_places_api_masters_delivery_places_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        /** @description Filter by customer ID */
+        customer_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -11215,6 +11585,26 @@ export interface operations {
       };
     };
   };
+  get_login_users_api_auth_login_users_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
   create_client_log_api_system_logs_client_post: {
     parameters: {
       query?: never;
@@ -11854,9 +12244,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -12160,9 +12548,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -12191,9 +12577,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
     };

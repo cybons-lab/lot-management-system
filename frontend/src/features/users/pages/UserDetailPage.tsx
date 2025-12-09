@@ -3,7 +3,7 @@
  * User detail page with role assignment
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -36,6 +36,17 @@ export function UserDetailPage() {
 
   // Role assignment mutation
   const assignRolesMutation = useAssignUserRoles();
+
+  // Initialize selectedRoleIds when opening the form
+  useEffect(() => {
+    if (showRoleForm && user && roles) {
+      // Map role_codes to role_ids
+      const currentRoleIds = roles
+        .filter((role) => user.role_codes.includes(role.role_code))
+        .map((role) => role.id);
+      setSelectedRoleIds(currentRoleIds);
+    }
+  }, [showRoleForm, user, roles]);
 
   const handleAssignRoles = async () => {
     try {
@@ -163,24 +174,21 @@ export function UserDetailPage() {
               <p className={styles.roleForm.label}>ロールを選択</p>
               <div className={styles.roleForm.checkboxGroup}>
                 {roles?.map((role) => (
-                  <div key={role.role_id} className={styles.roleForm.checkboxItem}>
+                  <div key={role.id} className={styles.roleForm.checkboxItem}>
                     <input
                       type="checkbox"
-                      id={`role-${role.role_id}`}
-                      checked={selectedRoleIds.includes(role.role_id)}
+                      id={`role-${role.id}`}
+                      checked={selectedRoleIds.includes(role.id)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setSelectedRoleIds([...selectedRoleIds, role.role_id]);
+                          setSelectedRoleIds([...selectedRoleIds, role.id]);
                         } else {
-                          setSelectedRoleIds(selectedRoleIds.filter((id) => id !== role.role_id));
+                          setSelectedRoleIds(selectedRoleIds.filter((id) => id !== role.id));
                         }
                       }}
                       className={styles.roleForm.checkbox}
                     />
-                    <label
-                      htmlFor={`role-${role.role_id}`}
-                      className={styles.roleForm.checkboxLabel}
-                    >
+                    <label htmlFor={`role-${role.id}`} className={styles.roleForm.checkboxLabel}>
                       {role.role_name} ({role.role_code})
                       {role.description && (
                         <span className={styles.roleForm.description}>- {role.description}</span>

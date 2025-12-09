@@ -41,10 +41,12 @@ from app.presentation.api.routes.inventory import (
     inbound_plans_router,
     inventory_items_router,
     lots_router,
+    withdrawals_router,
 )
 from app.presentation.api.routes.masters import (
     customer_items_router,
     customers_router,
+    delivery_places_router,
     products_router,
     supplier_products_router,
     suppliers_router,
@@ -92,10 +94,12 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(inbound_plans_router, prefix=prefix)
     app.include_router(adjustments_router, prefix=prefix)
     app.include_router(inventory_items_router, prefix=prefix)
+    app.include_router(withdrawals_router, prefix=prefix)
 
     # Master data endpoints
     masters_prefix = f"{prefix}/masters"
     app.include_router(customers_router, prefix=masters_prefix)
+    app.include_router(delivery_places_router, prefix=masters_prefix)
     app.include_router(products_router, prefix=masters_prefix)
     app.include_router(suppliers_router, prefix=masters_prefix)
     app.include_router(supplier_products_router, prefix=masters_prefix)
@@ -146,11 +150,12 @@ __all__ = [
     "allocation_suggestions_router",
     "allocations_router",
     "warehouse_alloc_router",
-    # Inventory (4)
+    # Inventory (5)
     "adjustments_router",
     "inbound_plans_router",
     "inventory_items_router",
     "lots_router",
+    "withdrawals_router",
     # Forecasts (1)
     "forecasts_router",
     # Alerts (1)

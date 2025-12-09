@@ -1,4 +1,4 @@
-import { Box, Home, List, Package, Plus, Truck } from "lucide-react";
+import { ArrowUpFromLine, Box, History, Home, List, Package, Plus, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -121,6 +121,18 @@ export function InventoryPage() {
         title="在庫管理"
         actions={
           <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => navigate("/inventory/withdrawals")}>
+              <History className="mr-2 h-4 w-4" />
+              出庫履歴
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate("/inventory/withdrawals/new")}
+            >
+              <ArrowUpFromLine className="mr-2 h-4 w-4" />
+              出庫登録
+            </Button>
             <Button size="sm" variant="outline" onClick={() => navigate("/inventory/adhoc/new")}>
               <Package className="mr-2 h-4 w-4" />
               アドホックロット作成

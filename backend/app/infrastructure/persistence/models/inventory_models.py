@@ -48,6 +48,7 @@ class StockTransactionType(str, PyEnum):
     SHIPMENT = "shipment"
     ADJUSTMENT = "adjustment"
     RETURN = "return"
+    WITHDRAWAL = "withdrawal"
 
 
 class LotOriginType(str, PyEnum):

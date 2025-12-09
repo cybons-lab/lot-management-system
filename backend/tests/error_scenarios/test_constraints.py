@@ -4,7 +4,9 @@ from sqlalchemy.orm import Session
 from app.infrastructure.persistence.models import Role
 
 
-def test_duplicate_role_code(client: TestClient, db: Session):
+def test_duplicate_role_code(
+    client: TestClient, db: Session, superuser_token_headers: dict[str, str]
+):
     """Test creating a role with duplicate code."""
     # Create a role directly in DB
     role = Role(role_code="ROLE_TEST_DUP", role_name="Test Role Duplicate")
@@ -19,6 +21,7 @@ def test_duplicate_role_code(client: TestClient, db: Session):
             "role_name": "Another Name",
             "description": "Duplicate code",
         },
+        headers=superuser_token_headers,
     )
 
     # Should return 409 Conflict or 400 Bad Request depending on implementation

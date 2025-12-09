@@ -1374,7 +1374,6 @@
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
                 "type": "object",
                 "title": "Request"
               }
@@ -3403,6 +3402,204 @@
         }
       }
     },
+    "/api/withdrawals": {
+      "get": {
+        "tags": [
+          "withdrawals"
+        ],
+        "summary": "List Withdrawals",
+        "description": "出庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    customer_id: 得意先IDでフィルタ\n    withdrawal_type: 出庫タイプでフィルタ\n    db: データベースセッション\n\nReturns:\n    出庫履歴一覧",
+        "operationId": "list_withdrawals_api_withdrawals_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "スキップ件数",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "スキップ件数"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "取得件数上限",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "取得件数上限"
+          },
+          {
+            "name": "lot_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ロットIDでフィルタ",
+              "title": "Lot Id"
+            },
+            "description": "ロットIDでフィルタ"
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先IDでフィルタ",
+              "title": "Customer Id"
+            },
+            "description": "得意先IDでフィルタ"
+          },
+          {
+            "name": "withdrawal_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "出庫タイプでフィルタ",
+              "title": "Withdrawal Type"
+            },
+            "description": "出庫タイプでフィルタ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "withdrawals"
+        ],
+        "summary": "Create Withdrawal",
+        "description": "出庫を登録.\n\n- ロットの現在数量から出庫数量を減算\n- 利用可能数量（current - allocated - locked）以内であること\n- stock_historyにWITHDRAWALトランザクションを記録\n\nArgs:\n    data: 出庫登録リクエスト\n    db: データベースセッション\n\nReturns:\n    作成された出庫レコード\n\nRaises:\n    HTTPException: バリデーションエラー",
+        "operationId": "create_withdrawal_api_withdrawals_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawalCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/withdrawals/{withdrawal_id}": {
+      "get": {
+        "tags": [
+          "withdrawals"
+        ],
+        "summary": "Get Withdrawal",
+        "description": "出庫詳細を取得.\n\nArgs:\n    withdrawal_id: 出庫ID\n    db: データベースセッション\n\nReturns:\n    出庫詳細\n\nRaises:\n    HTTPException: 出庫が見つからない場合",
+        "operationId": "get_withdrawal_api_withdrawals__withdrawal_id__get",
+        "parameters": [
+          {
+            "name": "withdrawal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Withdrawal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/masters/customers": {
       "get": {
         "tags": [
@@ -3749,6 +3946,76 @@
                 "schema": {
                   "$ref": "#/components/schemas/BulkUpsertResponse"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/delivery-places": {
+      "get": {
+        "tags": [
+          "delivery-places"
+        ],
+        "summary": "List Delivery Places",
+        "description": "Return delivery places, optionally filtered by customer_id.",
+        "operationId": "list_delivery_places_api_masters_delivery_places_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by customer ID",
+              "title": "Customer Id"
+            },
+            "description": "Filter by customer ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -5699,6 +5966,23 @@
         ]
       }
     },
+    "/api/auth/login-users": {
+      "get": {
+        "summary": "Get Login Users",
+        "description": "Get list of active users for login page (no auth required).\n\nThis endpoint is intentionally public to allow the dev login page\nto display a list of users without authentication.\nOnly returns minimal user info (id, username, display_name).",
+        "operationId": "get_login_users_api_auth_login_users_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/system/logs/client": {
       "post": {
         "summary": "Create Client Log",
@@ -5799,6 +6083,11 @@
         "summary": "List Users",
         "description": "ユーザー一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    is_active: 有効フラグでフィルタ（オプション）\n    db: データベースセッション\n\nReturns:\n    ユーザーのリスト",
         "operationId": "list_users_api_users_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "skip",
@@ -5876,6 +6165,11 @@
         "summary": "Create User",
         "description": "ユーザー作成.\n\nArgs:\n    user: 作成するユーザー情報\n    db: データベースセッション\n\nReturns:\n    作成されたユーザー\n\nRaises:\n    HTTPException: ユーザー名またはメールアドレスが既に存在する場合",
         "operationId": "create_user_api_users_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -5918,6 +6212,11 @@
         "summary": "Get User",
         "description": "ユーザー詳細取得.\n\nArgs:\n    user_id: ユーザーID\n    db: データベースセッション\n\nReturns:\n    ユーザー詳細（ロール情報含む）\n\nRaises:\n    HTTPException: ユーザーが存在しない場合",
         "operationId": "get_user_api_users__user_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "user_id",
@@ -5959,6 +6258,11 @@
         "summary": "Update User",
         "description": "ユーザー更新.\n\nArgs:\n    user_id: ユーザーID\n    user: 更新するユーザー情報\n    db: データベースセッション\n\nReturns:\n    更新されたユーザー\n\nRaises:\n    HTTPException: ユーザーが存在しない場合",
         "operationId": "update_user_api_users__user_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "user_id",
@@ -6010,6 +6314,11 @@
         "summary": "Delete User",
         "description": "ユーザー削除.\n\nArgs:\n    user_id: ユーザーID\n    db: データベースセッション\n\nRaises:\n    HTTPException: ユーザーが存在しない場合",
         "operationId": "delete_user_api_users__user_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "user_id",
@@ -6046,6 +6355,11 @@
         "summary": "Assign User Roles",
         "description": "ユーザーへのロール割当.\n\nArgs:\n    user_id: ユーザーID\n    assignment: 割り当てるロールID\n    db: データベースセッション\n\nReturns:\n    ロール割り当て後のユーザー情報\n\nRaises:\n    HTTPException: ユーザーが存在しない場合",
         "operationId": "assign_user_roles_api_users__user_id__roles_patch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "user_id",
@@ -6099,6 +6413,11 @@
         "summary": "Export Users",
         "description": "Export users to CSV or Excel.",
         "operationId": "export_users_api_users_export_download_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "format",
@@ -6141,6 +6460,11 @@
         "summary": "List Roles",
         "description": "ロール一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    db: データベースセッション\n\nReturns:\n    ロールのリスト",
         "operationId": "list_roles_api_roles_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "skip",
@@ -6200,6 +6524,11 @@
         "summary": "Create Role",
         "description": "ロール作成.\n\nArgs:\n    role: 作成するロール情報\n    db: データベースセッション\n\nReturns:\n    作成されたロール\n\nRaises:\n    HTTPException: ロールコードが既に存在する場合",
         "operationId": "create_role_api_roles_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -6242,6 +6571,11 @@
         "summary": "Get Role",
         "description": "ロール詳細取得.\n\nArgs:\n    role_id: ロールID\n    db: データベースセッション\n\nReturns:\n    ロール詳細\n\nRaises:\n    HTTPException: ロールが存在しない場合",
         "operationId": "get_role_api_roles__role_id__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "role_id",
@@ -6283,6 +6617,11 @@
         "summary": "Update Role",
         "description": "ロール更新.\n\nArgs:\n    role_id: ロールID\n    role: 更新するロール情報\n    db: データベースセッション\n\nReturns:\n    更新されたロール\n\nRaises:\n    HTTPException: ロールが存在しない場合",
         "operationId": "update_role_api_roles__role_id__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "role_id",
@@ -6334,6 +6673,11 @@
         "summary": "Delete Role",
         "description": "ロール削除.\n\nArgs:\n    role_id: ロールID\n    db: データベースセッション\n\nRaises:\n    HTTPException: ロールが存在しない場合、またはロールが使用中の場合",
         "operationId": "delete_role_api_roles__role_id__delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "role_id",
@@ -6628,7 +6972,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Delete Assignment Api Assignments  Assignment Id  Delete"
                 }
               }
@@ -6718,7 +7061,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/admin/reset-database": {
@@ -6740,7 +7088,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/admin/diagnostics/allocatable-lots": {
@@ -6749,8 +7102,13 @@
           "admin"
         ],
         "summary": "Get Allocatable Lots",
-        "description": "診断API: 引当可能ロット一覧（読み取り専用）.\n\nv2.2: v_lot_details ビューを使用して在庫情報を取得。\nlot_current_stock ビューは廃止。\n\nArgs:\n    prod: 製品コード（任意フィルタ）\n    wh: 倉庫コード（任意フィルタ）\n    limit: 最大取得件数（デフォルト100）\n    db: データベースセッション\n\nReturns:\n    CandidateLotsResponse: 引当可能ロット一覧\n\nNote:\n    - 読み取り専用トランザクション\n    - available_quantity > 0 のみ\n    - 期限切れは除外",
+        "description": "診断API: 引当可能ロット一覧（読み取り専用）.\n\nv2.2: v_lot_details ビューを使用して在庫情報を取得。\nlot_current_stock ビューは廃止。\n\nArgs:\n    prod: 製品コード（任意フィルタ）\n    wh: 倉庫コード（任意フィルタ）\n    limit: 最大取得件数（デフォルト100）\n    db: データベースセッション\n    current_user: 現在のログインユーザー\n\nReturns:\n    CandidateLotsResponse: 引当可能ロット一覧\n\nNote:\n    - 読み取り専用トランザクション\n    - available_quantity > 0 のみ\n    - 期限切れは除外",
         "operationId": "get_allocatable_lots_api_admin_diagnostics_allocatable_lots_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "prod",
@@ -6836,7 +7194,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/admin/metrics/reset": {
@@ -6856,7 +7219,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/api/admin/healthcheck/db-counts": {
@@ -7039,7 +7407,6 @@
               "application/json": {
                 "schema": {
                   "type": "object",
-                  "additionalProperties": true,
                   "title": "Response Download Template Api Admin Master Import Template Get"
                 }
               }
@@ -7072,7 +7439,6 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Download Order Template Api Admin Master Import Template Order Get"
                 }
@@ -8512,8 +8878,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Adjusted Quantity"
@@ -8549,7 +8914,6 @@
           },
           "adjusted_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Adjusted Quantity"
           },
           "reason": {
@@ -8907,7 +9271,6 @@
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "allocation_type": {
@@ -9012,7 +9375,6 @@
           },
           "shortage_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Shortage Quantity"
           },
           "related_order_line_ids": {
@@ -9162,17 +9524,14 @@
           },
           "forecast_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "shortage_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Shortage Quantity"
           }
         },
@@ -9193,17 +9552,14 @@
         "properties": {
           "total_forecast_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Forecast Quantity"
           },
           "total_allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Allocated Quantity"
           },
           "total_shortage_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Shortage Quantity"
           },
           "per_key": {
@@ -9345,7 +9701,6 @@
           },
           "quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity",
             "description": "引当数量"
           },
@@ -9498,13 +9853,11 @@
           },
           "total_allocated": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Total Allocated",
             "default": "0"
           },
           "remaining_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Remaining Quantity",
             "default": "0"
           },
@@ -9634,7 +9987,6 @@
           "parameters": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -9659,7 +10011,6 @@
           "parameters": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -9746,7 +10097,6 @@
           "parameters": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -10091,7 +10441,6 @@
             "description": "ルール種別（allocation/expiry_warning/kanban/other）"
           },
           "rule_parameters": {
-            "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
             "description": "ルールパラメータ（JSON）"
@@ -10153,7 +10502,6 @@
             "description": "ルール種別（allocation/expiry_warning/kanban/other）"
           },
           "rule_parameters": {
-            "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
             "description": "ルールパラメータ（JSON）"
@@ -10221,7 +10569,6 @@
           "rule_parameters": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -10260,17 +10607,14 @@
           },
           "current_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Current Quantity"
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity",
             "description": "引当可能数量"
           },
@@ -11529,8 +11873,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -11544,8 +11887,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -11580,8 +11922,7 @@
           "remaining_lot_qty": {
             "anyOf": [
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -11618,8 +11959,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Expected Quantity"
@@ -11676,7 +12016,6 @@
           },
           "expected_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Expected Quantity"
           },
           "expected_expiry_date": {
@@ -11722,13 +12061,11 @@
           },
           "order_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
             "description": "受注数量"
           },
           "already_allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Already Allocated Quantity",
             "description": "既存引当数量",
             "default": "0"
@@ -11769,7 +12106,6 @@
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity",
             "description": "引当数量"
           },
@@ -11874,8 +12210,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Forecast Quantity"
@@ -11987,8 +12322,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Forecast Quantity"
@@ -12171,7 +12505,6 @@
           },
           "forecast_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "unit": {
@@ -12335,7 +12668,6 @@
           },
           "forecast_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "unit": {
@@ -12452,8 +12784,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -12589,8 +12920,7 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -12620,7 +12950,6 @@
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "allocation_type": {
@@ -12807,8 +13136,7 @@
           "total_quantity": {
             "anyOf": [
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -12893,8 +13221,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Planned Quantity"
@@ -12952,7 +13279,6 @@
           },
           "planned_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Planned Quantity"
           },
           "unit": {
@@ -13102,8 +13428,7 @@
           "total_quantity": {
             "anyOf": [
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -13196,17 +13521,14 @@
           },
           "total_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Available Quantity"
           },
           "lot_count": {
@@ -13253,7 +13575,6 @@
           },
           "total_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "lot_count": {
@@ -13293,7 +13614,6 @@
           },
           "total_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "lot_count": {
@@ -13333,28 +13653,23 @@
           },
           "total_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Available Quantity"
           },
           "soft_allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Soft Allocated Quantity",
             "default": "0"
           },
           "hard_allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Hard Allocated Quantity",
             "default": "0"
           },
@@ -13572,8 +13887,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Current Quantity",
@@ -13585,8 +13899,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Allocated Quantity",
@@ -13598,8 +13911,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Locked Quantity",
@@ -13731,8 +14043,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -13829,19 +14140,16 @@
           },
           "current_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Current Quantity",
             "default": "0"
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
             "default": "0"
           },
           "locked_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Locked Quantity",
             "default": "0"
           },
@@ -14056,8 +14364,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -14071,8 +14378,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -14251,7 +14557,6 @@
           "old_values": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -14264,7 +14569,6 @@
           "new_values": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -14542,7 +14846,6 @@
           "changes": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -14651,8 +14954,7 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
+                "type": "string"
               }
             ],
             "title": "Order Quantity",
@@ -14670,8 +14972,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -14912,7 +15213,6 @@
           },
           "order_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
             "description": "受注数量"
           },
@@ -14925,8 +15225,7 @@
           "converted_quantity": {
             "anyOf": [
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -15192,7 +15491,6 @@
           },
           "allocated_quantity": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
             "description": "引当済数量",
             "default": "0"
@@ -15690,7 +15988,6 @@
           "data": {
             "anyOf": [
               {
-                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -15952,8 +16249,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Quantity Change"
@@ -15964,8 +16260,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Quantity After"
@@ -16026,12 +16321,10 @@
           },
           "quantity_change": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity Change"
           },
           "quantity_after": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity After"
           },
           "reference_type": {
@@ -16301,8 +16594,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               }
             ],
             "title": "Factor",
@@ -16352,7 +16644,6 @@
           },
           "factor": {
             "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Factor",
             "description": "換算係数"
           },
@@ -16391,8 +16682,7 @@
                 "type": "number"
               },
               {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+                "type": "string"
               },
               {
                 "type": "null"
@@ -16964,6 +17254,277 @@
         "type": "object",
         "title": "WarehouseUpdate",
         "description": "Update warehouse request."
+      },
+      "WithdrawalCreate": {
+        "properties": {
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id",
+            "description": "出庫対象のロットID"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Quantity",
+            "description": "出庫数量（正の値）"
+          },
+          "withdrawal_type": {
+            "$ref": "#/components/schemas/WithdrawalType",
+            "description": "出庫タイプ"
+          },
+          "customer_id": {
+            "type": "integer",
+            "title": "Customer Id",
+            "description": "得意先ID"
+          },
+          "delivery_place_id": {
+            "type": "integer",
+            "title": "Delivery Place Id",
+            "description": "納入場所ID"
+          },
+          "ship_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Ship Date",
+            "description": "出荷日"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "備考"
+          },
+          "reference_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Number",
+            "description": "参照番号（SAP受注番号など）"
+          },
+          "withdrawn_by": {
+            "type": "integer",
+            "title": "Withdrawn By",
+            "description": "出庫実行者ユーザーID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lot_id",
+          "quantity",
+          "withdrawal_type",
+          "customer_id",
+          "delivery_place_id",
+          "ship_date",
+          "withdrawn_by"
+        ],
+        "title": "WithdrawalCreate",
+        "description": "出庫登録リクエスト."
+      },
+      "WithdrawalListResponse": {
+        "properties": {
+          "withdrawals": {
+            "items": {
+              "$ref": "#/components/schemas/WithdrawalResponse"
+            },
+            "type": "array",
+            "title": "Withdrawals"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "withdrawals",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "WithdrawalListResponse",
+        "description": "出庫一覧レスポンス."
+      },
+      "WithdrawalResponse": {
+        "properties": {
+          "withdrawal_id": {
+            "type": "integer",
+            "title": "Withdrawal Id"
+          },
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id"
+          },
+          "lot_number": {
+            "type": "string",
+            "title": "Lot Number"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "product_code": {
+            "type": "string",
+            "title": "Product Code"
+          },
+          "quantity": {
+            "type": "string",
+            "title": "Quantity"
+          },
+          "withdrawal_type": {
+            "$ref": "#/components/schemas/WithdrawalType"
+          },
+          "withdrawal_type_label": {
+            "type": "string",
+            "title": "Withdrawal Type Label",
+            "description": "出庫タイプの日本語表示"
+          },
+          "customer_id": {
+            "type": "integer",
+            "title": "Customer Id"
+          },
+          "customer_name": {
+            "type": "string",
+            "title": "Customer Name"
+          },
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code"
+          },
+          "delivery_place_id": {
+            "type": "integer",
+            "title": "Delivery Place Id"
+          },
+          "delivery_place_name": {
+            "type": "string",
+            "title": "Delivery Place Name"
+          },
+          "delivery_place_code": {
+            "type": "string",
+            "title": "Delivery Place Code"
+          },
+          "ship_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Ship Date"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reference_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Number"
+          },
+          "withdrawn_by": {
+            "type": "integer",
+            "title": "Withdrawn By"
+          },
+          "withdrawn_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawn By Name"
+          },
+          "withdrawn_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Withdrawn At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "withdrawal_id",
+          "lot_id",
+          "lot_number",
+          "product_id",
+          "product_name",
+          "product_code",
+          "quantity",
+          "withdrawal_type",
+          "withdrawal_type_label",
+          "customer_id",
+          "customer_name",
+          "customer_code",
+          "delivery_place_id",
+          "delivery_place_name",
+          "delivery_place_code",
+          "ship_date",
+          "reason",
+          "reference_number",
+          "withdrawn_by",
+          "withdrawn_at",
+          "created_at"
+        ],
+        "title": "WithdrawalResponse",
+        "description": "出庫レスポンス."
+      },
+      "WithdrawalType": {
+        "type": "string",
+        "enum": [
+          "order_manual",
+          "internal_use",
+          "disposal",
+          "return",
+          "sample",
+          "other"
+        ],
+        "title": "WithdrawalType",
+        "description": "出庫タイプ."
       },
       "app__presentation__schemas__auth__auth_schemas__UserResponse": {
         "properties": {

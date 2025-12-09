@@ -11,7 +11,7 @@ import { http } from "@/shared/api/http-client";
  * Role
  */
 export interface Role {
-  role_id: number;
+  id: number;
   role_code: string;
   role_name: string;
   description: string | null;

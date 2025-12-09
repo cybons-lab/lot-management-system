@@ -17,9 +17,9 @@ import {
 import { useAuth } from "@/features/auth/AuthContext";
 import { http } from "@/shared/api/http-client";
 
-// Minimal User Type for Selection (API returns user_id, not id)
+// Minimal User Type for Selection (API returns id, not user_id)
 interface UserSummary {
-  user_id: number;
+  id: number;
   username: string;
   display_name: string;
 }
@@ -31,11 +31,11 @@ export function LoginPage() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
-  // Load users for selection
+  // Load users for selection (public endpoint, no auth required)
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const data = await http.get<UserSummary[]>("users");
+        const data = await http.get<UserSummary[]>("auth/login-users");
         setUsers(data);
       } catch (error) {
         console.error("Failed to fetch users", error);
@@ -56,7 +56,7 @@ export function LoginPage() {
     if (!selectedUserId) return;
 
     const userId = parseInt(selectedUserId, 10);
-    const selectedUser = users.find((u) => u.user_id === userId);
+    const selectedUser = users.find((u) => u.id === userId);
 
     setIsLoading(true);
     try {
@@ -94,7 +94,7 @@ export function LoginPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {users.map((u) => (
-                    <SelectItem key={u.user_id} value={String(u.user_id)}>
+                    <SelectItem key={u.id} value={String(u.id)}>
                       {u.display_name} ({u.username})
                     </SelectItem>
                   ))}

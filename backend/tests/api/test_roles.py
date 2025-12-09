@@ -37,7 +37,7 @@ def test_db(db: Session):
 # ===== GET /api/roles Tests =====
 
 
-def test_list_roles_success(test_db: Session):
+def test_list_roles_success(test_db: Session, superuser_token_headers: dict[str, str]):
     """Test listing roles."""
     client = TestClient(app)
 
@@ -47,7 +47,7 @@ def test_list_roles_success(test_db: Session):
     test_db.add_all([r1, r2])
     test_db.commit()
 
-    response = client.get("/api/roles")
+    response = client.get("/api/roles", headers=superuser_token_headers)
     assert response.status_code == 200
     data = response.json()
     codes = [r["role_code"] for r in data]
@@ -58,7 +58,7 @@ def test_list_roles_success(test_db: Session):
 # ===== GET /api/roles/{role_id} Tests =====
 
 
-def test_get_role_success(test_db: Session):
+def test_get_role_success(test_db: Session, superuser_token_headers: dict[str, str]):
     """Test getting a single role."""
     client = TestClient(app)
 
@@ -66,23 +66,23 @@ def test_get_role_success(test_db: Session):
     test_db.add(role)
     test_db.commit()
 
-    response = client.get(f"/api/roles/{role.id}")
+    response = client.get(f"/api/roles/{role.id}", headers=superuser_token_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["role_code"] == "TEST"
 
 
-def test_get_role_not_found(test_db: Session):
+def test_get_role_not_found(test_db: Session, superuser_token_headers: dict[str, str]):
     """Test getting a non-existent role."""
     client = TestClient(app)
-    response = client.get("/api/roles/99999")
+    response = client.get("/api/roles/99999", headers=superuser_token_headers)
     assert response.status_code == 404
 
 
 # ===== POST /api/roles Tests =====
 
 
-def test_create_role_success(test_db: Session):
+def test_create_role_success(test_db: Session, superuser_token_headers: dict[str, str]):
     """Test creating a new role."""
     client = TestClient(app)
 
@@ -92,7 +92,7 @@ def test_create_role_success(test_db: Session):
         "description": "Description",
     }
 
-    response = client.post("/api/roles", json=role_data)
+    response = client.post("/api/roles", json=role_data, headers=superuser_token_headers)
     assert response.status_code == 201
     data = response.json()
     assert data["role_code"] == "NEW_ROLE"
@@ -103,7 +103,7 @@ def test_create_role_success(test_db: Session):
     assert db_role is not None
 
 
-def test_create_role_duplicate_code(test_db: Session):
+def test_create_role_duplicate_code(test_db: Session, superuser_token_headers: dict[str, str]):
     """Test creating role with duplicate code."""
     client = TestClient(app)
 
@@ -116,14 +116,14 @@ def test_create_role_duplicate_code(test_db: Session):
         "role_name": "Duplicate",
     }
 
-    response = client.post("/api/roles", json=role_data)
+    response = client.post("/api/roles", json=role_data, headers=superuser_token_headers)
     assert response.status_code == 409
 
 
 # ===== PUT /api/roles/{role_id} Tests =====
 
 
-def test_update_role_success(test_db: Session):
+def test_update_role_success(test_db: Session, superuser_token_headers: dict[str, str]):
     """Test updating a role."""
     client = TestClient(app)
 
@@ -136,7 +136,9 @@ def test_update_role_success(test_db: Session):
         "description": "Updated Desc",
     }
 
-    response = client.put(f"/api/roles/{role.id}", json=update_data)
+    response = client.put(
+        f"/api/roles/{role.id}", json=update_data, headers=superuser_token_headers
+    )
     assert response.status_code == 200
     data = response.json()
     assert data["role_name"] == "New Name"
@@ -146,7 +148,7 @@ def test_update_role_success(test_db: Session):
 # ===== DELETE /api/roles/{role_id} Tests =====
 
 
-def test_delete_role_success(test_db: Session):
+def test_delete_role_success(test_db: Session, superuser_token_headers: dict[str, str]):
     """Test deleting a role."""
     client = TestClient(app)
 
@@ -154,7 +156,7 @@ def test_delete_role_success(test_db: Session):
     test_db.add(role)
     test_db.commit()
 
-    response = client.delete(f"/api/roles/{role.id}")
+    response = client.delete(f"/api/roles/{role.id}", headers=superuser_token_headers)
     assert response.status_code == 204
 
     # Verify deletion

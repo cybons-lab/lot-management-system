@@ -62,6 +62,19 @@ def get_current_admin(
     return user
 
 
+def get_current_user_or_above(
+    user: User = Depends(get_current_user),
+) -> User:
+    """Get current user if admin or user (not viewer), otherwise raise 403."""
+    roles = [ur.role.role_code for ur in user.user_roles]
+    if "admin" not in roles and "user" not in roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User or Admin privileges required",
+        )
+    return user
+
+
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     """Simple login by User ID or Username."""
@@ -110,3 +123,22 @@ def get_me(current_user: User = Depends(get_current_user)):
         "display_name": current_user.display_name,
         "roles": roles,
     }
+
+
+@router.get("/login-users")
+def get_login_users(db: Session = Depends(get_db)):
+    """Get list of active users for login page (no auth required).
+
+    This endpoint is intentionally public to allow the dev login page
+    to display a list of users without authentication.
+    Only returns minimal user info (id, username, display_name).
+    """
+    users = db.query(User).filter(User.is_active.is_(True)).all()
+    return [
+        {
+            "id": user.id,
+            "username": user.username,
+            "display_name": user.display_name,
+        }
+        for user in users
+    ]

@@ -252,7 +252,7 @@ def master_data(db):
         Supplier,
         Warehouse,
     )
-    from app.infrastructure.persistence.models.auth_models import User
+    from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
 
     # Create Warehouse
     warehouse = Warehouse(
@@ -292,6 +292,19 @@ def master_data(db):
     )
     db.add(delivery_place)
 
+    # Create Roles if not exist
+    admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+    if not admin_role:
+        admin_role = Role(role_code="admin", role_name="Administrator")
+        db.add(admin_role)
+
+    user_role = db.query(Role).filter(Role.role_code == "user").first()
+    if not user_role:
+        user_role = Role(role_code="user", role_name="User")
+        db.add(user_role)
+
+    db.flush()
+
     # Create User
     user = User(
         username="test_user_common",
@@ -301,7 +314,10 @@ def master_data(db):
         is_active=True,
     )
     db.add(user)
+    db.flush()
 
+    # Assign user role
+    db.add(UserRole(user_id=user.id, role_id=user_role.id))
     db.flush()
 
     return {
@@ -318,7 +334,14 @@ def master_data(db):
 @pytest.fixture
 def normal_user(db):
     """Create a normal test user."""
-    from app.infrastructure.persistence.models.auth_models import User
+    from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
+
+    # Ensure user role exists
+    user_role = db.query(Role).filter(Role.role_code == "user").first()
+    if not user_role:
+        user_role = Role(role_code="user", role_name="User")
+        db.add(user_role)
+        db.flush()
 
     user = User(
         username="test_user_normal",
@@ -328,6 +351,11 @@ def normal_user(db):
         is_active=True,
     )
     db.add(user)
+    db.flush()
+
+    # Assign role
+    db.add(UserRole(user_id=user.id, role_id=user_role.id))
+
     db.commit()
     db.refresh(user)
     yield user
@@ -339,7 +367,14 @@ def normal_user(db):
 @pytest.fixture
 def superuser(db):
     """Create a superuser for testing."""
-    from app.infrastructure.persistence.models.auth_models import User
+    from app.infrastructure.persistence.models.auth_models import Role, User, UserRole
+
+    # Ensure admin role exists
+    admin_role = db.query(Role).filter(Role.role_code == "admin").first()
+    if not admin_role:
+        admin_role = Role(role_code="admin", role_name="Administrator")
+        db.add(admin_role)
+        db.flush()
 
     user = User(
         username="test_superuser",
@@ -349,6 +384,11 @@ def superuser(db):
         is_active=True,
     )
     db.add(user)
+    db.flush()
+
+    # Assign admin role
+    db.add(UserRole(user_id=user.id, role_id=admin_role.id))
+
     db.commit()
     db.refresh(user)
     yield user

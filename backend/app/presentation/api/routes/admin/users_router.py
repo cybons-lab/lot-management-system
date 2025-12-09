@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.application.services.auth.user_service import UserService
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.system.users_schema import (
     UserCreate,
     UserResponse,
@@ -15,7 +16,7 @@ from app.presentation.schemas.system.users_schema import (
 )
 
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_admin)])
 
 
 @router.get("", response_model=list[UserResponse])
