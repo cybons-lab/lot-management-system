@@ -28,6 +28,7 @@ import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { ROUTES } from "@/constants/routes";
 import { generateAllocationSuggestions } from "@/features/allocations/api";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
 
 export function ForecastListPage() {
   const navigate = useNavigate();
@@ -220,7 +221,7 @@ export function ForecastListPage() {
   void navigate;
 
   return (
-    <div className="space-y-6 p-6">
+    <PageContainer>
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">フォーキャスト一覧</h2>
@@ -332,6 +333,6 @@ export function ForecastListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   );
 }

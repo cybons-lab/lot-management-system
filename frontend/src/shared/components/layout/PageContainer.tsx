@@ -1,42 +1,21 @@
 /**
- * ページコンテナコンポーネント
+ * PageContainer.tsx
  *
- * ページ全体のレイアウトを統一
+ * アプリケーション全体の標準ページコンテナ
+ * - 最大幅の制限 (1600px)
+ * - 中央寄せ
+ * - 標準的なパディング (px-6 py-6)
  */
 
-import React from "react";
+import { cn } from "@/lib/utils";
 
 interface PageContainerProps {
-  /** 子要素 */
   children: React.ReactNode;
-  /** 最大幅を制限するか */
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
-  /** 追加のクラス名 */
-  className?: string;
+  className?: string; // 追加のスタイルが必要な場合（背景色など）
 }
 
-/**
- * ページコンテナコンポーネント
- *
- * @example
- * ```tsx
- * <PageContainer maxWidth="2xl">
- *   <PageHeader title="ロット管理" />
- *   <div>コンテンツ...</div>
- * </PageContainer>
- * ```
- */
-export function PageContainer({ children, maxWidth = "full", className = "" }: PageContainerProps) {
-  const maxWidthClass = {
-    sm: "max-w-screen-sm",
-    md: "max-w-screen-md",
-    lg: "max-w-screen-lg",
-    xl: "max-w-screen-xl",
-    "2xl": "max-w-screen-2xl",
-    full: "max-w-full",
-  }[maxWidth];
-
+export function PageContainer({ children, className }: PageContainerProps) {
   return (
-    <div className={`container mx-auto px-4 py-6 ${maxWidthClass} ${className}`}>{children}</div>
+    <div className={cn("mx-auto max-w-[1600px] space-y-6 px-6 py-6", className)}>{children}</div>
   );
 }

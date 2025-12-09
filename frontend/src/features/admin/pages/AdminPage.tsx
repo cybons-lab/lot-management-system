@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui";
 import { http } from "@/shared/api/http-client";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
 
 interface InventorySyncResult {
   success: boolean;
@@ -74,7 +75,7 @@ export function AdminPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <div>
         <h2 className="text-destructive text-3xl font-bold tracking-tight">管理機能</h2>
         <p className="text-muted-foreground">システム管理と危険な操作を実行できます</p>
@@ -185,6 +186,6 @@ export function AdminPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   );
 }

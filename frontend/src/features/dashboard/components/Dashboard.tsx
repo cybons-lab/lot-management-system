@@ -3,9 +3,11 @@ import { DashboardStats } from "./DashboardStats";
 import { MasterChangeLogWidget } from "./MasterChangeLogWidget";
 import * as styles from "./styles";
 
+import { PageContainer } from "@/shared/components/layout/PageContainer";
+
 export function Dashboard() {
   return (
-    <div className="mx-auto max-w-[1600px] px-6 py-6 pb-20">
+    <PageContainer>
       <div className={styles.container}>
         <div className={styles.header.root}>
           <h2 className={styles.header.title}>ダッシュボード</h2>
@@ -24,6 +26,6 @@ export function Dashboard() {
           <MasterChangeLogWidget />
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

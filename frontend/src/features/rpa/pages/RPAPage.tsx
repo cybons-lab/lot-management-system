@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useExecuteMaterialDeliveryDocument } from "../hooks";
 
 import { Button, Input } from "@/components/ui";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function RPAPage() {
@@ -75,7 +76,7 @@ export function RPAPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <PageContainer>
       <PageHeader title="RPA" subtitle="素材納品書発行などのRPA処理を実行" />
 
       {/* メインコンテンツ */}
@@ -159,6 +160,6 @@ export function RPAPage() {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }
