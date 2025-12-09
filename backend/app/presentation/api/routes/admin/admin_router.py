@@ -23,6 +23,7 @@ from app.infrastructure.persistence.models import (
     Warehouse,
 )
 from app.presentation.api.deps import get_db
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.admin.admin_schema import (
     DashboardStatsResponse,
     FullSampleDataRequest,
@@ -32,7 +33,7 @@ from app.presentation.schemas.common.base import ResponseBase
 from app.presentation.schemas.system.users_schema import UserCreate
 
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(get_current_admin)])
 logger = logging.getLogger(__name__)
 
 

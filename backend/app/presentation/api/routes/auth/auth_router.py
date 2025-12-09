@@ -62,6 +62,19 @@ def get_current_admin(
     return user
 
 
+def get_current_user_or_above(
+    user: User = Depends(get_current_user),
+) -> User:
+    """Get current user if admin or user (not viewer), otherwise raise 403."""
+    roles = [ur.role.role_code for ur in user.user_roles]
+    if "admin" not in roles and "user" not in roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User or Admin privileges required",
+        )
+    return user
+
+
 @router.post("/login", response_model=TokenResponse)
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     """Simple login by User ID or Username."""
