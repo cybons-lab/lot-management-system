@@ -44,6 +44,7 @@ from app.presentation.api.routes.inventory import (
     withdrawals_router,
 )
 from app.presentation.api.routes.masters import (
+    customer_item_delivery_settings_router,
     customer_items_router,
     customers_router,
     delivery_places_router,
@@ -106,6 +107,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(uom_conversions_router, prefix=masters_prefix)
     app.include_router(warehouses_router, prefix=masters_prefix)
     app.include_router(customer_items_router, prefix=masters_prefix)
+    app.include_router(customer_item_delivery_settings_router, prefix=masters_prefix)
 
     # Auth & User management
     app.include_router(auth_router, prefix=f"{prefix}/auth")
@@ -132,7 +134,8 @@ def register_all_routers(app: FastAPI) -> None:
 
 
 __all__ = [
-    # Masters (7)
+    # Masters (8)
+    "customer_item_delivery_settings_router",
     "customer_items_router",
     "customers_router",
     "products_router",

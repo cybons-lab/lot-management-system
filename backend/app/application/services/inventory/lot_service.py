@@ -362,13 +362,6 @@ class LotService:
             if not supplier:
                 raise LotSupplierNotFoundError(lot_create.supplier_code)
 
-        # For ORDER origin type, supplier is mandatory
-        if lot_create.origin_type == LotOriginType.ORDER:
-            if not supplier:
-                raise LotValidationError(
-                    "supplier_code is required for order-linked lots (origin_type=order)"
-                )
-
         warehouse_id: int | None = None
         if lot_create.warehouse_id is not None:
             warehouse = (

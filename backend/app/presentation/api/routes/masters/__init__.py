@@ -1,5 +1,8 @@
 """Masters API routes subpackage."""
 
+from app.presentation.api.routes.masters.customer_item_delivery_settings_router import (
+    router as customer_item_delivery_settings_router,
+)
 from app.presentation.api.routes.masters.customer_items_router import (
     router as customer_items_router,
 )
@@ -19,6 +22,7 @@ from app.presentation.api.routes.masters.warehouses_router import router as ware
 
 
 __all__ = [
+    "customer_item_delivery_settings_router",
     "customer_items_router",
     "customers_router",
     "delivery_places_router",

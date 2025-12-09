@@ -12,6 +12,7 @@ interface CustomerItemsTableProps {
   isLoading: boolean;
   isDeleting: boolean;
   onDelete: (customerId: number, externalProductCode: string) => void;
+  onRowClick?: (item: CustomerItem) => void;
 }
 
 function TableHeader() {
@@ -51,11 +52,12 @@ interface TableRowProps {
   item: CustomerItem;
   isDeleting: boolean;
   onDelete: (customerId: number, externalProductCode: string) => void;
+  onRowClick?: (item: CustomerItem) => void;
 }
 
-function TableRow({ item, isDeleting, onDelete }: TableRowProps) {
+function TableRow({ item, isDeleting, onDelete, onRowClick }: TableRowProps) {
   return (
-    <tr className="hover:bg-gray-50">
+    <tr className="cursor-pointer hover:bg-gray-50" onClick={() => onRowClick?.(item)}>
       <td className="px-6 py-4 text-sm text-gray-900">
         <div className="flex items-center gap-2">
           <Building2 className="h-4 w-4 shrink-0 text-orange-600" />
@@ -102,7 +104,10 @@ function TableRow({ item, isDeleting, onDelete }: TableRowProps) {
         <Button
           variant="destructive"
           size="sm"
-          onClick={() => onDelete(item.customer_id, item.external_product_code)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(item.customer_id, item.external_product_code);
+          }}
           disabled={isDeleting}
         >
           削除
@@ -117,6 +122,7 @@ export function CustomerItemsTable({
   isLoading,
   isDeleting,
   onDelete,
+  onRowClick,
 }: CustomerItemsTableProps) {
   return (
     <div className="rounded-lg border bg-white shadow-sm">
@@ -142,6 +148,7 @@ export function CustomerItemsTable({
                   item={item}
                   isDeleting={isDeleting}
                   onDelete={onDelete}
+                  onRowClick={onRowClick}
                 />
               ))}
             </tbody>

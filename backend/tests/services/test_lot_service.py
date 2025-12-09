@@ -63,6 +63,7 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
         expiry_date=date.today() + timedelta(days=10),
         unit="EA",
         current_quantity=3,
+        origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
     lot_b = Lot(
         supplier_id=sup.id,
@@ -73,6 +74,7 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
         expiry_date=date.today() + timedelta(days=20),
         unit="EA",
         current_quantity=2,
+        origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
     # W2にも1つ（フィルタで除外される想定）
     lot_c = Lot(
@@ -84,6 +86,7 @@ def test_get_fefo_candidates_filters_and_sorts(db_session: Session, setup_lot_te
         expiry_date=date.today() + timedelta(days=5),
         unit="EA",
         current_quantity=9,
+        origin_type="order",  # Explicitly set for FEFO candidate filtering
     )
     db_session.add_all([lot_a, lot_b, lot_c])
     db_session.commit()
