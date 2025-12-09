@@ -15,6 +15,8 @@ import {
   type AllocationCommitRequest,
 } from "../../api";
 
+import { getAllocationQueryKeys } from "@/shared/constants/query-keys";
+
 /**
  * Create manual allocation suggestion (preview only)
  */
@@ -42,12 +44,11 @@ export const useCommitAllocation = () => {
   return useMutation({
     mutationFn: (data: AllocationCommitRequest) => commitAllocation(data),
     onSuccess: () => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ["allocations"] });
-      queryClient.invalidateQueries({ queryKey: ["allocationCandidates"] });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["lots"] });
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      // Invalidate all allocation-related queries (inventory, orders, dashboard, etc.)
+      const allocationKeys = getAllocationQueryKeys();
+      allocationKeys.forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
     },
   });
 };
@@ -61,12 +62,11 @@ export const useCancelAllocation = () => {
   return useMutation({
     mutationFn: (allocationId: number) => cancelAllocation(allocationId),
     onSuccess: () => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: ["allocations"] });
-      queryClient.invalidateQueries({ queryKey: ["allocationCandidates"] });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["lots"] });
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      // Invalidate all allocation-related queries (inventory, orders, dashboard, etc.)
+      const allocationKeys = getAllocationQueryKeys();
+      allocationKeys.forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
     },
   });
 };

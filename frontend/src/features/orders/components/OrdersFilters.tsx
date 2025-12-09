@@ -1,4 +1,4 @@
-import { Search } from "lucide-react";
+import { Crown, Search } from "lucide-react";
 
 import {
   Button,
@@ -106,7 +106,7 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
           </Select>
         </div>
 
-        <div className="flex items-end space-x-2 pb-2">
+        <div className="flex flex-wrap items-end gap-2 pb-2">
           <div className="flex items-center space-x-2">
             <input
               type="checkbox"
@@ -117,6 +117,22 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
             />
             <label htmlFor="unallocatedOnly" className="text-sm font-medium text-slate-700">
               未引当のみ表示
+            </label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="primarySuppliersOnly"
+              checked={!!filters.values.primarySuppliersOnly}
+              onChange={(e) => filters.set("primarySuppliersOnly", e.target.checked)}
+              className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
+            />
+            <label
+              htmlFor="primarySuppliersOnly"
+              className="flex items-center gap-1 text-sm font-medium text-slate-700"
+            >
+              <Crown className="h-3.5 w-3.5 text-amber-600" />
+              主担当の仕入先のみ
             </label>
           </div>
           <ViewModeSelector viewMode={viewMode} onViewModeChange={onViewModeChange} />

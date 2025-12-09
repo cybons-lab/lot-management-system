@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import * as ordersApi from "@/features/orders/api";
 import type { WarehouseAllocationItem } from "@/features/orders/api";
+import { getAllocationQueryKeys } from "@/shared/constants/query-keys";
 import type { CandidateLotItem, ManualAllocationSavePayload } from "@/shared/types/schema";
 
 // Temporary alias for missing type
@@ -107,8 +108,11 @@ export function useCreateAllocations(orderLineId: number | undefined) {
       }
     },
     onSettled: () => {
-      // 最終的にサーバーデータで更新
-      qc.invalidateQueries({ queryKey: ["orders"] });
+      // 最終的にサーバーデータで更新 - 包括的に無効化
+      const allocationKeys = getAllocationQueryKeys();
+      allocationKeys.forEach((key) => {
+        qc.invalidateQueries({ queryKey: key });
+      });
       if (orderLineId) {
         qc.invalidateQueries({ queryKey: keyCandidates(orderLineId) });
       }
@@ -129,7 +133,11 @@ export function useCancelAllocations(orderLineId: number | undefined) {
       return ordersApi.cancelLotAllocations(orderLineId, payload);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["orders"] });
+      // 包括的に無効化
+      const allocationKeys = getAllocationQueryKeys();
+      allocationKeys.forEach((key) => {
+        qc.invalidateQueries({ queryKey: key });
+      });
       if (orderLineId) {
         qc.invalidateQueries({ queryKey: keyCandidates(orderLineId) });
       }
@@ -164,7 +172,11 @@ export function useSaveWarehouseAllocations(orderLineId: number | undefined) {
       }
     },
     onSettled: () => {
-      qc.invalidateQueries({ queryKey: ["orders"] });
+      // 包括的に無効化
+      const allocationKeys = getAllocationQueryKeys();
+      allocationKeys.forEach((key) => {
+        qc.invalidateQueries({ queryKey: key });
+      });
     },
   });
 }
@@ -195,7 +207,11 @@ export function useReMatchOrder(orderId: number | undefined) {
       return ordersApi.reMatchOrder(orderId);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["orders"] });
+      // 包括的に無効化
+      const allocationKeys = getAllocationQueryKeys();
+      allocationKeys.forEach((key) => {
+        qc.invalidateQueries({ queryKey: key });
+      });
     },
   });
 }

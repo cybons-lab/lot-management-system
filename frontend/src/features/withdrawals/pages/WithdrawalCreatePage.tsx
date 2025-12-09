@@ -9,7 +9,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 
 import type { WithdrawalCreateRequest } from "../api";
-import { WithdrawalForm } from "../components/WithdrawalForm";
+import { WithdrawalFormFiltered } from "../components/WithdrawalFormFiltered";
 import { useWithdrawals } from "../hooks";
 
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
@@ -67,7 +67,7 @@ export function WithdrawalCreatePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <WithdrawalForm
+          <WithdrawalFormFiltered
             preselectedLot={preselectedLot ?? undefined}
             lots={lots}
             isLoadingLots={isLoadingLots}

@@ -9,6 +9,7 @@ import { OrderSummaryRow } from "./OrderSummaryRow";
 import { Button } from "@/components/ui";
 import { autoAllocateOrders } from "@/features/allocations/api";
 import type { ForecastGroup } from "@/features/forecasts/api";
+import { getAllocationQueryKeys, getForecastQueryKeys } from "@/shared/constants/query-keys";
 import type { OrderWithLinesResponse } from "@/shared/types/aliases";
 
 interface RelatedOrdersSectionProps {
@@ -34,8 +35,12 @@ export function RelatedOrdersSection({
       } else {
         toast.success(data.message);
       }
-      queryClient.invalidateQueries({ queryKey: ["forecasts"] });
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
+      // 包括的にクエリ無効化（forecasts と allocations の両方）
+      const allocationKeys = getAllocationQueryKeys();
+      const forecastKeys = getForecastQueryKeys();
+      [...allocationKeys, ...forecastKeys].forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
     },
     onError: (error) => {
       toast.error("自動引当に失敗しました: " + (error as Error).message);

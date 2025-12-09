@@ -25,6 +25,7 @@ import { WarehouseInfoCard } from "./WarehouseInfoCard";
 import { Card, CardContent } from "@/components/ui";
 import { bulkAutoAllocate } from "@/features/allocations/api";
 import { createForecast, deleteForecast, updateForecast } from "@/features/forecasts/api";
+import { getAllocationQueryKeys, getForecastQueryKeys } from "@/shared/constants/query-keys";
 import { cn } from "@/shared/libs/utils";
 
 export function ForecastDetailCard({
@@ -66,9 +67,12 @@ export function ForecastDetailCard({
       } else {
         toast.info(result.message);
       }
-      // 関連クエリを無効化して再取得
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["allocations"] });
+      // 関連クエリを無効化して再取得 - 包括的に無効化（forecasts も含む）
+      const allocationKeys = getAllocationQueryKeys();
+      const forecastKeys = getForecastQueryKeys();
+      [...allocationKeys, ...forecastKeys].forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
     },
     onError: (error) => {
       console.error("Auto-allocate failed:", error);
@@ -92,7 +96,11 @@ export function ForecastDetailCard({
       } else {
         toast.success("フォーキャストを更新しました");
       }
-      queryClient.invalidateQueries({ queryKey: ["forecasts"] });
+      // より具体的なクエリ無効化
+      const forecastKeys = getForecastQueryKeys();
+      forecastKeys.forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
     },
     onError: (error) => {
       console.error("Update/Delete forecast failed:", error);
@@ -114,7 +122,11 @@ export function ForecastDetailCard({
       }),
     onSuccess: () => {
       toast.success("フォーキャストを作成しました");
-      queryClient.invalidateQueries({ queryKey: ["forecasts"] });
+      // より具体的なクエリ無効化
+      const forecastKeys = getForecastQueryKeys();
+      forecastKeys.forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: key });
+      });
     },
     onError: (error) => {
       console.error("Create forecast failed:", error);
