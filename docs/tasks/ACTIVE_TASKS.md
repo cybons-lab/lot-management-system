@@ -99,7 +99,31 @@ backend/app/
 
 ---
 
-### P2-2: SAP在庫同期 - 本番API接続待ち
+### P2-2: フォーキャスト編集後の画面更新問題
+
+**報告日:** 2025-12-09
+**ステータス:** 保留（優先度: 低）
+
+**問題:**
+フォーキャスト編集（数量の追加・更新・削除）後、以下のコンポーネントが即時更新されない：
+- 計画引当サマリ（Planning Allocation Panel）
+- 関連受注セクション（Related Orders）
+
+**実施済み修正:**
+- `getForecastQueryKeys()` に `planningAllocationSummary` を追加
+- 自動引当mutation後に `forecasts` クエリも無効化
+
+**現状:** 修正後も画面が更新されない（手動リフレッシュで回避可能）
+
+**詳細:** [`docs/tasks/forecast-update-issue.md`](forecast-update-issue.md)
+
+**対応方針:**
+手動リフレッシュで回避可能であり、UX上の影響は限定的なため、優先度を下げて保留。
+バックエンド調査が必要な可能性あり。
+
+---
+
+### P2-3: SAP在庫同期 - 本番API接続待ち
 
 **現状**: モック実装完了、UI実装完了
 
