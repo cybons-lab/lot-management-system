@@ -18,7 +18,6 @@ interface DeliverySettingsSectionProps {
   externalProductCode: string;
 }
 
-// eslint-disable-next-line max-lines-per-function -- Form and table combined in single section
 export function DeliverySettingsSection({
   customerId,
   externalProductCode,
@@ -162,84 +161,111 @@ function AddSettingDialog({
         <DialogHeader>
           <DialogTitle>納入先別設定を追加</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="delivery_place_id" className="mb-1 block text-sm">
-              納入先ID
-            </Label>
-            <Input
-              id="delivery_place_id"
-              type="number"
-              value={formData.delivery_place_id ?? ""}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  delivery_place_id: e.target.value ? Number(e.target.value) : null,
-                })
-              }
-              placeholder="省略時はデフォルト設定"
-            />
-          </div>
-          <div>
-            <Label htmlFor="jiku_code" className="mb-1 block text-sm">
-              次区コード
-            </Label>
-            <Input
-              id="jiku_code"
-              type="text"
-              value={formData.jiku_code ?? ""}
-              onChange={(e) => setFormData({ ...formData, jiku_code: e.target.value || null })}
-              placeholder="省略時は全次区共通"
-            />
-          </div>
-          <div>
-            <Label htmlFor="shipment_text" className="mb-1 block text-sm">
-              出荷表テキスト
-            </Label>
-            <textarea
-              id="shipment_text"
-              value={formData.shipment_text ?? ""}
-              onChange={(e) => setFormData({ ...formData, shipment_text: e.target.value || null })}
-              placeholder="SAP連携用テキスト"
-              rows={2}
-              className="w-full rounded-md border px-3 py-2 text-sm"
-            />
-          </div>
-          <div>
-            <Label htmlFor="packing_note" className="mb-1 block text-sm">
-              梱包・注意書き
-            </Label>
-            <textarea
-              id="packing_note"
-              value={formData.packing_note ?? ""}
-              onChange={(e) => setFormData({ ...formData, packing_note: e.target.value || null })}
-              placeholder="梱包時の注意事項"
-              rows={2}
-              className="w-full rounded-md border px-3 py-2 text-sm"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="is_default"
-              checked={formData.is_default ?? false}
-              onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
-              className="rounded border-slate-300"
-            />
-            <Label htmlFor="is_default" className="text-sm">
-              デフォルト設定として使用
-            </Label>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              キャンセル
-            </Button>
-            <Button type="submit" disabled={isCreating}>
-              {isCreating ? "作成中..." : "作成"}
-            </Button>
-          </div>
-        </form>
+        <DeliverySettingForm
+          formData={formData}
+          setFormData={setFormData}
+          onSubmit={onSubmit}
+          onCancel={() => onOpenChange(false)}
+          isCreating={isCreating}
+        />
       </DialogContent>
     </Dialog>
+  );
+}
+
+interface DeliverySettingFormProps {
+  formData: Partial<CreateDeliverySettingRequest>;
+  setFormData: (data: Partial<CreateDeliverySettingRequest>) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  onCancel: () => void;
+  isCreating: boolean;
+}
+
+// eslint-disable-next-line max-lines-per-function -- Form fields are best kept together
+function DeliverySettingForm({
+  formData,
+  setFormData,
+  onSubmit,
+  onCancel,
+  isCreating,
+}: DeliverySettingFormProps) {
+  return (
+    <form onSubmit={onSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="delivery_place_id" className="mb-1 block text-sm">
+          納入先ID
+        </Label>
+        <Input
+          id="delivery_place_id"
+          type="number"
+          value={formData.delivery_place_id ?? ""}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              delivery_place_id: e.target.value ? Number(e.target.value) : null,
+            })
+          }
+          placeholder="省略時はデフォルト設定"
+        />
+      </div>
+      <div>
+        <Label htmlFor="jiku_code" className="mb-1 block text-sm">
+          次区コード
+        </Label>
+        <Input
+          id="jiku_code"
+          type="text"
+          value={formData.jiku_code ?? ""}
+          onChange={(e) => setFormData({ ...formData, jiku_code: e.target.value || null })}
+          placeholder="省略時は全次区共通"
+        />
+      </div>
+      <div>
+        <Label htmlFor="shipment_text" className="mb-1 block text-sm">
+          出荷表テキスト
+        </Label>
+        <textarea
+          id="shipment_text"
+          value={formData.shipment_text ?? ""}
+          onChange={(e) => setFormData({ ...formData, shipment_text: e.target.value || null })}
+          placeholder="SAP連携用テキスト"
+          rows={2}
+          className="w-full rounded-md border px-3 py-2 text-sm"
+        />
+      </div>
+      <div>
+        <Label htmlFor="packing_note" className="mb-1 block text-sm">
+          梱包・注意書き
+        </Label>
+        <textarea
+          id="packing_note"
+          value={formData.packing_note ?? ""}
+          onChange={(e) => setFormData({ ...formData, packing_note: e.target.value || null })}
+          placeholder="梱包時の注意事項"
+          rows={2}
+          className="w-full rounded-md border px-3 py-2 text-sm"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          type="checkbox"
+          id="is_default"
+          checked={formData.is_default ?? false}
+          onChange={(e) => setFormData({ ...formData, is_default: e.target.checked })}
+          className="rounded border-slate-300"
+        />
+        <Label htmlFor="is_default" className="text-sm">
+          デフォルト設定として使用
+        </Label>
+      </div>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          キャンセル
+        </Button>
+        <Button type="submit" disabled={isCreating}>
+          {isCreating ? "作成中..." : "作成"}
+        </Button>
+      </div>
+    </form>
   );
 }
