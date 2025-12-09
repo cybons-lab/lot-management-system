@@ -634,7 +634,6 @@ def generate_test_data():
                 order = Order(
                     id=order_id,
                     customer_id=customer_id,
-                    order_number=f"ORD-{order_id:08d}",
                     order_date=date.today() - timedelta(days=random.randint(0, 15)),
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
@@ -698,7 +697,6 @@ def generate_test_data():
                 order = Order(
                     id=order_id,
                     customer_id=customer.id,
-                    order_number=f"ORD-{order_id:08d}",
                     order_date=date.today() - timedelta(days=random.randint(0, 30)),
                     created_at=datetime.utcnow(),
                     updated_at=datetime.utcnow(),
