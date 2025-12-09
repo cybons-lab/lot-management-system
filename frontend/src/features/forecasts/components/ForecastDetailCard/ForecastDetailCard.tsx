@@ -24,7 +24,7 @@ import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
 import { Card, CardContent } from "@/components/ui";
 import { bulkAutoAllocate } from "@/features/allocations/api";
-import { updateForecast } from "@/features/forecasts/api";
+import { createForecast, deleteForecast, updateForecast } from "@/features/forecasts/api";
 import { cn } from "@/shared/libs/utils";
 
 export function ForecastDetailCard({
@@ -108,22 +108,58 @@ export function ForecastDetailCard({
     autoAllocateMutation.mutate();
   };
 
-  // フォーキャスト更新 mutation
+  // フォーキャスト更新 mutation (0なら削除)
   const updateForecastMutation = useMutation({
-    mutationFn: ({ forecastId, quantity }: { forecastId: number; quantity: number }) =>
-      updateForecast(forecastId, { forecast_quantity: quantity }),
-    onSuccess: () => {
-      toast.success("フォーキャストを更新しました");
+    mutationFn: async ({ forecastId, quantity }: { forecastId: number; quantity: number }) => {
+      if (quantity === 0) {
+        // 削除
+        await deleteForecast(forecastId);
+        return null;
+      }
+      return updateForecast(forecastId, { forecast_quantity: quantity });
+    },
+    onSuccess: (_, variables) => {
+      if (variables.quantity === 0) {
+        toast.success("フォーキャストを削除しました");
+      } else {
+        toast.success("フォーキャストを更新しました");
+      }
       queryClient.invalidateQueries({ queryKey: ["forecasts"] });
     },
     onError: (error) => {
-      console.error("Update forecast failed:", error);
-      toast.error("フォーキャストの更新に失敗しました");
+      console.error("Update/Delete forecast failed:", error);
+      toast.error("フォーキャストの操作に失敗しました");
+    },
+  });
+
+  // フォーキャスト新規作成 mutation
+  const createForecastMutation = useMutation({
+    mutationFn: (data: { dateKey: string; quantity: number }) =>
+      createForecast({
+        customer_id: group_key.customer_id,
+        delivery_place_id: group_key.delivery_place_id,
+        product_id: group_key.product_id,
+        forecast_date: data.dateKey,
+        forecast_quantity: data.quantity,
+        unit: unit,
+        forecast_period: data.dateKey.slice(0, 7), // YYYY-MM
+      }),
+    onSuccess: () => {
+      toast.success("フォーキャストを作成しました");
+      queryClient.invalidateQueries({ queryKey: ["forecasts"] });
+    },
+    onError: (error) => {
+      console.error("Create forecast failed:", error);
+      toast.error("フォーキャストの作成に失敗しました");
     },
   });
 
   const handleUpdateQuantity = async (forecastId: number, newQuantity: number) => {
     await updateForecastMutation.mutateAsync({ forecastId, quantity: newQuantity });
+  };
+
+  const handleCreateForecast = async (dateKey: string, quantity: number) => {
+    await createForecastMutation.mutateAsync({ dateKey, quantity });
   };
 
   return (
@@ -170,7 +206,8 @@ export function ForecastDetailCard({
                 hoveredDate={hoveredDate}
                 onDateHover={setHoveredDate}
                 onUpdateQuantity={handleUpdateQuantity}
-                isUpdating={updateForecastMutation.isPending}
+                onCreateForecast={handleCreateForecast}
+                isUpdating={updateForecastMutation.isPending || createForecastMutation.isPending}
               />
 
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />

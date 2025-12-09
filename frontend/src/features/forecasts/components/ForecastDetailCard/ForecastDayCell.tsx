@@ -1,6 +1,11 @@
 /**
  * ForecastDayCell - Individual day cell in the forecast grid
  * with inline editing support via double-click
+ *
+ * Supports:
+ * - Update existing forecast (quantity > 0)
+ * - Delete forecast (quantity = 0 for existing)
+ * - Create new forecast (quantity > 0 for non-existing)
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -24,6 +29,7 @@ export function ForecastDayCell({
   hoveredDate,
   onDateHover,
   onUpdateQuantity,
+  onCreateForecast,
   isUpdating,
 }: DayCellProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -46,32 +52,50 @@ export function ForecastDayCell({
     onDateHover?.(null);
   };
 
+  // Allow editing if not past and we have either:
+  // - An existing forecast to update (forecastId + onUpdateQuantity)
+  // - Ability to create new forecast (onCreateForecast)
+  const canEdit = !isPast && (onUpdateQuantity !== undefined || onCreateForecast !== undefined);
+
   const handleDoubleClick = () => {
-    // Don't allow editing past dates or if no forecastId
-    if (isPast || !forecastId || !onUpdateQuantity) return;
-    setEditValue(roundedQty?.toString() ?? "0");
+    if (isPast) return;
+    if (!canEdit) return;
+
+    setEditValue(roundedQty?.toString() ?? "");
     setIsEditing(true);
   };
 
   const handleSave = useCallback(async () => {
-    if (!forecastId || !onUpdateQuantity) return;
-
-    const newValue = parseFloat(editValue);
+    const newValue = editValue === "" ? 0 : parseFloat(editValue);
     if (isNaN(newValue) || newValue < 0) {
       setIsEditing(false);
       return;
     }
 
-    // Only save if value changed
-    if (newValue !== roundedQty) {
+    const intValue = Math.round(newValue);
+
+    // Case 1: Existing forecast
+    if (forecastId && onUpdateQuantity) {
+      if (intValue !== roundedQty) {
+        try {
+          // 0 means delete (handled by parent)
+          await onUpdateQuantity(forecastId, intValue);
+        } catch {
+          // Error handling is done in the parent
+        }
+      }
+    }
+    // Case 2: No existing forecast, create new if value > 0
+    else if (!forecastId && onCreateForecast && intValue > 0) {
       try {
-        await onUpdateQuantity(forecastId, newValue);
+        await onCreateForecast(dateKey, intValue);
       } catch {
         // Error handling is done in the parent
       }
     }
+
     setIsEditing(false);
-  }, [forecastId, onUpdateQuantity, editValue, roundedQty]);
+  }, [forecastId, onUpdateQuantity, onCreateForecast, editValue, roundedQty, dateKey]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -89,13 +113,11 @@ export function ForecastDayCell({
     }
   }, [isEditing]);
 
-  const canEdit = !isPast && forecastId !== undefined && onUpdateQuantity !== undefined;
-
   return (
     <div
       className={cn(
         "rounded border bg-white px-1 py-0.5 text-[11px] leading-tight transition",
-        canEdit ? "cursor-pointer" : "cursor-default",
+        canEdit ? "cursor-pointer hover:border-blue-300" : "cursor-default",
         "focus-within:ring-1 focus-within:ring-blue-200",
         isToday ? "border-blue-400 ring-1 ring-blue-100" : "border-gray-200",
         isPast ? "opacity-80" : undefined,
@@ -123,6 +145,7 @@ export function ForecastDayCell({
             onKeyDown={handleKeyDown}
             className="w-14 rounded border border-blue-300 bg-white px-1 text-right text-sm font-semibold tabular-nums outline-none focus:ring-1 focus:ring-blue-400"
             disabled={isUpdating}
+            placeholder="0"
           />
         ) : (
           <span

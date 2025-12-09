@@ -38,6 +38,7 @@ export interface DayCellProps {
   hoveredDate?: string | null;
   onDateHover?: (date: string | null) => void;
   onUpdateQuantity?: (forecastId: number, newQuantity: number) => Promise<void>;
+  onCreateForecast?: (dateKey: string, quantity: number) => Promise<void>;
   isUpdating?: boolean;
 }
 
@@ -67,6 +68,7 @@ export interface ForecastDailyGridProps {
   hoveredDate?: string | null;
   onDateHover?: (date: string | null) => void;
   onUpdateQuantity?: (forecastId: number, newQuantity: number) => Promise<void>;
+  onCreateForecast?: (dateKey: string, quantity: number) => Promise<void>;
   isUpdating?: boolean;
 }
 

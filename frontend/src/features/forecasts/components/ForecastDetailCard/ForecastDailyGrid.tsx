@@ -21,6 +21,7 @@ export function ForecastDailyGrid({
   hoveredDate,
   onDateHover,
   onUpdateQuantity,
+  onCreateForecast,
   isUpdating,
 }: ForecastDailyGridProps) {
   return (
@@ -33,18 +34,20 @@ export function ForecastDailyGrid({
         {dates.map((date) => {
           const dateKey = formatDateKey(date);
           const isPast = isPastDate(date, todayStart);
+          const forecastId = dailyForecastIds.get(dateKey);
 
           return (
             <ForecastDayCell
               key={dateKey}
               date={date}
               quantity={dailyData.get(dateKey)}
-              forecastId={dailyForecastIds.get(dateKey)}
+              forecastId={forecastId}
               isToday={todayKey === dateKey}
               isPast={isPast}
               hoveredDate={hoveredDate}
               onDateHover={onDateHover}
               onUpdateQuantity={onUpdateQuantity}
+              onCreateForecast={onCreateForecast}
               isUpdating={isUpdating}
             />
           );
