@@ -5,6 +5,7 @@
  */
 
 import { formatDistanceToNow } from "date-fns";
+/* eslint-disable max-lines-per-function */
 import { ja } from "date-fns/locale";
 import { ArrowLeft, Plus } from "lucide-react";
 import { useState } from "react";

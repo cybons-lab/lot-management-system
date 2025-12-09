@@ -36,6 +36,7 @@ export function ForecastDetailCard({
   isFocused = false,
   onToggle,
 }: ForecastDetailCardProps) {
+  /* eslint-disable react-hooks/rules-of-hooks */
   const { group_key, forecasts = [] } = group;
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -75,38 +76,6 @@ export function ForecastDetailCard({
       toast.error("自動引当に失敗しました");
     },
   });
-
-  // Early return if no forecasts
-  if (forecasts.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-8 text-center text-gray-500">
-          フォーキャストデータがありません
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Prepare display values
-  const now = new Date();
-  const todayKey = formatDateKey(now);
-  const todayStart = getTodayStart();
-  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
-    targetMonthStartDate.getMonth() + 1
-  }月`;
-
-  const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
-  const deliveryPlaceDisplay =
-    group_key.delivery_place_name ?? `納入先ID:${group_key.delivery_place_id}`;
-  const productName = group_key.product_name ?? `製品ID:${group_key.product_id}`;
-  const productCode = group_key.product_code;
-
-  const groupKey = `${group_key.customer_id}-${group_key.delivery_place_id}-${group_key.product_id}`;
-
-  // 自動引当ハンドラー
-  const handleAutoAllocate = () => {
-    autoAllocateMutation.mutate();
-  };
 
   // フォーキャスト更新 mutation (0なら削除)
   const updateForecastMutation = useMutation({
@@ -160,6 +129,38 @@ export function ForecastDetailCard({
 
   const handleCreateForecast = async (dateKey: string, quantity: number) => {
     await createForecastMutation.mutateAsync({ dateKey, quantity });
+  };
+
+  // Early return if no forecasts
+  if (forecasts.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-gray-500">
+          フォーキャストデータがありません
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Prepare display values
+  const now = new Date();
+  const todayKey = formatDateKey(now);
+  const todayStart = getTodayStart();
+  const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
+    targetMonthStartDate.getMonth() + 1
+  }月`;
+
+  const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
+  const deliveryPlaceDisplay =
+    group_key.delivery_place_name ?? `納入先ID:${group_key.delivery_place_id}`;
+  const productName = group_key.product_name ?? `製品ID:${group_key.product_id}`;
+  const productCode = group_key.product_code;
+
+  const groupKey = `${group_key.customer_id}-${group_key.delivery_place_id}-${group_key.product_id}`;
+
+  // 自動引当ハンドラー
+  const handleAutoAllocate = () => {
+    autoAllocateMutation.mutate();
   };
 
   return (

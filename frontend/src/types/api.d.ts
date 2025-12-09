@@ -1616,6 +1616,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/delivery-places": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Delivery Places
+     * @description Return delivery places, optionally filtered by customer_id.
+     */
+    get: operations["list_delivery_places_api_masters_delivery_places_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/products": {
     parameters: {
       query?: never;
@@ -2356,6 +2376,30 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/auth/login-users": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Login Users
+     * @description Get list of active users for login page (no auth required).
+     *
+     *     This endpoint is intentionally public to allow the dev login page
+     *     to display a list of users without authentication.
+     *     Only returns minimal user info (id, username, display_name).
+     */
+    get: operations["get_login_users_api_auth_login_users_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/system/logs/client": {
     parameters: {
       query?: never;
@@ -2854,6 +2898,7 @@ export interface paths {
      *         wh: 倉庫コード（任意フィルタ）
      *         limit: 最大取得件数（デフォルト100）
      *         db: データベースセッション
+     *         current_user: 現在のログインユーザー
      *
      *     Returns:
      *         CandidateLotsResponse: 引当可能ロット一覧
@@ -4366,9 +4411,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -4384,9 +4427,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -4438,9 +4479,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
       /** Job Id */
       job_id: number;
@@ -4655,9 +4694,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -4699,9 +4736,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -4740,9 +4775,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: {
-        [key: string]: unknown;
-      } | null;
+      rule_parameters?: Record<string, never> | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -6384,16 +6417,12 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: {
-        [key: string]: unknown;
-      } | null;
+      old_values?: Record<string, never> | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: {
-        [key: string]: unknown;
-      } | null;
+      new_values?: Record<string, never> | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -6553,9 +6582,7 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: {
-        [key: string]: unknown;
-      } | null;
+      changes?: Record<string, never> | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -7062,9 +7089,7 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: {
-        [key: string]: unknown;
-      } | null;
+      data?: Record<string, never> | null;
     };
     /**
      * RoleCreate
@@ -8681,9 +8706,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": {
-          [key: string]: unknown;
-        };
+        "application/json": Record<string, never>;
       };
     };
     responses: {
@@ -10220,6 +10243,40 @@ export interface operations {
       };
     };
   };
+  list_delivery_places_api_masters_delivery_places_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        /** @description Filter by customer ID */
+        customer_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_products_api_masters_products_get: {
     parameters: {
       query?: {
@@ -11528,6 +11585,26 @@ export interface operations {
       };
     };
   };
+  get_login_users_api_auth_login_users_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+    };
+  };
   create_client_log_api_system_logs_client_post: {
     parameters: {
       query?: never;
@@ -12167,9 +12244,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -12473,9 +12548,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -12504,9 +12577,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
     };
