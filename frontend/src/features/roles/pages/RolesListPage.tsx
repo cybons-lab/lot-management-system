@@ -120,8 +120,8 @@ export function RolesListPage() {
               </thead>
               <tbody className="divide-y">
                 {roles.map((role) => (
-                  <tr key={role.role_id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{role.role_id}</td>
+                  <tr key={role.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm">{role.id}</td>
                     <td className="px-4 py-3 text-sm font-medium">
                       <span className="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
                         {role.role_code}
@@ -148,7 +148,7 @@ export function RolesListPage() {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleDelete(role.role_id)}
+                        onClick={() => handleDelete(role.id)}
                         disabled={deleteMutation.isPending}
                       >
                         削除
