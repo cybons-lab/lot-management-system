@@ -22,8 +22,9 @@ type OrderGetResponse =
  * - status: ステータスフィルタ
  * - customer_code: 得意先コードフィルタ
  * - date_from, date_to: 日付範囲フィルタ
+ * - prioritize_primary: 主担当仕入先を優先表示
  */
-export const getOrders = (params?: OrdersListParams) => {
+export const getOrders = (params?: OrdersListParams & { prioritize_primary?: boolean }) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
@@ -31,12 +32,16 @@ export const getOrders = (params?: OrdersListParams) => {
   if (params?.customer_code) searchParams.append("customer_code", params.customer_code);
   if (params?.date_from) searchParams.append("date_from", params.date_from);
   if (params?.date_to) searchParams.append("date_to", params.date_to);
+  if (params?.prioritize_primary !== undefined)
+    searchParams.append("prioritize_primary", params.prioritize_primary.toString());
 
   const queryString = searchParams.toString();
   return http.get<OrderResponse[]>(`orders${queryString ? "?" + queryString : ""}`);
 };
 
-export const getOrderLines = (params?: OrdersListParams & { product_code?: string }) => {
+export const getOrderLines = (
+  params?: OrdersListParams & { product_code?: string; prioritize_primary?: boolean },
+) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
@@ -46,6 +51,8 @@ export const getOrderLines = (params?: OrdersListParams & { product_code?: strin
   if (params?.order_type) searchParams.append("order_type", params.order_type);
   if (params?.date_from) searchParams.append("date_from", params.date_from);
   if (params?.date_to) searchParams.append("date_to", params.date_to);
+  if (params?.prioritize_primary !== undefined)
+    searchParams.append("prioritize_primary", params.prioritize_primary.toString());
 
   const queryString = searchParams.toString();
   // Note: OrderLineResponse[] is returned, but we use OrderLine[] alias in frontend

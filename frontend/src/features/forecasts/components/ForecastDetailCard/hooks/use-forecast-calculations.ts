@@ -93,9 +93,7 @@ export function useForecastCalculations(group: ForecastGroup): UseForecastCalcul
       // forecast.forecast_date is in YYYY-MM-DD format from API
       // Use it directly as the key since dailyData also uses it
       idMap.set(forecast.forecast_date, forecast.id);
-      console.log("[dailyForecastIds] Added:", forecast.forecast_date, "->", forecast.id);
     }
-    console.log("[dailyForecastIds] Total entries:", idMap.size);
     return idMap;
   }, [dailyForecasts]);
 
