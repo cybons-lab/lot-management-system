@@ -3,8 +3,11 @@
  * 得意先品番マッピング一覧ページ
  */
 import { Package, Plus, Upload } from "lucide-react";
+import { useState } from "react";
 
+import type { CustomerItem } from "../api";
 import { CustomerItemBulkImportDialog } from "../components/CustomerItemBulkImportDialog";
+import { CustomerItemDetailDialog } from "../components/CustomerItemDetailDialog";
 import { CustomerItemExportButton } from "../components/CustomerItemExportButton";
 import { CustomerItemForm } from "../components/CustomerItemForm";
 import { CustomerItemsFilter } from "../components/CustomerItemsFilter";
@@ -33,6 +36,14 @@ export function CustomerItemsListPage() {
     handleCreate,
     handleDelete,
   } = useCustomerItemsPage();
+
+  const [selectedItem, setSelectedItem] = useState<CustomerItem | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+
+  const handleRowClick = (item: CustomerItem) => {
+    setSelectedItem(item);
+    setIsDetailDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
@@ -79,6 +90,7 @@ export function CustomerItemsListPage() {
         isLoading={isLoading}
         isDeleting={isDeleting}
         onDelete={handleDelete}
+        onRowClick={handleRowClick}
       />
 
       {/* 新規登録ダイアログ */}
@@ -99,6 +111,13 @@ export function CustomerItemsListPage() {
       <CustomerItemBulkImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
+      />
+
+      {/* 詳細ダイアログ */}
+      <CustomerItemDetailDialog
+        item={selectedItem}
+        open={isDetailDialogOpen}
+        onOpenChange={setIsDetailDialogOpen}
       />
     </div>
   );
