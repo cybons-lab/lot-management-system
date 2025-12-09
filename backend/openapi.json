@@ -3403,6 +3403,204 @@
         }
       }
     },
+    "/api/withdrawals": {
+      "get": {
+        "tags": [
+          "withdrawals"
+        ],
+        "summary": "List Withdrawals",
+        "description": "出庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    customer_id: 得意先IDでフィルタ\n    withdrawal_type: 出庫タイプでフィルタ\n    db: データベースセッション\n\nReturns:\n    出庫履歴一覧",
+        "operationId": "list_withdrawals_api_withdrawals_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "スキップ件数",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "スキップ件数"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "取得件数上限",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "取得件数上限"
+          },
+          {
+            "name": "lot_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ロットIDでフィルタ",
+              "title": "Lot Id"
+            },
+            "description": "ロットIDでフィルタ"
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先IDでフィルタ",
+              "title": "Customer Id"
+            },
+            "description": "得意先IDでフィルタ"
+          },
+          {
+            "name": "withdrawal_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "出庫タイプでフィルタ",
+              "title": "Withdrawal Type"
+            },
+            "description": "出庫タイプでフィルタ"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "withdrawals"
+        ],
+        "summary": "Create Withdrawal",
+        "description": "出庫を登録.\n\n- ロットの現在数量から出庫数量を減算\n- 利用可能数量（current - allocated - locked）以内であること\n- stock_historyにWITHDRAWALトランザクションを記録\n\nArgs:\n    data: 出庫登録リクエスト\n    db: データベースセッション\n\nReturns:\n    作成された出庫レコード\n\nRaises:\n    HTTPException: バリデーションエラー",
+        "operationId": "create_withdrawal_api_withdrawals_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawalCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/withdrawals/{withdrawal_id}": {
+      "get": {
+        "tags": [
+          "withdrawals"
+        ],
+        "summary": "Get Withdrawal",
+        "description": "出庫詳細を取得.\n\nArgs:\n    withdrawal_id: 出庫ID\n    db: データベースセッション\n\nReturns:\n    出庫詳細\n\nRaises:\n    HTTPException: 出庫が見つからない場合",
+        "operationId": "get_withdrawal_api_withdrawals__withdrawal_id__get",
+        "parameters": [
+          {
+            "name": "withdrawal_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Withdrawal Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawalResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/masters/customers": {
       "get": {
         "tags": [
@@ -16964,6 +17162,279 @@
         "type": "object",
         "title": "WarehouseUpdate",
         "description": "Update warehouse request."
+      },
+      "WithdrawalCreate": {
+        "properties": {
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id",
+            "description": "出庫対象のロットID"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Quantity",
+            "description": "出庫数量（正の値）"
+          },
+          "withdrawal_type": {
+            "$ref": "#/components/schemas/WithdrawalType",
+            "description": "出庫タイプ"
+          },
+          "customer_id": {
+            "type": "integer",
+            "title": "Customer Id",
+            "description": "得意先ID"
+          },
+          "delivery_place_id": {
+            "type": "integer",
+            "title": "Delivery Place Id",
+            "description": "納入場所ID"
+          },
+          "ship_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Ship Date",
+            "description": "出荷日"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "備考"
+          },
+          "reference_number": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Number",
+            "description": "参照番号（SAP受注番号など）"
+          },
+          "withdrawn_by": {
+            "type": "integer",
+            "title": "Withdrawn By",
+            "description": "出庫実行者ユーザーID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lot_id",
+          "quantity",
+          "withdrawal_type",
+          "customer_id",
+          "delivery_place_id",
+          "ship_date",
+          "withdrawn_by"
+        ],
+        "title": "WithdrawalCreate",
+        "description": "出庫登録リクエスト."
+      },
+      "WithdrawalListResponse": {
+        "properties": {
+          "withdrawals": {
+            "items": {
+              "$ref": "#/components/schemas/WithdrawalResponse"
+            },
+            "type": "array",
+            "title": "Withdrawals"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "page": {
+            "type": "integer",
+            "title": "Page"
+          },
+          "page_size": {
+            "type": "integer",
+            "title": "Page Size"
+          }
+        },
+        "type": "object",
+        "required": [
+          "withdrawals",
+          "total",
+          "page",
+          "page_size"
+        ],
+        "title": "WithdrawalListResponse",
+        "description": "出庫一覧レスポンス."
+      },
+      "WithdrawalResponse": {
+        "properties": {
+          "withdrawal_id": {
+            "type": "integer",
+            "title": "Withdrawal Id"
+          },
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id"
+          },
+          "lot_number": {
+            "type": "string",
+            "title": "Lot Number"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "product_code": {
+            "type": "string",
+            "title": "Product Code"
+          },
+          "quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Quantity"
+          },
+          "withdrawal_type": {
+            "$ref": "#/components/schemas/WithdrawalType"
+          },
+          "withdrawal_type_label": {
+            "type": "string",
+            "title": "Withdrawal Type Label",
+            "description": "出庫タイプの日本語表示"
+          },
+          "customer_id": {
+            "type": "integer",
+            "title": "Customer Id"
+          },
+          "customer_name": {
+            "type": "string",
+            "title": "Customer Name"
+          },
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code"
+          },
+          "delivery_place_id": {
+            "type": "integer",
+            "title": "Delivery Place Id"
+          },
+          "delivery_place_name": {
+            "type": "string",
+            "title": "Delivery Place Name"
+          },
+          "delivery_place_code": {
+            "type": "string",
+            "title": "Delivery Place Code"
+          },
+          "ship_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Ship Date"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "reference_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Number"
+          },
+          "withdrawn_by": {
+            "type": "integer",
+            "title": "Withdrawn By"
+          },
+          "withdrawn_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Withdrawn By Name"
+          },
+          "withdrawn_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Withdrawn At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "withdrawal_id",
+          "lot_id",
+          "lot_number",
+          "product_id",
+          "product_name",
+          "product_code",
+          "quantity",
+          "withdrawal_type",
+          "withdrawal_type_label",
+          "customer_id",
+          "customer_name",
+          "customer_code",
+          "delivery_place_id",
+          "delivery_place_name",
+          "delivery_place_code",
+          "ship_date",
+          "reason",
+          "reference_number",
+          "withdrawn_by",
+          "withdrawn_at",
+          "created_at"
+        ],
+        "title": "WithdrawalResponse",
+        "description": "出庫レスポンス."
+      },
+      "WithdrawalType": {
+        "type": "string",
+        "enum": [
+          "order_manual",
+          "internal_use",
+          "disposal",
+          "return",
+          "sample",
+          "other"
+        ],
+        "title": "WithdrawalType",
+        "description": "出庫タイプ."
       },
       "app__presentation__schemas__auth__auth_schemas__UserResponse": {
         "properties": {

@@ -3,12 +3,18 @@
  * Skeleton implementation
  */
 
-import { useParams } from "react-router-dom";
+import { ArrowUpFromLine } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui";
 
 export function LotDetailPage() {
   const { lotId } = useParams<{ lotId: string }>();
+  const navigate = useNavigate();
+
+  const handleWithdraw = () => {
+    navigate(`/inventory/withdrawals/new?lotId=${lotId}`);
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -19,6 +25,10 @@ export function LotDetailPage() {
           <p className="mt-1 text-gray-600">ロットID: {lotId}</p>
         </div>
         <div className="space-x-2">
+          <Button variant="outline" onClick={handleWithdraw}>
+            <ArrowUpFromLine className="mr-2 h-4 w-4" />
+            出庫
+          </Button>
           <Button variant="outline">編集</Button>
           <Button variant="destructive">削除</Button>
         </div>

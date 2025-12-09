@@ -1413,6 +1413,85 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/withdrawals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Withdrawals
+     * @description 出庫履歴一覧を取得.
+     *
+     *     Args:
+     *         skip: スキップ件数
+     *         limit: 取得件数上限
+     *         lot_id: ロットIDでフィルタ
+     *         customer_id: 得意先IDでフィルタ
+     *         withdrawal_type: 出庫タイプでフィルタ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         出庫履歴一覧
+     */
+    get: operations["list_withdrawals_api_withdrawals_get"];
+    put?: never;
+    /**
+     * Create Withdrawal
+     * @description 出庫を登録.
+     *
+     *     - ロットの現在数量から出庫数量を減算
+     *     - 利用可能数量（current - allocated - locked）以内であること
+     *     - stock_historyにWITHDRAWALトランザクションを記録
+     *
+     *     Args:
+     *         data: 出庫登録リクエスト
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         作成された出庫レコード
+     *
+     *     Raises:
+     *         HTTPException: バリデーションエラー
+     */
+    post: operations["create_withdrawal_api_withdrawals_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/withdrawals/{withdrawal_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Withdrawal
+     * @description 出庫詳細を取得.
+     *
+     *     Args:
+     *         withdrawal_id: 出庫ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         出庫詳細
+     *
+     *     Raises:
+     *         HTTPException: 出庫が見つからない場合
+     */
+    get: operations["get_withdrawal_api_withdrawals__withdrawal_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/customers": {
     parameters: {
       query?: never;
@@ -7631,6 +7710,136 @@ export interface components {
       warehouse_type?: string | null;
     };
     /**
+     * WithdrawalCreate
+     * @description 出庫登録リクエスト.
+     */
+    WithdrawalCreate: {
+      /**
+       * Lot Id
+       * @description 出庫対象のロットID
+       */
+      lot_id: number;
+      /**
+       * Quantity
+       * @description 出庫数量（正の値）
+       */
+      quantity: number | string;
+      /** @description 出庫タイプ */
+      withdrawal_type: components["schemas"]["WithdrawalType"];
+      /**
+       * Customer Id
+       * @description 得意先ID
+       */
+      customer_id: number;
+      /**
+       * Delivery Place Id
+       * @description 納入場所ID
+       */
+      delivery_place_id: number;
+      /**
+       * Ship Date
+       * Format: date
+       * @description 出荷日
+       */
+      ship_date: string;
+      /**
+       * Reason
+       * @description 備考
+       */
+      reason?: string | null;
+      /**
+       * Reference Number
+       * @description 参照番号（SAP受注番号など）
+       */
+      reference_number?: string | null;
+      /**
+       * Withdrawn By
+       * @description 出庫実行者ユーザーID
+       */
+      withdrawn_by: number;
+    };
+    /**
+     * WithdrawalListResponse
+     * @description 出庫一覧レスポンス.
+     */
+    WithdrawalListResponse: {
+      /** Withdrawals */
+      withdrawals: components["schemas"]["WithdrawalResponse"][];
+      /** Total */
+      total: number;
+      /** Page */
+      page: number;
+      /** Page Size */
+      page_size: number;
+    };
+    /**
+     * WithdrawalResponse
+     * @description 出庫レスポンス.
+     */
+    WithdrawalResponse: {
+      /** Withdrawal Id */
+      withdrawal_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Lot Number */
+      lot_number: string;
+      /** Product Id */
+      product_id: number;
+      /** Product Name */
+      product_name: string;
+      /** Product Code */
+      product_code: string;
+      /** Quantity */
+      quantity: string;
+      withdrawal_type: components["schemas"]["WithdrawalType"];
+      /**
+       * Withdrawal Type Label
+       * @description 出庫タイプの日本語表示
+       */
+      withdrawal_type_label: string;
+      /** Customer Id */
+      customer_id: number;
+      /** Customer Name */
+      customer_name: string;
+      /** Customer Code */
+      customer_code: string;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Delivery Place Name */
+      delivery_place_name: string;
+      /** Delivery Place Code */
+      delivery_place_code: string;
+      /**
+       * Ship Date
+       * Format: date
+       */
+      ship_date: string;
+      /** Reason */
+      reason: string | null;
+      /** Reference Number */
+      reference_number: string | null;
+      /** Withdrawn By */
+      withdrawn_by: number;
+      /** Withdrawn By Name */
+      withdrawn_by_name?: string | null;
+      /**
+       * Withdrawn At
+       * Format: date-time
+       */
+      withdrawn_at: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+    };
+    /**
+     * WithdrawalType
+     * @description 出庫タイプ.
+     * @enum {string}
+     */
+    WithdrawalType: "order_manual" | "internal_use" | "disposal" | "return" | "sample" | "other";
+    /**
      * UserResponse
      * @description User response schema.
      */
@@ -9647,6 +9856,110 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["InventoryByProductResponse"][];
+        };
+      };
+    };
+  };
+  list_withdrawals_api_withdrawals_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description ロットIDでフィルタ */
+        lot_id?: number | null;
+        /** @description 得意先IDでフィルタ */
+        customer_id?: number | null;
+        /** @description 出庫タイプでフィルタ */
+        withdrawal_type?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WithdrawalListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_withdrawal_api_withdrawals_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WithdrawalCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WithdrawalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_withdrawal_api_withdrawals__withdrawal_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        withdrawal_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WithdrawalResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

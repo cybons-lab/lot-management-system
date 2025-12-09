@@ -45,6 +45,7 @@ import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversi
 import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
+import { WithdrawalCreatePage, WithdrawalsListPage } from "@/features/withdrawals/pages";
 
 // --- Route Groups ---
 
@@ -60,6 +61,8 @@ function InventoryRoutes() {
         <Route path="adjustments" element={<AdjustmentsListPage />} />
         <Route path="adjustments/new" element={<AdjustmentCreatePage />} />
         <Route path="adhoc/new" element={<AdhocLotCreatePage />} />
+        <Route path="withdrawals" element={<WithdrawalsListPage />} />
+        <Route path="withdrawals/new" element={<WithdrawalCreatePage />} />
       </Route>
 
       {/* Inventory Item Detail & Lot Detail */}

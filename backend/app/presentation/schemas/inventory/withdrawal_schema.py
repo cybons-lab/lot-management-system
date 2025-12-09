@@ -1,0 +1,87 @@
+"""Withdrawal-related Pydantic schemas.
+
+出庫（受注外出庫）のリクエスト・レスポンススキーマ。
+"""
+
+from __future__ import annotations
+
+from datetime import date, datetime
+from decimal import Decimal
+from enum import Enum
+
+from pydantic import Field
+
+from app.presentation.schemas.common.base import BaseSchema
+
+
+class WithdrawalType(str, Enum):
+    """出庫タイプ."""
+
+    ORDER_MANUAL = "order_manual"  # 受注（手動）
+    INTERNAL_USE = "internal_use"  # 社内使用
+    DISPOSAL = "disposal"  # 廃棄処理
+    RETURN = "return"  # 返品対応
+    SAMPLE = "sample"  # サンプル出荷
+    OTHER = "other"  # その他
+
+
+WITHDRAWAL_TYPE_LABELS = {
+    WithdrawalType.ORDER_MANUAL: "受注（手動）",
+    WithdrawalType.INTERNAL_USE: "社内使用",
+    WithdrawalType.DISPOSAL: "廃棄処理",
+    WithdrawalType.RETURN: "返品対応",
+    WithdrawalType.SAMPLE: "サンプル出荷",
+    WithdrawalType.OTHER: "その他",
+}
+
+
+class WithdrawalCreate(BaseSchema):
+    """出庫登録リクエスト."""
+
+    lot_id: int = Field(..., description="出庫対象のロットID")
+    quantity: Decimal = Field(..., gt=0, description="出庫数量（正の値）")
+    withdrawal_type: WithdrawalType = Field(..., description="出庫タイプ")
+    customer_id: int = Field(..., description="得意先ID")
+    delivery_place_id: int = Field(..., description="納入場所ID")
+    ship_date: date = Field(..., description="出荷日")
+    reason: str | None = Field(None, description="備考")
+    reference_number: str | None = Field(
+        None, max_length=100, description="参照番号（SAP受注番号など）"
+    )
+    withdrawn_by: int = Field(..., description="出庫実行者ユーザーID")
+
+
+class WithdrawalResponse(BaseSchema):
+    """出庫レスポンス."""
+
+    id: int = Field(..., serialization_alias="withdrawal_id")
+    lot_id: int
+    lot_number: str
+    product_id: int
+    product_name: str
+    product_code: str
+    quantity: Decimal
+    withdrawal_type: WithdrawalType
+    withdrawal_type_label: str = Field(..., description="出庫タイプの日本語表示")
+    customer_id: int
+    customer_name: str
+    customer_code: str
+    delivery_place_id: int
+    delivery_place_name: str
+    delivery_place_code: str
+    ship_date: date
+    reason: str | None
+    reference_number: str | None
+    withdrawn_by: int
+    withdrawn_by_name: str | None = None
+    withdrawn_at: datetime
+    created_at: datetime
+
+
+class WithdrawalListResponse(BaseSchema):
+    """出庫一覧レスポンス."""
+
+    withdrawals: list[WithdrawalResponse]
+    total: int
+    page: int
+    page_size: int
