@@ -3,7 +3,7 @@
  * User detail page with role assignment
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -36,6 +36,17 @@ export function UserDetailPage() {
 
   // Role assignment mutation
   const assignRolesMutation = useAssignUserRoles();
+
+  // Initialize selectedRoleIds when opening the form
+  useEffect(() => {
+    if (showRoleForm && user && roles) {
+      // Map role_codes to role_ids
+      const currentRoleIds = roles
+        .filter((role) => user.role_codes.includes(role.role_code))
+        .map((role) => role.role_id);
+      setSelectedRoleIds(currentRoleIds);
+    }
+  }, [showRoleForm, user, roles]);
 
   const handleAssignRoles = async () => {
     try {
