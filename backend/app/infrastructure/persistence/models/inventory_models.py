@@ -128,7 +128,7 @@ class Lot(Base):
 
     # Origin tracking fields for non-order lots
     origin_type: Mapped[str] = mapped_column(
-        String(20), nullable=False, server_default=text("'order'")
+        String(20), nullable=False, server_default=text("'adhoc'")
     )
     origin_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
