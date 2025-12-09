@@ -102,4 +102,5 @@ export const getForecastQueryKeys = () => [
   QUERY_KEYS.forecasts,
   QUERY_KEYS.forecastList,
   QUERY_KEYS.forecastHistory,
+  QUERY_KEYS.planningAllocationSummary, // Planning allocation is tied to forecasts
 ];

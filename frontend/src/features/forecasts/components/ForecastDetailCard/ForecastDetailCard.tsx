@@ -67,9 +67,10 @@ export function ForecastDetailCard({
       } else {
         toast.info(result.message);
       }
-      // 関連クエリを無効化して再取得 - 包括的に無効化
+      // 関連クエリを無効化して再取得 - 包括的に無効化（forecasts も含む）
       const allocationKeys = getAllocationQueryKeys();
-      allocationKeys.forEach((key) => {
+      const forecastKeys = getForecastQueryKeys();
+      [...allocationKeys, ...forecastKeys].forEach((key) => {
         queryClient.invalidateQueries({ queryKey: key });
       });
     },
