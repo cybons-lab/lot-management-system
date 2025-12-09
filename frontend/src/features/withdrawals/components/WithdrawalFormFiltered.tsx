@@ -136,6 +136,18 @@ export function WithdrawalFormFiltered({
     }
   }, [filters.customer_id]);
 
+  // 仕入元が変わったら製品フィルタをリセット（選択中の製品が候補から外れた場合）
+  useEffect(() => {
+    if (filters.product_id && filters.supplier_id) {
+      const productExists = lots.some(
+        (lot) => lot.supplier_id === filters.supplier_id && lot.product_id === filters.product_id,
+      );
+      if (!productExists) {
+        setFilters((prev) => ({ ...prev, product_id: 0 }));
+      }
+    }
+  }, [filters.supplier_id, filters.product_id, lots]);
+
   // フィルタ連動: ロット絞り込み
   const filteredLots = useMemo(() => {
     let filtered = lots.filter((lot) => lot.status === "active");
@@ -155,6 +167,27 @@ export function WithdrawalFormFiltered({
 
     return filtered;
   }, [lots, filters]);
+
+  // フィルタ連動: 製品絞り込み
+  const filteredProducts = useMemo(() => {
+    // フィルタが何も選択されていない場合は全製品
+    if (!filters.supplier_id && !filters.customer_id && !filters.delivery_place_id) {
+      return products;
+    }
+
+    // 現在のフィルタ条件に合致するロットから製品IDを抽出
+    let relevantLots = lots.filter((lot) => lot.status === "active");
+
+    if (filters.supplier_id) {
+      relevantLots = relevantLots.filter((lot) => lot.supplier_id === filters.supplier_id);
+    }
+
+    // ロットに紐づく製品IDのセットを作成
+    const productIds = new Set(relevantLots.map((lot) => lot.product_id));
+
+    // 製品IDに該当する製品だけを返す
+    return products.filter((p) => productIds.has(p.id));
+  }, [products, lots, filters.supplier_id, filters.customer_id, filters.delivery_place_id]);
 
   // 選択されたロット
   const selectedLot = filteredLots.find((l) => l.lot_id === formData.lot_id) ?? preselectedLot;
@@ -250,7 +283,11 @@ export function WithdrawalFormFiltered({
           {/* 製品フィルタ */}
           <div>
             <Label htmlFor="filter_product" className="mb-2 block text-sm font-medium">
-              製品
+              製品 {filteredProducts.length < products.length && (
+                <span className="text-xs text-slate-500">
+                  ({filteredProducts.length}件)
+                </span>
+              )}
             </Label>
             <Select
               value={filters.product_id ? String(filters.product_id) : ""}
@@ -264,7 +301,7 @@ export function WithdrawalFormFiltered({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="0">すべて</SelectItem>
-                {products.map((p) => (
+                {filteredProducts.map((p) => (
                   <SelectItem key={p.id} value={String(p.id)}>
                     {p.product_code} - {p.product_name}
                   </SelectItem>
