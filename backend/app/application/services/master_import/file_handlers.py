@@ -40,7 +40,7 @@ def get_file_extension(filename: str) -> str:
 def parse_json(content: bytes) -> dict:
     """Parse JSON content."""
     try:
-        return json.loads(content.decode("utf-8"))
+        return json.loads(content.decode("utf-8"))  # type: ignore[no-any-return]
     except json.JSONDecodeError as e:
         raise FileParseError(f"Invalid JSON: {e}")
     except UnicodeDecodeError as e:
@@ -50,7 +50,7 @@ def parse_json(content: bytes) -> dict:
 def parse_yaml(content: bytes) -> dict:
     """Parse YAML content."""
     try:
-        return yaml.safe_load(content.decode("utf-8"))
+        return yaml.safe_load(content.decode("utf-8"))  # type: ignore[no-any-return]
     except yaml.YAMLError as e:
         raise FileParseError(f"Invalid YAML: {e}")
     except UnicodeDecodeError as e:

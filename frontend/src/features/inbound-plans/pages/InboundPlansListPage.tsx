@@ -10,8 +10,12 @@ import { toast } from "sonner";
 import { InboundPlansList, type InboundPlansFilters } from "../components/InboundPlansList";
 import { useInboundPlans, useDeleteInboundPlan, useSyncFromSAP } from "../hooks";
 
+import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
+/* eslint-disable-next-line complexity */
 export function InboundPlansListPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -74,17 +78,26 @@ export function InboundPlansListPage() {
   };
 
   return (
-    <InboundPlansList
-      plans={plans}
-      isLoading={isLoading}
-      isError={isError}
-      filters={filters}
-      onFilterChange={setFilters}
-      onDelete={handleDelete}
-      onViewDetail={handleViewDetail}
-      isDeleting={deleteMutation.isPending}
-      onSyncFromSAP={handleSyncFromSAP}
-      isSyncing={syncMutation.isPending}
-    />
+    <PageContainer>
+      <PageHeader
+        title="入荷予定一覧"
+        subtitle="入荷予定管理（ロット自動生成対応）"
+        actions={
+          <Button onClick={handleSyncFromSAP} disabled={syncMutation.isPending}>
+            {syncMutation.isPending ? "同期中..." : "SAPから取得"}
+          </Button>
+        }
+      />
+      <InboundPlansList
+        plans={plans}
+        isLoading={isLoading}
+        isError={isError}
+        filters={filters}
+        onFilterChange={setFilters}
+        onDelete={handleDelete}
+        onViewDetail={handleViewDetail}
+        isDeleting={deleteMutation.isPending}
+      />
+    </PageContainer>
   );
 }

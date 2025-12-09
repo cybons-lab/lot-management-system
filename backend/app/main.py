@@ -46,7 +46,7 @@ async def lifespan(app: FastAPI):
     logger.info("👋 アプリケーションを終了しています...")
 
 
-app = FastAPI(
+application = FastAPI(
     title="Lot Management API",
     openapi_url="/api/openapi.json",
     docs_url="/api/docs",
@@ -61,38 +61,38 @@ app = FastAPI(
 # ========================================
 # 登録順序: HTTP例外 → バリデーションエラー → ドメイン例外 → 汎用例外
 # Note: type: ignore is needed due to FastAPI/Starlette type signature mismatch
-app.add_exception_handler(StarletteHTTPException, errors.http_exception_handler)  # type: ignore[arg-type]
-app.add_exception_handler(RequestValidationError, errors.validation_exception_handler)  # type: ignore[arg-type]
-app.add_exception_handler(DomainError, errors.domain_exception_handler)  # type: ignore[arg-type]
-app.add_exception_handler(Exception, errors.generic_exception_handler)
+application.add_exception_handler(StarletteHTTPException, errors.http_exception_handler)  # type: ignore[arg-type]
+application.add_exception_handler(RequestValidationError, errors.validation_exception_handler)  # type: ignore[arg-type]
+application.add_exception_handler(DomainError, errors.domain_exception_handler)  # type: ignore[arg-type]
+application.add_exception_handler(Exception, errors.generic_exception_handler)
 
 # ========================================
 # ミドルウェア登録
 # ========================================
 # 注: add_middlewareは逆順で実行される
 # 実行順: CORS → Metrics → RequestLogging → RequestID
-app.add_middleware(
+application.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(MetricsMiddleware)
-app.add_middleware(
+application.add_middleware(MetricsMiddleware)
+application.add_middleware(
     RequestLoggingMiddleware,
     sensitive_headers=settings.LOG_SENSITIVE_FIELDS,
     log_request_body=settings.ENVIRONMENT != "production",
 )
-app.add_middleware(RequestIdMiddleware)
+application.add_middleware(RequestIdMiddleware)
 
 # ========================================
 # ルーター登録
 # ========================================
-register_all_routers(app)
+register_all_routers(application)
 
 
-@app.get("/")
+@application.get("/")
 def root():
     """ルートエンドポイント."""
     return {
@@ -100,3 +100,7 @@ def root():
         "version": settings.APP_VERSION,
         "docs": "/api/docs",
     }
+
+
+# For backward compatibility and testing
+app: FastAPI = application  # type: ignore[assignment, no-redef]
