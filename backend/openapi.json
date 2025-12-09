@@ -1374,6 +1374,7 @@
           "content": {
             "application/json": {
               "schema": {
+                "additionalProperties": true,
                 "type": "object",
                 "title": "Request"
               }
@@ -5903,6 +5904,231 @@
         }
       }
     },
+    "/api/masters/customer-item-delivery-settings/": {
+      "get": {
+        "tags": [
+          "customer-item-delivery-settings"
+        ],
+        "summary": "List Settings",
+        "description": "List all delivery settings for a customer item.",
+        "operationId": "list_settings_api_masters_customer_item_delivery_settings__get",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Customer Id"
+            }
+          },
+          {
+            "name": "external_product_code",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "External Product Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomerItemDeliverySettingResponse"
+                  },
+                  "title": "Response List Settings Api Masters Customer Item Delivery Settings  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "customer-item-delivery-settings"
+        ],
+        "summary": "Create Setting",
+        "description": "Create a new delivery setting.",
+        "operationId": "create_setting_api_masters_customer_item_delivery_settings__post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerItemDeliverySettingCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerItemDeliverySettingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/customer-item-delivery-settings/{setting_id}": {
+      "put": {
+        "tags": [
+          "customer-item-delivery-settings"
+        ],
+        "summary": "Update Setting",
+        "description": "Update a delivery setting.",
+        "operationId": "update_setting_api_masters_customer_item_delivery_settings__setting_id__put",
+        "parameters": [
+          {
+            "name": "setting_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Setting Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerItemDeliverySettingUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerItemDeliverySettingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "customer-item-delivery-settings"
+        ],
+        "summary": "Delete Setting",
+        "description": "Delete a delivery setting.",
+        "operationId": "delete_setting_api_masters_customer_item_delivery_settings__setting_id__delete",
+        "parameters": [
+          {
+            "name": "setting_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Setting Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/customer-item-delivery-settings/shipment-text": {
+      "post": {
+        "tags": [
+          "customer-item-delivery-settings"
+        ],
+        "summary": "Get Shipment Text",
+        "description": "Get shipment text with priority-based fallback.\n\nPriority order:\n1. Exact match (delivery_place_id + jiku_code)\n2. Delivery place only match\n3. Default setting (is_default = true)\n4. customer_items.shipping_document_template (fallback)",
+        "operationId": "get_shipment_text_api_masters_customer_item_delivery_settings_shipment_text_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShipmentTextRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShipmentTextResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "summary": "Login",
@@ -6972,6 +7198,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Delete Assignment Api Assignments  Assignment Id  Delete"
                 }
               }
@@ -7407,6 +7634,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Download Template Api Admin Master Import Template Get"
                 }
               }
@@ -7439,6 +7667,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Download Order Template Api Admin Master Import Template Order Get"
                 }
@@ -8878,7 +9107,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Adjusted Quantity"
@@ -8914,6 +9144,7 @@
           },
           "adjusted_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Adjusted Quantity"
           },
           "reason": {
@@ -9271,6 +9502,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "allocation_type": {
@@ -9375,6 +9607,7 @@
           },
           "shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Shortage Quantity"
           },
           "related_order_line_ids": {
@@ -9524,14 +9757,17 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Shortage Quantity"
           }
         },
@@ -9552,14 +9788,17 @@
         "properties": {
           "total_forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Forecast Quantity"
           },
           "total_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Allocated Quantity"
           },
           "total_shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Shortage Quantity"
           },
           "per_key": {
@@ -9701,6 +9940,7 @@
           },
           "quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity",
             "description": "引当数量"
           },
@@ -9853,11 +10093,13 @@
           },
           "total_allocated": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Total Allocated",
             "default": "0"
           },
           "remaining_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Remaining Quantity",
             "default": "0"
           },
@@ -9987,6 +10229,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -10011,6 +10254,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -10097,6 +10341,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -10441,6 +10686,7 @@
             "description": "ルール種別（allocation/expiry_warning/kanban/other）"
           },
           "rule_parameters": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
             "description": "ルールパラメータ（JSON）"
@@ -10502,6 +10748,7 @@
             "description": "ルール種別（allocation/expiry_warning/kanban/other）"
           },
           "rule_parameters": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
             "description": "ルールパラメータ（JSON）"
@@ -10569,6 +10816,7 @@
           "rule_parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -10607,14 +10855,17 @@
           },
           "current_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Current Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity",
             "description": "引当可能数量"
           },
@@ -11338,6 +11589,342 @@
         "title": "CustomerItemCreate",
         "description": "Schema for creating a customer item mapping."
       },
+      "CustomerItemDeliverySettingCreate": {
+        "properties": {
+          "customer_id": {
+            "type": "integer",
+            "title": "Customer Id"
+          },
+          "external_product_code": {
+            "type": "string",
+            "title": "External Product Code"
+          },
+          "delivery_place_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Id",
+            "description": "納入先ID（NULLの場合はデフォルト設定）"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code",
+            "description": "次区コード（NULLの場合は全次区共通）"
+          },
+          "shipment_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Text",
+            "description": "出荷表テキスト（SAP連携用）"
+          },
+          "packing_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packing Note",
+            "description": "梱包・注意書き"
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days",
+            "description": "リードタイム（日）"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "デフォルト設定フラグ",
+            "default": false
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From",
+            "description": "有効開始日"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To",
+            "description": "有効終了日"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id",
+          "external_product_code"
+        ],
+        "title": "CustomerItemDeliverySettingCreate",
+        "description": "Schema for creating a CustomerItemDeliverySetting."
+      },
+      "CustomerItemDeliverySettingResponse": {
+        "properties": {
+          "customer_id": {
+            "type": "integer",
+            "title": "Customer Id"
+          },
+          "external_product_code": {
+            "type": "string",
+            "title": "External Product Code"
+          },
+          "delivery_place_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Id",
+            "description": "納入先ID（NULLの場合はデフォルト設定）"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code",
+            "description": "次区コード（NULLの場合は全次区共通）"
+          },
+          "shipment_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Text",
+            "description": "出荷表テキスト（SAP連携用）"
+          },
+          "packing_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packing Note",
+            "description": "梱包・注意書き"
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days",
+            "description": "リードタイム（日）"
+          },
+          "is_default": {
+            "type": "boolean",
+            "title": "Is Default",
+            "description": "デフォルト設定フラグ",
+            "default": false
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From",
+            "description": "有効開始日"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To",
+            "description": "有効終了日"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id",
+          "external_product_code",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "CustomerItemDeliverySettingResponse",
+        "description": "Response schema for CustomerItemDeliverySetting."
+      },
+      "CustomerItemDeliverySettingUpdate": {
+        "properties": {
+          "delivery_place_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Id"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code"
+          },
+          "shipment_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Text"
+          },
+          "packing_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packing Note"
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days"
+          },
+          "is_default": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Default"
+          },
+          "valid_from": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid From"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          }
+        },
+        "type": "object",
+        "title": "CustomerItemDeliverySettingUpdate",
+        "description": "Schema for updating a CustomerItemDeliverySetting."
+      },
       "CustomerItemImportRow": {
         "properties": {
           "external_product_code": {
@@ -11873,7 +12460,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               },
               {
                 "type": "null"
@@ -11887,7 +12475,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -11922,7 +12511,8 @@
           "remaining_lot_qty": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -11959,7 +12549,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Expected Quantity"
@@ -12016,6 +12607,7 @@
           },
           "expected_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Expected Quantity"
           },
           "expected_expiry_date": {
@@ -12061,11 +12653,13 @@
           },
           "order_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
             "description": "受注数量"
           },
           "already_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Already Allocated Quantity",
             "description": "既存引当数量",
             "default": "0"
@@ -12106,6 +12700,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity",
             "description": "引当数量"
           },
@@ -12210,7 +12805,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Forecast Quantity"
@@ -12322,7 +12918,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Forecast Quantity"
@@ -12505,6 +13102,7 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "unit": {
@@ -12668,6 +13266,7 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "unit": {
@@ -12784,7 +13383,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -12920,7 +13520,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               },
               {
                 "type": "null"
@@ -12950,6 +13551,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "allocation_type": {
@@ -13136,7 +13738,8 @@
           "total_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -13221,7 +13824,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Planned Quantity"
@@ -13279,6 +13883,7 @@
           },
           "planned_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Planned Quantity"
           },
           "unit": {
@@ -13428,7 +14033,8 @@
           "total_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -13521,14 +14127,17 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Available Quantity"
           },
           "lot_count": {
@@ -13575,6 +14184,7 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "lot_count": {
@@ -13614,6 +14224,7 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "lot_count": {
@@ -13653,23 +14264,28 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Available Quantity"
           },
           "soft_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Soft Allocated Quantity",
             "default": "0"
           },
           "hard_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Hard Allocated Quantity",
             "default": "0"
           },
@@ -13887,7 +14503,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Current Quantity",
@@ -13899,7 +14516,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Allocated Quantity",
@@ -13911,7 +14529,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Locked Quantity",
@@ -14043,7 +14662,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -14140,16 +14760,19 @@
           },
           "current_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Current Quantity",
             "default": "0"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
             "default": "0"
           },
           "locked_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Locked Quantity",
             "default": "0"
           },
@@ -14364,7 +14987,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -14378,7 +15002,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -14557,6 +15182,7 @@
           "old_values": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -14569,6 +15195,7 @@
           "new_values": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -14846,6 +15473,7 @@
           "changes": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -14954,7 +15582,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               }
             ],
             "title": "Order Quantity",
@@ -14972,7 +15601,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               },
               {
                 "type": "null"
@@ -15213,6 +15843,7 @@
           },
           "order_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
             "description": "受注数量"
           },
@@ -15225,7 +15856,8 @@
           "converted_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               },
               {
                 "type": "null"
@@ -15491,6 +16123,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
             "description": "引当済数量",
             "default": "0"
@@ -15988,6 +16621,7 @@
           "data": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -16234,6 +16868,98 @@
         "title": "SAPSyncResponse",
         "description": "Response model for SAP synchronization."
       },
+      "ShipmentTextRequest": {
+        "properties": {
+          "customer_id": {
+            "type": "integer",
+            "title": "Customer Id"
+          },
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id"
+          },
+          "delivery_place_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Id"
+          },
+          "jiku_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jiku Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id",
+          "product_id"
+        ],
+        "title": "ShipmentTextRequest",
+        "description": "Request schema for getting shipment text."
+      },
+      "ShipmentTextResponse": {
+        "properties": {
+          "shipment_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipment Text"
+          },
+          "packing_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Packing Note"
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "データソース: 'delivery_setting' | 'customer_item' | 'none'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "shipment_text",
+          "packing_note",
+          "lead_time_days",
+          "source"
+        ],
+        "title": "ShipmentTextResponse",
+        "description": "Response schema for shipment text lookup."
+      },
       "StockHistoryCreate": {
         "properties": {
           "lot_id": {
@@ -16249,7 +16975,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity Change"
@@ -16260,7 +16987,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity After"
@@ -16321,10 +17049,12 @@
           },
           "quantity_change": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity Change"
           },
           "quantity_after": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity After"
           },
           "reference_type": {
@@ -16594,7 +17324,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Factor",
@@ -16644,6 +17375,7 @@
           },
           "factor": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Factor",
             "description": "換算係数"
           },
@@ -16682,7 +17414,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -17269,7 +18002,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity",
@@ -17399,6 +18133,7 @@
           },
           "quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity"
           },
           "withdrawal_type": {

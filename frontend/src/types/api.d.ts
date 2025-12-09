@@ -2336,6 +2336,80 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/customer-item-delivery-settings/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Settings
+     * @description List all delivery settings for a customer item.
+     */
+    get: operations["list_settings_api_masters_customer_item_delivery_settings__get"];
+    put?: never;
+    /**
+     * Create Setting
+     * @description Create a new delivery setting.
+     */
+    post: operations["create_setting_api_masters_customer_item_delivery_settings__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customer-item-delivery-settings/{setting_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Setting
+     * @description Update a delivery setting.
+     */
+    put: operations["update_setting_api_masters_customer_item_delivery_settings__setting_id__put"];
+    post?: never;
+    /**
+     * Delete Setting
+     * @description Delete a delivery setting.
+     */
+    delete: operations["delete_setting_api_masters_customer_item_delivery_settings__setting_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customer-item-delivery-settings/shipment-text": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get Shipment Text
+     * @description Get shipment text with priority-based fallback.
+     *
+     *     Priority order:
+     *     1. Exact match (delivery_place_id + jiku_code)
+     *     2. Delivery place only match
+     *     3. Default setting (is_default = true)
+     *     4. customer_items.shipping_document_template (fallback)
+     */
+    post: operations["get_shipment_text_api_masters_customer_item_delivery_settings_shipment_text_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/auth/login": {
     parameters: {
       query?: never;
@@ -4411,7 +4485,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
     };
     /**
@@ -4427,7 +4503,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
     };
     /**
@@ -4479,7 +4557,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
       /** Job Id */
       job_id: number;
@@ -4694,7 +4774,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -4736,7 +4818,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -4775,7 +4859,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: Record<string, never> | null;
+      rule_parameters?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -5088,6 +5174,142 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
+    };
+    /**
+     * CustomerItemDeliverySettingCreate
+     * @description Schema for creating a CustomerItemDeliverySetting.
+     */
+    CustomerItemDeliverySettingCreate: {
+      /** Customer Id */
+      customer_id: number;
+      /** External Product Code */
+      external_product_code: string;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID（NULLの場合はデフォルト設定）
+       */
+      delivery_place_id?: number | null;
+      /**
+       * Jiku Code
+       * @description 次区コード（NULLの場合は全次区共通）
+       */
+      jiku_code?: string | null;
+      /**
+       * Shipment Text
+       * @description 出荷表テキスト（SAP連携用）
+       */
+      shipment_text?: string | null;
+      /**
+       * Packing Note
+       * @description 梱包・注意書き
+       */
+      packing_note?: string | null;
+      /**
+       * Lead Time Days
+       * @description リードタイム（日）
+       */
+      lead_time_days?: number | null;
+      /**
+       * Is Default
+       * @description デフォルト設定フラグ
+       * @default false
+       */
+      is_default: boolean;
+      /**
+       * Valid From
+       * @description 有効開始日
+       */
+      valid_from?: string | null;
+      /**
+       * Valid To
+       * @description 有効終了日
+       */
+      valid_to?: string | null;
+    };
+    /**
+     * CustomerItemDeliverySettingResponse
+     * @description Response schema for CustomerItemDeliverySetting.
+     */
+    CustomerItemDeliverySettingResponse: {
+      /** Customer Id */
+      customer_id: number;
+      /** External Product Code */
+      external_product_code: string;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID（NULLの場合はデフォルト設定）
+       */
+      delivery_place_id?: number | null;
+      /**
+       * Jiku Code
+       * @description 次区コード（NULLの場合は全次区共通）
+       */
+      jiku_code?: string | null;
+      /**
+       * Shipment Text
+       * @description 出荷表テキスト（SAP連携用）
+       */
+      shipment_text?: string | null;
+      /**
+       * Packing Note
+       * @description 梱包・注意書き
+       */
+      packing_note?: string | null;
+      /**
+       * Lead Time Days
+       * @description リードタイム（日）
+       */
+      lead_time_days?: number | null;
+      /**
+       * Is Default
+       * @description デフォルト設定フラグ
+       * @default false
+       */
+      is_default: boolean;
+      /**
+       * Valid From
+       * @description 有効開始日
+       */
+      valid_from?: string | null;
+      /**
+       * Valid To
+       * @description 有効終了日
+       */
+      valid_to?: string | null;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * CustomerItemDeliverySettingUpdate
+     * @description Schema for updating a CustomerItemDeliverySetting.
+     */
+    CustomerItemDeliverySettingUpdate: {
+      /** Delivery Place Id */
+      delivery_place_id?: number | null;
+      /** Jiku Code */
+      jiku_code?: string | null;
+      /** Shipment Text */
+      shipment_text?: string | null;
+      /** Packing Note */
+      packing_note?: string | null;
+      /** Lead Time Days */
+      lead_time_days?: number | null;
+      /** Is Default */
+      is_default?: boolean | null;
+      /** Valid From */
+      valid_from?: string | null;
+      /** Valid To */
+      valid_to?: string | null;
     };
     /**
      * CustomerItemImportRow
@@ -6417,12 +6639,16 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: Record<string, never> | null;
+      old_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: Record<string, never> | null;
+      new_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -6582,7 +6808,9 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: Record<string, never> | null;
+      changes?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -7089,7 +7317,9 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: Record<string, never> | null;
+      data?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * RoleCreate
@@ -7217,6 +7447,37 @@ export interface components {
        * @default 0
        */
       skipped_count: number;
+    };
+    /**
+     * ShipmentTextRequest
+     * @description Request schema for getting shipment text.
+     */
+    ShipmentTextRequest: {
+      /** Customer Id */
+      customer_id: number;
+      /** Product Id */
+      product_id: number;
+      /** Delivery Place Id */
+      delivery_place_id?: number | null;
+      /** Jiku Code */
+      jiku_code?: string | null;
+    };
+    /**
+     * ShipmentTextResponse
+     * @description Response schema for shipment text lookup.
+     */
+    ShipmentTextResponse: {
+      /** Shipment Text */
+      shipment_text: string | null;
+      /** Packing Note */
+      packing_note: string | null;
+      /** Lead Time Days */
+      lead_time_days: number | null;
+      /**
+       * Source
+       * @description データソース: 'delivery_setting' | 'customer_item' | 'none'
+       */
+      source: string;
     };
     /**
      * StockHistoryCreate
@@ -8706,7 +8967,9 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": Record<string, never>;
+        "application/json": {
+          [key: string]: unknown;
+        };
       };
     };
     responses: {
@@ -11532,6 +11795,168 @@ export interface operations {
       };
     };
   };
+  list_settings_api_masters_customer_item_delivery_settings__get: {
+    parameters: {
+      query: {
+        customer_id: number;
+        external_product_code: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemDeliverySettingResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_setting_api_masters_customer_item_delivery_settings__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CustomerItemDeliverySettingCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemDeliverySettingResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_setting_api_masters_customer_item_delivery_settings__setting_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        setting_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CustomerItemDeliverySettingUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemDeliverySettingResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_setting_api_masters_customer_item_delivery_settings__setting_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        setting_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_shipment_text_api_masters_customer_item_delivery_settings_shipment_text_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ShipmentTextRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ShipmentTextResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   login_api_auth_login_post: {
     parameters: {
       query?: never;
@@ -12244,7 +12669,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
@@ -12548,7 +12975,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
@@ -12577,7 +13006,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
     };
