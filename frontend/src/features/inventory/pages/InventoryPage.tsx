@@ -1,4 +1,14 @@
-import { ArrowUpFromLine, Box, Crown, History, Home, List, Package, Plus, Truck } from "lucide-react";
+import {
+  ArrowUpFromLine,
+  Box,
+  Crown,
+  History,
+  Home,
+  List,
+  Package,
+  Plus,
+  Truck,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
