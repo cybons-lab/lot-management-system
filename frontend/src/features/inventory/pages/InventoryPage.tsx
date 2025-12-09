@@ -25,6 +25,8 @@ import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import { FormDialog } from "@/shared/components/form";
 import { Section } from "@/shared/components/layout";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { fmt } from "@/shared/utils/number";
 
 type OverviewMode = "items" | "product" | "supplier" | "warehouse";
@@ -114,20 +116,22 @@ export function InventoryPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1600px] px-6 py-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">在庫管理</h1>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" onClick={() => navigate("/inventory/adhoc/new")}>
-            <Package className="mr-2 h-4 w-4" />
-            アドホックロット作成
-          </Button>
-          <Button size="sm" onClick={createDialog.open}>
-            <Plus className="mr-2 h-4 w-4" />
-            ロット新規登録
-          </Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="在庫管理"
+        actions={
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => navigate("/inventory/adhoc/new")}>
+              <Package className="mr-2 h-4 w-4" />
+              アドホックロット作成
+            </Button>
+            <Button size="sm" onClick={createDialog.open}>
+              <Plus className="mr-2 h-4 w-4" />
+              ロット新規登録
+            </Button>
+          </div>
+        }
+      />
 
       <div className="space-y-6">
         {/* Stats Cards */}
@@ -267,6 +271,6 @@ export function InventoryPage() {
           isSubmitting={createLotMutation.isPending}
         />
       </FormDialog>
-    </div>
+    </PageContainer>
   );
 }

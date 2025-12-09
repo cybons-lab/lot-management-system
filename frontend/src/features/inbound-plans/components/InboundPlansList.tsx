@@ -43,8 +43,6 @@ interface InboundPlansListProps {
   onDelete: (id: number) => void;
   onViewDetail: (id: number) => void;
   isDeleting?: boolean;
-  onSyncFromSAP?: () => void;
-  isSyncing?: boolean;
 }
 
 // ============================================
@@ -60,8 +58,6 @@ export function InboundPlansList({
   onDelete,
   onViewDetail,
   isDeleting,
-  onSyncFromSAP,
-  isSyncing,
 }: InboundPlansListProps) {
   // Master data for filter options
   const { data: suppliers = [] } = useSuppliersQuery();
@@ -75,20 +71,7 @@ export function InboundPlansList({
     [suppliers],
   );
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">入荷予定一覧</h2>
-          <p className="mt-1 text-gray-600">入荷予定管理（ロット自動生成対応）</p>
-        </div>
-        {onSyncFromSAP && (
-          <Button onClick={onSyncFromSAP} disabled={isSyncing} size="default">
-            {isSyncing ? "同期中..." : "SAPから取得"}
-          </Button>
-        )}
-      </div>
-
+    <div className="space-y-6">
       {/* Filters */}
       <div className="rounded-lg border bg-white p-4">
         <div className="grid gap-4 md:grid-cols-4">

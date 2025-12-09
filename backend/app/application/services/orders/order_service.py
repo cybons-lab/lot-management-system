@@ -239,6 +239,10 @@ class OrderService:
                 delivery_place_id=line_data.delivery_place_id,
                 order_type=line_data.order_type,
                 forecast_id=line_data.forecast_id,
+                customer_order_no=line_data.customer_order_no,
+                customer_order_line_no=line_data.customer_order_line_no,
+                sap_order_no=line_data.sap_order_no,
+                sap_order_item_no=line_data.sap_order_item_no,
             )
             self.db.add(line)
             self.db.flush()

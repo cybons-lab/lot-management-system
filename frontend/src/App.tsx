@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import { Toaster } from "sonner";
 
-import { SAPRegistrationButton } from "@/components/common/SAPRegistrationButton";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { LoginPage } from "@/features/auth/pages/LoginPage";
@@ -17,7 +16,6 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <SAPRegistrationButton />
         <SystemStatus />
         <Routes>
           <Route path="/login" element={<LoginPage />} />

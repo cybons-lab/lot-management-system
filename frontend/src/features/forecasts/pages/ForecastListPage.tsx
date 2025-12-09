@@ -28,6 +28,8 @@ import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { ROUTES } from "@/constants/routes";
 import { generateAllocationSuggestions } from "@/features/allocations/api";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function ForecastListPage() {
   const navigate = useNavigate();
@@ -220,23 +222,23 @@ export function ForecastListPage() {
   void navigate;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">フォーキャスト一覧</h2>
-          <p className="mt-1 text-gray-600">顧客×納入先×製品でグループ化（v2.4）</p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleGenerateSuggestions}
-            disabled={generateMutation.isPending}
-          >
-            {generateMutation.isPending ? "生成中..." : "引当推奨生成"}
-          </Button>
-          <Button onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>一括インポート</Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="フォーキャスト一覧"
+        subtitle="顧客×納入先×製品でグループ化（v2.4）"
+        actions={
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleGenerateSuggestions}
+              disabled={generateMutation.isPending}
+            >
+              {generateMutation.isPending ? "生成中..." : "引当推奨生成"}
+            </Button>
+            <Button onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>一括インポート</Button>
+          </div>
+        }
+      />
 
       <div className="rounded-lg border bg-white p-4">
         <div className="grid gap-4 md:grid-cols-3">
@@ -332,6 +334,6 @@ export function ForecastListPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   );
 }

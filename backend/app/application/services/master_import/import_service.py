@@ -233,9 +233,9 @@ class MasterImportService:
             .first()
         )
         if existing:
-            existing.is_primary = is_primary
+            existing.is_primary = is_primary  # type: ignore[assignment]
             if lead_time_days is not None:
-                existing.lead_time_days = lead_time_days
+                existing.lead_time_days = lead_time_days  # type: ignore[assignment]
             return existing
         else:
             ps = ProductSupplier(

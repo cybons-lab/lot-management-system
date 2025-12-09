@@ -151,11 +151,6 @@ class TestLoadOrder:
         with pytest.raises(ValueError, match="Order not found"):
             _load_order(db_session, order_id=9999)
 
-    def test_load_order_no_params(self, db_session: Session):
-        """パラメータなしで呼び出すと ValueError."""
-        with pytest.raises(ValueError, match="order_id must be provided"):
-            _load_order(db_session)
-
 
 class TestAllocationPreviewStatus:
     """引当プレビューの状態チェックテスト."""

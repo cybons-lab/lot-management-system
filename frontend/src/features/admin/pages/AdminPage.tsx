@@ -15,6 +15,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui";
 import { http } from "@/shared/api/http-client";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 interface InventorySyncResult {
   success: boolean;
@@ -74,11 +76,8 @@ export function AdminPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-destructive text-3xl font-bold tracking-tight">管理機能</h2>
-        <p className="text-muted-foreground">システム管理と危険な操作を実行できます</p>
-      </div>
+    <PageContainer>
+      <PageHeader title="管理機能" subtitle="システム管理と危険な操作を実行できます" />
 
       <div className="border-destructive bg-destructive/10 rounded-lg border p-6">
         <div className="flex items-start gap-4">
@@ -96,20 +95,32 @@ export function AdminPage() {
         <div className="bg-card rounded-lg border p-6">
           <h3 className="mb-4 text-lg font-semibold">データベース操作</h3>
           <div className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              データベースバックアップ
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              データインポート/エクスポート
+            <Button
+              variant="outline"
+              className="text-muted-foreground w-full justify-start"
+              onClick={() => toast.info("この機能はまだ実装されていません")}
+            >
+              データベースバックアップ（未実装）
             </Button>
             <Button
               variant="outline"
+              className="text-muted-foreground w-full justify-start"
+              onClick={() => toast.info("この機能はまだ実装されていません")}
+            >
+              データインポート/エクスポート（未実装）
+            </Button>
+            <Button
+              variant="destructive"
               className="w-full justify-start"
               onClick={() => setShowGenerateConfirm(true)}
             >
               テストデータ生成（開発用）
             </Button>
-            <Button variant="destructive" className="w-full justify-start">
+            <Button
+              variant="destructive"
+              className="w-full justify-start"
+              onClick={() => toast.info("この機能はまだ実装されていません")}
+            >
               データベースリセット（開発用）
             </Button>
           </div>
@@ -145,12 +156,6 @@ export function AdminPage() {
         <div className="bg-card rounded-lg border p-6">
           <h3 className="mb-4 text-lg font-semibold">システム設定</h3>
           <div className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              マスタデータ管理
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              ユーザー管理
-            </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link to="/admin/batch-jobs">バッチジョブ管理</Link>
             </Button>
@@ -185,6 +190,6 @@ export function AdminPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </PageContainer>
   );
 }

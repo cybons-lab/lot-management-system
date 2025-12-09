@@ -115,7 +115,7 @@ def generate_openapi_json(output_path: Path) -> None:
         import os
 
         os.environ["DATABASE_URL"] = "sqlite:///:memory:"
-        from app.main import app
+        from app.main import application as app
 
         # OpenAPIスキーマを取得
         openapi_schema = app.openapi()

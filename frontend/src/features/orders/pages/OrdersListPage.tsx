@@ -7,19 +7,22 @@
  * - UIコンポーネント分離
  */
 
+import { Plus, RefreshCw, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
+import { Badge, Button } from "@/components/ui";
 import { ErrorState } from "@/features/inventory/components/ErrorState";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
 import { OrdersDeliveryView } from "@/features/orders/components/OrdersDeliveryView";
 import { OrdersFilters } from "@/features/orders/components/OrdersFilters";
 import { OrdersFlatView } from "@/features/orders/components/OrdersFlatView";
-import { OrdersHeader } from "@/features/orders/components/OrdersHeader";
 import { OrdersOrderView } from "@/features/orders/components/OrdersOrderView";
 import { useOrdersGrouping } from "@/features/orders/hooks/useOrdersGrouping";
 import { useOrdersListLogic } from "@/features/orders/hooks/useOrdersListLogic";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function OrdersListPage() {
   const navigate = useNavigate();
@@ -31,13 +34,36 @@ export function OrdersListPage() {
   );
 
   return (
-    <div className="space-y-6 px-6 py-6 md:px-8">
-      <OrdersHeader
-        confirmedLinesCount={logic.confirmedLines.length}
-        isLoading={logic.isLoading}
-        onRefresh={logic.refetch}
-        onCreateClick={logic.createDialog.open}
-        onNavigateToConfirmed={() => navigate("/confirmed-lines")}
+    <PageContainer>
+      <PageHeader
+        title="受注管理"
+        subtitle="受注明細一覧と引当状況を管理します"
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate("/confirmed-lines")}>
+              <Send className="mr-2 h-4 w-4" />
+              SAP受注登録
+              {logic.confirmedLines.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {logic.confirmedLines.length}
+                </Badge>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => logic.refetch()}
+              disabled={logic.isLoading}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              更新
+            </Button>
+            <Button size="sm" onClick={logic.createDialog.open}>
+              <Plus className="mr-2 h-4 w-4" />
+              新規登録
+            </Button>
+          </div>
+        }
       />
 
       <OrdersFilters
@@ -86,6 +112,6 @@ export function OrdersListPage() {
           isSubmitting={logic.createOrderMutation.isPending}
         />
       </FormDialog>
-    </div>
+    </PageContainer>
   );
 }

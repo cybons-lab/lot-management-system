@@ -3,15 +3,14 @@ import { DashboardStats } from "./DashboardStats";
 import { MasterChangeLogWidget } from "./MasterChangeLogWidget";
 import * as styles from "./styles";
 
+import { PageContainer } from "@/shared/components/layout/PageContainer";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
+
 export function Dashboard() {
   return (
-    <div className="mx-auto max-w-[1600px] px-6 py-6 pb-20">
+    <PageContainer>
+      <PageHeader title="ダッシュボード" subtitle="システムの健全性とアクティビティを監視します" />
       <div className={styles.container}>
-        <div className={styles.header.root}>
-          <h2 className={styles.header.title}>ダッシュボード</h2>
-          <p className={styles.header.description}>システムの健全性とアクティビティを監視します</p>
-        </div>
-
         {/* KPI Cards */}
         <DashboardStats />
 
@@ -24,6 +23,6 @@ export function Dashboard() {
           <MasterChangeLogWidget />
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }
