@@ -13,7 +13,6 @@ import { Button, Input, Label } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 /* eslint-disable complexity */
-
 import { useCustomers } from "@/features/customers/hooks";
 import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";

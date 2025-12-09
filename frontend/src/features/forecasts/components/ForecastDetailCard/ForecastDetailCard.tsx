@@ -36,7 +36,6 @@ export function ForecastDetailCard({
   isFocused = false,
   onToggle,
 }: ForecastDetailCardProps) {
-  /* eslint-disable react-hooks/rules-of-hooks */
   const { group_key, forecasts = [] } = group;
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
   const queryClient = useQueryClient();
