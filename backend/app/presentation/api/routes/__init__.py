@@ -46,6 +46,7 @@ from app.presentation.api.routes.inventory import (
 from app.presentation.api.routes.masters import (
     customer_items_router,
     customers_router,
+    delivery_places_router,
     products_router,
     supplier_products_router,
     suppliers_router,
@@ -98,6 +99,7 @@ def register_all_routers(app: FastAPI) -> None:
     # Master data endpoints
     masters_prefix = f"{prefix}/masters"
     app.include_router(customers_router, prefix=masters_prefix)
+    app.include_router(delivery_places_router, prefix=masters_prefix)
     app.include_router(products_router, prefix=masters_prefix)
     app.include_router(suppliers_router, prefix=masters_prefix)
     app.include_router(supplier_products_router, prefix=masters_prefix)

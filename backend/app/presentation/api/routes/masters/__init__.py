@@ -4,6 +4,9 @@ from app.presentation.api.routes.masters.customer_items_router import (
     router as customer_items_router,
 )
 from app.presentation.api.routes.masters.customers_router import router as customers_router
+from app.presentation.api.routes.masters.delivery_places_router import (
+    router as delivery_places_router,
+)
 from app.presentation.api.routes.masters.products_router import router as products_router
 from app.presentation.api.routes.masters.supplier_products_router import (
     router as supplier_products_router,
@@ -18,6 +21,7 @@ from app.presentation.api.routes.masters.warehouses_router import router as ware
 __all__ = [
     "customer_items_router",
     "customers_router",
+    "delivery_places_router",
     "products_router",
     "supplier_products_router",
     "suppliers_router",

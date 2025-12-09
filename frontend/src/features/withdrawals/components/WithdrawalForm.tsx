@@ -13,6 +13,7 @@ import { Button, Input, Label } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomers } from "@/features/customers/hooks";
+import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";
 
 interface WithdrawalFormProps {
@@ -95,14 +96,8 @@ export function WithdrawalForm({
   useEffect(() => {
     if (formData.customer_id) {
       setIsLoadingDeliveryPlaces(true);
-      // TODO: 納入場所APIを呼び出す（現在は簡易実装）
-      // 実際にはdelivery-placesエンドポイントをcustomer_idでフィルタ
-      import("@/shared/api/http-client")
-        .then(({ http }) => {
-          return http.get<DeliveryPlace[]>(
-            `masters/delivery-places?customer_id=${formData.customer_id}`,
-          );
-        })
+      http
+        .get<DeliveryPlace[]>(`masters/delivery-places?customer_id=${formData.customer_id}`)
         .then((places) => {
           setDeliveryPlaces(places);
           setFormData((prev) => ({ ...prev, delivery_place_id: 0 }));
