@@ -25,6 +25,7 @@ from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog
 from .masters_models import (
     Customer,
     CustomerItem,
+    CustomerItemDeliverySetting,
     DeliveryPlace,
     Product,
     ProductUomConversion,
@@ -66,6 +67,7 @@ __all__ = [
     "Product",
     "ProductUomConversion",
     "CustomerItem",
+    "CustomerItemDeliverySetting",
     # Inventory
     "Lot",
     "LotOriginType",

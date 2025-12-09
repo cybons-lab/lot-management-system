@@ -7,7 +7,7 @@ columns (address, created_by, deleted_at, etc.) have been removed.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -15,6 +15,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
@@ -384,3 +385,72 @@ class CustomerItemJikuMapping(Base):
 
     # Relationships
     delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
+
+
+class CustomerItemDeliverySetting(Base):
+    """Customer item delivery settings (得意先品番-納入先別出荷設定).
+
+    次区・納入先ごとの出荷テキスト、梱包注意書き、リードタイムなどを管理。
+    SAP連携時の出荷表データ生成に使用される。
+
+    DDL: customer_item_delivery_settings
+    Primary key: id (BIGSERIAL)
+    Foreign keys:
+        (customer_id, external_product_code) -> customer_items
+        delivery_place_id -> delivery_places(id)
+    """
+
+    __tablename__ = "customer_item_delivery_settings"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    customer_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    external_product_code: Mapped[str] = mapped_column(String(100), nullable=False)
+    delivery_place_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("delivery_places.id", ondelete="SET NULL"),
+        nullable=True,
+        comment="納入先（NULLの場合はデフォルト設定）",
+    )
+    jiku_code: Mapped[str | None] = mapped_column(
+        String(50), nullable=True, comment="次区コード（NULLの場合は全次区共通）"
+    )
+    shipment_text: Mapped[str | None] = mapped_column(
+        Text, nullable=True, comment="出荷表テキスト（SAP連携用）"
+    )
+    packing_note: Mapped[str | None] = mapped_column(Text, nullable=True, comment="梱包・注意書き")
+    lead_time_days: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, comment="リードタイム（日）"
+    )
+    is_default: Mapped[bool] = mapped_column(
+        Boolean, server_default="FALSE", nullable=False, comment="デフォルト設定フラグ"
+    )
+    valid_from: Mapped[date | None] = mapped_column(Date, nullable=True, comment="有効開始日")
+    valid_to: Mapped[date | None] = mapped_column(Date, nullable=True, comment="有効終了日")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["customer_id", "external_product_code"],
+            ["customer_items.customer_id", "customer_items.external_product_code"],
+            ondelete="CASCADE",
+            name="fk_cids_customer_item",
+        ),
+        UniqueConstraint(
+            "customer_id",
+            "external_product_code",
+            "delivery_place_id",
+            "jiku_code",
+            name="uq_customer_item_delivery_settings",
+        ),
+        Index("idx_cids_customer_item", "customer_id", "external_product_code"),
+        Index("idx_cids_delivery_place", "delivery_place_id"),
+        Index("idx_cids_jiku_code", "jiku_code"),
+    )
+
+    # Relationships
+    delivery_place: Mapped[DeliveryPlace | None] = relationship("DeliveryPlace")
