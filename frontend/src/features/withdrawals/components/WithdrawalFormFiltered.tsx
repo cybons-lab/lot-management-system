@@ -15,7 +15,11 @@ import { WITHDRAWAL_TYPES } from "../api";
 import { Button, Input, Label } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
-import { useCustomersQuery, useProductsQuery, useSuppliersQuery } from "@/hooks/api/useMastersQuery";
+import {
+  useCustomersQuery,
+  useProductsQuery,
+  useSuppliersQuery,
+} from "@/hooks/api/useMastersQuery";
 import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";
 
@@ -43,8 +47,11 @@ interface DeliveryPlace {
 
 /**
  * フィルタ連動型出庫登録フォーム
+ *
+ * NOTE: このフォームコンポーネントは複数のフィルタ連動ロジックを持つため、
+ * 分割すると状態管理が複雑になります。max-lines/complexityは許容します。
  */
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, max-lines, complexity */
 export function WithdrawalFormFiltered({
   preselectedLot,
   lots,
@@ -105,8 +112,9 @@ export function WithdrawalFormFiltered({
         lot_id: preselectedLot.lot_id,
       }));
       // 事前選択ロットの情報でフィルタも初期化
-      if (preselectedLot.supplier_id) {
-        setFilters((prev) => ({ ...prev, supplier_id: preselectedLot.supplier_id }));
+      if (preselectedLot.supplier_id != null) {
+        const supplierId = preselectedLot.supplier_id;
+        setFilters((prev) => ({ ...prev, supplier_id: supplierId }));
       }
       if (preselectedLot.product_id) {
         setFilters((prev) => ({ ...prev, product_id: preselectedLot.product_id }));
@@ -238,7 +246,7 @@ export function WithdrawalFormFiltered({
       quantity: formData.quantity,
       withdrawal_type: formData.withdrawal_type,
       customer_id: formData.customer_id,
-      delivery_place_id: formData.delivery_place_id || undefined, // 0の場合はundefined
+      delivery_place_id: formData.delivery_place_id, // 0は「未指定」を意味する
       ship_date: formData.ship_date,
       reason: formData.reason || undefined,
       reference_number: formData.reference_number || undefined,
@@ -261,9 +269,7 @@ export function WithdrawalFormFiltered({
             </Label>
             <Select
               value={filters.supplier_id ? String(filters.supplier_id) : ""}
-              onValueChange={(v) =>
-                setFilters({ ...filters, supplier_id: v ? Number(v) : 0 })
-              }
+              onValueChange={(v) => setFilters({ ...filters, supplier_id: v ? Number(v) : 0 })}
               disabled={isLoadingSuppliers}
             >
               <SelectTrigger>
@@ -283,17 +289,14 @@ export function WithdrawalFormFiltered({
           {/* 製品フィルタ */}
           <div>
             <Label htmlFor="filter_product" className="mb-2 block text-sm font-medium">
-              製品 {filteredProducts.length < products.length && (
-                <span className="text-xs text-slate-500">
-                  ({filteredProducts.length}件)
-                </span>
+              製品{" "}
+              {filteredProducts.length < products.length && (
+                <span className="text-xs text-slate-500">({filteredProducts.length}件)</span>
               )}
             </Label>
             <Select
               value={filters.product_id ? String(filters.product_id) : ""}
-              onValueChange={(v) =>
-                setFilters({ ...filters, product_id: v ? Number(v) : 0 })
-              }
+              onValueChange={(v) => setFilters({ ...filters, product_id: v ? Number(v) : 0 })}
               disabled={isLoadingProducts}
             >
               <SelectTrigger>
@@ -417,7 +420,9 @@ export function WithdrawalFormFiltered({
                 ))}
               </SelectContent>
             </Select>
-            {errors.customer_id && <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>}
+            {errors.customer_id && (
+              <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>
+            )}
           </div>
 
           {/* 納入場所（任意） */}

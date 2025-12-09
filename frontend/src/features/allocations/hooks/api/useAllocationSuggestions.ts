@@ -5,8 +5,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { getAllocationQueryKeys } from "@/shared/constants/query-keys";
-
 import {
   createManualAllocationSuggestion,
   createFefoAllocationSuggestion,
@@ -16,6 +14,8 @@ import {
   type FefoPreviewRequest,
   type AllocationCommitRequest,
 } from "../../api";
+
+import { getAllocationQueryKeys } from "@/shared/constants/query-keys";
 
 /**
  * Create manual allocation suggestion (preview only)

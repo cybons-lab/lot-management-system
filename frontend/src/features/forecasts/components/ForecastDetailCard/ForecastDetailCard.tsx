@@ -25,8 +25,8 @@ import { WarehouseInfoCard } from "./WarehouseInfoCard";
 import { Card, CardContent } from "@/components/ui";
 import { bulkAutoAllocate } from "@/features/allocations/api";
 import { createForecast, deleteForecast, updateForecast } from "@/features/forecasts/api";
-import { cn } from "@/shared/libs/utils";
 import { getAllocationQueryKeys, getForecastQueryKeys } from "@/shared/constants/query-keys";
+import { cn } from "@/shared/libs/utils";
 
 export function ForecastDetailCard({
   group,
