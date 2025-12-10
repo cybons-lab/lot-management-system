@@ -4,7 +4,6 @@ import type {
   CandidateLotsResponse,
   OrderResponse,
   AllocationCommitResponse,
-  WarehouseListResponse,
   ManualAllocationSavePayload,
 } from "@/shared/types/schema";
 import type { operations } from "@/types/api";
@@ -80,8 +79,7 @@ export const getOrdersWithAllocations = (): Promise<unknown> =>
 /**
  * 倉庫別引当情報取得
  */
-export const getWarehouseAllocList = (): Promise<WarehouseListResponse> =>
-  http.get("warehouse-alloc/warehouses");
+export const getWarehouseAllocList = (): Promise<unknown> => http.get("warehouse-alloc/warehouses");
 
 /**
  * 引当候補ロット取得（product_id基準）

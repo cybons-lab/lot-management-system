@@ -210,41 +210,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/v2/forecast/": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** List Forecasts */
-    get: operations["list_forecasts_api_v2_forecast__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/forecast/{forecast_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /** Get Forecast */
-    get: operations["get_forecast_api_v2_forecast__forecast_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/v2/forecast/import": {
+  "/api/v2/forecast/suggestions/preview": {
     parameters: {
       query?: never;
       header?: never;
@@ -253,23 +219,53 @@ export interface paths {
     };
     get?: never;
     put?: never;
-    /** Import Forecasts */
-    post: operations["import_forecasts_api_v2_forecast_import_post"];
+    /**
+     * Preview Allocation Suggestions
+     * @description 引当推奨の生成・プレビュー.
+     *
+     *     Mode:
+     *     - forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）
+     *     - order: 指定オーダー行に対して引当プレビュー（DB保存なし）
+     */
+    post: operations["preview_allocation_suggestions_api_v2_forecast_suggestions_preview_post"];
     delete?: never;
     options?: never;
     head?: never;
     patch?: never;
     trace?: never;
   };
-  "/api/v2/forecast/grouped": {
+  "/api/v2/forecast/suggestions": {
     parameters: {
       query?: never;
       header?: never;
       path?: never;
       cookie?: never;
     };
-    /** Get Grouped Forecasts */
-    get: operations["get_grouped_forecasts_api_v2_forecast_grouped_get"];
+    /**
+     * List Allocation Suggestions
+     * @description 引当推奨一覧取得.
+     */
+    get: operations["list_allocation_suggestions_api_v2_forecast_suggestions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/suggestions/group-summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Allocation Suggestions By Group
+     * @description フォーキャストグループ別の計画引当サマリを取得.
+     */
+    get: operations["get_allocation_suggestions_by_group_api_v2_forecast_suggestions_group_summary_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -977,72 +973,6 @@ export interface paths {
      *         Alert counts grouped by severity and category
      */
     get: operations["get_alert_summary_api_alerts_summary_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/preview": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Preview Allocation Suggestions
-     * @description 引当推奨の生成・プレビュー.
-     *
-     *     Mode:
-     *     - forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）
-     *     - order: 指定オーダー行に対して引当プレビュー（DB保存なし）
-     */
-    post: operations["preview_allocation_suggestions_api_allocation_suggestions_preview_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Allocation Suggestions
-     * @description 引当推奨一覧取得.
-     */
-    get: operations["list_allocation_suggestions_api_allocation_suggestions_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/group-summary": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Allocation Suggestions By Group
-     * @description フォーキャストグループ別の計画引当サマリを取得.
-     *
-     *     allocation_suggestions テーブルから該当グループのデータを集計して返す。
-     */
-    get: operations["get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -8392,73 +8322,7 @@ export interface operations {
       };
     };
   };
-  list_forecasts_api_v2_forecast__get: {
-    parameters: {
-      query?: {
-        skip?: number;
-        limit?: number;
-        customer_id?: number | null;
-        delivery_place_id?: number | null;
-        product_id?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListResponse_ForecastGroupResponse_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_forecast_api_v2_forecast__forecast_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        forecast_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ForecastResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  import_forecasts_api_v2_forecast_import_post: {
+  preview_allocation_suggestions_api_v2_forecast_suggestions_preview_post: {
     parameters: {
       query?: never;
       header?: never;
@@ -8467,7 +8331,7 @@ export interface operations {
     };
     requestBody: {
       content: {
-        "application/json": components["schemas"]["ForecastBulkImportRequest"];
+        "application/json": components["schemas"]["AllocationSuggestionRequest"];
       };
     };
     responses: {
@@ -8477,7 +8341,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ForecastBulkImportSummary"];
+          "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
         };
       };
       /** @description Validation Error */
@@ -8491,14 +8355,19 @@ export interface operations {
       };
     };
   };
-  get_grouped_forecasts_api_v2_forecast_grouped_get: {
+  list_allocation_suggestions_api_v2_forecast_suggestions_get: {
     parameters: {
       query?: {
+        /** @description スキップ件数 */
         skip?: number;
+        /** @description 取得件数上限 */
         limit?: number;
-        customer_id?: number | null;
-        delivery_place_id?: number | null;
+        /** @description 期間 (YYYY-MM) */
+        forecast_period?: string | null;
+        /** @description 製品ID */
         product_id?: number | null;
+        /** @description 得意先ID */
+        customer_id?: number | null;
       };
       header?: never;
       path?: never;
@@ -8512,7 +8381,45 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ListResponse_ForecastGroupResponse_"];
+          "application/json": components["schemas"]["AllocationSuggestionListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_allocation_suggestions_by_group_api_v2_forecast_suggestions_group_summary_get: {
+    parameters: {
+      query: {
+        /** @description 得意先ID */
+        customer_id: number;
+        /** @description 納入先ID */
+        delivery_place_id: number;
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 期間 (YYYY-MM) */
+        forecast_period?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -9647,117 +9554,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AlertSummaryResponse"];
-        };
-      };
-    };
-  };
-  preview_allocation_suggestions_api_allocation_suggestions_preview_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AllocationSuggestionRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_allocation_suggestions_api_allocation_suggestions_get: {
-    parameters: {
-      query?: {
-        /** @description スキップ件数 */
-        skip?: number;
-        /** @description 取得件数上限 */
-        limit?: number;
-        /** @description 期間 (YYYY-MM) */
-        forecast_period?: string | null;
-        /** @description 製品ID */
-        product_id?: number | null;
-        /** @description 得意先ID */
-        customer_id?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationSuggestionListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get: {
-    parameters: {
-      query: {
-        /** @description 得意先ID */
-        customer_id: number;
-        /** @description 納入先ID */
-        delivery_place_id: number;
-        /** @description 製品ID */
-        product_id: number;
-        /** @description 期間 (YYYY-MM) */
-        forecast_period?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

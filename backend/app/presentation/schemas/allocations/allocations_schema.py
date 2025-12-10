@@ -341,24 +341,5 @@ class DragAssignRequest(BaseSchema):
     allocate_qty: Decimal | None = Field(None, description="Deprecated: use allocated_quantity")
 
 
-class DragAssignResponse(BaseSchema):
-    """Deprecated: Use ManualAllocationResponse instead."""
-
-    success: bool
-    message: str
-    allocation_id: int
-    remaining_lot_qty: Decimal | None = None
-
-
-class AllocationSuggestionManualRequest(ManualAllocationRequest):
-    """Deprecated: Use ManualAllocationRequest instead."""
-
-    quantity: Decimal | None = Field(None, description="Deprecated: use allocated_quantity")
-
-
-class AllocationSuggestionManualResponse(ManualAllocationResponse):
-    """Deprecated: Use ManualAllocationResponse instead."""
-
-    suggested_quantity: Decimal | None = Field(
-        None, description="Deprecated: use allocated_quantity"
-    )
+# NOTE: DragAssignResponse, AllocationSuggestionManualRequest, AllocationSuggestionManualResponse
+# have been removed as they were deprecated and unused.

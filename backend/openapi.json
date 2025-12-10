@@ -870,164 +870,19 @@
         }
       }
     },
-    "/api/v2/forecast/": {
-      "get": {
-        "tags": [
-          "v2-forecast"
-        ],
-        "summary": "List Forecasts",
-        "operationId": "list_forecasts_api_v2_forecast__get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 100,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "customer_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Customer Id"
-            }
-          },
-          {
-            "name": "delivery_place_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Delivery Place Id"
-            }
-          },
-          {
-            "name": "product_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Product Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListResponse_ForecastGroupResponse_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v2/forecast/{forecast_id}": {
-      "get": {
-        "tags": [
-          "v2-forecast"
-        ],
-        "summary": "Get Forecast",
-        "operationId": "get_forecast_api_v2_forecast__forecast_id__get",
-        "parameters": [
-          {
-            "name": "forecast_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Forecast Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ForecastResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v2/forecast/import": {
+    "/api/v2/forecast/suggestions/preview": {
       "post": {
         "tags": [
           "v2-forecast"
         ],
-        "summary": "Import Forecasts",
-        "operationId": "import_forecasts_api_v2_forecast_import_post",
+        "summary": "Preview Allocation Suggestions",
+        "description": "引当推奨の生成・プレビュー.\n\nMode:\n- forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）\n- order: 指定オーダー行に対して引当プレビュー（DB保存なし）",
+        "operationId": "preview_allocation_suggestions_api_v2_forecast_suggestions_preview_post",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ForecastBulkImportRequest"
+                "$ref": "#/components/schemas/AllocationSuggestionRequest"
               }
             }
           },
@@ -1039,7 +894,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ForecastBulkImportSummary"
+                  "$ref": "#/components/schemas/AllocationSuggestionPreviewResponse"
                 }
               }
             }
@@ -1057,13 +912,14 @@
         }
       }
     },
-    "/api/v2/forecast/grouped": {
+    "/api/v2/forecast/suggestions": {
       "get": {
         "tags": [
           "v2-forecast"
         ],
-        "summary": "Get Grouped Forecasts",
-        "operationId": "get_grouped_forecasts_api_v2_forecast_grouped_get",
+        "summary": "List Allocation Suggestions",
+        "description": "引当推奨一覧取得.",
+        "operationId": "list_allocation_suggestions_api_v2_forecast_suggestions_get",
         "parameters": [
           {
             "name": "skip",
@@ -1072,9 +928,11 @@
             "schema": {
               "type": "integer",
               "minimum": 0,
+              "description": "スキップ件数",
               "default": 0,
               "title": "Skip"
-            }
+            },
+            "description": "スキップ件数"
           },
           {
             "name": "limit",
@@ -1084,41 +942,29 @@
               "type": "integer",
               "maximum": 1000,
               "minimum": 1,
+              "description": "取得件数上限",
               "default": 100,
               "title": "Limit"
-            }
+            },
+            "description": "取得件数上限"
           },
           {
-            "name": "customer_id",
+            "name": "forecast_period",
             "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "integer"
+                  "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Customer Id"
-            }
-          },
-          {
-            "name": "delivery_place_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Delivery Place Id"
-            }
+              "description": "期間 (YYYY-MM)",
+              "title": "Forecast Period"
+            },
+            "description": "期間 (YYYY-MM)"
           },
           {
             "name": "product_id",
@@ -1133,8 +979,28 @@
                   "type": "null"
                 }
               ],
+              "description": "製品ID",
               "title": "Product Id"
-            }
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先ID",
+              "title": "Customer Id"
+            },
+            "description": "得意先ID"
           }
         ],
         "responses": {
@@ -1143,7 +1009,92 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ListResponse_ForecastGroupResponse_"
+                  "$ref": "#/components/schemas/AllocationSuggestionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/forecast/suggestions/group-summary": {
+      "get": {
+        "tags": [
+          "v2-forecast"
+        ],
+        "summary": "Get Allocation Suggestions By Group",
+        "description": "フォーキャストグループ別の計画引当サマリを取得.",
+        "operationId": "get_allocation_suggestions_by_group_api_v2_forecast_suggestions_group_summary_get",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "得意先ID",
+              "title": "Customer Id"
+            },
+            "description": "得意先ID"
+          },
+          {
+            "name": "delivery_place_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "納入先ID",
+              "title": "Delivery Place Id"
+            },
+            "description": "納入先ID"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "製品ID",
+              "title": "Product Id"
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "forecast_period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "期間 (YYYY-MM)",
+              "title": "Forecast Period"
+            },
+            "description": "期間 (YYYY-MM)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Allocation Suggestions By Group Api V2 Forecast Suggestions Group Summary Get"
                 }
               }
             }
@@ -3217,246 +3168,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AlertSummaryResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocation-suggestions/preview": {
-      "post": {
-        "tags": [
-          "allocation-suggestions"
-        ],
-        "summary": "Preview Allocation Suggestions",
-        "description": "引当推奨の生成・プレビュー.\n\nMode:\n- forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）\n- order: 指定オーダー行に対して引当プレビュー（DB保存なし）",
-        "operationId": "preview_allocation_suggestions_api_allocation_suggestions_preview_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AllocationSuggestionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AllocationSuggestionPreviewResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocation-suggestions": {
-      "get": {
-        "tags": [
-          "allocation-suggestions"
-        ],
-        "summary": "List Allocation Suggestions",
-        "description": "引当推奨一覧取得.",
-        "operationId": "list_allocation_suggestions_api_allocation_suggestions_get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "スキップ件数",
-              "default": 0,
-              "title": "Skip"
-            },
-            "description": "スキップ件数"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "description": "取得件数上限",
-              "default": 100,
-              "title": "Limit"
-            },
-            "description": "取得件数上限"
-          },
-          {
-            "name": "forecast_period",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "期間 (YYYY-MM)",
-              "title": "Forecast Period"
-            },
-            "description": "期間 (YYYY-MM)"
-          },
-          {
-            "name": "product_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "製品ID",
-              "title": "Product Id"
-            },
-            "description": "製品ID"
-          },
-          {
-            "name": "customer_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "得意先ID",
-              "title": "Customer Id"
-            },
-            "description": "得意先ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AllocationSuggestionListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocation-suggestions/group-summary": {
-      "get": {
-        "tags": [
-          "allocation-suggestions"
-        ],
-        "summary": "Get Allocation Suggestions By Group",
-        "description": "フォーキャストグループ別の計画引当サマリを取得.\n\nallocation_suggestions テーブルから該当グループのデータを集計して返す。",
-        "operationId": "get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get",
-        "parameters": [
-          {
-            "name": "customer_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "得意先ID",
-              "title": "Customer Id"
-            },
-            "description": "得意先ID"
-          },
-          {
-            "name": "delivery_place_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "納入先ID",
-              "title": "Delivery Place Id"
-            },
-            "description": "納入先ID"
-          },
-          {
-            "name": "product_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "製品ID",
-              "title": "Product Id"
-            },
-            "description": "製品ID"
-          },
-          {
-            "name": "forecast_period",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "期間 (YYYY-MM)",
-              "title": "Forecast Period"
-            },
-            "description": "期間 (YYYY-MM)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }

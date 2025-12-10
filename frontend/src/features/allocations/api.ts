@@ -199,7 +199,7 @@ export const getPlanningAllocationSummary = (params: {
     searchParams.append("forecast_period", params.forecast_period);
   }
   return http.get<PlanningAllocationSummary>(
-    `allocation-suggestions/group-summary?${searchParams.toString()}`,
+    `v2/forecast/suggestions/group-summary?${searchParams.toString()}`,
   );
 };
 
@@ -308,7 +308,7 @@ export type AllocationSuggestionListResponse = {
 };
 
 export const generateAllocationSuggestions = (data: AllocationSuggestionRequest) => {
-  return http.post<AllocationSuggestionPreviewResponse>("allocation-suggestions/preview", data);
+  return http.post<AllocationSuggestionPreviewResponse>("v2/forecast/suggestions/preview", data);
 };
 
 export const getAllocationSuggestions = (params: {
@@ -327,7 +327,7 @@ export const getAllocationSuggestions = (params: {
 
   const queryString = searchParams.toString();
   return http.get<AllocationSuggestionListResponse>(
-    `allocation-suggestions${queryString ? "?" + queryString : ""}`,
+    `v2/forecast/suggestions${queryString ? "?" + queryString : ""}`,
   );
 };
 
