@@ -22,6 +22,11 @@ from .inventory_models import (
     StockTransactionType,
 )
 from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog
+from .lot_reservations_model import (
+    LotReservation,
+    ReservationSourceType,
+    ReservationStatus,
+)
 from .masters_models import (
     Customer,
     CustomerItem,
@@ -79,6 +84,10 @@ __all__ = [
     "AllocationTrace",
     "Withdrawal",
     "WithdrawalType",
+    # Reservations
+    "LotReservation",
+    "ReservationSourceType",
+    "ReservationStatus",
     # Orders
     "Order",
     "OrderLine",

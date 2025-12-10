@@ -34,6 +34,7 @@ from .base_model import Base
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .forecast_models import ForecastCurrent
     from .inbound_models import ExpectedLot
+    from .lot_reservations_model import LotReservation
     from .masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
     from .orders_models import Allocation
 
@@ -188,6 +189,9 @@ class Lot(Base):
     )
     adjustments: Mapped[list[Adjustment]] = relationship(
         "Adjustment", back_populates="lot", cascade="all, delete-orphan"
+    )
+    reservations: Mapped[list[LotReservation]] = relationship(
+        "LotReservation", back_populates="lot", cascade="all, delete-orphan"
     )
 
 
