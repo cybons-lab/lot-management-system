@@ -18020,6 +18020,25 @@
         "title": "UomConversionUpdate",
         "description": "Schema for updating a UOM conversion."
       },
+      "UserAssignmentSchema": {
+        "properties": {
+          "supplier_id": {
+            "type": "integer",
+            "title": "Supplier Id"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplier_id",
+          "is_primary"
+        ],
+        "title": "UserAssignmentSchema",
+        "description": "User-Supplier assignment schema."
+      },
       "UserCreate": {
         "properties": {
           "username": {
@@ -18898,6 +18917,13 @@
             },
             "type": "array",
             "title": "Roles"
+          },
+          "assignments": {
+            "items": {
+              "$ref": "#/components/schemas/UserAssignmentSchema"
+            },
+            "type": "array",
+            "title": "Assignments"
           }
         },
         "type": "object",

@@ -48,10 +48,12 @@ interface AdhocLotCreateFormProps {
   products: Array<{ id: number; product_code: string; product_name: string }>;
   /** 倉庫リスト */
   warehouses: Array<{ id: number; warehouse_code: string; warehouse_name: string }>;
+  /** 仕入先リスト */
+  suppliers: Array<{ id: number; supplier_code: string; supplier_name: string }>;
 }
 
 /**
- * アドホックロット新規登録フォーム
+ * 入庫登録（旧アドホックロット作成）フォーム
  */
 // eslint-disable-next-line max-lines-per-function -- Form component with many fields
 export function AdhocLotCreateForm({
@@ -60,10 +62,12 @@ export function AdhocLotCreateForm({
   isSubmitting,
   products,
   warehouses,
+  suppliers,
 }: AdhocLotCreateFormProps) {
   const [selectedOriginType, setSelectedOriginType] = useState<AdhocOriginType>("adhoc");
   const [selectedProduct, setSelectedProduct] = useState<string>("");
   const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
+  const [selectedSupplier, setSelectedSupplier] = useState<string>(""); // supplier_code
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -79,7 +83,7 @@ export function AdhocLotCreateForm({
       warehouse_id: parseInt(selectedWarehouse, 10),
       origin_type: selectedOriginType,
       origin_reference: (formData.get("origin_reference") as string) || undefined,
-      supplier_code: (formData.get("supplier_code") as string) || undefined,
+      supplier_code: selectedSupplier || undefined,
       current_quantity: Number(formData.get("current_quantity")),
       unit: formData.get("unit") as string,
       received_date: formData.get("received_date") as string,
@@ -152,10 +156,22 @@ export function AdhocLotCreateForm({
           </Select>
         </div>
 
-        {/* 仕入先（任意） */}
+        {/* 仕入先（任意）を選択式に変更 */}
         <div>
           <Label htmlFor="supplier_code">仕入先コード（任意）</Label>
-          <Input id="supplier_code" name="supplier_code" placeholder="例: S001" />
+          <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
+            <SelectTrigger>
+              <SelectValue placeholder="仕入先を選択" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">指定なし</SelectItem>
+              {suppliers.map((supplier) => (
+                <SelectItem key={supplier.id} value={supplier.supplier_code}>
+                  {supplier.supplier_code} - {supplier.supplier_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* 数量 */}
@@ -172,10 +188,22 @@ export function AdhocLotCreateForm({
           />
         </div>
 
-        {/* 単位 */}
+        {/* 単位（コンボボックス: 選択 or 入力） */}
         <div>
           <Label htmlFor="unit">単位 *</Label>
-          <Input id="unit" name="unit" required placeholder="例: EA" defaultValue="EA" />
+          <Input
+            id="unit"
+            name="unit"
+            required
+            placeholder="例: EA"
+            defaultValue="EA"
+            list="unit-options"
+          />
+          <datalist id="unit-options">
+            <option value="EA" />
+            <option value="KG" />
+            <option value="CAN" />
+          </datalist>
         </div>
 
         {/* 入荷日 */}
@@ -212,7 +240,7 @@ export function AdhocLotCreateForm({
           キャンセル
         </Button>
         <Button type="submit" disabled={isSubmitting || !selectedProduct || !selectedWarehouse}>
-          {isSubmitting ? "作成中..." : "アドホックロット作成"}
+          {isSubmitting ? "登録中..." : "入庫登録"}
         </Button>
       </div>
     </form>

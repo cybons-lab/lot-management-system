@@ -14,22 +14,38 @@ import { createLot } from "../api";
 import { AdhocLotCreateForm, type AdhocLotCreateData } from "../components/AdhocLotCreateForm";
 
 import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui";
+import { useAuth } from "@/features/auth/AuthContext";
 import { useProducts } from "@/features/products/hooks";
+import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 import { useWarehouses } from "@/features/warehouses/hooks";
 
 /**
- * アドホックロット作成ページ
+ * 入庫登録（旧アドホックロット作成）ページ
  */
 // eslint-disable-next-line max-lines-per-function -- Page component with data fetching logic
 export function AdhocLotCreatePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  // 製品・倉庫リストを取得
+  // マスタデータ取得
   const { useList: useProductList } = useProducts();
   const { useList: useWarehouseList } = useWarehouses();
+  const { useList: useSupplierList } = useSuppliers();
+
   const { data: products = [], isLoading: isLoadingProducts } = useProductList();
   const { data: warehouses = [], isLoading: isLoadingWarehouses } = useWarehouseList();
+  const { data: suppliers = [], isLoading: isLoadingSuppliers } = useSupplierList();
+
+  // 仕入先のフィルタリングロジック
+  // ユーザーに主担当(is_primary=true)の仕入先がある場合、それに絞り込む
+  const primaryAssignmentIds =
+    user?.assignments?.filter((a) => a.is_primary).map((a) => a.supplier_id) || [];
+
+  const filteredSuppliers =
+    primaryAssignmentIds.length > 0
+      ? suppliers.filter((s) => primaryAssignmentIds.includes(s.id))
+      : suppliers;
 
   // ロット作成Mutation
   const { mutateAsync: createAdhocLot, isPending } = useMutation({
@@ -55,7 +71,7 @@ export function AdhocLotCreatePage() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["lots"] });
-      toast.success(`アドホックロットを作成しました: ${result.lot_number}`);
+      toast.success(`ロットを作成しました: ${result.lot_number}`);
       navigate("/inventory");
     },
     onError: (error) => {
@@ -71,7 +87,7 @@ export function AdhocLotCreatePage() {
     navigate("/inventory");
   };
 
-  const isLoading = isLoadingProducts || isLoadingWarehouses;
+  const isLoading = isLoadingProducts || isLoadingWarehouses || isLoadingSuppliers;
 
   // 製品リストを変換
   const productOptions = products.map((p) => ({
@@ -87,6 +103,13 @@ export function AdhocLotCreatePage() {
     warehouse_name: w.warehouse_name ?? "",
   }));
 
+  // 仕入先リストを変換
+  const supplierOptions = filteredSuppliers.map((s) => ({
+    id: s.id ?? 0,
+    supplier_code: s.supplier_code ?? "",
+    supplier_name: s.supplier_name ?? "",
+  }));
+
   return (
     <div className="container mx-auto py-6">
       <div className="mb-6">
@@ -98,10 +121,9 @@ export function AdhocLotCreatePage() {
 
       <Card className="mx-auto max-w-2xl">
         <CardHeader>
-          <CardTitle>アドホックロット作成</CardTitle>
+          <CardTitle>入庫登録</CardTitle>
           <CardDescription>
-            受注に紐づかないロット（サンプル、安全在庫など）を作成します。
-            ロット番号は自動的に生成されます。
+            新規ロット（サンプル、安全在庫、一般入荷など）を登録します。
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -117,6 +139,7 @@ export function AdhocLotCreatePage() {
               isSubmitting={isPending}
               products={productOptions}
               warehouses={warehouseOptions}
+              suppliers={supplierOptions}
             />
           )}
         </CardContent>

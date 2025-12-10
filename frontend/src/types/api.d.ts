@@ -7454,6 +7454,16 @@ export interface components {
       factor?: number | string | null;
     };
     /**
+     * UserAssignmentSchema
+     * @description User-Supplier assignment schema.
+     */
+    UserAssignmentSchema: {
+      /** Supplier Id */
+      supplier_id: number;
+      /** Is Primary */
+      is_primary: boolean;
+    };
+    /**
      * UserCreate
      * @description Schema for creating a user.
      */
@@ -7866,6 +7876,8 @@ export interface components {
       display_name: string;
       /** Roles */
       roles?: string[];
+      /** Assignments */
+      assignments?: components["schemas"]["UserAssignmentSchema"][];
     };
     /**
      * UserResponse

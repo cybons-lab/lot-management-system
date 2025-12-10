@@ -109,6 +109,10 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             "username": user.username,
             "display_name": user.display_name,
             "roles": roles,
+            "assignments": [
+                {"supplier_id": a.supplier_id, "is_primary": a.is_primary}
+                for a in user.supplier_assignments
+            ],
         },
     }
 
@@ -122,6 +126,10 @@ def get_me(current_user: User = Depends(get_current_user)):
         "username": current_user.username,
         "display_name": current_user.display_name,
         "roles": roles,
+        "assignments": [
+            {"supplier_id": a.supplier_id, "is_primary": a.is_primary}
+            for a in current_user.supplier_assignments
+        ],
     }
 
 
