@@ -114,7 +114,7 @@ async def get_lot(lot_id: int, db: Session = Depends(get_db)):
 async def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
     service = LotService(db)
     created = service.create_lot(lot)
-    db.commit()
+    # Note: create_lot already commits internally
     return created
 
 

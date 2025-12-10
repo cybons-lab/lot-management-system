@@ -137,14 +137,11 @@ export function AdhocLotCreateForm({
       <div className="grid grid-cols-2 gap-4">
         {/* Row 0: Lot Number */}
         <div className="col-span-2">
-          <Label htmlFor="lot_number">ロット番号 *</Label>
-          <Input
-            id="lot_number"
-            name="lot_number"
-            required
-            placeholder="例: LOT-2025-001"
-            className="font-mono"
-          />
+          <div className="flex items-center gap-2">
+            <Label htmlFor="lot_number">ロット番号 *</Label>
+            <span className="text-muted-foreground text-xs">(例: LOT-2025-001)</span>
+          </div>
+          <Input id="lot_number" name="lot_number" required placeholder="" className="font-mono" />
         </div>
 
         {/* Row 1: Lot Type & Supplier */}
@@ -229,7 +226,10 @@ export function AdhocLotCreateForm({
         {/* Row 3: Quantity & Unit */}
         {/* 数量 */}
         <div>
-          <Label htmlFor="current_quantity">数量 *</Label>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="current_quantity">数量 *</Label>
+            <span className="text-muted-foreground text-xs">(例: 1000)</span>
+          </div>
           <Input
             id="current_quantity"
             name="current_quantity"
@@ -237,7 +237,7 @@ export function AdhocLotCreateForm({
             required
             min="0"
             step="0.001"
-            placeholder="例: 1000"
+            placeholder=""
           />
         </div>
 

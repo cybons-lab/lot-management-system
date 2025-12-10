@@ -74,9 +74,7 @@ export function AdhocLotCreatePage() {
       toast.success(`ロットを作成しました: ${result.lot_number}`);
       navigate("/inventory");
     },
-    onError: (error) => {
-      toast.error(`作成に失敗しました: ${error instanceof Error ? error.message : "不明なエラー"}`);
-    },
+    // グローバルエラーハンドラー（query-client.ts）がトーストを表示するため、ここでは何もしない
   });
 
   const handleSubmit = async (data: AdhocLotCreateData) => {
