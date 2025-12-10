@@ -14,6 +14,7 @@ interface OrderAllocationInlineProps {
   logic: ReturnType<typeof useLotAllocationForOrder>;
 }
 
+// eslint-disable-next-line complexity
 export function OrderAllocationInline({ line, logic }: OrderAllocationInlineProps) {
   const { getAllocationsForLine, changeAllocation, saveAllocations } = logic;
 

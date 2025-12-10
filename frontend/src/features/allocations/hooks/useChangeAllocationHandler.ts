@@ -4,10 +4,11 @@
 
 import { useCallback } from "react";
 
-import type { OrderLine } from "@/shared/types/aliases";
 import { setLineStatusToDraft } from "../helpers/allocationStatusHelpers";
 import type { AllocationsByLine, CandidateLotFetcher, LineStatusMap } from "../types";
 import { clampAllocationQuantity, getFreeQuantity } from "../utils/allocationCalculations";
+
+import type { OrderLine } from "@/shared/types/aliases";
 
 /**
  * Hook to handle allocation quantity changes
@@ -61,6 +62,6 @@ export function useChangeAllocationHandler({
       // Mark line as draft (has unsaved changes)
       setLineStatusToDraft(lineId, setLineStatuses);
     },
-    [candidateFetcher, setAllocationsByLine, setLineStatuses],
+    [allLines, candidateFetcher, setAllocationsByLine, setLineStatuses],
   );
 }

@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.application.services.allocations.suggestion import AllocationSuggestionService
+from app.application.services.forecasts.forecast_import_service import ForecastImportService
+from app.application.services.forecasts.forecast_service import ForecastService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion, Lot
 from app.presentation.schemas.allocations.allocation_suggestions_schema import (
@@ -15,12 +17,56 @@ from app.presentation.schemas.allocations.allocation_suggestions_schema import (
     AllocationSuggestionRequest,
     AllocationSuggestionResponse,
 )
+from app.presentation.schemas.forecasts.forecast_schema import (
+    ForecastBulkImportRequest,
+    ForecastBulkImportSummary,
+    ForecastListResponse,
+)
 
 
 logger = logging.getLogger(__name__)
 
 # Prefix will be '/api/v2/forecast' defined in v2 router registration
 router = APIRouter()
+
+
+# ===== Forecast CRUD Endpoints =====
+
+
+@router.get("/", response_model=ForecastListResponse)
+def list_forecasts(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=1000),
+    customer_id: int | None = Query(None),
+    delivery_place_id: int | None = Query(None),
+    product_id: int | None = Query(None),
+    db: Session = Depends(get_db),
+) -> Any:
+    """フォーキャスト一覧取得（グループ化）."""
+    service = ForecastService(db)
+    return service.get_forecasts(
+        skip=skip,
+        limit=limit,
+        customer_id=customer_id,
+        delivery_place_id=delivery_place_id,
+        product_id=product_id,
+    )
+
+
+@router.post("/import", response_model=ForecastBulkImportSummary)
+def import_forecasts(
+    payload: ForecastBulkImportRequest,
+    db: Session = Depends(get_db),
+) -> Any:
+    """フォーキャスト一括インポート."""
+    service = ForecastImportService(db)
+    return service.bulk_import(
+        items=payload.items,
+        replace_existing=payload.replace_existing,
+    )
+
+
+# ===== Allocation Suggestion Endpoints =====
 
 
 @router.post("/suggestions/preview", response_model=AllocationSuggestionPreviewResponse)
