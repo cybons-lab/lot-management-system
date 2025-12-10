@@ -41,14 +41,14 @@ class WithdrawalCreate(BaseSchema):
     lot_id: int = Field(..., description="出庫対象のロットID")
     quantity: Decimal = Field(..., gt=0, description="出庫数量（正の値）")
     withdrawal_type: WithdrawalType = Field(..., description="出庫タイプ")
-    customer_id: int = Field(..., description="得意先ID")
-    delivery_place_id: int = Field(..., description="納入場所ID")
+    customer_id: int | None = Field(None, description="得意先ID（受注手動の場合必須）")
+    delivery_place_id: int | None = Field(None, description="納入場所ID（任意）")
     ship_date: date = Field(..., description="出荷日")
     reason: str | None = Field(None, description="備考")
     reference_number: str | None = Field(
         None, max_length=100, description="参照番号（SAP受注番号など）"
     )
-    withdrawn_by: int = Field(..., description="出庫実行者ユーザーID")
+    withdrawn_by: int | None = Field(None, description="出庫実行者ユーザーID")
 
 
 class WithdrawalResponse(BaseSchema):
@@ -63,16 +63,16 @@ class WithdrawalResponse(BaseSchema):
     quantity: Decimal
     withdrawal_type: WithdrawalType
     withdrawal_type_label: str = Field(..., description="出庫タイプの日本語表示")
-    customer_id: int
-    customer_name: str
-    customer_code: str
-    delivery_place_id: int
-    delivery_place_name: str
-    delivery_place_code: str
+    customer_id: int | None = None
+    customer_name: str | None = None
+    customer_code: str | None = None
+    delivery_place_id: int | None = None
+    delivery_place_name: str | None = None
+    delivery_place_code: str | None = None
     ship_date: date
     reason: str | None
     reference_number: str | None
-    withdrawn_by: int
+    withdrawn_by: int | None = None
     withdrawn_by_name: str | None = None
     withdrawn_at: datetime
     created_at: datetime

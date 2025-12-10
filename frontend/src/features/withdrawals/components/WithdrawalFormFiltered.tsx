@@ -220,8 +220,11 @@ export function WithdrawalFormFiltered({
       newErrors.quantity = `利用可能数量（${availableQuantity}）を超えています`;
     }
 
-    if (!formData.customer_id || formData.customer_id <= 0) {
-      newErrors.customer_id = "得意先を選択してください";
+    // 得意先は受注（手動）の場合のみ必須
+    if (formData.withdrawal_type === "order_manual") {
+      if (!formData.customer_id || formData.customer_id <= 0) {
+        newErrors.customer_id = "得意先を選択してください";
+      }
     }
 
     // 納入場所は任意（必須チェックを削除）
@@ -245,8 +248,8 @@ export function WithdrawalFormFiltered({
       lot_id: formData.lot_id,
       quantity: formData.quantity,
       withdrawal_type: formData.withdrawal_type,
-      customer_id: formData.customer_id,
-      delivery_place_id: formData.delivery_place_id, // 0は「未指定」を意味する
+      customer_id: formData.customer_id || undefined, // 0の場合はundefined
+      delivery_place_id: formData.delivery_place_id || undefined, // 0の場合はundefined
       ship_date: formData.ship_date,
       reason: formData.reason || undefined,
       reference_number: formData.reference_number || undefined,
@@ -395,71 +398,77 @@ export function WithdrawalFormFiltered({
             </Select>
           </div>
 
-          {/* 得意先 */}
-          <div>
-            <Label htmlFor="customer_id" className="mb-2 block text-sm font-medium">
-              得意先 <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={formData.customer_id ? String(formData.customer_id) : ""}
-              onValueChange={(v) => {
-                const customerId = Number(v);
-                setFormData({ ...formData, customer_id: customerId });
-                setFilters({ ...filters, customer_id: customerId });
-              }}
-              disabled={isLoadingCustomers}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={isLoadingCustomers ? "読み込み中..." : "得意先を選択"} />
-              </SelectTrigger>
-              <SelectContent>
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.customer_code} - {c.customer_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.customer_id && (
-              <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>
-            )}
-          </div>
+          {/* 得意先（受注手動の場合のみ必須） */}
+          {formData.withdrawal_type === "order_manual" && (
+            <div>
+              <Label htmlFor="customer_id" className="mb-2 block text-sm font-medium">
+                得意先 <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.customer_id ? String(formData.customer_id) : ""}
+                onValueChange={(v) => {
+                  const customerId = Number(v);
+                  setFormData({ ...formData, customer_id: customerId });
+                  setFilters({ ...filters, customer_id: customerId });
+                }}
+                disabled={isLoadingCustomers}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={isLoadingCustomers ? "読み込み中..." : "得意先を選択"}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.customer_code} - {c.customer_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.customer_id && (
+                <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>
+              )}
+            </div>
+          )}
 
-          {/* 納入場所（任意） */}
-          <div>
-            <Label htmlFor="delivery_place_id" className="mb-2 block text-sm font-medium">
-              納入場所 <span className="text-slate-400">(任意)</span>
-            </Label>
-            <Select
-              value={formData.delivery_place_id ? String(formData.delivery_place_id) : ""}
-              onValueChange={(v) => {
-                const deliveryPlaceId = Number(v);
-                setFormData({ ...formData, delivery_place_id: deliveryPlaceId });
-                setFilters({ ...filters, delivery_place_id: deliveryPlaceId });
-              }}
-              disabled={isLoadingDeliveryPlaces || !formData.customer_id}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    !formData.customer_id
-                      ? "先に得意先を選択"
-                      : isLoadingDeliveryPlaces
-                        ? "読み込み中..."
-                        : "納入場所を選択（任意）"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="0">指定なし</SelectItem>
-                {deliveryPlaces.map((dp) => (
-                  <SelectItem key={dp.id} value={String(dp.id)}>
-                    {dp.delivery_place_code} - {dp.delivery_place_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* 納入場所（任意、受注手動の場合のみ表示） */}
+          {formData.withdrawal_type === "order_manual" && (
+            <div>
+              <Label htmlFor="delivery_place_id" className="mb-2 block text-sm font-medium">
+                納入場所 <span className="text-slate-400">(任意)</span>
+              </Label>
+              <Select
+                value={formData.delivery_place_id ? String(formData.delivery_place_id) : ""}
+                onValueChange={(v) => {
+                  const deliveryPlaceId = Number(v);
+                  setFormData({ ...formData, delivery_place_id: deliveryPlaceId });
+                  setFilters({ ...filters, delivery_place_id: deliveryPlaceId });
+                }}
+                disabled={isLoadingDeliveryPlaces || !formData.customer_id}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      !formData.customer_id
+                        ? "先に得意先を選択"
+                        : isLoadingDeliveryPlaces
+                          ? "読み込み中..."
+                          : "納入場所を選択（任意）"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">指定なし</SelectItem>
+                  {deliveryPlaces.map((dp) => (
+                    <SelectItem key={dp.id} value={String(dp.id)}>
+                      {dp.delivery_place_code} - {dp.delivery_place_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* 出荷日 */}
           <div>

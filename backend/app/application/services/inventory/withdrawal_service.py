@@ -149,16 +149,31 @@ class WithdrawalService:
                 f"出庫数量: {data.quantity}, 利用可能: {available_quantity}"
             )
 
-        # 得意先・納入場所を確認
-        customer = self.db.query(Customer).filter(Customer.id == data.customer_id).first()
-        if not customer:
-            raise ValueError(f"得意先（ID={data.customer_id}）が見つかりません")
+        # 得意先・納入場所を確認（受注手動の場合のみ必須）
+        customer = None
+        delivery_place = None
 
-        delivery_place = (
-            self.db.query(DeliveryPlace).filter(DeliveryPlace.id == data.delivery_place_id).first()
-        )
-        if not delivery_place:
-            raise ValueError(f"納入場所（ID={data.delivery_place_id}）が見つかりません")
+        if data.withdrawal_type == WithdrawalType.ORDER_MANUAL:
+            # 受注手動の場合は得意先必須
+            if not data.customer_id:
+                raise ValueError("受注（手動）の場合、得意先は必須です")
+            customer = self.db.query(Customer).filter(Customer.id == data.customer_id).first()
+            if not customer:
+                raise ValueError(f"得意先（ID={data.customer_id}）が見つかりません")
+        elif data.customer_id:
+            # 他のタイプでも指定があれば検証
+            customer = self.db.query(Customer).filter(Customer.id == data.customer_id).first()
+            if not customer:
+                raise ValueError(f"得意先（ID={data.customer_id}）が見つかりません")
+
+        if data.delivery_place_id:
+            delivery_place = (
+                self.db.query(DeliveryPlace)
+                .filter(DeliveryPlace.id == data.delivery_place_id)
+                .first()
+            )
+            if not delivery_place:
+                raise ValueError(f"納入場所（ID={data.delivery_place_id}）が見つかりません")
 
         # 出庫レコード作成
         quantity_before = lot.current_quantity
@@ -245,11 +260,15 @@ class WithdrawalService:
                 withdrawal_type, str(withdrawal_type.value)
             ),
             customer_id=withdrawal.customer_id,
-            customer_name=withdrawal.customer.customer_name,
-            customer_code=withdrawal.customer.customer_code,
+            customer_name=withdrawal.customer.customer_name if withdrawal.customer else None,
+            customer_code=withdrawal.customer.customer_code if withdrawal.customer else None,
             delivery_place_id=withdrawal.delivery_place_id,
-            delivery_place_name=withdrawal.delivery_place.delivery_place_name,
-            delivery_place_code=withdrawal.delivery_place.delivery_place_code,
+            delivery_place_name=withdrawal.delivery_place.delivery_place_name
+            if withdrawal.delivery_place
+            else None,
+            delivery_place_code=withdrawal.delivery_place.delivery_place_code
+            if withdrawal.delivery_place
+            else None,
             ship_date=withdrawal.ship_date,
             reason=withdrawal.reason,
             reference_number=withdrawal.reference_number,
