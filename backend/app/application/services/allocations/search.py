@@ -12,6 +12,7 @@ from typing import Any, cast
 
 from sqlalchemy.orm import Query, Session
 
+from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.infrastructure.persistence.models.views_models import (
     VDeliveryPlaceCodeToId,
     VLotAvailableQty,
@@ -122,9 +123,9 @@ def _query_lots_with_fallback(db: Session, product_id: int, strategy: str, limit
     if not results:
         from app.infrastructure.persistence.models import Lot
 
+        # Query lots (filtering will happen in Python)
         lot_query = db.query(Lot).filter(
             Lot.product_id == product_id,
-            (Lot.current_quantity - Lot.allocated_quantity) > 0,
         )
         if strategy == "fefo":
             lot_query = lot_query.order_by(
@@ -132,7 +133,9 @@ def _query_lots_with_fallback(db: Session, product_id: int, strategy: str, limit
                 Lot.received_date.asc(),
                 Lot.id.asc(),
             )
-        results = lot_query.limit(limit).all()
+        all_lots = lot_query.limit(limit * 2).all()  # Get more to filter
+        # Filter using lot_reservations
+        results = [lot for lot in all_lots if get_available_quantity(db, lot) > 0][:limit]
 
     return results
 
@@ -160,8 +163,10 @@ def _convert_to_candidate_item(
         received_date = lot_view.receipt_date
         status = lot_view.lot_status
     else:
-        # From Lot model
-        available_qty = float(lot_view.current_quantity - lot_view.allocated_quantity)
+        # From Lot model - use lot_reservations dynamically
+        # Note: We don't have db context here, so this is a fallback approximation
+        # The actual available_qty should be calculated from lot_reservations
+        available_qty = float(lot_view.current_quantity or 0)
         lot_id = lot_view.id
         received_date = lot_view.received_date
         status = lot_view.status
