@@ -175,26 +175,76 @@ class LotReservationService:
         self.db.flush()
 
     def confirm(self, reservation_id: int) -> LotReservation:
-        """Confirm a reservation (convert to hard allocation).
+        """予約を確定する.
 
         Args:
-            reservation_id: ID of the reservation to confirm
+            reservation_id: 予約ID
 
         Returns:
-            The updated reservation
+            LotReservation: 更新された予約
 
         Raises:
-            ReservationNotFoundError: If the reservation doesn't exist
+            ReservationNotFoundError: 予約が見つからない場合
         """
-        reservation = (
-            self.db.query(LotReservation).filter(LotReservation.id == reservation_id).first()
-        )
+        reservation = self.db.get(LotReservation, reservation_id)
         if not reservation:
-            raise ReservationNotFoundError(reservation_id)
+            raise ReservationNotFoundError(f"Reservation {reservation_id} not found")
 
-        reservation.status = ReservationStatus.CONFIRMED.value
+        if reservation.status == ReservationStatus.CONFIRMED:
+            return reservation
+
+        reservation.status = ReservationStatus.CONFIRMED
         reservation.confirmed_at = datetime.utcnow()
-        self.db.flush()
+        reservation.updated_at = datetime.utcnow()
+
+        # 関連するLotの更新日時も更新
+        if reservation.lot:
+            reservation.lot.updated_at = datetime.utcnow()
+
+        return reservation
+
+    def transfer_reservation(
+        self,
+        reservation_id: int,
+        new_source_type: ReservationSourceType,
+        new_source_id: int,
+        new_status: ReservationStatus | None = None,
+    ) -> LotReservation:
+        """予約を別のソースに振り替える（例: Forecast -> Order）.
+
+        Args:
+            reservation_id: 予約ID
+            new_source_type: 新しいソースタイプ
+            new_source_id: 新しいソースID
+            new_status: 新しいステータス（指定がない場合は維持）
+
+        Returns:
+            LotReservation: 更新された予約
+
+        Raises:
+            ReservationNotFoundError: 予約が見つからない場合
+            ValueError: 振替不可能な状態の場合
+        """
+        reservation = self.db.get(LotReservation, reservation_id)
+        if not reservation:
+            raise ReservationNotFoundError(f"Reservation {reservation_id} not found")
+
+        if reservation.status == ReservationStatus.RELEASED:
+            raise ValueError(f"Cannot transfer released reservation {reservation_id}")
+
+        reservation.source_type = new_source_type
+        reservation.source_id = new_source_id
+
+        if new_status:
+            reservation.status = new_status
+            if new_status == ReservationStatus.CONFIRMED and not reservation.confirmed_at:
+                reservation.confirmed_at = datetime.utcnow()
+
+        reservation.updated_at = datetime.utcnow()
+
+        # 関連するLotの更新日時も更新
+        if reservation.lot:
+            reservation.lot.updated_at = datetime.utcnow()
 
         return reservation
 

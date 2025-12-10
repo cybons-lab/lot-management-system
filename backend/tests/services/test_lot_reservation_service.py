@@ -548,3 +548,113 @@ class TestLotReservationServiceUpdateQuantity:
         # 在庫不足になる更新（100以上に）
         with pytest.raises(ReservationInsufficientStockError):
             service.update_quantity(reservation.id, Decimal("110"))
+
+
+class TestLotReservationServiceTransfer:
+    """transfer_reservation() メソッドのテスト"""
+
+    def test_transfer_updates_source(self, db_session: Session, setup_reservation_test_data):
+        """予約の転送が正しくsource_type/idを更新することを確認"""
+        data = setup_reservation_test_data
+        lot = data["lot"]
+        service = LotReservationService(db_session)
+
+        # Forecast予約を作成
+        reservation = service.reserve(
+            lot_id=lot.id,
+            source_type=ReservationSourceType.FORECAST,
+            source_id=101,
+            quantity=Decimal("50"),
+        )
+        db_session.flush()
+
+        # Orderへ転送
+        transferred = service.transfer_reservation(
+            reservation_id=reservation.id,
+            new_source_type=ReservationSourceType.ORDER,
+            new_source_id=202,
+        )
+        db_session.flush()
+
+        assert transferred.id == reservation.id
+        assert transferred.source_type == "order"
+        assert transferred.source_id == 202
+        assert transferred.status == "active"  # ステータス維持
+
+    def test_transfer_with_status_update(self, db_session: Session, setup_reservation_test_data):
+        """転送と同時にステータスを変更できることを確認"""
+        data = setup_reservation_test_data
+        lot = data["lot"]
+        service = LotReservationService(db_session)
+
+        # Forecast予約を作成
+        reservation = service.reserve(
+            lot_id=lot.id,
+            source_type=ReservationSourceType.FORECAST,
+            source_id=101,
+            quantity=Decimal("50"),
+        )
+        db_session.flush()
+
+        # Orderへ転送して確定
+        transferred = service.transfer_reservation(
+            reservation_id=reservation.id,
+            new_source_type=ReservationSourceType.ORDER,
+            new_source_id=202,
+            new_status=ReservationStatus.CONFIRMED,
+        )
+        db_session.flush()
+
+        assert transferred.source_type == "order"
+        assert transferred.status == "confirmed"
+        assert transferred.confirmed_at is not None
+
+    def test_transfer_released_reservation_raises_error(
+        self, db_session: Session, setup_reservation_test_data
+    ):
+        """リリース済みの予約は転送できないことを確認"""
+        data = setup_reservation_test_data
+        lot = data["lot"]
+        service = LotReservationService(db_session)
+
+        # 予約を作成してリリース
+        reservation = service.reserve(
+            lot_id=lot.id,
+            source_type=ReservationSourceType.FORECAST,
+            source_id=101,
+            quantity=Decimal("50"),
+        )
+        service.release(reservation.id)
+        db_session.flush()
+
+        with pytest.raises(ValueError) as exc_info:
+            service.transfer_reservation(
+                reservation_id=reservation.id,
+                new_source_type=ReservationSourceType.ORDER,
+                new_source_id=202,
+            )
+
+        assert "released" in str(exc_info.value).lower()
+
+    def test_transfer_updates_updated_at(self, db_session: Session, setup_reservation_test_data):
+        """転送時にupdated_atが更新されることを確認"""
+        data = setup_reservation_test_data
+        lot = data["lot"]
+        service = LotReservationService(db_session)
+
+        reservation = service.reserve(
+            lot_id=lot.id,
+            source_type=ReservationSourceType.FORECAST,
+            source_id=101,
+            quantity=Decimal("50"),
+        )
+        db_session.flush()
+
+        transferred = service.transfer_reservation(
+            reservation_id=reservation.id,
+            new_source_type=ReservationSourceType.ORDER,
+            new_source_id=202,
+        )
+        db_session.flush()
+
+        assert transferred.updated_at is not None

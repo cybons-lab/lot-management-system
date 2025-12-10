@@ -71,6 +71,7 @@ class Settings(BaseSettings):
 
     # API設定
     API_PREFIX: str = "/api"
+    API_V2_STR: str = "/api/v2"
 
     # ページネーション設定
     DEFAULT_PAGE_SIZE: int = 100
