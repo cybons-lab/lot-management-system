@@ -2,9 +2,10 @@
  * Allocations API Client (v2)
  */
 
+import { getAvailableLots } from "../inventory/api"; // Inventory APIからのインポート
+
 import { http } from "@/shared/api/http-client";
 import type { paths } from "@/types/api";
-import { getAvailableLots } from "../inventory/api"; // Inventory APIからのインポート
 
 // ===== API Types (v2 compatible) =====
 
@@ -120,7 +121,7 @@ export type CandidateLotItem = {
 // Legacy types for createAllocations
 export type AllocationInputItem = {
   lotId: number;
-  lot?: any; // For UI logic compatibility
+  lot?: unknown; // For UI logic compatibility
   quantity: number;
   delivery_place_id?: number | null;
 };

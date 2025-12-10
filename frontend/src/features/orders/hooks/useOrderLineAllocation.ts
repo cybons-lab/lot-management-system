@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
 import * as allocationsApi from "@/features/allocations/api";
+import type { CandidateLotItem } from "@/features/allocations/api";
 import * as ordersApi from "@/features/orders/api";
 import type { OrderLine } from "@/shared/types/aliases";
-import type { CandidateLotItem } from "@/features/allocations/api";
 
 interface Allocation {
   id?: number;
