@@ -22,12 +22,14 @@ from app.infrastructure.persistence.models import (
     Product,
     Warehouse,
 )
+from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 
 
 def _truncate_all(db: Session):
     """Clean up test data in dependency order."""
     tables = [
         Allocation,
+        LotReservation,
         OrderLine,
         Order,
         ForecastCurrent,
@@ -107,7 +109,6 @@ def lot_with_stock(test_db: Session, master_data):
         product_id=master_data["product"].id,
         warehouse_id=master_data["warehouse"].id,
         current_quantity=Decimal("1000"),
-        allocated_quantity=Decimal("0"),
         expiry_date=date.today() + timedelta(days=30),
         received_date=date.today(),
         status="active",
@@ -156,10 +157,16 @@ def create_soft_allocation(
     lot: Lot,
     quantity: Decimal,
 ) -> Allocation:
-    """Helper to create a soft allocation."""
+    """Helper to create a soft allocation with corresponding LotReservation."""
+    from app.infrastructure.persistence.models.lot_reservations_model import (
+        LotReservation,
+        ReservationSourceType,
+        ReservationStatus,
+    )
+
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_id=lot.id,
+        lot_reference=lot.lot_number,
         allocated_quantity=quantity,
         allocation_type="soft",
         status="allocated",
@@ -167,8 +174,15 @@ def create_soft_allocation(
     )
     test_db.add(allocation)
 
-    # Update lot allocated quantity
-    lot.allocated_quantity += quantity
+    # Create corresponding LotReservation
+    reservation = LotReservation(
+        lot_id=lot.id,
+        source_type=ReservationSourceType.ORDER,
+        source_id=order_line.id,
+        reserved_qty=quantity,
+        status=ReservationStatus.ACTIVE,
+    )
+    test_db.add(reservation)
     test_db.commit()
     test_db.refresh(allocation)
     return allocation
@@ -302,10 +316,13 @@ class TestPreemptSoftAllocations:
         assert len(released) == 1
         assert released[0]["released_qty"] == 200.0
 
-        # Check lot allocated quantity updated correctly
+        # Check lot reserved quantity updated correctly via LotReservation
+        from app.application.services.inventory.stock_calculation import get_reserved_quantity
+
         test_db.refresh(lot_with_stock)
         # Original 500 - 200 released = 300 remaining
-        assert lot_with_stock.allocated_quantity == Decimal("300")
+        reserved = get_reserved_quantity(test_db, lot_with_stock.id)
+        assert reserved == Decimal("300")
 
     def test_no_self_preemption(self, test_db: Session, master_data, lot_with_stock):
         """Test: Hard demand doesn't release its own soft allocation."""
@@ -346,13 +363,15 @@ class TestPreemptSoftAllocations:
     def test_release_updates_lot_allocated_quantity(
         self, test_db: Session, master_data, lot_with_stock
     ):
-        """Test: Lot's allocated_quantity is correctly updated after release."""
+        """Test: Lot's reserved_quantity is correctly updated after release."""
+        from app.application.services.inventory.stock_calculation import get_reserved_quantity
+
         # Create soft allocation
         forecast_line = create_order_line(test_db, master_data, "FORECAST_LINKED", Decimal("400"))
         create_soft_allocation(test_db, forecast_line, lot_with_stock, Decimal("400"))
 
-        initial_allocated = lot_with_stock.allocated_quantity
-        assert initial_allocated == Decimal("400")
+        initial_reserved = get_reserved_quantity(test_db, lot_with_stock.id)
+        assert initial_reserved == Decimal("400")
 
         # Release 200 units
         hard_line = create_order_line(test_db, master_data, "KANBAN", Decimal("800"))
@@ -364,10 +383,13 @@ class TestPreemptSoftAllocations:
             hard_demand_id=hard_line.id,
         )
 
-        # Check lot allocated quantity
+        # Check lot reserved quantity via LotReservation
+        from app.application.services.inventory.stock_calculation import get_reserved_quantity
+
         test_db.refresh(lot_with_stock)
         # Need 800, available was 600 (1000 - 400), so release 200
-        assert lot_with_stock.allocated_quantity == Decimal("200")
+        reserved = get_reserved_quantity(test_db, lot_with_stock.id)
+        assert reserved == Decimal("200")
 
     def test_multiple_soft_allocations_same_priority(
         self, test_db: Session, master_data, lot_with_stock

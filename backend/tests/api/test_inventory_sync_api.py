@@ -76,7 +76,6 @@ def _setup_test_data(db: Session):
             lot_number=f"LOT{i:03d}",
             warehouse_id=wh.id,
             current_quantity=100.0 * i,  # 100, 200, 300
-            allocated_quantity=0,
             unit="EA",
             received_date=date.today(),
             status="active",

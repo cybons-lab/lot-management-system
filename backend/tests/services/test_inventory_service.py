@@ -20,13 +20,29 @@ def test_get_inventory_items(db: Session, service_master_data):
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         current_quantity=100,
-        allocated_quantity=10,
         received_date=date.today(),
         status="active",
         unit="EA",
     )
     db.add(lot1)
-    db.flush()  # Flush to make it visible to view (in same transaction)
+    db.flush()
+
+    # Create reservation to simulate allocated quantity
+    from app.infrastructure.persistence.models.lot_reservations_model import (
+        LotReservation,
+        ReservationSourceType,
+        ReservationStatus,
+    )
+
+    res = LotReservation(
+        lot_id=lot1.id,
+        source_type=ReservationSourceType.ORDER,
+        source_id=1,  # Dummy ID
+        reserved_qty=10,
+        status=ReservationStatus.ACTIVE,
+    )
+    db.add(res)
+    db.flush()
 
     # Note: v_inventory_summary view might not see uncommitted changes depending on isolation level
     # But in tests we usually run in transaction.
@@ -148,12 +164,28 @@ def test_get_inventory_by_product(db: Session, service_master_data):
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         current_quantity=60,
-        allocated_quantity=5,
         received_date=date.today(),
         status="active",
         unit="EA",
     )
     db.add(lot1)
+    db.flush()
+
+    # Create reservation to simulate allocated quantity
+    from app.infrastructure.persistence.models.lot_reservations_model import (
+        LotReservation,
+        ReservationSourceType,
+        ReservationStatus,
+    )
+
+    res = LotReservation(
+        lot_id=lot1.id,
+        source_type=ReservationSourceType.ORDER,
+        source_id=2,  # Dummy ID
+        reserved_qty=5,
+        status=ReservationStatus.ACTIVE,
+    )
+    db.add(res)
     db.flush()
 
     results = service.get_inventory_by_product()

@@ -8,7 +8,14 @@ import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.batch.inventory_sync_service import InventorySyncService
-from app.infrastructure.persistence.models import BusinessRule, Lot, Product, Supplier, Warehouse
+from app.infrastructure.persistence.models import (
+    BusinessRule,
+    Lot,
+    LotReservation,
+    Product,
+    Supplier,
+    Warehouse,
+)
 
 
 @pytest.fixture
@@ -16,6 +23,7 @@ def setup_inventory_sync_test_data(db_session: Session):
     """SAP在庫同期テスト用の基本データをセットアップ."""
     # 既存データをクリア
     db_session.query(BusinessRule).filter(BusinessRule.rule_type == "inventory_sync_alert").delete()
+    db_session.query(LotReservation).delete()
     db_session.query(Lot).delete()
     db_session.query(Product).delete()
     db_session.query(Warehouse).delete()

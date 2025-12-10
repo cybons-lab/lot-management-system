@@ -110,7 +110,6 @@ def master_data(test_db: Session):
         warehouse_id=warehouse.id,
         lot_number="LOT-001",
         current_quantity=Decimal("100.000"),
-        allocated_quantity=Decimal("0.000"),
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=90),
@@ -320,16 +319,11 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
     test_db.add(order_line)
     test_db.commit()
 
-    # Update lot allocated quantity to simulate existing allocation
+    # Create allocation (using lot_reference instead of lot_id)
     lot = master_data["lot"]
-    lot.allocated_quantity = Decimal("10.000")
-    test_db.add(lot)
-    test_db.commit()
-
-    # Create allocation
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_id=master_data["lot"].id,
+        lot_reference=lot.lot_number,
         allocated_quantity=Decimal("10.000"),
         status="allocated",
     )
@@ -494,10 +488,10 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
     test_db.add(order_line)
     test_db.commit()
 
-    # Create soft allocation (allocation_type='soft', not updating lot.allocated_quantity)
+    # Create soft allocation (allocation_type='soft', using lot_reference)
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_id=master_data["lot"].id,
+        lot_reference=master_data["lot"].lot_number,
         allocated_quantity=Decimal("50.000"),
         allocation_type="soft",
         status="allocated",
@@ -505,11 +499,21 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
     test_db.add(allocation)
     test_db.commit()
 
-    # Verify initial lot state
-    # NOTE: 既存コードでは引当作成時にallocated_quantityが加算される
-    # このテストでは直接Allocationを作成しているので、手動で設定する必要がある
-    lot = test_db.get(Lot, master_data["lot"].id)
-    lot.allocated_quantity = Decimal("50.000")  # Soft引当作成をシミュレート
+    # Create corresponding LotReservation for the soft allocation
+    from app.infrastructure.persistence.models.lot_reservations_model import (
+        LotReservation,
+        ReservationSourceType,
+        ReservationStatus,
+    )
+
+    reservation = LotReservation(
+        lot_id=master_data["lot"].id,
+        source_type=ReservationSourceType.ORDER,
+        source_id=order_line.id,
+        reserved_qty=Decimal("50.000"),
+        status=ReservationStatus.ACTIVE,
+    )
+    test_db.add(reservation)
     test_db.commit()
 
     # Test: Confirm soft → hard
@@ -524,9 +528,13 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
     assert data["confirmed_by"] == "test_user"
     assert data["confirmed_at"] is not None
 
-    # Verify lot allocated_quantity is unchanged (already added at allocation creation)
-    test_db.refresh(lot)
-    assert lot.allocated_quantity == Decimal("50.000")  # 変更なし
+    # Verify lot reserved_quantity is correct via LotReservation
+    from app.application.services.inventory.stock_calculation import (
+        get_reserved_quantity,
+    )
+
+    lot = test_db.get(Lot, master_data["lot"].id)
+    assert get_reserved_quantity(test_db, lot.id) == Decimal("50.000")
 
 
 def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
@@ -555,10 +563,10 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
     test_db.add(order_line)
     test_db.commit()
 
-    # Create soft allocation for 100
+    # Create soft allocation for 100 (using lot_reference)
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_id=master_data["lot"].id,
+        lot_reference=master_data["lot"].lot_number,
         allocated_quantity=Decimal("100.000"),
         allocation_type="soft",
         status="allocated",
@@ -566,9 +574,21 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
     test_db.add(allocation)
     test_db.commit()
 
-    # Simulate that allocation creation already added to lot.allocated_quantity
-    lot = test_db.get(Lot, master_data["lot"].id)
-    lot.allocated_quantity = Decimal("100.000")
+    # Create corresponding LotReservation
+    from app.infrastructure.persistence.models.lot_reservations_model import (
+        LotReservation,
+        ReservationSourceType,
+        ReservationStatus,
+    )
+
+    reservation = LotReservation(
+        lot_id=master_data["lot"].id,
+        source_type=ReservationSourceType.ORDER,
+        source_id=order_line.id,
+        reserved_qty=Decimal("100.000"),
+        status=ReservationStatus.ACTIVE,
+    )
+    test_db.add(reservation)
     test_db.commit()
 
     # Test: Partial confirm (60 of 100)
@@ -622,10 +642,10 @@ def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data
     test_db.add(order_line)
     test_db.commit()
 
-    # Create already hard allocation
+    # Create already hard allocation (using lot_reference)
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_id=master_data["lot"].id,
+        lot_reference=master_data["lot"].lot_number,
         allocated_quantity=Decimal("10.000"),
         allocation_type="hard",  # Already hard
         status="allocated",
@@ -682,18 +702,16 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
     test_db.add(order_line)
     test_db.commit()
 
-    # Create soft allocation for 80
-    # This simulates what allocate_manually does: adds to lot.allocated_quantity
+    # Create soft allocation for 80 (using lot_reference)
     lot = master_data["lot"]
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_id=lot.id,
+        lot_reference=lot.lot_number,
         allocated_quantity=Decimal("80.000"),
         allocation_type="soft",
         status="allocated",
     )
     test_db.add(allocation)
-    lot.allocated_quantity = Decimal("80.000")  # Simulates allocation creation
     test_db.commit()
 
     # Now simulate stock decrease after soft allocation was made
@@ -757,17 +775,17 @@ def test_confirm_batch_success(test_db: Session, master_data: dict):
     test_db.add(order_line)
     test_db.commit()
 
-    # Create multiple soft allocations
+    # Create multiple soft allocations (using lot_reference)
     allocation1 = Allocation(
         order_line_id=order_line.id,
-        lot_id=master_data["lot"].id,
+        lot_reference=master_data["lot"].lot_number,
         allocated_quantity=Decimal("10.000"),
         allocation_type="soft",
         status="allocated",
     )
     allocation2 = Allocation(
         order_line_id=order_line.id,
-        lot_id=master_data["lot"].id,
+        lot_reference=master_data["lot"].lot_number,
         allocated_quantity=Decimal("20.000"),
         allocation_type="soft",
         status="allocated",
@@ -817,10 +835,10 @@ def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
     test_db.add(order_line)
     test_db.commit()
 
-    # Create one soft allocation
+    # Create one soft allocation (using lot_reference)
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_id=master_data["lot"].id,
+        lot_reference=master_data["lot"].lot_number,
         allocated_quantity=Decimal("20.000"),
         allocation_type="soft",
         status="allocated",

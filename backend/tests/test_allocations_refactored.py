@@ -118,7 +118,6 @@ def setup_test_data(db_session):
         expiry_date=today + timedelta(days=180),
         warehouse_id=warehouse.id,
         current_quantity=100.0,
-        allocated_quantity=0.0,
         unit="EA",
         status="active",
     )
@@ -207,7 +206,6 @@ class TestAllocationAPI:
             expiry_date=today + timedelta(days=90),
             warehouse_id=setup_test_data["warehouse_id"],
             current_quantity=50.0,
-            allocated_quantity=0.0,
             unit="EA",
             status="active",
         )

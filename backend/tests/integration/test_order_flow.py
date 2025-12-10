@@ -143,7 +143,6 @@ def test_order_to_fefo_allocation_flow(db_session):
             expiry_date=date.today() + timedelta(days=expiry_offset),
             warehouse_id=warehouse_db.id if warehouse_db else None,
             current_quantity=float(quantity),
-            allocated_quantity=0.0,
             unit="EA",
             status="active",
         )
@@ -192,16 +191,23 @@ def test_order_to_fefo_allocation_flow(db_session):
     # --- 6. ロットの引当数量更新の検証 ---
     db_session.expire_all()
 
-    lot_a1 = db_session.get(Lot, usable_lot_early)
-    lot_a2 = db_session.get(Lot, usable_lot_late)
-    lot_b1_ref = db_session.get(Lot, lot_b1)
-    lot_b2_ref = db_session.get(Lot, lot_b2)
-
     # Product A: 受注数量5 = LOT-A-1(4) + LOT-A-2(1)
     # Product B: 受注数量3 = LOT-B-1(2) + LOT-B-2(1)
     # 期待される引当数量をチェック（FEFOロジックによる）
-    total_allocated_a = (lot_a1.allocated_quantity or 0) + (lot_a2.allocated_quantity or 0)
-    total_allocated_b = (lot_b1_ref.allocated_quantity or 0) + (lot_b2_ref.allocated_quantity or 0)
+
+    from app.application.services.inventory.stock_calculation import get_reserved_quantity
+
+    # get_reserved_quantity は Decimal を返すので、計算のために float に変換するか、比較側を Decimal に合わせる
+    # ここでは既存コードに合わせて float として扱うこともできるが、get_reserved_quantity は Decimal を返す
+    # テストの期待値が float 5.0 なので float に変換して加算する
+
+    reserved_a1 = get_reserved_quantity(db_session, usable_lot_early)
+    reserved_a2 = get_reserved_quantity(db_session, usable_lot_late)
+    total_allocated_a = float(reserved_a1) + float(reserved_a2)
+
+    reserved_b1 = get_reserved_quantity(db_session, lot_b1)
+    reserved_b2 = get_reserved_quantity(db_session, lot_b2)
+    total_allocated_b = float(reserved_b1) + float(reserved_b2)
 
     assert total_allocated_a == 5.0  # Product A の受注数量
     assert total_allocated_b == 3.0  # Product B の受注数量
