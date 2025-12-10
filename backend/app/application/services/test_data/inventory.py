@@ -96,7 +96,6 @@ def generate_lots(
                 received_date=today - timedelta(days=random.randint(1, 30)),
                 expiry_date=expiry,
                 current_quantity=Decimal(qty),
-                allocated_quantity=Decimal(0),
                 unit="pcs",
                 status="active",
             )

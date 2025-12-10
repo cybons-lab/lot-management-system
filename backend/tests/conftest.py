@@ -112,6 +112,7 @@ def db_engine():
                     l.expiry_date,
                     l.current_quantity,
                     COALESCE(r.reserved_qty, 0) AS allocated_quantity,
+                    l.locked_quantity,
                     (l.current_quantity - COALESCE(r.reserved_qty, 0) - l.locked_quantity) AS available_quantity,
                     l.unit,
                     l.status,

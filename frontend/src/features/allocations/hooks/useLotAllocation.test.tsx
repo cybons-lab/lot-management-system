@@ -176,7 +176,7 @@ describe("useLotAllocation", () => {
     });
 
     expect(result.current.toast).toEqual({
-      message: "引当を登録しました",
+      message: "Allocation created",
       variant: "success",
     });
   });
