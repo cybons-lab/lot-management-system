@@ -28,7 +28,15 @@ from app.application.services.allocations.utils import (
     update_order_allocation_status,
     update_order_line_status,
 )
+from app.application.services.inventory.stock_calculation import (
+    get_available_quantity,
+)
 from app.infrastructure.persistence.models import Allocation, Lot, Order, OrderLine
+from app.infrastructure.persistence.models.lot_reservations_model import (
+    LotReservation,
+    ReservationSourceType,
+    ReservationStatus,
+)
 
 
 def validate_commit_eligibility(order: Order) -> None:
@@ -89,22 +97,30 @@ def persist_allocation_entities(
                 f"Lot {alloc_plan.lot_id} status '{lot.status}' is not active"
             )
 
-        # 利用可能在庫チェック
-        available = float(lot.current_quantity - lot.allocated_quantity)
+        # 利用可能在庫チェック (using lot_reservations)
+        available = float(get_available_quantity(db, lot))
         if available + EPSILON < alloc_plan.allocate_qty:
             raise AllocationCommitError(
                 f"Insufficient stock for lot {lot.id}: "
                 f"required {alloc_plan.allocate_qty}, available {available}"
             )
 
-        # 引当数量を更新
-        lot.allocated_quantity += Decimal(str(alloc_plan.allocate_qty))
+        # Create lot reservation instead of updating allocated_quantity
+        reservation = LotReservation(
+            lot_id=lot.id,
+            source_type=ReservationSourceType.ORDER,
+            source_id=line.id,
+            reserved_qty=Decimal(str(alloc_plan.allocate_qty)),
+            status=ReservationStatus.ACTIVE,
+            created_at=datetime.utcnow(),
+        )
+        db.add(reservation)
         lot.updated_at = datetime.utcnow()
 
-        # 引当レコード作成
+        # 引当レコード作成 (use lot_reference instead of lot_id)
         allocation = Allocation(
             order_line_id=line.id,
-            lot_id=lot.id,
+            lot_reference=lot.lot_number,
             allocated_quantity=alloc_plan.allocate_qty,
             status="allocated",
             created_at=datetime.utcnow(),
@@ -206,20 +222,28 @@ def allocate_manually(
             f"Product mismatch: Lot product {lot.product_id} != Line product {line.product_id}"
         )
 
-    # 在庫チェック
-    available = lot.current_quantity - lot.allocated_quantity
+    # 在庫チェック (using lot_reservations)
+    available = get_available_quantity(db, lot)
     if available + EPSILON < quantity:
         raise AllocationCommitError(
             f"Insufficient stock: required {quantity}, available {available}"
         )
 
-    # 引当実行
-    lot.allocated_quantity += quantity
+    # Create lot reservation instead of updating allocated_quantity
+    reservation = LotReservation(
+        lot_id=lot.id,
+        source_type=ReservationSourceType.ORDER,
+        source_id=line.id,
+        reserved_qty=quantity,
+        status=ReservationStatus.ACTIVE,
+        created_at=datetime.utcnow(),
+    )
+    db.add(reservation)
     lot.updated_at = datetime.utcnow()
 
     allocation = Allocation(
         order_line_id=line.id,
-        lot_id=lot.id,
+        lot_reference=lot.lot_number,
         allocated_quantity=quantity,
         status="allocated",
         created_at=datetime.utcnow(),
@@ -269,15 +293,29 @@ def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True
     if not allocation:
         raise AllocationNotFoundError(f"Allocation {allocation_id} not found")
 
-    # ロックをかけてロットを取得
-    lot_stmt = select(Lot).where(Lot.id == allocation.lot_id).with_for_update()
-    lot = db.execute(lot_stmt).scalar_one_or_none()
-    if not lot:
-        raise AllocationCommitError(f"Lot {allocation.lot_id} not found")
+    # Find lot by lot_reference
+    lot = None
+    if allocation.lot_reference:
+        lot_stmt = select(Lot).where(Lot.lot_number == allocation.lot_reference).with_for_update()
+        lot = db.execute(lot_stmt).scalar_one_or_none()
 
-    # 引当数量を解放
-    lot.allocated_quantity -= allocation.allocated_quantity
-    lot.updated_at = datetime.utcnow()
+    # Release the corresponding LotReservation(s)
+    if lot:
+        # Find reservations for this order_line from this lot
+        reservations = (
+            db.query(LotReservation)
+            .filter(
+                LotReservation.lot_id == lot.id,
+                LotReservation.source_id == allocation.order_line_id,
+                LotReservation.source_type == ReservationSourceType.ORDER,
+                LotReservation.status.in_([ReservationStatus.ACTIVE, ReservationStatus.CONFIRMED]),
+            )
+            .all()
+        )
+        for reservation in reservations:
+            reservation.status = ReservationStatus.RELEASED
+            reservation.updated_at = datetime.utcnow()
+        lot.updated_at = datetime.utcnow()
 
     # 注文ステータス更新のためにOrderLine情報を保持
     order_line_id = allocation.order_line_id
