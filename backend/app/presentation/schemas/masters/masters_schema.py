@@ -204,6 +204,53 @@ class DeliveryPlaceResponse(DeliveryPlaceBase):
 
 
 # ============================================================
+# ProductMapping (商品マスタ)
+# ============================================================
+
+
+class ProductMappingBase(BaseSchema):
+    """Base product mapping schema (DDL: product_mappings)."""
+
+    customer_id: int = Field(..., gt=0, description="得意先ID")
+    customer_part_code: str = Field(..., min_length=1, max_length=100, description="先方品番")
+    supplier_id: int = Field(..., gt=0, description="仕入先ID")
+    product_id: int = Field(..., gt=0, description="製品ID")
+    base_unit: str = Field(..., min_length=1, max_length=20, description="基本単位")
+    pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
+    pack_quantity: int | None = Field(None, ge=0, description="梱包数量")
+    special_instructions: str | None = Field(None, description="特記事項")
+    is_active: bool = Field(True, description="有効フラグ")
+
+
+class ProductMappingCreate(ProductMappingBase):
+    """Create product mapping request."""
+
+    pass
+
+
+class ProductMappingUpdate(BaseSchema):
+    """Update product mapping request."""
+
+    customer_id: int | None = Field(None, gt=0)
+    customer_part_code: str | None = Field(None, min_length=1, max_length=100)
+    supplier_id: int | None = Field(None, gt=0)
+    product_id: int | None = Field(None, gt=0)
+    base_unit: str | None = Field(None, min_length=1, max_length=20)
+    pack_unit: str | None = Field(None, max_length=20)
+    pack_quantity: int | None = Field(None, ge=0)
+    special_instructions: str | None = None
+    is_active: bool | None = None
+
+
+class ProductMappingResponse(ProductMappingBase):
+    """Product mapping response (DDL: product_mappings)."""
+
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
 # Bulk Load (一括登録)
 # ============================================================
 
