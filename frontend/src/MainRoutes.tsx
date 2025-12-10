@@ -15,6 +15,7 @@ import { ClientLogsPage } from "@/features/client-logs";
 import { CustomerItemsListPage } from "@/features/customer-items/pages/CustomerItemsListPage";
 import { CustomersListPage, CustomerDetailPage } from "@/features/customers";
 import { DashboardPage } from "@/features/dashboard/pages/DashboardPage";
+import { DeliveryPlacesListPage } from "@/features/delivery-places";
 import { ForecastCreatePage } from "@/features/forecasts/pages/ForecastCreatePage";
 import { ForecastDetailPage } from "@/features/forecasts/pages/ForecastDetailPage";
 import { ForecastEditPage } from "@/features/forecasts/pages/ForecastEditPage";
@@ -93,6 +94,7 @@ function MasterRoutes() {
       <Route path={ROUTES.MASTERS.CUSTOMER_ITEMS} element={<CustomerItemsListPage />} />
       <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
       <Route path="/masters/primary-assignments" element={<PrimaryAssignmentsPage />} />
+      <Route path="/delivery-places" element={<DeliveryPlacesListPage />} />
 
       {/* Settings - Phase G-2 (Admin Only) */}
       <Route

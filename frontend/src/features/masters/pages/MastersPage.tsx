@@ -30,6 +30,13 @@ const masterLinks: MasterLink[] = [
     color: "bg-blue-50 text-blue-600 hover:bg-blue-100",
   },
   {
+    title: "納入先マスタ",
+    description: "納入先情報を管理",
+    href: "/delivery-places",
+    icon: Database,
+    color: "bg-pink-50 text-pink-600 hover:bg-pink-100",
+  },
+  {
     title: "倉庫マスタ",
     description: "倉庫情報を管理",
     href: ROUTES.MASTERS.WAREHOUSES,
@@ -37,7 +44,7 @@ const masterLinks: MasterLink[] = [
     color: "bg-purple-50 text-purple-600 hover:bg-purple-100",
   },
   {
-    title: "商品マスタ",
+    title: "製品マスタ",
     description: "製品情報を管理",
     href: ROUTES.MASTERS.PRODUCTS,
     icon: Package,

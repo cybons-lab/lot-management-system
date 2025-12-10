@@ -1,0 +1,1 @@
+export { DeliveryPlacesListPage } from "./DeliveryPlacesListPage";

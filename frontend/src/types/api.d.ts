@@ -1545,8 +1545,40 @@ export interface paths {
      */
     get: operations["list_delivery_places_api_masters_delivery_places_get"];
     put?: never;
-    post?: never;
+    /**
+     * Create Delivery Place
+     * @description Create a new delivery place.
+     */
+    post: operations["create_delivery_place_api_masters_delivery_places_post"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/delivery-places/{delivery_place_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Delivery Place
+     * @description Get a delivery place by ID.
+     */
+    get: operations["get_delivery_place_api_masters_delivery_places__delivery_place_id__get"];
+    /**
+     * Update Delivery Place
+     * @description Update a delivery place.
+     */
+    put: operations["update_delivery_place_api_masters_delivery_places__delivery_place_id__put"];
+    post?: never;
+    /**
+     * Delete Delivery Place
+     * @description Delete a delivery place.
+     */
+    delete: operations["delete_delivery_place_api_masters_delivery_places__delivery_place_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -4334,9 +4366,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -4352,9 +4382,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -4406,9 +4434,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
       /** Job Id */
       job_id: number;
@@ -4515,9 +4541,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -4559,9 +4583,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -4600,9 +4622,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: {
-        [key: string]: unknown;
-      } | null;
+      rule_parameters?: Record<string, never> | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -5271,6 +5291,23 @@ export interface components {
       allocation_rate: number;
     };
     /**
+     * DeliveryPlaceCreate
+     * @description Create delivery place request.
+     */
+    DeliveryPlaceCreate: {
+      /**
+       * Jiku Code
+       * @description 次区コード(SAP連携用)
+       */
+      jiku_code?: string | null;
+      /** Delivery Place Code */
+      delivery_place_code: string;
+      /** Delivery Place Name */
+      delivery_place_name: string;
+      /** Customer Id */
+      customer_id: number;
+    };
+    /**
      * DeliveryPlaceImportRow
      * @description Delivery place for import.
      */
@@ -5290,6 +5327,47 @@ export interface components {
        * @description Jiku code (SAP)
        */
       jiku_code?: string | null;
+    };
+    /**
+     * DeliveryPlaceResponse
+     * @description Delivery place response (DDL: delivery_places).
+     */
+    DeliveryPlaceResponse: {
+      /**
+       * Jiku Code
+       * @description 次区コード(SAP連携用)
+       */
+      jiku_code?: string | null;
+      /** Delivery Place Code */
+      delivery_place_code: string;
+      /** Delivery Place Name */
+      delivery_place_name: string;
+      /** Customer Id */
+      customer_id: number;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * DeliveryPlaceUpdate
+     * @description Update delivery place request.
+     */
+    DeliveryPlaceUpdate: {
+      /** Jiku Code */
+      jiku_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Customer Id */
+      customer_id?: number | null;
     };
     /**
      * ExpectedLotCreate
@@ -6312,16 +6390,12 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: {
-        [key: string]: unknown;
-      } | null;
+      old_values?: Record<string, never> | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: {
-        [key: string]: unknown;
-      } | null;
+      new_values?: Record<string, never> | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -6481,9 +6555,7 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: {
-        [key: string]: unknown;
-      } | null;
+      changes?: Record<string, never> | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -7062,9 +7134,7 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: {
-        [key: string]: unknown;
-      } | null;
+      data?: Record<string, never> | null;
     };
     /**
      * RoleCreate
@@ -10549,8 +10619,136 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": unknown;
+          "application/json": components["schemas"]["DeliveryPlaceResponse"][];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_delivery_place_api_masters_delivery_places_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeliveryPlaceCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeliveryPlaceResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_delivery_place_api_masters_delivery_places__delivery_place_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        delivery_place_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeliveryPlaceResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_delivery_place_api_masters_delivery_places__delivery_place_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        delivery_place_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["DeliveryPlaceUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeliveryPlaceResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_delivery_place_api_masters_delivery_places__delivery_place_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        delivery_place_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -12692,9 +12890,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -12998,9 +13194,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -13029,9 +13223,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
     };
