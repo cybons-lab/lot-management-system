@@ -23,6 +23,7 @@ from app.application.services.allocations.schemas import (
     AllocationNotFoundError,
     InsufficientStockError,
 )
+from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.infrastructure.persistence.models import Allocation, Lot, OrderLine
 from app.presentation.api.deps import get_db
 from app.presentation.schemas.allocations.allocations_schema import (
@@ -78,7 +79,7 @@ def drag_assign(request: DragAssignRequest, db: Session = Depends(get_db)):
         lot = db.query(Lot).filter(Lot.id == request.lot_id).first()
         if not lot:
             raise HTTPException(status_code=404, detail="Lot not found")
-        remaining = lot.current_quantity - lot.allocated_quantity
+        remaining = get_available_quantity(db, lot)
 
         return DragAssignResponse(
             success=True,
@@ -296,20 +297,21 @@ def auto_allocate(request: AutoAllocateRequest, db: Session = Depends(get_db)):
         assert line is not None  # Already checked above
         remaining = max(Decimal("0"), Decimal(str(line.order_quantity)) - total_line_allocated)
 
-        # レスポンス作成
+        # レスポンス作成 (use lot_reference to find lot)
         allocated_lots = []
         for a in allocations:
-            lot = db.query(Lot).filter(Lot.id == a.lot_id).first()
-            if lot and a.lot_id is not None:
-                allocated_lots.append(
-                    FefoLotAllocation(
-                        lot_id=a.lot_id,
-                        lot_number=lot.lot_number,
-                        allocated_quantity=a.allocated_quantity,
-                        expiry_date=lot.expiry_date,
-                        received_date=lot.received_date,
+            if a.lot_reference:
+                lot = db.query(Lot).filter(Lot.lot_number == a.lot_reference).first()
+                if lot:
+                    allocated_lots.append(
+                        FefoLotAllocation(
+                            lot_id=lot.id,
+                            lot_number=lot.lot_number,
+                            allocated_quantity=a.allocated_quantity,
+                            expiry_date=lot.expiry_date,
+                            received_date=lot.received_date,
+                        )
                     )
-                )
 
         if allocations:
             message = f"{len(allocations)}件のロットに引当しました"
@@ -488,17 +490,23 @@ def confirm_allocation_hard(
 
         logger.info(
             f"Hard引当確定成功: allocation_id={allocation_id}, "
-            f"lot_id={allocation.lot_id}, qty={allocation.allocated_quantity}"
+            f"lot_reference={allocation.lot_reference}, qty={allocation.allocated_quantity}"
         )
 
-        # lot_idとconfirmed_atは確定済みなら存在するはず
-        assert allocation.lot_id is not None, "lot_id should not be None for confirmed allocation"
+        # Get lot_id from lot_reference
+        lot_id = None
+        if allocation.lot_reference:
+            lot = db.query(Lot).filter(Lot.lot_number == allocation.lot_reference).first()
+            if lot:
+                lot_id = lot.id
+
+        assert lot_id is not None, "lot_id should not be None for confirmed allocation"
         assert allocation.confirmed_at is not None, "confirmed_at should not be None"
 
         return HardAllocationConfirmResponse(
             id=allocation.id,
             order_line_id=allocation.order_line_id,
-            lot_id=allocation.lot_id,
+            lot_id=lot_id,
             allocated_quantity=allocation.allocated_quantity,
             allocation_type=allocation.allocation_type,
             status=allocation.status,
