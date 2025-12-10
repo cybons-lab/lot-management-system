@@ -17,10 +17,11 @@ import { allocationCandidatesKeys } from "./api/useAllocationCandidates";
  */
 export function useCandidateLotFetcher(queryClient: QueryClient): CandidateLotFetcher {
   return useCallback<CandidateLotFetcher>(
-    (lineId) => {
+    (lineId, productId) => {
       const cache = queryClient.getQueryData<{ items?: unknown[] }>(
         allocationCandidatesKeys.list({
           order_line_id: lineId,
+          product_id: productId,
           strategy: ALLOCATION_CONSTANTS.QUERY_STRATEGY.FEFO,
           limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
         }),

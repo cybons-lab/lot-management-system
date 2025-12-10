@@ -101,5 +101,5 @@ export interface LineStockStatus {
  * Function type for fetching candidate lots from cache
  */
 export interface CandidateLotFetcher {
-  (lineId: number): CandidateLotItem[];
+  (lineId: number, productId: number): CandidateLotItem[];
 }

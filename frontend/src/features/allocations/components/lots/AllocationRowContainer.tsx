@@ -40,6 +40,7 @@ export function AllocationRowContainer({
 }: AllocationRowContainerProps) {
   const { data, isLoading, error } = useAllocationCandidates({
     order_line_id: line.id,
+    product_id: Number(line.product_id || 0),
     strategy: "fefo",
     limit: 200,
   });

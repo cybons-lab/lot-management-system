@@ -5,7 +5,7 @@
 import { useMutation, type QueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 
-import { saveManualAllocations, type ManualAllocationSaveResponse } from "../api";
+import { saveManualAllocations, type ManualAllocationBatchResponse } from "../api";
 import { ALLOCATION_CONSTANTS } from "../constants";
 import { setLineStatusToCommitted } from "../helpers/allocationStatusHelpers";
 import type { AllocationsByLine, AllocationToastState, LineStatusMap } from "../types";
@@ -20,6 +20,7 @@ import type { OrderLine } from "@/shared/types/aliases";
  */
 interface SaveAllocationsVariables {
   orderLineId: number;
+  productId: number;
   orderId: number | null;
   allocations: Array<{ lot_id: number; quantity: number }>;
 }
@@ -46,7 +47,7 @@ export function useAllocationSaver({
 }) {
   // Mutation for saving allocations
   const saveAllocationsMutation = useMutation<
-    ManualAllocationSaveResponse,
+    ManualAllocationBatchResponse,
     unknown,
     SaveAllocationsVariables
   >({
@@ -65,7 +66,12 @@ export function useAllocationSaver({
       // Invalidate related queries to refetch fresh data
       queryClient.invalidateQueries({ queryKey: ["orders", "for-allocation"] });
       queryClient.invalidateQueries({
-        queryKey: allocationCandidatesKeys.list({ order_line_id: variables.orderLineId }),
+        queryKey: allocationCandidatesKeys.list({
+          order_line_id: variables.orderLineId,
+          product_id: variables.productId,
+          strategy: ALLOCATION_CONSTANTS.QUERY_STRATEGY.FEFO,
+          limit: ALLOCATION_CONSTANTS.CANDIDATE_LOTS_LIMIT,
+        }),
       });
     },
     onError: (error: unknown) => {
@@ -101,6 +107,7 @@ export function useAllocationSaver({
       // Execute mutation
       saveAllocationsMutation.mutate({
         orderLineId: lineId,
+        productId: Number(line.product_id || 0),
         orderId: getOrderId(line),
         allocations,
       });

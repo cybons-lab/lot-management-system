@@ -42,6 +42,7 @@ export function useLotAllocationActions(options: UseLotAllocationActionsOptions)
   const getAllocationsForLine = useGetAllocationsForLine(options.allocationsByLine);
 
   const changeAllocation = useChangeAllocationHandler({
+    allLines: options.allLines,
     candidateFetcher,
     setAllocationsByLine: options.setAllocationsByLine,
     setLineStatuses: options.setLineStatuses,
