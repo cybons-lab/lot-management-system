@@ -36,7 +36,6 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .inbound_models import ExpectedLot
     from .lot_reservations_model import LotReservation
     from .masters_models import Customer, DeliveryPlace, Product, Supplier, Warehouse
-    from .orders_models import Allocation
 
 
 class StockTransactionType(str, PyEnum):
@@ -99,9 +98,6 @@ class Lot(Base):
     current_quantity: Mapped[Decimal] = mapped_column(
         Numeric(15, 3), nullable=False, server_default=text("0")
     )
-    allocated_quantity: Mapped[Decimal] = mapped_column(
-        Numeric(15, 3), nullable=False, server_default=text("0")
-    )
     unit: Mapped[str] = mapped_column(String(20), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'active'"))
     lock_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -135,12 +131,7 @@ class Lot(Base):
 
     __table_args__ = (
         CheckConstraint("current_quantity >= 0", name="chk_lots_current_quantity"),
-        CheckConstraint("allocated_quantity >= 0", name="chk_lots_allocated_quantity"),
         CheckConstraint("locked_quantity >= 0", name="chk_lots_locked_quantity"),
-        CheckConstraint(
-            "allocated_quantity + locked_quantity <= current_quantity",
-            name="chk_lots_allocation_limit",
-        ),
         CheckConstraint(
             "status IN ('active','depleted','expired','quarantine','locked')",
             name="chk_lots_status",
@@ -180,9 +171,6 @@ class Lot(Base):
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="lots")
     expected_lot: Mapped[ExpectedLot | None] = relationship(
         "ExpectedLot", back_populates="lot", uselist=False
-    )
-    allocations: Mapped[list[Allocation]] = relationship(
-        "Allocation", back_populates="lot", cascade="all, delete-orphan"
     )
     stock_history: Mapped[list[StockHistory]] = relationship(
         "StockHistory", back_populates="lot", cascade="all, delete-orphan"

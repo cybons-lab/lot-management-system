@@ -48,12 +48,13 @@ def test_db(db: Session):
             l.product_id,
             l.warehouse_id,
             SUM(l.current_quantity) AS total_quantity,
-            SUM(l.allocated_quantity) AS allocated_quantity,
-            (SUM(l.current_quantity) - SUM(l.allocated_quantity)) AS available_quantity,
+            COALESCE(SUM(r.reserved_qty), 0) AS allocated_quantity,
+            (SUM(l.current_quantity) - COALESCE(SUM(r.reserved_qty), 0)) AS available_quantity,
             COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
-            (SUM(l.current_quantity) - SUM(l.allocated_quantity) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
+            (SUM(l.current_quantity) - COALESCE(SUM(r.reserved_qty), 0) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
             MAX(l.updated_at) AS last_updated
         FROM lots l
+        LEFT JOIN lot_reservations r ON l.id = r.lot_id AND r.status IN ('active', 'confirmed')
         LEFT JOIN inbound_plan_lines ipl ON l.product_id = ipl.product_id
         LEFT JOIN inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
         WHERE l.status = 'active'
@@ -107,7 +108,6 @@ def sample_data(test_db: Session):
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         current_quantity=Decimal("100.000"),
-        allocated_quantity=Decimal("20.000"),
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=90),
@@ -209,6 +209,7 @@ def test_inventory_item_reflects_lot_quantities(test_db: Session, sample_data):
     assert response.status_code == 200
     data = response.json()
 
-    # Should match the lot quantities (100 current, 20 allocated)
+    # Should match the lot quantities - using lot_reservations for allocated
+    # Since no reservations are created, allocated_quantity is 0
     assert float(data["total_quantity"]) == 100.0
-    assert float(data["allocated_quantity"]) == 20.0
+    assert float(data["allocated_quantity"]) == 0.0

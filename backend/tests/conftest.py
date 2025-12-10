@@ -64,7 +64,7 @@ def db_engine():
             except ProgrammingError:
                 pass
 
-            # Create view
+            # Create view - using lot_reservations for available calculation
             connection.execute(
                 text("""
                 CREATE OR REPLACE VIEW v_inventory_summary AS
@@ -72,12 +72,13 @@ def db_engine():
                     l.product_id,
                     l.warehouse_id,
                     SUM(l.current_quantity) AS total_quantity,
-                    SUM(l.allocated_quantity) AS allocated_quantity,
-                    (SUM(l.current_quantity) - SUM(l.allocated_quantity)) AS available_quantity,
+                    COALESCE(SUM(r.reserved_qty), 0) AS allocated_quantity,
+                    (SUM(l.current_quantity) - COALESCE(SUM(r.reserved_qty), 0)) AS available_quantity,
                     COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
-                    (SUM(l.current_quantity) - SUM(l.allocated_quantity) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
+                    (SUM(l.current_quantity) - COALESCE(SUM(r.reserved_qty), 0) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
                     MAX(l.updated_at) AS last_updated
                 FROM lots l
+                LEFT JOIN lot_reservations r ON l.id = r.lot_id AND r.status IN ('active', 'confirmed')
                 LEFT JOIN inbound_plan_lines ipl ON l.product_id = ipl.product_id
                 LEFT JOIN inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
                 WHERE l.status = 'active'
@@ -110,8 +111,8 @@ def db_engine():
                     l.received_date,
                     l.expiry_date,
                     l.current_quantity,
-                    l.allocated_quantity,
-                    (l.current_quantity - l.allocated_quantity - l.locked_quantity) AS available_quantity,
+                    COALESCE(r.reserved_qty, 0) AS allocated_quantity,
+                    (l.current_quantity - COALESCE(r.reserved_qty, 0) - l.locked_quantity) AS available_quantity,
                     l.unit,
                     l.status,
                     (l.expiry_date - CURRENT_DATE) AS days_to_expiry,
@@ -121,6 +122,12 @@ def db_engine():
                 JOIN products p ON l.product_id = p.id
                 JOIN warehouses w ON l.warehouse_id = w.id
                 LEFT JOIN suppliers s ON l.supplier_id = s.id
+                LEFT JOIN (
+                    SELECT lot_id, SUM(reserved_qty) as reserved_qty
+                    FROM lot_reservations
+                    WHERE status IN ('active', 'confirmed')
+                    GROUP BY lot_id
+                ) r ON l.id = r.lot_id
             """)
             )
 

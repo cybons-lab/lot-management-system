@@ -37,8 +37,6 @@ from .base_model import Base
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .auth_models import User
-    from .forecast_models import ForecastCurrent
-    from .inventory_models import Lot
     from .masters_models import Customer, Product
     from .order_groups_models import OrderGroup
 
@@ -174,11 +172,10 @@ class OrderLine(Base):
         server_default=text("'ORDER'"),
         comment="需要種別: FORECAST_LINKED / KANBAN / SPOT / ORDER",
     )
-    forecast_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        ForeignKey("forecast_current.id", ondelete="SET NULL"),
+    forecast_reference: Mapped[str | None] = mapped_column(
+        String(100),
         nullable=True,
-        comment="紐づく予測ID（FORECAST_LINKEDの場合）",
+        comment="Forecast business key reference (replaces forecast_id FK)",
     )
 
     status: Mapped[str] = mapped_column(
@@ -193,7 +190,11 @@ class OrderLine(Base):
         Index("idx_order_lines_delivery_place", "delivery_place_id"),
         Index("idx_order_lines_status", "status"),
         Index("idx_order_lines_order_type", "order_type"),
-        Index("idx_order_lines_forecast_id", "forecast_id"),
+        Index(
+            "idx_order_lines_forecast_reference",
+            "forecast_reference",
+            postgresql_where=text("forecast_reference IS NOT NULL"),
+        ),
         Index("idx_order_lines_order_group", "order_group_id"),
         Index(
             "idx_order_lines_sap_order_no",
@@ -229,9 +230,6 @@ class OrderLine(Base):
         "OrderGroup", back_populates="order_lines"
     )
     product: Mapped[Product] = relationship("Product", back_populates="order_lines")
-    forecast: Mapped[ForecastCurrent | None] = relationship(
-        "ForecastCurrent", back_populates="order_lines"
-    )
     allocations: Mapped[list[Allocation]] = relationship(
         "Allocation", back_populates="order_line", cascade="all, delete-orphan"
     )
@@ -247,11 +245,10 @@ class Allocation(Base):
 
     DDL: allocations
     Primary key: id (BIGSERIAL)
-    Foreign keys: order_line_id -> order_lines(id), lot_id -> lots(id),
+    Foreign keys: order_line_id -> order_lines(id),
                   inbound_plan_line_id -> inbound_plan_lines(id)
 
-    Supports both regular allocations (with lot_id) and provisional allocations
-    (with inbound_plan_line_id for planned inbound stock).
+    Uses lot_reference (business key) instead of lot_id FK for decoupling.
     """
 
     __tablename__ = "allocations"
@@ -262,10 +259,10 @@ class Allocation(Base):
         ForeignKey("order_lines.id", ondelete="CASCADE"),
         nullable=False,
     )
-    lot_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        ForeignKey("lots.id", ondelete="RESTRICT"),
-        nullable=True,  # Nullable for provisional allocations
+    lot_reference: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+        comment="Lot number (business key reference, replaces lot_id FK)",
     )
     inbound_plan_line_id: Mapped[int | None] = mapped_column(
         BigInteger,
@@ -305,7 +302,7 @@ class Allocation(Base):
             name="chk_allocation_type",
         ),
         Index("idx_allocations_order_line", "order_line_id"),
-        Index("idx_allocations_lot", "lot_id"),
+        Index("idx_allocations_lot_reference", "lot_reference"),
         Index("idx_allocations_inbound_plan_line", "inbound_plan_line_id"),
         Index("idx_allocations_status", "status"),
         Index("idx_allocations_allocation_type", "allocation_type"),
@@ -313,9 +310,8 @@ class Allocation(Base):
 
     # Relationships
     order_line: Mapped[OrderLine] = relationship("OrderLine", back_populates="allocations")
-    lot: Mapped[Lot | None] = relationship("Lot", back_populates="allocations")
 
     @property
     def lot_number(self) -> str | None:
-        """Flattened lot number for API response."""
-        return self.lot.lot_number if self.lot else None
+        """Alias for lot_reference for API compatibility."""
+        return self.lot_reference
