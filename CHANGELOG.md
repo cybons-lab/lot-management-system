@@ -12,6 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
 - タスク管理ドキュメントを統一：`remaining_issues.adoc`を削除し、`ACTIVE_TASKS.md`に一元化
 
+## [2025-12-11]
+
+### Added
+- **[P1-1] 受注管理画面の完全統合 (2段階→1段階へ)**
+  - `AllocationDialog` を独立コンポーネントとして抽出
+  - 受注一覧の「引当」ボタンから直接ダイアログを開けるように変更
+  - 受注番号カラムを削除（不要との指摘に対応）
+  - 納期表示を `delivery_date` フィールドに修正
+  - PR: #297
+
+### Completed (移行済み: ACTIVE_TASKSより)
+- **クリーンアーキテクチャ移行 (フェーズ3)**: ディレクトリ構造の全面刷新完了
+- **受注非連動ロット対応**: バックエンド/フロントエンド実装完了 (283 tests passed)
+- **P1-2: ロット新規登録500エラー**: 修正完了
+- **P1-3: データモデル再設計 (商品マスタ整理)**: `product_mappings` テーブル作成完了
+- **P2-0: ロット引当ページでのHARD引当同時実行対応**: 実装完了
+- **P2-1: 引当ステータスの仮/実区別表示**: `AllocationStatusBadge` 実装完了
+
+## [2025-12-10]
+
 ### Added
 - **[Feature] Master Import Phase 3 & 4 (Unified UI & Individual Imports)**
   - **DB Reset**: データベース初期化機能とUI (`ResetCard`) を実装
