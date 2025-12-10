@@ -1,47 +1,52 @@
-import { Upload } from "lucide-react";
-import { useState } from "react";
+import { Plus, Upload } from "lucide-react";
+import { useCallback, useState } from "react";
 
+import type { UomConversionCreate } from "../api";
 import { UomConversionBulkImportDialog } from "../components/UomConversionBulkImportDialog";
+import { UomConversionCreateDialog } from "../components/UomConversionCreateDialog";
+import { UomConversionDeleteDialog } from "../components/UomConversionDeleteDialog";
 import { UomConversionExportButton } from "../components/UomConversionExportButton";
 import { UomConversionsTable } from "../components/UomConversionsTable";
-import { useDeleteConversion, useInlineEdit, useUomConversions } from "../hooks";
+import {
+  useCreateUomConversion,
+  useDeleteConversion,
+  useInlineEdit,
+  useUomConversions,
+} from "../hooks";
 
 import { Button } from "@/components/ui";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/display/alert-dialog";
+import { useProducts } from "@/features/products/hooks";
 
 export function UomConversionsPage() {
   const { useList } = useUomConversions();
   const { data: conversions = [], isLoading } = useList();
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  const {
-    editingId,
-    editValue,
-    setEditValue,
-    isUpdating,
-    handleStartEdit,
-    handleCancelEdit,
-    handleSaveEdit,
-  } = useInlineEdit();
+  const { useList: useProductList } = useProducts();
+  const { data: products = [] } = useProductList();
+  const createMutation = useCreateUomConversion();
 
+  const inlineEdit = useInlineEdit();
   const { deleteTarget, setDeleteTarget, isDeleting, handleDelete } = useDeleteConversion();
 
-  if (isLoading) {
-    return <div className="p-6">読み込み中...</div>;
-  }
+  const handleCreate = useCallback(
+    (data: UomConversionCreate) => {
+      createMutation.mutate(data, { onSuccess: () => setIsCreateDialogOpen(false) });
+    },
+    [createMutation],
+  );
+
+  if (isLoading) return <div className="p-6">読み込み中...</div>;
+
+  const productOptions = products.map((p) => ({
+    id: p.id,
+    product_name: p.product_name,
+    product_code: p.product_code,
+  }));
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
-      {/* ヘッダー */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">単位換算</h1>
@@ -53,52 +58,44 @@ export function UomConversionsPage() {
             <Upload className="mr-2 h-4 w-4" />
             インポート
           </Button>
+          <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            新規登録
+          </Button>
         </div>
       </div>
 
-      {/* テーブル */}
       <UomConversionsTable
         conversions={conversions}
-        editingId={editingId}
-        editValue={editValue}
-        setEditValue={setEditValue}
-        isUpdating={isUpdating}
-        handleSaveEdit={handleSaveEdit}
-        handleCancelEdit={handleCancelEdit}
-        handleStartEdit={handleStartEdit}
+        editingId={inlineEdit.editingId}
+        editValue={inlineEdit.editValue}
+        setEditValue={inlineEdit.setEditValue}
+        isUpdating={inlineEdit.isUpdating}
+        handleSaveEdit={inlineEdit.handleSaveEdit}
+        handleCancelEdit={inlineEdit.handleCancelEdit}
+        handleStartEdit={inlineEdit.handleStartEdit}
         setDeleteTarget={setDeleteTarget}
       />
 
-      {/* 件数表示 */}
       <div className="text-sm text-slate-600">{conversions.length} 件の単位換算</div>
 
       <UomConversionBulkImportDialog
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
       />
-
-      {/* 削除確認ダイアログ */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>単位換算を削除しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
-              製品「{deleteTarget?.product_name}」（{deleteTarget?.product_code}）の 外部単位「
-              {deleteTarget?.external_unit}」の換算情報を削除します。 この操作は取り消せません。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {isDeleting ? "削除中..." : "削除"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <UomConversionDeleteDialog
+        target={deleteTarget}
+        onOpenChange={() => setDeleteTarget(null)}
+        onDelete={handleDelete}
+        isDeleting={isDeleting}
+      />
+      <UomConversionCreateDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        products={productOptions}
+        onSubmit={handleCreate}
+        isSubmitting={createMutation.isPending}
+      />
     </div>
   );
 }

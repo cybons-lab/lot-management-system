@@ -5,6 +5,7 @@ import type { BulkUpsertResponse } from "@/shared/types/bulk-operations";
 
 export interface UomConversionResponse {
   conversion_id: number;
+  product_id?: number;
   product_code: string;
   product_name: string;
   external_unit: string;
@@ -12,10 +13,25 @@ export interface UomConversionResponse {
   remarks?: string;
 }
 
-export type UomConversionCreate = Omit<UomConversionResponse, "conversion_id" | "product_name">;
+export interface UomConversionCreate {
+  product_id: number;
+  external_unit: string;
+  factor: number;
+}
+
 export type UomConversionUpdate = {
   factor?: number;
 };
+
+/**
+ * Create a new UOM conversion
+ * @endpoint POST /masters/uom-conversions
+ */
+export async function createUomConversion(
+  data: UomConversionCreate,
+): Promise<UomConversionResponse> {
+  return http.post<UomConversionResponse>("masters/uom-conversions", data);
+}
 
 /**
  * Bulk upsert UOM conversions

@@ -43,13 +43,7 @@ export function ProductMappingsListPage() {
   const [editingItem, setEditingItem] = useState<ProductMapping | null>(null);
   const [deletingItem, setDeletingItem] = useState<ProductMapping | null>(null);
 
-  const {
-    data: productMappings = [],
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useProductMappings();
+  const { data: productMappings = [], isLoading, isError, error, refetch } = useProductMappings();
   const { useList: useCustomerList } = useCustomers();
   const { data: customers = [] } = useCustomerList();
   const { useList: useSupplierList } = useSuppliers();
@@ -63,13 +57,19 @@ export function ProductMappingsListPage() {
 
   const customerMap = useMemo(() => {
     return new Map(
-      customers.map((c) => [c.id, { customer_code: c.customer_code, customer_name: c.customer_name }]),
+      customers.map((c) => [
+        c.id,
+        { customer_code: c.customer_code, customer_name: c.customer_name },
+      ]),
     );
   }, [customers]);
 
   const supplierMap = useMemo(() => {
     return new Map(
-      suppliers.map((s) => [s.id, { supplier_code: s.supplier_code, supplier_name: s.supplier_name }]),
+      suppliers.map((s) => [
+        s.id,
+        { supplier_code: s.supplier_code, supplier_name: s.supplier_name },
+      ]),
     );
   }, [suppliers]);
 
@@ -310,8 +310,7 @@ export function ProductMappingsListPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>商品マッピングを削除しますか？</AlertDialogTitle>
             <AlertDialogDescription>
-              先方品番: {deletingItem?.customer_part_code} を削除します。
-              この操作は元に戻せません。
+              先方品番: {deletingItem?.customer_part_code} を削除します。 この操作は元に戻せません。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

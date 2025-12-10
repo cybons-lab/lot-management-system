@@ -84,7 +84,10 @@ export function DeliveryPlacesListPage() {
 
   const customerMap = useMemo(() => {
     return new Map(
-      customers.map((c) => [c.id, { customer_code: c.customer_code, customer_name: c.customer_name }]),
+      customers.map((c) => [
+        c.id,
+        { customer_code: c.customer_code, customer_name: c.customer_name },
+      ]),
     );
   }, [customers]);
 
