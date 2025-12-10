@@ -94,17 +94,17 @@ describe("ProductForm", () => {
   it("populates fields with initial values in edit mode", () => {
     const product = {
       id: 1,
-      product_code: "P001",
-      product_name: "Test Product",
+      product_code: "EDIT-001",
+      product_name: "Edit Product",
       internal_unit: "EA",
-      external_unit: "BOX",
-      qty_per_internal_unit: 10,
-      is_active: true,
+      external_unit: "CS",
+      qty_per_internal_unit: 12,
+      is_active: false,
       created_at: "2023-01-01",
       updated_at: "2023-01-01",
       supplier_ids: [],
-      customer_part_no: null,
-      maker_item_code: null,
+      customer_part_no: "CP-123",
+      maker_item_code: "MK-456",
     };
 
     render(<ProductForm product={product} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
