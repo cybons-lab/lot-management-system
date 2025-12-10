@@ -4,6 +4,7 @@
 
 import { useCallback } from "react";
 
+import type { OrderLine } from "@/shared/types/aliases";
 import { setLineStatusToDraft } from "../helpers/allocationStatusHelpers";
 import type { AllocationsByLine, CandidateLotFetcher, LineStatusMap } from "../types";
 import { clampAllocationQuantity, getFreeQuantity } from "../utils/allocationCalculations";
@@ -14,18 +15,24 @@ import { clampAllocationQuantity, getFreeQuantity } from "../utils/allocationCal
  * @returns Change allocation handler function
  */
 export function useChangeAllocationHandler({
+  allLines,
   candidateFetcher,
   setAllocationsByLine,
   setLineStatuses,
 }: {
+  allLines: OrderLine[];
   candidateFetcher: CandidateLotFetcher;
   setAllocationsByLine: React.Dispatch<React.SetStateAction<AllocationsByLine>>;
   setLineStatuses: React.Dispatch<React.SetStateAction<LineStatusMap>>;
 }) {
   return useCallback(
     (lineId: number, lotId: number, value: number) => {
+      // Find the line to get product_id
+      const line = allLines.find((l) => l.id === lineId);
+      const productId = Number(line?.product_id || 0);
+
       // Fetch candidate lots to determine max allowed quantity
-      const candidates = candidateFetcher(lineId);
+      const candidates = candidateFetcher(lineId, productId);
       const targetLot = candidates.find((lot) => lot.lot_id === lotId);
 
       // Determine max allowed quantity (default to Infinity if lot not found)

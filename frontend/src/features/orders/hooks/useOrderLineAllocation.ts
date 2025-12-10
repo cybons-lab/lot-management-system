@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import * as allocationsApi from "@/features/allocations/api";
 import * as ordersApi from "@/features/orders/api";
 import type { OrderLine } from "@/shared/types/aliases";
-import type { CandidateLotItem } from "@/shared/types/schema";
+import type { CandidateLotItem } from "@/features/allocations/api";
 
 interface Allocation {
   id?: number;
@@ -109,8 +109,9 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     const fetchCandidates = async () => {
       setIsLoadingCandidates(true);
       try {
-        const res = await ordersApi.getCandidateLots({
+        const res = await allocationsApi.getAllocationCandidates({
           order_line_id: orderLine.id,
+          product_id: Number(orderLine.product_id || 0),
         });
         setCandidateLots(res.items);
 

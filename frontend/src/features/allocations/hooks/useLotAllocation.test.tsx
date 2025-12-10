@@ -48,33 +48,39 @@ describe("useLotAllocation", () => {
       {
         lot_id: 1,
         lot_number: "LOT-A",
-        quantity: 50,
-        current_quantity: "50",
-        allocated_quantity: "0",
-        available_quantity: "50",
-        product_id: 1,
-        status: "clean",
+        available_quantity: 50,
+        free_qty: 50,
+        current_quantity: 50,
+        allocated_quantity: 0,
+        product_code: "P001",
+        warehouse_code: "WH01",
         expiry_date: "2025-12-31",
-        warehouse_id: 1,
         warehouse_name: "Main Warehouse",
-        created_at: "2025-01-01",
+        status: "clean",
+        lock_reason: null,
+        internal_unit: null,
+        qty_per_internal_unit: null,
+        external_unit: null,
       },
       {
         lot_id: 2,
         lot_number: "LOT-B",
-        quantity: 50,
-        current_quantity: "50",
-        allocated_quantity: "0",
-        available_quantity: "50",
-        product_id: 1,
-        status: "clean",
+        available_quantity: 50,
+        free_qty: 50,
+        current_quantity: 50,
+        allocated_quantity: 0,
+        product_code: "P001",
+        warehouse_code: "WH01",
         expiry_date: "2026-01-01",
-        warehouse_id: 1,
         warehouse_name: "Main Warehouse",
-        created_at: "2025-01-02",
+        status: "clean",
+        lock_reason: null,
+        internal_unit: null,
+        qty_per_internal_unit: null,
+        external_unit: null,
       },
     ],
-    total: 2,
+    // total is optional or not in response wrapper depending on implementation
   };
 
   beforeEach(() => {
@@ -104,7 +110,11 @@ describe("useLotAllocation", () => {
     } as any);
 
     vi.mocked(api.getAllocationCandidates).mockResolvedValue(mockCandidates);
-    vi.mocked(api.saveManualAllocations).mockResolvedValue({ success: true });
+    vi.mocked(api.saveManualAllocations).mockResolvedValue({
+      success: true,
+      created_count: 1,
+      message: "Allocation created",
+    });
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -166,7 +176,7 @@ describe("useLotAllocation", () => {
     });
 
     expect(result.current.toast).toEqual({
-      message: "引当を登録しました",
+      message: "Allocation created",
       variant: "success",
     });
   });

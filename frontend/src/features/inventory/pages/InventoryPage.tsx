@@ -1,14 +1,4 @@
-import {
-  ArrowUpFromLine,
-  Box,
-  Crown,
-  History,
-  Home,
-  List,
-  Package,
-  Plus,
-  Truck,
-} from "lucide-react";
+import { ArrowUpFromLine, Box, History, Home, List, Package, Plus, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -53,14 +43,12 @@ export function InventoryPage() {
   const [filters, setFilters] = useState({
     product_id: "",
     warehouse_id: "",
-    primarySuppliersOnly: false,
   });
 
   // Build query params for items
   const queryParams = {
     product_id: filters.product_id ? Number(filters.product_id) : undefined,
     warehouse_id: filters.warehouse_id ? Number(filters.warehouse_id) : undefined,
-    prioritize_primary: filters.primarySuppliersOnly,
   };
 
   // Data Fetching
@@ -70,7 +58,7 @@ export function InventoryPage() {
     refetch: refetchItems,
   } = useInventoryItems(queryParams);
 
-  const supplierQuery = useInventoryBySupplier();
+  const supplierQuery = useInventoryBySupplier(); // 引数なし
   const warehouseQuery = useInventoryByWarehouse();
   const productQuery = useInventoryByProduct();
 
@@ -257,26 +245,6 @@ export function InventoryPage() {
                   onChange={(value) => setFilters({ ...filters, warehouse_id: value })}
                   placeholder="倉庫を検索..."
                 />
-              </div>
-              <div className="flex items-end">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="primarySuppliersOnly"
-                    checked={filters.primarySuppliersOnly}
-                    onChange={(e) =>
-                      setFilters({ ...filters, primarySuppliersOnly: e.target.checked })
-                    }
-                    className="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-2 focus:ring-amber-500"
-                  />
-                  <label
-                    htmlFor="primarySuppliersOnly"
-                    className="flex items-center gap-1 text-sm font-medium text-slate-700"
-                  >
-                    <Crown className="h-3.5 w-3.5 text-amber-600" />
-                    主担当の仕入先のみ
-                  </label>
-                </div>
               </div>
             </div>
           </Section>

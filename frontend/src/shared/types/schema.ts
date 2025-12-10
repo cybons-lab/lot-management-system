@@ -5,8 +5,7 @@ export type Schema = components["schemas"];
 // Allocations
 export type CandidateLotItem = Schema["CandidateLotItem"];
 export type CandidateLotsResponse = Schema["ListResponse_CandidateLotItem_"];
-export type ManualAllocationRequest = Schema["DragAssignRequest"];
-export type ManualAllocationResponse = Schema["DragAssignResponse"];
+// ManualAllocationRequest/Response removed - using v2 types directly in api.ts
 export type FefoPreviewRequest = Schema["FefoPreviewRequest"];
 export type FefoPreviewResponse = Schema["FefoPreviewResponse"];
 export type FefoLineAllocation = Schema["FefoLineAllocation"];
@@ -32,7 +31,7 @@ export type BulkImportForecastSummary = Schema["ForecastBulkImportSummary"];
 // Orders
 export type OrderResponse = Schema["OrderWithLinesResponse"];
 export type OrderLineResponse = Schema["OrderLineResponse"];
-export type WarehouseListResponse = Schema["WarehouseListResponse"];
+// export type WarehouseListResponse = Schema["WarehouseListResponse"]; // Not in current OpenAPI schema
 
 // Lots
 // export type Lot = Schema["Lot"]; // Likely LotRead

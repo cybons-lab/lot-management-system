@@ -9,8 +9,12 @@ import { getAllocationCandidates } from "../../api";
 
 export const allocationCandidatesKeys = {
   all: ["allocationCandidates"] as const,
-  list: (params: { order_line_id: number; strategy?: string; limit?: number }) =>
-    [...allocationCandidatesKeys.all, params] as const,
+  list: (params: {
+    order_line_id: number;
+    product_id: number;
+    strategy?: string;
+    limit?: number;
+  }) => [...allocationCandidatesKeys.all, params] as const,
 };
 
 /**
@@ -18,13 +22,14 @@ export const allocationCandidatesKeys = {
  */
 export const useAllocationCandidates = (params: {
   order_line_id: number;
+  product_id: number;
   strategy?: "fefo" | "fifo" | "custom";
   limit?: number;
 }) => {
   return useQuery({
     queryKey: allocationCandidatesKeys.list(params),
     queryFn: () => getAllocationCandidates(params),
-    enabled: params.order_line_id > 0,
+    enabled: params.order_line_id > 0 && params.product_id > 0,
     staleTime: 1000 * 60, // 1 minute (candidates change frequently)
   });
 };

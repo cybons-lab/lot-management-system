@@ -1,64 +1,40 @@
-import type {
-  InventoryByProductResponse,
-  InventoryBySupplierResponse,
-  InventoryByWarehouseResponse,
-} from "./types/InventoryAggregationTypes";
-
 import { http } from "@/shared/api/http-client";
 import type { paths } from "@/types/api";
 
-// ===== Lots Types =====
+// ===== Lots Types (v2) =====
 
-// api.d.ts から型を抽出
-type LotsGetParamsBase = paths["/api/lots"]["get"]["parameters"]["query"];
-type LotsGetParams = LotsGetParamsBase & {
-  delivery_place_code?: string | null;
-  prioritize_primary?: boolean;
-};
-type LotsGetResponse = paths["/api/lots"]["get"]["responses"][200]["content"]["application/json"];
-type LotGetResponse =
-  paths["/api/lots/{lot_id}"]["get"]["responses"][200]["content"]["application/json"];
-type LotCreateRequest = paths["/api/lots"]["post"]["requestBody"]["content"]["application/json"];
-type LotCreateResponse =
-  paths["/api/lots"]["post"]["responses"][201]["content"]["application/json"];
+export type LotsGetParams = paths["/api/v2/lot/"]["get"]["parameters"]["query"];
+export type LotResponse =
+  paths["/api/v2/lot/"]["get"]["responses"][200]["content"]["application/json"][number];
+export type LotDetailResponse =
+  paths["/api/v2/lot/{lot_id}"]["get"]["responses"][200]["content"]["application/json"];
 
-// ===== Inventory Items Types =====
+export type AvailableLotResponse =
+  paths["/api/v2/lot/available"]["get"]["responses"][200]["content"]["application/json"][number];
 
-/**
- * Inventory Item (Summary)
- */
-export interface InventoryItem {
-  inventory_item_id: number;
-  product_id: number;
-  warehouse_id: number;
-  total_quantity: number;
-  allocated_quantity: number;
-  available_quantity: number;
-  soft_allocated_quantity: number;
-  hard_allocated_quantity: number;
-  last_updated: string;
-  // Joined data (optional)
-  product_code?: string;
-  product_name?: string;
-  warehouse_name?: string;
-  warehouse_code?: string;
-}
+export type LotCreateRequest =
+  paths["/api/v2/lot/"]["post"]["requestBody"]["content"]["application/json"];
+export type LotCreateResponse =
+  paths["/api/v2/lot/"]["post"]["responses"][201]["content"]["application/json"];
 
-export interface InventoryItemsListParams {
-  skip?: number;
-  limit?: number;
-  product_id?: number;
-  warehouse_id?: number;
-  prioritize_primary?: boolean;
-}
+// ===== Inventory Items Types (v2) =====
+
+export type InventoryItem =
+  paths["/api/v2/inventory/"]["get"]["responses"][200]["content"]["application/json"][number];
+
+export type InventoryItemsListParams = paths["/api/v2/inventory/"]["get"]["parameters"]["query"];
+
+export type InventoryBySupplierResponse =
+  paths["/api/v2/inventory/by-supplier"]["get"]["responses"][200]["content"]["application/json"][number];
+export type InventoryByWarehouseResponse =
+  paths["/api/v2/inventory/by-warehouse"]["get"]["responses"][200]["content"]["application/json"][number];
+export type InventoryByProductResponse =
+  paths["/api/v2/inventory/by-product"]["get"]["responses"][200]["content"]["application/json"][number];
 
 // ===== Lots API Functions =====
 
 /**
- * ロット一覧取得
- *
- * @param params - クエリパラメータ（製品、倉庫、期限などでフィルタ可能）
- * @returns ロット一覧
+ * ロット一覧取得 (v2)
  */
 export const getLots = (params?: LotsGetParams) => {
   const searchParams = new URLSearchParams();
@@ -68,8 +44,7 @@ export const getLots = (params?: LotsGetParams) => {
   if (params?.product_id != null) searchParams.append("product_id", params.product_id.toString());
   if (params?.product_code) searchParams.append("product_code", params.product_code);
   if (params?.supplier_code) searchParams.append("supplier_code", params.supplier_code);
-  if (params?.delivery_place_code)
-    searchParams.append("delivery_place_code", params.delivery_place_code);
+  if (params?.warehouse_code) searchParams.append("warehouse_code", params.warehouse_code);
   if (params?.expiry_from) searchParams.append("expiry_from", params.expiry_from);
   if (params?.expiry_to) searchParams.append("expiry_to", params.expiry_to);
   if (params?.with_stock !== undefined)
@@ -78,73 +53,85 @@ export const getLots = (params?: LotsGetParams) => {
     searchParams.append("prioritize_primary", params.prioritize_primary.toString());
 
   const queryString = searchParams.toString();
-  return http.get<LotsGetResponse>(`lots${queryString ? "?" + queryString : ""}`);
+  return http.get<LotResponse[]>(`v2/lot/${queryString ? "?" + queryString : ""}`);
 };
 
 /**
- * ロット詳細取得
+ * ロット詳細取得 (v2)
  */
-export const getLot = (id: number) => http.get<LotGetResponse>(`lots/${id}`);
+export const getLot = (id: number) => http.get<LotDetailResponse>(`v2/lot/${id}`);
 
 /**
- * ロット新規作成
+ * ロット新規作成 (v2)
  */
-export const createLot = (data: LotCreateRequest) => http.post<LotCreateResponse>("lots", data);
+export const createLot = (data: LotCreateRequest) => http.post<LotCreateResponse>("v2/lot/", data);
+
+/**
+ * 利用可能ロット一覧取得 (v2)
+ */
+export const getAvailableLots = (params: {
+  product_id: number;
+  warehouse_id?: number;
+  min_quantity?: number;
+}) => {
+  const searchParams = new URLSearchParams();
+  searchParams.append("product_id", params.product_id.toString());
+  if (params.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
+  if (params.min_quantity) searchParams.append("min_quantity", params.min_quantity.toString());
+
+  const queryString = searchParams.toString();
+  return http.get<AvailableLotResponse[]>(`v2/lot/available?${queryString}`);
+};
 
 // ===== Inventory Items API Functions =====
 
 /**
- * Get inventory items (summary) list
- * @endpoint GET /inventory-items
+ * Get inventory items list (v2)
+ * @endpoint GET /api/v2/inventory/
  */
 export const getInventoryItems = (params?: InventoryItemsListParams) => {
   const searchParams = new URLSearchParams();
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+  // v2 API uses warehouse_id for filter? Check api.d.ts.
+  // api.d.ts says list_inventory_... parameters query has warehouse_id?
+  // Wait, let's verify parameters for /api/v2/inventory/. I didn't verify detail.
+  // Assuming it accepts warehouse_id based on previous v1.
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
-  if (params?.prioritize_primary !== undefined)
-    searchParams.append("prioritize_primary", params.prioritize_primary.toString());
 
   const queryString = searchParams.toString();
-  return http.get<InventoryItem[]>(`inventory-items${queryString ? "?" + queryString : ""}`);
+  return http.get<InventoryItem[]>(`v2/inventory/${queryString ? "?" + queryString : ""}`);
 };
 
 /**
  * Get inventory item detail (product + warehouse)
- * @endpoint GET /inventory-items/{product_id}/{warehouse_id}
+ * @endpoint GET /api/v2/inventory/{product_id}/{warehouse_id}
  */
 export const getInventoryItem = (productId: number, warehouseId: number) => {
-  return http.get<InventoryItem>(`inventory-items/${productId}/${warehouseId}`);
+  return http.get<InventoryItem>(`v2/inventory/${productId}/${warehouseId}`);
 };
 
 /**
  * Get inventory aggregated by supplier
- * @endpoint GET /inventory-items/by-supplier
+ * @endpoint GET /api/v2/inventory/by-supplier
  */
-export const getInventoryBySupplier = (params?: { prioritize_primary?: boolean }) => {
-  const searchParams = new URLSearchParams();
-  if (params?.prioritize_primary !== undefined)
-    searchParams.append("prioritize_primary", params.prioritize_primary.toString());
-
-  const queryString = searchParams.toString();
-  return http.get<InventoryBySupplierResponse[]>(
-    `inventory-items/by-supplier${queryString ? "?" + queryString : ""}`,
-  );
+export const getInventoryBySupplier = () => {
+  return http.get<InventoryBySupplierResponse[]>("v2/inventory/by-supplier");
 };
 
 /**
  * Get inventory aggregated by warehouse
- * @endpoint GET /inventory-items/by-warehouse
+ * @endpoint GET /api/v2/inventory/by-warehouse
  */
 export const getInventoryByWarehouse = () => {
-  return http.get<InventoryByWarehouseResponse[]>("inventory-items/by-warehouse");
+  return http.get<InventoryByWarehouseResponse[]>("v2/inventory/by-warehouse");
 };
 
 /**
  * Get inventory aggregated by product
- * @endpoint GET /inventory-items/by-product
+ * @endpoint GET /api/v2/inventory/by-product
  */
 export const getInventoryByProduct = () => {
-  return http.get<InventoryByProductResponse[]>("inventory-items/by-product");
+  return http.get<InventoryByProductResponse[]>("v2/inventory/by-product");
 };

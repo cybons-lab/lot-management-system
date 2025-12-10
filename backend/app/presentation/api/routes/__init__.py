@@ -26,12 +26,8 @@ from app.presentation.api.routes.admin import (
     users_router,
 )
 from app.presentation.api.routes.alerts import alerts_router
-from app.presentation.api.routes.allocations import (
-    allocation_candidates_router,
-    allocation_suggestions_router,
-    allocations_router,
-    warehouse_alloc_router,
-)
+
+# from app.presentation.api.routes.allocations import allocation_suggestions_router
 from app.presentation.api.routes.assignments.assignment_router import router as assignments_router
 from app.presentation.api.routes.auth.auth_router import router as auth_router
 from app.presentation.api.routes.forecasts import forecasts_router
@@ -39,7 +35,6 @@ from app.presentation.api.routes.integration.sap_router import router as sap_rou
 from app.presentation.api.routes.inventory import (
     adjustments_router,
     inbound_plans_router,
-    inventory_items_router,
     lots_router,
     withdrawals_router,
 )
@@ -85,20 +80,16 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(order_lines_router, prefix=prefix)
     app.include_router(orders_router, prefix=prefix)
 
-    # Allocation endpoints
-    app.include_router(allocations_router, prefix=prefix)
-    app.include_router(allocation_candidates_router, prefix=prefix)
-    app.include_router(allocation_suggestions_router, prefix=prefix)
-    app.include_router(warehouse_alloc_router, prefix=prefix)
-
     # Forecast & Alert endpoints
     app.include_router(forecasts_router, prefix=prefix)
     app.include_router(alerts_router, prefix=prefix)
 
+    # Allocations (v1 removed)
+    # app.include_router(allocation_suggestions_router, prefix=prefix)
+
     # Inventory endpoints
     app.include_router(inbound_plans_router, prefix=prefix)
     app.include_router(adjustments_router, prefix=prefix)
-    app.include_router(inventory_items_router, prefix=prefix)
     app.include_router(withdrawals_router, prefix=prefix)
 
     # Master data endpoints
@@ -152,15 +143,8 @@ __all__ = [
     "order_lines_router",
     "confirmed_lines_router",
     # "orders_validate_router",  # Disabled: requires OrderValidation* schemas
-    # Allocations (4)
-    "allocation_candidates_router",
-    "allocation_suggestions_router",
-    "allocations_router",
-    "warehouse_alloc_router",
-    # Inventory (5)
     "adjustments_router",
     "inbound_plans_router",
-    "inventory_items_router",
     "lots_router",
     "withdrawals_router",
     # Forecasts (1)

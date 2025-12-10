@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
 from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion
+from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace, Product
 
 from .inventory import get_any_lot_id
@@ -155,5 +156,15 @@ def generate_reservations(db: Session):
             forecast_period=fc.forecast_period,
         )
         db.add(res)
+
+        # Also create LotReservation Record (for v2 available quantity logic)
+        res_v2 = LotReservation(
+            lot_id=lot_id,
+            source_type="forecast",
+            source_id=fc.id,  # Link to forecast ID
+            reserved_qty=fc.forecast_quantity,
+            status="active",
+        )
+        db.add(res_v2)
 
     db.commit()

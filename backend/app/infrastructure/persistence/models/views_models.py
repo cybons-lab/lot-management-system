@@ -166,6 +166,7 @@ class VLotDetails(Base):
     expiry_date: Mapped[date | None] = mapped_column(Date)
     current_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    locked_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     available_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     unit: Mapped[str] = mapped_column(String(20))
     status: Mapped[str] = mapped_column(String(20))
