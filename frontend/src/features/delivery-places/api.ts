@@ -31,5 +31,5 @@ export async function updateDeliveryPlace(
 }
 
 export async function deleteDeliveryPlace(id: number): Promise<void> {
-  return http.delete(`${BASE_PATH}/${id}`);
+  return http.deleteVoid(`${BASE_PATH}/${id}`);
 }
