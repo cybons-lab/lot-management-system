@@ -1,7 +1,7 @@
 /**
  * SuppliersListPage - 仕入先マスタ一覧
  */
-import { Plus, Upload, Truck } from "lucide-react";
+import { Pencil, Plus, Trash2, Truck, Upload } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -14,9 +14,19 @@ import { supplierColumns } from "./columns";
 import * as styles from "./styles";
 
 import { Button, Input } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
-import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -26,10 +36,12 @@ export function SuppliersListPage() {
   const [sort, setSort] = useState<SortConfig>({ column: "supplier_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<Supplier | null>(null);
 
-  const { useList, useCreate } = useSuppliers();
+  const { useList, useCreate, useDelete } = useSuppliers();
   const { data: suppliers = [], isLoading, isError, error, refetch } = useList();
   const { mutate: createSupplier, isPending: isCreating } = useCreate();
+  const { mutate: deleteSupplier, isPending: isDeleting } = useDelete();
 
   const filteredSuppliers = useMemo(() => {
     if (!searchQuery.trim()) return suppliers;
@@ -66,6 +78,42 @@ export function SuppliersListPage() {
     },
     [createSupplier],
   );
+
+  const handleDelete = useCallback(() => {
+    if (!deletingItem) return;
+    deleteSupplier(deletingItem.id, {
+      onSuccess: () => setDeletingItem(null),
+    });
+  }, [deletingItem, deleteSupplier]);
+
+  const actionColumn: Column<Supplier> = {
+    id: "actions",
+    header: "操作",
+    cell: (row) => (
+      <div className="flex gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/suppliers/${row.supplier_code}`);
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDeletingItem(row);
+          }}
+        >
+          <Trash2 className="text-destructive h-4 w-4" />
+        </Button>
+      </div>
+    ),
+  };
 
   if (isError) {
     return (
@@ -126,7 +174,7 @@ export function SuppliersListPage() {
         </div>
         <DataTable
           data={sortedSuppliers}
-          columns={supplierColumns}
+          columns={[...supplierColumns, actionColumn]}
           sort={sort}
           onSortChange={setSort}
           getRowId={(row) => row.id}
@@ -155,6 +203,27 @@ export function SuppliersListPage() {
         title="仕入先マスタ インポート"
         group="supply"
       />
+
+      <AlertDialog
+        open={!!deletingItem}
+        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>仕入先を削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingItem?.supplier_name}（{deletingItem?.supplier_code}）を削除します。
+              この操作は元に戻せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "削除中..." : "削除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

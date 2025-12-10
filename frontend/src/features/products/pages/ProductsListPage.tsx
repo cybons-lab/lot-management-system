@@ -1,7 +1,7 @@
 /**
  * ProductsListPage - 商品マスタ一覧
  */
-import { Plus, Upload, Package } from "lucide-react";
+import { Package, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -15,8 +15,18 @@ import { productColumns } from "./columns";
 import * as styles from "./styles";
 
 import { Button, Input } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
-import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -26,10 +36,12 @@ export function ProductsListPage() {
   const [sort, setSort] = useState<SortConfig>({ column: "product_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<Product | null>(null);
 
-  const { useList, useCreate } = useProducts();
+  const { useList, useCreate, useDelete } = useProducts();
   const { data: products = [], isLoading, isError, error, refetch } = useList();
   const { mutate: createProduct, isPending: isCreating } = useCreate();
+  const { mutate: deleteProduct, isPending: isDeleting } = useDelete();
 
   // エラー時は簡易表示
   // Note: hooksの呼び出し順序を維持するため、条件分岐は後で行う
@@ -70,6 +82,42 @@ export function ProductsListPage() {
     },
     [createProduct],
   );
+
+  const handleDelete = useCallback(() => {
+    if (!deletingItem) return;
+    deleteProduct(deletingItem.id, {
+      onSuccess: () => setDeletingItem(null),
+    });
+  }, [deletingItem, deleteProduct]);
+
+  const actionColumn: Column<Product> = {
+    id: "actions",
+    header: "操作",
+    cell: (row) => (
+      <div className="flex gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/products/${row.product_code}`);
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDeletingItem(row);
+          }}
+        >
+          <Trash2 className="text-destructive h-4 w-4" />
+        </Button>
+      </div>
+    ),
+  };
 
   if (isError) {
     return (
@@ -130,7 +178,7 @@ export function ProductsListPage() {
         </div>
         <DataTable
           data={sortedProducts}
-          columns={productColumns}
+          columns={[...productColumns, actionColumn]}
           sort={sort}
           onSortChange={setSort}
           getRowId={(row) => row.id}
@@ -154,6 +202,27 @@ export function ProductsListPage() {
       </Dialog>
 
       <ProductBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+
+      <AlertDialog
+        open={!!deletingItem}
+        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>商品を削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingItem?.product_name}（{deletingItem?.product_code}）を削除します。
+              この操作は元に戻せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "削除中..." : "削除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

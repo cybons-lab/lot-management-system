@@ -3,7 +3,7 @@
  */
 import { cva } from "class-variance-authority";
 
-export const root = "space-y-6 p-6";
+export const root = "space-y-6 px-6 py-6 md:px-8";
 export const actionBar = "flex items-center gap-2";
 
 export const statsGrid = "grid gap-4 md:grid-cols-2 lg:grid-cols-4";
