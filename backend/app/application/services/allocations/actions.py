@@ -30,6 +30,7 @@ from app.application.services.allocations.utils import (
 )
 from app.application.services.inventory.stock_calculation import (
     get_available_quantity,
+    get_reserved_quantity,
 )
 from app.infrastructure.persistence.models import Allocation, Lot, Order, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
@@ -387,8 +388,8 @@ def preempt_soft_allocations_for_hard(
     if not lot:
         return []
 
-    # 現在の利用可能在庫を確認
-    available = lot.current_quantity - lot.allocated_quantity
+    # 現在の利用可能在庫を確認 (using lot_reservations)
+    available = get_available_quantity(db, lot)
     if available >= required_qty:
         # 十分な在庫がある場合は解除不要
         return []
@@ -397,29 +398,26 @@ def preempt_soft_allocations_for_hard(
     shortage = required_qty - available
 
     # 同じロットの全Soft引当を取得（優先度の低い順）
-    # 優先度: FORECAST_LINKED (最低) < SPOT < ORDER < KANBAN (最高)
-    # つまり、FORECAST_LINKEDから先に解除する
+    # Find allocations by lot_reference instead of lot_id
     soft_allocations_stmt = (
         select(Allocation)
         .join(OrderLine, Allocation.order_line_id == OrderLine.id)
         .where(
-            Allocation.lot_id == lot_id,
+            Allocation.lot_reference == lot.lot_number,
             Allocation.allocation_type == "soft",
             Allocation.status == "allocated",
             Allocation.order_line_id != hard_demand_id,
         )
         .order_by(
             # order_typeで優先度をつける（CASE文でソート）
-            # FORECAST_LINKED=1, SPOT=2, ORDER=3, KANBAN=4
-            # 昇順なので、値が小さい（優先度が低い）ものから取得
             sa_case(
                 (OrderLine.order_type == "KANBAN", 4),
                 (OrderLine.order_type == "ORDER", 3),
                 (OrderLine.order_type == "SPOT", 2),
                 (OrderLine.order_type == "FORECAST_LINKED", 1),
-                else_=3,  # デフォルトはORDER扱い
+                else_=3,
             ).asc(),
-            Allocation.created_at.asc(),  # 同じ優先度の場合は古い順
+            Allocation.created_at.asc(),
         )
     )
 
@@ -435,8 +433,20 @@ def preempt_soft_allocations_for_hard(
         # この引当を解除
         release_qty = min(allocation.allocated_quantity, remaining_shortage)
 
-        # ロットから引当数量を減らす
-        lot.allocated_quantity -= release_qty
+        # Release the corresponding LotReservation
+        reservations = (
+            db.query(LotReservation)
+            .filter(
+                LotReservation.lot_id == lot_id,
+                LotReservation.source_id == allocation.order_line_id,
+                LotReservation.source_type == ReservationSourceType.ORDER,
+                LotReservation.status.in_([ReservationStatus.ACTIVE, ReservationStatus.CONFIRMED]),
+            )
+            .all()
+        )
+        for reservation in reservations:
+            reservation.status = ReservationStatus.RELEASED
+            reservation.released_at = datetime.utcnow()
         lot.updated_at = datetime.utcnow()
 
         # 引当を削除
@@ -502,17 +512,17 @@ def confirm_hard_allocation(
     if allocation.allocation_type == "hard":
         raise AllocationCommitError("ALREADY_CONFIRMED", f"引当 {allocation_id} は既に確定済みです")
 
-    # lot_idが必須（provisionalは確定不可）
-    if not allocation.lot_id:
+    # lot_referenceが必須（provisionalは確定不可）
+    if not allocation.lot_reference:
         raise AllocationCommitError(
             "PROVISIONAL_ALLOCATION", "入荷予定ベースの仮引当は確定できません"
         )
 
-    # ロック付きでロット取得
-    lot_stmt = select(Lot).where(Lot.id == allocation.lot_id).with_for_update()
+    # ロック付きでロット取得 (by lot_reference)
+    lot_stmt = select(Lot).where(Lot.lot_number == allocation.lot_reference).with_for_update()
     lot = db.execute(lot_stmt).scalar_one_or_none()
     if not lot:
-        raise AllocationCommitError("LOT_NOT_FOUND", f"Lot {allocation.lot_id} not found")
+        raise AllocationCommitError("LOT_NOT_FOUND", f"Lot {allocation.lot_reference} not found")
 
     # ロットステータスチェック
     if lot.status not in ("active",):
@@ -529,14 +539,11 @@ def confirm_hard_allocation(
             f"確定数量 {confirm_qty} は引当数量 {allocation.allocated_quantity} を超えています",
         )
 
-    # 在庫チェック
-    # NOTE: この引当の数量は既に lots.allocated_quantity に加算済み。
-    # したがって、この引当自体を確定する場合は在庫不足にはならない。
-    # ただし、部分確定で残りを他に回す場合や、ロットの状態変化があった場合は
-    # 整合性チェックとして current_quantity >= allocated_quantity を確認。
-    if lot.current_quantity < lot.allocated_quantity:
+    # 在庫チェック (using lot_reservations)
+    reserved_qty = get_reserved_quantity(db, lot.id)
+    if lot.current_quantity < reserved_qty:
         # ロットの状態異常（在庫が減ったなど）
-        available = lot.current_quantity - (lot.allocated_quantity - allocation.allocated_quantity)
+        available = lot.current_quantity - (reserved_qty - allocation.allocated_quantity)
         raise InsufficientStockError(
             lot_id=lot.id,
             lot_number=lot.lot_number,
@@ -545,14 +552,12 @@ def confirm_hard_allocation(
         )
 
     # Soft引当の自動解除（必要に応じて）
-    # Hard引当時に同ロットのSoft引当を優先度に基づいて解除
     _preempted = preempt_soft_allocations_for_hard(
         db,
-        lot_id=allocation.lot_id,
+        lot_id=lot.id,
         required_qty=confirm_qty,
         hard_demand_id=allocation.order_line_id,
     )
-    # 解除されたSoft引当は後でログに記録可能（現在は内部処理のみ）
 
     now = datetime.utcnow()
     remaining_allocation: Allocation | None = None
@@ -563,7 +568,7 @@ def confirm_hard_allocation(
         remaining_qty = allocation.allocated_quantity - quantity
         remaining_allocation = Allocation(
             order_line_id=allocation.order_line_id,
-            lot_id=allocation.lot_id,
+            lot_reference=allocation.lot_reference,
             inbound_plan_line_id=allocation.inbound_plan_line_id,
             allocated_quantity=remaining_qty,
             allocation_type="soft",
@@ -582,9 +587,20 @@ def confirm_hard_allocation(
     allocation.confirmed_by = confirmed_by
     allocation.updated_at = now
 
-    # NOTE: lots.allocated_quantity は引当作成時（allocate_manually等）で
-    # 既に加算済みのため、ここでは加算しない。
-    # 二重カウントを防ぐため、allocation_type の変更のみ行う。
+    # Update corresponding LotReservation to confirmed status
+    reservation = (
+        db.query(LotReservation)
+        .filter(
+            LotReservation.lot_id == lot.id,
+            LotReservation.source_id == allocation.order_line_id,
+            LotReservation.source_type == ReservationSourceType.ORDER,
+            LotReservation.status == ReservationStatus.ACTIVE,
+        )
+        .first()
+    )
+    if reservation:
+        reservation.status = ReservationStatus.CONFIRMED
+        reservation.confirmed_at = now
     lot.updated_at = now
 
     db.flush()
@@ -607,7 +623,7 @@ def confirm_hard_allocation(
 
         event = AllocationConfirmedEvent(
             allocation_id=allocation.id,
-            lot_id=allocation.lot_id,
+            lot_id=lot.id,  # Use lot.id from looked-up lot
             quantity=confirm_qty,
         )
         EventDispatcher.queue(event)
@@ -714,12 +730,12 @@ def auto_allocate_line(
         return []  # 既に全量引当済み
 
     # 候補ロットを期限順で取得（FEFO）
+    # Filter using lot_reservations for available quantity
     candidate_lots = (
         db.query(Lot)
         .filter(
             Lot.product_id == line.product_id,
             Lot.status == "active",
-            Lot.current_quantity > Lot.allocated_quantity,
         )
         .order_by(Lot.expiry_date.asc().nulls_last(), Lot.received_date.asc())
         .with_for_update()
@@ -733,7 +749,8 @@ def auto_allocate_line(
         if remaining_qty <= 0:
             break
 
-        available = lot.current_quantity - lot.allocated_quantity
+        # Calculate available using lot_reservations
+        available = get_available_quantity(db, lot)
         if available <= 0:
             continue
 
@@ -882,12 +899,12 @@ def _auto_allocate_line_no_commit(
         return []
 
     # 候補ロットを期限順で取得（FEFO）
+    # Filter using lot_reservations for available quantity
     candidate_lots = (
         db.query(Lot)
         .filter(
             Lot.product_id == line.product_id,
             Lot.status == "active",
-            Lot.current_quantity > Lot.allocated_quantity,
         )
         .order_by(Lot.expiry_date.asc().nulls_last(), Lot.received_date.asc())
         .with_for_update()
@@ -901,7 +918,8 @@ def _auto_allocate_line_no_commit(
         if remaining_qty <= 0:
             break
 
-        available = lot.current_quantity - lot.allocated_quantity
+        # Calculate available using lot_reservations
+        available = get_available_quantity(db, lot)
         if available <= 0:
             continue
 
