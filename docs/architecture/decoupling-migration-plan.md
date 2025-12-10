@@ -1,6 +1,6 @@
 # モノリシックシステム疎結合化 作業計画書
 
-> **Version:** 1.0.0
+> **Version:** 2.0.0
 > **作成日:** 2025-12-10
 > **ステータス:** Draft - レビュー待ち
 
@@ -10,17 +10,11 @@
 
 1. [概要](#1-概要)
 2. [前提条件](#2-前提条件)
-3. [Step 1: lot_reservations テーブルの導入](#step-1-lot_reservations-テーブルの導入基盤整備)
-4. [Step 2: 在庫計算の lot_reservations 対応](#step-2-在庫計算の-lot_reservations-対応)
-5. [Step 3: 引当確定ロジックの lot_reservations 統合](#step-3-引当確定ロジックの-lot_reservations-統合)
-6. [Step 4: Forecast/手動引当の lot_reservations 統合](#step-4-forecast手動引当の-lot_reservations-統合)
-7. [Step 5: lots.allocated_quantity の廃止](#step-5-lotsallocated_quantity-の廃止)
-8. [Step 6: FK参照のビジネスキー化（Order & Allocation Context分離準備）](#step-6-fk参照のビジネスキー化order--allocation-context分離準備)
-9. [Step 7: Forecast参照のビジネスキー化](#step-7-forecast参照のビジネスキー化)
-10. [Step 8: API v2 導入とContext分離](#step-8-api-v2-導入とcontext分離)
-11. [Step 9: 旧構造のクリーンアップ](#step-9-旧構造のクリーンアップ)
-12. [マイルストーン総括](#マイルストーン総括)
-13. [リスクマトリクス](#リスクマトリクス)
+3. [Step 1: データモデル刷新](#step-1-データモデル刷新db--model層)
+4. [Step 2: サービス層の書き換え](#step-2-サービス層の書き換え)
+5. [Step 3: API v2 導入](#step-3-api-v2-導入)
+6. [マイルストーン総括](#マイルストーン総括)
+7. [リスクマトリクス](#リスクマトリクス)
 
 ---
 
@@ -28,7 +22,7 @@
 
 ### 1.1 目的
 
-本計画書は、現在同一DB内で動作しているモノリシックなロット管理システムを、**最小限のリスクで疎結合化**していくための段階的な作業計画を定義する。
+本計画書は、現在同一DB内で動作しているモノリシックなロット管理システムを、**効率的に疎結合化**するための作業計画を定義する。
 
 ### 1.2 関連ドキュメント
 
@@ -39,9 +33,20 @@
 
 ### 1.3 スコープ
 
-- **対象**: バックエンドのAPI・サービス層・データモデル
-- **対象外**: フロントエンドの大幅な変更（APIは後方互換を維持）
+- **対象**: バックエンドのAPI・サービス層・データモデル、フロントエンドのAPI呼び出し
 - **前提**: 物理DB分割やマイクロサービス化は行わない（論理分離のみ）
+
+### 1.4 作業前提
+
+| 条件 | 状態 |
+|------|------|
+| 作業中の他開発者 | なし（単独作業） |
+| 既存データ | **全削除可能** |
+| 破壊的変更 | **許容** |
+| 後方互換性 | **不要** |
+| 並行運用期間 | **不要** |
+
+この前提により、9 Step → 3 Step に効率化。
 
 ---
 
@@ -52,9 +57,9 @@
 | 項目 | 状態 |
 |-----|------|
 | `lot_reservations` テーブル | **存在しない**（新規作成必要） |
-| `allocations.lot_id` | 直接FK参照（→ `lot_reference` に移行必要） |
-| `order_lines.forecast_id` | 直接FK参照（→ `forecast_reference` に移行必要） |
-| `lots.allocated_quantity` | サービス層で直接更新（→ `lot_reservations` 経由に変更必要） |
+| `allocations.lot_id` | 直接FK参照（→ `lot_reference` に置換） |
+| `order_lines.forecast_id` | 直接FK参照（→ `forecast_reference` に置換） |
+| `lots.allocated_quantity` | サービス層で直接更新（→ 削除） |
 | サービス層 | Feature-based で14パッケージに分離済み（良好な基盤） |
 
 ### 2.2 不変条件（絶対に壊さない）
@@ -69,33 +74,34 @@
 
 ---
 
-## Step 1: lot_reservations テーブルの導入（基盤整備）
+## Step 1: データモデル刷新（DB + Model層）
 
 ### 目的
 
-- `lot_reservations` テーブルを新設し、ロット予約の統一モデルを確立する
-- 既存フローには**まだ手を出さない**（並行運用可能な状態を作る）
+- `lot_reservations` テーブルを新設
+- 旧構造（`allocated_quantity`, FK参照）を一括削除・置換
+- 既存データは全削除し、クリーンな状態から開始
 
 ### 変更対象レイヤー
 
-- **DB**: 新規テーブル作成
-- **Model層**: 新規モデル定義
-- **Repository層**: 新規リポジトリ作成
-- **Service層**: 新規 `LotReservationService` 作成（既存サービスは変更しない）
+- **DB**: テーブル作成・カラム削除・FK削除
+- **Model層**: SQLAlchemy モデル更新
 
 ### タスク一覧
 
 | # | タスク | 詳細 |
 |---|--------|------|
-| 1-1 | `lot_reservations` テーブル設計 | `id`, `lot_id`, `source_type`, `source_id`, `reserved_qty`, `status`, `created_at`, `expires_at` |
-| 1-2 | Alembic マイグレーション作成 | テーブル作成、CHECK制約（`reserved_qty > 0`）、インデックス |
-| 1-3 | `LotReservation` モデル定義 | `app/infrastructure/persistence/models/lot_reservation_models.py` |
-| 1-4 | `LotReservationRepository` 作成 | CRUD + `get_active_by_lot()`, `get_by_source()` |
-| 1-5 | `LotReservationService` 作成 | `create_reservation()`, `release_reservation()`, `confirm_reservation()` |
-| 1-6 | DB制約追加 | `lots` テーブルに `available_qty >= 0` の CHECK制約（トリガー or Generated Column） |
-| 1-7 | 単体テスト作成 | Service/Repository のテスト |
+| 1-1 | `lot_reservations` テーブル作成 | 新規テーブル、CHECK制約、インデックス |
+| 1-2 | `lots.allocated_quantity` 削除 | カラム削除 |
+| 1-3 | `allocations.lot_id` → `lot_reference` 置換 | FK削除、VARCHAR カラムに置換 |
+| 1-4 | `order_lines.forecast_id` → `forecast_reference` 置換 | FK削除、VARCHAR カラムに置換 |
+| 1-5 | SQLAlchemy モデル更新 | 各モデルクラスを新スキーマに対応 |
+| 1-6 | 既存データ全削除 | マイグレーションでクリーン状態に |
+| 1-7 | DB制約追加 | 利用可能数量の非負制約（トリガー or CHECK） |
 
-### テーブル定義案
+### テーブル定義
+
+#### lot_reservations（新規）
 
 ```sql
 CREATE TABLE lot_reservations (
@@ -119,437 +125,435 @@ CREATE INDEX idx_lot_reservations_lot_status ON lot_reservations(lot_id, status)
 CREATE INDEX idx_lot_reservations_source ON lot_reservations(source_type, source_id);
 ```
 
+#### allocations（変更）
+
+```sql
+-- 変更前
+lot_id BIGINT REFERENCES lots(id)
+
+-- 変更後
+lot_reference VARCHAR(50) NOT NULL  -- lot_number（ビジネスキー）
+-- FK削除
+```
+
+#### order_lines（変更）
+
+```sql
+-- 変更前
+forecast_id BIGINT REFERENCES forecast_current(id)
+
+-- 変更後
+forecast_reference VARCHAR(100)  -- ビジネスキー形式
+-- FK削除
+```
+
+#### lots（変更）
+
+```sql
+-- 削除
+allocated_quantity  -- このカラムを削除
+```
+
+### マイグレーション方針
+
+```python
+# 単一マイグレーションで実行
+def upgrade():
+    # 1. 既存データ削除（破壊的変更OK）
+    op.execute("TRUNCATE allocations, order_lines, orders, lots CASCADE")
+
+    # 2. lot_reservations 作成
+    op.create_table('lot_reservations', ...)
+
+    # 3. lots.allocated_quantity 削除
+    op.drop_column('lots', 'allocated_quantity')
+
+    # 4. allocations.lot_id → lot_reference
+    op.drop_constraint('allocations_lot_id_fkey', 'allocations')
+    op.drop_column('allocations', 'lot_id')
+    op.add_column('allocations', sa.Column('lot_reference', sa.String(50), nullable=False))
+
+    # 5. order_lines.forecast_id → forecast_reference
+    op.drop_constraint('order_lines_forecast_id_fkey', 'order_lines')
+    op.drop_column('order_lines', 'forecast_id')
+    op.add_column('order_lines', sa.Column('forecast_reference', sa.String(100)))
+```
+
 ### 影響範囲とリスク
 
-- **影響**: 新規追加のみ、既存コードへの影響なし
-- **リスク**: 低（既存フローは一切変更しない）
-
-### このStepで絶対に手を出さないもの
-
-- 既存の `allocations` テーブル構造
-- 既存の引当ロジック（`actions.py`, `allocator.py`）
-- 既存の `lots.allocated_quantity` 更新処理
-- フロントエンド
+- **影響**: データモデル全体の構造変更
+- **リスク**: 高（ただし既存データ削除OKなので復旧不要）
 
 ### 完了判定条件
 
-- [ ] `lot_reservations` テーブルが作成され、マイグレーションが適用済み
-- [ ] `LotReservationService` で予約の作成・解放・確定ができる
-- [ ] 単体テストが全てパス
-- [ ] 既存の引当フロー（`POST /allocations/commit` など）が**変わらず動作する**
+- [ ] マイグレーションが正常に適用される
+- [ ] `lot_reservations` テーブルが存在する
+- [ ] `lots.allocated_quantity` が削除されている
+- [ ] `allocations.lot_reference` が存在し、`lot_id` FK が削除されている
+- [ ] `order_lines.forecast_reference` が存在し、`forecast_id` FK が削除されている
+- [ ] SQLAlchemy モデルが新スキーマに対応している
 
 ---
 
-## Step 2: 在庫計算の lot_reservations 対応
+## Step 2: サービス層の書き換え
 
 ### 目的
 
-- 在庫の「利用可能数量」計算を `lot_reservations` ベースに移行
-- `lots.allocated_quantity` への直接更新を段階的に廃止する準備
+- 新データモデルに合わせたビジネスロジックの実装
+- `lot_reservations` を中心とした在庫管理の実現
+- 不変条件（トランザクション整合性、動的計算、非負制約）の遵守
 
 ### 変更対象レイヤー
 
-- **Service層**: `InventoryService`, `LotService` の在庫計算ロジック
-- **Domain層**: 在庫計算ドメインロジック
-- **API層**: 在庫取得APIのレスポンス拡張
+- **Service層**: 引当・在庫・ロット関連サービス
+- **Repository層**: 新テーブル対応
+- **Domain層**: ビジネスルール
 
 ### タスク一覧
 
 | # | タスク | 詳細 |
 |---|--------|------|
-| 2-1 | 在庫計算ロジック抽出 | 現在の `lots.current_quantity - allocated_quantity` 計算箇所を特定 |
-| 2-2 | 動的計算関数作成 | `calculate_available_qty(lot_id)` = `current_qty - SUM(active reservations)` |
-| 2-3 | `LotService` 更新 | 利用可能数量を動的計算で返すように変更 |
-| 2-4 | FEFO候補取得の更新 | `search.py` の候補ロット取得を動的計算ベースに |
-| 2-5 | APIレスポンス拡張 | `GET /lots` で `available_qty`（動的計算）と `reserved_qty` を返す |
-| 2-6 | 並行運用対応 | 旧方式（`allocated_quantity`）と新方式（`lot_reservations`）の両方で計算し、差分をログ出力 |
-| 2-7 | 結合テスト作成 | 在庫計算の整合性テスト |
-
-### 影響範囲とリスク
-
-- **影響**: 在庫計算ロジックの内部実装変更
-- **リスク**: 中（計算結果が変わる可能性）
-  - **対策**: 並行運用期間を設け、旧/新の計算結果を比較ログ出力
-
-### このStepで絶対に手を出さないもの
-
-- 既存の引当確定ロジック（まだ `lots.allocated_quantity` を更新する）
-- `allocations` テーブル構造
-- フロントエンド
-
-### 完了判定条件
-
-- [ ] `GET /lots` で `available_qty` が動的計算で返される
-- [ ] FEFO候補取得が動的計算ベースで動作する
-- [ ] 並行運用ログで旧/新の計算結果が一致することを確認
-- [ ] 既存の引当フローが変わらず動作する
-
----
-
-## Step 3: 引当確定ロジックの lot_reservations 統合
-
-### 目的
-
-- 引当確定時に `lot_reservations` を同時に作成/更新する
-- **不変条件1**（同一トランザクション）を維持しつつ移行
-
-### 変更対象レイヤー
-
-- **Service層**: `allocations/actions.py` の引当確定ロジック
-- **Domain層**: 引当ドメインロジック
-
-### タスク一覧
-
-| # | タスク | 詳細 |
-|---|--------|------|
-| 3-1 | `commit_fefo_allocation` 改修 | 引当確定時に `lot_reservations` を `status='confirmed'` で作成 |
-| 3-2 | `allocate_manually` 改修 | 手動引当時も `lot_reservations` を作成 |
-| 3-3 | トランザクション境界確認 | `lot`, `lot_reservations`, `allocations` が同一トランザクション内であることを確認 |
-| 3-4 | 解放ロジック追加 | `cancel_allocation` 時に `lot_reservations.status = 'released'` に更新 |
-| 3-5 | 二重引当防止 | `lot_reservations` の合計が `current_qty` を超えないようチェック |
-| 3-6 | エラーハンドリング | ロット残量が負になる場合は例外を投げてロールバック |
-| 3-7 | 結合テスト | 引当確定→在庫計算の整合性テスト |
+| 2-1 | `LotReservation` モデル作成 | `app/infrastructure/persistence/models/` |
+| 2-2 | `LotReservationRepository` 作成 | CRUD + `get_active_by_lot()`, `get_by_source()`, `sum_active_qty()` |
+| 2-3 | `LotReservationService` 作成 | `create()`, `release()`, `confirm()`, `transfer()` |
+| 2-4 | 在庫計算ロジック書き換え | `available_qty = current_qty - SUM(active reservations)` |
+| 2-5 | FEFO引当ロジック書き換え | `lot_reservations` 作成 + `allocations` 作成を同一トランザクションで |
+| 2-6 | 手動引当ロジック書き換え | 同上 |
+| 2-7 | Forecast引当ロジック書き換え | `source_type='forecast'` での予約作成 |
+| 2-8 | 引当振替ロジック実装 | Forecast → Order 振替時の `source_type` 更新 |
+| 2-9 | `lot_reference` ルックアップ実装 | `lot_number` からロット情報を取得 |
+| 2-10 | `forecast_reference` ルックアップ実装 | ビジネスキーから予測情報を取得 |
+| 2-11 | 旧ロジック削除 | `allocated_quantity` 関連のコード削除 |
+| 2-12 | 単体テスト作成 | 各サービスのテスト |
+| 2-13 | 結合テスト作成 | 引当フロー全体のテスト |
 
 ### 実装イメージ
 
+#### LotReservationService
+
 ```python
-# allocations/actions.py
-async def commit_fefo_allocation(db: Session, order_line_id: int, ...):
-    async with db.begin():  # 単一トランザクション
-        # 1. lot_reservations 作成（source_type='order'）
+# app/application/services/lot_reservations/lot_reservation_service.py
+
+class LotReservationService:
+    def __init__(self, db: Session):
+        self.db = db
+
+    def create_reservation(
+        self,
+        lot_id: int,
+        source_type: str,  # 'forecast' | 'order' | 'manual'
+        source_id: int | None,
+        quantity: Decimal,
+        status: str = 'active',
+    ) -> LotReservation:
+        """予約を作成（在庫チェック込み）"""
+        lot = self.db.query(Lot).filter(Lot.id == lot_id).with_for_update().one()
+
+        # 利用可能数量チェック（動的計算）
+        available = self._calculate_available(lot_id)
+        if available < quantity:
+            raise InsufficientStockError(f"Available: {available}, Requested: {quantity}")
+
+        reservation = LotReservation(
+            lot_id=lot_id,
+            source_type=source_type,
+            source_id=source_id,
+            reserved_qty=quantity,
+            status=status,
+            created_at=datetime.utcnow(),
+        )
+        self.db.add(reservation)
+        return reservation
+
+    def release_reservation(self, reservation_id: int) -> None:
+        """予約を解放"""
+        reservation = self.db.query(LotReservation).filter(
+            LotReservation.id == reservation_id
+        ).one()
+        reservation.status = 'released'
+        reservation.released_at = datetime.utcnow()
+
+    def confirm_reservation(self, reservation_id: int) -> None:
+        """予約を確定"""
+        reservation = self.db.query(LotReservation).filter(
+            LotReservation.id == reservation_id
+        ).one()
+        reservation.status = 'confirmed'
+        reservation.confirmed_at = datetime.utcnow()
+
+    def transfer_reservation(
+        self,
+        reservation_id: int,
+        new_source_type: str,
+        new_source_id: int,
+    ) -> None:
+        """予約を振替（Forecast → Order など）"""
+        reservation = self.db.query(LotReservation).filter(
+            LotReservation.id == reservation_id
+        ).one()
+        reservation.source_type = new_source_type
+        reservation.source_id = new_source_id
+
+    def _calculate_available(self, lot_id: int) -> Decimal:
+        """利用可能数量を動的計算"""
+        lot = self.db.query(Lot).filter(Lot.id == lot_id).one()
+
+        reserved_sum = self.db.query(
+            func.coalesce(func.sum(LotReservation.reserved_qty), 0)
+        ).filter(
+            LotReservation.lot_id == lot_id,
+            LotReservation.status.in_(['active', 'confirmed']),
+        ).scalar()
+
+        return lot.current_quantity - reserved_sum
+```
+
+#### 引当確定ロジック
+
+```python
+# app/application/services/allocations/actions.py
+
+async def commit_fefo_allocation(
+    db: Session,
+    order_line_id: int,
+    allocation_plans: list[AllocationPlan],
+) -> list[Allocation]:
+    """FEFO引当を確定（単一トランザクション）"""
+
+    allocations = []
+
+    for plan in allocation_plans:
+        lot = db.query(Lot).filter(Lot.id == plan.lot_id).with_for_update().one()
+
+        # 1. lot_reservations 作成
         reservation = LotReservation(
             lot_id=lot.id,
             source_type='order',
             source_id=order_line_id,
-            reserved_qty=allocated_qty,
+            reserved_qty=plan.quantity,
             status='confirmed',
             confirmed_at=datetime.utcnow(),
         )
         db.add(reservation)
 
-        # 2. lots.allocated_quantity 更新（並行運用期間中は両方更新）
-        lot.allocated_quantity += allocated_qty
-
-        # 3. allocations 作成
+        # 2. allocations 作成（lot_reference で参照）
         allocation = Allocation(
             order_line_id=order_line_id,
-            lot_id=lot.id,
-            allocated_quantity=allocated_qty,
+            lot_reference=lot.lot_number,  # ビジネスキー
+            allocated_quantity=plan.quantity,
             status='allocated',
+            created_at=datetime.utcnow(),
         )
         db.add(allocation)
 
-        # 4. 整合性チェック（available_qty >= 0）
-        available = lot.current_quantity - sum_active_reservations(lot.id)
+        allocations.append(allocation)
+
+    # 3. 整合性チェック（コミット前）
+    for plan in allocation_plans:
+        available = calculate_available_qty(db, plan.lot_id)
         if available < 0:
             raise InsufficientStockError(...)
+
+    return allocations
 ```
 
 ### 影響範囲とリスク
 
-- **影響**: 引当確定の中核ロジック変更
+- **影響**: 引当・在庫管理のコアロジック全体
 - **リスク**: 高
-  - **対策**:
-    - 並行運用（`lots.allocated_quantity` も引き続き更新）
-    - 詳細なログ出力
-    - ロールバック可能なマイグレーション
-
-### このStepで絶対に手を出さないもの
-
-- `allocations.lot_id` のFK構造（まだ変更しない）
-- `order_lines.forecast_id` のFK構造
-- フロントエンド
-- Forecast由来の引当（次Stepで対応）
+  - **対策**: 十分なテストカバレッジ、段階的な動作確認
 
 ### 完了判定条件
 
-- [ ] 引当確定時に `lot_reservations` レコードが作成される
-- [ ] 引当キャンセル時に `lot_reservations.status = 'released'` になる
-- [ ] 同一トランザクション内で `lots`, `lot_reservations`, `allocations` が更新される
-- [ ] ロット残量が負になる引当はエラーで拒否される
-- [ ] 既存のAPIコントラクトが維持される
-
----
-
-## Step 4: Forecast/手動引当の lot_reservations 統合
-
-### 目的
-
-- Forecast由来・手動引当でも `lot_reservations` を使用
-- **不変条件4**（すべてのロット押さえは lot_reservations を通す）を達成
-
-### 変更対象レイヤー
-
-- **Service層**: `allocations/allocator.py`, `suggestion.py`
-- **DB**: `allocation_suggestions` テーブルの扱い見直し
-
-### タスク一覧
-
-| # | タスク | 詳細 |
-|---|--------|------|
-| 4-1 | Forecast引当の調査 | 現在の `allocate_soft_for_forecast` の動作確認 |
-| 4-2 | Forecast引当改修 | `source_type='forecast'` で `lot_reservations` を作成 |
-| 4-3 | 手動引当改修 | `source_type='manual'` で `lot_reservations` を作成 |
-| 4-4 | 引当振替ロジック | Forecast→Order への振替時に `lot_reservations.source_type` を更新 |
-| 4-5 | `allocation_suggestions` 統合検討 | `lot_reservations` で代替可能か評価 |
-| 4-6 | 結合テスト | Forecast→Order振替の整合性テスト |
-
-### 影響範囲とリスク
-
-- **影響**: Forecast引当フロー全体
-- **リスク**: 中
-  - **対策**: Forecast引当は「提案」として表示されることが多いため、まず `status='temporary'` で作成し、確定時に `status='active'` に変更
-
-### このStepで絶対に手を出さないもの
-
-- `allocations.lot_id` のFK構造
-- `order_lines.forecast_id` のFK構造
-- フロントエンド
-
-### 完了判定条件
-
-- [ ] Forecast引当時に `lot_reservations(source_type='forecast')` が作成される
-- [ ] 手動引当時に `lot_reservations(source_type='manual')` が作成される
-- [ ] Forecast→Order振替で `source_type` と `source_id` が正しく更新される
-- [ ] すべてのロット押さえが `lot_reservations` で表現されている
-
----
-
-## Step 5: lots.allocated_quantity の廃止
-
-### 目的
-
-- `lots.allocated_quantity` の直接更新を完全に廃止
-- 在庫計算を `lot_reservations` ベースに一本化
-
-### 変更対象レイヤー
-
-- **Service層**: 全ての `lots.allocated_quantity` 更新箇所
-- **DB**: カラム削除（または deprecation）
-
-### タスク一覧
-
-| # | タスク | 詳細 |
-|---|--------|------|
-| 5-1 | 更新箇所の全数調査 | `lots.allocated_quantity` を更新している全箇所を特定 |
-| 5-2 | 更新処理の削除 | 各箇所から `allocated_quantity` 更新を削除 |
-| 5-3 | 整合性検証 | 旧/新の計算結果が一致することを本番相当データで確認 |
-| 5-4 | カラム deprecation | `allocated_quantity` カラムを nullable に変更（削除は次Step） |
-| 5-5 | 回帰テスト | 全引当フローの結合テスト |
-
-### 影響範囲とリスク
-
-- **影響**: 在庫計算の根本的な変更
-- **リスク**: 高
-  - **対策**:
-    - Step 2-4 で並行運用期間を十分に設ける
-    - 本番データでの検証
-    - ロールバック手順の準備
-
-### このStepで絶対に手を出さないもの
-
-- `allocations.lot_id` のFK構造
-- `order_lines.forecast_id` のFK構造
-- フロントエンド
-
-### 完了判定条件
-
-- [ ] `lots.allocated_quantity` への更新処理が全て削除されている
+- [ ] `LotReservationService` が動作する
 - [ ] 在庫計算が `lot_reservations` ベースで正しく動作する
-- [ ] 全引当フローのテストがパス
-- [ ] 本番相当データでの検証が完了
+- [ ] FEFO引当が新ロジックで動作する
+- [ ] 手動引当が新ロジックで動作する
+- [ ] Forecast引当が新ロジックで動作する
+- [ ] Forecast → Order 振替が動作する
+- [ ] すべてのテストがパス
+- [ ] 不変条件（トランザクション整合性、非負制約）が遵守されている
 
 ---
 
-## Step 6: FK参照のビジネスキー化（Order & Allocation Context分離準備）
-
-### 目的
-
-- `allocations.lot_id` → `allocations.lot_reference`（ビジネスキー）への移行
-- Context間の直接FK参照を排除する準備
-
-### 変更対象レイヤー
-
-- **DB**: `allocations` テーブル構造変更
-- **Model層**: `Allocation` モデル更新
-- **Service層**: 引当ロジックの参照方法変更
-- **API層**: レスポンス形式の調整
-
-### タスク一覧
-
-| # | タスク | 詳細 |
-|---|--------|------|
-| 6-1 | `lot_reference` カラム追加 | `allocations.lot_reference VARCHAR(50)` 追加 |
-| 6-2 | 既存データ移行 | `UPDATE allocations SET lot_reference = (SELECT lot_number FROM lots WHERE id = lot_id)` |
-| 6-3 | 引当ロジック更新 | `lot_id` ではなく `lot_reference` で参照するように変更 |
-| 6-4 | API更新 | `lot_id` と `lot_reference` の両方を返す（並行運用） |
-| 6-5 | FK削除 | `allocations.lot_id` FK制約を削除、カラムを nullable に |
-| 6-6 | 結合テスト | 引当→ロット参照の整合性テスト |
-
-### 影響範囲とリスク
-
-- **影響**: `allocations` テーブルの参照方法変更
-- **リスク**: 中
-  - **対策**:
-    - `lot_id` と `lot_reference` の並行運用期間を設ける
-    - ACL（Anti-Corruption Layer）で `lot_reference` → `lot_id` の変換を提供
-
-### このStepで絶対に手を出さないもの
-
-- `order_lines.forecast_id` のFK構造（次Stepで対応）
-- フロントエンドの大幅変更
-- Context間のAPI分離（まだ同一アプリ内）
-
-### 完了判定条件
-
-- [ ] `allocations.lot_reference` が全レコードに設定されている
-- [ ] 引当ロジックが `lot_reference` で動作する
-- [ ] `allocations.lot_id` FKが削除されている
-- [ ] APIが `lot_reference` を返す
-
----
-
-## Step 7: Forecast参照のビジネスキー化
-
-### 目的
-
-- `order_lines.forecast_id` → `order_lines.forecast_reference` への移行
-- Order Context と Forecast Context の疎結合化
-
-### 変更対象レイヤー
-
-- **DB**: `order_lines` テーブル構造変更
-- **Model層**: `OrderLine` モデル更新
-- **Service層**: 受注-予測紐づけロジック変更
-- **API層**: レスポンス形式の調整
-
-### タスク一覧
-
-| # | タスク | 詳細 |
-|---|--------|------|
-| 7-1 | Forecast のビジネスキー設計 | `forecast_reference` の形式決定（例: `FCST-{customer}-{product}-{period}`） |
-| 7-2 | `forecast_reference` カラム追加 | `order_lines.forecast_reference VARCHAR(100)` 追加 |
-| 7-3 | 既存データ移行 | 既存の `forecast_id` から `forecast_reference` を生成 |
-| 7-4 | 紐づけロジック更新 | `forecast_id` ではなく `forecast_reference` で紐づけ |
-| 7-5 | API更新 | `forecast_id` と `forecast_reference` の両方を返す |
-| 7-6 | FK削除 | `order_lines.forecast_id` FK制約を削除 |
-
-### 影響範囲とリスク
-
-- **影響**: 受注-予測紐づけの参照方法変更
-- **リスク**: 中
-  - **対策**: 並行運用期間を設ける
-
-### このStepで絶対に手を出さないもの
-
-- フロントエンドの大幅変更
-- Context間のAPI分離（まだ同一アプリ内）
-
-### 完了判定条件
-
-- [ ] `order_lines.forecast_reference` が全レコードに設定されている
-- [ ] 紐づけロジックが `forecast_reference` で動作する
-- [ ] `order_lines.forecast_id` FKが削除されている
-
----
-
-## Step 8: API v2 導入とContext分離
+## Step 3: API v2 導入
 
 ### 目的
 
 - Context ごとのAPI プレフィックス分離
-- 将来のマイクロサービス化への準備
+- 旧 v1 API の削除
+- フロントエンドのAPI呼び出し更新
 
 ### 変更対象レイヤー
 
-- **API層**: v2 エンドポイント追加
-- **Service層**: Context Client インターフェース導入
+- **API層**: v2 ルーター作成、v1 削除
+- **Frontend**: API呼び出し先の更新
 
 ### タスク一覧
 
 | # | タスク | 詳細 |
 |---|--------|------|
-| 8-1 | API v2 ルーター設計 | `/api/v2/forecast/*`, `/api/v2/lot/*`, `/api/v2/order/*`, `/api/v2/allocation/*`, `/api/v2/inventory/*` |
-| 8-2 | Context Client インターフェース | `LotContextClient`, `ForecastContextClient` の抽象定義 |
-| 8-3 | 同一プロセス実装 | 現時点では HTTP 呼び出しではなく直接呼び出し |
-| 8-4 | v1 → v2 プロキシ | v1 API を v2 経由で動作させる |
-| 8-5 | APIドキュメント更新 | OpenAPI 定義の更新 |
+| 3-1 | API v2 ルーター設計 | Context ごとのプレフィックス定義 |
+| 3-2 | `/api/v2/lot/*` ルーター作成 | Lot Context API |
+| 3-3 | `/api/v2/order/*` ルーター作成 | Order Context API |
+| 3-4 | `/api/v2/allocation/*` ルーター作成 | Allocation Context API |
+| 3-5 | `/api/v2/forecast/*` ルーター作成 | Forecast Context API |
+| 3-6 | `/api/v2/inventory/*` ルーター作成 | Inventory Context API |
+| 3-7 | Context Client インターフェース定義 | `LotContextClient`, `ForecastContextClient` |
+| 3-8 | v1 API 削除 | 旧ルーター削除（後方互換不要） |
+| 3-9 | フロントエンド API 更新 | 各 feature の `api.ts` を v2 エンドポイントに更新 |
+| 3-10 | OpenAPI スキーマ更新 | `npm run typegen` で型再生成 |
+| 3-11 | E2E テスト更新 | 新エンドポイントでのテスト |
+
+### API 構造
+
+```
+/api/v2/
+├── lot/
+│   ├── GET    /                    # ロット一覧
+│   ├── GET    /{id}                # ロット詳細
+│   ├── POST   /                    # ロット登録
+│   ├── GET    /available           # 利用可能ロット（FEFO順）
+│   └── POST   /{id}/adjust         # 数量調整
+│
+├── order/
+│   ├── GET    /                    # 受注一覧
+│   ├── GET    /{id}                # 受注詳細
+│   ├── POST   /                    # 受注登録
+│   └── POST   /import              # 受注インポート
+│
+├── allocation/
+│   ├── POST   /preview             # FEFO引当プレビュー
+│   ├── POST   /commit              # 引当確定
+│   ├── POST   /manual              # 手動引当
+│   ├── DELETE /{id}                # 引当キャンセル
+│   └── GET    /by-order/{order_id} # 受注の引当状況
+│
+├── forecast/
+│   ├── GET    /                    # 予測一覧
+│   ├── GET    /{id}                # 予測詳細
+│   ├── POST   /import              # 予測インポート
+│   └── GET    /grouped             # グループ化予測
+│
+├── inventory/
+│   ├── GET    /                    # 在庫サマリ
+│   ├── GET    /{product_id}/{warehouse_id}  # 特定在庫
+│   └── GET    /stats               # 統計情報
+│
+└── reservation/                    # lot_reservations 専用（内部/デバッグ用）
+    ├── GET    /                    # 予約一覧
+    ├── GET    /by-lot/{lot_id}     # ロットの予約状況
+    └── GET    /by-source/{type}/{id}  # ソース別予約
+```
+
+### Context Client インターフェース
+
+```python
+# app/infrastructure/clients/lot_client.py
+
+from abc import ABC, abstractmethod
+
+class LotContextClient(ABC):
+    """Lot Context へのアクセスインターフェース"""
+
+    @abstractmethod
+    async def get_available_lots(
+        self,
+        product_id: int,
+        warehouse_id: int,
+        min_quantity: Decimal,
+    ) -> list[LotCandidate]:
+        """利用可能ロットを FEFO 順で取得"""
+        pass
+
+    @abstractmethod
+    async def get_lot_by_reference(self, lot_reference: str) -> LotInfo:
+        """lot_number からロット情報を取得"""
+        pass
+
+
+class InProcessLotClient(LotContextClient):
+    """同一プロセス内での実装（現時点）"""
+
+    def __init__(self, lot_service: LotService):
+        self.lot_service = lot_service
+
+    async def get_available_lots(self, ...):
+        return await self.lot_service.get_available_lots(...)
+
+
+# 将来的には HttpLotClient に置き換え可能
+class HttpLotClient(LotContextClient):
+    """HTTP 経由での実装（マイクロサービス化時）"""
+
+    def __init__(self, base_url: str):
+        self.base_url = base_url
+
+    async def get_available_lots(self, ...):
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{self.base_url}/available", ...)
+            return [LotCandidate.from_dict(lot) for lot in response.json()]
+```
+
+### フロントエンド更新
+
+```typescript
+// frontend/src/features/allocation/api.ts
+
+// 変更前
+const BASE_URL = '/api/allocations';
+
+// 変更後
+const BASE_URL = '/api/v2/allocation';
+
+export const allocationApi = {
+  preview: (params: PreviewParams) =>
+    httpClient.post(`${BASE_URL}/preview`, { json: params }),
+
+  commit: (params: CommitParams) =>
+    httpClient.post(`${BASE_URL}/commit`, { json: params }),
+
+  // ...
+};
+```
 
 ### 影響範囲とリスク
 
-- **影響**: API構造の変更
-- **リスク**: 低（v1 は並行運用で維持）
-
-### このStepで絶対に手を出さないもの
-
-- フロントエンドの大幅変更（v1 API を引き続き使用可）
-- 物理的なサービス分離
-
-### 完了判定条件
-
-- [ ] v2 API エンドポイントが動作する
-- [ ] v1 API が v2 経由で動作する
-- [ ] Context Client インターフェースが定義されている
-
----
-
-## Step 9: 旧構造のクリーンアップ
-
-### 目的
-
-- 不要になったカラム・FK・コードの削除
-- コードベースの整理
-
-### 変更対象レイヤー
-
-- **DB**: 不要カラム削除
-- **Model層**: 不要フィールド削除
-- **Service層**: 旧ロジック削除
-- **API層**: v1 API の deprecation
-
-### タスク一覧
-
-| # | タスク | 詳細 |
-|---|--------|------|
-| 9-1 | `lots.allocated_quantity` カラム削除 | マイグレーションで完全削除 |
-| 9-2 | `allocations.lot_id` カラム削除 | マイグレーションで完全削除 |
-| 9-3 | `order_lines.forecast_id` カラム削除 | マイグレーションで完全削除 |
-| 9-4 | 旧ロジック削除 | `allocated_quantity` 関連のコード削除 |
-| 9-5 | v1 API deprecation 警告 | v1 API にdeprecation ヘッダー追加 |
-| 9-6 | ドキュメント更新 | 新構造のドキュメント整備 |
-
-### 影響範囲とリスク
-
-- **影響**: 旧構造に依存するコードが動作しなくなる
+- **影響**: API 構造全体、フロントエンド全体
 - **リスク**: 中
-  - **対策**: Step 1-8 で十分な並行運用期間を設ける
-
-### このStepで絶対に手を出さないもの
-
-- v1 API の完全削除（deprecation のみ）
+  - **対策**: OpenAPI スキーマからの型生成で整合性担保
 
 ### 完了判定条件
 
-- [ ] 不要カラムが全て削除されている
-- [ ] 旧ロジックが全て削除されている
-- [ ] 全テストがパス
-- [ ] ドキュメントが更新されている
+- [ ] v2 API エンドポイントが全て動作する
+- [ ] v1 API が削除されている
+- [ ] フロントエンドが v2 API を使用している
+- [ ] OpenAPI スキーマが更新されている
+- [ ] E2E テストがパスする
+- [ ] Context Client インターフェースが定義されている
 
 ---
 
 ## マイルストーン総括
 
+### Step 完了時の状態
+
+| Step | 完了時の状態 |
+|------|-------------|
+| **Step 1** | データモデルが新構造に移行完了。FK依存が排除。 |
+| **Step 2** | ビジネスロジックが `lot_reservations` ベースで動作。不変条件が遵守されている。 |
+| **Step 3** | Context 分離されたAPI構造。将来のマイクロサービス化への準備完了。 |
+
 ### 「ロットと受注が疎結合になった」と言えるタイミング
 
-**Step 6 完了時点**
+**Step 1 完了時点**
 
-- `allocations.lot_id` FK が削除され、`lot_reference`（ビジネスキー）での参照に移行
-- ロットの押さえが `lot_reservations` で統一管理される
+- `allocations.lot_id` FK が削除され、`lot_reference`（ビジネスキー）に移行
 - Order & Allocation Context が Lot Context の内部IDに依存しなくなる
 
 ### 「Forecast/Inventory/Lot/Order&Allocation の境界が実質的に分離できた」と言えるタイミング
 
-**Step 8 完了時点**
+**Step 3 完了時点**
 
 - 各 Context が独自の API プレフィックスを持つ
 - Context 間は ビジネスキー参照 + Context Client で統合
@@ -558,9 +562,9 @@ async def commit_fefo_allocation(db: Session, order_line_id: int, ...):
 
 ### 将来の物理分離への道筋
 
-Step 8 完了後、以下が可能になる：
+Step 3 完了後、以下が可能になる：
 
-1. Context Client を HTTP クライアントに置き換え
+1. `InProcessLotClient` → `HttpLotClient` に置き換え
 2. 各 Context を独立したサービスとしてデプロイ
 3. DB スキーマの物理分離
 
@@ -570,30 +574,25 @@ Step 8 完了後、以下が可能になる：
 
 | Step | リスク | 影響度 | 対策 |
 |------|--------|--------|------|
-| 1 | 低 | 新規追加のみ | - |
-| 2 | 中 | 在庫計算変更 | 並行運用・比較ログ |
-| 3 | **高** | 引当確定ロジック変更 | 詳細ログ・ロールバック準備 |
-| 4 | 中 | Forecast引当変更 | temporary status で段階移行 |
-| 5 | **高** | allocated_quantity 廃止 | 十分な並行運用期間 |
-| 6 | 中 | FK構造変更 | 並行運用・ACL |
-| 7 | 中 | FK構造変更 | 並行運用 |
-| 8 | 低 | API追加 | v1 並行運用 |
-| 9 | 中 | 旧構造削除 | 段階的 deprecation |
+| 1 | **高** | データモデル全体変更 | 既存データ削除で単純化 |
+| 2 | **高** | コアロジック変更 | 十分なテストカバレッジ |
+| 3 | 中 | API構造変更 | OpenAPI型生成で整合性担保 |
 
 ---
 
-## 付録: Step間の依存関係
+## 付録: Step 間の依存関係
 
 ```
-Step 1 ──→ Step 2 ──→ Step 3 ──→ Step 4 ──→ Step 5
-  │                      │                      │
-  │                      │                      ▼
-  │                      │                   Step 6 ──→ Step 7 ──→ Step 8 ──→ Step 9
-  │                      │
-  └──────────────────────┴─── 不変条件の遵守を確認しながら進行
+Step 1 ──→ Step 2 ──→ Step 3
+  │           │
+  │           └── 不変条件の遵守確認
+  │
+  └── DB構造が確定
 ```
 
-**クリティカルパス**: Step 1 → Step 3 → Step 5（lot_reservations の導入と統合）
+**クリティカルパス**: Step 1（データモデル）→ Step 2（ロジック）
+
+Step 1 と Step 2 は順序依存が強い。Step 3 は Step 2 完了後に独立して実行可能。
 
 ---
 
@@ -601,4 +600,5 @@ Step 1 ──→ Step 2 ──→ Step 3 ──→ Step 4 ──→ Step 5
 
 | 日付 | バージョン | 変更内容 |
 |------|-----------|----------|
-| 2025-12-10 | 1.0.0 | 初版作成 |
+| 2025-12-10 | 1.0.0 | 初版作成（9 Step 計画） |
+| 2025-12-10 | 2.0.0 | 効率化版に改訂（3 Step 計画）。破壊的変更・データ削除を許容する前提で統合。 |
