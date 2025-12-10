@@ -91,6 +91,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v2/order/lines": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Order Lines
+     * @description 受注明細一覧取得（フラット）.
+     */
+    get: operations["list_order_lines_api_v2_order_lines_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v2/order/{order_id}": {
     parameters: {
       query?: never;
@@ -102,7 +122,11 @@ export interface paths {
     get: operations["get_order_api_v2_order__order_id__get"];
     put?: never;
     post?: never;
-    delete?: never;
+    /**
+     * Cancel Order
+     * @description 受注キャンセル.
+     */
+    delete: operations["cancel_order_api_v2_order__order_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -204,6 +228,46 @@ export interface paths {
     get: operations["list_allocations_by_order_api_v2_allocation_by_order__order_id__get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Forecasts
+     * @description フォーキャスト一覧取得（グループ化）.
+     */
+    get: operations["list_forecasts_api_v2_forecast__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Import Forecasts
+     * @description フォーキャスト一括インポート.
+     */
+    post: operations["import_forecasts_api_v2_forecast_import_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -7678,14 +7742,14 @@ export interface components {
       withdrawal_type: components["schemas"]["WithdrawalType"];
       /**
        * Customer Id
-       * @description 得意先ID
+       * @description 得意先ID（受注手動の場合必須）
        */
-      customer_id: number;
+      customer_id?: number | null;
       /**
        * Delivery Place Id
-       * @description 納入場所ID
+       * @description 納入場所ID（任意）
        */
-      delivery_place_id: number;
+      delivery_place_id?: number | null;
       /**
        * Ship Date
        * Format: date
@@ -7706,7 +7770,7 @@ export interface components {
        * Withdrawn By
        * @description 出庫実行者ユーザーID
        */
-      withdrawn_by: number;
+      withdrawn_by?: number | null;
     };
     /**
      * WithdrawalListResponse
@@ -7748,17 +7812,17 @@ export interface components {
        */
       withdrawal_type_label: string;
       /** Customer Id */
-      customer_id: number;
+      customer_id?: number | null;
       /** Customer Name */
-      customer_name: string;
+      customer_name?: string | null;
       /** Customer Code */
-      customer_code: string;
+      customer_code?: string | null;
       /** Delivery Place Id */
-      delivery_place_id: number;
+      delivery_place_id?: number | null;
       /** Delivery Place Name */
-      delivery_place_name: string;
+      delivery_place_name?: string | null;
       /** Delivery Place Code */
-      delivery_place_code: string;
+      delivery_place_code?: string | null;
       /**
        * Ship Date
        * Format: date
@@ -7769,7 +7833,7 @@ export interface components {
       /** Reference Number */
       reference_number: string | null;
       /** Withdrawn By */
-      withdrawn_by: number;
+      withdrawn_by?: number | null;
       /** Withdrawn By Name */
       withdrawn_by_name?: string | null;
       /**
@@ -8099,6 +8163,43 @@ export interface operations {
       };
     };
   };
+  list_order_lines_api_v2_order_lines_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        status?: string | null;
+        customer_code?: string | null;
+        product_code?: string | null;
+        date_from?: string | null;
+        date_to?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown[];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   get_order_api_v2_order__order_id__get: {
     parameters: {
       query?: never;
@@ -8118,6 +8219,35 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["OrderWithLinesResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_order_api_v2_order__order_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -8309,6 +8439,74 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ManualAllocationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_forecasts_api_v2_forecast__get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        customer_id?: number | null;
+        delivery_place_id?: number | null;
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ForecastGroupResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  import_forecasts_api_v2_forecast_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ForecastBulkImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastBulkImportSummary"];
         };
       };
       /** @description Validation Error */
