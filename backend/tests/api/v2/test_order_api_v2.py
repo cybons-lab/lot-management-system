@@ -164,3 +164,26 @@ def test_import_orders(client, setup_order_data):
     data = response.json()
     assert len(data["created_line_ids"]) == 1
     assert data["errors"] == []
+
+
+def test_list_order_lines(client, setup_order_data):
+    """Test GET /api/v2/order/lines"""
+    response = client.get("/api/v2/order/lines")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    # Should include at least one line from setup
+    assert len(data) >= 1
+
+
+def test_cancel_order(client, setup_order_data):
+    """Test DELETE /api/v2/order/{order_id}"""
+    order = setup_order_data["order"]
+    response = client.delete(f"/api/v2/order/{order.id}")
+    assert response.status_code == 204
+
+    # Verify order is cancelled
+    response = client.get(f"/api/v2/order/{order.id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "cancelled"

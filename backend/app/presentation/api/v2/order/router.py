@@ -74,6 +74,30 @@ async def list_orders(
     )
 
 
+@router.get("/lines", response_model=list)
+async def list_order_lines(
+    skip: int = 0,
+    limit: int = 100,
+    status: str | None = None,
+    customer_code: str | None = None,
+    product_code: str | None = None,
+    date_from: date | None = None,
+    date_to: date | None = None,
+    db: Session = Depends(get_db),
+):
+    """受注明細一覧取得（フラット）."""
+    service = OrderService(db)
+    return service.get_order_lines(
+        skip=skip,
+        limit=limit,
+        status=status,
+        customer_code=customer_code,
+        product_code=product_code,
+        date_from=date_from,
+        date_to=date_to,
+    )
+
+
 @router.get("/{order_id}", response_model=OrderWithLinesResponse)
 async def get_order(order_id: int, db: Session = Depends(get_db)):
     service = OrderService(db)
@@ -125,3 +149,12 @@ async def import_orders(payload: OrderImportRequest, db: Session = Depends(get_d
         skipped_customer_order_nos=result.skipped_lines,
         errors=result.errors,
     )
+
+
+@router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def cancel_order(order_id: int, db: Session = Depends(get_db)):
+    """受注キャンセル."""
+    service = OrderService(db)
+    service.cancel_order(order_id)
+    db.commit()
+    return None
