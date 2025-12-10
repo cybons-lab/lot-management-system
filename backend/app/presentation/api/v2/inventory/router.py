@@ -9,13 +9,14 @@ from sqlalchemy.orm import Session
 
 from app.application.services.inventory.inventory_service import InventoryService
 from app.presentation.api.deps import get_db
+from app.presentation.schemas.common.base import BaseSchema
 from app.presentation.schemas.inventory.inventory_schema import (
     InventoryByProductResponse,
     InventoryBySupplierResponse,
     InventoryByWarehouseResponse,
     InventoryItemResponse,
 )
-from app.presentation.schemas.common.base import BaseSchema
+
 
 router = APIRouter()
 
@@ -40,12 +41,8 @@ async def list_inventory(
     )
 
 
-@router.get(
-    "/{product_id}/{warehouse_id}", response_model=InventoryItemResponse
-)
-async def get_inventory_item(
-    product_id: int, warehouse_id: int, db: Session = Depends(get_db)
-):
+@router.get("/{product_id}/{warehouse_id}", response_model=InventoryItemResponse)
+async def get_inventory_item(product_id: int, warehouse_id: int, db: Session = Depends(get_db)):
     service = InventoryService(db)
     item = service.get_inventory_item_by_product_warehouse(product_id, warehouse_id)
     if not item:
@@ -57,7 +54,9 @@ async def get_inventory_item(
 async def get_inventory_stats(db: Session = Depends(get_db)):
     service = InventoryService(db)
     by_product = service.get_inventory_by_product()
-    total_quantity = sum(Decimal(str(item.get("total_quantity", 0))) for item in by_product)
+    total_quantity = sum(
+        (Decimal(str(item.get("total_quantity", 0))) for item in by_product), Decimal("0")
+    )
     warehouse_ids = set()
     product_ids = set()
     for item in by_product:

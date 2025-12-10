@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import Field
 from sqlalchemy.orm import Session
 
 from app.application.services.orders.order_import_service import (
@@ -19,7 +20,7 @@ from app.presentation.schemas.orders.orders_schema import (
     OrderCreate,
     OrderWithLinesResponse,
 )
-from pydantic import Field
+
 
 router = APIRouter()
 

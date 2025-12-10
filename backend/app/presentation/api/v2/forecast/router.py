@@ -15,6 +15,7 @@ from app.presentation.schemas.forecasts.forecast_schema import (
     ForecastResponse,
 )
 
+
 router = APIRouter()
 
 
@@ -50,11 +51,9 @@ async def get_forecast(forecast_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/import", response_model=ForecastBulkImportSummary)
-async def import_forecasts(
-    payload: ForecastBulkImportRequest, db: Session = Depends(get_db)
-):
+async def import_forecasts(payload: ForecastBulkImportRequest, db: Session = Depends(get_db)):
     service = ForecastImportService(db)
-    summary = service.bulk_import(payload)
+    summary = service.bulk_import(items=payload.items, replace_existing=payload.replace_existing)
     db.commit()
     return summary
 

@@ -8,7 +8,8 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.application.services.inventory.lot_service import LotService
-from app.domain.lot import LotCandidate, LotNotFoundError
+from app.application.services.inventory.stock_calculation import get_reserved_quantity
+from app.domain.lot import LotCandidate
 from app.infrastructure.persistence.models import Lot, Product, Warehouse
 from app.presentation.schemas.inventory.inventory_schema import LotResponse
 
@@ -56,17 +57,15 @@ class InProcessLotClient(LotContextClient):
 
         candidates: list[LotCandidate] = []
         for lot in lots:
+            reserved = get_reserved_quantity(self.db, lot.id)
             candidates.append(
                 LotCandidate(
                     lot_id=lot.id,
                     lot_code=lot.lot_number,
                     lot_number=lot.lot_number,
-                    product_code=lot.product_code or "",
-                    warehouse_code=lot.warehouse_code or "",
-                    available_qty=float(
-                        (lot.current_quantity or Decimal("0"))
-                        - (lot.allocated_quantity or Decimal("0"))
-                    ),
+                    product_code=lot.product.maker_part_code if lot.product else "",
+                    warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
+                    available_qty=float((lot.current_quantity or Decimal("0")) - reserved),
                     expiry_date=lot.expiry_date,
                     receipt_date=lot.received_date,
                 )
@@ -76,7 +75,8 @@ class InProcessLotClient(LotContextClient):
     async def get_lot_by_reference(self, lot_reference: str) -> LotResponse:
         lot = self.db.query(Lot).filter(Lot.lot_number == lot_reference).first()
         if not lot:
-            raise LotNotFoundError(lot_reference)
+            # TODO: Define specific exception for reference lookup
+            raise ValueError(f"Lot not found: {lot_reference}")
 
         response = LotResponse.model_validate(lot)
         if lot.product:

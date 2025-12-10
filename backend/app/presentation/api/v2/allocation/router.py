@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -27,6 +28,7 @@ from app.presentation.schemas.allocations.allocations_schema import (
     ManualAllocationRequest,
     ManualAllocationResponse,
 )
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -106,16 +108,16 @@ async def manual_allocate(request: ManualAllocationRequest, db: Session = Depend
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
     lot = db.query(Lot).filter(Lot.id == request.lot_id).first()
-    available = get_available_quantity(db, lot) if lot else 0
+    available = get_available_quantity(db, lot) if lot else Decimal("0")
 
     return ManualAllocationResponse(
         order_line_id=request.order_line_id,
         lot_id=request.lot_id,
         lot_number=allocation.lot_reference or "",
         allocated_quantity=allocation.allocated_quantity,
-        available_quantity=available,
-        product_id=allocation.product_id,
-        expiry_date=allocation.expiry_date,
+        available_quantity=Decimal(available),
+        product_id=lot.product_id if lot else 0,  # Should exist if allocation succeeded
+        expiry_date=lot.expiry_date if lot else None,
         status=allocation.status,
         message="manual allocation created",
     )
@@ -132,22 +134,45 @@ async def delete_allocation(allocation_id: int, db: Session = Depends(get_db)):
 
 @router.get("/by-order/{order_id}", response_model=list[ManualAllocationResponse])
 async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)):
+    # Import OrderLine to join
+    from app.infrastructure.persistence.models import OrderLine
+
     allocations = (
-        db.query(Allocation).filter(Allocation.order_id == order_id).order_by(Allocation.id).all()
+        db.query(Allocation)
+        .join(OrderLine)
+        .filter(OrderLine.order_id == order_id)
+        .order_by(Allocation.id)
+        .all()
     )
     responses: list[ManualAllocationResponse] = []
+
+    # Pre-fetch lots needed
+    lot_refs = {alloc.lot_reference for alloc in allocations if alloc.lot_reference}
+    lots = {}
+    if lot_refs:
+        # Assuming lot_number is unique and mapped to lot_reference
+        lots = {l.lot_number: l for l in db.query(Lot).filter(Lot.lot_number.in_(lot_refs)).all()}
+
     for alloc in allocations:
-        lot = db.get(Lot, alloc.lot_id) if alloc.lot_id else None
-        available_quantity = get_available_quantity(db, lot) if lot else 0
+        lot = lots.get(alloc.lot_reference) if alloc.lot_reference else None
+        # lot_id is required for response, retrieve from Lot entity found by reference
+        lot_id = lot.id if lot else 0
+        available_quantity = get_available_quantity(db, lot) if lot else Decimal("0")
+
+        # product_id can be fetched from order_line or lot
+        product_id = (
+            alloc.order_line.product_id if alloc.order_line else (lot.product_id if lot else 0)
+        )
+
         responses.append(
             ManualAllocationResponse(
                 order_line_id=alloc.order_line_id,
-                lot_id=alloc.lot_id,
+                lot_id=lot_id,
                 lot_number=alloc.lot_reference or "",
                 allocated_quantity=alloc.allocated_quantity,
-                available_quantity=available_quantity,
-                product_id=alloc.product_id,
-                expiry_date=alloc.expiry_date,
+                available_quantity=Decimal(available_quantity),
+                product_id=product_id,
+                expiry_date=lot.expiry_date if lot else None,
                 status=alloc.status,
                 message="",
             )

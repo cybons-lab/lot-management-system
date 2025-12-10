@@ -46,7 +46,7 @@ class ReservationInsufficientStockError(Exception):
 class ReservationNotFoundError(Exception):
     """Raised when a reservation is not found."""
 
-    def __init__(self, reservation_id: int):
+    def __init__(self, reservation_id: int | str):
         self.reservation_id = reservation_id
         super().__init__(f"Reservation {reservation_id} not found")
 

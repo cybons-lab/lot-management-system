@@ -25,6 +25,7 @@ from app.presentation.schemas.inventory.inventory_schema import (
     LotResponse,
 )
 
+
 router = APIRouter()
 
 
@@ -76,6 +77,22 @@ async def list_lots(
     )
 
 
+@router.get("/available", response_model=list[AvailableLotResponse])
+async def get_available_lots(
+    product_id: int = Query(..., description="製品ID"),
+    warehouse_id: int | None = Query(None, description="倉庫ID"),
+    min_quantity: Decimal = Query(Decimal("0"), description="最小必要数量"),
+    db: Session = Depends(get_db),
+):
+    client = InProcessLotClient(LotService(db))
+    # client.get_available_lots call is likely non-async inside InProcessLotClient but here awaited?
+    # Checking InProcessLotClient implementation, it was defined as async def in previous steps.
+    candidates = await client.get_available_lots(
+        product_id=product_id, warehouse_id=warehouse_id, min_quantity=min_quantity
+    )
+    return [AvailableLotResponse.model_validate(candidate) for candidate in candidates]
+
+
 @router.get("/{lot_id}", response_model=LotResponse)
 async def get_lot(lot_id: int, db: Session = Depends(get_db)):
     service = LotService(db)
@@ -99,20 +116,6 @@ async def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
     created = service.create_lot(lot)
     db.commit()
     return created
-
-
-@router.get("/available", response_model=list[AvailableLotResponse])
-async def get_available_lots(
-    product_id: int = Query(..., description="製品ID"),
-    warehouse_id: int | None = Query(None, description="倉庫ID"),
-    min_quantity: Decimal = Query(Decimal("0"), description="最小必要数量"),
-    db: Session = Depends(get_db),
-):
-    client = InProcessLotClient(LotService(db))
-    candidates = await client.get_available_lots(
-        product_id=product_id, warehouse_id=warehouse_id, min_quantity=min_quantity
-    )
-    return [AvailableLotResponse.model_validate(candidate) for candidate in candidates]
 
 
 @router.post("/{lot_id}/adjust", response_model=AdjustmentResponse)
