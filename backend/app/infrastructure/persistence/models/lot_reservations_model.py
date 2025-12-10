@@ -117,6 +117,13 @@ class LotReservation(Base):
         server_default=func.current_timestamp(),
     )
 
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        onupdate=func.current_timestamp(),
+        comment="Timestamp of last update",
+    )
+
     expires_at: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,
