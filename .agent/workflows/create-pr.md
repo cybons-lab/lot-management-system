@@ -8,13 +8,20 @@ description: ブランチ作成からPRまでを完了する
 
 ## 手順
 
-### 1. 変更をステージング
+### 1. コードフォーマット（CIエラー防止）
+// turbo
+
+```bash
+cd backend && uv run ruff format app/ tests/
+```
+
+### 2. 変更をステージング
 
 ```bash
 git add -A
 ```
 
-### 2. コミット
+### 3. コミット
 
 コンベンショナルコミット形式を使用:
 
@@ -27,14 +34,14 @@ git commit -m "feat|fix|docs|refactor|test: 変更の概要
 Refs: 関連ドキュメントやイシュー"
 ```
 
-### 3. リモートにプッシュ
+### 4. リモートにプッシュ
 // turbo
 
 ```bash
 git push -u origin <ブランチ名>
 ```
 
-### 4. PRを作成
+### 5. PRを作成
 // turbo
 
 ```bash

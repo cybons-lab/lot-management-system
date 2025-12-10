@@ -182,9 +182,7 @@ class TestPreemptSoftAllocations:
     ):
         """Test: No soft allocations are released when there is sufficient available stock."""
         # Create soft allocation (300 units)
-        order_line = create_order_line(
-            test_db, master_data, "FORECAST_LINKED", Decimal("300")
-        )
+        order_line = create_order_line(test_db, master_data, "FORECAST_LINKED", Decimal("300"))
         create_soft_allocation(test_db, order_line, lot_with_stock, Decimal("300"))
 
         # Try to allocate 500 units (should succeed without preemption)
@@ -206,9 +204,7 @@ class TestPreemptSoftAllocations:
     def test_preemption_forecast_linked_first(self, test_db: Session, master_data, lot_with_stock):
         """Test: FORECAST_LINKED (lowest priority) is released first."""
         # Create soft allocations
-        forecast_line = create_order_line(
-            test_db, master_data, "FORECAST_LINKED", Decimal("300")
-        )
+        forecast_line = create_order_line(test_db, master_data, "FORECAST_LINKED", Decimal("300"))
         order_line = create_order_line(test_db, master_data, "ORDER", Decimal("300"))
 
         create_soft_allocation(test_db, forecast_line, lot_with_stock, Decimal("300"))
@@ -242,9 +238,7 @@ class TestPreemptSoftAllocations:
     def test_preemption_priority_order(self, test_db: Session, master_data, lot_with_stock):
         """Test: Soft allocations are released in priority order (FORECAST < SPOT < ORDER < KANBAN)."""
         # Create soft allocations for all types
-        forecast_line = create_order_line(
-            test_db, master_data, "FORECAST_LINKED", Decimal("200")
-        )
+        forecast_line = create_order_line(test_db, master_data, "FORECAST_LINKED", Decimal("200"))
         spot_line = create_order_line(test_db, master_data, "SPOT", Decimal("200"))
         order_line = create_order_line(test_db, master_data, "ORDER", Decimal("200"))
         kanban_line = create_order_line(test_db, master_data, "KANBAN", Decimal("200"))
@@ -290,9 +284,7 @@ class TestPreemptSoftAllocations:
     def test_partial_preemption(self, test_db: Session, master_data, lot_with_stock):
         """Test: Partial release when only part of an allocation needs to be released."""
         # Create soft allocation of 500 units
-        forecast_line = create_order_line(
-            test_db, master_data, "FORECAST_LINKED", Decimal("500")
-        )
+        forecast_line = create_order_line(test_db, master_data, "FORECAST_LINKED", Decimal("500"))
         create_soft_allocation(test_db, forecast_line, lot_with_stock, Decimal("500"))
 
         # Available: 1000 - 500 = 500
@@ -356,9 +348,7 @@ class TestPreemptSoftAllocations:
     ):
         """Test: Lot's allocated_quantity is correctly updated after release."""
         # Create soft allocation
-        forecast_line = create_order_line(
-            test_db, master_data, "FORECAST_LINKED", Decimal("400")
-        )
+        forecast_line = create_order_line(test_db, master_data, "FORECAST_LINKED", Decimal("400"))
         create_soft_allocation(test_db, forecast_line, lot_with_stock, Decimal("400"))
 
         initial_allocated = lot_with_stock.allocated_quantity
@@ -386,18 +376,14 @@ class TestPreemptSoftAllocations:
         # Create two FORECAST_LINKED allocations at different times
         import time
 
-        forecast_line1 = create_order_line(
-            test_db, master_data, "FORECAST_LINKED", Decimal("300")
-        )
+        forecast_line1 = create_order_line(test_db, master_data, "FORECAST_LINKED", Decimal("300"))
         alloc1 = create_soft_allocation(test_db, forecast_line1, lot_with_stock, Decimal("300"))
         alloc1.created_at = datetime.utcnow() - timedelta(hours=2)  # Older
         test_db.commit()
 
         time.sleep(0.01)  # Ensure different timestamps
 
-        forecast_line2 = create_order_line(
-            test_db, master_data, "FORECAST_LINKED", Decimal("300")
-        )
+        forecast_line2 = create_order_line(test_db, master_data, "FORECAST_LINKED", Decimal("300"))
         alloc2 = create_soft_allocation(test_db, forecast_line2, lot_with_stock, Decimal("300"))
         alloc2.created_at = datetime.utcnow()  # Newer
         test_db.commit()

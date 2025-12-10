@@ -38,7 +38,7 @@ class ReservationInsufficientStockError(Exception):
         self.requested = requested
         self.available = available
         self.message = message or (
-            f"Insufficient stock in lot {lot_id}: " f"requested {requested}, available {available}"
+            f"Insufficient stock in lot {lot_id}: requested {requested}, available {available}"
         )
         super().__init__(self.message)
 
