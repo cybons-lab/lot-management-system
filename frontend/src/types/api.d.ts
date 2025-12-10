@@ -770,447 +770,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/api/allocations/drag-assign": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Drag Assign
-     * @description 手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility.
-     */
-    post: operations["drag_assign_api_allocations_drag_assign_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/{allocation_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Delete Allocation
-     * @description 引当取消（DELETE API, ソフトキャンセル対応）.
-     */
-    delete: operations["delete_allocation_api_allocations__allocation_id__delete"];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/preview": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Preview Allocations
-     * @description FEFO引当シミュレーション実行.
-     *
-     *     Args:
-     *         request: プレビューリクエスト（order_id）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         FefoPreviewResponse: 引当プレビュー結果
-     */
-    post: operations["preview_allocations_api_allocations_preview_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/commit": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Commit Allocation
-     * @description 引当確定（v2.2.1準拠）.
-     *
-     *     FEFO・手動いずれかで作成された仮引当案を元に、実績の allocations を生成し、在庫を確定させる。
-     *
-     *     Args:
-     *         request: 引当確定リクエスト（order_id）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         AllocationCommitResponse: 確定結果
-     *
-     *     Note:
-     *         - allocations テーブルにレコード作成
-     *         - lots.quantity から実績数量を減算
-     *         - stock_history への出庫履歴記録
-     */
-    post: operations["commit_allocation_api_allocations_commit_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/bulk-cancel": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Bulk Cancel
-     * @description 引当一括取消.
-     *
-     *     複数の引当を一度に取り消す。部分的な失敗を許容する。
-     *
-     *     Args:
-     *         request: 取消対象の引当ID一覧
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         BulkCancelResponse: 取消結果（成功ID、失敗ID）
-     */
-    post: operations["bulk_cancel_api_allocations_bulk_cancel_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/cancel-by-order-line": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Cancel By Order Line
-     * @description 受注明細に紐づく全ての引当を一括キャンセル.
-     *
-     *     Args:
-     *         request: { "order_line_id": int }
-     *         db: DB Session
-     *
-     *     Returns:
-     *         { "success": bool, "message": str, "cancelled_ids": list[int] }
-     */
-    post: operations["cancel_by_order_line_api_allocations_cancel_by_order_line_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/auto-allocate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Auto Allocate
-     * @description 受注明細に対してFEFO戦略で自動引当を実行.
-     *
-     *     Args:
-     *         request: 自動引当リクエスト（order_line_id, strategy）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         AutoAllocateResponse: 引当結果
-     */
-    post: operations["auto_allocate_api_allocations_auto_allocate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/bulk-auto-allocate": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Bulk Auto Allocate
-     * @description 複数受注明細に対して一括でFEFO自動引当を実行.
-     *
-     *     フィルタリング条件を指定して対象を絞り込み可能。
-     *     フォーキャストグループ、個別受注、全受注への一括引当に対応。
-     *
-     *     - product_id: 製品IDでフィルタ
-     *     - customer_id: 得意先IDでフィルタ
-     *     - delivery_place_id: 納入先IDでフィルタ
-     *     - order_type: 受注タイプでフィルタ (FORECAST_LINKED, KANBAN, SPOT, ORDER)
-     *
-     *     Args:
-     *         request: 一括引当リクエスト
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         BulkAutoAllocateResponse: 一括引当結果
-     */
-    post: operations["bulk_auto_allocate_api_allocations_bulk_auto_allocate_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/auto-orders": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Auto Allocate Orders
-     * @description 複数受注に対して一括で自動引当（Single Lot Fit + FEFO）を実行・確定する.
-     *
-     *     - v0アルゴリズム (allocator.py) を使用
-     *     - 成功/失敗を個別に記録
-     *     - dry_run=True の場合は保存しない（未実装、今回はFalse前提）
-     *
-     *     Args:
-     *         request: 対象受注IDリスト
-     *         db: DBセッション
-     *
-     *     Returns:
-     *         BatchAutoOrderResponse: 実行結果
-     */
-    post: operations["auto_allocate_orders_api_allocations_auto_orders_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocations/{allocation_id}/confirm": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /**
-     * Confirm Allocation Hard
-     * @description Soft引当をHard引当に確定（Soft → Hard変換）.
-     *
-     *     - 在庫をロックし、他オーダーからは引当不可にする
-     *     - 部分確定も可能（quantity パラメータ指定時）
-     *
-     *     Args:
-     *         allocation_id: 確定対象の引当ID
-     *         request: 確定リクエスト（confirmed_by, quantity）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         HardAllocationConfirmResponse: 確定された引当情報
-     *
-     *     Raises:
-     *         404: 引当が見つからない
-     *         400: 既にhard確定済み、または不正なパラメータ
-     *         409: 在庫不足
-     */
-    patch: operations["confirm_allocation_hard_api_allocations__allocation_id__confirm_patch"];
-    trace?: never;
-  };
-  "/api/allocations/confirm-batch": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Confirm Allocations Batch
-     * @description 複数のSoft引当を一括でHard確定.
-     *
-     *     部分的な失敗を許容し、成功・失敗をそれぞれ返す。
-     *
-     *     Args:
-     *         request: 一括確定リクエスト（allocation_ids, confirmed_by）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         HardAllocationBatchConfirmResponse: 確定結果（成功ID一覧、失敗情報一覧）
-     */
-    post: operations["confirm_allocations_batch_api_allocations_confirm_batch_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-candidates": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Allocation Candidates
-     * @description 候補ロット一覧取得（v2.5準拠）.
-     *
-     *     指定された受注明細に対して、利用可能なロット候補を返却する（プレビューのみ、DB保存なし）。
-     *
-     *     v2.5 Refactor:
-     *     - forecast に含まれない商品でも、有効在庫があれば候補ロットを返す
-     *     - v_lot_available_qty + v_order_line_context を使用
-     *
-     *     Args:
-     *         order_line_id: 対象の受注明細 ID（必須）
-     *         strategy: 引当戦略（デフォルト "fefo"、将来 "fifo" や "custom" 拡張を想定）
-     *         limit: 最大取得件数（デフォルト200）
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         CandidateLotsResponse: 候補ロット一覧
-     *
-     *     Note:
-     *         - available_quantity > 0 のみ返却
-     *         - ロック済み・期限切れは除外
-     *         - 並び順: expiry_date NULLS LAST, received_date, lot_id（FEFO戦略の場合）
-     */
-    get: operations["get_allocation_candidates_api_allocation_candidates_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/preview": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get?: never;
-    put?: never;
-    /**
-     * Preview Allocation Suggestions
-     * @description 引当推奨の生成・プレビュー.
-     *
-     *     Mode:
-     *     - forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）
-     *     - order: 指定オーダー行に対して引当プレビュー（DB保存なし）
-     */
-    post: operations["preview_allocation_suggestions_api_allocation_suggestions_preview_post"];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Allocation Suggestions
-     * @description 引当推奨一覧取得.
-     */
-    get: operations["list_allocation_suggestions_api_allocation_suggestions_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/allocation-suggestions/group-summary": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Allocation Suggestions By Group
-     * @description フォーキャストグループ別の計画引当サマリを取得.
-     *
-     *     allocation_suggestions テーブルから該当グループのデータを集計して返す。
-     */
-    get: operations["get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/warehouse-alloc/warehouses": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Warehouses
-     * @description 配分対象の倉庫一覧（新しいwarehouseテーブル）を取得.
-     */
-    get: operations["list_warehouses_api_warehouse_alloc_warehouses_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/api/forecasts": {
     parameters: {
       query?: never;
@@ -1418,6 +977,72 @@ export interface paths {
      *         Alert counts grouped by severity and category
      */
     get: operations["get_alert_summary_api_alerts_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocation-suggestions/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview Allocation Suggestions
+     * @description 引当推奨の生成・プレビュー.
+     *
+     *     Mode:
+     *     - forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）
+     *     - order: 指定オーダー行に対して引当プレビュー（DB保存なし）
+     */
+    post: operations["preview_allocation_suggestions_api_allocation_suggestions_preview_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocation-suggestions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Allocation Suggestions
+     * @description 引当推奨一覧取得.
+     */
+    get: operations["list_allocation_suggestions_api_allocation_suggestions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocation-suggestions/group-summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Allocation Suggestions By Group
+     * @description フォーキャストグループ別の計画引当サマリを取得.
+     *
+     *     allocation_suggestions テーブルから該当グループのデータを集計して返す。
+     */
+    get: operations["get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1702,136 +1327,6 @@ export interface paths {
      *         HTTPException: レコードが見つからない場合は404
      */
     get: operations["get_adjustment_api_adjustments__adjustment_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/inventory-items": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Inventory Items
-     * @description 在庫サマリ一覧取得.
-     *
-     *     Args:
-     *         skip: スキップ件数（ページネーション用）
-     *         limit: 取得件数上限
-     *         product_id: 製品IDでフィルタ
-     *         warehouse_id: 倉庫IDでフィルタ
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         在庫サマリのリスト
-     */
-    get: operations["list_inventory_items_api_inventory_items_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/inventory-items/{product_id}/{warehouse_id}": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * Get Inventory Item
-     * @description 在庫サマリ詳細取得（製品ID + 倉庫ID単位）.
-     *
-     *     Args:
-     *         product_id: 製品ID
-     *         warehouse_id: 倉庫ID
-     *         db: データベースセッション
-     *
-     *     Returns:
-     *         在庫サマリ
-     *
-     *     Raises:
-     *         HTTPException: 在庫サマリが見つからない場合は404
-     */
-    get: operations["get_inventory_item_api_inventory_items__product_id___warehouse_id__get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/inventory-items/by-supplier": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Inventory By Supplier
-     * @description 在庫サマリ（仕入先別集計）取得.
-     *
-     *     Returns:
-     *         仕入先ごとの在庫集計リスト
-     */
-    get: operations["list_inventory_by_supplier_api_inventory_items_by_supplier_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/inventory-items/by-warehouse": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Inventory By Warehouse
-     * @description 在庫サマリ（倉庫別集計）取得.
-     *
-     *     Returns:
-     *         倉庫ごとの在庫集計リスト
-     */
-    get: operations["list_inventory_by_warehouse_api_inventory_items_by_warehouse_get"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  "/api/inventory-items/by-product": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    /**
-     * List Inventory By Product
-     * @description 在庫サマリ（製品別集計）取得.
-     *
-     *     Returns:
-     *         製品ごとの在庫集計リスト（全倉庫合計）
-     */
-    get: operations["list_inventory_by_product_api_inventory_items_by_product_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -4564,7 +4059,7 @@ export interface components {
       /** Order Line Id */
       order_line_id: number;
       /** Lot Id */
-      lot_id: number;
+      lot_id?: number | null;
       /** Allocated Quantity */
       allocated_quantity: string;
       /**
@@ -4803,45 +4298,6 @@ export interface components {
        */
       warehouse_name?: string | null;
     };
-    /**
-     * AutoAllocateRequest
-     * @description Auto-allocate request using FEFO strategy.
-     */
-    AutoAllocateRequest: {
-      /**
-       * Order Line Id
-       * @description 対象の受注明細ID
-       */
-      order_line_id: number;
-      /**
-       * Strategy
-       * @description 引当戦略 (fefo)
-       * @default fefo
-       */
-      strategy: string;
-    };
-    /**
-     * AutoAllocateResponse
-     * @description Auto-allocate response.
-     */
-    AutoAllocateResponse: {
-      /** Order Line Id */
-      order_line_id: number;
-      /** Allocated Lots */
-      allocated_lots?: components["schemas"]["FefoLotAllocation"][];
-      /**
-       * Total Allocated
-       * @default 0
-       */
-      total_allocated: string;
-      /**
-       * Remaining Quantity
-       * @default 0
-       */
-      remaining_quantity: string;
-      /** Message */
-      message: string;
-    };
     /** AvailableLotResponse */
     AvailableLotResponse: {
       /** Lot Id */
@@ -4860,53 +4316,6 @@ export interface components {
       expiry_date?: string | null;
       /** Receipt Date */
       receipt_date?: string | null;
-    };
-    /**
-     * BatchAutoOrderRequest
-     * @description Batch auto-allocate request for orders.
-     */
-    BatchAutoOrderRequest: {
-      /**
-       * Order Ids
-       * @description 引当対象の受注ID一覧
-       */
-      order_ids: number[];
-      /**
-       * Dry Run
-       * @description Trueならプレビューのみ（DB保存しない）
-       * @default false
-       */
-      dry_run: boolean;
-    };
-    /**
-     * BatchAutoOrderResponse
-     * @description Batch auto-allocate response.
-     */
-    BatchAutoOrderResponse: {
-      /** Results */
-      results?: components["schemas"]["BatchAutoOrderResult"][];
-      /** Total Orders */
-      total_orders: number;
-      /** Success Count */
-      success_count: number;
-      /** Failure Count */
-      failure_count: number;
-      /** Message */
-      message: string;
-    };
-    /**
-     * BatchAutoOrderResult
-     * @description Result for a single order in batch auto-allocation.
-     */
-    BatchAutoOrderResult: {
-      /** Order Id */
-      order_id: number;
-      /** Success */
-      success: boolean;
-      /** Message */
-      message?: string | null;
-      /** Created Allocation Ids */
-      created_allocation_ids?: number[];
     };
     /**
      * BatchJobCreate
@@ -5044,114 +4453,6 @@ export interface components {
        * @description Import file (.xlsx, .json, .yaml, .yml)
        */
       file: string;
-    };
-    /**
-     * BulkAutoAllocateFailedLine
-     * @description Failed line in bulk auto-allocate response.
-     */
-    BulkAutoAllocateFailedLine: {
-      /** Line Id */
-      line_id: number;
-      /** Error */
-      error: string;
-    };
-    /**
-     * BulkAutoAllocateRequest
-     * @description Bulk auto-allocate request for group-based FEFO allocation.
-     */
-    BulkAutoAllocateRequest: {
-      /**
-       * Product Id
-       * @description 製品ID（指定時はその製品のみ対象）
-       */
-      product_id?: number | null;
-      /**
-       * Customer Id
-       * @description 得意先ID（指定時はその得意先のみ対象）
-       */
-      customer_id?: number | null;
-      /**
-       * Delivery Place Id
-       * @description 納入先ID（指定時はその納入先のみ対象）
-       */
-      delivery_place_id?: number | null;
-      /**
-       * Order Type
-       * @description 受注タイプでフィルタ
-       */
-      order_type?: string | null;
-      /**
-       * Skip Already Allocated
-       * @description 既に全量引当済みの明細をスキップ
-       * @default true
-       */
-      skip_already_allocated: boolean;
-    };
-    /**
-     * BulkAutoAllocateResponse
-     * @description Bulk auto-allocate response.
-     */
-    BulkAutoAllocateResponse: {
-      /**
-       * Processed Lines
-       * @description 処理した受注明細数
-       * @default 0
-       */
-      processed_lines: number;
-      /**
-       * Allocated Lines
-       * @description 引当を作成した明細数
-       * @default 0
-       */
-      allocated_lines: number;
-      /**
-       * Total Allocations
-       * @description 作成した引当レコード数
-       * @default 0
-       */
-      total_allocations: number;
-      /**
-       * Skipped Lines
-       * @description スキップした明細数（既に引当済み等）
-       * @default 0
-       */
-      skipped_lines: number;
-      /**
-       * Failed Lines
-       * @description 失敗した明細
-       */
-      failed_lines?: components["schemas"]["BulkAutoAllocateFailedLine"][];
-      /** Message */
-      message: string;
-    };
-    /**
-     * BulkCancelRequest
-     * @description Bulk cancel allocations request.
-     */
-    BulkCancelRequest: {
-      /**
-       * Allocation Ids
-       * @description 取消対象の引当ID一覧
-       */
-      allocation_ids: number[];
-    };
-    /**
-     * BulkCancelResponse
-     * @description Bulk cancel allocations response.
-     */
-    BulkCancelResponse: {
-      /**
-       * Cancelled Ids
-       * @description 取消成功した引当ID
-       */
-      cancelled_ids?: number[];
-      /**
-       * Failed Ids
-       * @description 取消失敗した引当ID
-       */
-      failed_ids?: number[];
-      /** Message */
-      message: string;
     };
     /**
      * BulkUpsertResponse
@@ -5997,37 +5298,6 @@ export interface components {
       jiku_code?: string | null;
     };
     /**
-     * DragAssignRequest
-     * @description Deprecated: Use ManualAllocationRequest instead.
-     */
-    DragAssignRequest: {
-      /** Order Line Id */
-      order_line_id: number;
-      /** Lot Id */
-      lot_id: number;
-      /** Allocated Quantity */
-      allocated_quantity?: number | string | null;
-      /**
-       * Allocate Qty
-       * @description Deprecated: use allocated_quantity
-       */
-      allocate_qty?: number | string | null;
-    };
-    /**
-     * DragAssignResponse
-     * @description Deprecated: Use ManualAllocationResponse instead.
-     */
-    DragAssignResponse: {
-      /** Success */
-      success: boolean;
-      /** Message */
-      message: string;
-      /** Allocation Id */
-      allocation_id: number;
-      /** Remaining Lot Qty */
-      remaining_lot_qty?: string | null;
-    };
-    /**
      * ExpectedLotCreate
      * @description Payload for creating expected lots.
      */
@@ -6360,91 +5630,6 @@ export interface components {
     HTTPValidationError: {
       /** Detail */
       detail?: components["schemas"]["ValidationError"][];
-    };
-    /**
-     * HardAllocationBatchConfirmRequest
-     * @description Hard allocation batch confirm request.
-     */
-    HardAllocationBatchConfirmRequest: {
-      /**
-       * Allocation Ids
-       * @description 確定対象の引当ID一覧
-       */
-      allocation_ids: number[];
-      /**
-       * Confirmed By
-       * @description 確定操作を行うユーザーID
-       */
-      confirmed_by?: string | null;
-    };
-    /**
-     * HardAllocationBatchConfirmResponse
-     * @description Hard allocation batch confirm response.
-     */
-    HardAllocationBatchConfirmResponse: {
-      /**
-       * Confirmed
-       * @description 確定成功した引当ID
-       */
-      confirmed?: number[];
-      /**
-       * Failed
-       * @description 確定失敗した引当
-       */
-      failed?: components["schemas"]["HardAllocationBatchFailedItem"][];
-    };
-    /**
-     * HardAllocationBatchFailedItem
-     * @description Failed item in batch confirm response.
-     */
-    HardAllocationBatchFailedItem: {
-      /** Id */
-      id: number;
-      /** Error */
-      error: string;
-      /** Message */
-      message: string;
-    };
-    /**
-     * HardAllocationConfirmRequest
-     * @description Hard allocation confirm request (Soft → Hard).
-     */
-    HardAllocationConfirmRequest: {
-      /**
-       * Confirmed By
-       * @description 確定操作を行うユーザーID
-       */
-      confirmed_by?: string | null;
-      /**
-       * Quantity
-       * @description 部分確定の場合の数量（未指定で全量確定）
-       */
-      quantity?: number | string | null;
-    };
-    /**
-     * HardAllocationConfirmResponse
-     * @description Hard allocation confirm response.
-     */
-    HardAllocationConfirmResponse: {
-      /** Id */
-      id: number;
-      /** Order Line Id */
-      order_line_id: number;
-      /** Lot Id */
-      lot_id: number;
-      /** Allocated Quantity */
-      allocated_quantity: string;
-      /** Allocation Type */
-      allocation_type: string;
-      /** Status */
-      status: string;
-      /**
-       * Confirmed At
-       * Format: date-time
-       */
-      confirmed_at: string;
-      /** Confirmed By */
-      confirmed_by?: string | null;
     };
     /**
      * ImportResultDetail
@@ -8504,18 +7689,6 @@ export interface components {
        */
       warehouse_type: string;
     };
-    /** WarehouseListResponse */
-    WarehouseListResponse: {
-      /** Items */
-      items: components["schemas"]["WarehouseOut"][];
-    };
-    /** WarehouseOut */
-    WarehouseOut: {
-      /** Warehouse Id */
-      warehouse_id: number;
-      /** Warehouse Name */
-      warehouse_name: string;
-    };
     /**
      * WarehouseResponse
      * @description Warehouse response (DDL: warehouses).
@@ -10189,533 +9362,6 @@ export interface operations {
       };
     };
   };
-  drag_assign_api_allocations_drag_assign_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["DragAssignRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["DragAssignResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  delete_allocation_api_allocations__allocation_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        allocation_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  preview_allocations_api_allocations_preview_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["FefoPreviewRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["FefoPreviewResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  commit_allocation_api_allocations_commit_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AllocationCommitRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationCommitResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  bulk_cancel_api_allocations_bulk_cancel_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BulkCancelRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BulkCancelResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  cancel_by_order_line_api_allocations_cancel_by_order_line_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": {
-          [key: string]: unknown;
-        };
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  auto_allocate_api_allocations_auto_allocate_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AutoAllocateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AutoAllocateResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  bulk_auto_allocate_api_allocations_bulk_auto_allocate_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BulkAutoAllocateRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BulkAutoAllocateResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  auto_allocate_orders_api_allocations_auto_orders_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["BatchAutoOrderRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["BatchAutoOrderResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  confirm_allocation_hard_api_allocations__allocation_id__confirm_patch: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        allocation_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["HardAllocationConfirmRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HardAllocationConfirmResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  confirm_allocations_batch_api_allocations_confirm_batch_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["HardAllocationBatchConfirmRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HardAllocationBatchConfirmResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_allocation_candidates_api_allocation_candidates_get: {
-    parameters: {
-      query: {
-        order_line_id: number;
-        strategy?: string;
-        limit?: number;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["ListResponse_CandidateLotItem_"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  preview_allocation_suggestions_api_allocation_suggestions_preview_post: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        "application/json": components["schemas"]["AllocationSuggestionRequest"];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_allocation_suggestions_api_allocation_suggestions_get: {
-    parameters: {
-      query?: {
-        /** @description スキップ件数 */
-        skip?: number;
-        /** @description 取得件数上限 */
-        limit?: number;
-        /** @description 期間 (YYYY-MM) */
-        forecast_period?: string | null;
-        /** @description 製品ID */
-        product_id?: number | null;
-        /** @description 得意先ID */
-        customer_id?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["AllocationSuggestionListResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get: {
-    parameters: {
-      query: {
-        /** @description 得意先ID */
-        customer_id: number;
-        /** @description 納入先ID */
-        delivery_place_id: number;
-        /** @description 製品ID */
-        product_id: number;
-        /** @description 期間 (YYYY-MM) */
-        forecast_period?: string | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_warehouses_api_warehouse_alloc_warehouses_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["WarehouseListResponse"];
-        };
-      };
-    };
-  };
   list_forecasts_api_forecasts_get: {
     parameters: {
       query?: {
@@ -11001,6 +9647,117 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AlertSummaryResponse"];
+        };
+      };
+    };
+  };
+  preview_allocation_suggestions_api_allocation_suggestions_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AllocationSuggestionRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_allocation_suggestions_api_allocation_suggestions_get: {
+    parameters: {
+      query?: {
+        /** @description スキップ件数 */
+        skip?: number;
+        /** @description 取得件数上限 */
+        limit?: number;
+        /** @description 期間 (YYYY-MM) */
+        forecast_period?: string | null;
+        /** @description 製品ID */
+        product_id?: number | null;
+        /** @description 得意先ID */
+        customer_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationSuggestionListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get: {
+    parameters: {
+      query: {
+        /** @description 得意先ID */
+        customer_id: number;
+        /** @description 納入先ID */
+        delivery_place_id: number;
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 期間 (YYYY-MM) */
+        forecast_period?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -11397,143 +10154,6 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_inventory_items_api_inventory_items_get: {
-    parameters: {
-      query?: {
-        skip?: number;
-        limit?: number;
-        product_id?: number | null;
-        warehouse_id?: number | null;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["InventoryItemResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  get_inventory_item_api_inventory_items__product_id___warehouse_id__get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        product_id: number;
-        warehouse_id: number;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["InventoryItemResponse"];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_inventory_by_supplier_api_inventory_items_by_supplier_get: {
-    parameters: {
-      query?: {
-        prioritize_primary?: boolean;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["InventoryBySupplierResponse"][];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["HTTPValidationError"];
-        };
-      };
-    };
-  };
-  list_inventory_by_warehouse_api_inventory_items_by_warehouse_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["InventoryByWarehouseResponse"][];
-        };
-      };
-    };
-  };
-  list_inventory_by_product_api_inventory_items_by_product_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "application/json": components["schemas"]["InventoryByProductResponse"][];
         };
       };
     };

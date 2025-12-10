@@ -2678,798 +2678,6 @@
         }
       }
     },
-    "/api/allocations/drag-assign": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Drag Assign",
-        "description": "手動引当実行 (Drag & Assign) - Deprecated endpoint name but kept for compatibility.",
-        "operationId": "drag_assign_api_allocations_drag_assign_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DragAssignRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DragAssignResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/{allocation_id}": {
-      "delete": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Delete Allocation",
-        "description": "引当取消（DELETE API, ソフトキャンセル対応）.",
-        "operationId": "delete_allocation_api_allocations__allocation_id__delete",
-        "parameters": [
-          {
-            "name": "allocation_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Allocation Id"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successful Response"
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/preview": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Preview Allocations",
-        "description": "FEFO引当シミュレーション実行.\n\nArgs:\n    request: プレビューリクエスト（order_id）\n    db: データベースセッション\n\nReturns:\n    FefoPreviewResponse: 引当プレビュー結果",
-        "operationId": "preview_allocations_api_allocations_preview_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/FefoPreviewRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/FefoPreviewResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/commit": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Commit Allocation",
-        "description": "引当確定（v2.2.1準拠）.\n\nFEFO・手動いずれかで作成された仮引当案を元に、実績の allocations を生成し、在庫を確定させる。\n\nArgs:\n    request: 引当確定リクエスト（order_id）\n    db: データベースセッション\n\nReturns:\n    AllocationCommitResponse: 確定結果\n\nNote:\n    - allocations テーブルにレコード作成\n    - lots.quantity から実績数量を減算\n    - stock_history への出庫履歴記録",
-        "operationId": "commit_allocation_api_allocations_commit_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AllocationCommitRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AllocationCommitResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/bulk-cancel": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Bulk Cancel",
-        "description": "引当一括取消.\n\n複数の引当を一度に取り消す。部分的な失敗を許容する。\n\nArgs:\n    request: 取消対象の引当ID一覧\n    db: データベースセッション\n\nReturns:\n    BulkCancelResponse: 取消結果（成功ID、失敗ID）",
-        "operationId": "bulk_cancel_api_allocations_bulk_cancel_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkCancelRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BulkCancelResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/cancel-by-order-line": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Cancel By Order Line",
-        "description": "受注明細に紐づく全ての引当を一括キャンセル.\n\nArgs:\n    request: { \"order_line_id\": int }\n    db: DB Session\n\nReturns:\n    { \"success\": bool, \"message\": str, \"cancelled_ids\": list[int] }",
-        "operationId": "cancel_by_order_line_api_allocations_cancel_by_order_line_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "additionalProperties": true,
-                "type": "object",
-                "title": "Request"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/auto-allocate": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Auto Allocate",
-        "description": "受注明細に対してFEFO戦略で自動引当を実行.\n\nArgs:\n    request: 自動引当リクエスト（order_line_id, strategy）\n    db: データベースセッション\n\nReturns:\n    AutoAllocateResponse: 引当結果",
-        "operationId": "auto_allocate_api_allocations_auto_allocate_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AutoAllocateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AutoAllocateResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/bulk-auto-allocate": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Bulk Auto Allocate",
-        "description": "複数受注明細に対して一括でFEFO自動引当を実行.\n\nフィルタリング条件を指定して対象を絞り込み可能。\nフォーキャストグループ、個別受注、全受注への一括引当に対応。\n\n- product_id: 製品IDでフィルタ\n- customer_id: 得意先IDでフィルタ\n- delivery_place_id: 納入先IDでフィルタ\n- order_type: 受注タイプでフィルタ (FORECAST_LINKED, KANBAN, SPOT, ORDER)\n\nArgs:\n    request: 一括引当リクエスト\n    db: データベースセッション\n\nReturns:\n    BulkAutoAllocateResponse: 一括引当結果",
-        "operationId": "bulk_auto_allocate_api_allocations_bulk_auto_allocate_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkAutoAllocateRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BulkAutoAllocateResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/auto-orders": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Auto Allocate Orders",
-        "description": "複数受注に対して一括で自動引当（Single Lot Fit + FEFO）を実行・確定する.\n\n- v0アルゴリズム (allocator.py) を使用\n- 成功/失敗を個別に記録\n- dry_run=True の場合は保存しない（未実装、今回はFalse前提）\n\nArgs:\n    request: 対象受注IDリスト\n    db: DBセッション\n\nReturns:\n    BatchAutoOrderResponse: 実行結果",
-        "operationId": "auto_allocate_orders_api_allocations_auto_orders_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchAutoOrderRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BatchAutoOrderResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/{allocation_id}/confirm": {
-      "patch": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Confirm Allocation Hard",
-        "description": "Soft引当をHard引当に確定（Soft → Hard変換）.\n\n- 在庫をロックし、他オーダーからは引当不可にする\n- 部分確定も可能（quantity パラメータ指定時）\n\nArgs:\n    allocation_id: 確定対象の引当ID\n    request: 確定リクエスト（confirmed_by, quantity）\n    db: データベースセッション\n\nReturns:\n    HardAllocationConfirmResponse: 確定された引当情報\n\nRaises:\n    404: 引当が見つからない\n    400: 既にhard確定済み、または不正なパラメータ\n    409: 在庫不足",
-        "operationId": "confirm_allocation_hard_api_allocations__allocation_id__confirm_patch",
-        "parameters": [
-          {
-            "name": "allocation_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Allocation Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HardAllocationConfirmRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HardAllocationConfirmResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocations/confirm-batch": {
-      "post": {
-        "tags": [
-          "allocations"
-        ],
-        "summary": "Confirm Allocations Batch",
-        "description": "複数のSoft引当を一括でHard確定.\n\n部分的な失敗を許容し、成功・失敗をそれぞれ返す。\n\nArgs:\n    request: 一括確定リクエスト（allocation_ids, confirmed_by）\n    db: データベースセッション\n\nReturns:\n    HardAllocationBatchConfirmResponse: 確定結果（成功ID一覧、失敗情報一覧）",
-        "operationId": "confirm_allocations_batch_api_allocations_confirm_batch_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/HardAllocationBatchConfirmRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HardAllocationBatchConfirmResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocation-candidates": {
-      "get": {
-        "tags": [
-          "allocation-candidates"
-        ],
-        "summary": "Get Allocation Candidates",
-        "description": "候補ロット一覧取得（v2.5準拠）.\n\n指定された受注明細に対して、利用可能なロット候補を返却する（プレビューのみ、DB保存なし）。\n\nv2.5 Refactor:\n- forecast に含まれない商品でも、有効在庫があれば候補ロットを返す\n- v_lot_available_qty + v_order_line_context を使用\n\nArgs:\n    order_line_id: 対象の受注明細 ID（必須）\n    strategy: 引当戦略（デフォルト \"fefo\"、将来 \"fifo\" や \"custom\" 拡張を想定）\n    limit: 最大取得件数（デフォルト200）\n    db: データベースセッション\n\nReturns:\n    CandidateLotsResponse: 候補ロット一覧\n\nNote:\n    - available_quantity > 0 のみ返却\n    - ロック済み・期限切れは除外\n    - 並び順: expiry_date NULLS LAST, received_date, lot_id（FEFO戦略の場合）",
-        "operationId": "get_allocation_candidates_api_allocation_candidates_get",
-        "parameters": [
-          {
-            "name": "order_line_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Order Line Id"
-            }
-          },
-          {
-            "name": "strategy",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "default": "fefo",
-              "title": "Strategy"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "default": 200,
-              "title": "Limit"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ListResponse_CandidateLotItem_"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocation-suggestions/preview": {
-      "post": {
-        "tags": [
-          "allocation-suggestions"
-        ],
-        "summary": "Preview Allocation Suggestions",
-        "description": "引当推奨の生成・プレビュー.\n\nMode:\n- forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）\n- order: 指定オーダー行に対して引当プレビュー（DB保存なし）",
-        "operationId": "preview_allocation_suggestions_api_allocation_suggestions_preview_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AllocationSuggestionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AllocationSuggestionPreviewResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocation-suggestions": {
-      "get": {
-        "tags": [
-          "allocation-suggestions"
-        ],
-        "summary": "List Allocation Suggestions",
-        "description": "引当推奨一覧取得.",
-        "operationId": "list_allocation_suggestions_api_allocation_suggestions_get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "description": "スキップ件数",
-              "default": 0,
-              "title": "Skip"
-            },
-            "description": "スキップ件数"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "description": "取得件数上限",
-              "default": 100,
-              "title": "Limit"
-            },
-            "description": "取得件数上限"
-          },
-          {
-            "name": "forecast_period",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "期間 (YYYY-MM)",
-              "title": "Forecast Period"
-            },
-            "description": "期間 (YYYY-MM)"
-          },
-          {
-            "name": "product_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "製品ID",
-              "title": "Product Id"
-            },
-            "description": "製品ID"
-          },
-          {
-            "name": "customer_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "得意先ID",
-              "title": "Customer Id"
-            },
-            "description": "得意先ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AllocationSuggestionListResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/allocation-suggestions/group-summary": {
-      "get": {
-        "tags": [
-          "allocation-suggestions"
-        ],
-        "summary": "Get Allocation Suggestions By Group",
-        "description": "フォーキャストグループ別の計画引当サマリを取得.\n\nallocation_suggestions テーブルから該当グループのデータを集計して返す。",
-        "operationId": "get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get",
-        "parameters": [
-          {
-            "name": "customer_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "得意先ID",
-              "title": "Customer Id"
-            },
-            "description": "得意先ID"
-          },
-          {
-            "name": "delivery_place_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "納入先ID",
-              "title": "Delivery Place Id"
-            },
-            "description": "納入先ID"
-          },
-          {
-            "name": "product_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "description": "製品ID",
-              "title": "Product Id"
-            },
-            "description": "製品ID"
-          },
-          {
-            "name": "forecast_period",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "期間 (YYYY-MM)",
-              "title": "Forecast Period"
-            },
-            "description": "期間 (YYYY-MM)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/warehouse-alloc/warehouses": {
-      "get": {
-        "tags": [
-          "warehouse-alloc"
-        ],
-        "summary": "List Warehouses",
-        "description": "配分対象の倉庫一覧（新しいwarehouseテーブル）を取得.",
-        "operationId": "list_warehouses_api_warehouse_alloc_warehouses_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/WarehouseListResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/forecasts": {
       "get": {
         "tags": [
@@ -4009,6 +3217,246 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AlertSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocation-suggestions/preview": {
+      "post": {
+        "tags": [
+          "allocation-suggestions"
+        ],
+        "summary": "Preview Allocation Suggestions",
+        "description": "引当推奨の生成・プレビュー.\n\nMode:\n- forecast: 指定期間のForecastに対して引当推奨を一括再生成（DB保存あり）\n- order: 指定オーダー行に対して引当プレビュー（DB保存なし）",
+        "operationId": "preview_allocation_suggestions_api_allocation_suggestions_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocationSuggestionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationSuggestionPreviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocation-suggestions": {
+      "get": {
+        "tags": [
+          "allocation-suggestions"
+        ],
+        "summary": "List Allocation Suggestions",
+        "description": "引当推奨一覧取得.",
+        "operationId": "list_allocation_suggestions_api_allocation_suggestions_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "スキップ件数",
+              "default": 0,
+              "title": "Skip"
+            },
+            "description": "スキップ件数"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "description": "取得件数上限",
+              "default": 100,
+              "title": "Limit"
+            },
+            "description": "取得件数上限"
+          },
+          {
+            "name": "forecast_period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "期間 (YYYY-MM)",
+              "title": "Forecast Period"
+            },
+            "description": "期間 (YYYY-MM)"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "製品ID",
+              "title": "Product Id"
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "得意先ID",
+              "title": "Customer Id"
+            },
+            "description": "得意先ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationSuggestionListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocation-suggestions/group-summary": {
+      "get": {
+        "tags": [
+          "allocation-suggestions"
+        ],
+        "summary": "Get Allocation Suggestions By Group",
+        "description": "フォーキャストグループ別の計画引当サマリを取得.\n\nallocation_suggestions テーブルから該当グループのデータを集計して返す。",
+        "operationId": "get_allocation_suggestions_by_group_api_allocation_suggestions_group_summary_get",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "得意先ID",
+              "title": "Customer Id"
+            },
+            "description": "得意先ID"
+          },
+          {
+            "name": "delivery_place_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "納入先ID",
+              "title": "Delivery Place Id"
+            },
+            "description": "納入先ID"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "製品ID",
+              "title": "Product Id"
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "forecast_period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "期間 (YYYY-MM)",
+              "title": "Forecast Period"
+            },
+            "description": "期間 (YYYY-MM)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -4666,256 +4114,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/inventory-items": {
-      "get": {
-        "tags": [
-          "inventory-items"
-        ],
-        "summary": "List Inventory Items",
-        "description": "在庫サマリ一覧取得.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    product_id: 製品IDでフィルタ\n    warehouse_id: 倉庫IDでフィルタ\n    db: データベースセッション\n\nReturns:\n    在庫サマリのリスト",
-        "operationId": "list_inventory_items_api_inventory_items_get",
-        "parameters": [
-          {
-            "name": "skip",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "minimum": 0,
-              "default": 0,
-              "title": "Skip"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 1000,
-              "minimum": 1,
-              "default": 100,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "product_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Product Id"
-            }
-          },
-          {
-            "name": "warehouse_id",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "integer"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Warehouse Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryItemResponse"
-                  },
-                  "title": "Response List Inventory Items Api Inventory Items Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/inventory-items/{product_id}/{warehouse_id}": {
-      "get": {
-        "tags": [
-          "inventory-items"
-        ],
-        "summary": "Get Inventory Item",
-        "description": "在庫サマリ詳細取得（製品ID + 倉庫ID単位）.\n\nArgs:\n    product_id: 製品ID\n    warehouse_id: 倉庫ID\n    db: データベースセッション\n\nReturns:\n    在庫サマリ\n\nRaises:\n    HTTPException: 在庫サマリが見つからない場合は404",
-        "operationId": "get_inventory_item_api_inventory_items__product_id___warehouse_id__get",
-        "parameters": [
-          {
-            "name": "product_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Product Id"
-            }
-          },
-          {
-            "name": "warehouse_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "title": "Warehouse Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/inventory-items/by-supplier": {
-      "get": {
-        "tags": [
-          "inventory-items"
-        ],
-        "summary": "List Inventory By Supplier",
-        "description": "在庫サマリ（仕入先別集計）取得.\n\nReturns:\n    仕入先ごとの在庫集計リスト",
-        "operationId": "list_inventory_by_supplier_api_inventory_items_by_supplier_get",
-        "security": [
-          {
-            "OAuth2PasswordBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "prioritize_primary",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": true,
-              "title": "Prioritize Primary"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryBySupplierResponse"
-                  },
-                  "title": "Response List Inventory By Supplier Api Inventory Items By Supplier Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/inventory-items/by-warehouse": {
-      "get": {
-        "tags": [
-          "inventory-items"
-        ],
-        "summary": "List Inventory By Warehouse",
-        "description": "在庫サマリ（倉庫別集計）取得.\n\nReturns:\n    倉庫ごとの在庫集計リスト",
-        "operationId": "list_inventory_by_warehouse_api_inventory_items_by_warehouse_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryByWarehouseResponse"
-                  },
-                  "type": "array",
-                  "title": "Response List Inventory By Warehouse Api Inventory Items By Warehouse Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/inventory-items/by-product": {
-      "get": {
-        "tags": [
-          "inventory-items"
-        ],
-        "summary": "List Inventory By Product",
-        "description": "在庫サマリ（製品別集計）取得.\n\nReturns:\n    製品ごとの在庫集計リスト（全倉庫合計）",
-        "operationId": "list_inventory_by_product_api_inventory_items_by_product_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryByProductResponse"
-                  },
-                  "type": "array",
-                  "title": "Response List Inventory By Product Api Inventory Items By Product Get"
                 }
               }
             }
@@ -11017,7 +10215,14 @@
             "title": "Order Line Id"
           },
           "lot_id": {
-            "type": "integer",
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Lot Id"
           },
           "allocated_quantity": {
@@ -11100,7 +10305,6 @@
         "required": [
           "id",
           "order_line_id",
-          "lot_id",
           "allocated_quantity",
           "status"
         ],
@@ -11577,65 +10781,6 @@
         "title": "AllocationSuggestionResponse",
         "description": "引当推奨レスポンス."
       },
-      "AutoAllocateRequest": {
-        "properties": {
-          "order_line_id": {
-            "type": "integer",
-            "title": "Order Line Id",
-            "description": "対象の受注明細ID"
-          },
-          "strategy": {
-            "type": "string",
-            "title": "Strategy",
-            "description": "引当戦略 (fefo)",
-            "default": "fefo"
-          }
-        },
-        "type": "object",
-        "required": [
-          "order_line_id"
-        ],
-        "title": "AutoAllocateRequest",
-        "description": "Auto-allocate request using FEFO strategy."
-      },
-      "AutoAllocateResponse": {
-        "properties": {
-          "order_line_id": {
-            "type": "integer",
-            "title": "Order Line Id"
-          },
-          "allocated_lots": {
-            "items": {
-              "$ref": "#/components/schemas/FefoLotAllocation"
-            },
-            "type": "array",
-            "title": "Allocated Lots"
-          },
-          "total_allocated": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
-            "title": "Total Allocated",
-            "default": "0"
-          },
-          "remaining_quantity": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
-            "title": "Remaining Quantity",
-            "default": "0"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "order_line_id",
-          "message"
-        ],
-        "title": "AutoAllocateResponse",
-        "description": "Auto-allocate response."
-      },
       "AvailableLotResponse": {
         "properties": {
           "lot_id": {
@@ -11703,104 +10848,6 @@
           "available_qty"
         ],
         "title": "AvailableLotResponse"
-      },
-      "BatchAutoOrderRequest": {
-        "properties": {
-          "order_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "minItems": 1,
-            "title": "Order Ids",
-            "description": "引当対象の受注ID一覧"
-          },
-          "dry_run": {
-            "type": "boolean",
-            "title": "Dry Run",
-            "description": "Trueならプレビューのみ（DB保存しない）",
-            "default": false
-          }
-        },
-        "type": "object",
-        "required": [
-          "order_ids"
-        ],
-        "title": "BatchAutoOrderRequest",
-        "description": "Batch auto-allocate request for orders."
-      },
-      "BatchAutoOrderResponse": {
-        "properties": {
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/BatchAutoOrderResult"
-            },
-            "type": "array",
-            "title": "Results"
-          },
-          "total_orders": {
-            "type": "integer",
-            "title": "Total Orders"
-          },
-          "success_count": {
-            "type": "integer",
-            "title": "Success Count"
-          },
-          "failure_count": {
-            "type": "integer",
-            "title": "Failure Count"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "total_orders",
-          "success_count",
-          "failure_count",
-          "message"
-        ],
-        "title": "BatchAutoOrderResponse",
-        "description": "Batch auto-allocate response."
-      },
-      "BatchAutoOrderResult": {
-        "properties": {
-          "order_id": {
-            "type": "integer",
-            "title": "Order Id"
-          },
-          "success": {
-            "type": "boolean",
-            "title": "Success"
-          },
-          "message": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Message"
-          },
-          "created_allocation_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Created Allocation Ids"
-          }
-        },
-        "type": "object",
-        "required": [
-          "order_id",
-          "success"
-        ],
-        "title": "BatchAutoOrderResult",
-        "description": "Result for a single order in batch auto-allocation."
       },
       "BatchJobCreate": {
         "properties": {
@@ -12019,182 +11066,6 @@
           "file"
         ],
         "title": "Body_import_from_file_api_admin_master_import_upload_post"
-      },
-      "BulkAutoAllocateFailedLine": {
-        "properties": {
-          "line_id": {
-            "type": "integer",
-            "title": "Line Id"
-          },
-          "error": {
-            "type": "string",
-            "title": "Error"
-          }
-        },
-        "type": "object",
-        "required": [
-          "line_id",
-          "error"
-        ],
-        "title": "BulkAutoAllocateFailedLine",
-        "description": "Failed line in bulk auto-allocate response."
-      },
-      "BulkAutoAllocateRequest": {
-        "properties": {
-          "product_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Product Id",
-            "description": "製品ID（指定時はその製品のみ対象）"
-          },
-          "customer_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Id",
-            "description": "得意先ID（指定時はその得意先のみ対象）"
-          },
-          "delivery_place_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Delivery Place Id",
-            "description": "納入先ID（指定時はその納入先のみ対象）"
-          },
-          "order_type": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Order Type",
-            "description": "受注タイプでフィルタ"
-          },
-          "skip_already_allocated": {
-            "type": "boolean",
-            "title": "Skip Already Allocated",
-            "description": "既に全量引当済みの明細をスキップ",
-            "default": true
-          }
-        },
-        "type": "object",
-        "title": "BulkAutoAllocateRequest",
-        "description": "Bulk auto-allocate request for group-based FEFO allocation."
-      },
-      "BulkAutoAllocateResponse": {
-        "properties": {
-          "processed_lines": {
-            "type": "integer",
-            "title": "Processed Lines",
-            "description": "処理した受注明細数",
-            "default": 0
-          },
-          "allocated_lines": {
-            "type": "integer",
-            "title": "Allocated Lines",
-            "description": "引当を作成した明細数",
-            "default": 0
-          },
-          "total_allocations": {
-            "type": "integer",
-            "title": "Total Allocations",
-            "description": "作成した引当レコード数",
-            "default": 0
-          },
-          "skipped_lines": {
-            "type": "integer",
-            "title": "Skipped Lines",
-            "description": "スキップした明細数（既に引当済み等）",
-            "default": 0
-          },
-          "failed_lines": {
-            "items": {
-              "$ref": "#/components/schemas/BulkAutoAllocateFailedLine"
-            },
-            "type": "array",
-            "title": "Failed Lines",
-            "description": "失敗した明細"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "message"
-        ],
-        "title": "BulkAutoAllocateResponse",
-        "description": "Bulk auto-allocate response."
-      },
-      "BulkCancelRequest": {
-        "properties": {
-          "allocation_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "minItems": 1,
-            "title": "Allocation Ids",
-            "description": "取消対象の引当ID一覧"
-          }
-        },
-        "type": "object",
-        "required": [
-          "allocation_ids"
-        ],
-        "title": "BulkCancelRequest",
-        "description": "Bulk cancel allocations request."
-      },
-      "BulkCancelResponse": {
-        "properties": {
-          "cancelled_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Cancelled Ids",
-            "description": "取消成功した引当ID"
-          },
-          "failed_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Failed Ids",
-            "description": "取消失敗した引当ID"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "message"
-        ],
-        "title": "BulkCancelResponse",
-        "description": "Bulk cancel allocations response."
       },
       "BulkUpsertResponse": {
         "properties": {
@@ -14032,92 +12903,6 @@
         "title": "DeliveryPlaceImportRow",
         "description": "Delivery place for import."
       },
-      "DragAssignRequest": {
-        "properties": {
-          "order_line_id": {
-            "type": "integer",
-            "title": "Order Line Id"
-          },
-          "lot_id": {
-            "type": "integer",
-            "title": "Lot Id"
-          },
-          "allocated_quantity": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Allocated Quantity"
-          },
-          "allocate_qty": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Allocate Qty",
-            "description": "Deprecated: use allocated_quantity"
-          }
-        },
-        "type": "object",
-        "required": [
-          "order_line_id",
-          "lot_id"
-        ],
-        "title": "DragAssignRequest",
-        "description": "Deprecated: Use ManualAllocationRequest instead."
-      },
-      "DragAssignResponse": {
-        "properties": {
-          "success": {
-            "type": "boolean",
-            "title": "Success"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          },
-          "allocation_id": {
-            "type": "integer",
-            "title": "Allocation Id"
-          },
-          "remaining_lot_qty": {
-            "anyOf": [
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Remaining Lot Qty"
-          }
-        },
-        "type": "object",
-        "required": [
-          "success",
-          "message",
-          "allocation_id"
-        ],
-        "title": "DragAssignResponse",
-        "description": "Deprecated: Use ManualAllocationResponse instead."
-      },
       "ExpectedLotCreate": {
         "properties": {
           "expected_lot_number": {
@@ -15008,179 +13793,6 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
-      },
-      "HardAllocationBatchConfirmRequest": {
-        "properties": {
-          "allocation_ids": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "minItems": 1,
-            "title": "Allocation Ids",
-            "description": "確定対象の引当ID一覧"
-          },
-          "confirmed_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmed By",
-            "description": "確定操作を行うユーザーID"
-          }
-        },
-        "type": "object",
-        "required": [
-          "allocation_ids"
-        ],
-        "title": "HardAllocationBatchConfirmRequest",
-        "description": "Hard allocation batch confirm request."
-      },
-      "HardAllocationBatchConfirmResponse": {
-        "properties": {
-          "confirmed": {
-            "items": {
-              "type": "integer"
-            },
-            "type": "array",
-            "title": "Confirmed",
-            "description": "確定成功した引当ID"
-          },
-          "failed": {
-            "items": {
-              "$ref": "#/components/schemas/HardAllocationBatchFailedItem"
-            },
-            "type": "array",
-            "title": "Failed",
-            "description": "確定失敗した引当"
-          }
-        },
-        "type": "object",
-        "title": "HardAllocationBatchConfirmResponse",
-        "description": "Hard allocation batch confirm response."
-      },
-      "HardAllocationBatchFailedItem": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "error": {
-            "type": "string",
-            "title": "Error"
-          },
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "error",
-          "message"
-        ],
-        "title": "HardAllocationBatchFailedItem",
-        "description": "Failed item in batch confirm response."
-      },
-      "HardAllocationConfirmRequest": {
-        "properties": {
-          "confirmed_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmed By",
-            "description": "確定操作を行うユーザーID"
-          },
-          "quantity": {
-            "anyOf": [
-              {
-                "type": "number",
-                "exclusiveMinimum": 0.0
-              },
-              {
-                "type": "string",
-                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Quantity",
-            "description": "部分確定の場合の数量（未指定で全量確定）"
-          }
-        },
-        "type": "object",
-        "title": "HardAllocationConfirmRequest",
-        "description": "Hard allocation confirm request (Soft → Hard)."
-      },
-      "HardAllocationConfirmResponse": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "order_line_id": {
-            "type": "integer",
-            "title": "Order Line Id"
-          },
-          "lot_id": {
-            "type": "integer",
-            "title": "Lot Id"
-          },
-          "allocated_quantity": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
-            "title": "Allocated Quantity"
-          },
-          "allocation_type": {
-            "type": "string",
-            "pattern": "^(hard)$",
-            "title": "Allocation Type"
-          },
-          "status": {
-            "type": "string",
-            "pattern": "^(allocated)$",
-            "title": "Status"
-          },
-          "confirmed_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Confirmed At"
-          },
-          "confirmed_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmed By"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "order_line_id",
-          "lot_id",
-          "allocated_quantity",
-          "allocation_type",
-          "status",
-          "confirmed_at"
-        ],
-        "title": "HardAllocationConfirmResponse",
-        "description": "Hard allocation confirm response."
       },
       "ImportResultDetail": {
         "properties": {
@@ -19822,40 +18434,6 @@
         ],
         "title": "WarehouseCreate",
         "description": "Create warehouse request."
-      },
-      "WarehouseListResponse": {
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/WarehouseOut"
-            },
-            "type": "array",
-            "title": "Items"
-          }
-        },
-        "type": "object",
-        "required": [
-          "items"
-        ],
-        "title": "WarehouseListResponse"
-      },
-      "WarehouseOut": {
-        "properties": {
-          "warehouse_id": {
-            "type": "integer",
-            "title": "Warehouse Id"
-          },
-          "warehouse_name": {
-            "type": "string",
-            "title": "Warehouse Name"
-          }
-        },
-        "type": "object",
-        "required": [
-          "warehouse_id",
-          "warehouse_name"
-        ],
-        "title": "WarehouseOut"
       },
       "WarehouseResponse": {
         "properties": {

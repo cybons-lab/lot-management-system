@@ -63,6 +63,16 @@ export function AllocationRowContainer({
   const currentAllocations = getLineAllocations(line.id);
   const canSave = lineStatus === "draft" && !isOverAllocated;
 
+  // Calculate allocationState from backend allocations
+  let allocationState: "none" | "soft" | "hard" | "mixed" = "none";
+  if (line.allocations && line.allocations.length > 0) {
+    const hasHard = line.allocations.some((a) => a.allocation_type === "hard");
+    const hasSoft = line.allocations.some((a) => a.allocation_type === "soft");
+    if (hasHard && hasSoft) allocationState = "mixed";
+    else if (hasHard) allocationState = "hard";
+    else if (hasSoft) allocationState = "soft";
+  }
+
   return (
     <LotAllocationPanel
       order={order}
@@ -82,6 +92,7 @@ export function AllocationRowContainer({
       error={error as Error}
       isActive={isActive}
       onActivate={onActivate}
+      allocationState={allocationState}
     />
   );
 }

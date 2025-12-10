@@ -256,7 +256,7 @@ class AllocationDetail(BaseSchema):
 
     id: int
     order_line_id: int
-    lot_id: int
+    lot_id: int | None = None
     allocated_quantity: Decimal = Field(..., decimal_places=3)
     allocation_type: str = Field(
         default="soft", pattern="^(soft|hard)$", description="soft: 推奨引当, hard: 確定引当"

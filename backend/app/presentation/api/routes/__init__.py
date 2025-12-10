@@ -26,6 +26,7 @@ from app.presentation.api.routes.admin import (
     users_router,
 )
 from app.presentation.api.routes.alerts import alerts_router
+from app.presentation.api.routes.allocations import allocation_suggestions_router
 from app.presentation.api.routes.assignments.assignment_router import router as assignments_router
 from app.presentation.api.routes.auth.auth_router import router as auth_router
 from app.presentation.api.routes.forecasts import forecasts_router
@@ -81,6 +82,9 @@ def register_all_routers(app: FastAPI) -> None:
     # Forecast & Alert endpoints
     app.include_router(forecasts_router, prefix=prefix)
     app.include_router(alerts_router, prefix=prefix)
+
+    # Allocations
+    app.include_router(allocation_suggestions_router, prefix=prefix)
 
     # Inventory endpoints
     app.include_router(inbound_plans_router, prefix=prefix)
