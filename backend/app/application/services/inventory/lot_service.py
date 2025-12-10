@@ -398,6 +398,8 @@ class LotService:
         lot_payload.pop("warehouse_code", None)
         lot_payload.pop("supplier_code", None)
         lot_payload.pop("product_code", None)
+        # Lotモデルに存在しないフィールドを削除
+        lot_payload.pop("allocated_quantity", None)
 
         # Auto-generate lot number for non-order origin types if not provided or placeholder
         if lot_create.origin_type != LotOriginType.ORDER:
@@ -413,6 +415,15 @@ class LotService:
             self.db.refresh(db_lot)
         except IntegrityError as exc:
             self.db.rollback()
+            # 重複キーエラーを検出してユーザーフレンドリーなメッセージを返す
+            error_str = str(exc.orig) if exc.orig else str(exc)
+            if (
+                "uq_lots_number_product_warehouse" in error_str
+                or "duplicate key" in error_str.lower()
+            ):
+                raise LotValidationError(
+                    f"ロット番号「{lot_payload.get('lot_number', '')}」は既に存在します。別のロット番号を入力してください。"
+                ) from exc
             raise LotDatabaseError("ロット作成時のDB整合性エラー", exc) from exc
         except SQLAlchemyError as exc:
             self.db.rollback()
@@ -657,20 +668,43 @@ class LotService:
         if not db_lot:
             raise LotNotFoundError(lot_id)
 
-        response = LotResponse.model_validate(db_lot)
+        # LotResponseの必須フィールドをリレーションから取得
+        product_name = db_lot.product.product_name if db_lot.product else ""
+        product_code = db_lot.product.maker_part_code if db_lot.product else ""
+        supplier_name = db_lot.supplier.supplier_name if db_lot.supplier else ""
+        supplier_code = db_lot.supplier.supplier_code if db_lot.supplier else None
+        warehouse_name = db_lot.warehouse.warehouse_name if db_lot.warehouse else None
+        warehouse_code = db_lot.warehouse.warehouse_code if db_lot.warehouse else None
 
-        if db_lot.product:
-            response.product_name = db_lot.product.product_name
-            response.product_code = db_lot.product.product_code  # type: ignore[attr-defined]
-
-        if db_lot.warehouse:
-            response.warehouse_name = db_lot.warehouse.warehouse_name
-            response.warehouse_code = db_lot.warehouse.warehouse_code
-
-        if db_lot.supplier:
-            response.supplier_name = db_lot.supplier.supplier_name
-            response.supplier_code = db_lot.supplier.supplier_code
-
-        response.current_quantity = db_lot.current_quantity or Decimal("0")
-        response.last_updated = db_lot.updated_at
-        return response
+        return LotResponse(
+            id=db_lot.id,
+            lot_number=db_lot.lot_number,
+            product_id=db_lot.product_id,
+            warehouse_id=db_lot.warehouse_id,
+            supplier_id=db_lot.supplier_id,
+            expected_lot_id=db_lot.expected_lot_id,
+            received_date=db_lot.received_date,
+            expiry_date=db_lot.expiry_date,
+            current_quantity=db_lot.current_quantity or Decimal("0"),
+            allocated_quantity=Decimal("0"),  # Lotモデルにはないため固定値
+            locked_quantity=db_lot.locked_quantity or Decimal("0"),
+            unit=db_lot.unit,
+            status=LotStatus(db_lot.status) if db_lot.status else LotStatus.ACTIVE,
+            lock_reason=db_lot.lock_reason,
+            inspection_status=db_lot.inspection_status,
+            inspection_date=db_lot.inspection_date,
+            inspection_cert_number=db_lot.inspection_cert_number,
+            origin_type=LotOriginType(db_lot.origin_type)
+            if db_lot.origin_type
+            else LotOriginType.ADHOC,
+            origin_reference=db_lot.origin_reference,
+            product_name=product_name,
+            product_code=product_code,
+            supplier_name=supplier_name,
+            supplier_code=supplier_code,
+            warehouse_name=warehouse_name,
+            warehouse_code=warehouse_code,
+            last_updated=db_lot.updated_at,
+            created_at=db_lot.created_at,
+            updated_at=db_lot.updated_at,
+        )

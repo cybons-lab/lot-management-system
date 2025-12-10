@@ -28,6 +28,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - `test_order_locks.py`: ユーザーfixtureを`db.commit()`に変更しセッション問題を解決
   - アサーション修正（5件）: ステータスコード、既存データ考慮など
   - 統合テスト（1件）: `test_order_flow.py`を現行APIスキーマに合わせて全面書き直し
+- **[P1-2] ロット新規登録500エラー修正 (2025-12-10)**
+  - `lot_service.py`: `allocated_quantity`フィールドをpayloadから除外（Lotモデルに存在しないカラム）
+  - `lot_service.py`: `_build_lot_response`を直接コンストラクタで構築（`product_name`等の必須フィールド問題解決）
+  - `lot_service.py`: 重複キーエラー時にユーザーフレンドリーなメッセージを返す
+  - `router.py`: 二重コミットを修正
+  - `AdhocLotCreateForm.tsx`: placeholderをラベル横のヒントに変更
+  - `AdhocLotCreatePage.tsx`: 重複トーストを修正（グローバルハンドラーに統一）
 - **[Test Data] 全製品に最低1ロット確保**: `generate_test_data.py`を修正し、depletedシナリオでもロットを生成するよう変更
 - **[Test Data] エッジケーステスト用データパターン追加**: 3種類のエッジケースシナリオを導入
   - `mixed_expiry`: 1製品に有効/期限切れ/枯渇ロットを混在させる
