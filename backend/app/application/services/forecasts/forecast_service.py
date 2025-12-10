@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent, ForecastHistory
-from app.infrastructure.persistence.models.orders_models import Allocation, Order, OrderLine
+from app.infrastructure.persistence.models.orders_models import Order, OrderLine
 from app.presentation.schemas.forecasts.forecast_schema import (
     ForecastCreate,
     ForecastGroupKey,
@@ -130,9 +130,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                 )
                 .options(
                     joinedload(Order.order_lines).selectinload(OrderLine.product),
-                    joinedload(Order.order_lines)
-                    .selectinload(OrderLine.allocations)
-                    .joinedload(Allocation.lot),
+                    joinedload(Order.order_lines).selectinload(OrderLine.allocations),
                     joinedload(Order.customer),
                 )
                 .distinct()

@@ -51,7 +51,6 @@ def test_regenerate_for_periods(db):
         received_date=date(2025, 1, 1),
         expiry_date=date(2025, 12, 1),
         current_quantity=Decimal("100"),
-        allocated_quantity=Decimal("0"),
         unit="EA",
         status="active",
     )
@@ -65,7 +64,6 @@ def test_regenerate_for_periods(db):
         received_date=date(2025, 1, 1),
         expiry_date=date(2026, 1, 1),
         current_quantity=Decimal("100"),
-        allocated_quantity=Decimal("0"),
         unit="EA",
         status="active",
     )
@@ -139,7 +137,6 @@ def test_regenerate_with_shortage(db):
         received_date=date(2025, 1, 1),
         expiry_date=date(2025, 12, 1),
         current_quantity=Decimal("50"),
-        allocated_quantity=Decimal("0"),
         unit="EA",
         status="active",
     )
@@ -213,7 +210,6 @@ def test_regenerate_single_lot_fit(db):
         received_date=date(2025, 1, 1),
         expiry_date=date(2025, 11, 1),
         current_quantity=Decimal("50"),
-        allocated_quantity=Decimal("0"),
         unit="EA",
         status="active",
     )
@@ -227,7 +223,6 @@ def test_regenerate_single_lot_fit(db):
         received_date=date(2025, 2, 1),
         expiry_date=date(2025, 12, 1),
         current_quantity=Decimal("100"),
-        allocated_quantity=Decimal("0"),
         unit="EA",
         status="active",
     )

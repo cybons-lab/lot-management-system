@@ -4,6 +4,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
+from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.infrastructure.persistence.models import Order, OrderLine, Product
 
 from .schemas import FefoLinePlan, FefoLotPlan, FefoPreviewResult
@@ -138,7 +139,7 @@ def calculate_line_allocations(
             # allocator sees: available = current - allocated - temp_allocations[lot_id]
             # We want allocator to see: available = current_tracked_available
             # => temp_allocations[lot_id] = current - allocated - target_available
-            real_avail_db = lot.current_quantity - lot.allocated_quantity  # Max theoretical
+            real_avail_db = get_available_quantity(db, lot)  # Using lot_reservations
             target_avail = Decimal(str(current_tracked_available))
             temp_allocations[lot.id] = real_avail_db - target_avail
             candidates.append(lot)
@@ -165,7 +166,7 @@ def calculate_line_allocations(
             # Update availability tracker
             current_avail = available_per_lot.get(
                 allocated_lot.id,
-                float(allocated_lot.current_quantity - allocated_lot.allocated_quantity),
+                float(get_available_quantity(db, allocated_lot)),
             )
             available_per_lot[allocated_lot.id] = current_avail - allocated_qty_float
             remaining -= allocated_qty_float

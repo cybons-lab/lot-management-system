@@ -8,6 +8,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session, joinedload
 
+from app.application.services.inventory.stock_calculation import get_reserved_quantity
 from app.domain.events import EventDispatcher, StockChangedEvent
 from app.infrastructure.persistence.models import (
     Customer,
@@ -139,8 +140,9 @@ class WithdrawalService:
         if not lot:
             raise ValueError(f"ロット（ID={data.lot_id}）が見つかりません")
 
-        # 利用可能数量をチェック
-        available_quantity = lot.current_quantity - lot.allocated_quantity - lot.locked_quantity
+        # 利用可能数量をチェック (using lot_reservations)
+        reserved_qty = get_reserved_quantity(self.db, lot.id)
+        available_quantity = lot.current_quantity - reserved_qty - lot.locked_quantity
         if data.quantity > available_quantity:
             raise ValueError(
                 f"利用可能数量が不足しています。"
@@ -210,7 +212,7 @@ class WithdrawalService:
         EventDispatcher.queue(event)
 
         # レスポンス用にリレーションを再取得
-        withdrawal = (
+        refreshed = (
             self.db.query(Withdrawal)
             .options(
                 joinedload(Withdrawal.lot).joinedload(Lot.product),
@@ -222,7 +224,10 @@ class WithdrawalService:
             .first()
         )
 
-        return self._to_response(withdrawal)
+        if not refreshed:
+            raise ValueError(f"出庫（ID={withdrawal.id}）の再取得に失敗しました")
+
+        return self._to_response(refreshed)
 
     def _to_response(self, withdrawal: Withdrawal) -> WithdrawalResponse:
         """モデルをレスポンススキーマに変換."""

@@ -69,7 +69,6 @@ def sample_lot(test_db: Session):
         warehouse_id=wh.id,
         lot_number="LOT-001",
         current_quantity=Decimal("100.000"),
-        allocated_quantity=Decimal("0.000"),
         unit="EA",
         received_date=date.today(),
     )

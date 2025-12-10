@@ -13,6 +13,10 @@ from app.infrastructure.persistence.models import (
     OrderLine,
     Product,
 )
+from app.infrastructure.persistence.models.lot_reservations_model import (
+    LotReservation,
+    ReservationStatus,
+)
 from app.presentation.schemas.inventory.inventory_schema import LotStatus
 
 
@@ -32,9 +36,7 @@ def _load_order(db: Session, order_id: int) -> Order:
     stmt = (
         select(Order)
         .options(  # type: ignore[assignment]
-            selectinload(Order.order_lines)
-            .joinedload(OrderLine.allocations)
-            .joinedload(Allocation.lot),
+            selectinload(Order.order_lines).joinedload(OrderLine.allocations),
             selectinload(Order.order_lines).joinedload(OrderLine.product),
         )
         .where(Order.id == order_id)
@@ -83,22 +85,40 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
 def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
     """FEFO候補ロットを取得.
 
-    v2.3: 利用可能数量にロック数量を考慮し、検査ステータスをフィルタ。
+    v2.4: lot_reservationsを使って利用可能数量を計算。
 
     フィルタ条件:
     - 製品IDが一致
-    - 利用可能数量（現在数量 - 引当済み - ロック済み）> 0
+    - 利用可能数量（現在数量 - 予約済み - ロック済み）> 0
     - ステータスが active
     - 検査ステータスが not_required または passed
 
     Returns:
         List of (Lot, available_quantity) tuples sorted by FEFO order
     """
-    # 利用可能数量 = 現在数量 - 引当済み数量 - ロック数量
-    available_qty_expr = Lot.current_quantity - Lot.allocated_quantity - Lot.locked_quantity
+    # Subquery for reserved quantity per lot
+    reserved_subq = (
+        select(
+            LotReservation.lot_id,
+            func.coalesce(func.sum(LotReservation.reserved_qty), 0).label("reserved"),
+        )
+        .where(
+            LotReservation.status.in_(
+                [ReservationStatus.ACTIVE.value, ReservationStatus.CONFIRMED.value]
+            )
+        )
+        .group_by(LotReservation.lot_id)
+        .subquery()
+    )
+
+    # 利用可能数量 = 現在数量 - 予約済み数量 - ロック数量
+    available_qty_expr = (
+        Lot.current_quantity - func.coalesce(reserved_subq.c.reserved, 0) - Lot.locked_quantity
+    )
 
     stmt = (  # type: ignore[assignment]
         select(Lot, available_qty_expr.label("available_qty"))
+        .outerjoin(reserved_subq, Lot.id == reserved_subq.c.lot_id)
         .where(
             Lot.product_id == product_id,
             available_qty_expr > 0,

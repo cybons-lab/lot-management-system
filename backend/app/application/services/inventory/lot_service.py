@@ -14,6 +14,10 @@ from sqlalchemy import Select, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
+from app.application.services.inventory.stock_calculation import (
+    get_available_quantity,
+    get_reserved_quantity,
+)
 from app.domain.lot import (
     FefoPolicy,
     InsufficientLotStockError,
@@ -86,10 +90,10 @@ class LotRepository:
         if not product:
             return []
 
+        # First, get all active lots for this product
         stmt: Select[tuple[Lot]] = select(Lot).where(
             Lot.product_id == product.id,
             Lot.status == "active",
-            (Lot.current_quantity - Lot.allocated_quantity) > min_quantity,
         )
 
         # Filter by origin_type
@@ -107,7 +111,13 @@ class LotRepository:
             else:
                 return []
 
-        return cast(Sequence[Lot], self.db.execute(stmt).scalars().all())
+        lots = list(self.db.execute(stmt).scalars().all())
+
+        # Filter by available quantity using lot_reservations
+        available_lots = [
+            lot for lot in lots if float(get_available_quantity(self.db, lot)) > min_quantity
+        ]
+        return available_lots
 
     def create(
         self,
@@ -198,7 +208,7 @@ class LotService:
                 lot_number=lot.lot_number,
                 product_code=lot.product.maker_part_code if lot.product else product_code,
                 warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
-                available_qty=float((lot.current_quantity - lot.allocated_quantity) or 0.0),
+                available_qty=float(get_available_quantity(self.db, lot)),
                 expiry_date=lot.expiry_date,
                 receipt_date=lot.received_date,
             )
@@ -213,12 +223,12 @@ class LotService:
     def validate_lot_availability(self, lot_id: int, required_qty: float) -> None:
         """Validate lot availability.
 
-        v2.2: Uses Lot.current_quantity - Lot.allocated_quantity directly.
+        Uses lot_reservations for available quantity calculation.
         """
         lot = self.get_lot(lot_id)
 
-        # 利用可能在庫を計算
-        available_qty = float(lot.current_quantity - lot.allocated_quantity)
+        # 利用可能在庫を計算 (using lot_reservations)
+        available_qty = float(get_available_quantity(self.db, lot))
 
         StockValidator.validate_sufficient_stock(lot_id, required_qty, available_qty)
         StockValidator.validate_not_expired(lot_id, lot.expiry_date)
@@ -497,9 +507,9 @@ class LotService:
 
         quantity_to_lock = lock_data.quantity
         current_qty = db_lot.current_quantity or Decimal(0)
-        allocated_qty = db_lot.allocated_quantity or Decimal(0)
+        reserved_qty = get_reserved_quantity(self.db, lot_id)
         locked_qty = db_lot.locked_quantity or Decimal(0)
-        available_qty = current_qty - allocated_qty - locked_qty
+        available_qty = current_qty - reserved_qty - locked_qty
 
         if quantity_to_lock is None:
             quantity_to_lock = available_qty

@@ -22,7 +22,6 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, ma
         warehouse_id=warehouse.id,
         supplier_id=supplier.id,
         current_quantity=Decimal("100"),
-        allocated_quantity=Decimal("0"),
         status="active",
         received_date=date.today(),
         expiry_date=date.today(),
@@ -54,12 +53,18 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, ma
     db.add(line)
     db.commit()
 
-    # Create Allocations
+    # Create Allocations (using lot_reference)
     alloc1 = Allocation(
-        order_line_id=line.id, lot_id=lot.id, allocated_quantity=Decimal("10"), status="allocated"
+        order_line_id=line.id,
+        lot_reference=lot.lot_number,
+        allocated_quantity=Decimal("10"),
+        status="allocated",
     )
     alloc2 = Allocation(
-        order_line_id=line.id, lot_id=lot.id, allocated_quantity=Decimal("20"), status="allocated"
+        order_line_id=line.id,
+        lot_reference=lot.lot_number,
+        allocated_quantity=Decimal("20"),
+        status="allocated",
     )
     # Different line allocation (should not be cancelled)
     line2 = OrderLine(
@@ -75,15 +80,16 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, ma
     db.commit()
 
     alloc3 = Allocation(
-        order_line_id=line2.id, lot_id=lot.id, allocated_quantity=Decimal("5"), status="allocated"
+        order_line_id=line2.id,
+        lot_reference=lot.lot_number,
+        allocated_quantity=Decimal("5"),
+        status="allocated",
     )
 
     db.add(alloc1)
     db.add(alloc2)
     db.add(alloc3)
 
-    # Update lot allocated quantity
-    lot.allocated_quantity = Decimal("35")
     db.commit()
 
     # Call API
@@ -106,7 +112,3 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, ma
     assert db.get(Allocation, alloc1.id) is None
     assert db.get(Allocation, alloc2.id) is None
     assert db.get(Allocation, alloc3.id) is not None
-
-    updated_lot = db.get(Lot, lot.id)
-    # 35 - 10 - 20 = 5
-    assert updated_lot.allocated_quantity == Decimal("5")

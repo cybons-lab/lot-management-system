@@ -60,13 +60,14 @@ def allocate_soft_for_forecast(
 
     # Calculate real availability for each lot once
     # We map lot_id -> available_qty
+    # Note: temp_allocations already contains the reserved quantity offset
+    # calculated by the caller (fefo.py), so we don't access lot.allocated_quantity
     lot_availability: dict[int, Decimal] = {}
     for lot in sorted_lots:
-        allocated = lot.allocated_quantity
-        # Use temp_allocations dict instead of dynamic attribute
-        allocated += temp_allocations.get(lot.id, Decimal("0"))
-
-        available = lot.current_quantity - allocated
+        # temp_allocations contains the offset needed to achieve desired availability
+        temp_offset = temp_allocations.get(lot.id, Decimal("0"))
+        # available = current_quantity - temp_offset (which includes reserved qty)
+        available = lot.current_quantity - temp_offset
         lot_availability[lot.id] = max(Decimal("0"), available)
 
     # Filter out empty lots for logic

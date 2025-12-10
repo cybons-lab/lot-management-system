@@ -5,6 +5,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session, joinedload
 
+from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
 from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion, Lot
 from app.infrastructure.persistence.models.orders_models import OrderLine
@@ -214,7 +215,7 @@ class AllocationSuggestionService:
             if needed <= 0:
                 break
 
-            available = lot.current_quantity - lot.allocated_quantity
+            available = get_available_quantity(self.db, lot)
             if available <= 0:
                 continue
 
@@ -287,12 +288,14 @@ class AllocationSuggestionService:
             .filter(
                 Lot.product_id.in_(product_ids),
                 Lot.status == "active",
-                Lot.current_quantity > Lot.allocated_quantity,
             )
             .order_by(Lot.product_id, Lot.expiry_date.asc().nullslast(), Lot.received_date.asc())
             .options(joinedload(Lot.warehouse))
             .all()
         )
+
+        # Filter lots with available quantity > 0
+        lots = [lot for lot in lots if get_available_quantity(self.db, lot) > 0]
 
         # Group by product_id
         result: dict[int, list[Lot]] = {}

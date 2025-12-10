@@ -15,7 +15,6 @@ from app.domain.order import (
     ProductNotFoundError,
 )
 from app.infrastructure.persistence.models import (
-    Allocation,
     Customer,
     Order,
     OrderLine,
@@ -47,9 +46,7 @@ class OrderService:
         primary_supplier_ids: list[int] | None = None,
     ) -> list[OrderWithLinesResponse]:
         stmt = select(Order).options(  # type: ignore[assignment]
-            selectinload(Order.order_lines)
-            .selectinload(OrderLine.allocations)
-            .joinedload(Allocation.lot)
+            selectinload(Order.order_lines).selectinload(OrderLine.allocations)
         )
 
         if customer_code:
@@ -115,7 +112,7 @@ class OrderService:
             .join(Order, OrderLine.order_id == Order.id)
             .options(
                 selectinload(OrderLine.order).selectinload(Order.customer),
-                selectinload(OrderLine.allocations).joinedload(Allocation.lot),
+                selectinload(OrderLine.allocations),
                 selectinload(OrderLine.product),
             )
         )
@@ -153,11 +150,11 @@ class OrderService:
                     resp.customer_name = line.order.customer.customer_name
                     resp.customer_code = line.order.customer.customer_code
 
-            # Populate lot info in allocations
+            # Populate lot info in allocations (using lot_reference)
             for i, alloc in enumerate(line.allocations):
                 if i < len(resp.allocations):
-                    if alloc.lot:
-                        resp.allocations[i].lot_number = alloc.lot.lot_number
+                    if alloc.lot_reference:
+                        resp.allocations[i].lot_number = alloc.lot_reference
 
             response_lines.append(resp)
 
@@ -172,9 +169,7 @@ class OrderService:
             select(Order)
             .options(
                 selectinload(Order.order_lines).selectinload(OrderLine.product),
-                selectinload(Order.order_lines)
-                .selectinload(OrderLine.allocations)
-                .joinedload(Allocation.lot),
+                selectinload(Order.order_lines).selectinload(OrderLine.allocations),
                 selectinload(Order.customer),
             )
             .where(Order.id == order_id)
@@ -238,7 +233,7 @@ class OrderService:
                 converted_quantity=converted_qty,
                 delivery_place_id=line_data.delivery_place_id,
                 order_type=line_data.order_type,
-                forecast_id=line_data.forecast_id,
+                forecast_reference=str(line_data.forecast_id) if line_data.forecast_id else None,
                 customer_order_no=line_data.customer_order_no,
                 customer_order_line_no=line_data.customer_order_line_no,
                 sap_order_no=line_data.sap_order_no,

@@ -61,6 +61,7 @@ from app.presentation.api.routes.orders import (
 )
 from app.presentation.api.routes.rpa import router as rpa_router
 from app.presentation.api.routes.system.system_router import router as system_router
+from app.presentation.api.v2 import api_router as api_v2_router
 
 
 # orders_validate_router is disabled: requires OrderValidation* schemas not in DDL v2.2
@@ -74,6 +75,9 @@ def register_all_routers(app: FastAPI) -> None:
         app: FastAPIアプリケーションインスタンス
     """
     prefix = settings.API_PREFIX
+
+    # v2 API
+    app.include_router(api_v2_router, prefix=settings.API_V2_STR)
 
     # Core business endpoints
     app.include_router(lots_router, prefix=prefix)

@@ -97,7 +97,7 @@ class InventoryService:
                 a.allocation_type,
                 SUM(a.allocated_quantity) as qty
             FROM allocations a
-            JOIN lots l ON a.lot_id = l.id
+            JOIN lots l ON l.lot_number = a.lot_reference
             WHERE 1=1
               AND a.status IN ('allocated', 'provisional')
               AND l.product_id IN :product_ids
@@ -195,7 +195,7 @@ class InventoryService:
                 a.allocation_type,
                 SUM(a.allocated_quantity) as qty
             FROM allocations a
-            JOIN lots l ON a.lot_id = l.id
+            JOIN lots l ON l.lot_number = a.lot_reference
             WHERE a.status IN ('allocated', 'provisional')
               AND l.product_id = :product_id
               AND l.warehouse_id = :warehouse_id
@@ -311,8 +311,17 @@ class InventoryService:
                 p.product_name,
                 p.maker_part_code as product_code,
                 SUM(l.current_quantity) as total_quantity,
-                SUM(l.allocated_quantity) as allocated_quantity,
-                SUM(GREATEST(l.current_quantity - l.allocated_quantity - l.locked_quantity, 0)) as available_quantity,
+                COALESCE(
+                    (SELECT SUM(r.reserved_qty) FROM lot_reservations r 
+                     WHERE r.lot_id = ANY(ARRAY_AGG(l.id)) AND r.status IN ('active', 'confirmed')),
+                    0
+                ) as allocated_quantity,
+                SUM(GREATEST(l.current_quantity - l.locked_quantity, 0)) - COALESCE(
+                    (SELECT SUM(r.reserved_qty) FROM lot_reservations r 
+                     JOIN lots l2 ON r.lot_id = l2.id 
+                     WHERE l2.product_id = l.product_id AND r.status IN ('active', 'confirmed')),
+                    0
+                ) as available_quantity,
                 COUNT(l.id) as lot_count,
                 COUNT(DISTINCT l.warehouse_id) as warehouse_count
             FROM lots l
