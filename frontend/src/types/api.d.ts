@@ -4,6 +4,433 @@
  */
 
 export interface paths {
+  "/api/v2/lot/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Lots */
+    get: operations["list_lots_api_v2_lot__get"];
+    put?: never;
+    /** Create Lot */
+    post: operations["create_lot_api_v2_lot__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/lot/available": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Available Lots */
+    get: operations["get_available_lots_api_v2_lot_available_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/lot/{lot_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Lot */
+    get: operations["get_lot_api_v2_lot__lot_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/lot/{lot_id}/adjust": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Adjust Lot Quantity */
+    post: operations["adjust_lot_quantity_api_v2_lot__lot_id__adjust_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/order/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Orders */
+    get: operations["list_orders_api_v2_order__get"];
+    put?: never;
+    /** Create Order */
+    post: operations["create_order_api_v2_order__post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/order/{order_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Order */
+    get: operations["get_order_api_v2_order__order_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/order/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Import Orders */
+    post: operations["import_orders_api_v2_order_import_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/allocation/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Preview Allocations */
+    post: operations["preview_allocations_api_v2_allocation_preview_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/allocation/commit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Commit Allocation */
+    post: operations["commit_allocation_api_v2_allocation_commit_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/allocation/manual": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Manual Allocate */
+    post: operations["manual_allocate_api_v2_allocation_manual_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/allocation/{allocation_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete Allocation */
+    delete: operations["delete_allocation_api_v2_allocation__allocation_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/allocation/by-order/{order_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Allocations By Order */
+    get: operations["list_allocations_by_order_api_v2_allocation_by_order__order_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Forecasts */
+    get: operations["list_forecasts_api_v2_forecast__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/{forecast_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Forecast */
+    get: operations["get_forecast_api_v2_forecast__forecast_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Import Forecasts */
+    post: operations["import_forecasts_api_v2_forecast_import_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/grouped": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Grouped Forecasts */
+    get: operations["get_grouped_forecasts_api_v2_forecast_grouped_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/inventory/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Inventory */
+    get: operations["list_inventory_api_v2_inventory__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/inventory/{product_id}/{warehouse_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Inventory Item */
+    get: operations["get_inventory_item_api_v2_inventory__product_id___warehouse_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/inventory/stats": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Inventory Stats */
+    get: operations["get_inventory_stats_api_v2_inventory_stats_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/inventory/by-supplier": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Inventory By Supplier */
+    get: operations["list_inventory_by_supplier_api_v2_inventory_by_supplier_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/inventory/by-warehouse": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Inventory By Warehouse */
+    get: operations["list_inventory_by_warehouse_api_v2_inventory_by_warehouse_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/inventory/by-product": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Inventory By Product */
+    get: operations["list_inventory_by_product_api_v2_inventory_by_product_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/reservation/": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Reservations */
+    get: operations["list_reservations_api_v2_reservation__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/reservation/by-lot/{lot_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Reservations By Lot */
+    get: operations["reservations_by_lot_api_v2_reservation_by_lot__lot_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/reservation/by-source/{source_type}/{source_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Reservations By Source */
+    get: operations["reservations_by_source_api_v2_reservation_by_source__source_type___source_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/lots": {
     parameters: {
       query?: never;
@@ -4415,6 +4842,25 @@ export interface components {
       /** Message */
       message: string;
     };
+    /** AvailableLotResponse */
+    AvailableLotResponse: {
+      /** Lot Id */
+      lot_id: number;
+      /** Lot Code */
+      lot_code: string;
+      /** Lot Number */
+      lot_number?: string | null;
+      /** Product Code */
+      product_code: string;
+      /** Warehouse Code */
+      warehouse_code: string;
+      /** Available Qty */
+      available_qty: number;
+      /** Expiry Date */
+      expiry_date?: string | null;
+      /** Receipt Date */
+      receipt_date?: string | null;
+    };
     /**
      * BatchAutoOrderRequest
      * @description Batch auto-allocate request for orders.
@@ -6341,6 +6787,15 @@ export interface components {
       /** Warehouse Code */
       warehouse_code?: string | null;
     };
+    /** InventoryStats */
+    InventoryStats: {
+      /** Total Products */
+      total_products: number;
+      /** Total Warehouses */
+      total_warehouses: number;
+      /** Total Quantity */
+      total_quantity: string;
+    };
     /** ListResponse[CandidateLotItem] */
     ListResponse_CandidateLotItem_: {
       /** Items */
@@ -6593,6 +7048,45 @@ export interface components {
       lot_id: number;
       /** Quantity */
       quantity: number;
+    };
+    /**
+     * ManualAllocationRequest
+     * @description Manual allocation request (v2.2.1).
+     */
+    ManualAllocationRequest: {
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Allocated Quantity */
+      allocated_quantity: number | string;
+    };
+    /**
+     * ManualAllocationResponse
+     * @description Manual allocation response (v2.2.1).
+     */
+    ManualAllocationResponse: {
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Lot Number */
+      lot_number: string;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Available Quantity */
+      available_quantity: string;
+      /** Product Id */
+      product_id: number;
+      /** Expiry Date */
+      expiry_date?: string | null;
+      /**
+       * Status
+       * @default preview
+       */
+      status: string;
+      /** Message */
+      message?: string | null;
     };
     /** ManualAllocationSavePayload */
     ManualAllocationSavePayload: {
@@ -6853,6 +7347,52 @@ export interface components {
        * @description Inbound plans with SAP PO numbers
        */
       inbound_plans?: components["schemas"]["InboundPlanImportRow"][];
+    };
+    /** OrderImportLine */
+    OrderImportLine: {
+      /** Customer Order No */
+      customer_order_no: string;
+      /** Quantity */
+      quantity: number | string;
+      /** Unit */
+      unit: string;
+      /** Requested Date */
+      requested_date?: string | null;
+      /** Delivery Date */
+      delivery_date?: string | null;
+      /** Customer Order Line No */
+      customer_order_line_no?: string | null;
+    };
+    /** OrderImportRequest */
+    OrderImportRequest: {
+      /** Customer Code */
+      customer_code: string;
+      /** Product Code */
+      product_code: string;
+      /**
+       * Order Date
+       * Format: date
+       */
+      order_date: string;
+      /** Order Id */
+      order_id: number;
+      /** Delivery Place Id */
+      delivery_place_id: number;
+      /** Lines */
+      lines: components["schemas"]["OrderImportLine"][];
+      /** Source File Name */
+      source_file_name?: string | null;
+    };
+    /** OrderImportResponse */
+    OrderImportResponse: {
+      /** Order Group Id */
+      order_group_id?: number | null;
+      /** Created Line Ids */
+      created_line_ids?: number[];
+      /** Skipped Customer Order Nos */
+      skipped_customer_order_nos?: string[];
+      /** Errors */
+      errors?: string[];
     };
     /**
      * OrderLineCreate
@@ -7306,6 +7846,27 @@ export interface components {
       maker_item_code?: string | null;
       /** Is Active */
       is_active?: boolean | null;
+    };
+    /** ReservationResponse */
+    ReservationResponse: {
+      /** Id */
+      id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Source Type */
+      source_type: string;
+      /** Source Id */
+      source_id?: number | null;
+      /** Reserved Qty */
+      reserved_qty: number;
+      /** Status */
+      status: string;
+      /** Expires At */
+      expires_at?: string | null;
+      /** Confirmed At */
+      confirmed_at?: string | null;
+      /** Released At */
+      released_at?: string | null;
     };
     /**
      * ResponseBase
@@ -8190,6 +8751,837 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  list_lots_api_v2_lot__get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        product_id?: number | null;
+        product_code?: string | null;
+        supplier_code?: string | null;
+        warehouse_code?: string | null;
+        expiry_from?: string | null;
+        expiry_to?: string | null;
+        with_stock?: boolean;
+        prioritize_primary?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_lot_api_v2_lot__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LotCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_available_lots_api_v2_lot_available_get: {
+    parameters: {
+      query: {
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 倉庫ID */
+        warehouse_id?: number | null;
+        /** @description 最小必要数量 */
+        min_quantity?: number | string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AvailableLotResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_lot_api_v2_lot__lot_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  adjust_lot_quantity_api_v2_lot__lot_id__adjust_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AdjustmentCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AdjustmentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_orders_api_v2_order__get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        status?: string | null;
+        customer_code?: string | null;
+        date_from?: string | null;
+        date_to?: string | null;
+        order_type?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderWithLinesResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_order_api_v2_order__post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OrderCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderWithLinesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_order_api_v2_order__order_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderWithLinesResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  import_orders_api_v2_order_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OrderImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrderImportResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  preview_allocations_api_v2_allocation_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FefoPreviewRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FefoPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  commit_allocation_api_v2_allocation_commit_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AllocationCommitRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationCommitResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  manual_allocate_api_v2_allocation_manual_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ManualAllocationRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ManualAllocationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_allocation_api_v2_allocation__allocation_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        allocation_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_allocations_by_order_api_v2_allocation_by_order__order_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        order_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ManualAllocationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_forecasts_api_v2_forecast__get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        customer_id?: number | null;
+        delivery_place_id?: number | null;
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ForecastGroupResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_forecast_api_v2_forecast__forecast_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        forecast_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  import_forecasts_api_v2_forecast_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ForecastBulkImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ForecastBulkImportSummary"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_grouped_forecasts_api_v2_forecast_grouped_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        customer_id?: number | null;
+        delivery_place_id?: number | null;
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ListResponse_ForecastGroupResponse_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_inventory_api_v2_inventory__get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        product_id?: number | null;
+        warehouse_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryItemResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_inventory_item_api_v2_inventory__product_id___warehouse_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_id: number;
+        warehouse_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_inventory_stats_api_v2_inventory_stats_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryStats"];
+        };
+      };
+    };
+  };
+  list_inventory_by_supplier_api_v2_inventory_by_supplier_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryBySupplierResponse"][];
+        };
+      };
+    };
+  };
+  list_inventory_by_warehouse_api_v2_inventory_by_warehouse_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryByWarehouseResponse"][];
+        };
+      };
+    };
+  };
+  list_inventory_by_product_api_v2_inventory_by_product_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["InventoryByProductResponse"][];
+        };
+      };
+    };
+  };
+  list_reservations_api_v2_reservation__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReservationResponse"][];
+        };
+      };
+    };
+  };
+  reservations_by_lot_api_v2_reservation_by_lot__lot_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lot_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReservationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  reservations_by_source_api_v2_reservation_by_source__source_type___source_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        source_type: string;
+        source_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReservationResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_lots_api_lots_get: {
     parameters: {
       query?: {
