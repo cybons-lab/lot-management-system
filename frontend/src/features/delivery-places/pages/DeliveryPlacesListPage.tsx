@@ -30,31 +30,39 @@ import { DataTable, type Column, type SortConfig } from "@/shared/components/dat
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-const columns: Column<DeliveryPlace>[] = [
-  {
-    id: "delivery_place_code",
-    header: "納入先コード",
-    cell: (row) => row.delivery_place_code,
-    sortable: true,
-  },
-  {
-    id: "delivery_place_name",
-    header: "納入先名",
-    cell: (row) => row.delivery_place_name,
-    sortable: true,
-  },
-  {
-    id: "customer_id",
-    header: "得意先ID",
-    cell: (row) => row.customer_id,
-    sortable: true,
-  },
-  {
-    id: "jiku_code",
-    header: "次区コード",
-    cell: (row) => row.jiku_code || "-",
-  },
-];
+function createColumns(
+  customerMap: Map<number, { customer_code: string; customer_name: string }>,
+): Column<DeliveryPlace>[] {
+  return [
+    {
+      id: "delivery_place_code",
+      header: "納入先コード",
+      cell: (row) => row.delivery_place_code,
+      sortable: true,
+    },
+    {
+      id: "delivery_place_name",
+      header: "納入先名",
+      cell: (row) => row.delivery_place_name,
+      sortable: true,
+    },
+    {
+      id: "customer_id",
+      header: "得意先",
+      cell: (row) => {
+        const customer = customerMap.get(row.customer_id);
+        if (!customer) return `ID: ${row.customer_id}`;
+        return `${customer.customer_code} - ${customer.customer_name}`;
+      },
+      sortable: true,
+    },
+    {
+      id: "jiku_code",
+      header: "次区コード",
+      cell: (row) => row.jiku_code || "-",
+    },
+  ];
+}
 
 // eslint-disable-next-line max-lines-per-function
 export function DeliveryPlacesListPage() {
@@ -73,6 +81,14 @@ export function DeliveryPlacesListPage() {
   const { mutate: create, isPending: isCreating } = useCreateDeliveryPlace();
   const { mutate: update, isPending: isUpdating } = useUpdateDeliveryPlace();
   const { mutate: remove, isPending: isDeleting } = useDeleteDeliveryPlace();
+
+  const customerMap = useMemo(() => {
+    return new Map(
+      customers.map((c) => [c.id, { customer_code: c.customer_code, customer_name: c.customer_name }]),
+    );
+  }, [customers]);
+
+  const columns = useMemo(() => createColumns(customerMap), [customerMap]);
 
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return deliveryPlaces;

@@ -40,7 +40,7 @@ interface DeliveryPlaceFormProps {
     jiku_code?: string | null;
   };
   customers: Array<{ id: number; customer_name: string; customer_code: string }>;
-  onSubmit: (data: FormValues) => void;
+  onSubmit: (data: FormValues & { jiku_code: string }) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
   isEdit?: boolean;
@@ -65,9 +65,16 @@ export function DeliveryPlaceForm({
     },
   });
 
+  const handleSubmit = (data: FormValues) => {
+    onSubmit({
+      ...data,
+      jiku_code: data.jiku_code ?? "",
+    });
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="delivery_place_code"
