@@ -1,19 +1,13 @@
 from datetime import date, timedelta
 
+from app.application.services.allocations.actions import commit_fefo_allocation
+from app.application.services.allocations.fefo import preview_fefo_allocation
 from app.infrastructure.persistence.models import Lot, Order, Warehouse
-from app.presentation.api.routes.allocations.allocations_router import (
-    commit_allocation,
-    preview_allocations,
-)
 from app.presentation.api.routes.masters.customers_router import create_customer
 from app.presentation.api.routes.masters.products_router import create_product
 from app.presentation.api.routes.masters.suppliers_router import create_supplier
 from app.presentation.api.routes.masters.warehouses_router import create_warehouse
 from app.presentation.api.routes.orders.orders_router import create_order
-from app.presentation.schemas.allocations.allocations_schema import (
-    AllocationCommitRequest,
-    FefoPreviewRequest,
-)
 from app.presentation.schemas.masters.masters_schema import (
     CustomerCreate,
     SupplierCreate,
@@ -159,8 +153,14 @@ def test_order_to_fefo_allocation_flow(db_session):
     lot_b2 = _create_lot("B-2", prod_b, 5, 8)  # 期限が遅い
 
     # --- 4. FEFO引当プレビューの実行 ---
-    preview_result = preview_allocations(FefoPreviewRequest(order_id=order_id), db=db_session)
-    preview_data = preview_result.model_dump()
+    preview_result = preview_fefo_allocation(db_session, order_id)
+    preview_data = {"order_id": preview_result.order_id, "lines": []}
+    for line in preview_result.lines:
+        line_dict = {
+            "product_id": line.product_id,
+            "allocations": [{"lot_number": a.lot_number} for a in line.allocations],
+        }
+        preview_data["lines"].append(line_dict)
 
     assert preview_data["order_id"] == order_id
     assert len(preview_data["lines"]) == 2
@@ -182,11 +182,10 @@ def test_order_to_fefo_allocation_flow(db_session):
     assert len(allocated_lots_b) >= 1  # 最低1つのロットが引当される
 
     # --- 5. 引当コミットの実行 ---
-    commit_response = commit_allocation(AllocationCommitRequest(order_id=order_id), db=db_session)
-    commit_data = commit_response.model_dump()
+    commit_result = commit_fefo_allocation(db_session, order_id)
 
     # 4つの引当（A-1, A-2, B-1, B-2 から各1つ以上）
-    assert len(commit_data["created_allocation_ids"]) >= 2  # 最低でも各製品1つ
+    assert len(commit_result.created_allocations) >= 2  # 最低でも各製品1つ
 
     # --- 6. ロットの引当数量更新の検証 ---
     db_session.expire_all()
