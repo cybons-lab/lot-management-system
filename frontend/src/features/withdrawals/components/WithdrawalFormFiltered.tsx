@@ -502,6 +502,9 @@ export function WithdrawalFormFiltered({
               }
               placeholder={`最大: ${availableQuantity}`}
               disabled={isSubmitting}
+              inputMode="decimal"
+              autoComplete="off"
+              style={{ imeMode: "disabled" } as React.CSSProperties}
             />
             {errors.quantity && <p className="mt-1 text-sm text-red-600">{errors.quantity}</p>}
           </div>
