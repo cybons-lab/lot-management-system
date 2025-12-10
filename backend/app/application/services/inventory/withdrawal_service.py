@@ -212,7 +212,7 @@ class WithdrawalService:
         EventDispatcher.queue(event)
 
         # レスポンス用にリレーションを再取得
-        withdrawal = (
+        refreshed = (
             self.db.query(Withdrawal)
             .options(
                 joinedload(Withdrawal.lot).joinedload(Lot.product),
@@ -224,7 +224,10 @@ class WithdrawalService:
             .first()
         )
 
-        return self._to_response(withdrawal)
+        if not refreshed:
+            raise ValueError(f"出庫（ID={withdrawal.id}）の再取得に失敗しました")
+
+        return self._to_response(refreshed)
 
     def _to_response(self, withdrawal: Withdrawal) -> WithdrawalResponse:
         """モデルをレスポンススキーマに変換."""

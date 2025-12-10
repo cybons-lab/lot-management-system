@@ -208,7 +208,12 @@ def _enrich_lot_details(db: Session, candidates: list[CandidateLotItem]) -> None
         if lot:
             candidate.lot_number = lot.lot_number
             candidate.current_quantity = lot.current_quantity
-            candidate.allocated_quantity = lot.allocated_quantity
+            # Calculate reserved quantity dynamically
+            from app.application.services.inventory.stock_calculation import (
+                get_reserved_quantity,
+            )
+
+            candidate.allocated_quantity = get_reserved_quantity(db, lot.id)
             candidate.status = lot.status
             candidate.lock_reason = lot.lock_reason
 
