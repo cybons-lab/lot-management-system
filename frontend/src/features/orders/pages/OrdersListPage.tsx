@@ -62,7 +62,11 @@ export function OrdersListPage() {
       <ErrorState error={logic.error} onRetry={logic.refetch} />
 
       <div className="space-y-4">
-        <OrdersFlatView lines={logic.paginatedLines} isLoading={logic.isLoading} />
+        <OrdersFlatView
+          lines={logic.paginatedLines}
+          isLoading={logic.isLoading}
+          onRefresh={logic.refetch}
+        />
 
         {!logic.error && logic.sortedLines.length > 0 && (
           <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
