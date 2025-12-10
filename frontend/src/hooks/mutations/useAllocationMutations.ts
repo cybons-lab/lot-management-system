@@ -66,7 +66,7 @@ export function useCreateAllocations(options?: {
       // 引当に使用したロットのキャッシュも無効化
       variables.allocations.forEach((alloc) => {
         queryClient.invalidateQueries({
-          queryKey: QUERY_KEYS.lots.detail(alloc.lot?.id ?? alloc.lotId),
+          queryKey: QUERY_KEYS.lots.detail(alloc.lotId),
         });
       });
 
