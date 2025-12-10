@@ -52,6 +52,7 @@ class ProductOut(ORMModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    supplier_ids: list[int] = []
 
 
 class ProductBulkRow(ProductBase):

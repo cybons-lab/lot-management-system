@@ -94,6 +94,7 @@ export function AdhocLotCreatePage() {
     id: p.id ?? 0,
     product_code: p.product_code ?? "",
     product_name: p.product_name ?? "",
+    supplier_ids: p.supplier_ids ?? [],
   }));
 
   // 倉庫リストを変換

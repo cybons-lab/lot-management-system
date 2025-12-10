@@ -33,6 +33,7 @@ from .masters_models import (
     CustomerItemDeliverySetting,
     DeliveryPlace,
     Product,
+    ProductMapping,
     ProductUomConversion,
     Supplier,
     Warehouse,
@@ -73,6 +74,7 @@ __all__ = [
     "ProductUomConversion",
     "CustomerItem",
     "CustomerItemDeliverySetting",
+    "ProductMapping",
     # Inventory
     "Lot",
     "LotOriginType",

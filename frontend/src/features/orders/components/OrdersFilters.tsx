@@ -9,22 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-import { ViewModeSelector } from "@/features/orders/components/ViewModeSelector";
 import type { useFilters } from "@/hooks/ui";
-
-type ViewMode = "delivery" | "flat" | "order";
 
 interface OrdersFiltersProps {
   filters: ReturnType<typeof useFilters>;
-  viewMode: ViewMode;
-  onViewModeChange: (mode: ViewMode) => void;
 }
 
 /**
- * 受注管理画面のフィルターUI
+ * 受注管理画面のフィルターUI（統合版）
  */
 // eslint-disable-next-line max-lines-per-function
-export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFiltersProps) {
+export function OrdersFilters({ filters }: OrdersFiltersProps) {
   return (
     <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex gap-2">
@@ -135,7 +130,6 @@ export function OrdersFilters({ filters, viewMode, onViewModeChange }: OrdersFil
               主担当の仕入先のみ
             </label>
           </div>
-          <ViewModeSelector viewMode={viewMode} onViewModeChange={onViewModeChange} />
           <Button
             variant="ghost"
             size="sm"

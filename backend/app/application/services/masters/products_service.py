@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import cast
 
 from fastapi import HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
 from app.infrastructure.persistence.models import Product
@@ -83,7 +83,12 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             )
 
         return cast(
-            list[Product], query.order_by(Product.maker_part_code).offset(skip).limit(limit).all()
+            list[Product],
+            query.options(joinedload(Product.product_suppliers))
+            .order_by(Product.maker_part_code)
+            .offset(skip)
+            .limit(limit)
+            .all(),
         )
 
     def get_all(self) -> list[Product]:  # type: ignore[override]

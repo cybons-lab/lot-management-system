@@ -27,15 +27,7 @@ export function ViewModeSelector({ viewMode, onViewModeChange }: ViewModeSelecto
         onClick={() => onViewModeChange("flat")}
         className="min-w-[120px]"
       >
-        1行単位
-      </Button>
-      <Button
-        variant={viewMode === "order" ? "default" : "ghost"}
-        size="sm"
-        onClick={() => onViewModeChange("order")}
-        className="min-w-[120px]"
-      >
-        受注単位
+        明細一覧
       </Button>
     </div>
   );
