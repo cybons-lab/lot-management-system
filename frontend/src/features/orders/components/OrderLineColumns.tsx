@@ -5,6 +5,8 @@
 
 import { Link } from "react-router-dom";
 
+import { AllocationStatusBadge } from "./display/AllocationStatusBadge";
+
 import { Button } from "@/components/ui";
 import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import type { Column } from "@/shared/components/data/DataTable";
@@ -156,27 +158,24 @@ export const orderLineColumns: Column<OrderLineRow>[] = [
   },
   {
     id: "status",
-    header: "ステータス",
+    header: "引当状況",
     cell: (row: OrderLineRow) => {
-      // Simple status badge based on order status
-      const statusMap: Record<string, { label: string; color: string }> = {
-        draft: { label: "未処理", color: "bg-gray-100 text-gray-800" },
-        allocated: { label: "引当済", color: "bg-blue-100 text-blue-800" },
-        shipped: { label: "出荷済", color: "bg-green-100 text-green-800" },
-        closed: { label: "完了", color: "bg-slate-100 text-slate-800" },
-        cancelled: { label: "キャンセル", color: "bg-red-100 text-red-800" },
-      };
-      const status = statusMap[row.order_status || "draft"] || {
-        label: row.order_status || "不明",
-        color: "bg-gray-100 text-gray-800",
-      };
-      return (
-        <span
-          className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${status.color}`}
-        >
-          {status.label}
-        </span>
-      );
+      // Calculate soft and hard allocated quantities
+      const lots = coerceAllocatedLots(row.allocated_lots);
+      const softAllocated = lots
+        .filter((a) => a.allocation_type === "soft")
+        .reduce(
+          (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+          0,
+        );
+      const hardAllocated = lots
+        .filter((a) => a.allocation_type === "hard")
+        .reduce(
+          (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+          0,
+        );
+
+      return <AllocationStatusBadge softAllocated={softAllocated} hardAllocated={hardAllocated} />;
     },
     width: "100px",
   },
