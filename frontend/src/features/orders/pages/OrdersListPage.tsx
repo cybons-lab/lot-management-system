@@ -1,10 +1,9 @@
 /**
  * OrdersListPage.tsx
  *
- * 受注一覧画面（リファクタリング版）
- * - カスタムフック化により80行以下に削減
- * - ビューコンポーネント分割
- * - UIコンポーネント分離
+ * 受注一覧画面（統合版）
+ * - 明細一覧として統一表示
+ * - 得意先・種別を含む全情報を1テーブルで表示
  */
 
 import { Plus, RefreshCw, Send } from "lucide-react";
@@ -13,11 +12,8 @@ import { useNavigate } from "react-router-dom";
 import { Badge, Button } from "@/components/ui";
 import { ErrorState } from "@/features/inventory/components/ErrorState";
 import { OrderCreateForm } from "@/features/orders/components/OrderCreateForm";
-import { OrdersDeliveryView } from "@/features/orders/components/OrdersDeliveryView";
 import { OrdersFilters } from "@/features/orders/components/OrdersFilters";
 import { OrdersFlatView } from "@/features/orders/components/OrdersFlatView";
-import { OrdersOrderView } from "@/features/orders/components/OrdersOrderView";
-import { useOrdersGrouping } from "@/features/orders/hooks/useOrdersGrouping";
 import { useOrdersListLogic } from "@/features/orders/hooks/useOrdersListLogic";
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { FormDialog } from "@/shared/components/form";
@@ -27,11 +23,6 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 export function OrdersListPage() {
   const navigate = useNavigate();
   const logic = useOrdersListLogic();
-
-  const groups = useOrdersGrouping(
-    logic.paginatedLines,
-    logic.viewMode === "flat" ? "delivery" : logic.viewMode,
-  );
 
   return (
     <PageContainer>
@@ -66,20 +57,12 @@ export function OrdersListPage() {
         }
       />
 
-      <OrdersFilters
-        filters={logic.filters}
-        viewMode={logic.viewMode}
-        onViewModeChange={logic.setViewMode}
-      />
+      <OrdersFilters filters={logic.filters} />
 
       <ErrorState error={logic.error} onRetry={logic.refetch} />
 
       <div className="space-y-4">
-        {logic.viewMode === "delivery" && <OrdersDeliveryView groups={groups} />}
-        {logic.viewMode === "order" && <OrdersOrderView groups={groups} />}
-        {logic.viewMode === "flat" && (
-          <OrdersFlatView lines={logic.paginatedLines} isLoading={logic.isLoading} />
-        )}
+        <OrdersFlatView lines={logic.paginatedLines} isLoading={logic.isLoading} />
 
         {!logic.error && logic.sortedLines.length > 0 && (
           <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">

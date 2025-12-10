@@ -26,6 +26,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -307,6 +308,63 @@ class CustomerItem(Base):
     customer: Mapped[Customer] = relationship("Customer", back_populates="customer_items")
     product: Mapped[Product] = relationship("Product", back_populates="customer_items")
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="customer_items")
+
+
+class ProductMapping(Base):
+    """Product mappings table (商品マスタ).
+
+    4者の関係を表現: 得意先 + 先方品番 + メーカー品番(製品) + 仕入先
+    DDL: product_mappings
+    Primary key: id (BIGSERIAL)
+    """
+
+    __tablename__ = "product_mappings"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    customer_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("customers.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    customer_part_code: Mapped[str] = mapped_column(String(100), nullable=False)
+    supplier_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("suppliers.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    product_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("products.id", ondelete="RESTRICT"),
+        nullable=False,
+    )
+    base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
+    pack_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    pack_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    special_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "customer_id",
+            "customer_part_code",
+            "supplier_id",
+            name="uq_product_mappings_cust_part_supp",
+        ),
+        Index("idx_product_mappings_customer", "customer_id"),
+        Index("idx_product_mappings_supplier", "supplier_id"),
+        Index("idx_product_mappings_product", "product_id"),
+    )
+
+    # Relationships
+    customer: Mapped[Customer] = relationship("Customer")
+    supplier: Mapped[Supplier] = relationship("Supplier")
+    product: Mapped[Product] = relationship("Product")
 
 
 class ProductUomConversion(Base):

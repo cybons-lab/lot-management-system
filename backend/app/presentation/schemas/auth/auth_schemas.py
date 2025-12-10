@@ -5,6 +5,13 @@ from pydantic import BaseModel, Field
 from app.presentation.schemas.common.base import BaseSchema
 
 
+class UserAssignmentSchema(BaseSchema):
+    """User-Supplier assignment schema."""
+
+    supplier_id: int
+    is_primary: bool
+
+
 class UserResponse(BaseSchema):
     """User response schema."""
 
@@ -12,6 +19,7 @@ class UserResponse(BaseSchema):
     username: str
     display_name: str
     roles: list[str] = Field(default_factory=list)
+    assignments: list[UserAssignmentSchema] = Field(default_factory=list)
 
 
 class TokenResponse(BaseModel):

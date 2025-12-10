@@ -99,11 +99,12 @@ describe("ProductForm", () => {
       internal_unit: "EA",
       external_unit: "CS",
       qty_per_internal_unit: 12,
+      is_active: false,
+      created_at: "2023-01-01",
+      updated_at: "2023-01-01",
+      supplier_ids: [],
       customer_part_no: "CP-123",
       maker_item_code: "MK-456",
-      is_active: false,
-      created_at: "2025-01-01",
-      updated_at: "2025-01-01",
     };
 
     render(<ProductForm product={product} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);

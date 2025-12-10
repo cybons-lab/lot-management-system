@@ -1834,7 +1834,7 @@ export interface paths {
      * List Supplier Products
      * @description Get supplier products (仕入先商品一覧).
      *
-     *     CustomerItem テーブルから supplier_id が NOT NULL のレコードを取得。
+     *     product_suppliers テーブルから製品-仕入先の関連を取得。
      */
     get: operations["list_supplier_products_api_masters_supplier_products_get"];
     put?: never;
@@ -6971,6 +6971,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Supplier Ids
+       * @default []
+       */
+      supplier_ids: number[];
     };
     /**
      * ProductSupplierImportRow
@@ -7454,6 +7459,16 @@ export interface components {
       factor?: number | string | null;
     };
     /**
+     * UserAssignmentSchema
+     * @description User-Supplier assignment schema.
+     */
+    UserAssignmentSchema: {
+      /** Supplier Id */
+      supplier_id: number;
+      /** Is Primary */
+      is_primary: boolean;
+    };
+    /**
      * UserCreate
      * @description Schema for creating a user.
      */
@@ -7866,6 +7881,8 @@ export interface components {
       display_name: string;
       /** Roles */
       roles?: string[];
+      /** Assignments */
+      assignments?: components["schemas"]["UserAssignmentSchema"][];
     };
     /**
      * UserResponse

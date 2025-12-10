@@ -128,14 +128,8 @@ class WithdrawalService:
         Raises:
             ValueError: ロットが見つからない、利用可能数量が不足している場合
         """
-        # ロットを取得（ロック付き）
-        lot = (
-            self.db.query(Lot)
-            .options(joinedload(Lot.product))
-            .filter(Lot.id == data.lot_id)
-            .with_for_update()
-            .first()
-        )
+        # ロットを取得（ロック付き）- joinedloadはFOR UPDATEと互換性がないため分離
+        lot = self.db.query(Lot).filter(Lot.id == data.lot_id).with_for_update().first()
 
         if not lot:
             raise ValueError(f"ロット（ID={data.lot_id}）が見つかりません")

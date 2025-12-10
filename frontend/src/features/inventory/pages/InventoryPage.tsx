@@ -1,4 +1,4 @@
-import { ArrowUpFromLine, Box, History, Home, List, Package, Plus, Truck } from "lucide-react";
+import { ArrowUpFromLine, Box, History, Home, List, Package, Truck } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -74,7 +74,7 @@ export function InventoryPage() {
     () =>
       products.map((p) => ({
         value: String(p.id),
-        label: `${p.product_code} - ${p.product_name}`,
+        label: `${p.product_code} - ${p.product_name} `,
       })),
     [products],
   );
@@ -83,7 +83,7 @@ export function InventoryPage() {
     () =>
       warehouses.map((w) => ({
         value: String(w.id),
-        label: `${w.warehouse_code} - ${w.warehouse_name}`,
+        label: `${w.warehouse_code} - ${w.warehouse_name} `,
       })),
     [warehouses],
   );
@@ -95,7 +95,7 @@ export function InventoryPage() {
       createDialog.close();
       refetchItems();
     },
-    onError: (error) => toast.error(`作成に失敗しました: ${error.message}`),
+    onError: (error) => toast.error(`作成に失敗しました: ${error.message} `),
   });
 
   const handleRefresh = () => {
@@ -126,19 +126,15 @@ export function InventoryPage() {
               出庫履歴
             </Button>
             <Button
-              size="sm"
               variant="outline"
+              size="sm"
               onClick={() => navigate("/inventory/withdrawals/new")}
             >
               <ArrowUpFromLine className="mr-2 h-4 w-4" />
               出庫登録
             </Button>
-            <Button size="sm" variant="outline" onClick={() => navigate("/inventory/adhoc/new")}>
+            <Button size="sm" onClick={() => navigate("/inventory/adhoc/new")}>
               <Package className="mr-2 h-4 w-4" />
-              アドホックロット作成
-            </Button>
-            <Button size="sm" onClick={createDialog.open}>
-              <Plus className="mr-2 h-4 w-4" />
               ロット新規登録
             </Button>
           </div>

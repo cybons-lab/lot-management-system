@@ -1,6 +1,6 @@
 """Supplier products router (仕入先商品ルーター).
 
-CustomerItem テーブルから supplier_id が NOT NULL のレコードを仕入先商品として扱う。
+product_suppliers テーブルから製品と仕入先の関連を取得。
 """
 
 from fastapi import APIRouter, Depends, Query
@@ -9,7 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
-from app.infrastructure.persistence.models.masters_models import CustomerItem, Product, Supplier
+from app.infrastructure.persistence.models.masters_models import Product, Supplier
+from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 
 
 router = APIRouter(prefix="/supplier-products", tags=["masters"])
@@ -24,40 +25,35 @@ def list_supplier_products(
 ):
     """Get supplier products (仕入先商品一覧).
 
-    CustomerItem テーブルから supplier_id が NOT NULL のレコードを取得。
+    product_suppliers テーブルから製品-仕入先の関連を取得。
     """
     query = (
         select(
-            CustomerItem.customer_id,
-            CustomerItem.external_product_code,
-            CustomerItem.product_id,
-            CustomerItem.supplier_id,
-            CustomerItem.pack_unit,
-            CustomerItem.pack_quantity,
+            ProductSupplier.product_id,
+            ProductSupplier.supplier_id,
+            ProductSupplier.is_primary,
+            ProductSupplier.lead_time_days,
             Product.maker_part_code,
             Product.product_name,
             Supplier.supplier_code,
             Supplier.supplier_name,
         )
-        .join(Product, CustomerItem.product_id == Product.id)
-        .join(Supplier, CustomerItem.supplier_id == Supplier.id)
-        .where(CustomerItem.supplier_id.isnot(None))
+        .join(Product, ProductSupplier.product_id == Product.id)
+        .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
     )
 
     if supplier_id is not None:
-        query = query.where(CustomerItem.supplier_id == supplier_id)
+        query = query.where(ProductSupplier.supplier_id == supplier_id)
 
     query = query.offset(skip).limit(limit)
     results = db.execute(query).all()
 
     return [
         {
-            "customer_id": r.customer_id,
-            "external_product_code": r.external_product_code,
             "product_id": r.product_id,
             "supplier_id": r.supplier_id,
-            "order_unit": r.pack_unit,
-            "order_lot_size": float(r.pack_quantity) if r.pack_quantity else None,
+            "is_primary": r.is_primary,
+            "lead_time_days": r.lead_time_days,
             "product_code": r.maker_part_code,
             "product_name": r.product_name,
             "supplier_code": r.supplier_code,
@@ -72,31 +68,26 @@ def export_supplier_products(format: str = "csv", db: Session = Depends(get_db))
     """Export supplier products."""
     query = (
         select(
-            CustomerItem.customer_id,
-            CustomerItem.external_product_code,
-            CustomerItem.product_id,
-            CustomerItem.supplier_id,
-            CustomerItem.pack_unit,
-            CustomerItem.pack_quantity,
+            ProductSupplier.product_id,
+            ProductSupplier.supplier_id,
+            ProductSupplier.is_primary,
+            ProductSupplier.lead_time_days,
             Product.maker_part_code,
             Product.product_name,
             Supplier.supplier_code,
             Supplier.supplier_name,
         )
-        .join(Product, CustomerItem.product_id == Product.id)
-        .join(Supplier, CustomerItem.supplier_id == Supplier.id)
-        .where(CustomerItem.supplier_id.isnot(None))
+        .join(Product, ProductSupplier.product_id == Product.id)
+        .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
     )
     results = db.execute(query).all()
 
     data = [
         {
-            "customer_id": r.customer_id,
-            "external_product_code": r.external_product_code,
             "product_id": r.product_id,
             "supplier_id": r.supplier_id,
-            "order_unit": r.pack_unit,
-            "order_lot_size": float(r.pack_quantity) if r.pack_quantity else None,
+            "is_primary": r.is_primary,
+            "lead_time_days": r.lead_time_days,
             "product_code": r.maker_part_code,
             "product_name": r.product_name,
             "supplier_code": r.supplier_code,

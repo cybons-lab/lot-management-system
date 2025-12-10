@@ -5568,7 +5568,7 @@
           "masters"
         ],
         "summary": "List Supplier Products",
-        "description": "Get supplier products (仕入先商品一覧).\n\nCustomerItem テーブルから supplier_id が NOT NULL のレコードを取得。",
+        "description": "Get supplier products (仕入先商品一覧).\n\nproduct_suppliers テーブルから製品-仕入先の関連を取得。",
         "operationId": "list_supplier_products_api_masters_supplier_products_get",
         "parameters": [
           {
@@ -16943,6 +16943,14 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "supplier_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Supplier Ids",
+            "default": []
           }
         },
         "type": "object",
@@ -18020,6 +18028,25 @@
         "title": "UomConversionUpdate",
         "description": "Schema for updating a UOM conversion."
       },
+      "UserAssignmentSchema": {
+        "properties": {
+          "supplier_id": {
+            "type": "integer",
+            "title": "Supplier Id"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "supplier_id",
+          "is_primary"
+        ],
+        "title": "UserAssignmentSchema",
+        "description": "User-Supplier assignment schema."
+      },
       "UserCreate": {
         "properties": {
           "username": {
@@ -18898,6 +18925,13 @@
             },
             "type": "array",
             "title": "Roles"
+          },
+          "assignments": {
+            "items": {
+              "$ref": "#/components/schemas/UserAssignmentSchema"
+            },
+            "type": "array",
+            "title": "Assignments"
           }
         },
         "type": "object",
