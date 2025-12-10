@@ -38,12 +38,12 @@ export interface WithdrawalCreateRequest {
   lot_id: number;
   quantity: number;
   withdrawal_type: WithdrawalType;
-  customer_id: number;
-  delivery_place_id: number;
+  customer_id?: number; // Required only for order_manual
+  delivery_place_id?: number; // Optional
   ship_date: string; // YYYY-MM-DD
   reason?: string;
   reference_number?: string;
-  withdrawn_by: number;
+  withdrawn_by?: number;
 }
 
 export interface WithdrawalResponse {
