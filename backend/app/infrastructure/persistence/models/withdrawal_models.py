@@ -62,23 +62,23 @@ class Withdrawal(Base):
     )
     quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     withdrawal_type: Mapped[WithdrawalType] = mapped_column(String(20), nullable=False)
-    customer_id: Mapped[int] = mapped_column(
+    customer_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("customers.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
     )
-    delivery_place_id: Mapped[int] = mapped_column(
+    delivery_place_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("delivery_places.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
     )
     ship_date: Mapped[date] = mapped_column(Date, nullable=False)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     reference_number: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    withdrawn_by: Mapped[int] = mapped_column(
+    withdrawn_by: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
     )
     withdrawn_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
