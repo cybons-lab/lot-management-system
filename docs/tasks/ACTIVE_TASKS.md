@@ -1,6 +1,6 @@
 # 現在のタスク一覧
 
-**最終更新:** 2025-12-08
+**最終更新:** 2025-12-10
 
 > **このドキュメントの目的**: 
 > - **未対応**または**進行中**のタスクのみを記載
@@ -84,20 +84,26 @@ backend/app/
 
 ---
 
-### P2-1: 引当ステータスの仮/実区別表示
+### ✅ P2-1: 引当ステータスの仮/実区別表示 - 実装完了
 
 **報告日:** 2025-12-09
+**完了日:** 2025-12-10
 
-**問題:**
-受注明細の「引当済」ステータスバッジが仮引当（SOFT）と実引当（HARD）を区別していない。
+**実装内容:**
+- `AllocationStatusBadge.tsx` コンポーネント追加
+- `OrderLineColumns.tsx` でステータス表示を更新
 
-**対応案:**
-- `pending` → 未引当
-- `仮引当` → SOFT引当あり（緑/オレンジ）
-- `確定済` → HARD引当のみ（緑）
-- `引当済(一部仮)` → HARD + SOFT混在
+| 条件 | バッジ | 色 |
+|------|--------|-----|
+| allocated=0 | 未引当 | グレー |
+| SOFT only | 仮引当 | オレンジ |
+| HARD only | 確定済 | 緑 |
+| SOFT + HARD | 一部仮引当 | 青 |
+
+**テスト:** `AllocationStatusBadge.test.tsx` (8 tests)
 
 ---
+
 
 ### P2-2: フォーキャスト編集後の画面更新問題
 
@@ -161,7 +167,7 @@ backend/app/
 | **TS Errors** | 0 | ✅ Clean |
 | **Mypy Errors** | 0 | ✅ Clean |
 | **Ruff Errors** | 0 | ✅ Clean |
-| **Backend Tests** | 283 passed, 0 failed | ✅ Clean |
+| **Backend Tests** | 321 passed, 0 failed | ✅ Clean |
 
 ### コード品質無視コメント
 
