@@ -37,6 +37,7 @@ import { OperationLogsPage } from "@/features/operation-logs/pages/OperationLogs
 import { ConfirmedLinesPage } from "@/features/orders/pages/ConfirmedLinesPage";
 import { OrderDetailPage } from "@/features/orders/pages/OrderDetailPage";
 import { OrdersListPage } from "@/features/orders/pages/OrdersListPage";
+import { ProductMappingsListPage } from "@/features/product-mappings";
 import { ProductsListPage, ProductDetailPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
@@ -95,6 +96,7 @@ function MasterRoutes() {
       <Route path={ROUTES.MASTERS.BULK_LOAD} element={<MastersBulkLoadPage />} />
       <Route path="/masters/primary-assignments" element={<PrimaryAssignmentsPage />} />
       <Route path="/delivery-places" element={<DeliveryPlacesListPage />} />
+      <Route path="/product-mappings" element={<ProductMappingsListPage />} />
 
       {/* Settings - Phase G-2 (Admin Only) */}
       <Route

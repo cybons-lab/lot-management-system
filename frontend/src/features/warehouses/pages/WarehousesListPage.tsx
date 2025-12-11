@@ -1,7 +1,7 @@
 /**
  * WarehousesListPage - 倉庫マスタ一覧
  */
-import { Plus, Upload, Warehouse as WarehouseIcon } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload, Warehouse as WarehouseIcon } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -15,8 +15,18 @@ import { warehouseColumns } from "./columns";
 import * as styles from "./styles";
 
 import { Button, Input } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
-import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -26,10 +36,12 @@ export function WarehousesListPage() {
   const [sort, setSort] = useState<SortConfig>({ column: "warehouse_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<Warehouse | null>(null);
 
-  const { useList, useCreate } = useWarehouses();
+  const { useList, useCreate, useDelete } = useWarehouses();
   const { data: warehouses = [], isLoading, isError, error, refetch } = useList();
   const { mutate: createWarehouse, isPending: isCreating } = useCreate();
+  const { mutate: deleteWarehouse, isPending: isDeleting } = useDelete();
 
   const filteredWarehouses = useMemo(() => {
     if (!searchQuery.trim()) return warehouses;
@@ -66,6 +78,42 @@ export function WarehousesListPage() {
     },
     [createWarehouse],
   );
+
+  const handleDelete = useCallback(() => {
+    if (!deletingItem) return;
+    deleteWarehouse(deletingItem.id, {
+      onSuccess: () => setDeletingItem(null),
+    });
+  }, [deletingItem, deleteWarehouse]);
+
+  const actionColumn: Column<Warehouse> = {
+    id: "actions",
+    header: "操作",
+    cell: (row) => (
+      <div className="flex gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/warehouses/${row.warehouse_code}`);
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDeletingItem(row);
+          }}
+        >
+          <Trash2 className="text-destructive h-4 w-4" />
+        </Button>
+      </div>
+    ),
+  };
 
   if (isError) {
     return (
@@ -126,7 +174,7 @@ export function WarehousesListPage() {
         </div>
         <DataTable
           data={sortedWarehouses}
-          columns={warehouseColumns}
+          columns={[...warehouseColumns, actionColumn]}
           sort={sort}
           onSortChange={setSort}
           getRowId={(row) => row.id}
@@ -150,6 +198,27 @@ export function WarehousesListPage() {
       </Dialog>
 
       <WarehouseBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+
+      <AlertDialog
+        open={!!deletingItem}
+        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>倉庫を削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingItem?.warehouse_name}（{deletingItem?.warehouse_code}）を削除します。
+              この操作は元に戻せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "削除中..." : "削除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

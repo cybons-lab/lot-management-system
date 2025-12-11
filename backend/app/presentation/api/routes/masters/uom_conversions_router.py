@@ -1,6 +1,6 @@
 """UOM conversions router (単位換算ルーター)."""
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -11,6 +11,7 @@ from app.infrastructure.persistence.models.masters_models import Product, Produc
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse
 from app.presentation.schemas.masters.uom_conversions_schema import (
     UomConversionBulkUpsertRequest,
+    UomConversionCreate,
     UomConversionResponse,
     UomConversionUpdate,
 )
@@ -86,6 +87,53 @@ def export_uom_conversions(format: str = "csv", db: Session = Depends(get_db)):
     if format == "xlsx":
         return ExportService.export_to_excel(data, "uom_conversions")
     return ExportService.export_to_csv(data, "uom_conversions")
+
+
+@router.post("", status_code=status.HTTP_201_CREATED)
+def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_db)):
+    """Create a new UOM conversion.
+
+    Args:
+        data: UOM conversion data (product_id, external_unit, factor)
+        db: Database session
+
+    Returns:
+        Created UOM conversion with product info
+    """
+    service = UomConversionService(db)
+
+    # Check if product exists
+    product = db.query(Product).filter(Product.id == data.product_id).first()
+    if not product:
+        raise HTTPException(status_code=400, detail="Product not found")
+
+    # Check for duplicate
+    existing = service.get_by_key(data.product_id, data.external_unit)
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="UOM conversion for this product and external unit already exists",
+        )
+
+    # Create new conversion
+    new_conversion = ProductUomConversion(
+        product_id=data.product_id,
+        external_unit=data.external_unit,
+        factor=data.factor,
+    )
+    db.add(new_conversion)
+    db.commit()
+    db.refresh(new_conversion)
+
+    return {
+        "conversion_id": new_conversion.conversion_id,
+        "product_id": new_conversion.product_id,
+        "external_unit": new_conversion.external_unit,
+        "conversion_factor": float(new_conversion.factor),
+        "remarks": None,
+        "product_code": product.maker_part_code,
+        "product_name": product.product_name,
+    }
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

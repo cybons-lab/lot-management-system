@@ -1,0 +1,138 @@
+"""Product mapping CRUD endpoints (商品マスタ)."""
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.infrastructure.persistence.models import Customer, Product, ProductMapping, Supplier
+from app.presentation.schemas.masters.masters_schema import (
+    ProductMappingCreate,
+    ProductMappingResponse,
+    ProductMappingUpdate,
+)
+
+
+router = APIRouter(prefix="/product-mappings", tags=["product-mappings"])
+
+
+@router.get("", response_model=list[ProductMappingResponse])
+def list_product_mappings(
+    skip: int = 0,
+    limit: int = 100,
+    customer_id: int | None = Query(None, description="Filter by customer ID"),
+    supplier_id: int | None = Query(None, description="Filter by supplier ID"),
+    product_id: int | None = Query(None, description="Filter by product ID"),
+    is_active: bool | None = Query(None, description="Filter by active status"),
+    db: Session = Depends(get_db),
+):
+    """Return product mappings, optionally filtered."""
+    query = db.query(ProductMapping)
+
+    if customer_id is not None:
+        query = query.filter(ProductMapping.customer_id == customer_id)
+    if supplier_id is not None:
+        query = query.filter(ProductMapping.supplier_id == supplier_id)
+    if product_id is not None:
+        query = query.filter(ProductMapping.product_id == product_id)
+    if is_active is not None:
+        query = query.filter(ProductMapping.is_active == is_active)
+
+    mappings = query.order_by(ProductMapping.id).offset(skip).limit(limit).all()
+    return mappings
+
+
+@router.get("/{mapping_id}", response_model=ProductMappingResponse)
+def get_product_mapping(mapping_id: int, db: Session = Depends(get_db)):
+    """Get a product mapping by ID."""
+    mapping = db.query(ProductMapping).filter(ProductMapping.id == mapping_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Product mapping not found")
+    return mapping
+
+
+@router.post("", response_model=ProductMappingResponse, status_code=status.HTTP_201_CREATED)
+def create_product_mapping(data: ProductMappingCreate, db: Session = Depends(get_db)):
+    """Create a new product mapping."""
+    # Check customer exists
+    customer = db.query(Customer).filter(Customer.id == data.customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=400, detail="Customer not found")
+
+    # Check supplier exists
+    supplier = db.query(Supplier).filter(Supplier.id == data.supplier_id).first()
+    if not supplier:
+        raise HTTPException(status_code=400, detail="Supplier not found")
+
+    # Check product exists
+    product = db.query(Product).filter(Product.id == data.product_id).first()
+    if not product:
+        raise HTTPException(status_code=400, detail="Product not found")
+
+    # Check unique constraint
+    existing = (
+        db.query(ProductMapping)
+        .filter(
+            ProductMapping.customer_id == data.customer_id,
+            ProductMapping.customer_part_code == data.customer_part_code,
+            ProductMapping.supplier_id == data.supplier_id,
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=400,
+            detail="Product mapping with same customer, part code, and supplier already exists",
+        )
+
+    mapping = ProductMapping(**data.model_dump())
+    db.add(mapping)
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.put("/{mapping_id}", response_model=ProductMappingResponse)
+def update_product_mapping(
+    mapping_id: int, data: ProductMappingUpdate, db: Session = Depends(get_db)
+):
+    """Update a product mapping."""
+    mapping = db.query(ProductMapping).filter(ProductMapping.id == mapping_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Product mapping not found")
+
+    update_data = data.model_dump(exclude_unset=True)
+
+    # Validate foreign keys if being updated
+    if "customer_id" in update_data and update_data["customer_id"]:
+        customer = db.query(Customer).filter(Customer.id == update_data["customer_id"]).first()
+        if not customer:
+            raise HTTPException(status_code=400, detail="Customer not found")
+
+    if "supplier_id" in update_data and update_data["supplier_id"]:
+        supplier = db.query(Supplier).filter(Supplier.id == update_data["supplier_id"]).first()
+        if not supplier:
+            raise HTTPException(status_code=400, detail="Supplier not found")
+
+    if "product_id" in update_data and update_data["product_id"]:
+        product = db.query(Product).filter(Product.id == update_data["product_id"]).first()
+        if not product:
+            raise HTTPException(status_code=400, detail="Product not found")
+
+    for field, value in update_data.items():
+        setattr(mapping, field, value)
+
+    db.commit()
+    db.refresh(mapping)
+    return mapping
+
+
+@router.delete("/{mapping_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_product_mapping(mapping_id: int, db: Session = Depends(get_db)):
+    """Delete a product mapping."""
+    mapping = db.query(ProductMapping).filter(ProductMapping.id == mapping_id).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Product mapping not found")
+
+    db.delete(mapping)
+    db.commit()
+    return None

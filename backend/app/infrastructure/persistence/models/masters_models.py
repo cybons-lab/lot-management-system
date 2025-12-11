@@ -168,7 +168,7 @@ class DeliveryPlace(Base):
     __tablename__ = "delivery_places"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    jiku_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    jiku_code: Mapped[str] = mapped_column(String(50), nullable=False, server_default="")
     delivery_place_code: Mapped[str] = mapped_column(String(50), nullable=False)
     delivery_place_name: Mapped[str] = mapped_column(String(200), nullable=False)
     customer_id: Mapped[int] = mapped_column(

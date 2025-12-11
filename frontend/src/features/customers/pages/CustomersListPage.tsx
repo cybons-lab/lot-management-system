@@ -3,7 +3,7 @@
  * 得意先マスタ一覧ページ
  */
 
-import { Plus, Upload, Users } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload, Users } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -16,9 +16,19 @@ import { customerColumns } from "./columns";
 import * as styles from "./styles";
 
 import { Button, Input } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
-import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
+import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -34,11 +44,13 @@ export function CustomersListPage() {
   const [sort, setSort] = useState<SortConfig>({ column: "customer_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<Customer | null>(null);
 
   // Data
-  const { useList, useCreate } = useCustomers();
+  const { useList, useCreate, useDelete } = useCustomers();
   const { data: customers = [], isLoading, isError, error, refetch } = useList();
   const { mutate: createCustomer, isPending: isCreating } = useCreate();
+  const { mutate: deleteCustomer, isPending: isDeleting } = useDelete();
 
   // フィルタリング
   const filteredCustomers = useMemo(() => {
@@ -86,6 +98,44 @@ export function CustomersListPage() {
     },
     [createCustomer],
   );
+
+  // 削除
+  const handleDelete = useCallback(() => {
+    if (!deletingItem) return;
+    deleteCustomer(deletingItem.id, {
+      onSuccess: () => setDeletingItem(null),
+    });
+  }, [deletingItem, deleteCustomer]);
+
+  // 操作カラム
+  const actionColumn: Column<Customer> = {
+    id: "actions",
+    header: "操作",
+    cell: (row) => (
+      <div className="flex gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/customers/${row.customer_code}`);
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDeletingItem(row);
+          }}
+        >
+          <Trash2 className="text-destructive h-4 w-4" />
+        </Button>
+      </div>
+    ),
+  };
 
   // 統計
   const stats = useMemo(
@@ -158,7 +208,7 @@ export function CustomersListPage() {
 
         <DataTable
           data={sortedCustomers}
-          columns={customerColumns}
+          columns={[...customerColumns, actionColumn]}
           sort={sort}
           onSortChange={setSort}
           getRowId={(row) => row.id}
@@ -188,6 +238,28 @@ export function CustomersListPage() {
         title="得意先マスタ インポート"
         group="customer"
       />
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog
+        open={!!deletingItem}
+        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>得意先を削除しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deletingItem?.customer_name}（{deletingItem?.customer_code}）を削除します。
+              この操作は元に戻せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "削除中..." : "削除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

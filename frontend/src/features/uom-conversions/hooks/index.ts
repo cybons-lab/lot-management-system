@@ -1,3 +1,3 @@
 export { useDeleteConversion } from "./useDeleteConversion";
 export { useInlineEdit } from "./useInlineEdit";
-export { useUomConversions } from "./useUomConversions";
+export { useCreateUomConversion, useUomConversions } from "./useUomConversions";

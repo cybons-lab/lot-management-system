@@ -1870,7 +1870,11 @@ export interface paths {
      */
     get: operations["list_supplier_products_api_masters_supplier_products_get"];
     put?: never;
-    post?: never;
+    /**
+     * Create Supplier Product
+     * @description Create a new supplier product.
+     */
+    post: operations["create_supplier_product_api_masters_supplier_products_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1897,6 +1901,34 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/supplier-products/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Supplier Product
+     * @description Get a supplier product by ID.
+     */
+    get: operations["get_supplier_product_api_masters_supplier_products__id__get"];
+    /**
+     * Update Supplier Product
+     * @description Update a supplier product.
+     */
+    put: operations["update_supplier_product_api_masters_supplier_products__id__put"];
+    post?: never;
+    /**
+     * Delete Supplier Product
+     * @description Delete a supplier product.
+     */
+    delete: operations["delete_supplier_product_api_masters_supplier_products__id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/uom-conversions": {
     parameters: {
       query?: never;
@@ -1910,7 +1942,18 @@ export interface paths {
      */
     get: operations["list_uom_conversions_api_masters_uom_conversions_get"];
     put?: never;
-    post?: never;
+    /**
+     * Create Uom Conversion
+     * @description Create a new UOM conversion.
+     *
+     *     Args:
+     *         data: UOM conversion data (product_id, external_unit, factor)
+     *         db: Database session
+     *
+     *     Returns:
+     *         Created UOM conversion with product info
+     */
+    post: operations["create_uom_conversion_api_masters_uom_conversions_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -2353,6 +2396,58 @@ export interface paths {
      */
     post: operations["get_shipment_text_api_masters_customer_item_delivery_settings_shipment_text_post"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/product-mappings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Product Mappings
+     * @description Return product mappings, optionally filtered.
+     */
+    get: operations["list_product_mappings_api_masters_product_mappings_get"];
+    put?: never;
+    /**
+     * Create Product Mapping
+     * @description Create a new product mapping.
+     */
+    post: operations["create_product_mapping_api_masters_product_mappings_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/product-mappings/{mapping_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Product Mapping
+     * @description Get a product mapping by ID.
+     */
+    get: operations["get_product_mapping_api_masters_product_mappings__mapping_id__get"];
+    /**
+     * Update Product Mapping
+     * @description Update a product mapping.
+     */
+    put: operations["update_product_mapping_api_masters_product_mappings__mapping_id__put"];
+    post?: never;
+    /**
+     * Delete Product Mapping
+     * @description Delete a product mapping.
+     */
+    delete: operations["delete_product_mapping_api_masters_product_mappings__mapping_id__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -4366,7 +4461,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
     };
     /**
@@ -4382,7 +4479,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
     };
     /**
@@ -4434,7 +4533,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
       /** Job Id */
       job_id: number;
@@ -4541,7 +4642,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -4583,7 +4686,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -4622,7 +4727,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: Record<string, never> | null;
+      rule_parameters?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -6390,12 +6497,16 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: Record<string, never> | null;
+      old_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: Record<string, never> | null;
+      new_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -6555,7 +6666,9 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: Record<string, never> | null;
+      changes?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -7011,6 +7124,146 @@ export interface components {
       is_active: boolean;
     };
     /**
+     * ProductMappingCreate
+     * @description Create product mapping request.
+     */
+    ProductMappingCreate: {
+      /**
+       * Customer Id
+       * @description 得意先ID
+       */
+      customer_id: number;
+      /**
+       * Customer Part Code
+       * @description 先方品番
+       */
+      customer_part_code: string;
+      /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
+      supplier_id: number;
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id: number;
+      /**
+       * Base Unit
+       * @description 基本単位
+       */
+      base_unit: string;
+      /**
+       * Pack Unit
+       * @description 梱包単位
+       */
+      pack_unit?: string | null;
+      /**
+       * Pack Quantity
+       * @description 梱包数量
+       */
+      pack_quantity?: number | null;
+      /**
+       * Special Instructions
+       * @description 特記事項
+       */
+      special_instructions?: string | null;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+    };
+    /**
+     * ProductMappingResponse
+     * @description Product mapping response (DDL: product_mappings).
+     */
+    ProductMappingResponse: {
+      /**
+       * Customer Id
+       * @description 得意先ID
+       */
+      customer_id: number;
+      /**
+       * Customer Part Code
+       * @description 先方品番
+       */
+      customer_part_code: string;
+      /**
+       * Supplier Id
+       * @description 仕入先ID
+       */
+      supplier_id: number;
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id: number;
+      /**
+       * Base Unit
+       * @description 基本単位
+       */
+      base_unit: string;
+      /**
+       * Pack Unit
+       * @description 梱包単位
+       */
+      pack_unit?: string | null;
+      /**
+       * Pack Quantity
+       * @description 梱包数量
+       */
+      pack_quantity?: number | null;
+      /**
+       * Special Instructions
+       * @description 特記事項
+       */
+      special_instructions?: string | null;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * ProductMappingUpdate
+     * @description Update product mapping request.
+     */
+    ProductMappingUpdate: {
+      /** Customer Id */
+      customer_id?: number | null;
+      /** Customer Part Code */
+      customer_part_code?: string | null;
+      /** Supplier Id */
+      supplier_id?: number | null;
+      /** Product Id */
+      product_id?: number | null;
+      /** Base Unit */
+      base_unit?: string | null;
+      /** Pack Unit */
+      pack_unit?: string | null;
+      /** Pack Quantity */
+      pack_quantity?: number | null;
+      /** Special Instructions */
+      special_instructions?: string | null;
+      /** Is Active */
+      is_active?: boolean | null;
+    };
+    /**
      * ProductOut
      * @description Product response model.
      */
@@ -7134,7 +7387,9 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: Record<string, never> | null;
+      data?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * RoleCreate
@@ -7396,6 +7651,70 @@ export interface components {
       products?: components["schemas"]["ProductSupplierImportRow"][];
     };
     /**
+     * SupplierProductCreate
+     * @description Create supplier product request.
+     */
+    SupplierProductCreate: {
+      /** Product Id */
+      product_id: number;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Is Primary
+       * @default false
+       */
+      is_primary: boolean;
+      /** Lead Time Days */
+      lead_time_days?: number | null;
+    };
+    /**
+     * SupplierProductResponse
+     * @description Supplier product response (DDL: product_suppliers).
+     */
+    SupplierProductResponse: {
+      /** Product Id */
+      product_id: number;
+      /** Supplier Id */
+      supplier_id: number;
+      /**
+       * Is Primary
+       * @default false
+       */
+      is_primary: boolean;
+      /** Lead Time Days */
+      lead_time_days?: number | null;
+      /** Id */
+      id: number;
+      /** Product Code */
+      product_code: string;
+      /** Product Name */
+      product_name: string;
+      /** Supplier Code */
+      supplier_code: string;
+      /** Supplier Name */
+      supplier_name: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * SupplierProductUpdate
+     * @description Update supplier product request.
+     */
+    SupplierProductUpdate: {
+      /** Is Primary */
+      is_primary?: boolean | null;
+      /** Lead Time Days */
+      lead_time_days?: number | null;
+    };
+    /**
      * SupplierResponse
      * @description Supplier response (DDL: suppliers).
      */
@@ -7483,6 +7802,27 @@ export interface components {
        * @description List of UOM conversion rows to upsert
        */
       rows: components["schemas"]["UomConversionBulkRow"][];
+    };
+    /**
+     * UomConversionCreate
+     * @description Schema for creating a UOM conversion.
+     */
+    UomConversionCreate: {
+      /**
+       * Product Id
+       * @description 製品ID
+       */
+      product_id: number;
+      /**
+       * External Unit
+       * @description 外部単位
+       */
+      external_unit: string;
+      /**
+       * Factor
+       * @description 換算係数
+       */
+      factor: number | string;
     };
     /**
      * UomConversionResponse
@@ -11338,6 +11678,39 @@ export interface operations {
       };
     };
   };
+  create_supplier_product_api_masters_supplier_products_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SupplierProductCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierProductResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   export_supplier_products_api_masters_supplier_products_export_download_get: {
     parameters: {
       query?: {
@@ -11369,6 +11742,101 @@ export interface operations {
       };
     };
   };
+  get_supplier_product_api_masters_supplier_products__id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierProductResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_supplier_product_api_masters_supplier_products__id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["SupplierProductUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierProductResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_supplier_product_api_masters_supplier_products__id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_uom_conversions_api_masters_uom_conversions_get: {
     parameters: {
       query?: {
@@ -11384,6 +11852,39 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_uom_conversion_api_masters_uom_conversions_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UomConversionCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
         headers: {
           [name: string]: unknown;
         };
@@ -12178,6 +12679,174 @@ export interface operations {
       };
     };
   };
+  list_product_mappings_api_masters_product_mappings_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+        /** @description Filter by customer ID */
+        customer_id?: number | null;
+        /** @description Filter by supplier ID */
+        supplier_id?: number | null;
+        /** @description Filter by product ID */
+        product_id?: number | null;
+        /** @description Filter by active status */
+        is_active?: boolean | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductMappingResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_product_mapping_api_masters_product_mappings_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductMappingCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductMappingResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_product_mapping_api_masters_product_mappings__mapping_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        mapping_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductMappingResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_product_mapping_api_masters_product_mappings__mapping_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        mapping_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProductMappingUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductMappingResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_product_mapping_api_masters_product_mappings__mapping_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        mapping_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   login_api_auth_login_post: {
     parameters: {
       query?: never;
@@ -12890,7 +13559,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
@@ -13194,7 +13865,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
@@ -13223,7 +13896,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
     };

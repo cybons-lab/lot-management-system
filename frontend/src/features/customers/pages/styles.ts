@@ -9,7 +9,7 @@ import { cva } from "class-variance-authority";
 // Layout
 // ============================================
 
-export const root = "space-y-6";
+export const root = "space-y-6 px-6 py-6 md:px-8";
 
 export const actionBar = "flex items-center justify-end gap-2";
 

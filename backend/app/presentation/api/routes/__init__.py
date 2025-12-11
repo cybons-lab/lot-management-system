@@ -43,6 +43,7 @@ from app.presentation.api.routes.masters import (
     customer_items_router,
     customers_router,
     delivery_places_router,
+    product_mappings_router,
     products_router,
     supplier_products_router,
     suppliers_router,
@@ -103,6 +104,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(warehouses_router, prefix=masters_prefix)
     app.include_router(customer_items_router, prefix=masters_prefix)
     app.include_router(customer_item_delivery_settings_router, prefix=masters_prefix)
+    app.include_router(product_mappings_router, prefix=masters_prefix)
 
     # Auth & User management
     app.include_router(auth_router, prefix=f"{prefix}/auth")
@@ -129,10 +131,11 @@ def register_all_routers(app: FastAPI) -> None:
 
 
 __all__ = [
-    # Masters (8)
+    # Masters (9)
     "customer_item_delivery_settings_router",
     "customer_items_router",
     "customers_router",
+    "product_mappings_router",
     "products_router",
     "supplier_products_router",
     "suppliers_router",

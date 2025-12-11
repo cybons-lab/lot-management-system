@@ -1,125 +1,328 @@
-import { Package, Building2, Upload } from "lucide-react";
-import { useState } from "react";
+/**
+ * SupplierProductsPage - 仕入先商品詳細・一覧
+ */
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
+import { Package, Plus, Pencil, Trash2, Upload } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
 
+import {
+  type SupplierProduct,
+  type SupplierProductCreate,
+  type SupplierProductUpdate,
+} from "../api";
 import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
+import { SupplierProductForm } from "../components/SupplierProductForm";
 import { useSupplierProducts } from "../hooks/useSupplierProducts";
 
-import { Button } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
+import { useProducts } from "@/features/products/hooks/useProducts";
+import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
+import type { Column, SortConfig } from "@/shared/components/data/DataTable";
+import { DataTable } from "@/shared/components/data/DataTable";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-interface SupplierProduct {
-  supplier_code: string;
-  supplier_name: string;
-  product_code: string;
-  product_name: string;
-  order_unit?: string;
-  order_lot_size?: number;
-}
-
-function SupplierProductTableHeader() {
-  return (
-    <thead className="bg-slate-50">
-      <tr>
-        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-          仕入先コード
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-          仕入先名
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-          製品コード
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-          製品名
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-          発注単位
-        </th>
-        <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-slate-700 uppercase">
-          発注ロットサイズ
-        </th>
-      </tr>
-    </thead>
-  );
-}
-
-function SupplierProductTableRow({ product }: { product: SupplierProduct }) {
-  return (
-    <tr className="hover:bg-slate-50">
-      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
-        <div className="flex items-center gap-2">
-          <Building2 className="h-4 w-4 text-orange-600" />
-          {product.supplier_code}
-        </div>
-      </td>
-      <td className="px-6 py-4 text-sm text-slate-900">{product.supplier_name}</td>
-      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-900">
-        <div className="flex items-center gap-2">
-          <Package className="h-4 w-4 text-green-600" />
-          {product.product_code}
-        </div>
-      </td>
-      <td className="px-6 py-4 text-sm text-slate-900">{product.product_name}</td>
-      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-600">
-        {product.order_unit || "-"}
-      </td>
-      <td className="px-6 py-4 text-sm whitespace-nowrap text-slate-600">
-        {product.order_lot_size || "-"}
-      </td>
-    </tr>
-  );
+function createColumns(
+  productMap: Map<number, { code: string; name: string }>,
+  supplierMap: Map<number, { code: string; name: string }>,
+): Column<SupplierProduct>[] {
+  return [
+    {
+      id: "supplier_id",
+      header: "仕入先",
+      cell: (row) => {
+        const s = supplierMap.get(row.supplier_id);
+        if (!s) return `ID: ${row.supplier_id}`;
+        return `${s.code} - ${s.name}`;
+      },
+      sortable: true,
+    },
+    {
+      id: "product_id",
+      header: "製品",
+      cell: (row) => {
+        const p = productMap.get(row.product_id);
+        if (!p) return `ID: ${row.product_id}`;
+        return `${p.code} - ${p.name}`;
+      },
+      sortable: true,
+    },
+    {
+      id: "is_primary",
+      header: "主要",
+      cell: (row) => (row.is_primary ? "★" : ""),
+      sortable: true,
+    },
+    {
+      id: "lead_time_days",
+      header: "ＬＴ(日)",
+      cell: (row) => (row.lead_time_days != null ? `${row.lead_time_days}日` : "-"),
+      sortable: true,
+    },
+  ];
 }
 
 export function SupplierProductsPage() {
-  const { useList } = useSupplierProducts();
-  const { data: products = [], isLoading, error, isError } = useList();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sort, setSort] = useState<SortConfig>({
+    column: "supplier_id",
+    direction: "asc",
+  });
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<SupplierProduct | null>(null);
+  const [deletingItem, setDeletingItem] = useState<SupplierProduct | null>(null);
 
-  if (isLoading) {
-    return <div className="p-6">読み込み中...</div>;
-  }
+  const { useList, useCreate, useUpdate, useDelete } = useSupplierProducts();
+  const { data: supplierProducts = [], isLoading, isError, error, refetch } = useList();
+
+  const { useList: useProductList } = useProducts();
+  const { data: products = [] } = useProductList();
+
+  const { useList: useSupplierList } = useSuppliers();
+  const { data: suppliers = [] } = useSupplierList();
+
+  const { mutate: create, isPending: isCreating } = useCreate();
+  const { mutate: update, isPending: isUpdating } = useUpdate();
+  const { mutate: remove, isPending: isDeleting } = useDelete();
+
+  // Maps for efficient lookups
+  const productMap = useMemo(() => {
+    return new Map(
+      products.map((p) => [p.id, { code: p.maker_item_code || "", name: p.product_name }]),
+    );
+  }, [products]);
+
+  const supplierMap = useMemo(() => {
+    return new Map(suppliers.map((s) => [s.id, { code: s.supplier_code, name: s.supplier_name }]));
+  }, [suppliers]);
+
+  const columns = useMemo(() => createColumns(productMap, supplierMap), [productMap, supplierMap]);
+
+  const filteredData = useMemo(() => {
+    if (!searchQuery.trim()) return supplierProducts;
+    const query = searchQuery.toLowerCase();
+    return supplierProducts.filter((sp) => {
+      // API currently returns joined fields (product_code, etc), but we can also search via maps
+      const p = productMap.get(sp.product_id);
+      const s = supplierMap.get(sp.supplier_id);
+      const targetString = `
+        ${sp.product_code || ""} ${sp.product_name || ""} 
+        ${sp.supplier_code || ""} ${sp.supplier_name || ""}
+        ${p?.code || ""} ${p?.name || ""}
+        ${s?.code || ""} ${s?.name || ""}
+      `.toLowerCase();
+      return targetString.includes(query);
+    });
+  }, [supplierProducts, searchQuery, productMap, supplierMap]);
+
+  const sortedData = useMemo(() => {
+    const sorted = [...filteredData];
+    sorted.sort((a, b) => {
+      // Helper to get sortable value
+      const getVal = (item: SupplierProduct, col: string) => {
+        if (col === "product_id") return productMap.get(item.product_id)?.code || "";
+        if (col === "supplier_id") return supplierMap.get(item.supplier_id)?.code || "";
+        return item[col as keyof SupplierProduct];
+      };
+
+      const aVal = getVal(a, sort.column);
+      const bVal = getVal(b, sort.column);
+
+      if (aVal == null || bVal == null) return 0;
+      if (aVal === bVal) return 0;
+
+      const cmp = aVal < bVal ? -1 : 1;
+      return sort.direction === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [filteredData, sort, productMap, supplierMap]);
+
+  const handleCreate = useCallback(
+    (data: SupplierProductCreate | SupplierProductUpdate) => {
+      // Cast to Create type since form returns union
+      create(data as SupplierProductCreate, { onSuccess: () => setIsCreateDialogOpen(false) });
+    },
+    [create],
+  );
+
+  const handleUpdate = useCallback(
+    (data: SupplierProductCreate | SupplierProductUpdate) => {
+      if (!editingItem) return;
+      // Cast to Update type
+      update(
+        { id: editingItem.id, data: data as SupplierProductUpdate },
+        { onSuccess: () => setEditingItem(null) },
+      );
+    },
+    [editingItem, update],
+  );
+
+  const handleDelete = useCallback(() => {
+    if (!deletingItem) return;
+    remove(deletingItem.id, { onSuccess: () => setDeletingItem(null) });
+  }, [deletingItem, remove]);
+
+  const actionColumn: Column<SupplierProduct> = {
+    id: "actions",
+    header: "操作",
+    cell: (row) => (
+      <div className="flex gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditingItem(row);
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation();
+            setDeletingItem(row);
+          }}
+        >
+          <Trash2 className="text-destructive h-4 w-4" />
+        </Button>
+      </div>
+    ),
+  };
 
   if (isError) {
     return (
-      <div className="p-6">
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <p className="text-lg font-semibold text-red-900">データの取得に失敗しました</p>
-          <p className="mt-2 text-sm text-red-700">
-            {error instanceof Error ? error.message : "不明なエラー"}
-          </p>
-        </div>
+      <div className="space-y-6 px-6 py-6 md:px-8">
+        <PageHeader title="仕入先商品" subtitle="仕入先別の製品情報を管理します" />
+        <QueryErrorFallback error={error} resetError={refetch} />
       </div>
     );
   }
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">仕入先商品</h1>
-          <p className="mt-1 text-sm text-slate-600">仕入先別の製品情報を管理します</p>
-        </div>
-        <div className="flex gap-2">
-          <SupplierProductExportButton size="sm" />
-          <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-            <Upload className="mr-2 h-4 w-4" />
-            インポート
-          </Button>
+      <PageHeader
+        title="仕入先商品"
+        subtitle="仕入先別の製品情報を管理します"
+        actions={
+          <div className="flex gap-2">
+            <SupplierProductExportButton size="sm" />
+            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
+              <Upload className="mr-2 h-4 w-4" />
+              インポート
+            </Button>
+            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              新規登録
+            </Button>
+          </div>
+        }
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-lg border bg-orange-50 p-4">
+          <div className="flex items-center gap-3">
+            <Package className="h-8 w-8 text-orange-600" />
+            <div>
+              <p className="text-sm text-orange-600">登録件数</p>
+              <p className="text-2xl font-bold text-orange-700">{supplierProducts.length}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full divide-y divide-slate-200">
-          <SupplierProductTableHeader />
-          <tbody className="divide-y divide-slate-200 bg-white">
-            {products.map((product, index) => (
-              <SupplierProductTableRow key={index} product={product} />
-            ))}
-          </tbody>
-        </table>
+      <div className="rounded-lg border bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <h3 className="font-semibold">仕入先商品一覧</h3>
+          <Input
+            type="search"
+            placeholder="製品・仕入先で検索..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-64"
+          />
+        </div>
+        <DataTable
+          data={sortedData}
+          columns={[...columns, actionColumn]}
+          sort={sort}
+          onSortChange={setSort}
+          getRowId={(row) => row.id}
+          isLoading={isLoading}
+          emptyMessage="仕入先商品が登録されていません"
+        />
       </div>
 
-      <div className="text-sm text-slate-600">{products.length} 件の仕入先商品</div>
+      {/* 新規登録ダイアログ */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>仕入先商品登録</DialogTitle>
+          </DialogHeader>
+          <SupplierProductForm
+            products={products}
+            suppliers={suppliers}
+            onSubmit={handleCreate}
+            onCancel={() => setIsCreateDialogOpen(false)}
+            isSubmitting={isCreating}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* 編集ダイアログ */}
+      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>仕入先商品編集</DialogTitle>
+          </DialogHeader>
+          {editingItem && (
+            <SupplierProductForm
+              initialData={editingItem}
+              products={products}
+              suppliers={suppliers}
+              onSubmit={handleUpdate}
+              onCancel={() => setEditingItem(null)}
+              isSubmitting={isUpdating}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 削除確認ダイアログ */}
+      <AlertDialog
+        open={!!deletingItem}
+        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>削除確認</AlertDialogTitle>
+            <AlertDialogDescription>
+              選択した仕入先商品設定を削除します。この操作は元に戻せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? "削除中..." : "削除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <MasterImportDialog
         open={isImportDialogOpen}
