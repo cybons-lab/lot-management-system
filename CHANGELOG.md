@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Python 3.12 → 3.13 へ更新
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
 - タスク管理ドキュメントを統一：`remaining_issues.adoc`を削除し、`ACTIVE_TASKS.md`に一元化
+- **[P1-7] 論理削除導入後の参照エラー修正**:
+  - `v_lot_details`, `v_order_line_details` に `COALESCE` 追加して `null` 参照を防止
+  - 各ビューに `*_deleted` フラグを追加（マスタ削除状態の可視化）
+  - `LotResponse` スキーマに削除フラグを追加
+  - フロントエンド `lot-columns.tsx` で削除済みマスタのフォールバック表示（"[削除済み...]"）に対応
+  - `create_views_v2.sql` に欠落していたビュー定義（`v_order_line_context` 等）を追加
+  - `VInventorySummary` のカラム不一致を修正
+  - Bulk Upsert での `valid_to` フィルタ追加
+  - サービス層（`soft_delete_utils.py`）での soft-delete 対応
 
 ## [2025-12-11]
 

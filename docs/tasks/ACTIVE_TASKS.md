@@ -11,40 +11,7 @@
 
 ## 🚧 残タスク（P1: 高優先度）
 
-### P1-7: 論理削除導入後の参照エラー修正
 
-**ステータス:** 完了 ✅
-
-**概要:**
-在庫管理、需要予測などの画面で500エラーが多発している。
-論理削除されたマスタ（Supplier, Product等）を参照している箇所（`joinedload`等）で、データ不整合や想定外の `null` が発生している可能性が高い。
-
-**完了した対応:**
-- ✅ v_lot_details, v_order_line_details に COALESCE 追加
-- ✅ VLotDetails, VOrderLineDetails に *_deleted フラグ追加
-- ✅ LotResponse スキーマに削除フラグ追加
-- ✅ フロントエンド lot-columns.tsx で削除済み表示対応
-- ✅ create_views_v2.sql に欠落ビュー定義を追加（v_order_line_context等）
-- ✅ VInventorySummary のカラム不一致修正
-- ✅ Bulk Upsert での valid_to フィルタ追加
-- ✅ サービス層でのsoft-delete対応（soft_delete_utils.py追加）
-- ✅ forecast_service, withdrawal_service, order_service の削除済みマスタ対応
-
----
-
-### P1-7a: ビュー定義の整合性修正
-
-**ステータス:** 完了 ✅
-
-**概要:**
-create_views_v2.sql に定義されていないビューがあり、マイグレーション実行時にエラーが発生する可能性があった。
-
-**完了した対応:**
-- ✅ create_views_v2.sql に欠落ビュー定義を追加（11個）
-- ✅ VInventorySummary ORM モデルを更新
-- ✅ bulk_upsert メソッドに valid_to フィルタを追加（4サービス）
-
----
 
 
 
