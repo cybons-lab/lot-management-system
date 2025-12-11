@@ -10,8 +10,8 @@ import { useProducts } from "../hooks/useProducts";
 
 import * as styles from "./styles";
 
+import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
 import { Button, Input, Checkbox } from "@/components/ui";
-import { Label } from "@/components/ui/form/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,12 +22,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
+import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { formatDate } from "@/shared/utils/date";
-import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
 
 const isInactive = (validTo?: string | null) => {
   if (!validTo) return false;

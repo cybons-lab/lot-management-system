@@ -14,11 +14,8 @@ import { CustomerItemsFilter } from "../components/CustomerItemsFilter";
 import { CustomerItemsTable } from "../components/CustomerItemsTable";
 import { useCustomerItemsPage } from "../hooks/useCustomerItemsPage";
 
-import { Button, Checkbox } from "@/components/ui";
-import { Label } from "@/components/ui/form/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
-import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import { Button, Checkbox } from "@/components/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +26,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
+import { Label } from "@/components/ui/form/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function CustomerItemsListPage() {
   const {

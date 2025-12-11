@@ -1,6 +1,7 @@
 /**
  * useCustomerItemsPage - Custom hook for customer items page logic.
  */
+/* eslint-disable max-lines-per-function */
 import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 

@@ -1,9 +1,9 @@
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
 /**
  * SupplierProductsPage - 仕入先商品詳細・一覧
  */
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
-import { Package, Plus, Pencil, Trash2, Upload, RotateCcw } from "lucide-react";
+import { Package, Plus, Upload } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 
 import {
@@ -13,10 +13,14 @@ import {
 } from "../api";
 import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
 import { SupplierProductForm } from "../components/SupplierProductForm";
+import {
+  SupplierProductsTable,
+  type SupplierProductWithValidTo,
+} from "../components/SupplierProductsTable";
 import { useSupplierProducts } from "../hooks/useSupplierProducts";
 
+import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
 import { Button, Input, Checkbox } from "@/components/ui";
-import { Label } from "@/components/ui/form/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,149 +29,15 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
+import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
-import type { Column, SortConfig } from "@/shared/components/data/DataTable";
-import { DataTable } from "@/shared/components/data/DataTable";
+import type { SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
-
-const isInactive = (validTo?: string | null) => {
-  if (!validTo) return false;
-  const today = new Date().toISOString().split("T")[0];
-  return validTo <= today;
-};
-
-// Extend SupplierProduct type locally if needed
-type SupplierProductWithValidTo = SupplierProduct & { valid_to?: string };
-
-function createColumns(
-  productMap: Map<number, { code: string; name: string }>,
-  supplierMap: Map<number, { code: string; name: string }>,
-  onRestore: (row: SupplierProductWithValidTo) => void,
-  onPermanentDelete: (row: SupplierProductWithValidTo) => void,
-  onEdit: (row: SupplierProductWithValidTo) => void,
-  onSoftDelete: (row: SupplierProductWithValidTo) => void,
-): Column<SupplierProductWithValidTo>[] {
-  return [
-    {
-      id: "supplier_id",
-      header: "仕入先",
-      cell: (row) => {
-        let content;
-        // Use API-returned data first, fallback to map lookup
-        if (row.supplier_code && row.supplier_name) {
-          content = `${row.supplier_code} - ${row.supplier_name}`;
-        } else {
-          const s = supplierMap.get(row.supplier_id);
-          content = s ? `${s.code} - ${s.name}` : `ID: ${row.supplier_id}`;
-        }
-
-        return (
-          <div>
-            <span>{content}</span>
-            {isInactive(row.valid_to) && (
-              <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-                削除済
-              </span>
-            )}
-          </div>
-        );
-      },
-      sortable: true,
-    },
-    {
-      id: "product_id",
-      header: "製品",
-      cell: (row) => {
-        // Use API-returned data first, fallback to map lookup
-        if (row.product_code && row.product_name) {
-          return `${row.product_code} - ${row.product_name}`;
-        }
-        const p = productMap.get(row.product_id);
-        if (!p) return `ID: ${row.product_id}`;
-        return `${p.code} - ${p.name}`;
-      },
-      sortable: true,
-    },
-    {
-      id: "is_primary",
-      header: "主要",
-      cell: (row) => (row.is_primary ? "★" : ""),
-      sortable: true,
-    },
-    {
-      id: "lead_time_days",
-      header: "ＬＴ(日)",
-      cell: (row) => (row.lead_time_days != null ? `${row.lead_time_days}日` : "-"),
-      sortable: true,
-    },
-    {
-      id: "actions",
-      header: "操作",
-      cell: (row) => {
-        const inactive = isInactive(row.valid_to);
-        if (inactive) {
-          return (
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRestore(row);
-                }}
-                title="復元"
-              >
-                <RotateCcw className="h-4 w-4 text-green-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPermanentDelete(row);
-                }}
-                title="完全に削除"
-              >
-                <Trash2 className="h-4 w-4 text-red-600" />
-              </Button>
-            </div>
-          );
-        }
-        return (
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(row);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSoftDelete(row);
-              }}
-            >
-              <Trash2 className="text-destructive h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
-}
 
 export function SupplierProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -179,12 +49,12 @@ export function SupplierProductsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
 
-  const [editingItem, setEditingItem] = useState<SupplierProduct | null>(null);
+  const [editingItem, setEditingItem] = useState<SupplierProductWithValidTo | null>(null);
 
   // Delete & Restore state
-  const [deletingItem, setDeletingItem] = useState<SupplierProduct | null>(null);
+  const [deletingItem, setDeletingItem] = useState<SupplierProductWithValidTo | null>(null);
   const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
-  const [restoringItem, setRestoringItem] = useState<SupplierProduct | null>(null);
+  const [restoringItem, setRestoringItem] = useState<SupplierProductWithValidTo | null>(null);
 
   const { useList, useCreate, useUpdate, useSoftDelete, usePermanentDelete, useRestore } =
     useSupplierProducts();
@@ -202,7 +72,7 @@ export function SupplierProductsPage() {
   const { mutate: permanentDelete, isPending: isPermanentDeleting } = usePermanentDelete();
   const { mutate: restore, isPending: isRestoring } = useRestore();
 
-  // Maps for efficient lookups
+  // Maps for efficient lookups (used for filtering and sorting)
   const productMap = useMemo(() => {
     return new Map(
       products.map((p) => [p.id, { code: p.maker_item_code || "", name: p.product_name }]),
@@ -213,32 +83,19 @@ export function SupplierProductsPage() {
     return new Map(suppliers.map((s) => [s.id, { code: s.supplier_code, name: s.supplier_name }]));
   }, [suppliers]);
 
-  const handleEditClick = (row: SupplierProduct) => {
+  const handleEditClick = (row: SupplierProductWithValidTo) => {
     setEditingItem(row);
   };
 
-  const handleDeleteClick = (row: SupplierProduct) => {
+  const handleDeleteClick = (row: SupplierProductWithValidTo) => {
     setDeletingItem(row);
     setDeleteMode("soft");
   };
 
-  const handlePermanentClick = (row: SupplierProduct) => {
+  const handlePermanentClick = (row: SupplierProductWithValidTo) => {
     setDeletingItem(row);
     setDeleteMode("permanent");
   };
-
-  const columns = useMemo(
-    () =>
-      createColumns(
-        productMap,
-        supplierMap,
-        (row) => setRestoringItem(row),
-        (row) => handlePermanentClick(row),
-        (row) => handleEditClick(row),
-        (row) => handleDeleteClick(row),
-      ),
-    [productMap, supplierMap],
-  );
 
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return supplierProducts;
@@ -391,14 +248,17 @@ export function SupplierProductsPage() {
             />
           </div>
         </div>
-        <DataTable
-          data={sortedData as SupplierProductWithValidTo[]}
-          columns={columns}
+        <SupplierProductsTable
+          products={products}
+          suppliers={suppliers}
+          supplierProducts={sortedData}
+          isLoading={isLoading}
           sort={sort}
           onSortChange={setSort}
-          getRowId={(row) => row.id}
-          isLoading={isLoading}
-          emptyMessage="仕入先商品が登録されていません"
+          onEdit={handleEditClick}
+          onSoftDelete={handleDeleteClick}
+          onPermanentDelete={handlePermanentClick}
+          onRestore={(row) => setRestoringItem(row)}
         />
       </div>
 
@@ -468,7 +328,7 @@ export function SupplierProductsPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>設定を復元しますか？</AlertDialogTitle>
+            <DialogTitle>設定を復元しますか？</DialogTitle>
             <AlertDialogDescription>
               {restoringItem?.product_name} - {restoringItem?.supplier_name}{" "}
               の関連を有効状態に戻します。

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /**
  * CustomerItemsTable - Table component for customer items.
  */

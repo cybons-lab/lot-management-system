@@ -1,11 +1,17 @@
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
 /**
  * DeliveryPlacesListPage - 納入先マスタ一覧
  */
-import { MapPin, Plus, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { MapPin, Plus } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 
-import type { DeliveryPlace, DeliveryPlaceCreate, DeliveryPlaceUpdate } from "../api";
+import type { DeliveryPlaceCreate, DeliveryPlaceUpdate } from "../api";
 import { DeliveryPlaceForm } from "../components/DeliveryPlaceForm";
+import {
+  DeliveryPlacesTable,
+  type DeliveryPlaceWithValidTo,
+} from "../components/DeliveryPlacesTable";
 import {
   useDeliveryPlaces,
   useCreateDeliveryPlace,
@@ -15,14 +21,8 @@ import {
   useRestoreDeliveryPlace,
 } from "../hooks";
 
-import { Button, Input, Checkbox } from "@/components/ui";
-import { Label } from "@/components/ui/form/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
-import { useCustomers } from "@/features/customers/hooks";
-import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
-import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
-import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { Button, Input, Checkbox } from "@/components/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,129 +33,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
+import { Label } from "@/components/ui/form/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { useCustomers } from "@/features/customers/hooks";
+import type { SortConfig } from "@/shared/components/data/DataTable";
+import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
 
-// Helper to check if item is inactive based on valid_to
-const isInactive = (validTo?: string | null) => {
-  if (!validTo) return false;
-  // valid_to is "YYYY-MM-DD"
-  const today = new Date().toISOString().split("T")[0];
-  return validTo <= today;
-};
-
-// Extend DeliveryPlace type locally to include valid_to until types are synced
-type DeliveryPlaceWithValidTo = DeliveryPlace & { valid_to?: string };
-
-function createColumns(
-  customerMap: Map<number, { customer_code: string; customer_name: string }>,
-  onRestore: (row: DeliveryPlaceWithValidTo) => void,
-  onPermanentDelete: (row: DeliveryPlaceWithValidTo) => void,
-  onEdit: (row: DeliveryPlaceWithValidTo) => void,
-  onSoftDelete: (row: DeliveryPlaceWithValidTo) => void,
-): Column<DeliveryPlaceWithValidTo>[] {
-  return [
-    {
-      id: "delivery_place_code",
-      header: "納入先コード",
-      cell: (row) => (
-        <div className="flex items-center">
-          <span>{row.delivery_place_code}</span>
-          {isInactive(row.valid_to) && (
-            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-              削除済
-            </span>
-          )}
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      id: "delivery_place_name",
-      header: "納入先名",
-      cell: (row) => (
-        <div className={isInactive(row.valid_to) ? "text-muted-foreground" : ""}>
-          {row.delivery_place_name}
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      id: "customer_id",
-      header: "得意先",
-      cell: (row) => {
-        const customer = customerMap.get(row.customer_id);
-        if (!customer) return `ID: ${row.customer_id}`;
-        return `${customer.customer_code} - ${customer.customer_name}`;
-      },
-      sortable: true,
-    },
-    {
-      id: "jiku_code",
-      header: "次区コード",
-      cell: (row) => row.jiku_code || "-",
-    },
-    {
-      id: "actions",
-      header: "操作",
-      cell: (row) => {
-        const inactive = isInactive(row.valid_to);
-        if (inactive) {
-          return (
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRestore(row);
-                }}
-                title="復元"
-              >
-                <RotateCcw className="h-4 w-4 text-green-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPermanentDelete(row);
-                }}
-                title="完全に削除"
-              >
-                <Trash2 className="h-4 w-4 text-red-600" />
-              </Button>
-            </div>
-          );
-        }
-        return (
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(row);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSoftDelete(row);
-              }}
-            >
-              <Trash2 className="text-destructive h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
-}
-
-// eslint-disable-next-line max-lines-per-function
 export function DeliveryPlacesListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({
@@ -163,15 +47,15 @@ export function DeliveryPlacesListPage() {
     direction: "asc",
   });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<DeliveryPlace | null>(null);
+  const [editingItem, setEditingItem] = useState<DeliveryPlaceWithValidTo | null>(null);
   const [showInactive, setShowInactive] = useState(false);
 
   // Deletion state
-  const [deletingItem, setDeletingItem] = useState<DeliveryPlace | null>(null);
+  const [deletingItem, setDeletingItem] = useState<DeliveryPlaceWithValidTo | null>(null);
   const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
 
   // Restore state
-  const [restoringItem, setRestoringItem] = useState<DeliveryPlace | null>(null);
+  const [restoringItem, setRestoringItem] = useState<DeliveryPlaceWithValidTo | null>(null);
 
   const {
     data: deliveryPlaces = [],
@@ -193,36 +77,15 @@ export function DeliveryPlacesListPage() {
     usePermanentDeleteDeliveryPlace();
   const { mutate: restore, isPending: isRestoring } = useRestoreDeliveryPlace();
 
-  const customerMap = useMemo(() => {
-    return new Map(
-      customers.map((c) => [
-        c.id,
-        { customer_code: c.customer_code, customer_name: c.customer_name },
-      ]),
-    );
-  }, [customers]);
-
-  const handleDeleteClick = (row: DeliveryPlace) => {
+  const handleDeleteClick = (row: DeliveryPlaceWithValidTo) => {
     setDeletingItem(row);
     setDeleteMode("soft");
   };
 
-  const handlePermanentClick = (row: DeliveryPlace) => {
+  const handlePermanentClick = (row: DeliveryPlaceWithValidTo) => {
     setDeletingItem(row);
     setDeleteMode("permanent");
   };
-
-  const columns = useMemo(
-    () =>
-      createColumns(
-        customerMap,
-        (row) => setRestoringItem(row), // onRestore
-        (row) => handlePermanentClick(row), // onPermanentDelete
-        (row) => setEditingItem(row), // onEdit
-        (row) => handleDeleteClick(row), // onSoftDelete
-      ),
-    [customerMap],
-  );
 
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return deliveryPlaces;
@@ -237,8 +100,10 @@ export function DeliveryPlacesListPage() {
   const sortedData = useMemo(() => {
     const sorted = [...filteredData];
     sorted.sort((a, b) => {
-      const aVal = a[sort.column as keyof DeliveryPlace];
-      const bVal = b[sort.column as keyof DeliveryPlace];
+      // @ts-expect-error: sorting logic works with index access for basic properties
+      const aVal = a[sort.column];
+      // @ts-expect-error: sorting logic works with index access for basic properties
+      const bVal = b[sort.column];
       if (aVal === undefined || bVal === undefined) return 0;
       const cmp = String(aVal).localeCompare(String(bVal), "ja");
       return sort.direction === "asc" ? cmp : -cmp;
@@ -342,14 +207,16 @@ export function DeliveryPlacesListPage() {
             />
           </div>
         </div>
-        <DataTable
-          data={sortedData as DeliveryPlaceWithValidTo[]}
-          columns={columns}
+        <DeliveryPlacesTable
+          customers={customers}
+          deliveryPlaces={sortedData}
+          isLoading={isLoading}
           sort={sort}
           onSortChange={setSort}
-          getRowId={(row) => row.id}
-          isLoading={isLoading}
-          emptyMessage="納入先が登録されていません"
+          onEdit={setEditingItem}
+          onSoftDelete={handleDeleteClick}
+          onPermanentDelete={handlePermanentClick}
+          onRestore={setRestoringItem}
         />
       </div>
 

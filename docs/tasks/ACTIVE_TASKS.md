@@ -33,6 +33,7 @@
 - ✅ `supplier_products` (仕入先商品): Soft Delete / Restore 対応完了
 - ✅ `customer_items` (得意先品番): Soft Delete / Restore 対応完了
 - ⬜ `customers`, `suppliers`, `products`, `warehouses` (未着手)
+- ✅ Master Data Pages Refactoring (Lint Fixes)
 
 ---
 
