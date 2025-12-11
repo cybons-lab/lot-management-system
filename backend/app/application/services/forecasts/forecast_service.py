@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy import and_
 from sqlalchemy.orm import Session, joinedload
@@ -202,7 +203,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         )
 
     def create_forecast(self, data: ForecastCreate) -> ForecastResponse:
-        """Create a new forecast entry."""
+        """Create a new forecast entry and automatically create provisional order."""
         db_forecast = ForecastCurrent(
             customer_id=data.customer_id,
             delivery_place_id=data.delivery_place_id,
@@ -217,10 +218,15 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         self.db.commit()
         self.db.refresh(db_forecast)
 
+        # Auto-create provisional order if quantity > 0
+        if data.forecast_quantity > 0:
+            self._create_provisional_order(db_forecast)
+            self.db.commit()
+
         return self.get_forecast_by_id(db_forecast.id)  # type: ignore[return-value]
 
     def update_forecast(self, forecast_id: int, data: ForecastUpdate) -> ForecastResponse | None:
-        """Update a forecast entry."""
+        """Update a forecast entry and sync provisional order."""
         db_forecast = (
             self.db.query(ForecastCurrent).filter(ForecastCurrent.id == forecast_id).first()
         )
@@ -228,6 +234,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         if not db_forecast:
             return None
 
+        old_quantity = db_forecast.forecast_quantity
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_forecast, key, value)
@@ -237,16 +244,29 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         self.db.commit()
         self.db.refresh(db_forecast)
 
+        # Sync provisional order if quantity changed
+        if "forecast_quantity" in update_data:
+            new_quantity = db_forecast.forecast_quantity
+            if new_quantity != old_quantity:
+                if new_quantity > 0:
+                    self._update_provisional_order(db_forecast)
+                else:
+                    self._delete_provisional_order(db_forecast)
+                self.db.commit()
+
         return self.get_forecast_by_id(forecast_id)
 
     def delete_forecast(self, forecast_id: int) -> bool:
-        """Delete a forecast entry."""
+        """Delete a forecast entry and its provisional order."""
         db_forecast = (
             self.db.query(ForecastCurrent).filter(ForecastCurrent.id == forecast_id).first()
         )
 
         if not db_forecast:
             return False
+
+        # Delete associated provisional order first
+        self._delete_provisional_order(db_forecast)
 
         self.db.delete(db_forecast)
         self.db.commit()
@@ -291,3 +311,102 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             )
             for h in history
         ]
+
+    # --- Provisional Order Management ---
+
+    def _build_forecast_reference(self, forecast: ForecastCurrent) -> str:
+        """Build forecast reference string for provisional orders.
+
+        Format: FC-{customer_id}-{delivery_place_id}-{product_id}-{forecast_date}
+        """
+        return f"FC-{forecast.customer_id}-{forecast.delivery_place_id}-{forecast.product_id}-{forecast.forecast_date}"
+
+    def _create_provisional_order(self, forecast: ForecastCurrent) -> None:
+        """Create a provisional order for the forecast.
+
+        Creates an Order and OrderLine with order_type='FORECAST_LINKED'.
+        """
+        forecast_ref = self._build_forecast_reference(forecast)
+
+        # Check if provisional order already exists
+        existing = (
+            self.db.query(OrderLine).filter(OrderLine.forecast_reference == forecast_ref).first()
+        )
+        if existing:
+            return  # Already exists, skip creation
+
+        # Create order header (or reuse existing for the same customer and date)
+        order = (
+            self.db.query(Order)
+            .filter(
+                and_(
+                    Order.customer_id == forecast.customer_id,
+                    Order.order_date == forecast.forecast_date,
+                    Order.status == "open",
+                )
+            )
+            .first()
+        )
+
+        if not order:
+            order = Order(
+                customer_id=forecast.customer_id,
+                order_date=forecast.forecast_date,
+                status="open",
+            )
+            self.db.add(order)
+            self.db.flush()
+
+        # Create provisional order line
+        order_line = OrderLine(
+            order_id=order.id,
+            product_id=forecast.product_id,
+            delivery_place_id=forecast.delivery_place_id,
+            delivery_date=forecast.forecast_date,
+            order_quantity=Decimal(str(forecast.forecast_quantity)),
+            unit=forecast.unit,
+            order_type="FORECAST_LINKED",
+            forecast_reference=forecast_ref,
+            status="pending",
+        )
+        self.db.add(order_line)
+
+    def _update_provisional_order(self, forecast: ForecastCurrent) -> None:
+        """Update or create provisional order for the forecast."""
+        forecast_ref = self._build_forecast_reference(forecast)
+
+        # Find existing provisional order
+        order_line = (
+            self.db.query(OrderLine).filter(OrderLine.forecast_reference == forecast_ref).first()
+        )
+
+        if order_line:
+            # Update quantity
+            order_line.order_quantity = Decimal(str(forecast.forecast_quantity))
+            order_line.updated_at = datetime.now()
+        else:
+            # Create new if not exists
+            self._create_provisional_order(forecast)
+
+    def _delete_provisional_order(self, forecast: ForecastCurrent) -> None:
+        """Delete provisional order associated with the forecast."""
+        forecast_ref = self._build_forecast_reference(forecast)
+
+        # Find and delete provisional order line
+        order_line = (
+            self.db.query(OrderLine).filter(OrderLine.forecast_reference == forecast_ref).first()
+        )
+
+        if order_line:
+            order_id = order_line.order_id
+            self.db.delete(order_line)
+            self.db.flush()
+
+            # Clean up empty orders (no remaining order lines)
+            remaining_lines = (
+                self.db.query(OrderLine).filter(OrderLine.order_id == order_id).count()
+            )
+            if remaining_lines == 0:
+                order = self.db.query(Order).filter(Order.id == order_id).first()
+                if order:
+                    self.db.delete(order)
