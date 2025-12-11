@@ -71,6 +71,21 @@ class CustomerItemImportRow(BaseSchema):
     special_instructions: str | None = Field(None, description="Special instructions")
 
 
+class ProductMappingImportRow(BaseSchema):
+    """Product mapping for import (4-party relationship: customer + part code + product + supplier)."""
+
+    customer_part_code: str = Field(..., description="Customer's part code")
+    maker_part_code: str = Field(
+        ..., description="Internal product code (products.maker_part_code)"
+    )
+    supplier_code: str = Field(..., description="Supplier code (required)")
+    base_unit: str = Field(..., description="Base unit")
+    pack_unit: str | None = Field(None, description="Pack unit")
+    pack_quantity: int | None = Field(None, ge=1, description="Pack quantity")
+    special_instructions: str | None = Field(None, description="Special instructions")
+    is_active: bool = Field(default=True, description="Is active")
+
+
 class CustomerImportRow(BaseSchema):
     """Customer with related data for import."""
 
@@ -81,6 +96,9 @@ class CustomerImportRow(BaseSchema):
     )
     items: list[CustomerItemImportRow] = Field(
         default_factory=list, description="Customer-specific product mappings"
+    )
+    product_mappings: list[ProductMappingImportRow] = Field(
+        default_factory=list, description="Product mappings (4-party relationship)"
     )
 
 

@@ -16,6 +16,7 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItem,
     DeliveryPlace,
     Product,
+    ProductMapping,
     Supplier,
 )
 from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
@@ -141,6 +142,7 @@ class MasterImportService:
         customer_result = ImportResultDetail(table_name="customers")
         dp_result = ImportResultDetail(table_name="delivery_places")
         ci_result = ImportResultDetail(table_name="customer_items")
+        pm_result = ImportResultDetail(table_name="product_mappings")
 
         for customer_row in data.customers:
             # Upsert customer
@@ -184,7 +186,28 @@ class MasterImportService:
                             f"Failed to create customer_item: {item_row.external_product_code}"
                         )
 
-        results.extend([customer_result, dp_result, ci_result])
+                # Process product mappings
+                for pm_row in customer_row.product_mappings:
+                    pm = self._upsert_product_mapping(
+                        customer.id,
+                        pm_row.customer_part_code,
+                        pm_row.maker_part_code,
+                        pm_row.supplier_code,
+                        pm_row.base_unit,
+                        pm_row.pack_unit,
+                        pm_row.pack_quantity,
+                        pm_row.special_instructions,
+                        pm_row.is_active,
+                    )
+                    if pm:
+                        pm_result.created += 1
+                    else:
+                        pm_result.failed += 1
+                        pm_result.errors.append(
+                            f"Failed to create product_mapping: {pm_row.customer_part_code}"
+                        )
+
+        results.extend([customer_result, dp_result, ci_result, pm_result])
         return results
 
     def _upsert_supplier(self, code: str, name: str) -> Supplier | None:
@@ -346,3 +369,63 @@ class MasterImportService:
             )
             self.db.add(ci)
             return ci
+
+    def _upsert_product_mapping(
+        self,
+        customer_id: int,
+        customer_part_code: str,
+        maker_part_code: str,
+        supplier_code: str,
+        base_unit: str,
+        pack_unit: str | None,
+        pack_quantity: int | None,
+        special_instructions: str | None,
+        is_active: bool,
+    ) -> ProductMapping | None:
+        """Upsert product mapping (4-party relationship)."""
+        # Find product by maker_part_code
+        product = self.db.query(Product).filter(Product.maker_part_code == maker_part_code).first()
+        if not product:
+            return None
+
+        # Find supplier (required for product_mappings)
+        supplier = self.db.query(Supplier).filter(Supplier.supplier_code == supplier_code).first()
+        if not supplier:
+            return None
+
+        # Check for existing mapping
+        existing = (
+            self.db.query(ProductMapping)
+            .filter(
+                ProductMapping.customer_id == customer_id,
+                ProductMapping.customer_part_code == customer_part_code,
+                ProductMapping.supplier_id == supplier.id,
+            )
+            .first()
+        )
+
+        if existing:
+            existing.product_id = product.id
+            existing.base_unit = base_unit
+            if pack_unit:
+                existing.pack_unit = pack_unit
+            if pack_quantity is not None:
+                existing.pack_quantity = pack_quantity
+            if special_instructions:
+                existing.special_instructions = special_instructions
+            existing.is_active = is_active
+            return existing
+        else:
+            pm = ProductMapping(
+                customer_id=customer_id,
+                customer_part_code=customer_part_code,
+                supplier_id=supplier.id,
+                product_id=product.id,
+                base_unit=base_unit,
+                pack_unit=pack_unit,
+                pack_quantity=pack_quantity,
+                special_instructions=special_instructions,
+                is_active=is_active,
+            )
+            self.db.add(pm)
+            return pm
