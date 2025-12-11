@@ -295,6 +295,45 @@ class BulkUpsertResponse(BaseSchema):
 
 
 # ============================================================
+# SupplierProduct (仕入先商品マスタ)
+# ============================================================
+
+
+class SupplierProductBase(BaseSchema):
+    """Base supplier product schema (DDL: product_suppliers)."""
+
+    product_id: int = Field(..., gt=0)
+    supplier_id: int = Field(..., gt=0)
+    is_primary: bool = Field(False)
+    lead_time_days: int | None = Field(None, ge=0)
+
+
+class SupplierProductCreate(SupplierProductBase):
+    """Create supplier product request."""
+
+    pass
+
+
+class SupplierProductUpdate(BaseSchema):
+    """Update supplier product request."""
+
+    is_primary: bool | None = None
+    lead_time_days: int | None = Field(None, ge=0)
+
+
+class SupplierProductResponse(SupplierProductBase):
+    """Supplier product response (DDL: product_suppliers)."""
+
+    id: int
+    product_code: str
+    product_name: str
+    supplier_code: str
+    supplier_name: str
+    created_at: datetime
+    updated_at: datetime
+
+
+# ============================================================
 # List Responses
 # ============================================================
 
@@ -311,3 +350,6 @@ SupplierListResponse = ListResponse[SupplierResponse]
 
 DeliveryPlaceListResponse = ListResponse[DeliveryPlaceResponse]
 """Delivery place list response."""
+
+SupplierProductListResponse = ListResponse[SupplierProductResponse]
+"""Supplier product list response."""

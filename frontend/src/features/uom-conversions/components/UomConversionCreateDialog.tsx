@@ -11,12 +11,14 @@ interface Product {
   id: number;
   product_name: string;
   product_code: string;
+  supplier_ids?: number[];
 }
 
 interface UomConversionCreateDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   products: Product[];
+  suppliers: Array<{ id: number; supplier_name: string; supplier_code: string }>;
   onSubmit: (data: UomConversionCreate) => void;
   isSubmitting: boolean;
 }
@@ -25,6 +27,7 @@ export function UomConversionCreateDialog({
   open,
   onOpenChange,
   products,
+  suppliers,
   onSubmit,
   isSubmitting,
 }: UomConversionCreateDialogProps) {
@@ -36,6 +39,7 @@ export function UomConversionCreateDialog({
         </DialogHeader>
         <UomConversionForm
           products={products}
+          suppliers={suppliers}
           onSubmit={onSubmit}
           onCancel={() => onOpenChange(false)}
           isSubmitting={isSubmitting}

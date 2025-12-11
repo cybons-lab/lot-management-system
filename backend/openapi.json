@@ -272,7 +272,8 @@
                   "type": "number"
                 },
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
                 }
               ],
               "description": "最小必要数量",
@@ -5804,6 +5805,46 @@
             }
           }
         }
+      },
+      "post": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Create Supplier Product",
+        "description": "Create a new supplier product.",
+        "operationId": "create_supplier_product_api_masters_supplier_products_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierProductCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierProductResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/masters/supplier-products/export/download": {
@@ -5834,6 +5875,134 @@
                 "schema": {}
               }
             }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/supplier-products/{id}": {
+      "get": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Get Supplier Product",
+        "description": "Get a supplier product by ID.",
+        "operationId": "get_supplier_product_api_masters_supplier_products__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierProductResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Update Supplier Product",
+        "description": "Update a supplier product.",
+        "operationId": "update_supplier_product_api_masters_supplier_products__id__put",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierProductUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierProductResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Delete Supplier Product",
+        "description": "Delete a supplier product.",
+        "operationId": "delete_supplier_product_api_masters_supplier_products__id__delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
           },
           "422": {
             "description": "Validation Error",
@@ -5899,6 +6068,44 @@
         ],
         "responses": {
           "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Create Uom Conversion",
+        "description": "Create a new UOM conversion.\n\nArgs:\n    data: UOM conversion data (product_id, external_unit, factor)\n    db: Database session\n\nReturns:\n    Created UOM conversion with product info",
+        "operationId": "create_uom_conversion_api_masters_uom_conversions_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UomConversionCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
             "description": "Successful Response",
             "content": {
               "application/json": {
@@ -7050,6 +7257,304 @@
         }
       }
     },
+    "/api/masters/product-mappings": {
+      "get": {
+        "tags": [
+          "product-mappings"
+        ],
+        "summary": "List Product Mappings",
+        "description": "Return product mappings, optionally filtered.",
+        "operationId": "list_product_mappings_api_masters_product_mappings_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by customer ID",
+              "title": "Customer Id"
+            },
+            "description": "Filter by customer ID"
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by supplier ID",
+              "title": "Supplier Id"
+            },
+            "description": "Filter by supplier ID"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by product ID",
+              "title": "Product Id"
+            },
+            "description": "Filter by product ID"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductMappingResponse"
+                  },
+                  "title": "Response List Product Mappings Api Masters Product Mappings Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "product-mappings"
+        ],
+        "summary": "Create Product Mapping",
+        "description": "Create a new product mapping.",
+        "operationId": "create_product_mapping_api_masters_product_mappings_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductMappingCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductMappingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/product-mappings/{mapping_id}": {
+      "get": {
+        "tags": [
+          "product-mappings"
+        ],
+        "summary": "Get Product Mapping",
+        "description": "Get a product mapping by ID.",
+        "operationId": "get_product_mapping_api_masters_product_mappings__mapping_id__get",
+        "parameters": [
+          {
+            "name": "mapping_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Mapping Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductMappingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "product-mappings"
+        ],
+        "summary": "Update Product Mapping",
+        "description": "Update a product mapping.",
+        "operationId": "update_product_mapping_api_masters_product_mappings__mapping_id__put",
+        "parameters": [
+          {
+            "name": "mapping_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Mapping Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductMappingUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductMappingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "product-mappings"
+        ],
+        "summary": "Delete Product Mapping",
+        "description": "Delete a product mapping.",
+        "operationId": "delete_product_mapping_api_masters_product_mappings__mapping_id__delete",
+        "parameters": [
+          {
+            "name": "mapping_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Mapping Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "summary": "Login",
@@ -8119,6 +8624,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Delete Assignment Api Assignments  Assignment Id  Delete"
                 }
               }
@@ -8554,6 +9060,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Download Template Api Admin Master Import Template Get"
                 }
               }
@@ -8586,6 +9093,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Download Order Template Api Admin Master Import Template Order Get"
                 }
@@ -10025,7 +10533,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Adjusted Quantity"
@@ -10061,6 +10570,7 @@
           },
           "adjusted_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Adjusted Quantity"
           },
           "reason": {
@@ -10425,6 +10935,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "allocation_type": {
@@ -10528,6 +11039,7 @@
           },
           "shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Shortage Quantity"
           },
           "related_order_line_ids": {
@@ -10677,14 +11189,17 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Shortage Quantity"
           }
         },
@@ -10705,14 +11220,17 @@
         "properties": {
           "total_forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Forecast Quantity"
           },
           "total_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Allocated Quantity"
           },
           "total_shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Shortage Quantity"
           },
           "per_key": {
@@ -10854,6 +11372,7 @@
           },
           "quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity",
             "description": "引当数量"
           },
@@ -11053,6 +11572,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -11077,6 +11597,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -11163,6 +11684,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -11331,6 +11853,7 @@
             "description": "ルール種別（allocation/expiry_warning/kanban/other）"
           },
           "rule_parameters": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
             "description": "ルールパラメータ（JSON）"
@@ -11392,6 +11915,7 @@
             "description": "ルール種別（allocation/expiry_warning/kanban/other）"
           },
           "rule_parameters": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
             "description": "ルールパラメータ（JSON）"
@@ -11459,6 +11983,7 @@
           "rule_parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -11497,14 +12022,17 @@
           },
           "current_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Current Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity",
             "description": "引当可能数量"
           },
@@ -13247,7 +13775,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Expected Quantity"
@@ -13304,6 +13833,7 @@
           },
           "expected_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Expected Quantity"
           },
           "expected_expiry_date": {
@@ -13349,11 +13879,13 @@
           },
           "order_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
             "description": "受注数量"
           },
           "already_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Already Allocated Quantity",
             "description": "既存引当数量",
             "default": "0"
@@ -13394,6 +13926,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity",
             "description": "引当数量"
           },
@@ -13498,7 +14031,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Forecast Quantity"
@@ -13610,7 +14144,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Forecast Quantity"
@@ -13793,6 +14328,7 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "unit": {
@@ -13956,6 +14492,7 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "unit": {
@@ -14072,7 +14609,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -14253,7 +14791,8 @@
           "total_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -14338,7 +14877,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Planned Quantity"
@@ -14396,6 +14936,7 @@
           },
           "planned_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Planned Quantity"
           },
           "unit": {
@@ -14545,7 +15086,8 @@
           "total_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -14638,14 +15180,17 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Available Quantity"
           },
           "lot_count": {
@@ -14692,6 +15237,7 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "lot_count": {
@@ -14731,6 +15277,7 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "lot_count": {
@@ -14770,23 +15317,28 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Available Quantity"
           },
           "soft_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Soft Allocated Quantity",
             "default": "0"
           },
           "hard_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Hard Allocated Quantity",
             "default": "0"
           },
@@ -14865,6 +15417,7 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           }
         },
@@ -15027,7 +15580,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Current Quantity",
@@ -15039,7 +15593,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Allocated Quantity",
@@ -15051,7 +15606,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Locked Quantity",
@@ -15183,7 +15739,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -15280,16 +15837,19 @@
           },
           "current_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Current Quantity",
             "default": "0"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
             "default": "0"
           },
           "locked_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Locked Quantity",
             "default": "0"
           },
@@ -15504,7 +16064,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -15518,7 +16079,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -15642,7 +16204,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               }
             ],
             "title": "Allocated Quantity"
@@ -15673,10 +16236,12 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity"
           },
           "product_id": {
@@ -15796,6 +16361,7 @@
           "old_values": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -15808,6 +16374,7 @@
           "new_values": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -16085,6 +16652,7 @@
           "changes": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -16187,7 +16755,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity"
@@ -16350,7 +16919,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               }
             ],
             "title": "Order Quantity",
@@ -16368,7 +16938,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               },
               {
                 "type": "null"
@@ -16609,6 +17180,7 @@
           },
           "order_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
             "description": "受注数量"
           },
@@ -16621,7 +17193,8 @@
           "converted_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               },
               {
                 "type": "null"
@@ -16887,6 +17460,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
             "description": "引当済数量",
             "default": "0"
@@ -17130,6 +17704,318 @@
         ],
         "title": "ProductCreate",
         "description": "Payload to create a product."
+      },
+      "ProductMappingCreate": {
+        "properties": {
+          "customer_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Customer Id",
+            "description": "得意先ID"
+          },
+          "customer_part_code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Customer Part Code",
+            "description": "先方品番"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Supplier Id",
+            "description": "仕入先ID"
+          },
+          "product_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Product Id",
+            "description": "製品ID"
+          },
+          "base_unit": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Base Unit",
+            "description": "基本単位"
+          },
+          "pack_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Unit",
+            "description": "梱包単位"
+          },
+          "pack_quantity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Quantity",
+            "description": "梱包数量"
+          },
+          "special_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Special Instructions",
+            "description": "特記事項"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "有効フラグ",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id",
+          "customer_part_code",
+          "supplier_id",
+          "product_id",
+          "base_unit"
+        ],
+        "title": "ProductMappingCreate",
+        "description": "Create product mapping request."
+      },
+      "ProductMappingResponse": {
+        "properties": {
+          "customer_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Customer Id",
+            "description": "得意先ID"
+          },
+          "customer_part_code": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Customer Part Code",
+            "description": "先方品番"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Supplier Id",
+            "description": "仕入先ID"
+          },
+          "product_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Product Id",
+            "description": "製品ID"
+          },
+          "base_unit": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Base Unit",
+            "description": "基本単位"
+          },
+          "pack_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Unit",
+            "description": "梱包単位"
+          },
+          "pack_quantity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Quantity",
+            "description": "梱包数量"
+          },
+          "special_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Special Instructions",
+            "description": "特記事項"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "有効フラグ",
+            "default": true
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_id",
+          "customer_part_code",
+          "supplier_id",
+          "product_id",
+          "base_unit",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProductMappingResponse",
+        "description": "Product mapping response (DDL: product_mappings)."
+      },
+      "ProductMappingUpdate": {
+        "properties": {
+          "customer_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id"
+          },
+          "customer_part_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Part Code"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "base_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Unit"
+          },
+          "pack_unit": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Unit"
+          },
+          "pack_quantity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Quantity"
+          },
+          "special_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Special Instructions"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          }
+        },
+        "type": "object",
+        "title": "ProductMappingUpdate",
+        "description": "Update product mapping request."
       },
       "ProductOut": {
         "properties": {
@@ -17469,6 +18355,7 @@
           "data": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -17822,7 +18709,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity Change"
@@ -17833,7 +18721,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity After"
@@ -17894,10 +18783,12 @@
           },
           "quantity_change": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity Change"
           },
           "quantity_after": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity After"
           },
           "reference_type": {
@@ -18050,6 +18941,149 @@
         "title": "SupplierImportRow",
         "description": "Supplier with related products for import."
       },
+      "SupplierProductCreate": {
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Product Id"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Supplier Id"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "default": false
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "supplier_id"
+        ],
+        "title": "SupplierProductCreate",
+        "description": "Create supplier product request."
+      },
+      "SupplierProductResponse": {
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Product Id"
+          },
+          "supplier_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Supplier Id"
+          },
+          "is_primary": {
+            "type": "boolean",
+            "title": "Is Primary",
+            "default": false
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "product_code": {
+            "type": "string",
+            "title": "Product Code"
+          },
+          "product_name": {
+            "type": "string",
+            "title": "Product Name"
+          },
+          "supplier_code": {
+            "type": "string",
+            "title": "Supplier Code"
+          },
+          "supplier_name": {
+            "type": "string",
+            "title": "Supplier Name"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "supplier_id",
+          "id",
+          "product_code",
+          "product_name",
+          "supplier_code",
+          "supplier_name",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SupplierProductResponse",
+        "description": "Supplier product response (DDL: product_suppliers)."
+      },
+      "SupplierProductUpdate": {
+        "properties": {
+          "is_primary": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Primary"
+          },
+          "lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lead Time Days"
+          }
+        },
+        "type": "object",
+        "title": "SupplierProductUpdate",
+        "description": "Update supplier product request."
+      },
       "SupplierResponse": {
         "properties": {
           "supplier_code": {
@@ -18167,7 +19201,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Factor",
@@ -18202,6 +19237,42 @@
         "title": "UomConversionBulkUpsertRequest",
         "description": "Bulk upsert request for UOM conversions."
       },
+      "UomConversionCreate": {
+        "properties": {
+          "product_id": {
+            "type": "integer",
+            "title": "Product Id",
+            "description": "製品ID"
+          },
+          "external_unit": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "External Unit",
+            "description": "外部単位"
+          },
+          "factor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Factor",
+            "description": "換算係数"
+          }
+        },
+        "type": "object",
+        "required": [
+          "product_id",
+          "external_unit",
+          "factor"
+        ],
+        "title": "UomConversionCreate",
+        "description": "Schema for creating a UOM conversion."
+      },
       "UomConversionResponse": {
         "properties": {
           "product_id": {
@@ -18217,6 +19288,7 @@
           },
           "factor": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Factor",
             "description": "換算係数"
           },
@@ -18255,7 +19327,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -18827,7 +19900,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity",
@@ -18975,6 +20049,7 @@
           },
           "quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity"
           },
           "withdrawal_type": {
