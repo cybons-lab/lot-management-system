@@ -253,6 +253,7 @@ class VInventorySummary(Base):
     在庫集計ビュー。
     - 商品・倉庫ごとの在庫総数、引当済数、有効在庫数を集計
     - InventoryServiceの集計処理をDB側に委譲
+    - 仮在庫（入荷予定）も含む
     """
 
     __tablename__ = "v_inventory_summary"
@@ -262,5 +263,8 @@ class VInventorySummary(Base):
     warehouse_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     total_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    locked_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     available_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    provisional_stock: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    available_with_provisional: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     last_updated: Mapped[datetime | None] = mapped_column(DateTime)
