@@ -1,5 +1,7 @@
 """UOM conversions router (単位換算ルーター)."""
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -25,6 +27,7 @@ def list_uom_conversions(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     product_id: int | None = Query(None),
+    include_inactive: bool = Query(False),
     db: Session = Depends(get_db),
 ):
     """Get UOM conversions (単位換算一覧)."""
@@ -35,10 +38,14 @@ def list_uom_conversions(
         ProductUomConversion.factor,
         Product.maker_part_code,
         Product.product_name,
+        ProductUomConversion.valid_to,
     ).join(Product, ProductUomConversion.product_id == Product.id)
 
     if product_id is not None:
         query = query.where(ProductUomConversion.product_id == product_id)
+
+    if not include_inactive:
+        query = query.where(ProductUomConversion.get_active_filter())
 
     query = query.offset(skip).limit(limit)
     results = db.execute(query).all()
@@ -52,6 +59,7 @@ def list_uom_conversions(
             "remarks": None,
             "product_code": r.maker_part_code,
             "product_name": r.product_name,
+            "valid_to": r.valid_to,
         }
         for r in results
     ]
@@ -133,6 +141,7 @@ def create_uom_conversion(data: UomConversionCreate, db: Session = Depends(get_d
         "remarks": None,
         "product_code": product.maker_part_code,
         "product_name": product.product_name,
+        "valid_to": new_conversion.valid_to,
     }
 
 
@@ -175,14 +184,50 @@ def update_uom_conversion(
 @router.delete("/{conversion_id}", status_code=204)
 def delete_uom_conversion(
     conversion_id: int,
+    end_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
     """Delete a UOM conversion by ID.
 
     Args:
         conversion_id: ID of the conversion to delete
+        end_date: Optional end date for validity
         db: Database session
     """
     service = UomConversionService(db)
-    service.delete_by_id(conversion_id)
+    service.delete_by_id(conversion_id, end_date)
     return None
+
+
+@router.delete("/{conversion_id}/permanent", status_code=204)
+def permanent_delete_uom_conversion(
+    conversion_id: int,
+    db: Session = Depends(get_db),
+):
+    """Permanently delete a UOM conversion by ID.
+
+    Args:
+        conversion_id: ID of the conversion to delete
+        db: Database session
+    """
+    service = UomConversionService(db)
+    service.permanent_delete_by_id(conversion_id)
+    return None
+
+
+@router.post("/{conversion_id}/restore", response_model=UomConversionResponse)
+def restore_uom_conversion(
+    conversion_id: int,
+    db: Session = Depends(get_db),
+):
+    """Restore a soft-deleted UOM conversion.
+
+    Args:
+        conversion_id: ID of the conversion to restore
+        db: Database session
+
+    Returns:
+        Restored UOM conversion
+    """
+    service = UomConversionService(db)
+    return service.restore_by_id(conversion_id)

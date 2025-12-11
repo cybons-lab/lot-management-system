@@ -1,8 +1,14 @@
-import { Package, Pencil, Trash2, Check, X } from "lucide-react";
+import { Package, Pencil, Trash2, Check, X, RotateCcw } from "lucide-react";
 
 import type { UomConversionResponse } from "../api";
 
 import { Button, Input } from "@/components/ui";
+
+const isInactive = (validTo?: string) => {
+  if (!validTo) return false;
+  const today = new Date().toISOString().split("T")[0];
+  return validTo <= today;
+};
 
 /** Inline edit cell for conversion factor */
 function FactorCell({
@@ -62,14 +68,46 @@ function ActionButtons({
   conversion,
   editingId,
   onStartEdit,
-  onDelete,
+  onSoftDelete,
+  onPermanentDelete,
+  onRestore,
 }: {
   conversion: UomConversionResponse;
   editingId: number | null;
   onStartEdit: (c: UomConversionResponse) => void;
-  onDelete: (c: UomConversionResponse) => void;
+  onSoftDelete: (c: UomConversionResponse) => void;
+  onPermanentDelete: (c: UomConversionResponse) => void;
+  onRestore: (c: UomConversionResponse) => void;
 }) {
   if (editingId === conversion.conversion_id) return null;
+
+  const inactive = isInactive(conversion.valid_to);
+
+  if (inactive) {
+    return (
+      <div className="flex items-center justify-end gap-1">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onRestore(conversion)}
+          title="復元"
+          className="h-8 w-8 p-0"
+        >
+          <RotateCcw className="h-4 w-4 text-green-600" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onPermanentDelete(conversion)}
+          title="完全に削除"
+          className="h-8 w-8 p-0"
+        >
+          <Trash2 className="h-4 w-4 text-red-600" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center justify-end gap-1">
       <Button
@@ -83,7 +121,7 @@ function ActionButtons({
       <Button
         size="sm"
         variant="ghost"
-        onClick={() => onDelete(conversion)}
+        onClick={() => onSoftDelete(conversion)}
         className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
       >
         <Trash2 className="h-4 w-4" />
@@ -102,7 +140,9 @@ interface TableProps {
   handleSaveEdit: (id: number) => void;
   handleCancelEdit: () => void;
   handleStartEdit: (c: UomConversionResponse) => void;
-  setDeleteTarget: (c: UomConversionResponse) => void;
+  handleSoftDelete: (c: UomConversionResponse) => void;
+  handlePermanentDelete: (c: UomConversionResponse) => void;
+  handleRestore: (c: UomConversionResponse) => void;
 }
 
 /** UOM conversions table component */
@@ -116,7 +156,9 @@ export function UomConversionsTable({
   handleSaveEdit,
   handleCancelEdit,
   handleStartEdit,
-  setDeleteTarget,
+  handleSoftDelete,
+  handlePermanentDelete,
+  handleRestore,
 }: TableProps) {
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -150,6 +192,11 @@ export function UomConversionsTable({
                 <div className="flex items-center gap-2">
                   <Package className="h-4 w-4 text-green-600" />
                   {conversion.product_code}
+                  {isInactive(conversion.valid_to) && (
+                    <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                      削除済
+                    </span>
+                  )}
                 </div>
               </td>
               <td className="px-6 py-4 text-sm text-slate-900">
@@ -184,7 +231,9 @@ export function UomConversionsTable({
                   conversion={conversion}
                   editingId={editingId}
                   onStartEdit={handleStartEdit}
-                  onDelete={setDeleteTarget}
+                  onSoftDelete={handleSoftDelete}
+                  onPermanentDelete={handlePermanentDelete}
+                  onRestore={handleRestore}
                 />
               </td>
             </tr>

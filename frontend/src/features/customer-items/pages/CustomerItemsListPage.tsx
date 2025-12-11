@@ -14,9 +14,21 @@ import { CustomerItemsFilter } from "../components/CustomerItemsFilter";
 import { CustomerItemsTable } from "../components/CustomerItemsTable";
 import { useCustomerItemsPage } from "../hooks/useCustomerItemsPage";
 
-import { Button } from "@/components/ui";
+import { Button, Checkbox } from "@/components/ui";
+import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
 
 export function CustomerItemsListPage() {
   const {
@@ -24,6 +36,8 @@ export function CustomerItemsListPage() {
     setSearchQuery,
     filters,
     setFilters,
+    showInactive,
+    setShowInactive,
     isCreateDialogOpen,
     setIsCreateDialogOpen,
     isImportDialogOpen,
@@ -31,18 +45,49 @@ export function CustomerItemsListPage() {
     filteredItems,
     isLoading,
     isCreating,
-    isDeleting,
     stats,
     handleCreate,
-    handleDelete,
+    handleSoftDelete,
+    handlePermanentDelete,
+    handleRestore,
+    isSoftDeleting,
+    isPermanentDeleting,
+    isRestoring,
   } = useCustomerItemsPage();
 
   const [selectedItem, setSelectedItem] = useState<CustomerItem | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
+  // Delete/Restore state
+  const [deletingItem, setDeletingItem] = useState<CustomerItem | null>(null);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
+  const [restoringItem, setRestoringItem] = useState<CustomerItem | null>(null);
+
   const handleRowClick = (item: CustomerItem) => {
     setSelectedItem(item);
     setIsDetailDialogOpen(true);
+  };
+
+  const executeSoftDelete = (endDate: string | null) => {
+    if (!deletingItem) return;
+    handleSoftDelete(
+      deletingItem.customer_id,
+      deletingItem.external_product_code,
+      endDate || undefined,
+    );
+    setDeletingItem(null);
+  };
+
+  const executePermanentDelete = () => {
+    if (!deletingItem) return;
+    handlePermanentDelete(deletingItem.customer_id, deletingItem.external_product_code);
+    setDeletingItem(null);
+  };
+
+  const executeRestore = () => {
+    if (!restoringItem) return;
+    handleRestore(restoringItem.customer_id, restoringItem.external_product_code);
+    setRestoringItem(null);
   };
 
   return (
@@ -78,18 +123,39 @@ export function CustomerItemsListPage() {
         </div>
       </div>
 
-      <CustomerItemsFilter
-        filters={filters}
-        setFilters={setFilters}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1">
+          <CustomerItemsFilter
+            filters={filters}
+            setFilters={setFilters}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+        </div>
+        <div className="flex items-center space-x-2 pt-4">
+          <Checkbox
+            id="show-inactive"
+            checked={showInactive}
+            onCheckedChange={(c) => setShowInactive(!!c)}
+          />
+          <Label htmlFor="show-inactive" className="cursor-pointer">
+            削除済みを表示
+          </Label>
+        </div>
+      </div>
 
       <CustomerItemsTable
         items={filteredItems}
         isLoading={isLoading}
-        isDeleting={isDeleting}
-        onDelete={handleDelete}
+        onSoftDelete={(item) => {
+          setDeletingItem(item);
+          setDeleteMode("soft");
+        }}
+        onPermanentDelete={(item) => {
+          setDeletingItem(item);
+          setDeleteMode("permanent");
+        }}
+        onRestore={setRestoringItem}
         onRowClick={handleRowClick}
       />
 
@@ -119,6 +185,53 @@ export function CustomerItemsListPage() {
         open={isDetailDialogOpen}
         onOpenChange={setIsDetailDialogOpen}
       />
+
+      {/* Delete/Restore Dialogs */}
+      <SoftDeleteDialog
+        open={!!deletingItem && deleteMode === "soft"}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        title="マッピングを無効化しますか？"
+        description={`${deletingItem?.customer_name} - ${deletingItem?.product_name} の設定を無効化します。`}
+        onConfirm={executeSoftDelete}
+        isPending={isSoftDeleting}
+        onSwitchToPermanent={() => setDeleteMode("permanent")}
+      />
+
+      <PermanentDeleteDialog
+        open={!!deletingItem && deleteMode === "permanent"}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setDeletingItem(null);
+            setDeleteMode("soft");
+          }
+        }}
+        onConfirm={executePermanentDelete}
+        isPending={isPermanentDeleting}
+        title="マッピングを完全に削除しますか？"
+        description={`${deletingItem?.customer_name} - ${deletingItem?.product_name} の設定を完全に削除します。この操作は取り消せません。`}
+        confirmationPhrase={deletingItem?.external_product_code || "delete"}
+      />
+
+      <AlertDialog
+        open={!!restoringItem}
+        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>設定を復元しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              {restoringItem?.customer_name} - {restoringItem?.product_name}{" "}
+              の設定を有効状態に戻します。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={executeRestore} disabled={isRestoring}>
+              {isRestoring ? "復元中..." : "復元"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

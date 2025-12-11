@@ -1,7 +1,7 @@
 # backend/app/services/masters/uom_conversion_service.py
 """UOM conversion service (単位換算マスタ管理)."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import cast
 
 from sqlalchemy.orm import Session
@@ -77,8 +77,30 @@ class UomConversionService(
         self.db.refresh(conversion)
         return conversion
 
-    def delete_by_id(self, conversion_id: int) -> None:
-        """Delete UOM conversion by ID.
+    def delete_by_id(self, conversion_id: int, end_date: date | None = None) -> None:
+        """Soft delete UOM conversion by ID.
+
+        Args:
+            conversion_id: ID of the conversion to delete
+            end_date: Optional end date for validity
+
+        Raises:
+            HTTPException: If conversion not found
+        """
+        from fastapi import HTTPException, status
+
+        conversion = self.get_by_id(conversion_id)
+        if not conversion:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"UOM conversion with ID {conversion_id} not found",
+            )
+
+        conversion.soft_delete(end_date)
+        self.db.commit()
+
+    def permanent_delete_by_id(self, conversion_id: int) -> None:
+        """Permanently delete UOM conversion by ID.
 
         Args:
             conversion_id: ID of the conversion to delete
@@ -98,8 +120,34 @@ class UomConversionService(
         self.db.delete(conversion)
         self.db.commit()
 
+    def restore_by_id(self, conversion_id: int) -> ProductUomConversion:
+        """Restore soft-deleted UOM conversion.
+
+        Args:
+            conversion_id: ID of the conversion to restore
+
+        Returns:
+            Restored conversion
+
+        Raises:
+            HTTPException: If conversion not found
+        """
+        from fastapi import HTTPException, status
+
+        conversion = self.get_by_id(conversion_id)
+        if not conversion:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"UOM conversion with ID {conversion_id} not found",
+            )
+
+        conversion.restore()
+        self.db.commit()
+        self.db.refresh(conversion)
+        return conversion
+
     def bulk_upsert(self, rows: list[UomConversionBulkRow]) -> BulkUpsertResponse:
-        """Bulk upsert UOM conversions by composite key (product_code,
+        """Bulk upsert UOM conversions by composite key (product_id,
         external_unit).
 
         Args:

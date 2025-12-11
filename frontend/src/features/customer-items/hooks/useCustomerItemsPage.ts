@@ -5,7 +5,13 @@ import { useState, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 
 import type { CreateCustomerItemRequest } from "../api";
-import { useCustomerItems, useCreateCustomerItem, useDeleteCustomerItem } from "../hooks";
+import {
+  useCustomerItems,
+  useCreateCustomerItem,
+  useDeleteCustomerItem,
+  usePermanentDeleteCustomerItem,
+  useRestoreCustomerItem,
+} from "../hooks";
 
 function useCustomerItemFilters() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -13,16 +19,26 @@ function useCustomerItemFilters() {
     customer_id: "",
     product_id: "",
   });
+  const [showInactive, setShowInactive] = useState(false);
 
   const queryParams = useMemo(
     () => ({
       customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
       product_id: filters.product_id ? Number(filters.product_id) : undefined,
+      include_inactive: showInactive,
     }),
-    [filters.customer_id, filters.product_id],
+    [filters.customer_id, filters.product_id, showInactive],
   );
 
-  return { searchQuery, setSearchQuery, filters, setFilters, queryParams };
+  return {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilters,
+    showInactive,
+    setShowInactive,
+    queryParams,
+  };
 }
 
 function useCustomerItemDialogs() {
@@ -33,14 +49,26 @@ function useCustomerItemDialogs() {
 }
 
 export function useCustomerItemsPage() {
-  const { searchQuery, setSearchQuery, filters, setFilters, queryParams } =
-    useCustomerItemFilters();
+  const {
+    searchQuery,
+    setSearchQuery,
+    filters,
+    setFilters,
+    showInactive,
+    setShowInactive,
+    queryParams,
+  } = useCustomerItemFilters();
+
   const { isCreateDialogOpen, setIsCreateDialogOpen, isImportDialogOpen, setIsImportDialogOpen } =
     useCustomerItemDialogs();
 
   const { data: customerItems = [], isLoading } = useCustomerItems(queryParams);
   const { mutate: createCustomerItem, isPending: isCreating } = useCreateCustomerItem();
-  const { mutate: deleteCustomerItem, isPending: isDeleting } = useDeleteCustomerItem();
+
+  const { mutate: softDelete, isPending: isSoftDeleting } = useDeleteCustomerItem();
+  const { mutate: permanentDelete, isPending: isPermanentDeleting } =
+    usePermanentDeleteCustomerItem();
+  const { mutate: restore, isPending: isRestoring } = useRestoreCustomerItem();
 
   // Filtering
   const filteredItems = useMemo(() => {
@@ -71,26 +99,46 @@ export function useCustomerItemsPage() {
     [createCustomerItem, setIsCreateDialogOpen],
   );
 
-  // Delete handler
-  const handleDelete = useCallback(
-    (customerId: number, externalProductCode: string) => {
-      if (!confirm("この得意先品番マッピングを削除してもよろしいですか？")) {
-        return;
-      }
-
-      deleteCustomerItem(
-        { customerId, externalProductCode },
+  // Soft Delete Handler
+  const handleSoftDelete = useCallback(
+    (customerId: number, externalProductCode: string, endDate?: string) => {
+      softDelete(
+        { customerId, externalProductCode, endDate },
         {
-          onSuccess: () => {
-            toast.success("得意先品番マッピングを削除しました");
-          },
-          onError: () => {
-            toast.error("削除に失敗しました");
-          },
+          onSuccess: () => toast.success("得意先品番マッピングを削除しました"),
+          onError: () => toast.error("削除に失敗しました"),
         },
       );
     },
-    [deleteCustomerItem],
+    [softDelete],
+  );
+
+  // Permanent Delete Handler
+  const handlePermanentDelete = useCallback(
+    (customerId: number, externalProductCode: string) => {
+      permanentDelete(
+        { customerId, externalProductCode },
+        {
+          onSuccess: () => toast.success("完全に削除しました"),
+          onError: () => toast.error("完全削除に失敗しました"),
+        },
+      );
+    },
+    [permanentDelete],
+  );
+
+  // Restore Handler
+  const handleRestore = useCallback(
+    (customerId: number, externalProductCode: string) => {
+      restore(
+        { customerId, externalProductCode },
+        {
+          onSuccess: () => toast.success("復元しました"),
+          onError: () => toast.error("復元に失敗しました"),
+        },
+      );
+    },
+    [restore],
   );
 
   // Stats
@@ -108,6 +156,8 @@ export function useCustomerItemsPage() {
     setSearchQuery,
     filters,
     setFilters,
+    showInactive,
+    setShowInactive,
     isCreateDialogOpen,
     setIsCreateDialogOpen,
     isImportDialogOpen,
@@ -116,10 +166,14 @@ export function useCustomerItemsPage() {
     filteredItems,
     isLoading,
     isCreating,
-    isDeleting,
+    isSoftDeleting,
+    isPermanentDeleting,
+    isRestoring,
     stats,
     // Handlers
     handleCreate,
-    handleDelete,
+    handleSoftDelete,
+    handlePermanentDelete,
+    handleRestore,
   };
 }

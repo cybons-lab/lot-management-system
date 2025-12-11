@@ -6223,6 +6223,16 @@
               ],
               "title": "Supplier Id"
             }
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Inactive"
+            }
           }
         ],
         "responses": {
@@ -6427,8 +6437,61 @@
           "masters"
         ],
         "summary": "Delete Supplier Product",
-        "description": "Delete a supplier product.",
+        "description": "Soft delete a supplier product (mark as inactive).",
         "operationId": "delete_supplier_product_api_masters_supplier_products__id__delete",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/supplier-products/{id}/permanent": {
+      "delete": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Permanent Delete Supplier Product",
+        "description": "Permanently delete a supplier product.",
+        "operationId": "permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete",
         "parameters": [
           {
             "name": "id",
@@ -6443,6 +6506,49 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/supplier-products/{id}/restore": {
+      "post": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Restore Supplier Product",
+        "description": "Restore a soft-deleted supplier product.",
+        "operationId": "restore_supplier_product_api_masters_supplier_products__id__restore_post",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierProductResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -6503,6 +6609,16 @@
                 }
               ],
               "title": "Product Id"
+            }
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "title": "Include Inactive"
             }
           }
         ],
@@ -6707,8 +6823,61 @@
           "masters"
         ],
         "summary": "Delete Uom Conversion",
-        "description": "Delete a UOM conversion by ID.\n\nArgs:\n    conversion_id: ID of the conversion to delete\n    db: Database session",
+        "description": "Delete a UOM conversion by ID.\n\nArgs:\n    conversion_id: ID of the conversion to delete\n    end_date: Optional end date for validity\n    db: Database session",
         "operationId": "delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete",
+        "parameters": [
+          {
+            "name": "conversion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Conversion Id"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/uom-conversions/{conversion_id}/permanent": {
+      "delete": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Permanent Delete Uom Conversion",
+        "description": "Permanently delete a UOM conversion by ID.\n\nArgs:\n    conversion_id: ID of the conversion to delete\n    db: Database session",
+        "operationId": "permanent_delete_uom_conversion_api_masters_uom_conversions__conversion_id__permanent_delete",
         "parameters": [
           {
             "name": "conversion_id",
@@ -6723,6 +6892,49 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/uom-conversions/{conversion_id}/restore": {
+      "post": {
+        "tags": [
+          "masters"
+        ],
+        "summary": "Restore Uom Conversion",
+        "description": "Restore a soft-deleted UOM conversion.\n\nArgs:\n    conversion_id: ID of the conversion to restore\n    db: Database session\n\nReturns:\n    Restored UOM conversion",
+        "operationId": "restore_uom_conversion_api_masters_uom_conversions__conversion_id__restore_post",
+        "parameters": [
+          {
+            "name": "conversion_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Conversion Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UomConversionResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -7215,7 +7427,7 @@
           "customer-items"
         ],
         "summary": "List Customer Items",
-        "description": "得意先品番マッピング一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    product_id: 製品IDでフィルタ（オプション）\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
+        "description": "得意先品番マッピング一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ（オプション）\n    product_id: 製品IDでフィルタ（オプション）\n    include_inactive: 無効なマッピングを含めるか\n    db: データベースセッション\n\nReturns:\n    得意先品番マッピングのリスト",
         "operationId": "list_customer_items_api_masters_customer_items_get",
         "parameters": [
           {
@@ -7276,6 +7488,18 @@
               "title": "Product Id"
             },
             "description": "製品IDでフィルタ"
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "無効なマッピングを含めるか",
+              "default": false,
+              "title": "Include Inactive"
+            },
+            "description": "無効なマッピングを含めるか"
           }
         ],
         "responses": {
@@ -7459,8 +7683,70 @@
           "customer-items"
         ],
         "summary": "Delete Customer Item",
-        "description": "得意先品番マッピング削除.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "description": "得意先品番マッピング削除.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    end_date: 無効化日（指定がない場合は即時）\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
         "operationId": "delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Customer Id"
+            }
+          },
+          {
+            "name": "external_product_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "External Product Code"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End Date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/customer-items/{customer_id}/{external_product_code}/permanent": {
+      "delete": {
+        "tags": [
+          "customer-items"
+        ],
+        "summary": "Permanent Delete Customer Item",
+        "description": "得意先品番マッピング完全削除.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "operationId": "permanent_delete_customer_item_api_masters_customer_items__customer_id___external_product_code__permanent_delete",
         "parameters": [
           {
             "name": "customer_id",
@@ -7484,6 +7770,58 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/customer-items/{customer_id}/{external_product_code}/restore": {
+      "post": {
+        "tags": [
+          "customer-items"
+        ],
+        "summary": "Restore Customer Item",
+        "description": "得意先品番マッピング復元.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    db: データベースセッション\n\nReturns:\n    復元された品番マッピング\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "operationId": "restore_customer_item_api_masters_customer_items__customer_id___external_product_code__restore_post",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Customer Id"
+            }
+          },
+          {
+            "name": "external_product_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "External Product Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerItemResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -13853,6 +14191,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
           }
         },
         "type": "object",
@@ -13865,7 +14208,8 @@
           "customer_name",
           "product_name",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "CustomerItemResponse",
         "description": "Schema for customer item response with enriched data."
@@ -19975,6 +20319,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
           }
         },
         "type": "object",
@@ -19984,7 +20333,8 @@
           "factor",
           "conversion_id",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "UomConversionResponse",
         "description": "Schema for UOM conversion response."

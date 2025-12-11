@@ -1,7 +1,7 @@
 # backend/app/schemas/masters/uom_conversions_schema.py
 """Product UOM conversion schemas (単位換算マスタ)."""
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import Field
@@ -35,6 +35,7 @@ class UomConversionResponse(UomConversionBase):
     conversion_id: int
     created_at: datetime
     updated_at: datetime
+    valid_to: date
 
     class Config:
         """Pydantic config."""

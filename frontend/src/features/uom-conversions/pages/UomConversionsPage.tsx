@@ -2,18 +2,12 @@
 import { Plus, Upload, Filter, X } from "lucide-react";
 import { useCallback, useState, useMemo } from "react";
 
-import type { UomConversionCreate } from "../api";
+import type { UomConversionCreate, UomConversionResponse } from "../api";
 import { UomConversionBulkImportDialog } from "../components/UomConversionBulkImportDialog";
 import { UomConversionCreateDialog } from "../components/UomConversionCreateDialog";
-import { UomConversionDeleteDialog } from "../components/UomConversionDeleteDialog";
 import { UomConversionExportButton } from "../components/UomConversionExportButton";
 import { UomConversionsTable } from "../components/UomConversionsTable";
-import {
-  useCreateUomConversion,
-  useDeleteConversion,
-  useInlineEdit,
-  useUomConversions,
-} from "../hooks";
+import { useCreateUomConversion, useInlineEdit, useUomConversions } from "../hooks";
 
 import {
   Button,
@@ -22,13 +16,29 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Checkbox,
 } from "@/components/ui";
+import { Label } from "@/components/ui/form/label";
+import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
+
 import { useProducts } from "@/features/products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
 
 export function UomConversionsPage() {
-  const { useList } = useUomConversions();
-  const { data: conversions = [], isLoading } = useList();
+  const [showInactive, setShowInactive] = useState(false);
+  const { useList, useSoftDelete, usePermanentDelete, useRestore } = useUomConversions();
+  // Pass showInactive to useList (assuming generic hook accepts it)
+  const { data: conversions = [], isLoading } = useList(showInactive);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedSupplierId, setSelectedSupplierId] = useState<string>("all");
@@ -40,9 +50,16 @@ export function UomConversionsPage() {
   const { data: suppliers = [] } = useSupplierList();
 
   const createMutation = useCreateUomConversion();
-
   const inlineEdit = useInlineEdit();
-  const { deleteTarget, setDeleteTarget, isDeleting, handleDelete } = useDeleteConversion();
+
+  const softDeleteMutation = useSoftDelete();
+  const permanentDeleteMutation = usePermanentDelete();
+  const restoreMutation = useRestore();
+
+  // Delete & Restore state
+  const [deletingItem, setDeletingItem] = useState<UomConversionResponse | null>(null);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
+  const [restoringItem, setRestoringItem] = useState<UomConversionResponse | null>(null);
 
   const handleCreate = useCallback(
     (data: UomConversionCreate) => {
@@ -73,6 +90,30 @@ export function UomConversionsPage() {
       return suppliers?.includes(supplierId);
     });
   }, [conversions, selectedSupplierId, productSupplierMap]);
+
+  const handleSoftDelete = (endDate: string | null) => {
+    if (!deletingItem) return;
+    softDeleteMutation.mutate(
+      { id: deletingItem.conversion_id, endDate: endDate || undefined },
+      {
+        onSuccess: () => setDeletingItem(null),
+      },
+    );
+  };
+
+  const handlePermanentDelete = () => {
+    if (!deletingItem) return;
+    permanentDeleteMutation.mutate(deletingItem.conversion_id, {
+      onSuccess: () => setDeletingItem(null),
+    });
+  };
+
+  const handleRestore = () => {
+    if (!restoringItem) return;
+    restoreMutation.mutate(restoringItem.conversion_id, {
+      onSuccess: () => setRestoringItem(null),
+    });
+  };
 
   if (isLoading) return <div className="p-6">読み込み中...</div>;
 
@@ -134,8 +175,20 @@ export function UomConversionsPage() {
             解除
           </Button>
         )}
-        <div className="ml-auto text-sm text-slate-500">
-          表示中: {filteredConversions.length} / {conversions.length} 件
+        <div className="ml-auto flex items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="show-inactive"
+              checked={showInactive}
+              onCheckedChange={(checked) => setShowInactive(checked as boolean)}
+            />
+            <Label htmlFor="show-inactive" className="cursor-pointer text-sm">
+              削除済みを表示
+            </Label>
+          </div>
+          <div className="text-sm text-slate-500">
+            表示中: {filteredConversions.length} / {conversions.length} 件
+          </div>
         </div>
       </div>
 
@@ -148,7 +201,15 @@ export function UomConversionsPage() {
         handleSaveEdit={inlineEdit.handleSaveEdit}
         handleCancelEdit={inlineEdit.handleCancelEdit}
         handleStartEdit={inlineEdit.handleStartEdit}
-        setDeleteTarget={setDeleteTarget}
+        handleSoftDelete={(c) => {
+          setDeletingItem(c);
+          setDeleteMode("soft");
+        }}
+        handlePermanentDelete={(c) => {
+          setDeletingItem(c);
+          setDeleteMode("permanent");
+        }}
+        handleRestore={setRestoringItem}
       />
 
       <div className="text-sm text-slate-600">{filteredConversions.length} 件の単位換算</div>
@@ -157,12 +218,7 @@ export function UomConversionsPage() {
         open={isImportDialogOpen}
         onOpenChange={setIsImportDialogOpen}
       />
-      <UomConversionDeleteDialog
-        target={deleteTarget}
-        onOpenChange={() => setDeleteTarget(null)}
-        onDelete={handleDelete}
-        isDeleting={isDeleting}
-      />
+
       <UomConversionCreateDialog
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}
@@ -171,6 +227,52 @@ export function UomConversionsPage() {
         onSubmit={handleCreate}
         isSubmitting={createMutation.isPending}
       />
+
+      <SoftDeleteDialog
+        open={!!deletingItem && deleteMode === "soft"}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        title="単位換算を無効化しますか？"
+        description={`${deletingItem?.product_name} (${deletingItem?.external_unit}) の設定を無効化します。`}
+        onConfirm={handleSoftDelete}
+        isPending={softDeleteMutation.isPending}
+        onSwitchToPermanent={() => setDeleteMode("permanent")}
+      />
+
+      <PermanentDeleteDialog
+        open={!!deletingItem && deleteMode === "permanent"}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setDeletingItem(null);
+            setDeleteMode("soft");
+          }
+        }}
+        onConfirm={handlePermanentDelete}
+        isPending={permanentDeleteMutation.isPending}
+        title="単位換算を完全に削除しますか？"
+        description={`${deletingItem?.product_name} (${deletingItem?.external_unit}) の設定を完全に削除します。`}
+        confirmationPhrase={deletingItem?.external_unit || "delete"}
+      />
+
+      <AlertDialog
+        open={!!restoringItem}
+        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>設定を復元しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              {restoringItem?.product_name} ({restoringItem?.external_unit})
+              の設定を有効状態に戻します。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRestore} disabled={restoreMutation.isPending}>
+              {restoreMutation.isPending ? "復元中..." : "復元"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

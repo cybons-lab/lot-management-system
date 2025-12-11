@@ -1,6 +1,6 @@
 """Customer items schemas (得意先品番マッピング)."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import Field
 
@@ -47,6 +47,7 @@ class CustomerItemResponse(CustomerItemBase):
     supplier_name: str | None = Field(None, description="仕入先名")
     created_at: datetime
     updated_at: datetime
+    valid_to: date
 
     class Config:
         """Pydantic config."""

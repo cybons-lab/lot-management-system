@@ -11,6 +11,7 @@ export interface UomConversionResponse {
   external_unit: string;
   conversion_factor: number;
   remarks?: string;
+  valid_to?: string;
 }
 
 export interface UomConversionCreate {

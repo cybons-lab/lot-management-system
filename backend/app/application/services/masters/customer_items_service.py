@@ -1,6 +1,6 @@
 """Customer items service (得意先品番マッピング管理)."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import cast
 
 from sqlalchemy.orm import Session
@@ -50,6 +50,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
             "special_instructions": item.special_instructions,
             "created_at": item.created_at,
             "updated_at": item.updated_at,
+            "valid_to": item.valid_to,
         }
 
     def create(self, item: CustomerItemCreate) -> dict:  # type: ignore[override]
@@ -63,6 +64,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         limit: int = 100,
         customer_id: int | None = None,
         product_id: int | None = None,
+        include_inactive: bool = False,
     ) -> list[dict]:
         """Get all customer item mappings with optional filtering and enriched
         data.
@@ -92,6 +94,9 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         if product_id is not None:
             query = query.filter(CustomerItem.product_id == product_id)
 
+        if not include_inactive:
+            query = query.filter(CustomerItem.get_active_filter())
+
         results = self.db.execute(query.offset(skip).limit(limit)).all()
 
         # Convert to dict with enriched data
@@ -118,6 +123,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                 "updated_at": r.CustomerItem.updated_at.isoformat()
                 if r.CustomerItem.updated_at
                 else None,
+                "valid_to": r.CustomerItem.valid_to,
             }
             for r in results
         ]
@@ -154,8 +160,20 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         self.db.refresh(db_item)
         return self._enrich_item(db_item)
 
-    def delete_by_key(self, customer_id: int, external_product_code: str) -> bool:
-        """Delete a customer item mapping by composite key."""
+    def delete_by_key(
+        self, customer_id: int, external_product_code: str, end_date: date | None = None
+    ) -> bool:
+        """Soft delete a customer item mapping by composite key."""
+        db_item = self.get_by_key(customer_id, external_product_code)
+        if not db_item:
+            return False
+
+        db_item.soft_delete(end_date)
+        self.db.commit()
+        return True
+
+    def permanent_delete_by_key(self, customer_id: int, external_product_code: str) -> bool:
+        """Permanently delete a customer item mapping by composite key."""
         db_item = self.get_by_key(customer_id, external_product_code)
         if not db_item:
             return False
@@ -163,6 +181,17 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         self.db.delete(db_item)
         self.db.commit()
         return True
+
+    def restore_by_key(self, customer_id: int, external_product_code: str) -> dict | None:
+        """Restore a soft-deleted customer item mapping."""
+        db_item = self.get_by_key(customer_id, external_product_code)
+        if not db_item:
+            return None
+
+        db_item.restore()
+        self.db.commit()
+        self.db.refresh(db_item)
+        return self._enrich_item(db_item)
 
     def bulk_upsert(self, rows: list[CustomerItemBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert customer items by composite key (customer_code,

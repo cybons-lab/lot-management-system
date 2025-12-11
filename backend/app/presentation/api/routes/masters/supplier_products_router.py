@@ -3,6 +3,8 @@
 product_suppliers テーブルから製品と仕入先の関連を取得。
 """
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -26,6 +28,7 @@ def list_supplier_products(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
     supplier_id: int | None = Query(None),
+    include_inactive: bool = Query(False),
     db: Session = Depends(get_db),
 ):
     """Get supplier products (仕入先商品一覧).
@@ -43,6 +46,7 @@ def list_supplier_products(
             Product.product_name,
             Supplier.supplier_code,
             Supplier.supplier_name,
+            ProductSupplier.valid_to,
         )
         .join(Product, ProductSupplier.product_id == Product.id)
         .join(Supplier, ProductSupplier.supplier_id == Supplier.id)
@@ -50,6 +54,9 @@ def list_supplier_products(
 
     if supplier_id is not None:
         query = query.where(ProductSupplier.supplier_id == supplier_id)
+
+    if not include_inactive:
+        query = query.where(ProductSupplier.get_active_filter())
 
     query = query.offset(skip).limit(limit)
     results = db.execute(query).all()
@@ -65,6 +72,7 @@ def list_supplier_products(
             "product_name": r.product_name,
             "supplier_code": r.supplier_code,
             "supplier_name": r.supplier_name,
+            "valid_to": r.valid_to,
         }
         for r in results
     ]
@@ -132,13 +140,15 @@ def get_supplier_product(id: int, db: Session = Depends(get_db)):
         "supplier_name": sp.supplier.supplier_name,
         "created_at": sp.created_at,
         "updated_at": sp.updated_at,
+        "valid_to": sp.valid_to,
     }
 
 
 @router.post("", response_model=SupplierProductResponse, status_code=status.HTTP_201_CREATED)
 def create_supplier_product(data: SupplierProductCreate, db: Session = Depends(get_db)):
     """Create a new supplier product."""
-    # Check if exists
+    # Check if exists (including inactive ones?)
+    # Ideally should reactivate if exists and inactive, but for now duplicate error
     existing = (
         db.query(ProductSupplier)
         .filter(
@@ -178,6 +188,7 @@ def create_supplier_product(data: SupplierProductCreate, db: Session = Depends(g
         "supplier_name": sp.supplier.supplier_name,
         "created_at": sp.created_at,
         "updated_at": sp.updated_at,
+        "valid_to": sp.valid_to,
     }
 
 
@@ -216,12 +227,29 @@ def update_supplier_product(id: int, data: SupplierProductUpdate, db: Session = 
         "supplier_name": sp.supplier.supplier_name,
         "created_at": sp.created_at,
         "updated_at": sp.updated_at,
+        "valid_to": sp.valid_to,
     }
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_supplier_product(id: int, db: Session = Depends(get_db)):
-    """Delete a supplier product."""
+def delete_supplier_product(
+    id: int,
+    end_date: date | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    """Soft delete a supplier product (mark as inactive)."""
+    sp = db.query(ProductSupplier).filter(ProductSupplier.id == id).first()
+    if not sp:
+        raise HTTPException(status_code=404, detail="Supplier product not found")
+
+    sp.soft_delete(end_date)
+    db.commit()
+    return None
+
+
+@router.delete("/{id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+def permanent_delete_supplier_product(id: int, db: Session = Depends(get_db)):
+    """Permanently delete a supplier product."""
     sp = db.query(ProductSupplier).filter(ProductSupplier.id == id).first()
     if not sp:
         raise HTTPException(status_code=404, detail="Supplier product not found")
@@ -229,3 +257,30 @@ def delete_supplier_product(id: int, db: Session = Depends(get_db)):
     db.delete(sp)
     db.commit()
     return None
+
+
+@router.post("/{id}/restore", response_model=SupplierProductResponse)
+def restore_supplier_product(id: int, db: Session = Depends(get_db)):
+    """Restore a soft-deleted supplier product."""
+    sp = db.query(ProductSupplier).filter(ProductSupplier.id == id).first()
+    if not sp:
+        raise HTTPException(status_code=404, detail="Supplier product not found")
+
+    sp.restore()
+    db.commit()
+    db.refresh(sp)
+
+    return {
+        "id": sp.id,
+        "product_id": sp.product_id,
+        "supplier_id": sp.supplier_id,
+        "is_primary": sp.is_primary,
+        "lead_time_days": sp.lead_time_days,
+        "product_code": sp.product.maker_part_code,
+        "product_name": sp.product.product_name,
+        "supplier_code": sp.supplier.supplier_code,
+        "supplier_name": sp.supplier.supplier_name,
+        "created_at": sp.created_at,
+        "updated_at": sp.updated_at,
+        "valid_to": sp.valid_to,
+    }

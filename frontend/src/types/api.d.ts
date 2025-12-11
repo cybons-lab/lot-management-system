@@ -2088,9 +2088,49 @@ export interface paths {
     post?: never;
     /**
      * Delete Supplier Product
-     * @description Delete a supplier product.
+     * @description Soft delete a supplier product (mark as inactive).
      */
     delete: operations["delete_supplier_product_api_masters_supplier_products__id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/supplier-products/{id}/permanent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanent Delete Supplier Product
+     * @description Permanently delete a supplier product.
+     */
+    delete: operations["permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/supplier-products/{id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Supplier Product
+     * @description Restore a soft-deleted supplier product.
+     */
+    post: operations["restore_supplier_product_api_masters_supplier_products__id__restore_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2201,9 +2241,61 @@ export interface paths {
      *
      *     Args:
      *         conversion_id: ID of the conversion to delete
+     *         end_date: Optional end date for validity
      *         db: Database session
      */
     delete: operations["delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/uom-conversions/{conversion_id}/permanent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanent Delete Uom Conversion
+     * @description Permanently delete a UOM conversion by ID.
+     *
+     *     Args:
+     *         conversion_id: ID of the conversion to delete
+     *         db: Database session
+     */
+    delete: operations["permanent_delete_uom_conversion_api_masters_uom_conversions__conversion_id__permanent_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/uom-conversions/{conversion_id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Uom Conversion
+     * @description Restore a soft-deleted UOM conversion.
+     *
+     *     Args:
+     *         conversion_id: ID of the conversion to restore
+     *         db: Database session
+     *
+     *     Returns:
+     *         Restored UOM conversion
+     */
+    post: operations["restore_uom_conversion_api_masters_uom_conversions__conversion_id__restore_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2389,6 +2481,7 @@ export interface paths {
      *         limit: 取得件数上限
      *         customer_id: 得意先IDでフィルタ（オプション）
      *         product_id: 製品IDでフィルタ（オプション）
+     *         include_inactive: 無効なマッピングを含めるか
      *         db: データベースセッション
      *
      *     Returns:
@@ -2477,12 +2570,72 @@ export interface paths {
      *     Args:
      *         customer_id: 得意先ID
      *         external_product_code: 得意先品番
+     *         end_date: 無効化日（指定がない場合は即時）
      *         db: データベースセッション
      *
      *     Raises:
      *         HTTPException: マッピングが存在しない場合
      */
     delete: operations["delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customer-items/{customer_id}/{external_product_code}/permanent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanent Delete Customer Item
+     * @description 得意先品番マッピング完全削除.
+     *
+     *     Args:
+     *         customer_id: 得意先ID
+     *         external_product_code: 得意先品番
+     *         db: データベースセッション
+     *
+     *     Raises:
+     *         HTTPException: マッピングが存在しない場合
+     */
+    delete: operations["permanent_delete_customer_item_api_masters_customer_items__customer_id___external_product_code__permanent_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customer-items/{customer_id}/{external_product_code}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Customer Item
+     * @description 得意先品番マッピング復元.
+     *
+     *     Args:
+     *         customer_id: 得意先ID
+     *         external_product_code: 得意先品番
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         復元された品番マッピング
+     *
+     *     Raises:
+     *         HTTPException: マッピングが存在しない場合
+     */
+    post: operations["restore_customer_item_api_masters_customer_items__customer_id___external_product_code__restore_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -5512,6 +5665,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
     };
     /**
      * CustomerItemUpdate
@@ -8145,6 +8303,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
     };
     /**
      * UomConversionUpdate
@@ -12205,6 +12368,7 @@ export interface operations {
         skip?: number;
         limit?: number;
         supplier_id?: number | null;
+        include_inactive?: boolean;
       };
       header?: never;
       path?: never;
@@ -12364,6 +12528,37 @@ export interface operations {
   };
   delete_supplier_product_api_masters_supplier_products__id__delete: {
     parameters: {
+      query?: {
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete: {
+    parameters: {
       query?: never;
       header?: never;
       path: {
@@ -12391,12 +12586,44 @@ export interface operations {
       };
     };
   };
+  restore_supplier_product_api_masters_supplier_products__id__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierProductResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_uom_conversions_api_masters_uom_conversions_get: {
     parameters: {
       query?: {
         skip?: number;
         limit?: number;
         product_id?: number | null;
+        include_inactive?: boolean;
       };
       header?: never;
       path?: never;
@@ -12558,6 +12785,37 @@ export interface operations {
   };
   delete_uom_conversion_api_masters_uom_conversions__conversion_id__delete: {
     parameters: {
+      query?: {
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        conversion_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  permanent_delete_uom_conversion_api_masters_uom_conversions__conversion_id__permanent_delete: {
+    parameters: {
       query?: never;
       header?: never;
       path: {
@@ -12573,6 +12831,37 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  restore_uom_conversion_api_masters_uom_conversions__conversion_id__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversion_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UomConversionResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -12915,6 +13204,8 @@ export interface operations {
         customer_id?: number | null;
         /** @description 製品IDでフィルタ */
         product_id?: number | null;
+        /** @description 無効なマッピングを含めるか */
+        include_inactive?: boolean;
       };
       header?: never;
       path?: never;
@@ -13044,6 +13335,38 @@ export interface operations {
   };
   delete_customer_item_api_masters_customer_items__customer_id___external_product_code__delete: {
     parameters: {
+      query?: {
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        customer_id: number;
+        external_product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  permanent_delete_customer_item_api_masters_customer_items__customer_id___external_product_code__permanent_delete: {
+    parameters: {
       query?: never;
       header?: never;
       path: {
@@ -13060,6 +13383,38 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  restore_customer_item_api_masters_customer_items__customer_id___external_product_code__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customer_id: number;
+        external_product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerItemResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
