@@ -36,6 +36,7 @@ def upgrade() -> None:
         "delivery_places",
         "customer_items",
         "product_uom_conversions",
+        "product_suppliers",
     ]
 
     for table in tables:
@@ -86,26 +87,6 @@ def upgrade() -> None:
         ["valid_to"],
     )
 
-    # Also add to supplier_products if it exists
-    # Check if table exists first
-    connection = op.get_bind()
-    inspector = sa.inspect(connection)
-    if "supplier_products" in inspector.get_table_names():
-        op.add_column(
-            "supplier_products",
-            sa.Column(
-                "valid_to",
-                sa.Date(),
-                nullable=False,
-                server_default=sa.text("'9999-12-31'"),
-            ),
-        )
-        op.create_index(
-            "idx_supplier_products_valid_to",
-            "supplier_products",
-            ["valid_to"],
-        )
-
 
 def downgrade() -> None:
     """Remove valid_to column from master tables."""
@@ -118,6 +99,7 @@ def downgrade() -> None:
         "delivery_places",
         "customer_items",
         "product_uom_conversions",
+        "product_suppliers",
     ]
 
     for table in tables:
@@ -148,10 +130,3 @@ def downgrade() -> None:
     )
 
     op.drop_column("product_mappings", "valid_to")
-
-    # Handle supplier_products
-    connection = op.get_bind()
-    inspector = sa.inspect(connection)
-    if "supplier_products" in inspector.get_table_names():
-        op.drop_index("idx_supplier_products_valid_to", table_name="supplier_products")
-        op.drop_column("supplier_products", "valid_to")
