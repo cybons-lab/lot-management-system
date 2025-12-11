@@ -39,6 +39,7 @@ def _to_product_out(product: Product) -> ProductOut:
         is_active=product.is_active,
         created_at=product.created_at,
         updated_at=product.updated_at,
+        valid_to=product.valid_to,
         supplier_ids=[ps.supplier_id for ps in product.product_suppliers]
         if product.product_suppliers
         else [],
