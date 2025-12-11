@@ -15,6 +15,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2025-12-11]
 
 ### Added
+- **[P1-1] 需要予測→仮受注の自動連動**
+  - 日別指示 → 仮受注の自動作成/更新/削除を実装
+  - フォーキャスト作成時: 仮受注を自動生成 (order_type='FORECAST_LINKED')
+  - フォーキャスト更新時: 対応する仮受注の数量を同期
+  - フォーキャスト削除時: 対応する仮受注を自動削除
+  - 日別指示変更 → 計画引当サマリの自動再計算
+  - 関連受注セクションの自動引当ボタン削除（右上ボタン1箇所に統一）
+  - PR: #301
+- **[P1-5] product_mappings一括インポート対応**
+  - `ProductMappingImportRow` スキーマを追加
+  - `CustomerImportRow` に `product_mappings` フィールドを追加
+  - 4者の関係（得意先 + 先方品番 + メーカー品番 + 仕入先）をサポート
+  - PR: #301
 - **[P1-1] 受注管理画面の完全統合 (2段階→1段階へ)**
   - `AllocationDialog` を独立コンポーネントとして抽出
   - 受注一覧の「引当」ボタンから直接ダイアログを開けるように変更
