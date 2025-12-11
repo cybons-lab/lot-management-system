@@ -44,27 +44,34 @@ class SoftDeleteMixin:
         """Check if the record is currently active (not soft deleted).
 
         Returns:
-            True if valid_to is today or in the future, False otherwise.
+            True if valid_to is in the future (after today), False otherwise.
+            A record with valid_to = today is considered inactive.
         """
-        return self.valid_to >= date.today()
+        return self.valid_to > date.today()
 
     @property
     def is_soft_deleted(self) -> bool:
         """Check if the record has been soft deleted.
 
         Returns:
-            True if valid_to is in the past, False otherwise.
+            True if valid_to is today or in the past, False otherwise.
         """
-        return self.valid_to < date.today()
+        return self.valid_to <= date.today()
 
     def soft_delete(self, end_date: date | None = None) -> None:
         """Mark this record as soft deleted.
 
         Args:
             end_date: The date until which the record is valid.
-                     Defaults to today (immediately inactive).
+                     Defaults to yesterday (immediately inactive).
         """
-        self.valid_to = end_date if end_date is not None else date.today()
+        from datetime import timedelta
+
+        if end_date is not None:
+            self.valid_to = end_date
+        else:
+            # Set to yesterday so the record is immediately inactive
+            self.valid_to = date.today() - timedelta(days=1)
 
     def restore(self) -> None:
         """Restore a soft-deleted record to active status."""
@@ -76,10 +83,11 @@ class SoftDeleteMixin:
 
         Returns:
             A filter expression that can be used in queries.
+            Filters to records where valid_to > today.
 
         Usage:
             session.query(MyModel).filter(MyModel.get_active_filter())
         """
         from sqlalchemy import func
 
-        return cls.valid_to >= func.current_date()
+        return cls.valid_to > func.current_date()

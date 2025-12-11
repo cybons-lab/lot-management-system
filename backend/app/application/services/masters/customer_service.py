@@ -1,3 +1,4 @@
+from datetime import date
 from typing import cast
 
 from sqlalchemy.orm import Session
@@ -14,7 +15,10 @@ from app.presentation.schemas.masters.masters_schema import (
 
 
 class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]):
-    """Service for managing customers."""
+    """Service for managing customers.
+
+    Supports soft delete (valid_to based) and hard delete (admin only).
+    """
 
     def __init__(self, db: Session):
         super().__init__(db, Customer)
@@ -39,11 +43,28 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
         assert customer is not None  # raise_404=True ensures this
         return self.update(customer.id, payload)
 
-    def delete_by_code(self, code: str) -> None:
-        """Delete customer by customer_code."""
+    def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
+        """Soft delete customer by customer_code.
+
+        Args:
+            code: Customer code
+            end_date: End date for validity. Defaults to today.
+        """
         customer = self.get_by_code(code)
-        assert customer is not None  # raise_404=True ensures this
-        self.delete(customer.id)
+        assert customer is not None
+        self.delete(customer.id, end_date=end_date)
+
+    def hard_delete_by_code(self, code: str) -> None:
+        """Permanently delete customer by customer_code."""
+        customer = self.get_by_code(code)
+        assert customer is not None
+        self.hard_delete(customer.id)
+
+    def restore_by_code(self, code: str) -> Customer:
+        """Restore a soft-deleted customer by customer_code."""
+        customer = self.get_by_code(code)
+        assert customer is not None
+        return self.restore(customer.id)
 
     def bulk_upsert(self, rows: list[CustomerBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert customers by customer_code.

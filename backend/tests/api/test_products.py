@@ -182,7 +182,11 @@ def test_update_product_not_found(test_db: Session):
 
 
 def test_delete_product_success(test_db: Session):
-    """Test deleting a product."""
+    """Test soft deleting a product.
+
+    Soft delete sets valid_to to today. The product still exists in DB
+    but is excluded from list by default.
+    """
     client = TestClient(app)
 
     p = Product(maker_part_code="DEL-001", product_name="Delete Me", base_unit="EA")
@@ -192,10 +196,19 @@ def test_delete_product_success(test_db: Session):
     response = client.delete("/api/masters/products/DEL-001")
     assert response.status_code == 204
 
-    # Verify deleted
-    test_db.expire_all()  # Clear cache
+    # Verify soft deletion: record still exists in DB
+    test_db.expire_all()
     deleted = test_db.query(Product).filter(Product.maker_part_code == "DEL-001").first()
-    assert deleted is None
+    assert deleted is not None  # Soft delete doesn't remove from DB
+    # valid_to should be set (not 9999-12-31)
+    from datetime import date
+
+    assert deleted.valid_to <= date.today()
+
+    # But product is excluded from list API by default
+    response = client.get("/api/masters/products")
+    product_codes = [p["product_code"] for p in response.json()]
+    assert "DEL-001" not in product_codes
 
 
 def test_delete_product_not_found(test_db: Session):

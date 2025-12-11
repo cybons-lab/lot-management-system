@@ -1,6 +1,11 @@
-"""Customer master CRUD endpoints (standalone)."""
+"""Customer master CRUD endpoints (standalone).
 
-from fastapi import APIRouter, Depends
+Supports soft delete (valid_to based) and hard delete (admin only).
+"""
+
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
@@ -22,24 +27,21 @@ router = APIRouter(prefix="/customers", tags=["customers"])
 def list_customers(
     skip: int = 0,
     limit: int = 100,
+    include_inactive: bool = Query(False, description="Include soft-deleted (inactive) customers"),
     db: Session = Depends(get_db),
 ):
-    """Return customers."""
+    """Return customers.
+
+    By default, only active customers (valid_to >= today) are returned.
+    Set include_inactive=true to include soft-deleted customers.
+    """
     service = CustomerService(db)
-    return service.get_all(skip=skip, limit=limit)
+    return service.get_all(skip=skip, limit=limit, include_inactive=include_inactive)
 
 
 @router.get("/template/download")
 def download_customers_template(format: str = "csv", include_sample: bool = True):
-    """Download customer import template.
-
-    Args:
-        format: 'csv' or 'xlsx' (default: csv)
-        include_sample: Whether to include a sample row (default: True)
-
-    Returns:
-        Template file for customer import
-    """
+    """Download customer import template."""
     return ExportService.export_template("customers", format=format, include_sample=include_sample)
 
 
@@ -66,11 +68,8 @@ def get_customer(customer_code: str, db: Session = Depends(get_db)):
 def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
     """Create a new customer."""
     service = CustomerService(db)
-    # Check if exists
     existing = service.get_by_code(customer.customer_code, raise_404=False)
     if existing:
-        from fastapi import HTTPException, status
-
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Customer with this code already exists",
@@ -78,7 +77,6 @@ def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
     try:
         return service.create(customer)
     except Exception as e:
-        from fastapi import HTTPException, status
         from sqlalchemy.exc import IntegrityError
 
         if isinstance(e, IntegrityError):
@@ -97,21 +95,35 @@ def update_customer(customer_code: str, customer: CustomerUpdate, db: Session = 
 
 
 @router.delete("/{customer_code}", status_code=204)
-def delete_customer(customer_code: str, db: Session = Depends(get_db)):
-    """Delete a customer."""
+def delete_customer(
+    customer_code: str,
+    end_date: date | None = Query(None, description="End date for soft delete"),
+    db: Session = Depends(get_db),
+):
+    """Soft delete customer (set valid_to to end_date or today)."""
     service = CustomerService(db)
-    service.delete_by_code(customer_code)
+    service.delete_by_code(customer_code, end_date=end_date)
     return None
+
+
+@router.delete("/{customer_code}/permanent", status_code=204)
+def permanent_delete_customer(customer_code: str, db: Session = Depends(get_db)):
+    """Permanently delete customer (admin only)."""
+    # TODO: Add admin role check
+    service = CustomerService(db)
+    service.hard_delete_by_code(customer_code)
+    return None
+
+
+@router.post("/{customer_code}/restore", response_model=CustomerResponse)
+def restore_customer(customer_code: str, db: Session = Depends(get_db)):
+    """Restore a soft-deleted customer."""
+    service = CustomerService(db)
+    return service.restore_by_code(customer_code)
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
 def bulk_upsert_customers(request: CustomerBulkUpsertRequest, db: Session = Depends(get_db)):
-    """Bulk upsert customers by customer_code.
-
-    - If a customer with the same customer_code exists, it will be updated
-    - If not, a new customer will be created
-
-    Returns summary with counts of created/updated/failed records.
-    """
+    """Bulk upsert customers by customer_code."""
     service = CustomerService(db)
     return service.bulk_upsert(request.rows)

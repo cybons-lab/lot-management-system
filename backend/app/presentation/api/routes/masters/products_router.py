@@ -1,6 +1,11 @@
-"""Product master CRUD endpoints (standalone)."""
+"""Product master CRUD endpoints (standalone).
 
-from fastapi import APIRouter, Depends, HTTPException, status
+Supports soft delete (valid_to based) and hard delete (admin only).
+"""
+
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -45,6 +50,7 @@ def list_products(
     skip: int = 0,
     limit: int = 100,
     search: str | None = None,
+    include_inactive: bool = Query(False, description="Include soft-deleted products"),
     db: Session = Depends(get_db),
 ):
     """Return a paginated list of products."""
@@ -157,11 +163,31 @@ def update_product(product_code: str, product: ProductUpdate, db: Session = Depe
 
 
 @router.delete("/{product_code}", status_code=204)
-def delete_product(product_code: str, db: Session = Depends(get_db)):
-    """Delete a product by its code (maker_part_code)."""
+def delete_product(
+    product_code: str,
+    end_date: date | None = Query(None, description="End date for soft delete"),
+    db: Session = Depends(get_db),
+):
+    """Soft delete a product."""
     service = ProductService(db)
-    service.delete_by_code(product_code)
+    service.delete_by_code(product_code, end_date=end_date)
     return None
+
+
+@router.delete("/{product_code}/permanent", status_code=204)
+def permanent_delete_product(product_code: str, db: Session = Depends(get_db)):
+    """Permanently delete product (admin only)."""
+    service = ProductService(db)
+    service.hard_delete_by_code(product_code)
+    return None
+
+
+@router.post("/{product_code}/restore", response_model=ProductOut)
+def restore_product(product_code: str, db: Session = Depends(get_db)):
+    """Restore a soft-deleted product."""
+    service = ProductService(db)
+    product = service.restore_by_code(product_code)
+    return _to_product_out(product)
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

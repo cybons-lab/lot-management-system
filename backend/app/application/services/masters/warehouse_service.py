@@ -1,3 +1,4 @@
+from datetime import date
 from typing import cast
 
 from sqlalchemy.orm import Session
@@ -14,7 +15,10 @@ from app.presentation.schemas.masters.masters_schema import (
 
 
 class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, int]):
-    """Service for managing warehouses."""
+    """Service for managing warehouses.
+
+    Supports soft delete (valid_to based) and hard delete (admin only).
+    """
 
     def __init__(self, db: Session):
         super().__init__(db, Warehouse)
@@ -39,11 +43,23 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
         assert warehouse is not None  # raise_404=True ensures this
         return self.update(warehouse.id, payload)
 
-    def delete_by_code(self, code: str) -> None:
-        """Delete warehouse by warehouse_code."""
+    def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
+        """Soft delete warehouse by warehouse_code."""
         warehouse = self.get_by_code(code)
-        assert warehouse is not None  # raise_404=True ensures this
-        self.delete(warehouse.id)
+        assert warehouse is not None
+        self.delete(warehouse.id, end_date=end_date)
+
+    def hard_delete_by_code(self, code: str) -> None:
+        """Permanently delete warehouse by warehouse_code."""
+        warehouse = self.get_by_code(code)
+        assert warehouse is not None
+        self.hard_delete(warehouse.id)
+
+    def restore_by_code(self, code: str) -> Warehouse:
+        """Restore a soft-deleted warehouse by warehouse_code."""
+        warehouse = self.get_by_code(code)
+        assert warehouse is not None
+        return self.restore(warehouse.id)
 
     def bulk_upsert(self, rows: list[WarehouseBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert warehouses by warehouse_code.

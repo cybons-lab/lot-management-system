@@ -1,3 +1,4 @@
+from datetime import date
 from typing import cast
 
 from sqlalchemy.orm import Session
@@ -14,7 +15,10 @@ from app.presentation.schemas.masters.masters_schema import (
 
 
 class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]):
-    """Service for managing suppliers."""
+    """Service for managing suppliers.
+
+    Supports soft delete (valid_to based) and hard delete (admin only).
+    """
 
     def __init__(self, db: Session):
         super().__init__(db, Supplier)
@@ -40,12 +44,38 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]
             raise ValueError("Supplier not found or has no ID")
         return self.update(supplier.id, payload)
 
-    def delete_by_code(self, code: str) -> None:
-        """Delete supplier by supplier_code."""
+    def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
+        """Soft delete supplier by supplier_code.
+
+        Args:
+            code: Supplier code
+            end_date: End date for validity. Defaults to today.
+        """
         supplier = self.get_by_code(code)
         if supplier is None or supplier.id is None:
             raise ValueError("Supplier not found or has no ID")
-        self.delete(supplier.id)
+        self.delete(supplier.id, end_date=end_date)
+
+    def hard_delete_by_code(self, code: str) -> None:
+        """Permanently delete supplier by supplier_code.
+
+        This physically removes the supplier from the database.
+        Only for admin use with incorrectly created records.
+        """
+        supplier = self.get_by_code(code)
+        if supplier is None or supplier.id is None:
+            raise ValueError("Supplier not found or has no ID")
+        self.hard_delete(supplier.id)
+
+    def restore_by_code(self, code: str) -> Supplier:
+        """Restore a soft-deleted supplier by supplier_code.
+
+        Sets valid_to back to 9999-12-31 (indefinitely valid).
+        """
+        supplier = self.get_by_code(code)
+        if supplier is None or supplier.id is None:
+            raise ValueError("Supplier not found or has no ID")
+        return self.restore(supplier.id)
 
     def bulk_upsert(self, rows: list[SupplierBulkRow]) -> BulkUpsertResponse:
         """Bulk upsert suppliers by supplier_code.
