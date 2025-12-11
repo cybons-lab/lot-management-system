@@ -1,6 +1,7 @@
 from datetime import date
 from typing import cast
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
@@ -75,23 +76,38 @@ class WarehouseService(BaseService[Warehouse, WarehouseCreate, WarehouseUpdate, 
 
         for row in rows:
             try:
-                # Check if warehouse exists by warehouse_code
+                # Check if active warehouse exists by warehouse_code
                 existing = (
                     self.db.query(Warehouse)
                     .filter(Warehouse.warehouse_code == row.warehouse_code)
+                    .filter(Warehouse.valid_to > func.current_date())
                     .first()
                 )
 
                 if existing:
-                    # UPDATE
+                    # UPDATE active record
                     existing.warehouse_name = row.warehouse_name
                     existing.warehouse_type = row.warehouse_type
                     summary["updated"] += 1
                 else:
-                    # CREATE
-                    new_warehouse = Warehouse(**row.model_dump())
-                    self.db.add(new_warehouse)
-                    summary["created"] += 1
+                    # Check for soft-deleted record
+                    deleted = (
+                        self.db.query(Warehouse)
+                        .filter(Warehouse.warehouse_code == row.warehouse_code)
+                        .filter(Warehouse.valid_to <= func.current_date())
+                        .first()
+                    )
+                    if deleted:
+                        # Restore and update soft-deleted record
+                        deleted.warehouse_name = row.warehouse_name
+                        deleted.warehouse_type = row.warehouse_type
+                        deleted.valid_to = date(9999, 12, 31)
+                        summary["updated"] += 1
+                    else:
+                        # CREATE new record
+                        new_warehouse = Warehouse(**row.model_dump())
+                        self.db.add(new_warehouse)
+                        summary["created"] += 1
 
                 summary["total"] += 1
 

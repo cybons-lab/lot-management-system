@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, Date, DateTime, Float, Integer, Numeric, String
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, Float, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import Base
@@ -146,6 +146,7 @@ class VLotDetails(Base):
     - lots テーブルをベースに、products, warehouses, suppliers を JOIN
     - 在庫数量（current_quantity, allocated_quantity, available_quantity）を含む
     - 賞味期限までの日数（days_to_expiry）を算出
+    - 論理削除されたマスタ参照時はCOALESCEでフォールバック値を設定
     """
 
     __tablename__ = "v_lot_details"
@@ -154,14 +155,14 @@ class VLotDetails(Base):
     lot_id: Mapped[int] = mapped_column("lot_id", BigInteger, primary_key=True)
     lot_number: Mapped[str] = mapped_column(String(100))
     product_id: Mapped[int] = mapped_column(BigInteger)
-    maker_part_code: Mapped[str | None] = mapped_column(String)
-    product_name: Mapped[str] = mapped_column(String)
+    maker_part_code: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
+    product_name: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
     warehouse_id: Mapped[int] = mapped_column(BigInteger)
-    warehouse_code: Mapped[str] = mapped_column(String)
-    warehouse_name: Mapped[str] = mapped_column(String)
+    warehouse_code: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
+    warehouse_name: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
     supplier_id: Mapped[int | None] = mapped_column(BigInteger)
-    supplier_code: Mapped[str | None] = mapped_column(String)
-    supplier_name: Mapped[str | None] = mapped_column(String)
+    supplier_code: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
+    supplier_name: Mapped[str] = mapped_column(String)  # COALESCE ensures non-null
     received_date: Mapped[date] = mapped_column(Date)
     expiry_date: Mapped[date | None] = mapped_column(Date)
     current_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
@@ -170,7 +171,16 @@ class VLotDetails(Base):
     available_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     unit: Mapped[str] = mapped_column(String(20))
     status: Mapped[str] = mapped_column(String(20))
+    lock_reason: Mapped[str | None] = mapped_column(String)
     days_to_expiry: Mapped[int | None] = mapped_column(Integer)
+    # 担当者情報
+    primary_user_id: Mapped[int | None] = mapped_column(Integer)
+    primary_username: Mapped[str | None] = mapped_column(String)
+    primary_user_display_name: Mapped[str | None] = mapped_column(String)
+    # 論理削除フラグ（マスタの状態確認用）
+    product_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    warehouse_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    supplier_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
 
@@ -185,6 +195,7 @@ class VOrderLineDetails(Base):
     受注明細の詳細情報ビュー。
     - 受注、顧客、商品、納入先、仕入元、引当情報を含む
     - OrderServiceの_populate_additional_info処理をDB側に委譲
+    - 論理削除されたマスタ参照時はCOALESCEでフォールバック値を設定
     """
 
     __tablename__ = "v_order_line_details"
@@ -195,9 +206,9 @@ class VOrderLineDetails(Base):
     order_date: Mapped[date | None] = mapped_column(Date)
     customer_id: Mapped[int] = mapped_column(Integer)
 
-    # 顧客情報
-    customer_code: Mapped[str | None] = mapped_column(String)
-    customer_name: Mapped[str | None] = mapped_column(String)
+    # 顧客情報 (COALESCE ensures non-null for code/name)
+    customer_code: Mapped[str] = mapped_column(String)
+    customer_name: Mapped[str] = mapped_column(String)
 
     # 受注明細情報
     line_id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -207,23 +218,33 @@ class VOrderLineDetails(Base):
     unit: Mapped[str | None] = mapped_column(String)
     delivery_place_id: Mapped[int | None] = mapped_column(Integer)
     line_status: Mapped[str | None] = mapped_column(String)
+    shipping_document_text: Mapped[str | None] = mapped_column(String)
 
-    # 商品情報
-    product_code: Mapped[str | None] = mapped_column(String)
-    product_name: Mapped[str | None] = mapped_column(String)
+    # 商品情報 (COALESCE ensures non-null for code/name)
+    product_code: Mapped[str] = mapped_column(String)
+    product_name: Mapped[str] = mapped_column(String)
     product_internal_unit: Mapped[str | None] = mapped_column(String)
     product_external_unit: Mapped[str | None] = mapped_column(String)
     product_qty_per_internal_unit: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
 
-    # 納入先情報
-    delivery_place_code: Mapped[str | None] = mapped_column(String)
-    delivery_place_name: Mapped[str | None] = mapped_column(String)
+    # 納入先情報 (COALESCE ensures non-null for code/name)
+    delivery_place_code: Mapped[str] = mapped_column(String)
+    delivery_place_name: Mapped[str] = mapped_column(String)
+    jiku_code: Mapped[str | None] = mapped_column(String)
 
-    # 仕入元情報
-    supplier_name: Mapped[str | None] = mapped_column(String)
+    # 得意先品番
+    external_product_code: Mapped[str | None] = mapped_column(String)
+
+    # 仕入元情報 (COALESCE ensures non-null)
+    supplier_name: Mapped[str] = mapped_column(String)
 
     # 引当情報（集計）
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+
+    # 論理削除フラグ（マスタの状態確認用）
+    customer_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    product_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
+    delivery_place_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class VInventorySummary(Base):
@@ -232,6 +253,7 @@ class VInventorySummary(Base):
     在庫集計ビュー。
     - 商品・倉庫ごとの在庫総数、引当済数、有効在庫数を集計
     - InventoryServiceの集計処理をDB側に委譲
+    - 仮在庫（入荷予定）も含む
     """
 
     __tablename__ = "v_inventory_summary"
@@ -241,5 +263,8 @@ class VInventorySummary(Base):
     warehouse_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     total_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     allocated_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    locked_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     available_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    provisional_stock: Mapped[Decimal] = mapped_column(Numeric(15, 3))
+    available_with_provisional: Mapped[Decimal] = mapped_column(Numeric(15, 3))
     last_updated: Mapped[datetime | None] = mapped_column(DateTime)

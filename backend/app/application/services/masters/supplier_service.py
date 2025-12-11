@@ -1,6 +1,7 @@
 from datetime import date
 from typing import cast
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
@@ -91,22 +92,36 @@ class SupplierService(BaseService[Supplier, SupplierCreate, SupplierUpdate, int]
 
         for row in rows:
             try:
-                # Check if supplier exists by supplier_code
+                # Check if active supplier exists by supplier_code
                 existing = (
                     self.db.query(Supplier)
                     .filter(Supplier.supplier_code == row.supplier_code)
+                    .filter(Supplier.valid_to > func.current_date())
                     .first()
                 )
 
                 if existing:
-                    # UPDATE
+                    # UPDATE active record
                     existing.supplier_name = row.supplier_name
                     summary["updated"] += 1
                 else:
-                    # CREATE
-                    new_supplier = Supplier(**row.model_dump())
-                    self.db.add(new_supplier)
-                    summary["created"] += 1
+                    # Check for soft-deleted record
+                    deleted = (
+                        self.db.query(Supplier)
+                        .filter(Supplier.supplier_code == row.supplier_code)
+                        .filter(Supplier.valid_to <= func.current_date())
+                        .first()
+                    )
+                    if deleted:
+                        # Restore and update soft-deleted record
+                        deleted.supplier_name = row.supplier_name
+                        deleted.valid_to = date(9999, 12, 31)
+                        summary["updated"] += 1
+                    else:
+                        # CREATE new record
+                        new_supplier = Supplier(**row.model_dump())
+                        self.db.add(new_supplier)
+                        summary["created"] += 1
 
                 summary["total"] += 1
 

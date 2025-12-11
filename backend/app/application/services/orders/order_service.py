@@ -8,6 +8,10 @@ from typing import cast
 from sqlalchemy import case, exists, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.application.services.common.soft_delete_utils import (
+    get_customer_code,
+    get_customer_name,
+)
 from app.domain.order import (
     InvalidOrderStatusError,
     OrderNotFoundError,
@@ -146,9 +150,9 @@ class OrderService:
             if line.order:
                 resp.customer_id = line.order.customer_id
                 resp.order_date = line.order.order_date
-                if line.order.customer:
-                    resp.customer_name = line.order.customer.customer_name
-                    resp.customer_code = line.order.customer.customer_code
+                customer = line.order.customer
+                resp.customer_name = get_customer_name(customer) or None
+                resp.customer_code = get_customer_code(customer) or None
 
             # Populate lot info in allocations (using lot_reference)
             for i, alloc in enumerate(line.allocations):

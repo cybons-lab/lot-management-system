@@ -1,6 +1,7 @@
 from datetime import date
 from typing import cast
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
@@ -80,22 +81,36 @@ class CustomerService(BaseService[Customer, CustomerCreate, CustomerUpdate, int]
 
         for row in rows:
             try:
-                # Check if customer exists by customer_code
+                # Check if active customer exists by customer_code
                 existing = (
                     self.db.query(Customer)
                     .filter(Customer.customer_code == row.customer_code)
+                    .filter(Customer.valid_to > func.current_date())
                     .first()
                 )
 
                 if existing:
-                    # UPDATE
+                    # UPDATE active record
                     existing.customer_name = row.customer_name
                     summary["updated"] += 1
                 else:
-                    # CREATE
-                    new_customer = Customer(**row.model_dump())
-                    self.db.add(new_customer)
-                    summary["created"] += 1
+                    # Check for soft-deleted record
+                    deleted = (
+                        self.db.query(Customer)
+                        .filter(Customer.customer_code == row.customer_code)
+                        .filter(Customer.valid_to <= func.current_date())
+                        .first()
+                    )
+                    if deleted:
+                        # Restore and update soft-deleted record
+                        deleted.customer_name = row.customer_name
+                        deleted.valid_to = date(9999, 12, 31)
+                        summary["updated"] += 1
+                    else:
+                        # CREATE new record
+                        new_customer = Customer(**row.model_dump())
+                        self.db.add(new_customer)
+                        summary["created"] += 1
 
                 summary["total"] += 1
 
