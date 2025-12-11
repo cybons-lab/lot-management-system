@@ -13,7 +13,7 @@
 
 ### P1-7: 論理削除導入後の参照エラー修正
 
-**ステータス:** ほぼ完了 ✅
+**ステータス:** 完了 ✅
 
 **概要:**
 在庫管理、需要予測などの画面で500エラーが多発している。
@@ -27,9 +27,8 @@
 - ✅ create_views_v2.sql に欠落ビュー定義を追加（v_order_line_context等）
 - ✅ VInventorySummary のカラム不一致修正
 - ✅ Bulk Upsert での valid_to フィルタ追加
-
-**残対応（優先度: 低）:**
-- ❌ JOIN クエリでの関連マスタ valid_to チェック追加（View側で対応済みのため緊急度低）
+- ✅ サービス層でのsoft-delete対応（soft_delete_utils.py追加）
+- ✅ forecast_service, withdrawal_service, order_service の削除済みマスタ対応
 
 ---
 
