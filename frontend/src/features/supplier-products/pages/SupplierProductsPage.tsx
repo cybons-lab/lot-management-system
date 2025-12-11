@@ -44,6 +44,10 @@ function createColumns(
       id: "supplier_id",
       header: "仕入先",
       cell: (row) => {
+        // Use API-returned data first, fallback to map lookup
+        if (row.supplier_code && row.supplier_name) {
+          return `${row.supplier_code} - ${row.supplier_name}`;
+        }
         const s = supplierMap.get(row.supplier_id);
         if (!s) return `ID: ${row.supplier_id}`;
         return `${s.code} - ${s.name}`;
@@ -54,6 +58,10 @@ function createColumns(
       id: "product_id",
       header: "製品",
       cell: (row) => {
+        // Use API-returned data first, fallback to map lookup
+        if (row.product_code && row.product_name) {
+          return `${row.product_code} - ${row.product_name}`;
+        }
         const p = productMap.get(row.product_id);
         if (!p) return `ID: ${row.product_id}`;
         return `${p.code} - ${p.name}`;
@@ -90,10 +98,10 @@ export function SupplierProductsPage() {
   const { data: supplierProducts = [], isLoading, isError, error, refetch } = useList();
 
   const { useList: useProductList } = useProducts();
-  const { data: products = [] } = useProductList();
+  const { data: products = [] } = useProductList(true);
 
   const { useList: useSupplierList } = useSuppliers();
-  const { data: suppliers = [] } = useSupplierList();
+  const { data: suppliers = [] } = useSupplierList(true);
 
   const { mutate: create, isPending: isCreating } = useCreate();
   const { mutate: update, isPending: isUpdating } = useUpdate();
@@ -116,7 +124,7 @@ export function SupplierProductsPage() {
     if (!searchQuery.trim()) return supplierProducts;
     const query = searchQuery.toLowerCase();
     return supplierProducts.filter((sp) => {
-      // API currently returns joined fields (product_code, etc), but we can also search via maps
+      // Use API-returned data first, fallback to maps
       const p = productMap.get(sp.product_id);
       const s = supplierMap.get(sp.supplier_id);
       const targetString = `
@@ -134,8 +142,12 @@ export function SupplierProductsPage() {
     sorted.sort((a, b) => {
       // Helper to get sortable value
       const getVal = (item: SupplierProduct, col: string) => {
-        if (col === "product_id") return productMap.get(item.product_id)?.code || "";
-        if (col === "supplier_id") return supplierMap.get(item.supplier_id)?.code || "";
+        if (col === "product_id") {
+          return item.product_code || productMap.get(item.product_id)?.code || "";
+        }
+        if (col === "supplier_id") {
+          return item.supplier_code || supplierMap.get(item.supplier_id)?.code || "";
+        }
         return item[col as keyof SupplierProduct];
       };
 

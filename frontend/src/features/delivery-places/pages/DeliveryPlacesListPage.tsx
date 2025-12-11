@@ -77,7 +77,8 @@ export function DeliveryPlacesListPage() {
 
   const { data: deliveryPlaces = [], isLoading, isError, error, refetch } = useDeliveryPlaces();
   const { useList } = useCustomers();
-  const { data: customers = [] } = useList();
+  // Include soft-deleted customers to properly display names for delivery places
+  const { data: customers = [] } = useList(true);
   const { mutate: create, isPending: isCreating } = useCreateDeliveryPlace();
   const { mutate: update, isPending: isUpdating } = useUpdateDeliveryPlace();
   const { mutate: remove, isPending: isDeleting } = useDeleteDeliveryPlace();
