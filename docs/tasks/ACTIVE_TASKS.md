@@ -13,7 +13,7 @@
 
 ### P1-7: 論理削除導入後の参照エラー修正
 
-**ステータス:** 進行中 🔄
+**ステータス:** ほぼ完了 ✅
 
 **概要:**
 在庫管理、需要予測などの画面で500エラーが多発している。
@@ -24,31 +24,26 @@
 - ✅ VLotDetails, VOrderLineDetails に *_deleted フラグ追加
 - ✅ LotResponse スキーマに削除フラグ追加
 - ✅ フロントエンド lot-columns.tsx で削除済み表示対応
+- ✅ create_views_v2.sql に欠落ビュー定義を追加（v_order_line_context等）
+- ✅ VInventorySummary のカラム不一致修正
+- ✅ Bulk Upsert での valid_to フィルタ追加
 
-**残対応:**
-- ❌ create_views_v2.sql に欠落ビュー定義を追加（v_order_line_context等）
-- ❌ VInventorySummary のカラム不一致修正
-- ❌ Bulk Upsert での valid_to フィルタ追加
-- ❌ JOIN クエリでの関連マスタ valid_to チェック追加
+**残対応（優先度: 低）:**
+- ❌ JOIN クエリでの関連マスタ valid_to チェック追加（View側で対応済みのため緊急度低）
 
 ---
 
 ### P1-7a: ビュー定義の整合性修正
 
-**ステータス:** 進行中 🔄
+**ステータス:** 完了 ✅
 
 **概要:**
-create_views_v2.sql に定義されていないビューがあり、マイグレーション実行時にエラーが発生する可能性がある。
+create_views_v2.sql に定義されていないビューがあり、マイグレーション実行時にエラーが発生する可能性があった。
 
-**問題点:**
-1. **欠落ビュー**: v_order_line_context, v_customer_daily_products, v_customer_code_to_id 等
-2. **カラム不一致**: VInventorySummary に locked_quantity, provisional_stock 等が欠落
-3. **Bulk Upsert**: 削除済みレコードを再活性化する可能性
-
-**対応方針:**
-- create_views_v2.sql に欠落ビュー定義を追加
-- VInventorySummary ORM モデルを更新
-- bulk_upsert メソッドに valid_to フィルタを追加
+**完了した対応:**
+- ✅ create_views_v2.sql に欠落ビュー定義を追加（11個）
+- ✅ VInventorySummary ORM モデルを更新
+- ✅ bulk_upsert メソッドに valid_to フィルタを追加（4サービス）
 
 ---
 
