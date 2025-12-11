@@ -25,7 +25,6 @@ import { WarehouseInfoCard } from "./WarehouseInfoCard";
 import { Card, CardContent } from "@/components/ui";
 import { bulkAutoAllocate } from "@/features/allocations/api";
 import { createForecast, deleteForecast, updateForecast } from "@/features/forecasts/api";
-import { getAllocationQueryKeys, getForecastQueryKeys } from "@/shared/constants/query-keys";
 import { cn } from "@/shared/libs/utils";
 
 export function ForecastDetailCard({
@@ -68,11 +67,19 @@ export function ForecastDetailCard({
         toast.info(result.message);
       }
       // 関連クエリを無効化して再取得 - 包括的に無効化（forecasts も含む）
-      const allocationKeys = getAllocationQueryKeys();
-      const forecastKeys = getForecastQueryKeys();
-      [...allocationKeys, ...forecastKeys].forEach((key) => {
-        queryClient.invalidateQueries({ queryKey: key });
-      });
+      // 関連クエリを無効化して再取得 - 包括的に無効化（forecasts も含む）
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["forecasts"],
+          exact: false,
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["allocations"],
+          exact: false,
+          refetchType: "all",
+        }),
+      ]);
     },
     onError: (error) => {
       console.error("Auto-allocate failed:", error);
@@ -97,20 +104,28 @@ export function ForecastDetailCard({
         toast.success("フォーキャストを更新しました");
       }
       // クエリ無効化: forecasts, allocations, planning-allocation-summary
-      const forecastKeys = getForecastQueryKeys();
-      const allocationKeys = getAllocationQueryKeys();
-      [...forecastKeys, ...allocationKeys].forEach((key) => {
-        queryClient.invalidateQueries({ queryKey: key });
-      });
-      // Invalidate planning allocation summary for this group
-      queryClient.invalidateQueries({
-        queryKey: [
-          "planning-allocation-summary",
-          group_key.customer_id,
-          group_key.delivery_place_id,
-          group_key.product_id,
-        ],
-      });
+      // クエリ無効化: forecasts, allocations を広範に再取得
+      // paramsが含まれていても前方一致で無効化されるように設定
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["forecasts"],
+          exact: false,
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["allocations"],
+          exact: false,
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "planning-allocation-summary",
+            group_key.customer_id,
+            group_key.delivery_place_id,
+            group_key.product_id,
+          ],
+        }),
+      ]);
     },
     onError: (error) => {
       console.error("Update/Delete forecast failed:", error);
@@ -133,20 +148,27 @@ export function ForecastDetailCard({
     onSuccess: () => {
       toast.success("フォーキャストを作成しました");
       // クエリ無効化: forecasts, allocations, planning-allocation-summary
-      const forecastKeys = getForecastQueryKeys();
-      const allocationKeys = getAllocationQueryKeys();
-      [...forecastKeys, ...allocationKeys].forEach((key) => {
-        queryClient.invalidateQueries({ queryKey: key });
-      });
-      // Invalidate planning allocation summary for this group
-      queryClient.invalidateQueries({
-        queryKey: [
-          "planning-allocation-summary",
-          group_key.customer_id,
-          group_key.delivery_place_id,
-          group_key.product_id,
-        ],
-      });
+      // クエリ無効化: forecasts, allocations, planning-allocation-summary
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["forecasts"],
+          exact: false,
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["allocations"],
+          exact: false,
+          refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "planning-allocation-summary",
+            group_key.customer_id,
+            group_key.delivery_place_id,
+            group_key.product_id,
+          ],
+        }),
+      ]);
     },
     onError: (error) => {
       console.error("Create forecast failed:", error);
