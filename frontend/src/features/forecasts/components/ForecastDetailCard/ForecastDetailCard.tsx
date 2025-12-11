@@ -96,10 +96,20 @@ export function ForecastDetailCard({
       } else {
         toast.success("フォーキャストを更新しました");
       }
-      // より具体的なクエリ無効化
+      // クエリ無効化: forecasts, allocations, planning-allocation-summary
       const forecastKeys = getForecastQueryKeys();
-      forecastKeys.forEach((key) => {
+      const allocationKeys = getAllocationQueryKeys();
+      [...forecastKeys, ...allocationKeys].forEach((key) => {
         queryClient.invalidateQueries({ queryKey: key });
+      });
+      // Invalidate planning allocation summary for this group
+      queryClient.invalidateQueries({
+        queryKey: [
+          "planning-allocation-summary",
+          group_key.customer_id,
+          group_key.delivery_place_id,
+          group_key.product_id,
+        ],
       });
     },
     onError: (error) => {
@@ -122,10 +132,20 @@ export function ForecastDetailCard({
       }),
     onSuccess: () => {
       toast.success("フォーキャストを作成しました");
-      // より具体的なクエリ無効化
+      // クエリ無効化: forecasts, allocations, planning-allocation-summary
       const forecastKeys = getForecastQueryKeys();
-      forecastKeys.forEach((key) => {
+      const allocationKeys = getAllocationQueryKeys();
+      [...forecastKeys, ...allocationKeys].forEach((key) => {
         queryClient.invalidateQueries({ queryKey: key });
+      });
+      // Invalidate planning allocation summary for this group
+      queryClient.invalidateQueries({
+        queryKey: [
+          "planning-allocation-summary",
+          group_key.customer_id,
+          group_key.delivery_place_id,
+          group_key.product_id,
+        ],
       });
     },
     onError: (error) => {
