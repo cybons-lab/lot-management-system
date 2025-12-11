@@ -1,6 +1,12 @@
-"""Delivery place CRUD endpoints."""
+"""Delivery place CRUD endpoints.
+
+Supports soft delete (validity period-based deletion) for delivery_places.
+"""
+
+from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -20,10 +26,15 @@ def list_delivery_places(
     skip: int = 0,
     limit: int = 100,
     customer_id: int | None = Query(None, description="Filter by customer ID"),
+    include_inactive: bool = Query(False, description="Include soft-deleted places"),
     db: Session = Depends(get_db),
 ):
     """Return delivery places, optionally filtered by customer_id."""
     query = db.query(DeliveryPlace)
+
+    # Filter out soft-deleted records by default
+    if not include_inactive:
+        query = query.filter(DeliveryPlace.valid_to > func.current_date())
 
     if customer_id is not None:
         query = query.filter(DeliveryPlace.customer_id == customer_id)
@@ -91,12 +102,63 @@ def update_delivery_place(
 
 
 @router.delete("/{delivery_place_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_delivery_place(delivery_place_id: int, db: Session = Depends(get_db)):
-    """Delete a delivery place."""
+def delete_delivery_place(
+    delivery_place_id: int,
+    end_date: date | None = Query(None, description="Valid until date (defaults to yesterday)"),
+    db: Session = Depends(get_db),
+):
+    """Soft delete a delivery place by setting valid_to date."""
     place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
     if not place:
         raise HTTPException(status_code=404, detail="Delivery place not found")
 
-    db.delete(place)
+    # Use SoftDeleteMixin method
+    place.soft_delete(end_date)
     db.commit()
     return None
+
+
+@router.delete("/{delivery_place_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
+def permanent_delete_delivery_place(
+    delivery_place_id: int,
+    db: Session = Depends(get_db),
+):
+    """Permanently delete a delivery place (admin only).
+
+    Only allowed if the place has no references in other tables.
+    """
+    # TODO: Add admin role check
+
+    place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
+    if not place:
+        raise HTTPException(status_code=404, detail="Delivery place not found")
+
+    # Check for references in forecast_current, customer_items, etc.
+    # This would fail on FK constraint if references exist
+    try:
+        db.delete(place)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="この納入先は他のデータから参照されているため削除できません",
+        )
+    return None
+
+
+@router.post("/{delivery_place_id}/restore", response_model=DeliveryPlaceResponse)
+def restore_delivery_place(
+    delivery_place_id: int,
+    db: Session = Depends(get_db),
+):
+    """Restore a soft-deleted delivery place."""
+    place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
+    if not place:
+        raise HTTPException(status_code=404, detail="Delivery place not found")
+
+    # Use SoftDeleteMixin method
+    place.restore()
+    db.commit()
+    db.refresh(place)
+    return place
