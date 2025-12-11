@@ -179,7 +179,11 @@ def test_update_warehouse_not_found(test_db: Session):
 
 
 def test_delete_warehouse_success(test_db: Session):
-    """Test deleting a warehouse."""
+    """Test soft deleting a warehouse.
+
+    Soft delete sets valid_to to today. The warehouse still exists in DB
+    but is excluded from list by default.
+    """
     client = TestClient(app)
 
     w = Warehouse(warehouse_code="DEL-001", warehouse_name="Delete Me", warehouse_type="internal")
@@ -189,10 +193,19 @@ def test_delete_warehouse_success(test_db: Session):
     response = client.delete("/api/masters/warehouses/DEL-001")
     assert response.status_code == 204
 
-    # Verify deleted
+    # Verify soft deletion: record still exists in DB
     test_db.expire_all()
     deleted = test_db.query(Warehouse).filter(Warehouse.warehouse_code == "DEL-001").first()
-    assert deleted is None
+    assert deleted is not None  # Soft delete doesn't remove from DB
+    # valid_to should be set (not 9999-12-31)
+    from datetime import date
+
+    assert deleted.valid_to <= date.today()
+
+    # But warehouse is excluded from list API by default
+    response = client.get("/api/masters/warehouses")
+    warehouse_codes = [w["warehouse_code"] for w in response.json()]
+    assert "DEL-001" not in warehouse_codes
 
 
 def test_delete_warehouse_not_found(test_db: Session):

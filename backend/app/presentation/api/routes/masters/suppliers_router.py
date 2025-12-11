@@ -1,6 +1,11 @@
-"""Supplier master CRUD endpoints (standalone)."""
+"""Supplier master CRUD endpoints (standalone).
 
-from fastapi import APIRouter, Depends
+Supports soft delete (valid_to based) and hard delete (admin only).
+"""
+
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
@@ -22,11 +27,16 @@ router = APIRouter(prefix="/suppliers", tags=["suppliers"])
 def list_suppliers(
     skip: int = 0,
     limit: int = 100,
+    include_inactive: bool = Query(False, description="Include soft-deleted (inactive) suppliers"),
     db: Session = Depends(get_db),
 ):
-    """List suppliers."""
+    """List suppliers.
+
+    By default, only active suppliers (valid_to >= today) are returned.
+    Set include_inactive=true to include soft-deleted suppliers.
+    """
     service = SupplierService(db)
-    return service.get_all(skip=skip, limit=limit)
+    return service.get_all(skip=skip, limit=limit, include_inactive=include_inactive)
 
 
 @router.get("/template/download")
@@ -69,8 +79,6 @@ def create_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
     # Check if exists
     existing = service.get_by_code(supplier.supplier_code, raise_404=False)
     if existing:
-        from fastapi import HTTPException, status
-
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Supplier with this code already exists",
@@ -78,7 +86,6 @@ def create_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
     try:
         return service.create(supplier)
     except Exception as e:
-        from fastapi import HTTPException, status
         from sqlalchemy.exc import IntegrityError
 
         if isinstance(e, IntegrityError):
@@ -97,11 +104,45 @@ def update_supplier(supplier_code: str, supplier: SupplierUpdate, db: Session = 
 
 
 @router.delete("/{supplier_code}", status_code=204)
-def delete_supplier(supplier_code: str, db: Session = Depends(get_db)):
-    """Delete supplier."""
+def delete_supplier(
+    supplier_code: str,
+    end_date: date | None = Query(None, description="End date for soft delete. Defaults to today."),
+    db: Session = Depends(get_db),
+):
+    """Soft delete supplier (set valid_to to end_date or today).
+
+    This marks the supplier as inactive from the specified date.
+    The supplier data is preserved for historical reference.
+    """
     service = SupplierService(db)
-    service.delete_by_code(supplier_code)
+    service.delete_by_code(supplier_code, end_date=end_date)
     return None
+
+
+@router.delete("/{supplier_code}/permanent", status_code=204)
+def permanent_delete_supplier(supplier_code: str, db: Session = Depends(get_db)):
+    """Permanently delete supplier (admin only).
+
+    WARNING: This completely removes the supplier from the database.
+    This operation cannot be undone.
+
+    Use this only for incorrectly created records.
+    Will fail if the supplier is referenced by other records.
+    """
+    # TODO: Add admin role check here
+    service = SupplierService(db)
+    service.hard_delete_by_code(supplier_code)
+    return None
+
+
+@router.post("/{supplier_code}/restore", response_model=SupplierResponse)
+def restore_supplier(supplier_code: str, db: Session = Depends(get_db)):
+    """Restore a soft-deleted supplier.
+
+    Sets valid_to back to 9999-12-31 (indefinitely valid).
+    """
+    service = SupplierService(db)
+    return service.restore_by_code(supplier_code)
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from typing import cast
 
 from fastapi import HTTPException, status
@@ -63,7 +64,12 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
         return product
 
     def list_items(
-        self, skip: int = 0, limit: int = 100, search: str | None = None
+        self,
+        skip: int = 0,
+        limit: int = 100,
+        search: str | None = None,
+        *,
+        include_inactive: bool = False,
     ) -> list[Product]:
         """List products with optional search.
 
@@ -71,11 +77,18 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             skip: Number of records to skip
             limit: Maximum number of records to return
             search: Optional search query for product_code or product_name
+            include_inactive: If True, include soft-deleted products
 
         Returns:
             List of products
         """
+        from sqlalchemy import func
+
         query = self.db.query(Product)
+
+        # Filter out soft-deleted records by default
+        if not include_inactive:
+            query = query.filter(Product.valid_to > func.current_date())
 
         if search:
             query = query.filter(
@@ -156,11 +169,23 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
         assert product is not None  # raise_404=True ensures this
         return self.update(product.id, payload)
 
-    def delete_by_code(self, code: str) -> None:
-        """Delete product by product code."""
+    def delete_by_code(self, code: str, *, end_date: date | None = None) -> None:
+        """Soft delete product by product code."""
         product = self.get_by_code(code)
-        assert product is not None  # raise_404=True ensures this
-        self.delete(product.id)
+        assert product is not None
+        self.delete(product.id, end_date=end_date)
+
+    def hard_delete_by_code(self, code: str) -> None:
+        """Permanently delete product by product code."""
+        product = self.get_by_code(code)
+        assert product is not None
+        self.hard_delete(product.id)
+
+    def restore_by_code(self, code: str) -> Product:
+        """Restore a soft-deleted product by product code."""
+        product = self.get_by_code(code)
+        assert product is not None
+        return self.restore(product.id)
 
     def list_products(
         self, *, page: int, per_page: int, q: str | None

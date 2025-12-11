@@ -173,7 +173,11 @@ def test_update_supplier_not_found(test_db: Session):
 
 
 def test_delete_supplier_success(test_db: Session):
-    """Test deleting a supplier."""
+    """Test soft deleting a supplier.
+
+    Soft delete sets valid_to to today. The supplier still exists in DB
+    but is excluded from list by default.
+    """
     client = TestClient(app)
 
     s = Supplier(supplier_code="DEL-001", supplier_name="Delete Me")
@@ -183,10 +187,19 @@ def test_delete_supplier_success(test_db: Session):
     response = client.delete("/api/masters/suppliers/DEL-001")
     assert response.status_code == 204
 
-    # Verify deleted
+    # Verify soft deletion: record still exists in DB
     test_db.expire_all()
     deleted = test_db.query(Supplier).filter(Supplier.supplier_code == "DEL-001").first()
-    assert deleted is None
+    assert deleted is not None  # Soft delete doesn't remove from DB
+    # valid_to should be set (not 9999-12-31)
+    from datetime import date
+
+    assert deleted.valid_to <= date.today()
+
+    # But supplier is excluded from list API by default
+    response = client.get("/api/masters/suppliers")
+    supplier_codes = [s["supplier_code"] for s in response.json()]
+    assert "DEL-001" not in supplier_codes
 
 
 def test_delete_supplier_not_found(test_db: Session):

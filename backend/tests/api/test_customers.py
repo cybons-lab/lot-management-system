@@ -197,7 +197,11 @@ def test_update_customer_not_found(test_db: Session):
 
 
 def test_delete_customer_success(test_db: Session):
-    """Test deleting a customer."""
+    """Test soft deleting a customer.
+
+    Soft delete sets valid_to to today. The customer can still be retrieved
+    by code but is excluded from list by default.
+    """
     client = TestClient(app)
 
     c = Customer(
@@ -210,9 +214,23 @@ def test_delete_customer_success(test_db: Session):
     response = client.delete("/api/masters/customers/DELETE-001")
     assert response.status_code == 204
 
-    # Verify deletion
+    # Verify soft deletion: customer still exists when fetched by code
     response = client.get("/api/masters/customers/DELETE-001")
-    assert response.status_code == 404
+    assert response.status_code == 200
+    data = response.json()
+    assert data["customer_code"] == "DELETE-001"
+
+    # But customer is excluded from list by default
+    response = client.get("/api/masters/customers")
+    assert response.status_code == 200
+    customer_codes = [c["customer_code"] for c in response.json()]
+    assert "DELETE-001" not in customer_codes
+
+    # Customer is included if we set include_inactive=true
+    response = client.get("/api/masters/customers?include_inactive=true")
+    assert response.status_code == 200
+    customer_codes = [c["customer_code"] for c in response.json()]
+    assert "DELETE-001" in customer_codes
 
 
 def test_delete_customer_not_found(test_db: Session):

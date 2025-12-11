@@ -1,6 +1,11 @@
-"""Warehouse master CRUD endpoints (standalone)."""
+"""Warehouse master CRUD endpoints (standalone).
 
-from fastapi import APIRouter, Depends
+Supports soft delete (valid_to based) and hard delete (admin only).
+"""
+
+from datetime import date
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
@@ -22,11 +27,12 @@ router = APIRouter(prefix="/warehouses", tags=["warehouses"])
 def list_warehouses(
     skip: int = 0,
     limit: int = 100,
+    include_inactive: bool = Query(False, description="Include soft-deleted warehouses"),
     db: Session = Depends(get_db),
 ):
     """List warehouses."""
     service = WarehouseService(db)
-    return service.get_all(skip=skip, limit=limit)
+    return service.get_all(skip=skip, limit=limit, include_inactive=include_inactive)
 
 
 @router.get("/template/download")
@@ -66,11 +72,8 @@ def get_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
 def create_warehouse(warehouse: WarehouseCreate, db: Session = Depends(get_db)):
     """Create warehouse."""
     service = WarehouseService(db)
-    # Check if exists
     existing = service.get_by_code(warehouse.warehouse_code, raise_404=False)
     if existing:
-        from fastapi import HTTPException, status
-
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Warehouse with this code already exists",
@@ -78,7 +81,6 @@ def create_warehouse(warehouse: WarehouseCreate, db: Session = Depends(get_db)):
     try:
         return service.create(warehouse)
     except Exception as e:
-        from fastapi import HTTPException, status
         from sqlalchemy.exc import IntegrityError
 
         if isinstance(e, IntegrityError):
@@ -99,11 +101,30 @@ def update_warehouse(
 
 
 @router.delete("/{warehouse_code}", status_code=204)
-def delete_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
-    """Delete warehouse."""
+def delete_warehouse(
+    warehouse_code: str,
+    end_date: date | None = Query(None, description="End date for soft delete"),
+    db: Session = Depends(get_db),
+):
+    """Soft delete warehouse."""
     service = WarehouseService(db)
-    service.delete_by_code(warehouse_code)
+    service.delete_by_code(warehouse_code, end_date=end_date)
     return None
+
+
+@router.delete("/{warehouse_code}/permanent", status_code=204)
+def permanent_delete_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
+    """Permanently delete warehouse (admin only)."""
+    service = WarehouseService(db)
+    service.hard_delete_by_code(warehouse_code)
+    return None
+
+
+@router.post("/{warehouse_code}/restore", response_model=WarehouseResponse)
+def restore_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
+    """Restore a soft-deleted warehouse."""
+    service = WarehouseService(db)
+    return service.restore_by_code(warehouse_code)
 
 
 @router.post("/bulk-upsert", response_model=BulkUpsertResponse)
