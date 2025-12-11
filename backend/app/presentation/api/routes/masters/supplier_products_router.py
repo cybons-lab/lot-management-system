@@ -34,6 +34,7 @@ def list_supplier_products(
     """
     query = (
         select(
+            ProductSupplier.id,
             ProductSupplier.product_id,
             ProductSupplier.supplier_id,
             ProductSupplier.is_primary,
@@ -55,6 +56,7 @@ def list_supplier_products(
 
     return [
         {
+            "id": r.id,
             "product_id": r.product_id,
             "supplier_id": r.supplier_id,
             "is_primary": r.is_primary,
@@ -73,6 +75,7 @@ def export_supplier_products(format: str = "csv", db: Session = Depends(get_db))
     """Export supplier products."""
     query = (
         select(
+            ProductSupplier.id,
             ProductSupplier.product_id,
             ProductSupplier.supplier_id,
             ProductSupplier.is_primary,
@@ -89,6 +92,7 @@ def export_supplier_products(format: str = "csv", db: Session = Depends(get_db))
 
     data = [
         {
+            "id": r.id,
             "product_id": r.product_id,
             "supplier_id": r.supplier_id,
             "is_primary": r.is_primary,
