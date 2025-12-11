@@ -81,7 +81,7 @@ export function SuppliersListPage() {
 
   const handleDelete = useCallback(() => {
     if (!deletingItem) return;
-    deleteSupplier(deletingItem.id, {
+    deleteSupplier(deletingItem.supplier_code, {
       onSuccess: () => setDeletingItem(null),
     });
   }, [deletingItem, deleteSupplier]);

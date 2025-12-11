@@ -85,7 +85,7 @@ export function ProductsListPage() {
 
   const handleDelete = useCallback(() => {
     if (!deletingItem) return;
-    deleteProduct(deletingItem.id, {
+    deleteProduct(deletingItem.product_code, {
       onSuccess: () => setDeletingItem(null),
     });
   }, [deletingItem, deleteProduct]);

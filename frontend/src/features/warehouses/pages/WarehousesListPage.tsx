@@ -81,7 +81,7 @@ export function WarehousesListPage() {
 
   const handleDelete = useCallback(() => {
     if (!deletingItem) return;
-    deleteWarehouse(deletingItem.id, {
+    deleteWarehouse(deletingItem.warehouse_code, {
       onSuccess: () => setDeletingItem(null),
     });
   }, [deletingItem, deleteWarehouse]);

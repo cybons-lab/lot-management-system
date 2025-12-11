@@ -102,7 +102,7 @@ export function CustomersListPage() {
   // 削除
   const handleDelete = useCallback(() => {
     if (!deletingItem) return;
-    deleteCustomer(deletingItem.id, {
+    deleteCustomer(deletingItem.customer_code, {
       onSuccess: () => setDeletingItem(null),
     });
   }, [deletingItem, deleteCustomer]);
