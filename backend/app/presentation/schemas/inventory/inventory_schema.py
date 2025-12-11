@@ -110,7 +110,7 @@ class LotResponse(LotBase, TimestampMixin):
 
     id: int = Field(serialization_alias="lot_id")
 
-    # Joined fields from v_lots_with_master view (non-nullable due to INNER JOIN)
+    # Joined fields from v_lot_details view (COALESCE ensures non-null for deleted masters)
     product_name: str
     product_code: str
     supplier_name: str
@@ -121,6 +121,16 @@ class LotResponse(LotBase, TimestampMixin):
     warehouse_code: str | None = None
     supplier_code: str | None = None
     last_updated: datetime | None = None
+
+    # User assignment fields
+    primary_user_id: int | None = None
+    primary_username: str | None = None
+    primary_user_display_name: str | None = None
+
+    # Soft-delete status flags for related masters
+    product_deleted: bool = False
+    warehouse_deleted: bool = False
+    supplier_deleted: bool = False
 
 
 class StockTransactionType(str, Enum):

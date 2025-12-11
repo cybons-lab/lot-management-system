@@ -51,15 +51,27 @@ export function createLotColumns(): Column<LotUI>[] {
     {
       id: "product_code",
       header: "製品コード",
-      cell: (lot) => lot.product_code,
+      cell: (lot) => (
+        <span className={lot.product_deleted ? "text-muted-foreground line-through" : ""}>
+          {lot.product_code}
+        </span>
+      ),
       sortable: true,
     },
     {
       id: "product_name",
       header: "製品名",
       cell: (lot) => (
-        <span className="block max-w-[200px] truncate" title={lot.product_name ?? ""}>
+        <span
+          className={`block max-w-[200px] truncate ${lot.product_deleted ? "text-muted-foreground italic" : ""}`}
+          title={lot.product_name ?? ""}
+        >
           {lot.product_name}
+          {lot.product_deleted && (
+            <span className="ml-1 text-xs text-orange-500" title="この製品は削除されています">
+              (削除済)
+            </span>
+          )}
         </span>
       ),
       width: "200px",

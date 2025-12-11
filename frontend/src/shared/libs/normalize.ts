@@ -102,6 +102,16 @@ export interface LotUI extends Record<string, unknown> {
   inspection_date: string | null;
   inspection_cert_number: string | null;
 
+  // User assignment fields
+  primary_user_id?: number | null;
+  primary_username?: string | null;
+  primary_user_display_name?: string | null;
+
+  // Soft-delete status flags for related masters
+  product_deleted?: boolean;
+  warehouse_deleted?: boolean;
+  supplier_deleted?: boolean;
+
   // Legacy fields (deprecated, for backward compatibility)
   product_code?: string | null;
   product_name?: string | null;

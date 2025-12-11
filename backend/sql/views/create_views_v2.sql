@@ -1,6 +1,8 @@
 -- ============================================================
--- ビュー再作成スクリプト (v2.2: lot_reservations対応版)
+-- ビュー再作成スクリプト (v2.3: soft-delete対応版)
 -- ============================================================
+-- 変更履歴:
+-- v2.3: 論理削除されたマスタ参照時のNULL対応（COALESCE追加）
 
 -- 1. 既存ビューの削除
 DROP VIEW IF EXISTS public.v_candidate_lots_by_order_line CASCADE;
@@ -69,14 +71,14 @@ SELECT
     l.id AS lot_id,
     l.lot_number,
     l.product_id,
-    p.maker_part_code,
-    p.product_name,
+    COALESCE(p.maker_part_code, '') AS maker_part_code,
+    COALESCE(p.product_name, '[削除済み製品]') AS product_name,
     l.warehouse_id,
-    w.warehouse_code,
-    w.warehouse_name,
+    COALESCE(w.warehouse_code, '') AS warehouse_code,
+    COALESCE(w.warehouse_name, '[削除済み倉庫]') AS warehouse_name,
     l.supplier_id,
-    s.supplier_code,
-    s.supplier_name,
+    COALESCE(s.supplier_code, '') AS supplier_code,
+    COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
     l.received_date,
     l.expiry_date,
     l.current_quantity,
@@ -91,6 +93,10 @@ SELECT
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
     u_primary.display_name AS primary_user_display_name,
+    -- 論理削除フラグ（マスタの状態確認用）
+    CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS product_deleted,
+    CASE WHEN w.valid_to IS NOT NULL AND w.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS warehouse_deleted,
+    CASE WHEN s.valid_to IS NOT NULL AND s.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS supplier_deleted,
     l.created_at,
     l.updated_at
 FROM public.lots l
@@ -99,13 +105,13 @@ LEFT JOIN public.products p ON l.product_id = p.id
 LEFT JOIN public.warehouses w ON l.warehouse_id = w.id
 LEFT JOIN public.suppliers s ON l.supplier_id = s.id
 -- 主担当者を結合
-LEFT JOIN public.user_supplier_assignments usa_primary 
-    ON usa_primary.supplier_id = l.supplier_id 
+LEFT JOIN public.user_supplier_assignments usa_primary
+    ON usa_primary.supplier_id = l.supplier_id
     AND usa_primary.is_primary = TRUE
-LEFT JOIN public.users u_primary 
+LEFT JOIN public.users u_primary
     ON u_primary.id = usa_primary.user_id;
 
-COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む）';
+COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応）';
 
 
 CREATE VIEW public.v_candidate_lots_by_order_line AS
@@ -143,8 +149,8 @@ SELECT
     o.id AS order_id,
     o.order_date,
     o.customer_id,
-    c.customer_code,
-    c.customer_name,
+    COALESCE(c.customer_code, '') AS customer_code,
+    COALESCE(c.customer_name, '[削除済み得意先]') AS customer_name,
     ol.id AS line_id,
     ol.product_id,
     ol.delivery_date,
@@ -153,18 +159,22 @@ SELECT
     ol.delivery_place_id,
     ol.status AS line_status,
     ol.shipping_document_text,
-    p.maker_part_code AS product_code,
-    p.product_name,
+    COALESCE(p.maker_part_code, '') AS product_code,
+    COALESCE(p.product_name, '[削除済み製品]') AS product_name,
     p.internal_unit AS product_internal_unit,
     p.external_unit AS product_external_unit,
     p.qty_per_internal_unit AS product_qty_per_internal_unit,
-    dp.delivery_place_code,
-    dp.delivery_place_name,
+    COALESCE(dp.delivery_place_code, '') AS delivery_place_code,
+    COALESCE(dp.delivery_place_name, '[削除済み納入先]') AS delivery_place_name,
     dp.jiku_code,
     ci.external_product_code,
-    s.supplier_name,
+    COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
     -- allocationsテーブルからの集計 (lot_reference経由でなく order_line_id で集計)
-    COALESCE(alloc_sum.allocated_qty, 0) AS allocated_quantity
+    COALESCE(alloc_sum.allocated_qty, 0) AS allocated_quantity,
+    -- 論理削除フラグ
+    CASE WHEN c.valid_to IS NOT NULL AND c.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS customer_deleted,
+    CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS product_deleted,
+    CASE WHEN dp.valid_to IS NOT NULL AND dp.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS delivery_place_deleted
 FROM public.orders o
 LEFT JOIN public.customers c ON o.customer_id = c.id
 LEFT JOIN public.order_lines ol ON ol.order_id = o.id
@@ -179,4 +189,4 @@ LEFT JOIN (
     GROUP BY order_line_id
 ) alloc_sum ON alloc_sum.order_line_id = ol.id;
 
-COMMENT ON VIEW public.v_order_line_details IS '受注明細の詳細情報ビュー';
+COMMENT ON VIEW public.v_order_line_details IS '受注明細の詳細情報ビュー（soft-delete対応）';

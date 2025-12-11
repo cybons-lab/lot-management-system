@@ -668,13 +668,49 @@ class LotService:
         if not db_lot:
             raise LotNotFoundError(lot_id)
 
-        # LotResponseの必須フィールドをリレーションから取得
-        product_name = db_lot.product.product_name if db_lot.product else ""
-        product_code = db_lot.product.maker_part_code if db_lot.product else ""
-        supplier_name = db_lot.supplier.supplier_name if db_lot.supplier else ""
-        supplier_code = db_lot.supplier.supplier_code if db_lot.supplier else None
-        warehouse_name = db_lot.warehouse.warehouse_name if db_lot.warehouse else None
-        warehouse_code = db_lot.warehouse.warehouse_code if db_lot.warehouse else None
+        # LotResponseの必須フィールドをリレーションから取得（削除済みマスタ対応）
+        product = db_lot.product
+        warehouse = db_lot.warehouse
+        supplier = db_lot.supplier
+
+        # 削除済みフラグの判定（SoftDeleteMixinのis_soft_deletedプロパティを使用）
+        product_deleted = (
+            product.is_soft_deleted if product and hasattr(product, "is_soft_deleted") else False
+        )
+        warehouse_deleted = (
+            warehouse.is_soft_deleted
+            if warehouse and hasattr(warehouse, "is_soft_deleted")
+            else False
+        )
+        supplier_deleted = (
+            supplier.is_soft_deleted if supplier and hasattr(supplier, "is_soft_deleted") else False
+        )
+
+        # 削除済みマスタの場合はフォールバック値を設定
+        product_name = (
+            product.product_name
+            if product and not product_deleted
+            else "[削除済み製品]"
+            if product_deleted
+            else ""
+        )
+        product_code = product.maker_part_code if product else ""
+        supplier_name = (
+            supplier.supplier_name
+            if supplier and not supplier_deleted
+            else "[削除済み仕入先]"
+            if supplier_deleted
+            else ""
+        )
+        supplier_code = supplier.supplier_code if supplier else None
+        warehouse_name = (
+            warehouse.warehouse_name
+            if warehouse and not warehouse_deleted
+            else "[削除済み倉庫]"
+            if warehouse_deleted
+            else None
+        )
+        warehouse_code = warehouse.warehouse_code if warehouse else None
 
         return LotResponse(
             id=db_lot.id,
@@ -707,4 +743,7 @@ class LotService:
             last_updated=db_lot.updated_at,
             created_at=db_lot.created_at,
             updated_at=db_lot.updated_at,
+            product_deleted=product_deleted,
+            warehouse_deleted=warehouse_deleted,
+            supplier_deleted=supplier_deleted,
         )
