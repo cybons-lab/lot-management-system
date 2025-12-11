@@ -1,7 +1,7 @@
 /**
  * DeliveryPlacesListPage - 納入先マスタ一覧
  */
-import { MapPin, Plus, Pencil, Trash2 } from "lucide-react";
+import { MapPin, Plus, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 
 import type { DeliveryPlace, DeliveryPlaceCreate, DeliveryPlaceUpdate } from "../api";
@@ -12,15 +12,27 @@ import {
   useUpdateDeliveryPlace,
   useSoftDeleteDeliveryPlace,
   usePermanentDeleteDeliveryPlace,
+  useRestoreDeliveryPlace,
 } from "../hooks";
 
-import { Button, Input } from "@/components/ui";
+import { Button, Input, Checkbox } from "@/components/ui";
+import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
 import { useCustomers } from "@/features/customers/hooks";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/display/alert-dialog";
 
 // Helper to check if item is inactive based on valid_to
 const isInactive = (validTo?: string | null) => {
@@ -35,6 +47,10 @@ type DeliveryPlaceWithValidTo = DeliveryPlace & { valid_to?: string };
 
 function createColumns(
   customerMap: Map<number, { customer_code: string; customer_name: string }>,
+  onRestore: (row: DeliveryPlaceWithValidTo) => void,
+  onPermanentDelete: (row: DeliveryPlaceWithValidTo) => void,
+  onEdit: (row: DeliveryPlaceWithValidTo) => void,
+  onSoftDelete: (row: DeliveryPlaceWithValidTo) => void,
 ): Column<DeliveryPlaceWithValidTo>[] {
   return [
     {
@@ -44,7 +60,9 @@ function createColumns(
         <div className="flex items-center">
           <span>{row.delivery_place_code}</span>
           {isInactive(row.valid_to) && (
-            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">無効</span>
+            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+              削除済
+            </span>
           )}
         </div>
       ),
@@ -75,6 +93,65 @@ function createColumns(
       header: "次区コード",
       cell: (row) => row.jiku_code || "-",
     },
+    {
+      id: "actions",
+      header: "操作",
+      cell: (row) => {
+        const inactive = isInactive(row.valid_to);
+        if (inactive) {
+          return (
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestore(row);
+                }}
+                title="復元"
+              >
+                <RotateCcw className="h-4 w-4 text-green-600" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPermanentDelete(row);
+                }}
+                title="完全に削除"
+              >
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </Button>
+            </div>
+          );
+        }
+        return (
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSoftDelete(row);
+              }}
+            >
+              <Trash2 className="text-destructive h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
   ];
 }
 
@@ -87,10 +164,14 @@ export function DeliveryPlacesListPage() {
   });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DeliveryPlace | null>(null);
+  const [showInactive, setShowInactive] = useState(false);
 
   // Deletion state
   const [deletingItem, setDeletingItem] = useState<DeliveryPlace | null>(null);
   const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
+
+  // Restore state
+  const [restoringItem, setRestoringItem] = useState<DeliveryPlace | null>(null);
 
   const {
     data: deliveryPlaces = [],
@@ -99,7 +180,7 @@ export function DeliveryPlacesListPage() {
     error,
     refetch,
   } = useDeliveryPlaces({
-    includeInactive: true,
+    includeInactive: showInactive,
   });
   const { useList } = useCustomers();
   // Include soft-deleted customers to properly display names for delivery places
@@ -110,6 +191,7 @@ export function DeliveryPlacesListPage() {
   const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDeleteDeliveryPlace();
   const { mutate: permanentDelete, isPending: isPermanentDeleting } =
     usePermanentDeleteDeliveryPlace();
+  const { mutate: restore, isPending: isRestoring } = useRestoreDeliveryPlace();
 
   const customerMap = useMemo(() => {
     return new Map(
@@ -120,7 +202,27 @@ export function DeliveryPlacesListPage() {
     );
   }, [customers]);
 
-  const columns = useMemo(() => createColumns(customerMap), [customerMap]);
+  const handleDeleteClick = (row: DeliveryPlace) => {
+    setDeletingItem(row);
+    setDeleteMode("soft");
+  };
+
+  const handlePermanentClick = (row: DeliveryPlace) => {
+    setDeletingItem(row);
+    setDeleteMode("permanent");
+  };
+
+  const columns = useMemo(
+    () =>
+      createColumns(
+        customerMap,
+        (row) => setRestoringItem(row), // onRestore
+        (row) => handlePermanentClick(row), // onPermanentDelete
+        (row) => setEditingItem(row), // onEdit
+        (row) => handleDeleteClick(row), // onSoftDelete
+      ),
+    [customerMap],
+  );
 
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return deliveryPlaces;
@@ -159,11 +261,6 @@ export function DeliveryPlacesListPage() {
     [editingItem, update],
   );
 
-  const handleDeleteClick = (row: DeliveryPlace) => {
-    setDeletingItem(row);
-    setDeleteMode("soft");
-  };
-
   const handleSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
     softDelete(
@@ -181,33 +278,11 @@ export function DeliveryPlacesListPage() {
     });
   };
 
-  const actionColumn: Column<DeliveryPlaceWithValidTo> = {
-    id: "actions",
-    header: "操作",
-    cell: (row) => (
-      <div className="flex gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditingItem(row);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteClick(row);
-          }}
-        >
-          <Trash2 className="text-destructive h-4 w-4" />
-        </Button>
-      </div>
-    ),
+  const handleRestore = () => {
+    if (!restoringItem) return;
+    restore(restoringItem.id, {
+      onSuccess: () => setRestoringItem(null),
+    });
   };
 
   if (isError) {
@@ -247,17 +322,29 @@ export function DeliveryPlacesListPage() {
       <div className="rounded-lg border bg-white shadow-sm">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h3 className="font-semibold">納入先一覧</h3>
-          <Input
-            type="search"
-            placeholder="コード・名称で検索..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64"
-          />
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-inactive"
+                checked={showInactive}
+                onCheckedChange={(checked) => setShowInactive(checked as boolean)}
+              />
+              <Label htmlFor="show-inactive" className="cursor-pointer text-sm">
+                削除済みを表示
+              </Label>
+            </div>
+            <Input
+              type="search"
+              placeholder="コード・名称で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64"
+            />
+          </div>
         </div>
         <DataTable
           data={sortedData as DeliveryPlaceWithValidTo[]}
-          columns={[...columns, actionColumn]}
+          columns={columns}
           sort={sort}
           onSortChange={setSort}
           getRowId={(row) => row.id}
@@ -314,7 +401,7 @@ export function DeliveryPlacesListPage() {
       {/* 完全削除ダイアログ (物理削除) */}
       <PermanentDeleteDialog
         open={!!deletingItem && deleteMode === "permanent"}
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           if (!open) {
             setDeletingItem(null);
             setDeleteMode("soft");
@@ -326,6 +413,27 @@ export function DeliveryPlacesListPage() {
         description={`${deletingItem?.delivery_place_name} を完全に削除します。`}
         confirmationPhrase={deletingItem?.delivery_place_code || "delete"}
       />
+
+      {/* 復元確認ダイアログ */}
+      <AlertDialog
+        open={!!restoringItem}
+        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>納入先を復元しますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              {restoringItem?.delivery_place_name} を有効状態に戻します。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>キャンセル</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRestore} disabled={isRestoring}>
+              {isRestoring ? "復元中..." : "復元"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

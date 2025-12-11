@@ -48,3 +48,7 @@ export async function softDeleteDeliveryPlace(id: number, endDate?: string): Pro
 export async function permanentDeleteDeliveryPlace(id: number): Promise<void> {
   return http.deleteVoid(`${BASE_PATH}/${id}/permanent`);
 }
+
+export async function restoreDeliveryPlace(id: number): Promise<void> {
+  return http.post(`${BASE_PATH}/${id}/restore`, {});
+}

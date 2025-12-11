@@ -8,6 +8,7 @@ import {
   deleteDeliveryPlace,
   fetchDeliveryPlaces,
   permanentDeleteDeliveryPlace,
+  restoreDeliveryPlace,
   softDeleteDeliveryPlace,
   updateDeliveryPlace,
   type DeliveryPlaceCreate,
@@ -74,6 +75,17 @@ export function usePermanentDeleteDeliveryPlace() {
 
   return useMutation({
     mutationFn: (id: number) => permanentDeleteDeliveryPlace(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useRestoreDeliveryPlace() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => restoreDeliveryPlace(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

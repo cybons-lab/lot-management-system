@@ -5,4 +5,5 @@ export {
   useDeleteDeliveryPlace,
   useSoftDeleteDeliveryPlace,
   usePermanentDeleteDeliveryPlace,
+  useRestoreDeliveryPlace,
 } from "./useDeliveryPlaces";
