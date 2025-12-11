@@ -36,7 +36,7 @@ def _to_product_out(product: Product) -> ProductOut:
         qty_per_internal_unit=float(product.qty_per_internal_unit),
         customer_part_no=None,
         maker_item_code=None,
-        is_active=True,
+        is_active=product.is_active,
         created_at=product.created_at,
         updated_at=product.updated_at,
         supplier_ids=[ps.supplier_id for ps in product.product_suppliers]
@@ -55,7 +55,9 @@ def list_products(
 ):
     """Return a paginated list of products."""
     service = ProductService(db)
-    products = service.list_items(skip=skip, limit=limit, search=search)
+    products = service.list_items(
+        skip=skip, limit=limit, search=search, include_inactive=include_inactive
+    )
     return [_to_product_out(product) for product in products]
 
 
