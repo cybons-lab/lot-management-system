@@ -1418,6 +1418,9 @@ export interface paths {
     /**
      * List Customers
      * @description Return customers.
+     *
+     *     By default, only active customers (valid_to >= today) are returned.
+     *     Set include_inactive=true to include soft-deleted customers.
      */
     get: operations["list_customers_api_masters_customers_get"];
     put?: never;
@@ -1442,13 +1445,6 @@ export interface paths {
     /**
      * Download Customers Template
      * @description Download customer import template.
-     *
-     *     Args:
-     *         format: 'csv' or 'xlsx' (default: csv)
-     *         include_sample: Whether to include a sample row (default: True)
-     *
-     *     Returns:
-     *         Template file for customer import
      */
     get: operations["download_customers_template_api_masters_customers_template_download_get"];
     put?: never;
@@ -1499,9 +1495,49 @@ export interface paths {
     post?: never;
     /**
      * Delete Customer
-     * @description Delete a customer.
+     * @description Soft delete customer (set valid_to to end_date or today).
      */
     delete: operations["delete_customer_api_masters_customers__customer_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customers/{customer_code}/permanent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanent Delete Customer
+     * @description Permanently delete customer (admin only).
+     */
+    delete: operations["permanent_delete_customer_api_masters_customers__customer_code__permanent_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/customers/{customer_code}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Customer
+     * @description Restore a soft-deleted customer.
+     */
+    post: operations["restore_customer_api_masters_customers__customer_code__restore_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1519,11 +1555,6 @@ export interface paths {
     /**
      * Bulk Upsert Customers
      * @description Bulk upsert customers by customer_code.
-     *
-     *     - If a customer with the same customer_code exists, it will be updated
-     *     - If not, a new customer will be created
-     *
-     *     Returns summary with counts of created/updated/failed records.
      */
     post: operations["bulk_upsert_customers_api_masters_customers_bulk_upsert_post"];
     delete?: never;
@@ -1576,9 +1607,51 @@ export interface paths {
     post?: never;
     /**
      * Delete Delivery Place
-     * @description Delete a delivery place.
+     * @description Soft delete a delivery place by setting valid_to date.
      */
     delete: operations["delete_delivery_place_api_masters_delivery_places__delivery_place_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/delivery-places/{delivery_place_id}/permanent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanent Delete Delivery Place
+     * @description Permanently delete a delivery place (admin only).
+     *
+     *     Only allowed if the place has no references in other tables.
+     */
+    delete: operations["permanent_delete_delivery_place_api_masters_delivery_places__delivery_place_id__permanent_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/delivery-places/{delivery_place_id}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Delivery Place
+     * @description Restore a soft-deleted delivery place.
+     */
+    post: operations["restore_delivery_place_api_masters_delivery_places__delivery_place_id__restore_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1675,7 +1748,7 @@ export interface paths {
     post?: never;
     /**
      * Delete Product
-     * @description Delete a product by its code (maker_part_code).
+     * @description Soft delete a product.
      */
     delete: operations["delete_product_api_masters_products__product_code__delete"];
     options?: never;
@@ -1700,6 +1773,46 @@ export interface paths {
     get: operations["get_product_suppliers_api_masters_products__product_code__suppliers_get"];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/products/{product_code}/permanent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanent Delete Product
+     * @description Permanently delete product (admin only).
+     */
+    delete: operations["permanent_delete_product_api_masters_products__product_code__permanent_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/products/{product_code}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Product
+     * @description Restore a soft-deleted product.
+     */
+    post: operations["restore_product_api_masters_products__product_code__restore_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -1741,6 +1854,9 @@ export interface paths {
     /**
      * List Suppliers
      * @description List suppliers.
+     *
+     *     By default, only active suppliers (valid_to >= today) are returned.
+     *     Set include_inactive=true to include soft-deleted suppliers.
      */
     get: operations["list_suppliers_api_masters_suppliers_get"];
     put?: never;
@@ -1822,9 +1938,60 @@ export interface paths {
     post?: never;
     /**
      * Delete Supplier
-     * @description Delete supplier.
+     * @description Soft delete supplier (set valid_to to end_date or today).
+     *
+     *     This marks the supplier as inactive from the specified date.
+     *     The supplier data is preserved for historical reference.
      */
     delete: operations["delete_supplier_api_masters_suppliers__supplier_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/suppliers/{supplier_code}/permanent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanent Delete Supplier
+     * @description Permanently delete supplier (admin only).
+     *
+     *     WARNING: This completely removes the supplier from the database.
+     *     This operation cannot be undone.
+     *
+     *     Use this only for incorrectly created records.
+     *     Will fail if the supplier is referenced by other records.
+     */
+    delete: operations["permanent_delete_supplier_api_masters_suppliers__supplier_code__permanent_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/suppliers/{supplier_code}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Supplier
+     * @description Restore a soft-deleted supplier.
+     *
+     *     Sets valid_to back to 9999-12-31 (indefinitely valid).
+     */
+    post: operations["restore_supplier_api_masters_suppliers__supplier_code__restore_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -2133,9 +2300,49 @@ export interface paths {
     post?: never;
     /**
      * Delete Warehouse
-     * @description Delete warehouse.
+     * @description Soft delete warehouse.
      */
     delete: operations["delete_warehouse_api_masters_warehouses__warehouse_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouses/{warehouse_code}/permanent": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Permanent Delete Warehouse
+     * @description Permanently delete warehouse (admin only).
+     */
+    delete: operations["permanent_delete_warehouse_api_masters_warehouses__warehouse_code__permanent_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouses/{warehouse_code}/restore": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Restore Warehouse
+     * @description Restore a soft-deleted warehouse.
+     */
+    post: operations["restore_warehouse_api_masters_warehouses__warehouse_code__restore_post"];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -4937,6 +5144,11 @@ export interface components {
        * @description Customer-specific product mappings
        */
       items?: components["schemas"]["CustomerItemImportRow"][];
+      /**
+       * Product Mappings
+       * @description Product mappings (4-party relationship)
+       */
+      product_mappings?: components["schemas"]["ProductMappingImportRow"][];
     };
     /**
      * CustomerItemBulkRow
@@ -5366,6 +5578,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
     };
     /**
      * CustomerUpdate
@@ -5463,6 +5680,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
     };
     /**
      * DeliveryPlaceUpdate
@@ -7176,6 +7398,53 @@ export interface components {
       is_active: boolean;
     };
     /**
+     * ProductMappingImportRow
+     * @description Product mapping for import (4-party relationship: customer + part code + product + supplier).
+     */
+    ProductMappingImportRow: {
+      /**
+       * Customer Part Code
+       * @description Customer's part code
+       */
+      customer_part_code: string;
+      /**
+       * Maker Part Code
+       * @description Internal product code (products.maker_part_code)
+       */
+      maker_part_code: string;
+      /**
+       * Supplier Code
+       * @description Supplier code (required)
+       */
+      supplier_code: string;
+      /**
+       * Base Unit
+       * @description Base unit
+       */
+      base_unit: string;
+      /**
+       * Pack Unit
+       * @description Pack unit
+       */
+      pack_unit?: string | null;
+      /**
+       * Pack Quantity
+       * @description Pack quantity
+       */
+      pack_quantity?: number | null;
+      /**
+       * Special Instructions
+       * @description Special instructions
+       */
+      special_instructions?: string | null;
+      /**
+       * Is Active
+       * @description Is active
+       * @default true
+       */
+      is_active: boolean;
+    };
+    /**
      * ProductMappingResponse
      * @description Product mapping response (DDL: product_mappings).
      */
@@ -7238,6 +7507,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
     };
     /**
      * ProductMappingUpdate
@@ -7296,6 +7570,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
       /**
        * Supplier Ids
        * @default []
@@ -7703,6 +7982,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
     };
     /**
      * SupplierProductUpdate
@@ -7735,6 +8019,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
     };
     /**
      * SupplierUpdate
@@ -8134,6 +8423,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Valid To
+       * Format: date
+       */
+      valid_to: string;
     };
     /**
      * WarehouseUpdate
@@ -10688,6 +10982,8 @@ export interface operations {
       query?: {
         skip?: number;
         limit?: number;
+        /** @description Include soft-deleted (inactive) customers */
+        include_inactive?: boolean;
       };
       header?: never;
       path?: never;
@@ -10879,6 +11175,38 @@ export interface operations {
   };
   delete_customer_api_masters_customers__customer_code__delete: {
     parameters: {
+      query?: {
+        /** @description End date for soft delete */
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        customer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  permanent_delete_customer_api_masters_customers__customer_code__permanent_delete: {
+    parameters: {
       query?: never;
       header?: never;
       path: {
@@ -10894,6 +11222,37 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  restore_customer_api_masters_customers__customer_code__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        customer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CustomerResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -10946,6 +11305,8 @@ export interface operations {
         limit?: number;
         /** @description Filter by customer ID */
         customer_id?: number | null;
+        /** @description Include soft-deleted places */
+        include_inactive?: boolean;
       };
       header?: never;
       path?: never;
@@ -11074,6 +11435,38 @@ export interface operations {
   };
   delete_delivery_place_api_masters_delivery_places__delivery_place_id__delete: {
     parameters: {
+      query?: {
+        /** @description Valid until date (defaults to yesterday) */
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        delivery_place_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  permanent_delete_delivery_place_api_masters_delivery_places__delivery_place_id__permanent_delete: {
+    parameters: {
       query?: never;
       header?: never;
       path: {
@@ -11101,12 +11494,45 @@ export interface operations {
       };
     };
   };
+  restore_delivery_place_api_masters_delivery_places__delivery_place_id__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        delivery_place_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["DeliveryPlaceResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_products_api_masters_products_get: {
     parameters: {
       query?: {
         skip?: number;
         limit?: number;
         search?: string | null;
+        /** @description Include soft-deleted products */
+        include_inactive?: boolean;
       };
       header?: never;
       path?: never;
@@ -11298,7 +11724,10 @@ export interface operations {
   };
   delete_product_api_masters_products__product_code__delete: {
     parameters: {
-      query?: never;
+      query?: {
+        /** @description End date for soft delete */
+        end_date?: string | null;
+      };
       header?: never;
       path: {
         product_code: string;
@@ -11356,6 +11785,66 @@ export interface operations {
       };
     };
   };
+  permanent_delete_product_api_masters_products__product_code__permanent_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  restore_product_api_masters_products__product_code__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        product_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ProductOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   bulk_upsert_products_api_masters_products_bulk_upsert_post: {
     parameters: {
       query?: never;
@@ -11394,6 +11883,8 @@ export interface operations {
       query?: {
         skip?: number;
         limit?: number;
+        /** @description Include soft-deleted (inactive) suppliers */
+        include_inactive?: boolean;
       };
       header?: never;
       path?: never;
@@ -11585,6 +12076,38 @@ export interface operations {
   };
   delete_supplier_api_masters_suppliers__supplier_code__delete: {
     parameters: {
+      query?: {
+        /** @description End date for soft delete. Defaults to today. */
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        supplier_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  permanent_delete_supplier_api_masters_suppliers__supplier_code__permanent_delete: {
+    parameters: {
       query?: never;
       header?: never;
       path: {
@@ -11600,6 +12123,37 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  restore_supplier_api_masters_suppliers__supplier_code__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        supplier_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SupplierResponse"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -12036,6 +12590,8 @@ export interface operations {
       query?: {
         skip?: number;
         limit?: number;
+        /** @description Include soft-deleted warehouses */
+        include_inactive?: boolean;
       };
       header?: never;
       path?: never;
@@ -12227,6 +12783,38 @@ export interface operations {
   };
   delete_warehouse_api_masters_warehouses__warehouse_code__delete: {
     parameters: {
+      query?: {
+        /** @description End date for soft delete */
+        end_date?: string | null;
+      };
+      header?: never;
+      path: {
+        warehouse_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  permanent_delete_warehouse_api_masters_warehouses__warehouse_code__permanent_delete: {
+    parameters: {
       query?: never;
       header?: never;
       path: {
@@ -12242,6 +12830,37 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  restore_warehouse_api_masters_warehouses__warehouse_code__restore_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        warehouse_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseResponse"];
+        };
       };
       /** @description Validation Error */
       422: {

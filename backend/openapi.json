@@ -4355,7 +4355,7 @@
           "customers"
         ],
         "summary": "List Customers",
-        "description": "Return customers.",
+        "description": "Return customers.\n\nBy default, only active customers (valid_to >= today) are returned.\nSet include_inactive=true to include soft-deleted customers.",
         "operationId": "list_customers_api_masters_customers_get",
         "parameters": [
           {
@@ -4377,6 +4377,18 @@
               "default": 100,
               "title": "Limit"
             }
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include soft-deleted (inactive) customers",
+              "default": false,
+              "title": "Include Inactive"
+            },
+            "description": "Include soft-deleted (inactive) customers"
           }
         ],
         "responses": {
@@ -4453,7 +4465,7 @@
           "customers"
         ],
         "summary": "Download Customers Template",
-        "description": "Download customer import template.\n\nArgs:\n    format: 'csv' or 'xlsx' (default: csv)\n    include_sample: Whether to include a sample row (default: True)\n\nReturns:\n    Template file for customer import",
+        "description": "Download customer import template.",
         "operationId": "download_customers_template_api_masters_customers_template_download_get",
         "parameters": [
           {
@@ -4639,8 +4651,63 @@
           "customers"
         ],
         "summary": "Delete Customer",
-        "description": "Delete a customer.",
+        "description": "Soft delete customer (set valid_to to end_date or today).",
         "operationId": "delete_customer_api_masters_customers__customer_code__delete",
+        "parameters": [
+          {
+            "name": "customer_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Customer Code"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date for soft delete",
+              "title": "End Date"
+            },
+            "description": "End date for soft delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/customers/{customer_code}/permanent": {
+      "delete": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Permanent Delete Customer",
+        "description": "Permanently delete customer (admin only).",
+        "operationId": "permanent_delete_customer_api_masters_customers__customer_code__permanent_delete",
         "parameters": [
           {
             "name": "customer_code",
@@ -4669,13 +4736,56 @@
         }
       }
     },
+    "/api/masters/customers/{customer_code}/restore": {
+      "post": {
+        "tags": [
+          "customers"
+        ],
+        "summary": "Restore Customer",
+        "description": "Restore a soft-deleted customer.",
+        "operationId": "restore_customer_api_masters_customers__customer_code__restore_post",
+        "parameters": [
+          {
+            "name": "customer_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Customer Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/masters/customers/bulk-upsert": {
       "post": {
         "tags": [
           "customers"
         ],
         "summary": "Bulk Upsert Customers",
-        "description": "Bulk upsert customers by customer_code.\n\n- If a customer with the same customer_code exists, it will be updated\n- If not, a new customer will be created\n\nReturns summary with counts of created/updated/failed records.",
+        "description": "Bulk upsert customers by customer_code.",
         "operationId": "bulk_upsert_customers_api_masters_customers_bulk_upsert_post",
         "requestBody": {
           "content": {
@@ -4757,6 +4867,18 @@
               "title": "Customer Id"
             },
             "description": "Filter by customer ID"
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include soft-deleted places",
+              "default": false,
+              "title": "Include Inactive"
+            },
+            "description": "Include soft-deleted places"
           }
         ],
         "responses": {
@@ -4925,8 +5047,63 @@
           "delivery-places"
         ],
         "summary": "Delete Delivery Place",
-        "description": "Delete a delivery place.",
+        "description": "Soft delete a delivery place by setting valid_to date.",
         "operationId": "delete_delivery_place_api_masters_delivery_places__delivery_place_id__delete",
+        "parameters": [
+          {
+            "name": "delivery_place_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Delivery Place Id"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Valid until date (defaults to yesterday)",
+              "title": "End Date"
+            },
+            "description": "Valid until date (defaults to yesterday)"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/delivery-places/{delivery_place_id}/permanent": {
+      "delete": {
+        "tags": [
+          "delivery-places"
+        ],
+        "summary": "Permanent Delete Delivery Place",
+        "description": "Permanently delete a delivery place (admin only).\n\nOnly allowed if the place has no references in other tables.",
+        "operationId": "permanent_delete_delivery_place_api_masters_delivery_places__delivery_place_id__permanent_delete",
         "parameters": [
           {
             "name": "delivery_place_id",
@@ -4941,6 +5118,49 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/delivery-places/{delivery_place_id}/restore": {
+      "post": {
+        "tags": [
+          "delivery-places"
+        ],
+        "summary": "Restore Delivery Place",
+        "description": "Restore a soft-deleted delivery place.",
+        "operationId": "restore_delivery_place_api_masters_delivery_places__delivery_place_id__restore_post",
+        "parameters": [
+          {
+            "name": "delivery_place_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Delivery Place Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryPlaceResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -4999,6 +5219,18 @@
               ],
               "title": "Search"
             }
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include soft-deleted products",
+              "default": false,
+              "title": "Include Inactive"
+            },
+            "description": "Include soft-deleted products"
           }
         ],
         "responses": {
@@ -5261,7 +5493,7 @@
           "products"
         ],
         "summary": "Delete Product",
-        "description": "Delete a product by its code (maker_part_code).",
+        "description": "Soft delete a product.",
         "operationId": "delete_product_api_masters_products__product_code__delete",
         "parameters": [
           {
@@ -5272,6 +5504,25 @@
               "type": "string",
               "title": "Product Code"
             }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date for soft delete",
+              "title": "End Date"
+            },
+            "description": "End date for soft delete"
           }
         ],
         "responses": {
@@ -5316,6 +5567,85 @@
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/products/{product_code}/permanent": {
+      "delete": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Permanent Delete Product",
+        "description": "Permanently delete product (admin only).",
+        "operationId": "permanent_delete_product_api_masters_products__product_code__permanent_delete",
+        "parameters": [
+          {
+            "name": "product_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Product Code"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/products/{product_code}/restore": {
+      "post": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Restore Product",
+        "description": "Restore a soft-deleted product.",
+        "operationId": "restore_product_api_masters_products__product_code__restore_post",
+        "parameters": [
+          {
+            "name": "product_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Product Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductOut"
+                }
               }
             }
           },
@@ -5380,7 +5710,7 @@
           "suppliers"
         ],
         "summary": "List Suppliers",
-        "description": "List suppliers.",
+        "description": "List suppliers.\n\nBy default, only active suppliers (valid_to >= today) are returned.\nSet include_inactive=true to include soft-deleted suppliers.",
         "operationId": "list_suppliers_api_masters_suppliers_get",
         "parameters": [
           {
@@ -5402,6 +5732,18 @@
               "default": 100,
               "title": "Limit"
             }
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include soft-deleted (inactive) suppliers",
+              "default": false,
+              "title": "Include Inactive"
+            },
+            "description": "Include soft-deleted (inactive) suppliers"
           }
         ],
         "responses": {
@@ -5664,8 +6006,63 @@
           "suppliers"
         ],
         "summary": "Delete Supplier",
-        "description": "Delete supplier.",
+        "description": "Soft delete supplier (set valid_to to end_date or today).\n\nThis marks the supplier as inactive from the specified date.\nThe supplier data is preserved for historical reference.",
         "operationId": "delete_supplier_api_masters_suppliers__supplier_code__delete",
+        "parameters": [
+          {
+            "name": "supplier_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Supplier Code"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date for soft delete. Defaults to today.",
+              "title": "End Date"
+            },
+            "description": "End date for soft delete. Defaults to today."
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/suppliers/{supplier_code}/permanent": {
+      "delete": {
+        "tags": [
+          "suppliers"
+        ],
+        "summary": "Permanent Delete Supplier",
+        "description": "Permanently delete supplier (admin only).\n\nWARNING: This completely removes the supplier from the database.\nThis operation cannot be undone.\n\nUse this only for incorrectly created records.\nWill fail if the supplier is referenced by other records.",
+        "operationId": "permanent_delete_supplier_api_masters_suppliers__supplier_code__permanent_delete",
         "parameters": [
           {
             "name": "supplier_code",
@@ -5680,6 +6077,49 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/suppliers/{supplier_code}/restore": {
+      "post": {
+        "tags": [
+          "suppliers"
+        ],
+        "summary": "Restore Supplier",
+        "description": "Restore a soft-deleted supplier.\n\nSets valid_to back to 9999-12-31 (indefinitely valid).",
+        "operationId": "restore_supplier_api_masters_suppliers__supplier_code__restore_post",
+        "parameters": [
+          {
+            "name": "supplier_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Supplier Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -6325,6 +6765,18 @@
               "default": 100,
               "title": "Limit"
             }
+          },
+          {
+            "name": "include_inactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "description": "Include soft-deleted warehouses",
+              "default": false,
+              "title": "Include Inactive"
+            },
+            "description": "Include soft-deleted warehouses"
           }
         ],
         "responses": {
@@ -6587,8 +7039,63 @@
           "warehouses"
         ],
         "summary": "Delete Warehouse",
-        "description": "Delete warehouse.",
+        "description": "Soft delete warehouse.",
         "operationId": "delete_warehouse_api_masters_warehouses__warehouse_code__delete",
+        "parameters": [
+          {
+            "name": "warehouse_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Warehouse Code"
+            }
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End date for soft delete",
+              "title": "End Date"
+            },
+            "description": "End date for soft delete"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/warehouses/{warehouse_code}/permanent": {
+      "delete": {
+        "tags": [
+          "warehouses"
+        ],
+        "summary": "Permanent Delete Warehouse",
+        "description": "Permanently delete warehouse (admin only).",
+        "operationId": "permanent_delete_warehouse_api_masters_warehouses__warehouse_code__permanent_delete",
         "parameters": [
           {
             "name": "warehouse_code",
@@ -6603,6 +7110,49 @@
         "responses": {
           "204": {
             "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/warehouses/{warehouse_code}/restore": {
+      "post": {
+        "tags": [
+          "warehouses"
+        ],
+        "summary": "Restore Warehouse",
+        "description": "Restore a soft-deleted warehouse.",
+        "operationId": "restore_warehouse_api_masters_warehouses__warehouse_code__restore_post",
+        "parameters": [
+          {
+            "name": "warehouse_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Warehouse Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseResponse"
+                }
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
@@ -12559,6 +13109,14 @@
             "type": "array",
             "title": "Items",
             "description": "Customer-specific product mappings"
+          },
+          "product_mappings": {
+            "items": {
+              "$ref": "#/components/schemas/ProductMappingImportRow"
+            },
+            "type": "array",
+            "title": "Product Mappings",
+            "description": "Product mappings (4-party relationship)"
           }
         },
         "type": "object",
@@ -13468,6 +14026,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
           }
         },
         "type": "object",
@@ -13476,7 +14039,8 @@
           "customer_name",
           "id",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "CustomerResponse",
         "description": "Customer response (DDL: customers)."
@@ -13698,6 +14262,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
           }
         },
         "type": "object",
@@ -13707,7 +14276,8 @@
           "customer_id",
           "id",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "DeliveryPlaceResponse",
         "description": "Delivery place response (DDL: delivery_places)."
@@ -17795,6 +18365,82 @@
         "title": "ProductMappingCreate",
         "description": "Create product mapping request."
       },
+      "ProductMappingImportRow": {
+        "properties": {
+          "customer_part_code": {
+            "type": "string",
+            "title": "Customer Part Code",
+            "description": "Customer's part code"
+          },
+          "maker_part_code": {
+            "type": "string",
+            "title": "Maker Part Code",
+            "description": "Internal product code (products.maker_part_code)"
+          },
+          "supplier_code": {
+            "type": "string",
+            "title": "Supplier Code",
+            "description": "Supplier code (required)"
+          },
+          "base_unit": {
+            "type": "string",
+            "title": "Base Unit",
+            "description": "Base unit"
+          },
+          "pack_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Unit",
+            "description": "Pack unit"
+          },
+          "pack_quantity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pack Quantity",
+            "description": "Pack quantity"
+          },
+          "special_instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Special Instructions",
+            "description": "Special instructions"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "Is active",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_part_code",
+          "maker_part_code",
+          "supplier_code",
+          "base_unit"
+        ],
+        "title": "ProductMappingImportRow",
+        "description": "Product mapping for import (4-party relationship: customer + part code + product + supplier)."
+      },
       "ProductMappingResponse": {
         "properties": {
           "customer_id": {
@@ -17886,6 +18532,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
           }
         },
         "type": "object",
@@ -17897,7 +18548,8 @@
           "base_unit",
           "id",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "ProductMappingResponse",
         "description": "Product mapping response (DDL: product_mappings)."
@@ -18079,6 +18731,11 @@
             "format": "date-time",
             "title": "Updated At"
           },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
+          },
           "supplier_ids": {
             "items": {
               "type": "integer"
@@ -18100,7 +18757,8 @@
           "maker_item_code",
           "is_active",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "ProductOut",
         "description": "Product response model."
@@ -19037,6 +19695,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
           }
         },
         "type": "object",
@@ -19049,7 +19712,8 @@
           "supplier_code",
           "supplier_name",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "SupplierProductResponse",
         "description": "Supplier product response (DDL: product_suppliers)."
@@ -19111,6 +19775,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
           }
         },
         "type": "object",
@@ -19119,7 +19788,8 @@
           "supplier_name",
           "id",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "SupplierResponse",
         "description": "Supplier response (DDL: suppliers)."
@@ -19839,6 +20509,11 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "valid_to": {
+            "type": "string",
+            "format": "date",
+            "title": "Valid To"
           }
         },
         "type": "object",
@@ -19848,7 +20523,8 @@
           "warehouse_type",
           "id",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "valid_to"
         ],
         "title": "WarehouseResponse",
         "description": "Warehouse response (DDL: warehouses)."

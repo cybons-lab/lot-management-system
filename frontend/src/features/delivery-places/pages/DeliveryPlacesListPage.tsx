@@ -10,40 +10,54 @@ import {
   useDeliveryPlaces,
   useCreateDeliveryPlace,
   useUpdateDeliveryPlace,
-  useDeleteDeliveryPlace,
+  useSoftDeleteDeliveryPlace,
+  usePermanentDeleteDeliveryPlace,
 } from "../hooks";
 
 import { Button, Input } from "@/components/ui";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/display/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
 import { useCustomers } from "@/features/customers/hooks";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
+// Helper to check if item is inactive based on valid_to
+const isInactive = (validTo?: string | null) => {
+  if (!validTo) return false;
+  // valid_to is "YYYY-MM-DD"
+  const today = new Date().toISOString().split("T")[0];
+  return validTo <= today;
+};
+
+// Extend DeliveryPlace type locally to include valid_to until types are synced
+type DeliveryPlaceWithValidTo = DeliveryPlace & { valid_to?: string };
+
 function createColumns(
   customerMap: Map<number, { customer_code: string; customer_name: string }>,
-): Column<DeliveryPlace>[] {
+): Column<DeliveryPlaceWithValidTo>[] {
   return [
     {
       id: "delivery_place_code",
       header: "納入先コード",
-      cell: (row) => row.delivery_place_code,
+      cell: (row) => (
+        <div className="flex items-center">
+          <span>{row.delivery_place_code}</span>
+          {isInactive(row.valid_to) && (
+            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">無効</span>
+          )}
+        </div>
+      ),
       sortable: true,
     },
     {
       id: "delivery_place_name",
       header: "納入先名",
-      cell: (row) => row.delivery_place_name,
+      cell: (row) => (
+        <div className={isInactive(row.valid_to) ? "text-muted-foreground" : ""}>
+          {row.delivery_place_name}
+        </div>
+      ),
       sortable: true,
     },
     {
@@ -73,15 +87,29 @@ export function DeliveryPlacesListPage() {
   });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<DeliveryPlace | null>(null);
-  const [deletingItem, setDeletingItem] = useState<DeliveryPlace | null>(null);
 
-  const { data: deliveryPlaces = [], isLoading, isError, error, refetch } = useDeliveryPlaces();
+  // Deletion state
+  const [deletingItem, setDeletingItem] = useState<DeliveryPlace | null>(null);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
+
+  const {
+    data: deliveryPlaces = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useDeliveryPlaces({
+    includeInactive: true,
+  });
   const { useList } = useCustomers();
   // Include soft-deleted customers to properly display names for delivery places
   const { data: customers = [] } = useList(true);
   const { mutate: create, isPending: isCreating } = useCreateDeliveryPlace();
   const { mutate: update, isPending: isUpdating } = useUpdateDeliveryPlace();
-  const { mutate: remove, isPending: isDeleting } = useDeleteDeliveryPlace();
+
+  const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDeleteDeliveryPlace();
+  const { mutate: permanentDelete, isPending: isPermanentDeleting } =
+    usePermanentDeleteDeliveryPlace();
 
   const customerMap = useMemo(() => {
     return new Map(
@@ -131,12 +159,29 @@ export function DeliveryPlacesListPage() {
     [editingItem, update],
   );
 
-  const handleDelete = useCallback(() => {
-    if (!deletingItem) return;
-    remove(deletingItem.id, { onSuccess: () => setDeletingItem(null) });
-  }, [deletingItem, remove]);
+  const handleDeleteClick = (row: DeliveryPlace) => {
+    setDeletingItem(row);
+    setDeleteMode("soft");
+  };
 
-  const actionColumn: Column<DeliveryPlace> = {
+  const handleSoftDelete = (endDate: string | null) => {
+    if (!deletingItem) return;
+    softDelete(
+      { id: deletingItem.id, endDate: endDate || undefined },
+      {
+        onSuccess: () => setDeletingItem(null),
+      },
+    );
+  };
+
+  const handlePermanentDelete = () => {
+    if (!deletingItem) return;
+    permanentDelete(deletingItem.id, {
+      onSuccess: () => setDeletingItem(null),
+    });
+  };
+
+  const actionColumn: Column<DeliveryPlaceWithValidTo> = {
     id: "actions",
     header: "操作",
     cell: (row) => (
@@ -156,7 +201,7 @@ export function DeliveryPlacesListPage() {
           size="sm"
           onClick={(e) => {
             e.stopPropagation();
-            setDeletingItem(row);
+            handleDeleteClick(row);
           }}
         >
           <Trash2 className="text-destructive h-4 w-4" />
@@ -211,7 +256,7 @@ export function DeliveryPlacesListPage() {
           />
         </div>
         <DataTable
-          data={sortedData}
+          data={sortedData as DeliveryPlaceWithValidTo[]}
           columns={[...columns, actionColumn]}
           sort={sort}
           onSortChange={setSort}
@@ -255,27 +300,32 @@ export function DeliveryPlacesListPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 削除確認ダイアログ */}
-      <AlertDialog
-        open={!!deletingItem}
-        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>納入先を削除しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deletingItem?.delivery_place_name}（{deletingItem?.delivery_place_code}
-              ）を削除します。 この操作は元に戻せません。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? "削除中..." : "削除"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* 削除ダイアログ (論理削除) */}
+      <SoftDeleteDialog
+        open={!!deletingItem && deleteMode === "soft"}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        title="納入先を無効化しますか？"
+        description={`${deletingItem?.delivery_place_name}（${deletingItem?.delivery_place_code}）を無効化します。`}
+        onConfirm={handleSoftDelete}
+        isPending={isSoftDeleting}
+        onSwitchToPermanent={() => setDeleteMode("permanent")}
+      />
+
+      {/* 完全削除ダイアログ (物理削除) */}
+      <PermanentDeleteDialog
+        open={!!deletingItem && deleteMode === "permanent"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeletingItem(null);
+            setDeleteMode("soft");
+          }
+        }}
+        onConfirm={handlePermanentDelete}
+        isPending={isPermanentDeleting}
+        title="納入先を完全に削除しますか？"
+        description={`${deletingItem?.delivery_place_name} を完全に削除します。`}
+        confirmationPhrase={deletingItem?.delivery_place_code || "delete"}
+      />
     </div>
   );
 }

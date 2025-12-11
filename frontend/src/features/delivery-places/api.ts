@@ -10,9 +10,15 @@ export type DeliveryPlaceUpdate = components["schemas"]["DeliveryPlaceUpdate"];
 
 const BASE_PATH = "masters/delivery-places";
 
-export async function fetchDeliveryPlaces(customerId?: number): Promise<DeliveryPlace[]> {
-  const params = customerId ? `?customer_id=${customerId}` : "";
-  return http.get<DeliveryPlace[]>(`${BASE_PATH}${params}`);
+export async function fetchDeliveryPlaces(params?: {
+  customerId?: number;
+  includeInactive?: boolean;
+}): Promise<DeliveryPlace[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.customerId) searchParams.append("customer_id", String(params.customerId));
+  if (params?.includeInactive) searchParams.append("include_inactive", "true");
+  const query = searchParams.toString();
+  return http.get<DeliveryPlace[]>(`${BASE_PATH}${query ? `?${query}` : ""}`);
 }
 
 export async function fetchDeliveryPlace(id: number): Promise<DeliveryPlace> {
@@ -32,4 +38,13 @@ export async function updateDeliveryPlace(
 
 export async function deleteDeliveryPlace(id: number): Promise<void> {
   return http.deleteVoid(`${BASE_PATH}/${id}`);
+}
+
+export async function softDeleteDeliveryPlace(id: number, endDate?: string): Promise<void> {
+  const query = endDate ? `?end_date=${endDate}` : "";
+  return http.deleteVoid(`${BASE_PATH}/${id}${query}`);
+}
+
+export async function permanentDeleteDeliveryPlace(id: number): Promise<void> {
+  return http.deleteVoid(`${BASE_PATH}/${id}/permanent`);
 }
