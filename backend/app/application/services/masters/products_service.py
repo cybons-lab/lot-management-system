@@ -6,6 +6,7 @@ from datetime import date
 from typing import cast
 
 from fastapi import HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
@@ -231,24 +232,40 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
                 if "base_unit" not in data:
                     data["base_unit"] = data.get("internal_unit", "CAN")
 
-                # Check if product exists by maker_part_code
+                # Check if active product exists by maker_part_code
                 existing = (
                     self.db.query(Product)
                     .filter(Product.maker_part_code == data["maker_part_code"])
+                    .filter(Product.valid_to > func.current_date())
                     .first()
                 )
 
                 if existing:
-                    # UPDATE
+                    # UPDATE active record
                     for field, value in data.items():
                         if field != "maker_part_code":  # Don't update the key field
                             setattr(existing, field, value)
                     summary["updated"] += 1
                 else:
-                    # CREATE
-                    new_product = Product(**data)
-                    self.db.add(new_product)
-                    summary["created"] += 1
+                    # Check for soft-deleted record
+                    deleted = (
+                        self.db.query(Product)
+                        .filter(Product.maker_part_code == data["maker_part_code"])
+                        .filter(Product.valid_to <= func.current_date())
+                        .first()
+                    )
+                    if deleted:
+                        # Restore and update soft-deleted record
+                        for field, value in data.items():
+                            if field != "maker_part_code":
+                                setattr(deleted, field, value)
+                        deleted.valid_to = date(9999, 12, 31)
+                        summary["updated"] += 1
+                    else:
+                        # CREATE new record
+                        new_product = Product(**data)
+                        self.db.add(new_product)
+                        summary["created"] += 1
 
                 summary["total"] += 1
 
