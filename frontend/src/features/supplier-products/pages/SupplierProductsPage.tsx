@@ -1,9 +1,9 @@
+/* eslint-disable max-lines-per-function */
+/* eslint-disable complexity */
 /**
  * SupplierProductsPage - 仕入先商品詳細・一覧
  */
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
-import { Package, Plus, Pencil, Trash2, Upload } from "lucide-react";
+import { Package, Plus, Upload } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
 
 import {
@@ -13,9 +13,14 @@ import {
 } from "../api";
 import { SupplierProductExportButton } from "../components/SupplierProductExportButton";
 import { SupplierProductForm } from "../components/SupplierProductForm";
+import {
+  SupplierProductsTable,
+  type SupplierProductWithValidTo,
+} from "../components/SupplierProductsTable";
 import { useSupplierProducts } from "../hooks/useSupplierProducts";
 
-import { Button, Input } from "@/components/ui";
+import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import { Button, Input, Checkbox } from "@/components/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,56 +29,15 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
+import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { useProducts } from "@/features/products/hooks/useProducts";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
-import type { Column, SortConfig } from "@/shared/components/data/DataTable";
-import { DataTable } from "@/shared/components/data/DataTable";
+import type { SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-
-function createColumns(
-  productMap: Map<number, { code: string; name: string }>,
-  supplierMap: Map<number, { code: string; name: string }>,
-): Column<SupplierProduct>[] {
-  return [
-    {
-      id: "supplier_id",
-      header: "仕入先",
-      cell: (row) => {
-        const s = supplierMap.get(row.supplier_id);
-        if (!s) return `ID: ${row.supplier_id}`;
-        return `${s.code} - ${s.name}`;
-      },
-      sortable: true,
-    },
-    {
-      id: "product_id",
-      header: "製品",
-      cell: (row) => {
-        const p = productMap.get(row.product_id);
-        if (!p) return `ID: ${row.product_id}`;
-        return `${p.code} - ${p.name}`;
-      },
-      sortable: true,
-    },
-    {
-      id: "is_primary",
-      header: "主要",
-      cell: (row) => (row.is_primary ? "★" : ""),
-      sortable: true,
-    },
-    {
-      id: "lead_time_days",
-      header: "ＬＴ(日)",
-      cell: (row) => (row.lead_time_days != null ? `${row.lead_time_days}日` : "-"),
-      sortable: true,
-    },
-  ];
-}
 
 export function SupplierProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,23 +47,32 @@ export function SupplierProductsPage() {
   });
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<SupplierProduct | null>(null);
-  const [deletingItem, setDeletingItem] = useState<SupplierProduct | null>(null);
+  const [showInactive, setShowInactive] = useState(false);
 
-  const { useList, useCreate, useUpdate, useDelete } = useSupplierProducts();
-  const { data: supplierProducts = [], isLoading, isError, error, refetch } = useList();
+  const [editingItem, setEditingItem] = useState<SupplierProductWithValidTo | null>(null);
+
+  // Delete & Restore state
+  const [deletingItem, setDeletingItem] = useState<SupplierProductWithValidTo | null>(null);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
+  const [restoringItem, setRestoringItem] = useState<SupplierProductWithValidTo | null>(null);
+
+  const { useList, useCreate, useUpdate, useSoftDelete, usePermanentDelete, useRestore } =
+    useSupplierProducts();
+  const { data: supplierProducts = [], isLoading, isError, error, refetch } = useList(showInactive);
 
   const { useList: useProductList } = useProducts();
-  const { data: products = [] } = useProductList();
+  const { data: products = [] } = useProductList(true);
 
   const { useList: useSupplierList } = useSuppliers();
-  const { data: suppliers = [] } = useSupplierList();
+  const { data: suppliers = [] } = useSupplierList(true);
 
   const { mutate: create, isPending: isCreating } = useCreate();
   const { mutate: update, isPending: isUpdating } = useUpdate();
-  const { mutate: remove, isPending: isDeleting } = useDelete();
+  const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDelete();
+  const { mutate: permanentDelete, isPending: isPermanentDeleting } = usePermanentDelete();
+  const { mutate: restore, isPending: isRestoring } = useRestore();
 
-  // Maps for efficient lookups
+  // Maps for efficient lookups (used for filtering and sorting)
   const productMap = useMemo(() => {
     return new Map(
       products.map((p) => [p.id, { code: p.maker_item_code || "", name: p.product_name }]),
@@ -110,13 +83,25 @@ export function SupplierProductsPage() {
     return new Map(suppliers.map((s) => [s.id, { code: s.supplier_code, name: s.supplier_name }]));
   }, [suppliers]);
 
-  const columns = useMemo(() => createColumns(productMap, supplierMap), [productMap, supplierMap]);
+  const handleEditClick = (row: SupplierProductWithValidTo) => {
+    setEditingItem(row);
+  };
+
+  const handleDeleteClick = (row: SupplierProductWithValidTo) => {
+    setDeletingItem(row);
+    setDeleteMode("soft");
+  };
+
+  const handlePermanentClick = (row: SupplierProductWithValidTo) => {
+    setDeletingItem(row);
+    setDeleteMode("permanent");
+  };
 
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return supplierProducts;
     const query = searchQuery.toLowerCase();
     return supplierProducts.filter((sp) => {
-      // API currently returns joined fields (product_code, etc), but we can also search via maps
+      // Use API-returned data first, fallback to maps
       const p = productMap.get(sp.product_id);
       const s = supplierMap.get(sp.supplier_id);
       const targetString = `
@@ -134,8 +119,12 @@ export function SupplierProductsPage() {
     sorted.sort((a, b) => {
       // Helper to get sortable value
       const getVal = (item: SupplierProduct, col: string) => {
-        if (col === "product_id") return productMap.get(item.product_id)?.code || "";
-        if (col === "supplier_id") return supplierMap.get(item.supplier_id)?.code || "";
+        if (col === "product_id") {
+          return item.product_code || productMap.get(item.product_id)?.code || "";
+        }
+        if (col === "supplier_id") {
+          return item.supplier_code || supplierMap.get(item.supplier_id)?.code || "";
+        }
         return item[col as keyof SupplierProduct];
       };
 
@@ -171,38 +160,28 @@ export function SupplierProductsPage() {
     [editingItem, update],
   );
 
-  const handleDelete = useCallback(() => {
+  const handleSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
-    remove(deletingItem.id, { onSuccess: () => setDeletingItem(null) });
-  }, [deletingItem, remove]);
+    softDelete(
+      { id: deletingItem.id, endDate: endDate || undefined },
+      {
+        onSuccess: () => setDeletingItem(null),
+      },
+    );
+  };
 
-  const actionColumn: Column<SupplierProduct> = {
-    id: "actions",
-    header: "操作",
-    cell: (row) => (
-      <div className="flex gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditingItem(row);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDeletingItem(row);
-          }}
-        >
-          <Trash2 className="text-destructive h-4 w-4" />
-        </Button>
-      </div>
-    ),
+  const handlePermanentDelete = () => {
+    if (!deletingItem) return;
+    permanentDelete(deletingItem.id, {
+      onSuccess: () => setDeletingItem(null),
+    });
+  };
+
+  const handleRestore = () => {
+    if (!restoringItem) return;
+    restore(restoringItem.id, {
+      onSuccess: () => setRestoringItem(null),
+    });
   };
 
   if (isError) {
@@ -249,22 +228,37 @@ export function SupplierProductsPage() {
       <div className="rounded-lg border bg-white shadow-sm">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h3 className="font-semibold">仕入先商品一覧</h3>
-          <Input
-            type="search"
-            placeholder="製品・仕入先で検索..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-64"
-          />
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-inactive"
+                checked={showInactive}
+                onCheckedChange={(checked) => setShowInactive(checked as boolean)}
+              />
+              <Label htmlFor="show-inactive" className="cursor-pointer text-sm">
+                削除済みを表示
+              </Label>
+            </div>
+            <Input
+              type="search"
+              placeholder="製品・仕入先で検索..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-64"
+            />
+          </div>
         </div>
-        <DataTable
-          data={sortedData}
-          columns={[...columns, actionColumn]}
+        <SupplierProductsTable
+          products={products}
+          suppliers={suppliers}
+          supplierProducts={sortedData}
+          isLoading={isLoading}
           sort={sort}
           onSortChange={setSort}
-          getRowId={(row) => row.id}
-          isLoading={isLoading}
-          emptyMessage="仕入先商品が登録されていません"
+          onEdit={handleEditClick}
+          onSoftDelete={handleDeleteClick}
+          onPermanentDelete={handlePermanentClick}
+          onRestore={(row) => setRestoringItem(row)}
         />
       </div>
 
@@ -303,22 +297,47 @@ export function SupplierProductsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 削除確認ダイアログ */}
+      <SoftDeleteDialog
+        open={!!deletingItem && deleteMode === "soft"}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        title="仕入先商品設定を無効化しますか？"
+        description={`${deletingItem?.product_name || "製品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を無効化します。`}
+        onConfirm={handleSoftDelete}
+        isPending={isSoftDeleting}
+        onSwitchToPermanent={() => setDeleteMode("permanent")}
+      />
+
+      <PermanentDeleteDialog
+        open={!!deletingItem && deleteMode === "permanent"}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setDeletingItem(null);
+            setDeleteMode("soft");
+          }
+        }}
+        onConfirm={handlePermanentDelete}
+        isPending={isPermanentDeleting}
+        title="仕入先商品設定を完全に削除しますか？"
+        description={`${deletingItem?.product_name || "製品"} - ${deletingItem?.supplier_name || "仕入先"} の関連を完全に削除します。`}
+        confirmationPhrase={deletingItem?.product_code || "delete"}
+      />
+
       <AlertDialog
-        open={!!deletingItem}
-        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
+        open={!!restoringItem}
+        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>削除確認</AlertDialogTitle>
+            <DialogTitle>設定を復元しますか？</DialogTitle>
             <AlertDialogDescription>
-              選択した仕入先商品設定を削除します。この操作は元に戻せません。
+              {restoringItem?.product_name} - {restoringItem?.supplier_name}{" "}
+              の関連を有効状態に戻します。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? "削除中..." : "削除"}
+            <AlertDialogAction onClick={handleRestore} disabled={isRestoring}>
+              {isRestoring ? "復元中..." : "復元"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

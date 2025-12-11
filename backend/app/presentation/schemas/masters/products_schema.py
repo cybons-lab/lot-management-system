@@ -1,6 +1,6 @@
 """Product schemas."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -52,6 +52,7 @@ class ProductOut(ORMModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    valid_to: date
     supplier_ids: list[int] = []
 
 

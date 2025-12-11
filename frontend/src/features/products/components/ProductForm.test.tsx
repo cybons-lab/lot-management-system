@@ -105,6 +105,7 @@ describe("ProductForm", () => {
       supplier_ids: [],
       customer_part_no: "CP-123",
       maker_item_code: "MK-456",
+      valid_to: "9999-12-31",
     };
 
     render(<ProductForm product={product} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);

@@ -7,6 +7,9 @@ import {
   createDeliveryPlace,
   deleteDeliveryPlace,
   fetchDeliveryPlaces,
+  permanentDeleteDeliveryPlace,
+  restoreDeliveryPlace,
+  softDeleteDeliveryPlace,
   updateDeliveryPlace,
   type DeliveryPlaceCreate,
   type DeliveryPlaceUpdate,
@@ -14,10 +17,10 @@ import {
 
 const QUERY_KEY = ["delivery-places"] as const;
 
-export function useDeliveryPlaces(customerId?: number) {
+export function useDeliveryPlaces(params?: { customerId?: number; includeInactive?: boolean }) {
   return useQuery({
-    queryKey: customerId ? [...QUERY_KEY, { customerId }] : QUERY_KEY,
-    queryFn: () => fetchDeliveryPlaces(customerId),
+    queryKey: params ? [...QUERY_KEY, params] : QUERY_KEY,
+    queryFn: () => fetchDeliveryPlaces(params),
   });
 }
 
@@ -49,6 +52,40 @@ export function useDeleteDeliveryPlace() {
 
   return useMutation({
     mutationFn: (id: number) => deleteDeliveryPlace(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useSoftDeleteDeliveryPlace() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, endDate }: { id: number; endDate?: string }) =>
+      softDeleteDeliveryPlace(id, endDate),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function usePermanentDeleteDeliveryPlace() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => permanentDeleteDeliveryPlace(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+}
+
+export function useRestoreDeliveryPlace() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: number) => restoreDeliveryPlace(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },

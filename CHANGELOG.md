@@ -43,6 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 新規登録・編集・削除機能
   - 一覧表示、インポート機能
   - Supplier Products APIに`id`フィールドを追加（編集・削除機能修正）
+- **[Feature] Frontend Refactoring:** Extracted table components and resolved complexity/lint errors in `SupplierProductsPage`, `UomConversionsPage`, and `DeliveryPlacesListPage`.
+- **[Feature] Master Data Soft Delete Integration**
+  - **Uom Conversions**: Soft/Permanent Delete, Restore, Show Inactive
+  - **Supplier Products**: Soft/Permanent Delete, Restore, Show Inactive
+  - **Customer Items**: Soft/Permanent Delete, Restore, Show Inactive
 
 ### Fixed
 - **[P1-2] 納入先マスタ `jiku_code` 非null化**

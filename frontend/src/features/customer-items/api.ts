@@ -28,6 +28,7 @@ export interface CustomerItem {
   special_instructions: string | null;
   created_at: string;
   updated_at: string;
+  valid_to?: string;
 }
 
 /**
@@ -58,6 +59,7 @@ export interface CustomerItemsListParams {
   limit?: number;
   customer_id?: number;
   product_id?: number;
+  include_inactive?: boolean;
 }
 
 // ===== API Functions =====
@@ -72,6 +74,7 @@ export const getCustomerItems = (params?: CustomerItemsListParams) => {
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params?.customer_id) searchParams.append("customer_id", params.customer_id.toString());
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
+  if (params?.include_inactive) searchParams.append("include_inactive", "true");
 
   const queryString = searchParams.toString();
   return http.get<CustomerItem[]>(`masters/customer-items${queryString ? "?" + queryString : ""}`);
@@ -109,12 +112,39 @@ export const updateCustomerItem = (
 };
 
 /**
- * Delete customer item
+ * Delete customer item (Soft delete)
  * @endpoint DELETE /customer-items/{customer_id}/{external_product_code}
  */
-export const deleteCustomerItem = (customerId: number, externalProductCode: string) => {
+export const deleteCustomerItem = (
+  customerId: number,
+  externalProductCode: string,
+  endDate?: string,
+) => {
+  const searchParams = new URLSearchParams();
+  if (endDate) searchParams.append("end_date", endDate);
+  const queryString = searchParams.toString();
   return http.delete(
-    `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}`,
+    `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}${queryString ? "?" + queryString : ""}`,
+  );
+};
+
+/**
+ * Permanently delete customer item
+ * @endpoint DELETE /customer-items/{customer_id}/{external_product_code}/permanent
+ */
+export const permanentDeleteCustomerItem = (customerId: number, externalProductCode: string) => {
+  return http.delete(
+    `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}/permanent`,
+  );
+};
+
+/**
+ * Restore customer item
+ * @endpoint POST /customer-items/{customer_id}/{external_product_code}/restore
+ */
+export const restoreCustomerItem = (customerId: number, externalProductCode: string) => {
+  return http.post<CustomerItem>(
+    `masters/customer-items/${customerId}/${encodeURIComponent(externalProductCode)}/restore`,
   );
 };
 

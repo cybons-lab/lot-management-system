@@ -6,7 +6,7 @@ Legacy fields have been removed.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import Field
 
@@ -50,7 +50,10 @@ class WarehouseResponse(WarehouseBase):
 
     id: int
     created_at: datetime
+    id: int
+    created_at: datetime
     updated_at: datetime
+    valid_to: date
 
 
 class WarehouseBulkRow(WarehouseBase):
@@ -96,7 +99,10 @@ class SupplierResponse(SupplierBase):
 
     id: int
     created_at: datetime
+    id: int
+    created_at: datetime
     updated_at: datetime
+    valid_to: date
 
 
 class SupplierBulkRow(SupplierBase):
@@ -150,7 +156,10 @@ class CustomerResponse(CustomerBase):
 
     id: int
     created_at: datetime
+    id: int
+    created_at: datetime
     updated_at: datetime
+    valid_to: date
 
 
 class CustomerBulkRow(CustomerBase):
@@ -200,7 +209,10 @@ class DeliveryPlaceResponse(DeliveryPlaceBase):
 
     id: int
     created_at: datetime
+    id: int
+    created_at: datetime
     updated_at: datetime
+    valid_to: date
 
 
 # ============================================================
@@ -247,7 +259,10 @@ class ProductMappingResponse(ProductMappingBase):
 
     id: int
     created_at: datetime
+    id: int
+    created_at: datetime
     updated_at: datetime
+    valid_to: date
 
 
 # ============================================================
@@ -330,7 +345,9 @@ class SupplierProductResponse(SupplierProductBase):
     supplier_code: str
     supplier_name: str
     created_at: datetime
+    created_at: datetime
     updated_at: datetime
+    valid_to: date
 
 
 # ============================================================

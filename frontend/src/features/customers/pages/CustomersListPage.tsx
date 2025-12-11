@@ -1,9 +1,4 @@
-/**
- * CustomersListPage
- * 得意先マスタ一覧ページ
- */
-
-import { Pencil, Plus, Trash2, Upload, Users } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload, Users, RotateCcw } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -12,10 +7,10 @@ import { CustomerExportButton } from "../components/CustomerExportButton";
 import { CustomerForm } from "../components/CustomerForm";
 import { useCustomers } from "../hooks";
 
-import { customerColumns } from "./columns";
 import * as styles from "./styles";
 
-import { Button, Input } from "@/components/ui";
+import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import { Button, Input, Checkbox } from "@/components/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,15 +21,135 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
+import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { formatDate } from "@/shared/utils/date";
 
-// ============================================
-// Component
-// ============================================
+const isInactive = (validTo?: string | null) => {
+  if (!validTo) return false;
+  const today = new Date().toISOString().split("T")[0];
+  return validTo <= today;
+};
+
+// Extend Customer type locally if needed
+type CustomerWithValidTo = Customer & { valid_to?: string };
+
+function createColumns(
+  onRestore: (row: CustomerWithValidTo) => void,
+  onPermanentDelete: (row: CustomerWithValidTo) => void,
+  onEdit: (row: CustomerWithValidTo) => void,
+  onSoftDelete: (row: CustomerWithValidTo) => void,
+): Column<CustomerWithValidTo>[] {
+  return [
+    {
+      id: "customer_code",
+      header: "得意先コード",
+      cell: (row) => (
+        <div className="flex items-center">
+          <span className="font-mono text-sm font-medium text-gray-900">{row.customer_code}</span>
+          {isInactive(row.valid_to) && (
+            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+              削除済
+            </span>
+          )}
+        </div>
+      ),
+      sortable: true,
+      width: "200px",
+    },
+    {
+      id: "customer_name",
+      header: "得意先名",
+      cell: (row) => (
+        <span
+          className={`block max-w-[300px] truncate ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-gray-900"}`}
+          title={row.customer_name}
+        >
+          {row.customer_name}
+        </span>
+      ),
+      sortable: true,
+      width: "300px",
+    },
+    {
+      id: "created_at",
+      header: "作成日時",
+      cell: (row) => <span className="text-sm text-gray-500">{formatDate(row.created_at)}</span>,
+      sortable: true,
+      width: "150px",
+    },
+    {
+      id: "updated_at",
+      header: "更新日時",
+      cell: (row) => <span className="text-sm text-gray-500">{formatDate(row.updated_at)}</span>,
+      sortable: true,
+      width: "150px",
+    },
+    {
+      id: "actions",
+      header: "操作",
+      cell: (row) => {
+        const inactive = isInactive(row.valid_to);
+        if (inactive) {
+          return (
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestore(row);
+                }}
+                title="復元"
+              >
+                <RotateCcw className="h-4 w-4 text-green-600" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPermanentDelete(row);
+                }}
+                title="完全に削除"
+              >
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </Button>
+            </div>
+          );
+        }
+        return (
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSoftDelete(row);
+              }}
+            >
+              <Trash2 className="text-destructive h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+}
 
 export function CustomersListPage() {
   const navigate = useNavigate();
@@ -44,13 +159,20 @@ export function CustomersListPage() {
   const [sort, setSort] = useState<SortConfig>({ column: "customer_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
+
+  // Deletion & Restore
   const [deletingItem, setDeletingItem] = useState<Customer | null>(null);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
+  const [restoringItem, setRestoringItem] = useState<Customer | null>(null);
 
   // Data
-  const { useList, useCreate, useDelete } = useCustomers();
-  const { data: customers = [], isLoading, isError, error, refetch } = useList();
+  const { useList, useCreate, useSoftDelete, usePermanentDelete, useRestore } = useCustomers();
+  const { data: customers = [], isLoading, isError, error, refetch } = useList(showInactive);
   const { mutate: createCustomer, isPending: isCreating } = useCreate();
-  const { mutate: deleteCustomer, isPending: isDeleting } = useDelete();
+  const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDelete();
+  const { mutate: permanentDelete, isPending: isPermanentDeleting } = usePermanentDelete();
+  const { mutate: restore, isPending: isRestoring } = useRestore();
 
   // フィルタリング
   const filteredCustomers = useMemo(() => {
@@ -79,11 +201,32 @@ export function CustomersListPage() {
     return sorted;
   }, [filteredCustomers, sort]);
 
-  // 行クリック
+  // Handle actions
+  const handleDeleteClick = (row: Customer) => {
+    setDeletingItem(row);
+    setDeleteMode("soft");
+  };
+
+  const handlePermanentClick = (row: Customer) => {
+    setDeletingItem(row);
+    setDeleteMode("permanent");
+  };
+
   const handleRowClick = useCallback(
     (customer: Customer) => {
       navigate(`/customers/${customer.customer_code}`);
     },
+    [navigate],
+  );
+
+  const columns = useMemo(
+    () =>
+      createColumns(
+        (row) => setRestoringItem(row),
+        (row) => handlePermanentClick(row),
+        (row) => navigate(`/customers/${row.customer_code}`),
+        (row) => handleDeleteClick(row),
+      ),
     [navigate],
   );
 
@@ -99,42 +242,28 @@ export function CustomersListPage() {
     [createCustomer],
   );
 
-  // 削除
-  const handleDelete = useCallback(() => {
+  const handleSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
-    deleteCustomer(deletingItem.id, {
+    softDelete(
+      { id: deletingItem.customer_code, endDate: endDate || undefined },
+      {
+        onSuccess: () => setDeletingItem(null),
+      },
+    );
+  };
+
+  const handlePermanentDelete = () => {
+    if (!deletingItem) return;
+    permanentDelete(deletingItem.customer_code, {
       onSuccess: () => setDeletingItem(null),
     });
-  }, [deletingItem, deleteCustomer]);
+  };
 
-  // 操作カラム
-  const actionColumn: Column<Customer> = {
-    id: "actions",
-    header: "操作",
-    cell: (row) => (
-      <div className="flex gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/customers/${row.customer_code}`);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDeletingItem(row);
-          }}
-        >
-          <Trash2 className="text-destructive h-4 w-4" />
-        </Button>
-      </div>
-    ),
+  const handleRestore = () => {
+    if (!restoringItem) return;
+    restore(restoringItem.customer_code, {
+      onSuccess: () => setRestoringItem(null),
+    });
   };
 
   // 統計
@@ -196,6 +325,16 @@ export function CustomersListPage() {
         <div className={styles.tableHeader}>
           <h3 className={styles.tableTitle}>得意先一覧</h3>
           <div className={styles.tableActions}>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-inactive"
+                checked={showInactive}
+                onCheckedChange={(checked) => setShowInactive(checked as boolean)}
+              />
+              <Label htmlFor="show-inactive" className="cursor-pointer text-sm">
+                削除済みを表示
+              </Label>
+            </div>
             <Input
               type="search"
               placeholder="コード・名称で検索..."
@@ -207,8 +346,8 @@ export function CustomersListPage() {
         </div>
 
         <DataTable
-          data={sortedCustomers}
-          columns={[...customerColumns, actionColumn]}
+          data={sortedCustomers as CustomerWithValidTo[]}
+          columns={columns}
           sort={sort}
           onSortChange={setSort}
           getRowId={(row) => row.id}
@@ -239,23 +378,46 @@ export function CustomersListPage() {
         group="customer"
       />
 
-      {/* 削除確認ダイアログ */}
+      <SoftDeleteDialog
+        open={!!deletingItem && deleteMode === "soft"}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        title="得意先を無効化しますか？"
+        description={`${deletingItem?.customer_name}（${deletingItem?.customer_code}）を無効化します。`}
+        onConfirm={handleSoftDelete}
+        isPending={isSoftDeleting}
+        onSwitchToPermanent={() => setDeleteMode("permanent")}
+      />
+
+      <PermanentDeleteDialog
+        open={!!deletingItem && deleteMode === "permanent"}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setDeletingItem(null);
+            setDeleteMode("soft");
+          }
+        }}
+        onConfirm={handlePermanentDelete}
+        isPending={isPermanentDeleting}
+        title="得意先を完全に削除しますか？"
+        description={`${deletingItem?.customer_name} を完全に削除します。`}
+        confirmationPhrase={deletingItem?.customer_code || "delete"}
+      />
+
       <AlertDialog
-        open={!!deletingItem}
-        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
+        open={!!restoringItem}
+        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>得意先を削除しますか？</AlertDialogTitle>
+            <AlertDialogTitle>得意先を復元しますか？</AlertDialogTitle>
             <AlertDialogDescription>
-              {deletingItem?.customer_name}（{deletingItem?.customer_code}）を削除します。
-              この操作は元に戻せません。
+              {restoringItem?.customer_name} を有効状態に戻します。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? "削除中..." : "削除"}
+            <AlertDialogAction onClick={handleRestore} disabled={isRestoring}>
+              {isRestoring ? "復元中..." : "復元"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

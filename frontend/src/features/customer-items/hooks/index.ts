@@ -16,6 +16,8 @@ import {
   createCustomerItem,
   updateCustomerItem,
   deleteCustomerItem,
+  permanentDeleteCustomerItem,
+  restoreCustomerItem,
 } from "../api";
 
 // ===== Query Keys =====
@@ -93,9 +95,32 @@ export const useUpdateCustomerItem = () => {
 };
 
 /**
- * Delete customer item
+ * Delete customer item (Soft Delete)
  */
 export const useDeleteCustomerItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      customerId,
+      externalProductCode,
+      endDate,
+    }: {
+      customerId: number;
+      externalProductCode: string;
+      endDate?: string;
+    }) => deleteCustomerItem(customerId, externalProductCode, endDate),
+    onSuccess: () => {
+      // Invalidate customer items list to refetch
+      queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+    },
+  });
+};
+
+/**
+ * Permanently delete customer item
+ */
+export const usePermanentDeleteCustomerItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -105,7 +130,28 @@ export const useDeleteCustomerItem = () => {
     }: {
       customerId: number;
       externalProductCode: string;
-    }) => deleteCustomerItem(customerId, externalProductCode),
+    }) => permanentDeleteCustomerItem(customerId, externalProductCode),
+    onSuccess: () => {
+      // Invalidate customer items list to refetch
+      queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });
+    },
+  });
+};
+
+/**
+ * Restore customer item
+ */
+export const useRestoreCustomerItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      customerId,
+      externalProductCode,
+    }: {
+      customerId: number;
+      externalProductCode: string;
+    }) => restoreCustomerItem(customerId, externalProductCode),
     onSuccess: () => {
       // Invalidate customer items list to refetch
       queryClient.invalidateQueries({ queryKey: customerItemKeys.lists() });

@@ -1,5 +1,7 @@
 """Customer items router (得意先品番マッピングAPI)."""
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -24,6 +26,7 @@ def list_customer_items(
     limit: int = Query(100, ge=1, le=1000),
     customer_id: int | None = Query(None, description="得意先IDでフィルタ"),
     product_id: int | None = Query(None, description="製品IDでフィルタ"),
+    include_inactive: bool = Query(False, description="無効なマッピングを含めるか"),
     db: Session = Depends(get_db),
 ):
     """得意先品番マッピング一覧取得.
@@ -33,13 +36,20 @@ def list_customer_items(
         limit: 取得件数上限
         customer_id: 得意先IDでフィルタ（オプション）
         product_id: 製品IDでフィルタ（オプション）
+        include_inactive: 無効なマッピングを含めるか
         db: データベースセッション
 
     Returns:
         得意先品番マッピングのリスト
     """
     service = CustomerItemsService(db)
-    return service.get_all(skip=skip, limit=limit, customer_id=customer_id, product_id=product_id)
+    return service.get_all(
+        skip=skip,
+        limit=limit,
+        customer_id=customer_id,
+        product_id=product_id,
+        include_inactive=include_inactive,
+    )
 
 
 @router.get("/{customer_id}", response_model=list[CustomerItemResponse])
@@ -117,9 +127,39 @@ def update_customer_item(
 
 @router.delete("/{customer_id}/{external_product_code}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_customer_item(
-    customer_id: int, external_product_code: str, db: Session = Depends(get_db)
+    customer_id: int,
+    external_product_code: str,
+    end_date: date | None = Query(None),
+    db: Session = Depends(get_db),
 ):
     """得意先品番マッピング削除.
+
+    Args:
+        customer_id: 得意先ID
+        external_product_code: 得意先品番
+        end_date: 無効化日（指定がない場合は即時）
+        db: データベースセッション
+
+    Raises:
+        HTTPException: マッピングが存在しない場合
+    """
+    service = CustomerItemsService(db)
+    deleted = service.delete_by_key(customer_id, external_product_code, end_date)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer item mapping not found",
+        )
+    return None
+
+
+@router.delete(
+    "/{customer_id}/{external_product_code}/permanent", status_code=status.HTTP_204_NO_CONTENT
+)
+def permanent_delete_customer_item(
+    customer_id: int, external_product_code: str, db: Session = Depends(get_db)
+):
+    """得意先品番マッピング完全削除.
 
     Args:
         customer_id: 得意先ID
@@ -130,13 +170,40 @@ def delete_customer_item(
         HTTPException: マッピングが存在しない場合
     """
     service = CustomerItemsService(db)
-    deleted = service.delete_by_key(customer_id, external_product_code)
+    deleted = service.permanent_delete_by_key(customer_id, external_product_code)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Customer item mapping not found",
         )
     return None
+
+
+@router.post("/{customer_id}/{external_product_code}/restore", response_model=CustomerItemResponse)
+def restore_customer_item(
+    customer_id: int, external_product_code: str, db: Session = Depends(get_db)
+):
+    """得意先品番マッピング復元.
+
+    Args:
+        customer_id: 得意先ID
+        external_product_code: 得意先品番
+        db: データベースセッション
+
+    Returns:
+        復元された品番マッピング
+
+    Raises:
+        HTTPException: マッピングが存在しない場合
+    """
+    service = CustomerItemsService(db)
+    restored = service.restore_by_key(customer_id, external_product_code)
+    if not restored:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer item mapping not found",
+        )
+    return restored
 
 
 @router.get("/export/download")

@@ -1,7 +1,4 @@
-/**
- * WarehousesListPage - 倉庫マスタ一覧
- */
-import { Pencil, Plus, Trash2, Upload, Warehouse as WarehouseIcon } from "lucide-react";
+import { Pencil, Plus, Trash2, Upload, Warehouse as WarehouseIcon, RotateCcw } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,10 +8,10 @@ import { WarehouseExportButton } from "../components/WarehouseExportButton";
 import { WarehouseForm } from "../components/WarehouseForm";
 import { useWarehouses } from "../hooks";
 
-import { warehouseColumns } from "./columns";
 import * as styles from "./styles";
 
-import { Button, Input } from "@/components/ui";
+import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import { Button, Input, Checkbox } from "@/components/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,10 +22,144 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/display/alert-dialog";
+import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
+import { formatDate } from "@/shared/utils/date";
+
+const isInactive = (validTo?: string | null) => {
+  if (!validTo) return false;
+  const today = new Date().toISOString().split("T")[0];
+  return validTo <= today;
+};
+
+const warehouseTypeLabels: Record<string, string> = {
+  internal: "社内",
+  external: "外部",
+  supplier: "仕入先",
+};
+
+// Extend Warehouse type locally if needed
+type WarehouseWithValidTo = Warehouse & { valid_to?: string };
+
+function createColumns(
+  onRestore: (row: WarehouseWithValidTo) => void,
+  onPermanentDelete: (row: WarehouseWithValidTo) => void,
+  onEdit: (row: WarehouseWithValidTo) => void,
+  onSoftDelete: (row: WarehouseWithValidTo) => void,
+): Column<WarehouseWithValidTo>[] {
+  return [
+    {
+      id: "warehouse_code",
+      header: "倉庫コード",
+      cell: (row) => (
+        <div className="flex items-center">
+          <span className="font-mono text-sm font-medium text-gray-900">{row.warehouse_code}</span>
+          {isInactive(row.valid_to) && (
+            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+              削除済
+            </span>
+          )}
+        </div>
+      ),
+      sortable: true,
+      width: "150px",
+    },
+    {
+      id: "warehouse_name",
+      header: "倉庫名",
+      cell: (row) => (
+        <span
+          className={`block max-w-[250px] truncate ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-gray-900"}`}
+          title={row.warehouse_name}
+        >
+          {row.warehouse_name}
+        </span>
+      ),
+      sortable: true,
+      width: "250px",
+    },
+    {
+      id: "warehouse_type",
+      header: "タイプ",
+      cell: (row) => (
+        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+          {warehouseTypeLabels[row.warehouse_type] ?? row.warehouse_type}
+        </span>
+      ),
+      sortable: true,
+      width: "100px",
+    },
+    {
+      id: "updated_at",
+      header: "更新日時",
+      cell: (row) => <span className="text-sm text-gray-500">{formatDate(row.updated_at)}</span>,
+      sortable: true,
+      width: "120px",
+    },
+    {
+      id: "actions",
+      header: "操作",
+      cell: (row) => {
+        const inactive = isInactive(row.valid_to);
+        if (inactive) {
+          return (
+            <div className="flex gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestore(row);
+                }}
+                title="復元"
+              >
+                <RotateCcw className="h-4 w-4 text-green-600" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPermanentDelete(row);
+                }}
+                title="完全に削除"
+              >
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </Button>
+            </div>
+          );
+        }
+        return (
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(row);
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSoftDelete(row);
+              }}
+            >
+              <Trash2 className="text-destructive h-4 w-4" />
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+}
 
 export function WarehousesListPage() {
   const navigate = useNavigate();
@@ -36,12 +167,19 @@ export function WarehousesListPage() {
   const [sort, setSort] = useState<SortConfig>({ column: "warehouse_code", direction: "asc" });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [deletingItem, setDeletingItem] = useState<Warehouse | null>(null);
+  const [showInactive, setShowInactive] = useState(false);
 
-  const { useList, useCreate, useDelete } = useWarehouses();
-  const { data: warehouses = [], isLoading, isError, error, refetch } = useList();
+  // Delete & Restore state
+  const [deletingItem, setDeletingItem] = useState<Warehouse | null>(null);
+  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
+  const [restoringItem, setRestoringItem] = useState<Warehouse | null>(null);
+
+  const { useList, useCreate, useSoftDelete, usePermanentDelete, useRestore } = useWarehouses();
+  const { data: warehouses = [], isLoading, isError, error, refetch } = useList(showInactive);
   const { mutate: createWarehouse, isPending: isCreating } = useCreate();
-  const { mutate: deleteWarehouse, isPending: isDeleting } = useDelete();
+  const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDelete();
+  const { mutate: permanentDelete, isPending: isPermanentDeleting } = usePermanentDelete();
+  const { mutate: restore, isPending: isRestoring } = useRestore();
 
   const filteredWarehouses = useMemo(() => {
     if (!searchQuery.trim()) return warehouses;
@@ -72,6 +210,27 @@ export function WarehousesListPage() {
     [navigate],
   );
 
+  const handleDeleteClick = (row: Warehouse) => {
+    setDeletingItem(row);
+    setDeleteMode("soft");
+  };
+
+  const handlePermanentClick = (row: Warehouse) => {
+    setDeletingItem(row);
+    setDeleteMode("permanent");
+  };
+
+  const columns = useMemo(
+    () =>
+      createColumns(
+        (row) => setRestoringItem(row),
+        (row) => handlePermanentClick(row),
+        (row) => navigate(`/warehouses/${row.warehouse_code}`),
+        (row) => handleDeleteClick(row),
+      ),
+    [navigate],
+  );
+
   const handleCreate = useCallback(
     (data: WarehouseCreate) => {
       createWarehouse(data, { onSuccess: () => setIsCreateDialogOpen(false) });
@@ -79,40 +238,28 @@ export function WarehousesListPage() {
     [createWarehouse],
   );
 
-  const handleDelete = useCallback(() => {
+  const handleSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
-    deleteWarehouse(deletingItem.id, {
+    softDelete(
+      { id: deletingItem.warehouse_code, endDate: endDate || undefined },
+      {
+        onSuccess: () => setDeletingItem(null),
+      },
+    );
+  };
+
+  const handlePermanentDelete = () => {
+    if (!deletingItem) return;
+    permanentDelete(deletingItem.warehouse_code, {
       onSuccess: () => setDeletingItem(null),
     });
-  }, [deletingItem, deleteWarehouse]);
+  };
 
-  const actionColumn: Column<Warehouse> = {
-    id: "actions",
-    header: "操作",
-    cell: (row) => (
-      <div className="flex gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/warehouses/${row.warehouse_code}`);
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setDeletingItem(row);
-          }}
-        >
-          <Trash2 className="text-destructive h-4 w-4" />
-        </Button>
-      </div>
-    ),
+  const handleRestore = () => {
+    if (!restoringItem) return;
+    restore(restoringItem.warehouse_code, {
+      onSuccess: () => setRestoringItem(null),
+    });
   };
 
   if (isError) {
@@ -163,6 +310,16 @@ export function WarehousesListPage() {
         <div className={styles.tableHeader}>
           <h3 className={styles.tableTitle}>倉庫一覧</h3>
           <div className={styles.tableActions}>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="show-inactive"
+                checked={showInactive}
+                onCheckedChange={(checked) => setShowInactive(checked as boolean)}
+              />
+              <Label htmlFor="show-inactive" className="cursor-pointer text-sm">
+                削除済みを表示
+              </Label>
+            </div>
             <Input
               type="search"
               placeholder="コード・名称で検索..."
@@ -173,8 +330,8 @@ export function WarehousesListPage() {
           </div>
         </div>
         <DataTable
-          data={sortedWarehouses}
-          columns={[...warehouseColumns, actionColumn]}
+          data={sortedWarehouses as WarehouseWithValidTo[]}
+          columns={columns}
           sort={sort}
           onSortChange={setSort}
           getRowId={(row) => row.id}
@@ -199,22 +356,46 @@ export function WarehousesListPage() {
 
       <WarehouseBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
 
+      <SoftDeleteDialog
+        open={!!deletingItem && deleteMode === "soft"}
+        onOpenChange={(open) => !open && setDeletingItem(null)}
+        title="倉庫を無効化しますか？"
+        description={`${deletingItem?.warehouse_name}（${deletingItem?.warehouse_code}）を無効化します。`}
+        onConfirm={handleSoftDelete}
+        isPending={isSoftDeleting}
+        onSwitchToPermanent={() => setDeleteMode("permanent")}
+      />
+
+      <PermanentDeleteDialog
+        open={!!deletingItem && deleteMode === "permanent"}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setDeletingItem(null);
+            setDeleteMode("soft");
+          }
+        }}
+        onConfirm={handlePermanentDelete}
+        isPending={isPermanentDeleting}
+        title="倉庫を完全に削除しますか？"
+        description={`${deletingItem?.warehouse_name} を完全に削除します。`}
+        confirmationPhrase={deletingItem?.warehouse_code || "delete"}
+      />
+
       <AlertDialog
-        open={!!deletingItem}
-        onOpenChange={(open: boolean) => !open && setDeletingItem(null)}
+        open={!!restoringItem}
+        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>倉庫を削除しますか？</AlertDialogTitle>
+            <AlertDialogTitle>倉庫を復元しますか？</AlertDialogTitle>
             <AlertDialogDescription>
-              {deletingItem?.warehouse_name}（{deletingItem?.warehouse_code}）を削除します。
-              この操作は元に戻せません。
+              {restoringItem?.warehouse_name} を有効状態に戻します。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? "削除中..." : "削除"}
+            <AlertDialogAction onClick={handleRestore} disabled={isRestoring}>
+              {isRestoring ? "復元中..." : "復元"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,7 +1,8 @@
+/* eslint-disable max-lines-per-function */
 /**
  * CustomerItemsTable - Table component for customer items.
  */
-import { Building2, Package } from "lucide-react";
+import { Building2, Package, RotateCcw, Trash2 } from "lucide-react";
 
 import type { CustomerItem } from "../api";
 
@@ -10,8 +11,9 @@ import { Button } from "@/components/ui";
 interface CustomerItemsTableProps {
   items: CustomerItem[];
   isLoading: boolean;
-  isDeleting: boolean;
-  onDelete: (customerId: number, externalProductCode: string) => void;
+  onSoftDelete: (item: CustomerItem) => void;
+  onPermanentDelete: (item: CustomerItem) => void;
+  onRestore: (item: CustomerItem) => void;
   onRowClick?: (item: CustomerItem) => void;
 }
 
@@ -50,12 +52,21 @@ function TableHeader() {
 
 interface TableRowProps {
   item: CustomerItem;
-  isDeleting: boolean;
-  onDelete: (customerId: number, externalProductCode: string) => void;
+  onSoftDelete: (item: CustomerItem) => void;
+  onPermanentDelete: (item: CustomerItem) => void;
+  onRestore: (item: CustomerItem) => void;
   onRowClick?: (item: CustomerItem) => void;
 }
 
-function TableRow({ item, isDeleting, onDelete, onRowClick }: TableRowProps) {
+const isInactive = (validTo?: string) => {
+  if (!validTo) return false;
+  const today = new Date().toISOString().split("T")[0];
+  return validTo <= today;
+};
+
+function TableRow({ item, onSoftDelete, onPermanentDelete, onRestore, onRowClick }: TableRowProps) {
+  const inactive = isInactive(item.valid_to);
+
   return (
     <tr className="cursor-pointer hover:bg-gray-50" onClick={() => onRowClick?.(item)}>
       <td className="px-6 py-4 text-sm text-gray-900">
@@ -66,6 +77,11 @@ function TableRow({ item, isDeleting, onDelete, onRowClick }: TableRowProps) {
             <div className="truncate text-xs text-gray-500" title={item.customer_name}>
               {item.customer_name}
             </div>
+            {inactive && (
+              <span className="mt-1 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                削除済
+              </span>
+            )}
           </div>
         </div>
       </td>
@@ -101,17 +117,48 @@ function TableRow({ item, isDeleting, onDelete, onRowClick }: TableRowProps) {
         {item.pack_quantity || "-"}
       </td>
       <td className="px-6 py-4 text-right text-sm whitespace-nowrap">
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(item.customer_id, item.external_product_code);
-          }}
-          disabled={isDeleting}
-        >
-          削除
-        </Button>
+        {inactive ? (
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRestore(item);
+              }}
+              title="復元"
+              className="h-8 w-8 p-0"
+            >
+              <RotateCcw className="h-4 w-4 text-green-600" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPermanentDelete(item);
+              }}
+              title="完全に削除"
+              className="h-8 w-8 p-0"
+            >
+              <Trash2 className="h-4 w-4 text-red-600" />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSoftDelete(item);
+              }}
+              className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </td>
     </tr>
   );
@@ -120,8 +167,9 @@ function TableRow({ item, isDeleting, onDelete, onRowClick }: TableRowProps) {
 export function CustomerItemsTable({
   items,
   isLoading,
-  isDeleting,
-  onDelete,
+  onSoftDelete,
+  onPermanentDelete,
+  onRestore,
   onRowClick,
 }: CustomerItemsTableProps) {
   return (
@@ -146,8 +194,9 @@ export function CustomerItemsTable({
                 <TableRow
                   key={`${item.customer_id}-${item.external_product_code}`}
                   item={item}
-                  isDeleting={isDeleting}
-                  onDelete={onDelete}
+                  onSoftDelete={onSoftDelete}
+                  onPermanentDelete={onPermanentDelete}
+                  onRestore={onRestore}
                   onRowClick={onRowClick}
                 />
               ))}

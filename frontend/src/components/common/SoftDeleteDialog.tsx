@@ -28,6 +28,7 @@ export interface SoftDeleteDialogProps {
   description: string;
   onConfirm: (endDate: string | null) => void;
   isPending?: boolean;
+  onSwitchToPermanent?: () => void;
 }
 
 export function SoftDeleteDialog({
@@ -37,6 +38,7 @@ export function SoftDeleteDialog({
   description,
   onConfirm,
   isPending = false,
+  onSwitchToPermanent,
 }: SoftDeleteDialogProps) {
   const [endDate, setEndDate] = useState<string>("");
   const today = new Date().toISOString().split("T")[0];
@@ -75,8 +77,17 @@ export function SoftDeleteDialog({
           </div>
         </div>
 
-        <AlertDialogFooter>
-          <AlertDialogCancel>キャンセル</AlertDialogCancel>
+        <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+          {onSwitchToPermanent && (
+            <button
+              type="button"
+              onClick={onSwitchToPermanent}
+              className="text-destructive mr-auto mb-2 text-sm underline hover:no-underline sm:mb-0"
+            >
+              完全に削除する（管理者のみ）
+            </button>
+          )}
+          <AlertDialogCancel onClick={() => onOpenChange(false)}>キャンセル</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={isPending}

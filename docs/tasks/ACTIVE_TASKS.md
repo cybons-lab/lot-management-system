@@ -13,7 +13,7 @@
 
 ### P1-6: マスタデータの論理削除への移行
 
-**ステータス:** 未着手
+**ステータス:** 進行中
 
 **目的:**
 現在の物理削除（`db.delete(instance)`）を論理削除（`is_active` フラグ）に変更する。
@@ -27,6 +27,13 @@
 - 各マスタモデルに `is_active` フラグを追加（既存のものは活用）
 - 削除APIを論理削除に変更（`is_active = False`）
 - 一覧取得時に `is_active = True` でフィルタリング
+
+**進捗:**
+- ✅ `uom_conversions` (単位換算): Soft Delete / Restore 対応完了
+- ✅ `supplier_products` (仕入先商品): Soft Delete / Restore 対応完了
+- ✅ `customer_items` (得意先品番): Soft Delete / Restore 対応完了
+- ⬜ `customers`, `suppliers`, `products`, `warehouses` (未着手)
+- ✅ Master Data Pages Refactoring (Lint Fixes)
 
 ---
 
