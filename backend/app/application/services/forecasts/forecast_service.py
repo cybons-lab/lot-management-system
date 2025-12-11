@@ -8,6 +8,14 @@ from sqlalchemy import and_
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
+from app.application.services.common.soft_delete_utils import (
+    get_customer_code,
+    get_customer_name,
+    get_delivery_place_code,
+    get_delivery_place_name,
+    get_product_code,
+    get_product_name,
+)
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent, ForecastHistory
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
 from app.presentation.schemas.forecasts.forecast_schema import (
@@ -87,12 +95,12 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                 customer_id=cust_id,
                 delivery_place_id=dp_id,
                 product_id=prod_id,
-                customer_code=getattr(first.customer, "customer_code", None),
-                customer_name=getattr(first.customer, "customer_name", None),
-                delivery_place_code=getattr(first.delivery_place, "delivery_place_code", None),
-                delivery_place_name=getattr(first.delivery_place, "delivery_place_name", None),
-                product_code=getattr(first.product, "maker_part_code", None),
-                product_name=getattr(first.product, "product_name", None),
+                customer_code=get_customer_code(first.customer),
+                customer_name=get_customer_name(first.customer),
+                delivery_place_code=get_delivery_place_code(first.delivery_place),
+                delivery_place_name=get_delivery_place_name(first.delivery_place),
+                product_code=get_product_code(first.product),
+                product_name=get_product_name(first.product),
             )
 
             forecast_responses = [
@@ -108,12 +116,12 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                     snapshot_at=f.snapshot_at,
                     created_at=f.created_at,
                     updated_at=f.updated_at,
-                    customer_code=getattr(f.customer, "customer_code", None),
-                    customer_name=getattr(f.customer, "customer_name", None),
-                    delivery_place_code=getattr(f.delivery_place, "delivery_place_code", None),
-                    delivery_place_name=getattr(f.delivery_place, "delivery_place_name", None),
-                    product_code=getattr(f.product, "maker_part_code", None),
-                    product_name=getattr(f.product, "product_name", None),
+                    customer_code=get_customer_code(f.customer),
+                    customer_name=get_customer_name(f.customer),
+                    delivery_place_code=get_delivery_place_code(f.delivery_place),
+                    delivery_place_name=get_delivery_place_name(f.delivery_place),
+                    product_code=get_product_code(f.product),
+                    product_name=get_product_name(f.product),
                 )
                 for f in forecast_list
             ]
@@ -194,12 +202,12 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             snapshot_at=forecast.snapshot_at,
             created_at=forecast.created_at,
             updated_at=forecast.updated_at,
-            customer_code=getattr(forecast.customer, "customer_code", None),
-            customer_name=getattr(forecast.customer, "customer_name", None),
-            delivery_place_code=getattr(forecast.delivery_place, "delivery_place_code", None),
-            delivery_place_name=getattr(forecast.delivery_place, "delivery_place_name", None),
-            product_code=getattr(forecast.product, "maker_part_code", None),
-            product_name=getattr(forecast.product, "product_name", None),
+            customer_code=get_customer_code(forecast.customer),
+            customer_name=get_customer_name(forecast.customer),
+            delivery_place_code=get_delivery_place_code(forecast.delivery_place),
+            delivery_place_name=get_delivery_place_name(forecast.delivery_place),
+            product_code=get_product_code(forecast.product),
+            product_name=get_product_name(forecast.product),
         )
 
     def create_forecast(self, data: ForecastCreate) -> ForecastResponse:

@@ -8,6 +8,14 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session, joinedload
 
+from app.application.services.common.soft_delete_utils import (
+    get_customer_code,
+    get_customer_name,
+    get_delivery_place_code,
+    get_delivery_place_name,
+    get_product_code,
+    get_product_name,
+)
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
 from app.domain.events import EventDispatcher, StockChangedEvent
 from app.infrastructure.persistence.models import (
@@ -241,28 +249,27 @@ class WithdrawalService:
     def _to_response(self, withdrawal: Withdrawal) -> WithdrawalResponse:
         """モデルをレスポンススキーマに変換."""
         withdrawal_type = WithdrawalType(withdrawal.withdrawal_type)
+        lot = withdrawal.lot
+        product = lot.product if lot else None
+
         return WithdrawalResponse(
             id=withdrawal.id,
             lot_id=withdrawal.lot_id,
-            lot_number=withdrawal.lot.lot_number,
-            product_id=withdrawal.lot.product_id,
-            product_name=withdrawal.lot.product.product_name,
-            product_code=withdrawal.lot.product.maker_part_code,
+            lot_number=lot.lot_number if lot else "",
+            product_id=lot.product_id if lot else 0,
+            product_name=get_product_name(product),
+            product_code=get_product_code(product),
             quantity=withdrawal.quantity,
             withdrawal_type=withdrawal_type,
             withdrawal_type_label=WITHDRAWAL_TYPE_LABELS.get(
                 withdrawal_type, str(withdrawal_type.value)
             ),
             customer_id=withdrawal.customer_id,
-            customer_name=withdrawal.customer.customer_name if withdrawal.customer else None,
-            customer_code=withdrawal.customer.customer_code if withdrawal.customer else None,
+            customer_name=get_customer_name(withdrawal.customer) or None,
+            customer_code=get_customer_code(withdrawal.customer) or None,
             delivery_place_id=withdrawal.delivery_place_id,
-            delivery_place_name=withdrawal.delivery_place.delivery_place_name
-            if withdrawal.delivery_place
-            else None,
-            delivery_place_code=withdrawal.delivery_place.delivery_place_code
-            if withdrawal.delivery_place
-            else None,
+            delivery_place_name=get_delivery_place_name(withdrawal.delivery_place) or None,
+            delivery_place_code=get_delivery_place_code(withdrawal.delivery_place) or None,
             ship_date=withdrawal.ship_date,
             reason=withdrawal.reason,
             reference_number=withdrawal.reference_number,
