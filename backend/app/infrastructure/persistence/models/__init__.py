@@ -42,6 +42,7 @@ from .order_groups_models import OrderGroup
 from .orders_models import Allocation, Order, OrderLine
 from .product_supplier_models import ProductSupplier
 from .seed_snapshot_model import SeedSnapshot
+from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
 from .system_config_model import SystemConfig
 from .system_models import ClientLog
 from .views_models import (
@@ -65,6 +66,9 @@ from .withdrawal_models import Withdrawal, WithdrawalType
 __all__ = [
     # Base
     "Base",
+    # Soft Delete
+    "SoftDeleteMixin",
+    "INFINITE_VALID_TO",
     # Masters
     "Warehouse",
     "Supplier",

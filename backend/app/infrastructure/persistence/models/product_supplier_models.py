@@ -6,21 +6,25 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     Index,
     Integer,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.orm import relationship
 
 from app.infrastructure.persistence.models.base_model import Base
+from app.infrastructure.persistence.models.soft_delete_mixin import SoftDeleteMixin
 
 
-class ProductSupplier(Base):
+class ProductSupplier(SoftDeleteMixin, Base):
     """製品-仕入先の関連テーブル.
 
     1製品に対して複数の仕入先を紐づけ可能。 is_primary=True の仕入先が主要仕入先（1製品につき1つ）。
+    Supports soft delete via valid_to column.
     """
 
     __tablename__ = "product_suppliers"
@@ -30,6 +34,7 @@ class ProductSupplier(Base):
     supplier_id = Column(BigInteger, ForeignKey("suppliers.id"), nullable=False)
     is_primary = Column(Boolean, nullable=False, default=False)
     lead_time_days = Column(Integer, nullable=True)
+    valid_to = Column(Date, nullable=False, server_default=text("'9999-12-31'"))
     created_at = Column(DateTime, nullable=False, default=datetime.now)
     updated_at = Column(DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
@@ -45,4 +50,5 @@ class ProductSupplier(Base):
             unique=True,
             postgresql_where=(is_primary == True),  # noqa: E712
         ),
+        Index("idx_product_suppliers_valid_to", "valid_to"),
     )

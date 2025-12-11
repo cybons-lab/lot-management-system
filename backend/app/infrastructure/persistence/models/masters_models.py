@@ -3,6 +3,11 @@
 
 All models strictly follow the DDL as the single source of truth. Legacy
 columns (address, created_by, deleted_at, etc.) have been removed.
+
+Soft Delete Support:
+    Master models support soft delete via the `valid_to` column.
+    Records with valid_to >= today are considered active.
+    Use SoftDeleteMixin for common soft delete operations.
 """
 
 from __future__ import annotations
@@ -31,6 +36,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
+from .soft_delete_mixin import SoftDeleteMixin
 
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
@@ -42,11 +48,12 @@ if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .product_supplier_models import ProductSupplier
 
 
-class Warehouse(Base):
+class Warehouse(SoftDeleteMixin, Base):
     """Warehouses master table (倉庫マスタ).
 
     DDL: warehouses
     Primary key: id (BIGSERIAL)
+    Supports soft delete via valid_to column.
     """
 
     __tablename__ = "warehouses"
@@ -55,6 +62,9 @@ class Warehouse(Base):
     warehouse_code: Mapped[str] = mapped_column(String(50), nullable=False)
     warehouse_name: Mapped[str] = mapped_column(String(200), nullable=False)
     warehouse_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    valid_to: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("'9999-12-31'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -70,17 +80,19 @@ class Warehouse(Base):
         ),
         Index("idx_warehouses_code", "warehouse_code"),
         Index("idx_warehouses_type", "warehouse_type"),
+        Index("idx_warehouses_valid_to", "valid_to"),
     )
 
     # Relationships
     lots: Mapped[list[Lot]] = relationship("Lot", back_populates="warehouse")
 
 
-class Supplier(Base):
+class Supplier(SoftDeleteMixin, Base):
     """Suppliers master table (仕入先マスタ).
 
     DDL: suppliers
     Primary key: id (BIGSERIAL)
+    Supports soft delete via valid_to column.
     """
 
     __tablename__ = "suppliers"
@@ -88,6 +100,9 @@ class Supplier(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     supplier_code: Mapped[str] = mapped_column(String(50), nullable=False)
     supplier_name: Mapped[str] = mapped_column(String(200), nullable=False)
+    valid_to: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("'9999-12-31'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -98,6 +113,7 @@ class Supplier(Base):
     __table_args__ = (
         UniqueConstraint("supplier_code", name="uq_suppliers_supplier_code"),
         Index("idx_suppliers_code", "supplier_code"),
+        Index("idx_suppliers_valid_to", "valid_to"),
     )
 
     # Relationships
@@ -116,11 +132,12 @@ class Supplier(Base):
     )
 
 
-class Customer(Base):
+class Customer(SoftDeleteMixin, Base):
     """Customers master table (得意先マスタ).
 
     DDL: customers
     Primary key: id (BIGSERIAL)
+    Supports soft delete via valid_to column.
     """
 
     __tablename__ = "customers"
@@ -132,6 +149,9 @@ class Customer(Base):
     contact_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     email: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    valid_to: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("'9999-12-31'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -142,6 +162,7 @@ class Customer(Base):
     __table_args__ = (
         UniqueConstraint("customer_code", name="uq_customers_customer_code"),
         Index("idx_customers_code", "customer_code"),
+        Index("idx_customers_valid_to", "valid_to"),
     )
 
     # Relationships
@@ -157,12 +178,13 @@ class Customer(Base):
     )
 
 
-class DeliveryPlace(Base):
+class DeliveryPlace(SoftDeleteMixin, Base):
     """Delivery places master table (納入先マスタ).
 
     DDL: delivery_places
     Primary key: id (BIGSERIAL)
     Foreign keys: customer_id -> customers(id)
+    Supports soft delete via valid_to column.
     """
 
     __tablename__ = "delivery_places"
@@ -176,6 +198,9 @@ class DeliveryPlace(Base):
         ForeignKey("customers.id", ondelete="RESTRICT"),
         nullable=False,
     )
+    valid_to: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("'9999-12-31'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -187,6 +212,7 @@ class DeliveryPlace(Base):
         UniqueConstraint("delivery_place_code", name="uq_delivery_places_code"),
         Index("idx_delivery_places_customer", "customer_id"),
         Index("idx_delivery_places_code", "delivery_place_code"),
+        Index("idx_delivery_places_valid_to", "valid_to"),
     )
 
     # Relationships
@@ -196,11 +222,12 @@ class DeliveryPlace(Base):
     )
 
 
-class Product(Base):
+class Product(SoftDeleteMixin, Base):
     """Products master table (製品マスタ).
 
     DDL: products
     Primary key: id (BIGSERIAL)
+    Supports soft delete via valid_to column.
     """
 
     __tablename__ = "products"
@@ -214,6 +241,9 @@ class Product(Base):
     product_name: Mapped[str] = mapped_column(String(200), nullable=False)
     base_unit: Mapped[str] = mapped_column(String(20), nullable=False)
     consumption_limit_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    valid_to: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("'9999-12-31'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -235,6 +265,7 @@ class Product(Base):
         UniqueConstraint("maker_part_code", name="uq_products_maker_part_code"),
         Index("idx_products_code", "maker_part_code"),
         Index("idx_products_name", "product_name"),
+        Index("idx_products_valid_to", "valid_to"),
     )
 
     # Relationships
@@ -257,12 +288,13 @@ class Product(Base):
     )
 
 
-class CustomerItem(Base):
+class CustomerItem(SoftDeleteMixin, Base):
     """Customer-specific product mappings (得意先品番マッピング).
 
     DDL: customer_items
     Primary key: (customer_id, external_product_code)
     Foreign keys: customer_id -> customers(id), product_id -> products(id), supplier_id -> suppliers(id)
+    Supports soft delete via valid_to column.
     """
 
     __tablename__ = "customer_items"
@@ -292,6 +324,9 @@ class CustomerItem(Base):
     special_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
     shipping_document_template: Mapped[str | None] = mapped_column(Text, nullable=True)
     sap_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    valid_to: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("'9999-12-31'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -302,6 +337,7 @@ class CustomerItem(Base):
     __table_args__ = (
         Index("idx_customer_items_product", "product_id"),
         Index("idx_customer_items_supplier", "supplier_id"),
+        Index("idx_customer_items_valid_to", "valid_to"),
     )
 
     # Relationships
@@ -310,12 +346,13 @@ class CustomerItem(Base):
     supplier: Mapped[Supplier | None] = relationship("Supplier", back_populates="customer_items")
 
 
-class ProductMapping(Base):
+class ProductMapping(SoftDeleteMixin, Base):
     """Product mappings table (商品マスタ).
 
     4者の関係を表現: 得意先 + 先方品番 + メーカー品番(製品) + 仕入先
     DDL: product_mappings
     Primary key: id (BIGSERIAL)
+    Supports soft delete via valid_to column (migrated from is_active).
     """
 
     __tablename__ = "product_mappings"
@@ -341,7 +378,9 @@ class ProductMapping(Base):
     pack_unit: Mapped[str | None] = mapped_column(String(20), nullable=True)
     pack_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)
     special_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("true"))
+    valid_to: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("'9999-12-31'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -359,6 +398,7 @@ class ProductMapping(Base):
         Index("idx_product_mappings_customer", "customer_id"),
         Index("idx_product_mappings_supplier", "supplier_id"),
         Index("idx_product_mappings_product", "product_id"),
+        Index("idx_product_mappings_valid_to", "valid_to"),
     )
 
     # Relationships
@@ -367,12 +407,13 @@ class ProductMapping(Base):
     product: Mapped[Product] = relationship("Product")
 
 
-class ProductUomConversion(Base):
+class ProductUomConversion(SoftDeleteMixin, Base):
     """Product UOM conversion table (製品単位換算マスタ).
 
     DDL: product_uom_conversions
     Primary key: conversion_id (BIGSERIAL)
     Foreign keys: product_id -> products(id)
+    Supports soft delete via valid_to column.
     """
 
     __tablename__ = "product_uom_conversions"
@@ -385,6 +426,9 @@ class ProductUomConversion(Base):
     )
     external_unit: Mapped[str] = mapped_column(String(20), nullable=False)
     factor: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
+    valid_to: Mapped[date] = mapped_column(
+        Date, nullable=False, server_default=text("'9999-12-31'")
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
@@ -394,6 +438,7 @@ class ProductUomConversion(Base):
 
     __table_args__ = (
         UniqueConstraint("product_id", "external_unit", name="uq_uom_conversions_product_unit"),
+        Index("idx_product_uom_conversions_valid_to", "valid_to"),
     )
 
     # Relationships
