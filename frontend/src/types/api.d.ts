@@ -1045,6 +1045,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/allocations/bulk-auto-allocate": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Auto Allocate
+     * @description Group-based bulk auto-allocation using FEFO strategy.
+     *
+     *     Can filter by product, customer, delivery_place, and order_type.
+     */
+    post: operations["bulk_auto_allocate_api_allocations_bulk_auto_allocate_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/inbound-plans": {
     parameters: {
       query?: never;
@@ -4821,7 +4843,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
     };
     /**
@@ -4837,7 +4861,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
     };
     /**
@@ -4889,7 +4915,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | Record<string, never>
+        | {
+            [key: string]: unknown;
+          }
         | null;
       /** Job Id */
       job_id: number;
@@ -4928,6 +4956,85 @@ export interface components {
        * @description Import file (.xlsx, .json, .yaml, .yml)
        */
       file: string;
+    };
+    /**
+     * BulkAutoAllocateFailedLine
+     * @description Failed line in bulk auto-allocate response.
+     */
+    BulkAutoAllocateFailedLine: {
+      /** Line Id */
+      line_id: number;
+      /** Error */
+      error: string;
+    };
+    /**
+     * BulkAutoAllocateRequest
+     * @description Bulk auto-allocate request for group-based FEFO allocation.
+     */
+    BulkAutoAllocateRequest: {
+      /**
+       * Product Id
+       * @description 製品ID（指定時はその製品のみ対象）
+       */
+      product_id?: number | null;
+      /**
+       * Customer Id
+       * @description 得意先ID（指定時はその得意先のみ対象）
+       */
+      customer_id?: number | null;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID（指定時はその納入先のみ対象）
+       */
+      delivery_place_id?: number | null;
+      /**
+       * Order Type
+       * @description 受注タイプでフィルタ
+       */
+      order_type?: string | null;
+      /**
+       * Skip Already Allocated
+       * @description 既に全量引当済みの明細をスキップ
+       * @default true
+       */
+      skip_already_allocated: boolean;
+    };
+    /**
+     * BulkAutoAllocateResponse
+     * @description Bulk auto-allocate response.
+     */
+    BulkAutoAllocateResponse: {
+      /**
+       * Processed Lines
+       * @description 処理した受注明細数
+       * @default 0
+       */
+      processed_lines: number;
+      /**
+       * Allocated Lines
+       * @description 引当を作成した明細数
+       * @default 0
+       */
+      allocated_lines: number;
+      /**
+       * Total Allocations
+       * @description 作成した引当レコード数
+       * @default 0
+       */
+      total_allocations: number;
+      /**
+       * Skipped Lines
+       * @description スキップした明細数（既に引当済み等）
+       * @default 0
+       */
+      skipped_lines: number;
+      /**
+       * Failed Lines
+       * @description 失敗した明細
+       */
+      failed_lines?: components["schemas"]["BulkAutoAllocateFailedLine"][];
+      /** Message */
+      message: string;
     };
     /**
      * BulkUpsertResponse
@@ -4996,7 +5103,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -5038,7 +5147,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: Record<string, never>;
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -5077,7 +5188,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: Record<string, never> | null;
+      rule_parameters?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -6886,12 +6999,16 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: Record<string, never> | null;
+      old_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: Record<string, never> | null;
+      new_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -7051,7 +7168,9 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: Record<string, never> | null;
+      changes?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -7827,7 +7946,9 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: Record<string, never> | null;
+      data?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * RoleCreate
@@ -10637,6 +10758,39 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AlertSummaryResponse"];
+        };
+      };
+    };
+  };
+  bulk_auto_allocate_api_allocations_bulk_auto_allocate_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BulkAutoAllocateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkAutoAllocateResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
@@ -14534,7 +14688,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
@@ -14838,7 +14994,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
       /** @description Validation Error */
@@ -14867,7 +15025,9 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": Record<string, never>;
+          "application/json": {
+            [key: string]: unknown;
+          };
         };
       };
     };

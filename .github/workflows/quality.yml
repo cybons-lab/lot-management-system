@@ -78,7 +78,6 @@ jobs:
   schema-sync-check:
     name: Schema Synchronization Check
     runs-on: ubuntu-latest
-    if: false
     steps:
       - uses: actions/checkout@v4
 
