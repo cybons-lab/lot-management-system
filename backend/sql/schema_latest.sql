@@ -1,8 +1,18 @@
+-- ============================================================
+-- schema_latest.sql - 現在のDBスキーマダンプ
+-- ============================================================
+-- このファイルは開発用DBから pg_dump で自動生成されたものです。
+-- 手動編集禁止: 内容を更新する場合は以下のコマンドを実行してください。
+--
+-- docker exec lot-db-postgres pg_dump -U admin -d lot_management \
+--   --schema-only --no-owner --no-privileges --clean --if-exists \
+--   > backend/sql/schema_latest.sql
+--
+-- 最終更新: 2025-12-12
+-- ============================================================
 --
 -- PostgreSQL database dump
 --
-
-\restrict zUbAjcEqydcnh96WVcHgsY11guKZh4yroI5E5rj488zPYtrhcMhKFhtH9fy1JWu
 
 -- Dumped from database version 15.15
 -- Dumped by pg_dump version 15.15
@@ -18,6 +28,367 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_withdrawn_by_fkey;
+ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_lot_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_delivery_place_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_customer_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.user_supplier_assignments DROP CONSTRAINT IF EXISTS user_supplier_assignments_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.user_supplier_assignments DROP CONSTRAINT IF EXISTS user_supplier_assignments_supplier_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.system_client_logs DROP CONSTRAINT IF EXISTS system_client_logs_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS product_mappings_supplier_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS product_mappings_product_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS product_mappings_customer_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS orders_locked_by_user_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS order_lines_order_group_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.order_groups DROP CONSTRAINT IF EXISTS order_groups_product_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.order_groups DROP CONSTRAINT IF EXISTS order_groups_customer_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.user_roles DROP CONSTRAINT IF EXISTS fk_user_roles_user;
+ALTER TABLE IF EXISTS ONLY public.user_roles DROP CONSTRAINT IF EXISTS fk_user_roles_role;
+ALTER TABLE IF EXISTS ONLY public.product_uom_conversions DROP CONSTRAINT IF EXISTS fk_uom_conversions_product;
+ALTER TABLE IF EXISTS ONLY public.stock_history DROP CONSTRAINT IF EXISTS fk_stock_history_lot;
+ALTER TABLE IF EXISTS ONLY public.product_suppliers DROP CONSTRAINT IF EXISTS fk_product_suppliers_supplier;
+ALTER TABLE IF EXISTS ONLY public.product_suppliers DROP CONSTRAINT IF EXISTS fk_product_suppliers_product;
+ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS fk_orders_customer;
+ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS fk_order_lines_product;
+ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS fk_order_lines_order;
+ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS fk_order_lines_delivery_place;
+ALTER TABLE IF EXISTS ONLY public.operation_logs DROP CONSTRAINT IF EXISTS fk_operation_logs_user;
+ALTER TABLE IF EXISTS ONLY public.master_change_logs DROP CONSTRAINT IF EXISTS fk_master_change_logs_user;
+ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS fk_lots_warehouse;
+ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS fk_lots_supplier;
+ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS fk_lots_product;
+ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS fk_lots_expected;
+ALTER TABLE IF EXISTS ONLY public.lot_reservations DROP CONSTRAINT IF EXISTS fk_lot_reservations_lot_id;
+ALTER TABLE IF EXISTS ONLY public.inbound_plans DROP CONSTRAINT IF EXISTS fk_inbound_plans_supplier;
+ALTER TABLE IF EXISTS ONLY public.inbound_plan_lines DROP CONSTRAINT IF EXISTS fk_inbound_plan_lines_product;
+ALTER TABLE IF EXISTS ONLY public.inbound_plan_lines DROP CONSTRAINT IF EXISTS fk_inbound_plan_lines_plan;
+ALTER TABLE IF EXISTS ONLY public.forecast_current DROP CONSTRAINT IF EXISTS fk_forecast_current_product;
+ALTER TABLE IF EXISTS ONLY public.forecast_current DROP CONSTRAINT IF EXISTS fk_forecast_current_delivery_place;
+ALTER TABLE IF EXISTS ONLY public.forecast_current DROP CONSTRAINT IF EXISTS fk_forecast_current_customer;
+ALTER TABLE IF EXISTS ONLY public.expected_lots DROP CONSTRAINT IF EXISTS fk_expected_lots_line;
+ALTER TABLE IF EXISTS ONLY public.delivery_places DROP CONSTRAINT IF EXISTS fk_delivery_places_customer;
+ALTER TABLE IF EXISTS ONLY public.customer_items DROP CONSTRAINT IF EXISTS fk_customer_items_supplier;
+ALTER TABLE IF EXISTS ONLY public.customer_items DROP CONSTRAINT IF EXISTS fk_customer_items_product;
+ALTER TABLE IF EXISTS ONLY public.customer_items DROP CONSTRAINT IF EXISTS fk_customer_items_customer;
+ALTER TABLE IF EXISTS ONLY public.customer_item_jiku_mappings DROP CONSTRAINT IF EXISTS fk_customer_item_jiku_delivery_place;
+ALTER TABLE IF EXISTS ONLY public.customer_item_jiku_mappings DROP CONSTRAINT IF EXISTS fk_customer_item_jiku_customer_item;
+ALTER TABLE IF EXISTS ONLY public.customer_item_delivery_settings DROP CONSTRAINT IF EXISTS fk_cids_delivery_place;
+ALTER TABLE IF EXISTS ONLY public.customer_item_delivery_settings DROP CONSTRAINT IF EXISTS fk_cids_customer_item;
+ALTER TABLE IF EXISTS ONLY public.allocations DROP CONSTRAINT IF EXISTS fk_allocations_order_line;
+ALTER TABLE IF EXISTS ONLY public.allocations DROP CONSTRAINT IF EXISTS fk_allocations_inbound_plan_line;
+ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS fk_allocation_suggestions_product;
+ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS fk_allocation_suggestions_lot;
+ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS fk_allocation_suggestions_delivery_place;
+ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS fk_allocation_suggestions_customer;
+ALTER TABLE IF EXISTS ONLY public.adjustments DROP CONSTRAINT IF EXISTS fk_adjustments_user;
+ALTER TABLE IF EXISTS ONLY public.adjustments DROP CONSTRAINT IF EXISTS fk_adjustments_lot;
+ALTER TABLE IF EXISTS ONLY public.allocation_traces DROP CONSTRAINT IF EXISTS allocation_traces_order_line_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.allocation_traces DROP CONSTRAINT IF EXISTS allocation_traces_lot_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS allocation_suggestions_forecast_id_fkey;
+DROP INDEX IF EXISTS public.ux_forecast_current_unique;
+DROP INDEX IF EXISTS public.uq_user_supplier_primary_per_supplier;
+DROP INDEX IF EXISTS public.uq_product_primary_supplier;
+DROP INDEX IF EXISTS public.ix_forecast_history_key;
+DROP INDEX IF EXISTS public.ix_forecast_current_key;
+DROP INDEX IF EXISTS public.idx_withdrawals_type;
+DROP INDEX IF EXISTS public.idx_withdrawals_lot;
+DROP INDEX IF EXISTS public.idx_withdrawals_date;
+DROP INDEX IF EXISTS public.idx_withdrawals_customer;
+DROP INDEX IF EXISTS public.idx_warehouses_valid_to;
+DROP INDEX IF EXISTS public.idx_warehouses_type;
+DROP INDEX IF EXISTS public.idx_warehouses_code;
+DROP INDEX IF EXISTS public.idx_users_username;
+DROP INDEX IF EXISTS public.idx_users_email;
+DROP INDEX IF EXISTS public.idx_users_azure_oid;
+DROP INDEX IF EXISTS public.idx_users_auth_provider;
+DROP INDEX IF EXISTS public.idx_users_active;
+DROP INDEX IF EXISTS public.idx_user_supplier_assignments_user;
+DROP INDEX IF EXISTS public.idx_user_supplier_assignments_supplier;
+DROP INDEX IF EXISTS public.idx_user_supplier_assignments_primary;
+DROP INDEX IF EXISTS public.idx_user_roles_user;
+DROP INDEX IF EXISTS public.idx_user_roles_role;
+DROP INDEX IF EXISTS public.idx_system_configs_key;
+DROP INDEX IF EXISTS public.idx_system_client_logs_user_id;
+DROP INDEX IF EXISTS public.idx_system_client_logs_created_at;
+DROP INDEX IF EXISTS public.idx_suppliers_valid_to;
+DROP INDEX IF EXISTS public.idx_suppliers_code;
+DROP INDEX IF EXISTS public.idx_stock_history_type;
+DROP INDEX IF EXISTS public.idx_stock_history_lot;
+DROP INDEX IF EXISTS public.idx_stock_history_date;
+DROP INDEX IF EXISTS public.idx_roles_code;
+DROP INDEX IF EXISTS public.idx_products_valid_to;
+DROP INDEX IF EXISTS public.idx_products_name;
+DROP INDEX IF EXISTS public.idx_products_code;
+DROP INDEX IF EXISTS public.idx_product_uom_conversions_valid_to;
+DROP INDEX IF EXISTS public.idx_product_suppliers_valid_to;
+DROP INDEX IF EXISTS public.idx_product_mappings_valid_to;
+DROP INDEX IF EXISTS public.idx_product_mappings_supplier;
+DROP INDEX IF EXISTS public.idx_product_mappings_product;
+DROP INDEX IF EXISTS public.idx_product_mappings_customer;
+DROP INDEX IF EXISTS public.idx_orders_locked_by;
+DROP INDEX IF EXISTS public.idx_orders_lock_expires;
+DROP INDEX IF EXISTS public.idx_orders_date;
+DROP INDEX IF EXISTS public.idx_orders_customer;
+DROP INDEX IF EXISTS public.idx_order_lines_status;
+DROP INDEX IF EXISTS public.idx_order_lines_sap_order_no;
+DROP INDEX IF EXISTS public.idx_order_lines_product;
+DROP INDEX IF EXISTS public.idx_order_lines_order_type;
+DROP INDEX IF EXISTS public.idx_order_lines_order_group;
+DROP INDEX IF EXISTS public.idx_order_lines_order;
+DROP INDEX IF EXISTS public.idx_order_lines_forecast_reference;
+DROP INDEX IF EXISTS public.idx_order_lines_delivery_place;
+DROP INDEX IF EXISTS public.idx_order_lines_date;
+DROP INDEX IF EXISTS public.idx_order_lines_customer_order_no;
+DROP INDEX IF EXISTS public.idx_order_groups_product;
+DROP INDEX IF EXISTS public.idx_order_groups_date;
+DROP INDEX IF EXISTS public.idx_order_groups_customer;
+DROP INDEX IF EXISTS public.idx_operation_logs_user;
+DROP INDEX IF EXISTS public.idx_operation_logs_type;
+DROP INDEX IF EXISTS public.idx_operation_logs_table;
+DROP INDEX IF EXISTS public.idx_operation_logs_created;
+DROP INDEX IF EXISTS public.idx_master_change_logs_user;
+DROP INDEX IF EXISTS public.idx_master_change_logs_table;
+DROP INDEX IF EXISTS public.idx_master_change_logs_record;
+DROP INDEX IF EXISTS public.idx_master_change_logs_changed;
+DROP INDEX IF EXISTS public.idx_lots_warehouse;
+DROP INDEX IF EXISTS public.idx_lots_supplier;
+DROP INDEX IF EXISTS public.idx_lots_status;
+DROP INDEX IF EXISTS public.idx_lots_product_warehouse;
+DROP INDEX IF EXISTS public.idx_lots_origin_type;
+DROP INDEX IF EXISTS public.idx_lots_number;
+DROP INDEX IF EXISTS public.idx_lots_expiry_date;
+DROP INDEX IF EXISTS public.idx_lot_reservations_status;
+DROP INDEX IF EXISTS public.idx_lot_reservations_source;
+DROP INDEX IF EXISTS public.idx_lot_reservations_lot_status;
+DROP INDEX IF EXISTS public.idx_lot_reservations_expires_at;
+DROP INDEX IF EXISTS public.idx_inbound_plans_supplier;
+DROP INDEX IF EXISTS public.idx_inbound_plans_status;
+DROP INDEX IF EXISTS public.idx_inbound_plans_date;
+DROP INDEX IF EXISTS public.idx_inbound_plan_lines_product;
+DROP INDEX IF EXISTS public.idx_inbound_plan_lines_plan;
+DROP INDEX IF EXISTS public.idx_expected_lots_number;
+DROP INDEX IF EXISTS public.idx_expected_lots_line;
+DROP INDEX IF EXISTS public.idx_delivery_places_valid_to;
+DROP INDEX IF EXISTS public.idx_delivery_places_customer;
+DROP INDEX IF EXISTS public.idx_delivery_places_code;
+DROP INDEX IF EXISTS public.idx_customers_valid_to;
+DROP INDEX IF EXISTS public.idx_customers_code;
+DROP INDEX IF EXISTS public.idx_customer_items_valid_to;
+DROP INDEX IF EXISTS public.idx_customer_items_supplier;
+DROP INDEX IF EXISTS public.idx_customer_items_product;
+DROP INDEX IF EXISTS public.idx_cids_jiku_code;
+DROP INDEX IF EXISTS public.idx_cids_delivery_place;
+DROP INDEX IF EXISTS public.idx_cids_customer_item;
+DROP INDEX IF EXISTS public.idx_business_rules_type;
+DROP INDEX IF EXISTS public.idx_business_rules_code;
+DROP INDEX IF EXISTS public.idx_business_rules_active;
+DROP INDEX IF EXISTS public.idx_batch_jobs_type;
+DROP INDEX IF EXISTS public.idx_batch_jobs_status;
+DROP INDEX IF EXISTS public.idx_batch_jobs_created;
+DROP INDEX IF EXISTS public.idx_allocations_status;
+DROP INDEX IF EXISTS public.idx_allocations_order_line;
+DROP INDEX IF EXISTS public.idx_allocations_lot_reference;
+DROP INDEX IF EXISTS public.idx_allocations_inbound_plan_line;
+DROP INDEX IF EXISTS public.idx_allocations_allocation_type;
+DROP INDEX IF EXISTS public.idx_allocation_traces_order_line;
+DROP INDEX IF EXISTS public.idx_allocation_traces_lot;
+DROP INDEX IF EXISTS public.idx_allocation_traces_created_at;
+DROP INDEX IF EXISTS public.idx_allocation_suggestions_product;
+DROP INDEX IF EXISTS public.idx_allocation_suggestions_period;
+DROP INDEX IF EXISTS public.idx_allocation_suggestions_lot;
+DROP INDEX IF EXISTS public.idx_allocation_suggestions_forecast;
+DROP INDEX IF EXISTS public.idx_allocation_suggestions_customer;
+DROP INDEX IF EXISTS public.idx_adjustments_lot;
+DROP INDEX IF EXISTS public.idx_adjustments_date;
+ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_pkey;
+ALTER TABLE IF EXISTS ONLY public.warehouses DROP CONSTRAINT IF EXISTS warehouses_pkey;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_azure_object_id_key;
+ALTER TABLE IF EXISTS ONLY public.user_supplier_assignments DROP CONSTRAINT IF EXISTS user_supplier_assignments_pkey;
+ALTER TABLE IF EXISTS ONLY public.user_roles DROP CONSTRAINT IF EXISTS user_roles_pkey;
+ALTER TABLE IF EXISTS ONLY public.warehouses DROP CONSTRAINT IF EXISTS uq_warehouses_warehouse_code;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS uq_users_username;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS uq_users_email;
+ALTER TABLE IF EXISTS ONLY public.user_supplier_assignments DROP CONSTRAINT IF EXISTS uq_user_supplier_assignments_user_supplier;
+ALTER TABLE IF EXISTS ONLY public.product_uom_conversions DROP CONSTRAINT IF EXISTS uq_uom_conversions_product_unit;
+ALTER TABLE IF EXISTS ONLY public.system_configs DROP CONSTRAINT IF EXISTS uq_system_configs_key;
+ALTER TABLE IF EXISTS ONLY public.suppliers DROP CONSTRAINT IF EXISTS uq_suppliers_supplier_code;
+ALTER TABLE IF EXISTS ONLY public.roles DROP CONSTRAINT IF EXISTS uq_roles_role_code;
+ALTER TABLE IF EXISTS ONLY public.products DROP CONSTRAINT IF EXISTS uq_products_maker_part_code;
+ALTER TABLE IF EXISTS ONLY public.product_suppliers DROP CONSTRAINT IF EXISTS uq_product_supplier;
+ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS uq_product_mappings_cust_part_supp;
+ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS uq_order_lines_customer_key;
+ALTER TABLE IF EXISTS ONLY public.order_groups DROP CONSTRAINT IF EXISTS uq_order_groups_business_key;
+ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS uq_lots_number_product_warehouse;
+ALTER TABLE IF EXISTS ONLY public.delivery_places DROP CONSTRAINT IF EXISTS uq_delivery_places_code;
+ALTER TABLE IF EXISTS ONLY public.customers DROP CONSTRAINT IF EXISTS uq_customers_customer_code;
+ALTER TABLE IF EXISTS ONLY public.customer_item_jiku_mappings DROP CONSTRAINT IF EXISTS uq_customer_item_jiku;
+ALTER TABLE IF EXISTS ONLY public.customer_item_delivery_settings DROP CONSTRAINT IF EXISTS uq_customer_item_delivery_settings;
+ALTER TABLE IF EXISTS ONLY public.system_configs DROP CONSTRAINT IF EXISTS system_configs_pkey;
+ALTER TABLE IF EXISTS ONLY public.system_client_logs DROP CONSTRAINT IF EXISTS system_client_logs_pkey;
+ALTER TABLE IF EXISTS ONLY public.suppliers DROP CONSTRAINT IF EXISTS suppliers_pkey;
+ALTER TABLE IF EXISTS ONLY public.stock_history DROP CONSTRAINT IF EXISTS stock_history_pkey;
+ALTER TABLE IF EXISTS ONLY public.seed_snapshots DROP CONSTRAINT IF EXISTS seed_snapshots_pkey;
+ALTER TABLE IF EXISTS ONLY public.roles DROP CONSTRAINT IF EXISTS roles_pkey;
+ALTER TABLE IF EXISTS ONLY public.products DROP CONSTRAINT IF EXISTS products_pkey;
+ALTER TABLE IF EXISTS ONLY public.product_uom_conversions DROP CONSTRAINT IF EXISTS product_uom_conversions_pkey;
+ALTER TABLE IF EXISTS ONLY public.product_suppliers DROP CONSTRAINT IF EXISTS product_suppliers_pkey;
+ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS product_mappings_pkey;
+ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS orders_pkey;
+ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS order_lines_pkey;
+ALTER TABLE IF EXISTS ONLY public.order_groups DROP CONSTRAINT IF EXISTS order_groups_pkey;
+ALTER TABLE IF EXISTS ONLY public.operation_logs DROP CONSTRAINT IF EXISTS operation_logs_pkey;
+ALTER TABLE IF EXISTS ONLY public.master_change_logs DROP CONSTRAINT IF EXISTS master_change_logs_pkey;
+ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS lots_pkey;
+ALTER TABLE IF EXISTS ONLY public.lot_reservations DROP CONSTRAINT IF EXISTS lot_reservations_pkey;
+ALTER TABLE IF EXISTS ONLY public.inbound_plans DROP CONSTRAINT IF EXISTS inbound_plans_sap_po_number_key;
+ALTER TABLE IF EXISTS ONLY public.inbound_plans DROP CONSTRAINT IF EXISTS inbound_plans_plan_number_key;
+ALTER TABLE IF EXISTS ONLY public.inbound_plans DROP CONSTRAINT IF EXISTS inbound_plans_pkey;
+ALTER TABLE IF EXISTS ONLY public.inbound_plan_lines DROP CONSTRAINT IF EXISTS inbound_plan_lines_pkey;
+ALTER TABLE IF EXISTS ONLY public.forecast_history DROP CONSTRAINT IF EXISTS forecast_history_pkey;
+ALTER TABLE IF EXISTS ONLY public.forecast_current DROP CONSTRAINT IF EXISTS forecast_current_pkey;
+ALTER TABLE IF EXISTS ONLY public.expected_lots DROP CONSTRAINT IF EXISTS expected_lots_pkey;
+ALTER TABLE IF EXISTS ONLY public.delivery_places DROP CONSTRAINT IF EXISTS delivery_places_pkey;
+ALTER TABLE IF EXISTS ONLY public.customers DROP CONSTRAINT IF EXISTS customers_pkey;
+ALTER TABLE IF EXISTS ONLY public.customer_items DROP CONSTRAINT IF EXISTS customer_items_pkey;
+ALTER TABLE IF EXISTS ONLY public.customer_item_jiku_mappings DROP CONSTRAINT IF EXISTS customer_item_jiku_mappings_pkey;
+ALTER TABLE IF EXISTS ONLY public.customer_item_delivery_settings DROP CONSTRAINT IF EXISTS customer_item_delivery_settings_pkey;
+ALTER TABLE IF EXISTS ONLY public.business_rules DROP CONSTRAINT IF EXISTS business_rules_rule_code_key;
+ALTER TABLE IF EXISTS ONLY public.business_rules DROP CONSTRAINT IF EXISTS business_rules_pkey;
+ALTER TABLE IF EXISTS ONLY public.batch_jobs DROP CONSTRAINT IF EXISTS batch_jobs_pkey;
+ALTER TABLE IF EXISTS ONLY public.allocations DROP CONSTRAINT IF EXISTS allocations_pkey;
+ALTER TABLE IF EXISTS ONLY public.allocation_traces DROP CONSTRAINT IF EXISTS allocation_traces_pkey;
+ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS allocation_suggestions_pkey;
+ALTER TABLE IF EXISTS ONLY public.alembic_version DROP CONSTRAINT IF EXISTS alembic_version_pkc;
+ALTER TABLE IF EXISTS ONLY public.adjustments DROP CONSTRAINT IF EXISTS adjustments_pkey;
+ALTER TABLE IF EXISTS public.withdrawals ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.warehouses ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.user_supplier_assignments ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.system_configs ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.system_client_logs ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.suppliers ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.stock_history ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.seed_snapshots ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.roles ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.products ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.product_uom_conversions ALTER COLUMN conversion_id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.product_suppliers ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.product_mappings ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.orders ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.order_lines ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.order_groups ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.operation_logs ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.master_change_logs ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.lots ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.lot_reservations ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.inbound_plans ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.inbound_plan_lines ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.forecast_history ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.forecast_current ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.expected_lots ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.delivery_places ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.customers ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.customer_item_jiku_mappings ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.customer_item_delivery_settings ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.business_rules ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.batch_jobs ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.allocations ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.allocation_traces ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.allocation_suggestions ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.adjustments ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE IF EXISTS public.withdrawals_id_seq;
+DROP TABLE IF EXISTS public.withdrawals;
+DROP SEQUENCE IF EXISTS public.warehouses_id_seq;
+DROP VIEW IF EXISTS public.v_warehouse_code_to_id;
+DROP VIEW IF EXISTS public.v_user_supplier_assignments;
+DROP VIEW IF EXISTS public.v_supplier_code_to_id;
+DROP VIEW IF EXISTS public.v_product_code_to_id;
+DROP VIEW IF EXISTS public.v_order_line_details;
+DROP VIEW IF EXISTS public.v_lot_details;
+DROP TABLE IF EXISTS public.warehouses;
+DROP VIEW IF EXISTS public.v_lot_current_stock;
+DROP VIEW IF EXISTS public.v_inventory_summary;
+DROP VIEW IF EXISTS public.v_forecast_order_pairs;
+DROP VIEW IF EXISTS public.v_delivery_place_code_to_id;
+DROP VIEW IF EXISTS public.v_customer_item_jiku_mappings;
+DROP VIEW IF EXISTS public.v_customer_code_to_id;
+DROP VIEW IF EXISTS public.v_candidate_lots_by_order_line;
+DROP VIEW IF EXISTS public.v_order_line_context;
+DROP VIEW IF EXISTS public.v_lot_available_qty;
+DROP VIEW IF EXISTS public.v_lot_allocations;
+DROP VIEW IF EXISTS public.v_customer_daily_products;
+DROP SEQUENCE IF EXISTS public.users_id_seq;
+DROP TABLE IF EXISTS public.users;
+DROP SEQUENCE IF EXISTS public.user_supplier_assignments_id_seq;
+DROP TABLE IF EXISTS public.user_supplier_assignments;
+DROP TABLE IF EXISTS public.user_roles;
+DROP SEQUENCE IF EXISTS public.system_configs_id_seq;
+DROP TABLE IF EXISTS public.system_configs;
+DROP SEQUENCE IF EXISTS public.system_client_logs_id_seq;
+DROP TABLE IF EXISTS public.system_client_logs;
+DROP SEQUENCE IF EXISTS public.suppliers_id_seq;
+DROP TABLE IF EXISTS public.suppliers;
+DROP SEQUENCE IF EXISTS public.stock_history_id_seq;
+DROP TABLE IF EXISTS public.stock_history;
+DROP SEQUENCE IF EXISTS public.seed_snapshots_id_seq;
+DROP TABLE IF EXISTS public.seed_snapshots;
+DROP SEQUENCE IF EXISTS public.roles_id_seq;
+DROP TABLE IF EXISTS public.roles;
+DROP SEQUENCE IF EXISTS public.products_id_seq;
+DROP TABLE IF EXISTS public.products;
+DROP SEQUENCE IF EXISTS public.product_uom_conversions_conversion_id_seq;
+DROP TABLE IF EXISTS public.product_uom_conversions;
+DROP SEQUENCE IF EXISTS public.product_suppliers_id_seq;
+DROP TABLE IF EXISTS public.product_suppliers;
+DROP SEQUENCE IF EXISTS public.product_mappings_id_seq;
+DROP TABLE IF EXISTS public.product_mappings;
+DROP SEQUENCE IF EXISTS public.orders_id_seq;
+DROP TABLE IF EXISTS public.orders;
+DROP SEQUENCE IF EXISTS public.order_lines_id_seq;
+DROP TABLE IF EXISTS public.order_lines;
+DROP SEQUENCE IF EXISTS public.order_groups_id_seq;
+DROP TABLE IF EXISTS public.order_groups;
+DROP SEQUENCE IF EXISTS public.operation_logs_id_seq;
+DROP TABLE IF EXISTS public.operation_logs;
+DROP SEQUENCE IF EXISTS public.master_change_logs_id_seq;
+DROP TABLE IF EXISTS public.master_change_logs;
+DROP SEQUENCE IF EXISTS public.lots_id_seq;
+DROP TABLE IF EXISTS public.lots;
+DROP SEQUENCE IF EXISTS public.lot_reservations_id_seq;
+DROP TABLE IF EXISTS public.lot_reservations;
+DROP SEQUENCE IF EXISTS public.inbound_plans_id_seq;
+DROP TABLE IF EXISTS public.inbound_plans;
+DROP SEQUENCE IF EXISTS public.inbound_plan_lines_id_seq;
+DROP TABLE IF EXISTS public.inbound_plan_lines;
+DROP SEQUENCE IF EXISTS public.forecast_history_id_seq;
+DROP TABLE IF EXISTS public.forecast_history;
+DROP SEQUENCE IF EXISTS public.forecast_current_id_seq;
+DROP TABLE IF EXISTS public.forecast_current;
+DROP SEQUENCE IF EXISTS public.expected_lots_id_seq;
+DROP TABLE IF EXISTS public.expected_lots;
+DROP SEQUENCE IF EXISTS public.delivery_places_id_seq;
+DROP TABLE IF EXISTS public.delivery_places;
+DROP SEQUENCE IF EXISTS public.customers_id_seq;
+DROP TABLE IF EXISTS public.customers;
+DROP TABLE IF EXISTS public.customer_items;
+DROP SEQUENCE IF EXISTS public.customer_item_jiku_mappings_id_seq;
+DROP TABLE IF EXISTS public.customer_item_jiku_mappings;
+DROP SEQUENCE IF EXISTS public.customer_item_delivery_settings_id_seq;
+DROP TABLE IF EXISTS public.customer_item_delivery_settings;
+DROP SEQUENCE IF EXISTS public.business_rules_id_seq;
+DROP TABLE IF EXISTS public.business_rules;
+DROP SEQUENCE IF EXISTS public.batch_jobs_id_seq;
+DROP TABLE IF EXISTS public.batch_jobs;
+DROP SEQUENCE IF EXISTS public.allocations_id_seq;
+DROP TABLE IF EXISTS public.allocations;
+DROP SEQUENCE IF EXISTS public.allocation_traces_id_seq;
+DROP TABLE IF EXISTS public.allocation_traces;
+DROP SEQUENCE IF EXISTS public.allocation_suggestions_id_seq;
+DROP TABLE IF EXISTS public.allocation_suggestions;
+DROP TABLE IF EXISTS public.alembic_version;
+DROP SEQUENCE IF EXISTS public.adjustments_id_seq;
+DROP TABLE IF EXISTS public.adjustments;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -82,7 +453,9 @@ CREATE TABLE public.allocation_suggestions (
     allocation_type character varying(10) NOT NULL,
     source character varying(32) NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    forecast_id bigint,
+    priority integer DEFAULT 0 NOT NULL
 );
 
 
@@ -148,14 +521,46 @@ ALTER SEQUENCE public.allocation_traces_id_seq OWNED BY public.allocation_traces
 CREATE TABLE public.allocations (
     id bigint NOT NULL,
     order_line_id bigint NOT NULL,
-    lot_id bigint,
     allocated_quantity numeric(15,3) NOT NULL,
     status character varying(20) DEFAULT 'allocated'::character varying NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     inbound_plan_line_id bigint,
+    allocation_type character varying(10) DEFAULT 'soft'::character varying NOT NULL,
+    confirmed_at timestamp without time zone,
+    confirmed_by character varying(100),
+    lot_reference character varying(100),
+    CONSTRAINT chk_allocation_type CHECK (((allocation_type)::text = ANY ((ARRAY['soft'::character varying, 'hard'::character varying])::text[]))),
     CONSTRAINT chk_allocations_status CHECK (((status)::text = ANY ((ARRAY['allocated'::character varying, 'provisional'::character varying, 'shipped'::character varying, 'cancelled'::character varying])::text[])))
 );
+
+
+--
+-- Name: COLUMN allocations.allocation_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.allocations.allocation_type IS 'Allocation type: soft (provisional) or hard (confirmed)';
+
+
+--
+-- Name: COLUMN allocations.confirmed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.allocations.confirmed_at IS 'Hard allocation confirmation timestamp';
+
+
+--
+-- Name: COLUMN allocations.confirmed_by; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.allocations.confirmed_by IS 'User who confirmed the allocation';
+
+
+--
+-- Name: COLUMN allocations.lot_reference; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.allocations.lot_reference IS 'Lot number (business key reference, replaces lot_id FK)';
 
 
 --
@@ -252,6 +657,102 @@ ALTER SEQUENCE public.business_rules_id_seq OWNED BY public.business_rules.id;
 
 
 --
+-- Name: customer_item_delivery_settings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.customer_item_delivery_settings (
+    id bigint NOT NULL,
+    customer_id bigint NOT NULL,
+    external_product_code character varying(100) NOT NULL,
+    delivery_place_id bigint,
+    jiku_code character varying(50),
+    shipment_text text,
+    packing_note text,
+    lead_time_days integer,
+    is_default boolean DEFAULT false NOT NULL,
+    valid_from date,
+    valid_to date,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: COLUMN customer_item_delivery_settings.delivery_place_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_item_delivery_settings.delivery_place_id IS '納入先（NULLの場合はデフォルト設定）';
+
+
+--
+-- Name: COLUMN customer_item_delivery_settings.jiku_code; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_item_delivery_settings.jiku_code IS '次区コード（NULLの場合は全次区共通）';
+
+
+--
+-- Name: COLUMN customer_item_delivery_settings.shipment_text; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_item_delivery_settings.shipment_text IS '出荷表テキスト（SAP連携用）';
+
+
+--
+-- Name: COLUMN customer_item_delivery_settings.packing_note; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_item_delivery_settings.packing_note IS '梱包・注意書き';
+
+
+--
+-- Name: COLUMN customer_item_delivery_settings.lead_time_days; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_item_delivery_settings.lead_time_days IS 'リードタイム（日）';
+
+
+--
+-- Name: COLUMN customer_item_delivery_settings.is_default; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_item_delivery_settings.is_default IS 'デフォルト設定フラグ';
+
+
+--
+-- Name: COLUMN customer_item_delivery_settings.valid_from; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_item_delivery_settings.valid_from IS '有効開始日';
+
+
+--
+-- Name: COLUMN customer_item_delivery_settings.valid_to; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.customer_item_delivery_settings.valid_to IS '有効終了日';
+
+
+--
+-- Name: customer_item_delivery_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.customer_item_delivery_settings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: customer_item_delivery_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.customer_item_delivery_settings_id_seq OWNED BY public.customer_item_delivery_settings.id;
+
+
+--
 -- Name: customer_item_jiku_mappings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -264,13 +765,6 @@ CREATE TABLE public.customer_item_jiku_mappings (
     is_default boolean DEFAULT false,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
 );
-
-
---
--- Name: TABLE customer_item_jiku_mappings; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON TABLE public.customer_item_jiku_mappings IS '顧客商品-次区マッピング（1商品に複数の次区コード対応）';
 
 
 --
@@ -308,7 +802,8 @@ CREATE TABLE public.customer_items (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     shipping_document_template text,
-    sap_notes text
+    sap_notes text,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
 );
 
 
@@ -321,7 +816,12 @@ CREATE TABLE public.customers (
     customer_code character varying(50) NOT NULL,
     customer_name character varying(200) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    address character varying(500),
+    contact_name character varying(100),
+    phone character varying(50),
+    email character varying(200),
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
 );
 
 
@@ -350,12 +850,13 @@ ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
 
 CREATE TABLE public.delivery_places (
     id bigint NOT NULL,
-    jiku_code character varying(50),
+    jiku_code character varying(50) DEFAULT ''::character varying NOT NULL,
     delivery_place_code character varying(50) NOT NULL,
     delivery_place_name character varying(200) NOT NULL,
     customer_id bigint NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
 );
 
 
@@ -536,8 +1037,16 @@ CREATE TABLE public.inbound_plans (
     notes text,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    sap_po_number character varying(20),
     CONSTRAINT chk_inbound_plans_status CHECK (((status)::text = ANY (ARRAY[('planned'::character varying)::text, ('partially_received'::character varying)::text, ('received'::character varying)::text, ('cancelled'::character varying)::text])))
 );
+
+
+--
+-- Name: COLUMN inbound_plans.sap_po_number; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.inbound_plans.sap_po_number IS 'SAP購買発注番号（業務キー）';
 
 
 --
@@ -560,6 +1069,103 @@ ALTER SEQUENCE public.inbound_plans_id_seq OWNED BY public.inbound_plans.id;
 
 
 --
+-- Name: lot_reservations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.lot_reservations (
+    id bigint NOT NULL,
+    lot_id bigint NOT NULL,
+    source_type character varying(20) NOT NULL,
+    source_id bigint,
+    reserved_qty numeric(15,3) NOT NULL,
+    status character varying(20) DEFAULT 'active'::character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at timestamp without time zone,
+    confirmed_at timestamp without time zone,
+    released_at timestamp without time zone,
+    updated_at timestamp without time zone,
+    CONSTRAINT chk_lot_reservations_qty_positive CHECK ((reserved_qty > (0)::numeric)),
+    CONSTRAINT chk_lot_reservations_source_type CHECK (((source_type)::text = ANY ((ARRAY['forecast'::character varying, 'order'::character varying, 'manual'::character varying])::text[]))),
+    CONSTRAINT chk_lot_reservations_status CHECK (((status)::text = ANY ((ARRAY['temporary'::character varying, 'active'::character varying, 'confirmed'::character varying, 'released'::character varying])::text[])))
+);
+
+
+--
+-- Name: COLUMN lot_reservations.source_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lot_reservations.source_type IS 'Reservation source: ''forecast'' | ''order'' | ''manual''';
+
+
+--
+-- Name: COLUMN lot_reservations.source_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lot_reservations.source_id IS 'ID of the source entity (order_line_id, forecast_group_id, etc.)';
+
+
+--
+-- Name: COLUMN lot_reservations.reserved_qty; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lot_reservations.reserved_qty IS 'Reserved quantity (must be positive)';
+
+
+--
+-- Name: COLUMN lot_reservations.status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lot_reservations.status IS 'Reservation status: ''temporary'' | ''active'' | ''confirmed'' | ''released''';
+
+
+--
+-- Name: COLUMN lot_reservations.expires_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lot_reservations.expires_at IS 'Expiration time for temporary reservations';
+
+
+--
+-- Name: COLUMN lot_reservations.confirmed_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lot_reservations.confirmed_at IS 'Timestamp when reservation was confirmed';
+
+
+--
+-- Name: COLUMN lot_reservations.released_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lot_reservations.released_at IS 'Timestamp when reservation was released';
+
+
+--
+-- Name: COLUMN lot_reservations.updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lot_reservations.updated_at IS 'Timestamp of last update';
+
+
+--
+-- Name: lot_reservations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.lot_reservations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: lot_reservations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.lot_reservations_id_seq OWNED BY public.lot_reservations.id;
+
+
+--
 -- Name: lots; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -573,7 +1179,6 @@ CREATE TABLE public.lots (
     received_date date NOT NULL,
     expiry_date date,
     current_quantity numeric(15,3) DEFAULT 0 NOT NULL,
-    allocated_quantity numeric(15,3) DEFAULT 0 NOT NULL,
     unit character varying(20) NOT NULL,
     status character varying(20) DEFAULT 'active'::character varying NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -584,11 +1189,12 @@ CREATE TABLE public.lots (
     inspection_date date,
     inspection_cert_number character varying(100),
     locked_quantity numeric(15,3) DEFAULT '0'::numeric NOT NULL,
-    CONSTRAINT chk_lots_allocated_quantity CHECK ((allocated_quantity >= (0)::numeric)),
-    CONSTRAINT chk_lots_allocation_limit CHECK (((allocated_quantity + locked_quantity) <= current_quantity)),
+    origin_type character varying(20) DEFAULT 'adhoc'::character varying NOT NULL,
+    origin_reference character varying(255),
     CONSTRAINT chk_lots_current_quantity CHECK ((current_quantity >= (0)::numeric)),
     CONSTRAINT chk_lots_inspection_status CHECK (((inspection_status)::text = ANY ((ARRAY['not_required'::character varying, 'pending'::character varying, 'passed'::character varying, 'failed'::character varying])::text[]))),
     CONSTRAINT chk_lots_locked_quantity CHECK ((locked_quantity >= (0)::numeric)),
+    CONSTRAINT chk_lots_origin_type CHECK (((origin_type)::text = ANY ((ARRAY['order'::character varying, 'forecast'::character varying, 'sample'::character varying, 'safety_stock'::character varying, 'adhoc'::character varying])::text[]))),
     CONSTRAINT chk_lots_status CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'depleted'::character varying, 'expired'::character varying, 'quarantine'::character varying, 'locked'::character varying])::text[])))
 );
 
@@ -685,6 +1291,47 @@ ALTER SEQUENCE public.operation_logs_id_seq OWNED BY public.operation_logs.id;
 
 
 --
+-- Name: order_groups; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.order_groups (
+    id bigint NOT NULL,
+    customer_id bigint NOT NULL,
+    product_id bigint NOT NULL,
+    order_date date NOT NULL,
+    source_file_name character varying(255),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+--
+-- Name: COLUMN order_groups.source_file_name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_groups.source_file_name IS '取り込み元ファイル名';
+
+
+--
+-- Name: order_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.order_groups_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: order_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.order_groups_id_seq OWNED BY public.order_groups.id;
+
+
+--
 -- Name: order_lines; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -701,10 +1348,73 @@ CREATE TABLE public.order_lines (
     status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
     version integer DEFAULT 1 NOT NULL,
     converted_quantity numeric(15,3),
-    sap_order_no character varying(100),
+    sap_order_no character varying(20),
     shipping_document_text text,
+    order_type character varying(20) DEFAULT 'ORDER'::character varying NOT NULL,
+    order_group_id bigint,
+    customer_order_no character varying(6),
+    customer_order_line_no character varying(10),
+    sap_order_item_no character varying(6),
+    forecast_reference character varying(100),
+    CONSTRAINT chk_order_lines_order_type CHECK (((order_type)::text = ANY ((ARRAY['FORECAST_LINKED'::character varying, 'KANBAN'::character varying, 'SPOT'::character varying, 'ORDER'::character varying])::text[]))),
     CONSTRAINT chk_order_lines_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('allocated'::character varying)::text, ('shipped'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text])))
 );
+
+
+--
+-- Name: COLUMN order_lines.sap_order_no; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_lines.sap_order_no IS 'SAP受注番号（業務キー）';
+
+
+--
+-- Name: COLUMN order_lines.shipping_document_text; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_lines.shipping_document_text IS '出荷表テキスト';
+
+
+--
+-- Name: COLUMN order_lines.order_type; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_lines.order_type IS '需要種別: FORECAST_LINKED / KANBAN / SPOT / ORDER';
+
+
+--
+-- Name: COLUMN order_lines.order_group_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_lines.order_group_id IS '受注グループへの参照（得意先×製品×受注日）';
+
+
+--
+-- Name: COLUMN order_lines.customer_order_no; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_lines.customer_order_no IS '得意先6桁受注番号（業務キー）';
+
+
+--
+-- Name: COLUMN order_lines.customer_order_line_no; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_lines.customer_order_line_no IS '得意先側行番号';
+
+
+--
+-- Name: COLUMN order_lines.sap_order_item_no; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_lines.sap_order_item_no IS 'SAP明細番号（業務キー）';
+
+
+--
+-- Name: COLUMN order_lines.forecast_reference; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.order_lines.forecast_reference IS 'Forecast business key reference (replaces forecast_id FK)';
 
 
 --
@@ -732,12 +1442,14 @@ ALTER SEQUENCE public.order_lines_id_seq OWNED BY public.order_lines.id;
 
 CREATE TABLE public.orders (
     id bigint NOT NULL,
-    order_number character varying(50) NOT NULL,
     customer_id bigint NOT NULL,
     order_date date NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    status character varying(20) DEFAULT 'open'::character varying NOT NULL
+    status character varying(20) DEFAULT 'open'::character varying NOT NULL,
+    locked_by_user_id integer,
+    locked_at timestamp without time zone,
+    lock_expires_at timestamp without time zone
 );
 
 
@@ -761,6 +1473,80 @@ ALTER SEQUENCE public.orders_id_seq OWNED BY public.orders.id;
 
 
 --
+-- Name: product_mappings; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.product_mappings (
+    id bigint NOT NULL,
+    customer_id bigint NOT NULL,
+    customer_part_code character varying(100) NOT NULL,
+    supplier_id bigint NOT NULL,
+    product_id bigint NOT NULL,
+    base_unit character varying(20) NOT NULL,
+    pack_unit character varying(20),
+    pack_quantity integer,
+    special_instructions text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+);
+
+
+--
+-- Name: product_mappings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.product_mappings_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: product_mappings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.product_mappings_id_seq OWNED BY public.product_mappings.id;
+
+
+--
+-- Name: product_suppliers; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.product_suppliers (
+    id bigint NOT NULL,
+    product_id bigint NOT NULL,
+    supplier_id bigint NOT NULL,
+    is_primary boolean DEFAULT false NOT NULL,
+    lead_time_days integer,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+);
+
+
+--
+-- Name: product_suppliers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.product_suppliers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: product_suppliers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.product_suppliers_id_seq OWNED BY public.product_suppliers.id;
+
+
+--
 -- Name: product_uom_conversions; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -770,7 +1556,8 @@ CREATE TABLE public.product_uom_conversions (
     external_unit character varying(20) NOT NULL,
     factor numeric(15,3) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
 );
 
 
@@ -807,7 +1594,8 @@ CREATE TABLE public.products (
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     internal_unit character varying(20) DEFAULT 'CAN'::character varying NOT NULL,
     external_unit character varying(20) DEFAULT 'KG'::character varying NOT NULL,
-    qty_per_internal_unit numeric(10,4) DEFAULT 1.0 NOT NULL
+    qty_per_internal_unit numeric(10,4) DEFAULT 1.0 NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
 );
 
 
@@ -953,7 +1741,7 @@ CREATE TABLE public.stock_history (
     reference_type character varying(50),
     reference_id bigint,
     transaction_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT chk_stock_history_type CHECK (((transaction_type)::text = ANY (ARRAY[('inbound'::character varying)::text, ('allocation'::character varying)::text, ('shipment'::character varying)::text, ('adjustment'::character varying)::text, ('return'::character varying)::text])))
+    CONSTRAINT chk_stock_history_type CHECK (((transaction_type)::text = ANY ((ARRAY['inbound'::character varying, 'allocation'::character varying, 'shipment'::character varying, 'adjustment'::character varying, 'return'::character varying, 'withdrawal'::character varying])::text[])))
 );
 
 
@@ -985,7 +1773,8 @@ CREATE TABLE public.suppliers (
     supplier_code character varying(50) NOT NULL,
     supplier_name character varying(200) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL
 );
 
 
@@ -1006,6 +1795,39 @@ CREATE SEQUENCE public.suppliers_id_seq
 --
 
 ALTER SEQUENCE public.suppliers_id_seq OWNED BY public.suppliers.id;
+
+
+--
+-- Name: system_client_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.system_client_logs (
+    id bigint NOT NULL,
+    user_id bigint,
+    level character varying(20) DEFAULT 'info'::character varying NOT NULL,
+    message text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    user_agent character varying(255)
+);
+
+
+--
+-- Name: system_client_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.system_client_logs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: system_client_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.system_client_logs_id_seq OWNED BY public.system_client_logs.id;
 
 
 --
@@ -1094,12 +1916,14 @@ CREATE TABLE public.users (
     id bigint NOT NULL,
     username character varying(50) NOT NULL,
     email character varying(255) NOT NULL,
-    password_hash character varying(255) NOT NULL,
+    password_hash character varying(255),
     display_name character varying(100) NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     last_login_at timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    auth_provider character varying(50) DEFAULT 'local'::character varying NOT NULL,
+    azure_object_id character varying(100)
 );
 
 
@@ -1134,6 +1958,18 @@ CREATE VIEW public.v_customer_daily_products AS
 
 
 --
+-- Name: v_lot_allocations; Type: VIEW; Schema: public; Owner: -
+--
+
+CREATE VIEW public.v_lot_allocations AS
+ SELECT lot_reservations.lot_id,
+    sum(lot_reservations.reserved_qty) AS allocated_quantity
+   FROM public.lot_reservations
+  WHERE ((lot_reservations.status)::text = 'active'::text)
+  GROUP BY lot_reservations.lot_id;
+
+
+--
 -- Name: v_lot_available_qty; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -1141,12 +1977,13 @@ CREATE VIEW public.v_lot_available_qty AS
  SELECT l.id AS lot_id,
     l.product_id,
     l.warehouse_id,
-    GREATEST(((l.current_quantity - l.allocated_quantity) - l.locked_quantity), (0)::numeric) AS available_qty,
+    GREATEST(((l.current_quantity - COALESCE(la.allocated_quantity, (0)::numeric)) - l.locked_quantity), (0)::numeric) AS available_qty,
     l.received_date AS receipt_date,
     l.expiry_date,
     l.status AS lot_status
-   FROM public.lots l
-  WHERE (((l.status)::text = 'active'::text) AND ((l.expiry_date IS NULL) OR (l.expiry_date >= CURRENT_DATE)) AND (((l.current_quantity - l.allocated_quantity) - l.locked_quantity) > (0)::numeric));
+   FROM (public.lots l
+     LEFT JOIN public.v_lot_allocations la ON ((l.id = la.lot_id)))
+  WHERE (((l.status)::text = 'active'::text) AND ((l.expiry_date IS NULL) OR (l.expiry_date >= CURRENT_DATE)) AND (((l.current_quantity - COALESCE(la.allocated_quantity, (0)::numeric)) - l.locked_quantity) > (0)::numeric));
 
 
 --
@@ -1189,7 +2026,11 @@ CREATE VIEW public.v_candidate_lots_by_order_line AS
 CREATE VIEW public.v_customer_code_to_id AS
  SELECT c.customer_code,
     c.id AS customer_id,
-    c.customer_name
+    COALESCE(c.customer_name, '[削除済み得意先]'::character varying) AS customer_name,
+        CASE
+            WHEN ((c.valid_to IS NOT NULL) AND (c.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS is_deleted
    FROM public.customers c;
 
 
@@ -1200,25 +2041,33 @@ CREATE VIEW public.v_customer_code_to_id AS
 CREATE VIEW public.v_customer_item_jiku_mappings AS
  SELECT cijm.id,
     cijm.customer_id,
-    c.customer_code,
-    c.customer_name,
+    COALESCE(c.customer_code, ''::character varying) AS customer_code,
+    COALESCE(c.customer_name, '[削除済み得意先]'::character varying) AS customer_name,
     cijm.external_product_code,
     cijm.jiku_code,
     cijm.delivery_place_id,
-    dp.delivery_place_code,
-    dp.delivery_place_name,
+    COALESCE(dp.delivery_place_code, ''::character varying) AS delivery_place_code,
+    COALESCE(dp.delivery_place_name, '[削除済み納入先]'::character varying) AS delivery_place_name,
     cijm.is_default,
-    cijm.created_at
+    cijm.created_at,
+        CASE
+            WHEN ((c.valid_to IS NOT NULL) AND (c.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS customer_deleted,
+        CASE
+            WHEN ((dp.valid_to IS NOT NULL) AND (dp.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS delivery_place_deleted
    FROM ((public.customer_item_jiku_mappings cijm
-     JOIN public.customers c ON ((cijm.customer_id = c.id)))
-     JOIN public.delivery_places dp ON ((cijm.delivery_place_id = dp.id)));
+     LEFT JOIN public.customers c ON ((cijm.customer_id = c.id)))
+     LEFT JOIN public.delivery_places dp ON ((cijm.delivery_place_id = dp.id)));
 
 
 --
 -- Name: VIEW v_customer_item_jiku_mappings; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マッピングビュー';
+COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マッピングビュー（soft-delete対応）';
 
 
 --
@@ -1228,7 +2077,11 @@ COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マ�
 CREATE VIEW public.v_delivery_place_code_to_id AS
  SELECT d.delivery_place_code,
     d.id AS delivery_place_id,
-    d.delivery_place_name
+    COALESCE(d.delivery_place_name, '[削除済み納入先]'::character varying) AS delivery_place_name,
+        CASE
+            WHEN ((d.valid_to IS NOT NULL) AND (d.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS is_deleted
    FROM public.delivery_places d;
 
 
@@ -1255,13 +2108,14 @@ CREATE VIEW public.v_inventory_summary AS
  SELECT l.product_id,
     l.warehouse_id,
     sum(l.current_quantity) AS total_quantity,
-    sum(l.allocated_quantity) AS allocated_quantity,
+    sum(COALESCE(la.allocated_quantity, (0)::numeric)) AS allocated_quantity,
     sum(l.locked_quantity) AS locked_quantity,
-    GREATEST(((sum(l.current_quantity) - sum(l.allocated_quantity)) - sum(l.locked_quantity)), (0)::numeric) AS available_quantity,
+    GREATEST(((sum(l.current_quantity) - sum(COALESCE(la.allocated_quantity, (0)::numeric))) - sum(l.locked_quantity)), (0)::numeric) AS available_quantity,
     COALESCE(sum(ipl.planned_quantity), (0)::numeric) AS provisional_stock,
-    GREATEST((((sum(l.current_quantity) - sum(l.allocated_quantity)) - sum(l.locked_quantity)) + COALESCE(sum(ipl.planned_quantity), (0)::numeric)), (0)::numeric) AS available_with_provisional,
+    GREATEST((((sum(l.current_quantity) - sum(COALESCE(la.allocated_quantity, (0)::numeric))) - sum(l.locked_quantity)) + COALESCE(sum(ipl.planned_quantity), (0)::numeric)), (0)::numeric) AS available_with_provisional,
     max(l.updated_at) AS last_updated
-   FROM ((public.lots l
+   FROM (((public.lots l
+     LEFT JOIN public.v_lot_allocations la ON ((l.id = la.lot_id)))
      LEFT JOIN public.inbound_plan_lines ipl ON ((l.product_id = ipl.product_id)))
      LEFT JOIN public.inbound_plans ip ON (((ipl.inbound_plan_id = ip.id) AND ((ip.status)::text = 'planned'::text))))
   WHERE ((l.status)::text = 'active'::text)
@@ -1300,6 +2154,7 @@ CREATE TABLE public.warehouses (
     warehouse_type character varying(20) NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
     CONSTRAINT chk_warehouse_type CHECK (((warehouse_type)::text = ANY (ARRAY[('internal'::character varying)::text, ('external'::character varying)::text, ('supplier'::character varying)::text])))
 );
 
@@ -1312,20 +2167,20 @@ CREATE VIEW public.v_lot_details AS
  SELECT l.id AS lot_id,
     l.lot_number,
     l.product_id,
-    p.maker_part_code,
-    p.product_name,
+    COALESCE(p.maker_part_code, ''::character varying) AS maker_part_code,
+    COALESCE(p.product_name, '[削除済み製品]'::character varying) AS product_name,
     l.warehouse_id,
-    w.warehouse_code,
-    w.warehouse_name,
+    COALESCE(w.warehouse_code, ''::character varying) AS warehouse_code,
+    COALESCE(w.warehouse_name, '[削除済み倉庫]'::character varying) AS warehouse_name,
     l.supplier_id,
-    s.supplier_code,
-    s.supplier_name,
+    COALESCE(s.supplier_code, ''::character varying) AS supplier_code,
+    COALESCE(s.supplier_name, '[削除済み仕入先]'::character varying) AS supplier_name,
     l.received_date,
     l.expiry_date,
     l.current_quantity,
-    l.allocated_quantity,
+    COALESCE(la.allocated_quantity, (0)::numeric) AS allocated_quantity,
     l.locked_quantity,
-    GREATEST(((l.current_quantity - l.allocated_quantity) - l.locked_quantity), (0)::numeric) AS available_quantity,
+    GREATEST(((l.current_quantity - COALESCE(la.allocated_quantity, (0)::numeric)) - l.locked_quantity), (0)::numeric) AS available_quantity,
     l.unit,
     l.status,
     l.lock_reason,
@@ -1336,9 +2191,22 @@ CREATE VIEW public.v_lot_details AS
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
     u_primary.display_name AS primary_user_display_name,
+        CASE
+            WHEN ((p.valid_to IS NOT NULL) AND (p.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS product_deleted,
+        CASE
+            WHEN ((w.valid_to IS NOT NULL) AND (w.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS warehouse_deleted,
+        CASE
+            WHEN ((s.valid_to IS NOT NULL) AND (s.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS supplier_deleted,
     l.created_at,
     l.updated_at
-   FROM (((((public.lots l
+   FROM ((((((public.lots l
+     LEFT JOIN public.v_lot_allocations la ON ((l.id = la.lot_id)))
      LEFT JOIN public.products p ON ((l.product_id = p.id)))
      LEFT JOIN public.warehouses w ON ((l.warehouse_id = w.id)))
      LEFT JOIN public.suppliers s ON ((l.supplier_id = s.id)))
@@ -1350,7 +2218,7 @@ CREATE VIEW public.v_lot_details AS
 -- Name: VIEW v_lot_details; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む）';
+COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応）';
 
 
 --
@@ -1359,11 +2227,10 @@ COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情
 
 CREATE VIEW public.v_order_line_details AS
  SELECT o.id AS order_id,
-    o.order_number,
     o.order_date,
     o.customer_id,
-    c.customer_code,
-    c.customer_name,
+    COALESCE(c.customer_code, ''::character varying) AS customer_code,
+    COALESCE(c.customer_name, '[削除済み得意先]'::character varying) AS customer_name,
     ol.id AS line_id,
     ol.product_id,
     ol.delivery_date,
@@ -1372,17 +2239,29 @@ CREATE VIEW public.v_order_line_details AS
     ol.delivery_place_id,
     ol.status AS line_status,
     ol.shipping_document_text,
-    p.maker_part_code AS product_code,
-    p.product_name,
+    COALESCE(p.maker_part_code, ''::character varying) AS product_code,
+    COALESCE(p.product_name, '[削除済み製品]'::character varying) AS product_name,
     p.internal_unit AS product_internal_unit,
     p.external_unit AS product_external_unit,
     p.qty_per_internal_unit AS product_qty_per_internal_unit,
-    dp.delivery_place_code,
-    dp.delivery_place_name,
+    COALESCE(dp.delivery_place_code, ''::character varying) AS delivery_place_code,
+    COALESCE(dp.delivery_place_name, '[削除済み納入先]'::character varying) AS delivery_place_name,
     dp.jiku_code,
     ci.external_product_code,
-    s.supplier_name,
-    COALESCE(sum(a.allocated_quantity), (0)::numeric) AS allocated_quantity
+    COALESCE(s.supplier_name, '[削除済み仕入先]'::character varying) AS supplier_name,
+    COALESCE(alloc_sum.allocated_qty, (0)::numeric) AS allocated_quantity,
+        CASE
+            WHEN ((c.valid_to IS NOT NULL) AND (c.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS customer_deleted,
+        CASE
+            WHEN ((p.valid_to IS NOT NULL) AND (p.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS product_deleted,
+        CASE
+            WHEN ((dp.valid_to IS NOT NULL) AND (dp.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS delivery_place_deleted
    FROM (((((((public.orders o
      LEFT JOIN public.customers c ON ((o.customer_id = c.id)))
      LEFT JOIN public.order_lines ol ON ((ol.order_id = o.id)))
@@ -1390,15 +2269,17 @@ CREATE VIEW public.v_order_line_details AS
      LEFT JOIN public.delivery_places dp ON ((ol.delivery_place_id = dp.id)))
      LEFT JOIN public.customer_items ci ON (((ci.customer_id = o.customer_id) AND (ci.product_id = ol.product_id))))
      LEFT JOIN public.suppliers s ON ((ci.supplier_id = s.id)))
-     LEFT JOIN public.allocations a ON ((a.order_line_id = ol.id)))
-  GROUP BY o.id, o.order_number, o.order_date, o.customer_id, c.customer_code, c.customer_name, ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status, ol.shipping_document_text, p.maker_part_code, p.product_name, p.internal_unit, p.external_unit, p.qty_per_internal_unit, dp.delivery_place_code, dp.delivery_place_name, dp.jiku_code, ci.external_product_code, s.supplier_name;
+     LEFT JOIN ( SELECT allocations.order_line_id,
+            sum(allocations.allocated_quantity) AS allocated_qty
+           FROM public.allocations
+          GROUP BY allocations.order_line_id) alloc_sum ON ((alloc_sum.order_line_id = ol.id)));
 
 
 --
 -- Name: VIEW v_order_line_details; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.v_order_line_details IS '受注明細の詳細情報ビュー';
+COMMENT ON VIEW public.v_order_line_details IS '受注明細の詳細情報ビュー（soft-delete対応）';
 
 
 --
@@ -1408,7 +2289,11 @@ COMMENT ON VIEW public.v_order_line_details IS '受注明細の詳細情報ビ�
 CREATE VIEW public.v_product_code_to_id AS
  SELECT p.maker_part_code AS product_code,
     p.id AS product_id,
-    p.product_name
+    COALESCE(p.product_name, '[削除済み製品]'::character varying) AS product_name,
+        CASE
+            WHEN ((p.valid_to IS NOT NULL) AND (p.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS is_deleted
    FROM public.products p;
 
 
@@ -1419,7 +2304,11 @@ CREATE VIEW public.v_product_code_to_id AS
 CREATE VIEW public.v_supplier_code_to_id AS
  SELECT s.supplier_code,
     s.id AS supplier_id,
-    s.supplier_name
+    COALESCE(s.supplier_name, '[削除済み仕入先]'::character varying) AS supplier_name,
+        CASE
+            WHEN ((s.valid_to IS NOT NULL) AND (s.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS is_deleted
    FROM public.suppliers s;
 
 
@@ -1427,7 +2316,7 @@ CREATE VIEW public.v_supplier_code_to_id AS
 -- Name: VIEW v_supplier_code_to_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.v_supplier_code_to_id IS '仕入先コード→IDマッピング';
+COMMENT ON VIEW public.v_supplier_code_to_id IS '仕入先コード→IDマッピング（soft-delete対応）';
 
 
 --
@@ -1440,22 +2329,26 @@ CREATE VIEW public.v_user_supplier_assignments AS
     u.username,
     u.display_name,
     usa.supplier_id,
-    s.supplier_code,
-    s.supplier_name,
+    COALESCE(s.supplier_code, ''::character varying) AS supplier_code,
+    COALESCE(s.supplier_name, '[削除済み仕入先]'::character varying) AS supplier_name,
     usa.is_primary,
     usa.assigned_at,
     usa.created_at,
-    usa.updated_at
+    usa.updated_at,
+        CASE
+            WHEN ((s.valid_to IS NOT NULL) AND (s.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS supplier_deleted
    FROM ((public.user_supplier_assignments usa
      JOIN public.users u ON ((usa.user_id = u.id)))
-     JOIN public.suppliers s ON ((usa.supplier_id = s.id)));
+     LEFT JOIN public.suppliers s ON ((usa.supplier_id = s.id)));
 
 
 --
 -- Name: VIEW v_user_supplier_assignments; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.v_user_supplier_assignments IS 'ユーザー-仕入先担当割り当てビュー';
+COMMENT ON VIEW public.v_user_supplier_assignments IS 'ユーザー-仕入先担当割り当てビュー（soft-delete対応）';
 
 
 --
@@ -1465,8 +2358,12 @@ COMMENT ON VIEW public.v_user_supplier_assignments IS 'ユーザー-仕入先担
 CREATE VIEW public.v_warehouse_code_to_id AS
  SELECT w.warehouse_code,
     w.id AS warehouse_id,
-    w.warehouse_name,
-    w.warehouse_type
+    COALESCE(w.warehouse_name, '[削除済み倉庫]'::character varying) AS warehouse_name,
+    w.warehouse_type,
+        CASE
+            WHEN ((w.valid_to IS NOT NULL) AND (w.valid_to <= CURRENT_DATE)) THEN true
+            ELSE false
+        END AS is_deleted
    FROM public.warehouses w;
 
 
@@ -1474,7 +2371,7 @@ CREATE VIEW public.v_warehouse_code_to_id AS
 -- Name: VIEW v_warehouse_code_to_id; Type: COMMENT; Schema: public; Owner: -
 --
 
-COMMENT ON VIEW public.v_warehouse_code_to_id IS '倉庫コード→IDマッピング';
+COMMENT ON VIEW public.v_warehouse_code_to_id IS '倉庫コード→IDマッピング（soft-delete対応）';
 
 
 --
@@ -1494,6 +2391,47 @@ CREATE SEQUENCE public.warehouses_id_seq
 --
 
 ALTER SEQUENCE public.warehouses_id_seq OWNED BY public.warehouses.id;
+
+
+--
+-- Name: withdrawals; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.withdrawals (
+    id bigint NOT NULL,
+    lot_id bigint NOT NULL,
+    quantity numeric(15,3) NOT NULL,
+    withdrawal_type character varying(20) NOT NULL,
+    customer_id bigint,
+    delivery_place_id bigint,
+    ship_date date NOT NULL,
+    reason text,
+    reference_number character varying(100),
+    withdrawn_by bigint,
+    withdrawn_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT chk_withdrawals_quantity CHECK ((quantity > (0)::numeric)),
+    CONSTRAINT chk_withdrawals_type CHECK (((withdrawal_type)::text = ANY ((ARRAY['order_manual'::character varying, 'internal_use'::character varying, 'disposal'::character varying, 'return'::character varying, 'sample'::character varying, 'other'::character varying])::text[])))
+);
+
+
+--
+-- Name: withdrawals_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.withdrawals_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: withdrawals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.withdrawals_id_seq OWNED BY public.withdrawals.id;
 
 
 --
@@ -1536,6 +2474,13 @@ ALTER TABLE ONLY public.batch_jobs ALTER COLUMN id SET DEFAULT nextval('public.b
 --
 
 ALTER TABLE ONLY public.business_rules ALTER COLUMN id SET DEFAULT nextval('public.business_rules_id_seq'::regclass);
+
+
+--
+-- Name: customer_item_delivery_settings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_item_delivery_settings ALTER COLUMN id SET DEFAULT nextval('public.customer_item_delivery_settings_id_seq'::regclass);
 
 
 --
@@ -1595,6 +2540,13 @@ ALTER TABLE ONLY public.inbound_plans ALTER COLUMN id SET DEFAULT nextval('publi
 
 
 --
+-- Name: lot_reservations id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lot_reservations ALTER COLUMN id SET DEFAULT nextval('public.lot_reservations_id_seq'::regclass);
+
+
+--
 -- Name: lots id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1616,6 +2568,13 @@ ALTER TABLE ONLY public.operation_logs ALTER COLUMN id SET DEFAULT nextval('publ
 
 
 --
+-- Name: order_groups id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_groups ALTER COLUMN id SET DEFAULT nextval('public.order_groups_id_seq'::regclass);
+
+
+--
 -- Name: order_lines id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1627,6 +2586,20 @@ ALTER TABLE ONLY public.order_lines ALTER COLUMN id SET DEFAULT nextval('public.
 --
 
 ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.orders_id_seq'::regclass);
+
+
+--
+-- Name: product_mappings id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_mappings ALTER COLUMN id SET DEFAULT nextval('public.product_mappings_id_seq'::regclass);
+
+
+--
+-- Name: product_suppliers id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_suppliers ALTER COLUMN id SET DEFAULT nextval('public.product_suppliers_id_seq'::regclass);
 
 
 --
@@ -1672,6 +2645,13 @@ ALTER TABLE ONLY public.suppliers ALTER COLUMN id SET DEFAULT nextval('public.su
 
 
 --
+-- Name: system_client_logs id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.system_client_logs ALTER COLUMN id SET DEFAULT nextval('public.system_client_logs_id_seq'::regclass);
+
+
+--
 -- Name: system_configs id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -1697,6 +2677,13 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 --
 
 ALTER TABLE ONLY public.warehouses ALTER COLUMN id SET DEFAULT nextval('public.warehouses_id_seq'::regclass);
+
+
+--
+-- Name: withdrawals id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.withdrawals ALTER COLUMN id SET DEFAULT nextval('public.withdrawals_id_seq'::regclass);
 
 
 --
@@ -1761,6 +2748,14 @@ ALTER TABLE ONLY public.business_rules
 
 ALTER TABLE ONLY public.business_rules
     ADD CONSTRAINT business_rules_rule_code_key UNIQUE (rule_code);
+
+
+--
+-- Name: customer_item_delivery_settings customer_item_delivery_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_item_delivery_settings
+    ADD CONSTRAINT customer_item_delivery_settings_pkey PRIMARY KEY (id);
 
 
 --
@@ -1844,6 +2839,22 @@ ALTER TABLE ONLY public.inbound_plans
 
 
 --
+-- Name: inbound_plans inbound_plans_sap_po_number_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.inbound_plans
+    ADD CONSTRAINT inbound_plans_sap_po_number_key UNIQUE (sap_po_number);
+
+
+--
+-- Name: lot_reservations lot_reservations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lot_reservations
+    ADD CONSTRAINT lot_reservations_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: lots lots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1868,6 +2879,14 @@ ALTER TABLE ONLY public.operation_logs
 
 
 --
+-- Name: order_groups order_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_groups
+    ADD CONSTRAINT order_groups_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: order_lines order_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -1881,6 +2900,22 @@ ALTER TABLE ONLY public.order_lines
 
 ALTER TABLE ONLY public.orders
     ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: product_mappings product_mappings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_mappings
+    ADD CONSTRAINT product_mappings_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: product_suppliers product_suppliers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_suppliers
+    ADD CONSTRAINT product_suppliers_pkey PRIMARY KEY (id);
 
 
 --
@@ -1932,11 +2967,27 @@ ALTER TABLE ONLY public.suppliers
 
 
 --
+-- Name: system_client_logs system_client_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.system_client_logs
+    ADD CONSTRAINT system_client_logs_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: system_configs system_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.system_configs
     ADD CONSTRAINT system_configs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: customer_item_delivery_settings uq_customer_item_delivery_settings; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_item_delivery_settings
+    ADD CONSTRAINT uq_customer_item_delivery_settings UNIQUE (customer_id, external_product_code, delivery_place_id, jiku_code);
 
 
 --
@@ -1972,11 +3023,35 @@ ALTER TABLE ONLY public.lots
 
 
 --
--- Name: orders uq_orders_order_number; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: order_groups uq_order_groups_business_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.orders
-    ADD CONSTRAINT uq_orders_order_number UNIQUE (order_number);
+ALTER TABLE ONLY public.order_groups
+    ADD CONSTRAINT uq_order_groups_business_key UNIQUE (customer_id, product_id, order_date);
+
+
+--
+-- Name: order_lines uq_order_lines_customer_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_lines
+    ADD CONSTRAINT uq_order_lines_customer_key UNIQUE (order_group_id, customer_order_no);
+
+
+--
+-- Name: product_mappings uq_product_mappings_cust_part_supp; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_mappings
+    ADD CONSTRAINT uq_product_mappings_cust_part_supp UNIQUE (customer_id, customer_part_code, supplier_id);
+
+
+--
+-- Name: product_suppliers uq_product_supplier; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_suppliers
+    ADD CONSTRAINT uq_product_supplier UNIQUE (product_id, supplier_id);
 
 
 --
@@ -2068,6 +3143,14 @@ ALTER TABLE ONLY public.user_supplier_assignments
 
 
 --
+-- Name: users users_azure_object_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_azure_object_id_key UNIQUE (azure_object_id);
+
+
+--
 -- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2081,6 +3164,14 @@ ALTER TABLE ONLY public.users
 
 ALTER TABLE ONLY public.warehouses
     ADD CONSTRAINT warehouses_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: withdrawals withdrawals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.withdrawals
+    ADD CONSTRAINT withdrawals_pkey PRIMARY KEY (id);
 
 
 --
@@ -2102,6 +3193,13 @@ CREATE INDEX idx_adjustments_lot ON public.adjustments USING btree (lot_id);
 --
 
 CREATE INDEX idx_allocation_suggestions_customer ON public.allocation_suggestions USING btree (customer_id);
+
+
+--
+-- Name: idx_allocation_suggestions_forecast; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_allocation_suggestions_forecast ON public.allocation_suggestions USING btree (forecast_id);
 
 
 --
@@ -2147,6 +3245,13 @@ CREATE INDEX idx_allocation_traces_order_line ON public.allocation_traces USING 
 
 
 --
+-- Name: idx_allocations_allocation_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_allocations_allocation_type ON public.allocations USING btree (allocation_type);
+
+
+--
 -- Name: idx_allocations_inbound_plan_line; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2154,10 +3259,10 @@ CREATE INDEX idx_allocations_inbound_plan_line ON public.allocations USING btree
 
 
 --
--- Name: idx_allocations_lot; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocations_lot_reference; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_allocations_lot ON public.allocations USING btree (lot_id);
+CREATE INDEX idx_allocations_lot_reference ON public.allocations USING btree (lot_reference);
 
 
 --
@@ -2217,6 +3322,27 @@ CREATE INDEX idx_business_rules_type ON public.business_rules USING btree (rule_
 
 
 --
+-- Name: idx_cids_customer_item; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_cids_customer_item ON public.customer_item_delivery_settings USING btree (customer_id, external_product_code);
+
+
+--
+-- Name: idx_cids_delivery_place; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_cids_delivery_place ON public.customer_item_delivery_settings USING btree (delivery_place_id);
+
+
+--
+-- Name: idx_cids_jiku_code; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_cids_jiku_code ON public.customer_item_delivery_settings USING btree (jiku_code);
+
+
+--
 -- Name: idx_customer_items_product; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2231,10 +3357,24 @@ CREATE INDEX idx_customer_items_supplier ON public.customer_items USING btree (s
 
 
 --
+-- Name: idx_customer_items_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_customer_items_valid_to ON public.customer_items USING btree (valid_to);
+
+
+--
 -- Name: idx_customers_code; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_customers_code ON public.customers USING btree (customer_code);
+
+
+--
+-- Name: idx_customers_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_customers_valid_to ON public.customers USING btree (valid_to);
 
 
 --
@@ -2249,6 +3389,13 @@ CREATE INDEX idx_delivery_places_code ON public.delivery_places USING btree (del
 --
 
 CREATE INDEX idx_delivery_places_customer ON public.delivery_places USING btree (customer_id);
+
+
+--
+-- Name: idx_delivery_places_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_delivery_places_valid_to ON public.delivery_places USING btree (valid_to);
 
 
 --
@@ -2301,6 +3448,34 @@ CREATE INDEX idx_inbound_plans_supplier ON public.inbound_plans USING btree (sup
 
 
 --
+-- Name: idx_lot_reservations_expires_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lot_reservations_expires_at ON public.lot_reservations USING btree (expires_at) WHERE (expires_at IS NOT NULL);
+
+
+--
+-- Name: idx_lot_reservations_lot_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lot_reservations_lot_status ON public.lot_reservations USING btree (lot_id, status);
+
+
+--
+-- Name: idx_lot_reservations_source; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lot_reservations_source ON public.lot_reservations USING btree (source_type, source_id);
+
+
+--
+-- Name: idx_lot_reservations_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lot_reservations_status ON public.lot_reservations USING btree (status);
+
+
+--
 -- Name: idx_lots_expiry_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2312,6 +3487,13 @@ CREATE INDEX idx_lots_expiry_date ON public.lots USING btree (expiry_date) WHERE
 --
 
 CREATE INDEX idx_lots_number ON public.lots USING btree (lot_number);
+
+
+--
+-- Name: idx_lots_origin_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_lots_origin_type ON public.lots USING btree (origin_type);
 
 
 --
@@ -2399,6 +3581,34 @@ CREATE INDEX idx_operation_logs_user ON public.operation_logs USING btree (user_
 
 
 --
+-- Name: idx_order_groups_customer; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_order_groups_customer ON public.order_groups USING btree (customer_id);
+
+
+--
+-- Name: idx_order_groups_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_order_groups_date ON public.order_groups USING btree (order_date);
+
+
+--
+-- Name: idx_order_groups_product; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_order_groups_product ON public.order_groups USING btree (product_id);
+
+
+--
+-- Name: idx_order_lines_customer_order_no; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_order_lines_customer_order_no ON public.order_lines USING btree (customer_order_no) WHERE (customer_order_no IS NOT NULL);
+
+
+--
 -- Name: idx_order_lines_date; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2413,10 +3623,31 @@ CREATE INDEX idx_order_lines_delivery_place ON public.order_lines USING btree (d
 
 
 --
+-- Name: idx_order_lines_forecast_reference; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_order_lines_forecast_reference ON public.order_lines USING btree (forecast_reference) WHERE (forecast_reference IS NOT NULL);
+
+
+--
 -- Name: idx_order_lines_order; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_order_lines_order ON public.order_lines USING btree (order_id);
+
+
+--
+-- Name: idx_order_lines_order_group; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_order_lines_order_group ON public.order_lines USING btree (order_group_id);
+
+
+--
+-- Name: idx_order_lines_order_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_order_lines_order_type ON public.order_lines USING btree (order_type);
 
 
 --
@@ -2455,6 +3686,62 @@ CREATE INDEX idx_orders_date ON public.orders USING btree (order_date);
 
 
 --
+-- Name: idx_orders_lock_expires; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_orders_lock_expires ON public.orders USING btree (lock_expires_at) WHERE (lock_expires_at IS NOT NULL);
+
+
+--
+-- Name: idx_orders_locked_by; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_orders_locked_by ON public.orders USING btree (locked_by_user_id);
+
+
+--
+-- Name: idx_product_mappings_customer; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_mappings_customer ON public.product_mappings USING btree (customer_id);
+
+
+--
+-- Name: idx_product_mappings_product; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_mappings_product ON public.product_mappings USING btree (product_id);
+
+
+--
+-- Name: idx_product_mappings_supplier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_mappings_supplier ON public.product_mappings USING btree (supplier_id);
+
+
+--
+-- Name: idx_product_mappings_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_mappings_valid_to ON public.product_mappings USING btree (valid_to);
+
+
+--
+-- Name: idx_product_suppliers_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_suppliers_valid_to ON public.product_suppliers USING btree (valid_to);
+
+
+--
+-- Name: idx_product_uom_conversions_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_product_uom_conversions_valid_to ON public.product_uom_conversions USING btree (valid_to);
+
+
+--
 -- Name: idx_products_code; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2466,6 +3753,13 @@ CREATE INDEX idx_products_code ON public.products USING btree (maker_part_code);
 --
 
 CREATE INDEX idx_products_name ON public.products USING btree (product_name);
+
+
+--
+-- Name: idx_products_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_products_valid_to ON public.products USING btree (valid_to);
 
 
 --
@@ -2501,6 +3795,27 @@ CREATE INDEX idx_stock_history_type ON public.stock_history USING btree (transac
 --
 
 CREATE INDEX idx_suppliers_code ON public.suppliers USING btree (supplier_code);
+
+
+--
+-- Name: idx_suppliers_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_suppliers_valid_to ON public.suppliers USING btree (valid_to);
+
+
+--
+-- Name: idx_system_client_logs_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_system_client_logs_created_at ON public.system_client_logs USING btree (created_at);
+
+
+--
+-- Name: idx_system_client_logs_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_system_client_logs_user_id ON public.system_client_logs USING btree (user_id);
 
 
 --
@@ -2553,6 +3868,20 @@ CREATE INDEX idx_users_active ON public.users USING btree (is_active) WHERE (is_
 
 
 --
+-- Name: idx_users_auth_provider; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_auth_provider ON public.users USING btree (auth_provider);
+
+
+--
+-- Name: idx_users_azure_oid; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_users_azure_oid ON public.users USING btree (azure_object_id);
+
+
+--
 -- Name: idx_users_email; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2581,6 +3910,41 @@ CREATE INDEX idx_warehouses_type ON public.warehouses USING btree (warehouse_typ
 
 
 --
+-- Name: idx_warehouses_valid_to; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_warehouses_valid_to ON public.warehouses USING btree (valid_to);
+
+
+--
+-- Name: idx_withdrawals_customer; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_withdrawals_customer ON public.withdrawals USING btree (customer_id);
+
+
+--
+-- Name: idx_withdrawals_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_withdrawals_date ON public.withdrawals USING btree (ship_date);
+
+
+--
+-- Name: idx_withdrawals_lot; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_withdrawals_lot ON public.withdrawals USING btree (lot_id);
+
+
+--
+-- Name: idx_withdrawals_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_withdrawals_type ON public.withdrawals USING btree (withdrawal_type);
+
+
+--
 -- Name: ix_forecast_current_key; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2595,6 +3959,13 @@ CREATE INDEX ix_forecast_history_key ON public.forecast_history USING btree (cus
 
 
 --
+-- Name: uq_product_primary_supplier; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uq_product_primary_supplier ON public.product_suppliers USING btree (product_id) WHERE (is_primary = true);
+
+
+--
 -- Name: uq_user_supplier_primary_per_supplier; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2606,6 +3977,14 @@ CREATE UNIQUE INDEX uq_user_supplier_primary_per_supplier ON public.user_supplie
 --
 
 CREATE UNIQUE INDEX ux_forecast_current_unique ON public.forecast_current USING btree (customer_id, delivery_place_id, product_id, forecast_date, forecast_period);
+
+
+--
+-- Name: allocation_suggestions allocation_suggestions_forecast_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.allocation_suggestions
+    ADD CONSTRAINT allocation_suggestions_forecast_id_fkey FOREIGN KEY (forecast_id) REFERENCES public.forecast_current(id) ON DELETE CASCADE;
 
 
 --
@@ -2681,19 +4060,27 @@ ALTER TABLE ONLY public.allocations
 
 
 --
--- Name: allocations fk_allocations_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocations
-    ADD CONSTRAINT fk_allocations_lot FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE RESTRICT;
-
-
---
 -- Name: allocations fk_allocations_order_line; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.allocations
     ADD CONSTRAINT fk_allocations_order_line FOREIGN KEY (order_line_id) REFERENCES public.order_lines(id) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_item_delivery_settings fk_cids_customer_item; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_item_delivery_settings
+    ADD CONSTRAINT fk_cids_customer_item FOREIGN KEY (customer_id, external_product_code) REFERENCES public.customer_items(customer_id, external_product_code) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_item_delivery_settings fk_cids_delivery_place; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.customer_item_delivery_settings
+    ADD CONSTRAINT fk_cids_delivery_place FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE SET NULL;
 
 
 --
@@ -2801,6 +4188,14 @@ ALTER TABLE ONLY public.inbound_plans
 
 
 --
+-- Name: lot_reservations fk_lot_reservations_lot_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.lot_reservations
+    ADD CONSTRAINT fk_lot_reservations_lot_id FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE RESTRICT;
+
+
+--
 -- Name: lots fk_lots_expected; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2881,6 +4276,22 @@ ALTER TABLE ONLY public.orders
 
 
 --
+-- Name: product_suppliers fk_product_suppliers_product; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_suppliers
+    ADD CONSTRAINT fk_product_suppliers_product FOREIGN KEY (product_id) REFERENCES public.products(id);
+
+
+--
+-- Name: product_suppliers fk_product_suppliers_supplier; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_suppliers
+    ADD CONSTRAINT fk_product_suppliers_supplier FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id);
+
+
+--
 -- Name: stock_history fk_stock_history_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2913,6 +4324,70 @@ ALTER TABLE ONLY public.user_roles
 
 
 --
+-- Name: order_groups order_groups_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_groups
+    ADD CONSTRAINT order_groups_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: order_groups order_groups_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_groups
+    ADD CONSTRAINT order_groups_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: order_lines order_lines_order_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.order_lines
+    ADD CONSTRAINT order_lines_order_group_id_fkey FOREIGN KEY (order_group_id) REFERENCES public.order_groups(id) ON DELETE SET NULL;
+
+
+--
+-- Name: orders orders_locked_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_locked_by_user_id_fkey FOREIGN KEY (locked_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: product_mappings product_mappings_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_mappings
+    ADD CONSTRAINT product_mappings_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
+
+
+--
+-- Name: product_mappings product_mappings_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_mappings
+    ADD CONSTRAINT product_mappings_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: product_mappings product_mappings_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.product_mappings
+    ADD CONSTRAINT product_mappings_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE CASCADE;
+
+
+--
+-- Name: system_client_logs system_client_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.system_client_logs
+    ADD CONSTRAINT system_client_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
 -- Name: user_supplier_assignments user_supplier_assignments_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2929,8 +4404,40 @@ ALTER TABLE ONLY public.user_supplier_assignments
 
 
 --
+-- Name: withdrawals withdrawals_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.withdrawals
+    ADD CONSTRAINT withdrawals_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: withdrawals withdrawals_delivery_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.withdrawals
+    ADD CONSTRAINT withdrawals_delivery_place_id_fkey FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: withdrawals withdrawals_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.withdrawals
+    ADD CONSTRAINT withdrawals_lot_id_fkey FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: withdrawals withdrawals_withdrawn_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.withdrawals
+    ADD CONSTRAINT withdrawals_withdrawn_by_fkey FOREIGN KEY (withdrawn_by) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+
+--
 -- PostgreSQL database dump complete
 --
 
-\unrestrict zUbAjcEqydcnh96WVcHgsY11guKZh4yroI5E5rj488zPYtrhcMhKFhtH9fy1JWu
+\unrestrict 1dAhq8oFRSz3E0J38brLnyzGW09zmj3VCemCG6N4z783Fqhg6zQ2iSb6kaOaQht
 

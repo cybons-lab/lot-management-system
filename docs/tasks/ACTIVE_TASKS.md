@@ -97,19 +97,21 @@
 
 ---
 
-### P3-3: DDLスキーマ同期確認 🆕
+### P3-3: DDLスキーマ同期 ✅
 
-**ステータス:** 確認済み（対応不要）
+**ステータス:** 完了（2025-12-12）
 
 **概要:**
-`schema_latest.sql` と SQLAlchemy モデル間で `allocations.lot_id` vs `lot_reference` の差異あり。
-→ **意図的な設計変更**（ビジネスキー参照への移行）であることを確認。
+`schema_latest.sql` と SQLAlchemy モデル間で `allocations.lot_id` vs `lot_reference` の差異があった。
+→ **意図的な設計変更**（ビジネスキー参照への移行）であることを確認し、DDLを再ダンプして同期完了。
+
+**対応内容:**
+- `schema_latest.sql` を本番DBから再ダンプ
+- ファイル先頭に「自動生成ファイル」のコメントを追加
+- 更新コマンドをドキュメント化
 
 **参照ドキュメント:**
 - [`docs/architecture/decoupling-migration-plan.md`](../architecture/decoupling-migration-plan.md) - 疎結合化計画
-- [`docs/architecture/bounded-contexts-separation.md`](../architecture/bounded-contexts-separation.md) - 境界分離設計
-
-**ステータス:** DDL更新は疎結合化マイグレーション時に実施予定。現時点で対応不要。
 
 
 ---
