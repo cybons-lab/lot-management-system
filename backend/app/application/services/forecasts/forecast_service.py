@@ -233,6 +233,9 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             self._create_provisional_order(db_forecast)
             self.db.commit()
 
+            # Regenerate allocation suggestions for this period
+            self._regenerate_allocation_suggestions(data.forecast_period)
+
         return self.get_forecast_by_id(db_forecast.id)  # type: ignore[return-value]
 
     def update_forecast(self, forecast_id: int, data: ForecastUpdate) -> ForecastResponse | None:
@@ -245,6 +248,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             return None
 
         old_quantity = db_forecast.forecast_quantity
+        forecast_period = db_forecast.forecast_period  # Capture before update
         update_data = data.model_dump(exclude_unset=True)
         for key, value in update_data.items():
             setattr(db_forecast, key, value)
@@ -264,6 +268,9 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                     self._delete_provisional_order(db_forecast)
                 self.db.commit()
 
+                # Regenerate allocation suggestions for this period
+                self._regenerate_allocation_suggestions(forecast_period)
+
         return self.get_forecast_by_id(forecast_id)
 
     def delete_forecast(self, forecast_id: int) -> bool:
@@ -275,11 +282,16 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         if not db_forecast:
             return False
 
+        forecast_period = db_forecast.forecast_period  # Capture before delete
+
         # Delete associated provisional order first
         self._delete_provisional_order(db_forecast)
 
         self.db.delete(db_forecast)
         self.db.commit()
+
+        # Regenerate allocation suggestions for this period
+        self._regenerate_allocation_suggestions(forecast_period)
 
         return True
 
@@ -323,6 +335,25 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         ]
 
     # --- Provisional Order Management ---
+
+    def _regenerate_allocation_suggestions(self, forecast_period: str) -> None:
+        """Regenerate allocation suggestions for a forecast period.
+
+        This is called after forecast create/update/delete to keep
+        the planning allocation summary in sync.
+        """
+        try:
+            from app.application.services.allocations.suggestion import AllocationSuggestionService
+
+            suggestion_service = AllocationSuggestionService(self.db)
+            suggestion_service.regenerate_for_periods([forecast_period])
+        except Exception as e:
+            # Log but don't fail the forecast operation
+            import logging
+
+            logging.getLogger(__name__).warning(
+                f"Failed to regenerate allocation suggestions for period {forecast_period}: {e}"
+            )
 
     def _build_forecast_reference(self, forecast: ForecastCurrent) -> str:
         """Build forecast reference string for provisional orders.
