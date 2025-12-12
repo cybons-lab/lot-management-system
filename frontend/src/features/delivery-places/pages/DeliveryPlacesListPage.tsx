@@ -7,18 +7,8 @@ import { DeliveryPlaceForm } from "../components/DeliveryPlaceForm";
 import { DeliveryPlacesTable } from "../components/DeliveryPlacesTable";
 import { useDeliveryPlacesPageState } from "../hooks/useDeliveryPlacesPageState";
 
-import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/components/common";
 import { Button, Input, Checkbox } from "@/components/ui";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/display/alert-dialog";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
@@ -203,25 +193,14 @@ export function DeliveryPlacesListPage() {
       />
 
       {/* 復元確認ダイアログ */}
-      <AlertDialog
+      <RestoreDialog
         open={!!restoringItem}
-        onOpenChange={(open: boolean) => !open && closeRestoreDialog()}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>納入先を復元しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
-              {restoringItem?.delivery_place_name} を有効状態に戻します。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRestore} disabled={isRestoring}>
-              {isRestoring ? "復元中..." : "復元"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={(open) => !open && closeRestoreDialog()}
+        onConfirm={handleRestore}
+        isPending={isRestoring}
+        title="納入先を復元しますか？"
+        description={`${restoringItem?.delivery_place_name} を有効状態に戻します。`}
+      />
     </div>
   );
 }

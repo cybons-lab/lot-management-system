@@ -14,18 +14,8 @@ import { CustomerItemsFilter } from "../components/CustomerItemsFilter";
 import { CustomerItemsTable } from "../components/CustomerItemsTable";
 import { useCustomerItemsPage } from "../hooks/useCustomerItemsPage";
 
-import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/components/common";
 import { Button, Checkbox } from "@/components/ui";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/display/alert-dialog";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -212,26 +202,14 @@ export function CustomerItemsListPage() {
         confirmationPhrase={deletingItem?.external_product_code || "delete"}
       />
 
-      <AlertDialog
+      <RestoreDialog
         open={!!restoringItem}
-        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>設定を復元しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
-              {restoringItem?.customer_name} - {restoringItem?.product_name}{" "}
-              の設定を有効状態に戻します。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={executeRestore} disabled={isRestoring}>
-              {isRestoring ? "復元中..." : "復元"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={(open) => !open && setRestoringItem(null)}
+        onConfirm={executeRestore}
+        isPending={isRestoring}
+        title="設定を復元しますか？"
+        description={`${restoringItem?.customer_name} - ${restoringItem?.product_name} の設定を有効状態に戻します。`}
+      />
     </div>
   );
 }
