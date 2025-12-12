@@ -126,7 +126,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                 for f in forecast_list
             ]
 
-            # Fetch related orders for this group
+            # Fetch related orders for this group (FORECAST_LINKED only)
             related_orders_query = (
                 self.db.query(Order)
                 .join(OrderLine)
@@ -135,6 +135,8 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                         Order.customer_id == cust_id,
                         OrderLine.product_id == prod_id,
                         OrderLine.delivery_place_id == dp_id,
+                        OrderLine.order_type == "FORECAST_LINKED",  # 仮受注のみ
+                        Order.status != "closed",  # 完了済みは除外
                     )
                 )
                 .options(
