@@ -29,27 +29,32 @@
 
 ---
 
-### P1-9: フロントエンドテスト拡充 🆕
+### P1-9: フロントエンドテスト拡充 🔄
 
-**ステータス:** 未着手
+**ステータス:** 進行中
 
 **概要:**
 フロントエンドのテストカバレッジが非常に低い状態（479コンポーネントに対して7テストファイルのみ）。
 主要機能のテストを追加してコード品質を向上させる。
 
 **現状:**
-- テストファイル: 7件のみ
-- カバレッジ対象: `App`, `OrderLineCard`, `AllocationStatusBadge`, `ProductForm`, `useLotAllocation`, `useOrders`, `LineBasedAllocationList`
+- テストファイル: 10件 (7 → 10, +3)
+- テスト数: 108 passed, 1 skipped (109 total)
+
+**追加済みテスト:**
+- ✅ `useLotFilters.test.ts` - ロットフィルタリング (16テスト)
+- ✅ `useOrderLineComputed.test.ts` - 受注明細計算 (24テスト)
+- ✅ `allocationCalculations.test.ts` - 引当計算ユーティリティ (35テスト)
 
 **追加すべきテスト（優先順）:**
-- [ ] `orders/` - 受注関連のテスト拡充
-- [ ] `allocations/` - 引当関連のテスト拡充
-- [ ] `inventory/` - 在庫関連のテスト拡充
+- [x] `orders/` - 受注関連のテスト拡充
+- [x] `allocations/` - 引当関連のテスト拡充
+- [x] `inventory/` - 在庫関連のテスト拡充
 - [ ] `forecasts/` - 予測関連のテスト
 
 **目標:**
 - 主要featureに最低3テストファイルずつ追加
-- テストファイル数: 7 → 20以上
+- テストファイル数: 7 → 20以上 (現在: 10)
 
 
 ## 📌 将来対応（P2: 中優先度）
