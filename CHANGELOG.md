@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **[P2-4] フォーキャスト詳細：他グループ引当の表示**
+  - 計画引当サマリのロット内訳に「他グループ」列を追加
+  - 同一ロットが他のフォーキャストグループ（別顧客/納入先）で引当されている場合、その数量を表示
+  - Backend: `get_allocation_suggestions_by_group` API に `other_group_allocated` フィールド追加
+  - Frontend: `PlanningAllocationPanel` のロット内訳テーブルに列追加
+
 ### Changed
 - Python 3.12 → 3.13 へ更新
 - ドキュメント構造を整理（アーカイブ削除、CLAUDE.md簡素化）
