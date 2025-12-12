@@ -27,6 +27,30 @@
 **残調査:**
 - なぜサマリ(245)と明細合計(199)がズレるのか（Ghost Orderの可能性、またはフィルタリング条件の差異）
 
+---
+
+### P1-9: フロントエンドテスト拡充 🆕
+
+**ステータス:** 未着手
+
+**概要:**
+フロントエンドのテストカバレッジが非常に低い状態（479コンポーネントに対して7テストファイルのみ）。
+主要機能のテストを追加してコード品質を向上させる。
+
+**現状:**
+- テストファイル: 7件のみ
+- カバレッジ対象: `App`, `OrderLineCard`, `AllocationStatusBadge`, `ProductForm`, `useLotAllocation`, `useOrders`, `LineBasedAllocationList`
+
+**追加すべきテスト（優先順）:**
+- [ ] `orders/` - 受注関連のテスト拡充
+- [ ] `allocations/` - 引当関連のテスト拡充
+- [ ] `inventory/` - 在庫関連のテスト拡充
+- [ ] `forecasts/` - 予測関連のテスト
+
+**目標:**
+- 主要featureに最低3テストファイルずつ追加
+- テストファイル数: 7 → 20以上
+
 
 ## 📌 将来対応（P2: 中優先度）
 
@@ -55,6 +79,38 @@
 ### P3-1: SAP受注登録の本番化
 
 **現状:** モック実装済み、本番SAP API接続待ち
+
+---
+
+### P3-2: eslint-disable コメント削除 🆕
+
+**ステータス:** 未着手
+
+**概要:**
+31ファイルで `// eslint-disable` が使用されている。適切なコード修正に置き換える。
+
+**影響ファイル例:**
+- `SearchableSelect.tsx`
+- `BatchJobsPage.tsx`
+- `ProductMappingsListPage.tsx`
+- その他28ファイル
+
+---
+
+### P3-3: DDLスキーマ同期確認 🆕
+
+**ステータス:** 確認済み（対応不要）
+
+**概要:**
+`schema_latest.sql` と SQLAlchemy モデル間で `allocations.lot_id` vs `lot_reference` の差異あり。
+→ **意図的な設計変更**（ビジネスキー参照への移行）であることを確認。
+
+**参照ドキュメント:**
+- [`docs/architecture/decoupling-migration-plan.md`](../architecture/decoupling-migration-plan.md) - 疎結合化計画
+- [`docs/architecture/bounded-contexts-separation.md`](../architecture/bounded-contexts-separation.md) - 境界分離設計
+
+**ステータス:** DDL更新は疎結合化マイグレーション時に実施予定。現時点で対応不要。
+
 
 ---
 
