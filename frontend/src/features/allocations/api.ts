@@ -172,6 +172,7 @@ export interface PlanningAllocationLotBreakdown {
   lot_number: string | null;
   expiry_date: string | null;
   planned_quantity: number;
+  other_group_allocated: number;
 }
 
 export interface PlanningAllocationPeriod {

@@ -208,12 +208,26 @@ def get_allocation_suggestions_by_group(
     lot_breakdown = []
     for lot_id, qty in sorted(lot_totals.items(), key=lambda x: x[0]):
         lot = lot_map.get(lot_id)
+        other_group_allocated = (
+            db.query(func.sum(AllocationSuggestion.quantity))
+            .filter(
+                AllocationSuggestion.lot_id == lot_id,
+                AllocationSuggestion.product_id == product_id,
+                ~(
+                    (AllocationSuggestion.customer_id == customer_id)
+                    & (AllocationSuggestion.delivery_place_id == delivery_place_id)
+                ),
+            )
+            .scalar()
+            or Decimal("0")
+        )
         lot_breakdown.append(
             {
                 "lot_id": lot_id,
                 "lot_number": lot.lot_number if lot else None,
                 "expiry_date": lot.expiry_date.isoformat() if lot and lot.expiry_date else None,
                 "planned_quantity": qty,
+                "other_group_allocated": other_group_allocated,
             }
         )
 

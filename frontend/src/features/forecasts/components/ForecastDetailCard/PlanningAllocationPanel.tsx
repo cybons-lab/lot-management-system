@@ -13,6 +13,7 @@ interface LotBreakdownItem {
   lot_number?: string | null;
   expiry_date?: string | null;
   planned_quantity: number;
+  other_group_allocated: number;
 }
 
 interface PeriodItem {
@@ -26,22 +27,36 @@ function LotBreakdownSection({ lots }: { lots: LotBreakdownItem[] }) {
     <div className="space-y-1">
       <div className="text-xs text-slate-400">ロット別内訳:</div>
       <div className="max-h-24 overflow-y-auto">
-        {lots.map((lot) => (
-          <div
-            key={lot.lot_id}
-            className="flex items-center justify-between rounded px-2 py-0.5 text-xs hover:bg-slate-50"
-          >
-            <span className="truncate text-slate-600">
-              {lot.lot_number || `Lot #${lot.lot_id}`}
-              {lot.expiry_date && (
-                <span className="ml-1 text-slate-400">(~{lot.expiry_date.substring(0, 10)})</span>
-              )}
-            </span>
-            <span className="ml-2 font-medium text-slate-700">
-              {formatQuantity(lot.planned_quantity, "PCS")}
-            </span>
-          </div>
-        ))}
+        <table className="w-full text-left text-xs text-slate-600">
+          <thead className="sticky top-0 bg-white text-[11px] text-slate-400">
+            <tr>
+              <th className="px-2 py-1 font-medium">ロット番号</th>
+              <th className="px-2 py-1 font-medium">賞味期限</th>
+              <th className="px-2 py-1 text-right font-medium">引当数量</th>
+              <th className="px-2 py-1 text-right font-medium">他グループ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {lots.map((lot) => (
+              <tr key={lot.lot_id} className="hover:bg-slate-50">
+                <td className="max-w-[120px] truncate px-2 py-1">
+                  {lot.lot_number || `Lot #${lot.lot_id}`}
+                </td>
+                <td className="px-2 py-1 text-slate-500">
+                  {lot.expiry_date ? lot.expiry_date.substring(0, 10) : "-"}
+                </td>
+                <td className="px-2 py-1 text-right font-medium text-slate-700">
+                  {formatQuantity(lot.planned_quantity, "PCS")}
+                </td>
+                <td className="px-2 py-1 text-right text-slate-500">
+                  {lot.other_group_allocated > 0
+                    ? formatQuantity(lot.other_group_allocated, "PCS")
+                    : "-"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
