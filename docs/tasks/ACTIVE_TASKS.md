@@ -121,13 +121,13 @@
 
 ---
 
-#### 🔴 リファクタリング対象 - 高優先度（3件）
+#### ✅ リファクタリング対象 - 高優先度（3件） - 完了
 
-| ファイル | 行数 | 違反 | 対応方針 |
-|---------|------|------|----------|
-| `WithdrawalFormFiltered.tsx` | 556 | max-lines, max-lines-per-function, complexity | カスタムフック抽出、サブコンポーネント分離 |
-| `SupplierProductsPage.tsx` | 354 | max-lines-per-function, complexity | CRUD操作をフックに抽出、ダイアログ分離 |
-| `DeliveryPlacesListPage.tsx` | 306 | max-lines-per-function, complexity | 同上 |
+| ファイル | 行数 | 対応内容 |
+|---------|------|----------|
+| `WithdrawalFormFiltered.tsx` | 556→137 | `useWithdrawalFormState`フック抽出、`LotFilterSection`/`LotSelector`/`WithdrawalInfoSection`分離 |
+| `SupplierProductsPage.tsx` | 354→241 | `useSupplierProductsPageState`フック抽出 |
+| `DeliveryPlacesListPage.tsx` | 306→223 | `useDeliveryPlacesPageState`フック抽出 |
 
 ---
 
