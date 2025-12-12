@@ -106,7 +106,8 @@ export function PlanningAllocationPanel({
     );
   }
 
-  if (!data || !data.has_data) {
+  // データがないか、計画0かつ不足0の場合
+  if (!data || (!data.has_data && !data.shortage_quantity)) {
     return (
       <div className="flex items-center gap-2 py-3 text-xs text-slate-400">
         <Package className="h-3 w-3" />
@@ -115,19 +116,37 @@ export function PlanningAllocationPanel({
     );
   }
 
+  const hasShortage = (data.shortage_quantity || 0) > 0;
+
   return (
     <div className="space-y-2">
       <h5 className="flex items-center gap-1.5 text-xs font-semibold text-slate-600">
         <Package className="h-3 w-3" />
         計画引当サマリ
+        {hasShortage && (
+          <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+            在庫不足
+          </span>
+        )}
       </h5>
 
       {/* 合計 */}
-      <div className="flex items-center justify-between rounded bg-slate-50 px-2 py-1.5">
-        <span className="text-xs text-slate-500">計画引当数量</span>
-        <span className="text-sm font-bold text-slate-700">
-          {formatQuantity(data.total_planned_quantity, "PCS")}
-        </span>
+      <div className="space-y-1 rounded bg-slate-50 px-2 py-1.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-slate-500">計画引当数量</span>
+          <span className="text-sm font-bold text-slate-700">
+            {formatQuantity(data.total_planned_quantity, "PCS")}
+          </span>
+        </div>
+
+        {hasShortage && (
+          <div className="flex items-center justify-between border-t border-dashed border-slate-200 pt-1">
+            <span className="text-xs font-medium text-red-500">不足数量</span>
+            <span className="text-sm font-bold text-red-600">
+              -{formatQuantity(data.shortage_quantity, "PCS")}
+            </span>
+          </div>
+        )}
       </div>
 
       <LotBreakdownSection lots={data.lot_breakdown} />

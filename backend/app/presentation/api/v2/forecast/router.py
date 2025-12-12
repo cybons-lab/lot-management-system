@@ -156,10 +156,27 @@ def get_allocation_suggestions_by_group(
 
     suggestions = query.all()
 
-    if not suggestions:
+    # Calculate total demand from ForecastCurrent
+    from sqlalchemy import func
+
+    from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+
+    demand_query = db.query(func.sum(ForecastCurrent.forecast_quantity)).filter(
+        ForecastCurrent.customer_id == customer_id,
+        ForecastCurrent.delivery_place_id == delivery_place_id,
+        ForecastCurrent.product_id == product_id,
+    )
+    if forecast_period:
+        demand_query = demand_query.filter(ForecastCurrent.forecast_period == forecast_period)
+
+    total_demand = demand_query.scalar() or Decimal("0")
+
+    if not suggestions and total_demand == 0:
         return {
             "has_data": False,
             "total_planned_quantity": Decimal("0"),
+            "total_demand_quantity": Decimal("0"),
+            "shortage_quantity": Decimal("0"),
             "lot_breakdown": [],
             "by_period": [],
         }
@@ -205,9 +222,13 @@ def get_allocation_suggestions_by_group(
         for period, qty in sorted(period_totals.items())
     ]
 
+    shortage = max(Decimal("0"), total_demand - total_planned)
+
     return {
         "has_data": True,
         "total_planned_quantity": total_planned,
+        "total_demand_quantity": total_demand,
+        "shortage_quantity": shortage,
         "lot_breakdown": lot_breakdown,
         "by_period": by_period,
     }
