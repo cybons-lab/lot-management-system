@@ -31,7 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 非表示の内部受注IDによる余白(gap)を除去
   - 数量フィールドに固定幅を適用し、表示ズレを修正
 
-
+### Changed
+- **[Tooling] Pre-commit Hooks**: フロントエンドのコミット時に ESLint (`eslint --fix`) が実行されるように設定追加
 
 ### Added
 - **[P1-1] 需要予測→仮受注の自動連動**
