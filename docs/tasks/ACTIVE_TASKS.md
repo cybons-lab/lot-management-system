@@ -91,14 +91,72 @@
 
 ---
 
-### P3-2: eslint-disable コメント削除 🆕
+### P3-2: eslint-disable コメント削除
 
-**ステータス:** 未着手
+**ステータス:** 一部対応中
 
 **概要:**
-31ファイルで `// eslint-disable` が使用されている。適切なコード修正に置き換える。
+30ファイルで `// eslint-disable` が使用されている。分析の結果、以下のように分類。
 
-### P2-3: フォーキャスト詳細：他グループ引当の表示 🆕
+---
+
+#### ✅ やむを得ないもの（許容）- 14件
+
+| ファイル | 理由 |
+|---------|------|
+| `external-modules.d.ts` | 型定義ファイルで`any`必須 |
+| `SearchableSelect.tsx` | 複雑性13で1超過、サブコンポーネント分離済み |
+| `useLotCandidateRow.ts` | 83行で3行超過、分割で可読性低下 |
+| `OrderLineColumns.tsx` | カラム定義を一箇所管理 |
+| `OrderInfoColumns.tsx` | カラム定義を一箇所管理 |
+| `useLotColumns.tsx` | カラム定義を一箇所管理 |
+| `useOrderLineAllocation.ts` | 引当状態を一箇所管理の複合フック |
+| `OrderDetailPage.tsx` | 多カラムテーブルコンポーネント |
+| `AdhocLotCreatePage.tsx` | データ取得付きページコンポーネント |
+| `BatchJobsPage.tsx` | 複数セクション持つページ |
+| `OrderCard.tsx` | 条件付きレンダリング多数 |
+| `WithdrawalForm.tsx` | 多フィールドフォーム |
+| `DeliverySettingsSection.tsx` | フォームフィールド集約 |
+| `uom-conversion-csv.ts` / `supplier-product-csv.ts` | CSV変換のswitch文 |
+
+---
+
+#### ✅ リファクタリング対象 - 高優先度（3件） - 完了
+
+| ファイル | 行数 | 対応内容 |
+|---------|------|----------|
+| `WithdrawalFormFiltered.tsx` | 556→137 | `useWithdrawalFormState`フック抽出、`LotFilterSection`/`LotSelector`/`WithdrawalInfoSection`分離 |
+| `SupplierProductsPage.tsx` | 354→241 | `useSupplierProductsPageState`フック抽出 |
+| `DeliveryPlacesListPage.tsx` | 306→223 | `useDeliveryPlacesPageState`フック抽出 |
+
+---
+
+#### 🟡 リファクタリング対象 - 中優先度（6件）
+
+| ファイル | 行数 | 違反 |
+|---------|------|------|
+| `ProductMappingForm.tsx` | 289 | max-lines-per-function, complexity |
+| `UomConversionsPage.tsx` | 224 | max-lines-per-function, complexity |
+| `ForecastDayCell.tsx` | 169 | max-lines-per-function, complexity |
+| `SupplierProductForm.tsx` | - | max-lines-per-function, any型 |
+| `AdhocLotCreateForm.tsx` | 302 | max-lines-per-function |
+| `useCustomerItemsPage.ts` | 180 | max-lines-per-function |
+
+---
+
+#### 🟢 リファクタリング対象 - 低優先度（7件）
+
+- `UserSupplierAssignmentDialog.tsx`
+- `AddAssignmentDialog.tsx`
+- `SupplierAssignmentEditDialog.tsx`
+- `UserDetailPage.tsx`
+- `UsersListPage.tsx`
+- `ProductMappingsListPage.tsx`
+- その他テーブル系コンポーネント
+
+---
+
+### P2-4: フォーキャスト詳細：他グループ引当の表示
 
 **ステータス:** 未着手
 
