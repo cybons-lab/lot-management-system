@@ -178,22 +178,17 @@
 
 ---
 
-### P2-4: フォーキャスト詳細：他グループ引当の表示
+### P2-4: フォーキャスト詳細：他グループ引当の表示 ✅
 
-**ステータス:** 未着手
+**ステータス:** 完了（2025-12-12）
 
 **概要:**
-計画引当サマリにおいて、同じロットが他のフォーキャストグループ（別顧客・別納入先）で引当されている場合、その消費量が分からないため、内訳を表示する。
+計画引当サマリにおいて、同じロットが他のフォーキャストグループ（別顧客・別納入先）で引当されている場合、その消費量を表示する機能を追加。
 
-**対応予定:**
-- `PlanningAllocationSummary` APIに他グループ引当数量（`other_allocated_quantity`）を追加
-- UIのロット内訳に「他グループ引当」列またはツールチップを追加
-
-**影響ファイル例:**
-- `SearchableSelect.tsx`
-- `BatchJobsPage.tsx`
-- `ProductMappingsListPage.tsx`
-- その他28ファイル
+**対応内容:**
+- Backend: `get_allocation_suggestions_by_group` API に `other_group_allocated` フィールド追加
+- Frontend: `PlanningAllocationPanel` のロット内訳テーブルに「他グループ」列を追加
+- 値が0より大きい場合は数量表示、それ以外は「-」表示
 
 ---
 
