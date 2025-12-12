@@ -5,7 +5,7 @@
  */
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useLotAllocationActions } from "@/features/allocations/hooks/useLotAllocationActions";
 import type {
@@ -25,6 +25,33 @@ export const useLotAllocationForOrder = (order: OrderWithLinesResponse) => {
   const [toast, setToast] = useState<AllocationToastState>(null);
 
   const allLines = order.lines ?? [];
+
+  // Backend state sync
+  useEffect(() => {
+    if (!allLines || allLines.length === 0) return;
+
+    const initialAllocations: AllocationsByLine = {};
+    const initialStatuses: LineStatusMap = {};
+
+    allLines.forEach((line) => {
+      // Map allocations
+      if (line.allocations && line.allocations.length > 0) {
+        const lineAllocMap: Record<number, number> = {};
+        line.allocations.forEach((alloc) => {
+          if (alloc.lot_id) {
+            lineAllocMap[alloc.lot_id] = Number(alloc.allocated_quantity);
+          }
+        });
+        initialAllocations[line.id] = lineAllocMap;
+      }
+
+      // Map status
+      initialStatuses[line.id] = "clean";
+    });
+
+    setAllocationsByLine(initialAllocations);
+    setLineStatuses(initialStatuses);
+  }, [order]); // Re-sync when order updates (e.g. after invalidateQueries)
 
   const {
     getCandidateLots,
