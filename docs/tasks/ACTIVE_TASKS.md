@@ -91,12 +91,12 @@
 
 ---
 
-### P3-2: eslint-disable コメント削除
+### P3-2: eslint-disable コメント削除 ✅
 
-**ステータス:** 一部対応中
+**ステータス:** 完了（2025-12-12）
 
 **概要:**
-30ファイルで `// eslint-disable` が使用されている。分析の結果、以下のように分類。
+30ファイルで `// eslint-disable` が使用されていた。分析の結果、以下のように分類・対応完了。
 
 ---
 
@@ -131,7 +131,6 @@
 
 ---
 
-
 #### ✅ リファクタリング対象 - 中優先度（6件） - 完了
 
 | ファイル | 対応内容 |
@@ -143,8 +142,23 @@
 | `AdhocLotCreateForm.tsx` | eslint-disable維持（入庫登録の多フィールドフォーム） |
 | `useCustomerItemsPage.ts` | eslint-disable維持（既に分割済み） |
 
+---
+
+#### ✅ RestoreDialog統一化 - 8ページで共通化完了
+
+| ページ | 削減行数 |
+|--------|---------|
+| `DeliveryPlacesListPage` | -21行 |
+| `SupplierProductsPage` | -21行 |
+| `CustomerItemsListPage` | -22行 |
+| `ProductsListPage` | -29行 |
+| `CustomersListPage` | -29行 |
+| `SuppliersListPage` | -29行 |
+| `WarehousesListPage` | -29行 |
+| `UomConversionsPage` | ダイアログ群コンポーネント化で対応済み |
+
 **追加作成したコンポーネント:**
-- `RestoreDialog` - 共通復元確認ダイアログ
+- `RestoreDialog` - 共通復元確認ダイアログ（全マスタページで使用）
 - `useUomConversionsPageState` - ページ状態管理フック
 - `UomConversionsPageHeader` - ページヘッダーコンポーネント
 - `UomConversionsDeleteRestoreDialogs` - 削除/復元ダイアログ群
