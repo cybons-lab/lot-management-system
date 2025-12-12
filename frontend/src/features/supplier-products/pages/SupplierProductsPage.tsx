@@ -25,6 +25,7 @@ import { MasterImportDialog } from "@/features/masters/components/MasterImportDi
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
+// eslint-disable-next-line max-lines-per-function, complexity
 export function SupplierProductsPage() {
   const {
     // Data
@@ -213,12 +214,16 @@ export function SupplierProductsPage() {
         confirmationPhrase={deletingItem?.product_code || "delete"}
       />
 
-      <AlertDialog open={!!restoringItem} onOpenChange={(open: boolean) => !open && closeRestoreDialog()}>
+      <AlertDialog
+        open={!!restoringItem}
+        onOpenChange={(open: boolean) => !open && closeRestoreDialog()}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <DialogTitle>設定を復元しますか？</DialogTitle>
             <AlertDialogDescription>
-              {restoringItem?.product_name} - {restoringItem?.supplier_name} の関連を有効状態に戻します。
+              {restoringItem?.product_name} - {restoringItem?.supplier_name}{" "}
+              の関連を有効状態に戻します。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

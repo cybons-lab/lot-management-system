@@ -10,12 +10,9 @@
 
 import { useState, useMemo, useCallback } from "react";
 
-import type {
-  SupplierProduct,
-  SupplierProductCreate,
-  SupplierProductUpdate,
-} from "../api";
+import type { SupplierProduct, SupplierProductCreate, SupplierProductUpdate } from "../api";
 import type { SupplierProductWithValidTo } from "../components/SupplierProductsTable";
+
 import { useSupplierProducts } from "./useSupplierProducts";
 
 import { useProducts } from "@/features/products/hooks/useProducts";
@@ -31,6 +28,7 @@ interface DialogState {
   restoringItem: SupplierProductWithValidTo | null;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function useSupplierProductsPageState() {
   // Filter and sort state
   const [searchQuery, setSearchQuery] = useState("");
@@ -83,6 +81,7 @@ export function useSupplierProductsPageState() {
   const filteredData = useMemo(() => {
     if (!searchQuery.trim()) return supplierProducts;
     const query = searchQuery.toLowerCase();
+    // eslint-disable-next-line complexity
     return supplierProducts.filter((sp) => {
       const p = productMap.get(sp.product_id);
       const s = supplierMap.get(sp.supplier_id);

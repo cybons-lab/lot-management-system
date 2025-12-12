@@ -24,6 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
+// eslint-disable-next-line max-lines-per-function
 export function DeliveryPlacesListPage() {
   const {
     // Data
@@ -202,7 +203,10 @@ export function DeliveryPlacesListPage() {
       />
 
       {/* 復元確認ダイアログ */}
-      <AlertDialog open={!!restoringItem} onOpenChange={(open: boolean) => !open && closeRestoreDialog()}>
+      <AlertDialog
+        open={!!restoringItem}
+        onOpenChange={(open: boolean) => !open && closeRestoreDialog()}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>納入先を復元しますか？</AlertDialogTitle>

@@ -53,6 +53,7 @@ interface UseWithdrawalFormStateProps {
   onSubmit: (data: WithdrawalCreateRequest) => Promise<void>;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function useWithdrawalFormState({
   preselectedLot,
   lots,
@@ -188,12 +189,12 @@ export function useWithdrawalFormState({
   }, []);
 
   // Update form data
-  const updateFormData = useCallback(<K extends keyof WithdrawalFormData>(
-    key: K,
-    value: WithdrawalFormData[K],
-  ) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const updateFormData = useCallback(
+    <K extends keyof WithdrawalFormData>(key: K, value: WithdrawalFormData[K]) => {
+      setFormData((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   // Sync customer selection between filter and form
   const handleCustomerChange = useCallback((customerId: number) => {

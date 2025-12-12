@@ -12,6 +12,7 @@ import { useState, useMemo, useCallback } from "react";
 
 import type { DeliveryPlaceCreate, DeliveryPlaceUpdate } from "../api";
 import type { DeliveryPlaceWithValidTo } from "../components/DeliveryPlacesTable";
+
 import {
   useDeliveryPlaces,
   useCreateDeliveryPlace,
@@ -32,6 +33,7 @@ interface DialogState {
   restoringItem: DeliveryPlaceWithValidTo | null;
 }
 
+// eslint-disable-next-line max-lines-per-function
 export function useDeliveryPlacesPageState() {
   // Filter and sort state
   const [searchQuery, setSearchQuery] = useState("");

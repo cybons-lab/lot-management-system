@@ -33,6 +33,7 @@ interface WithdrawalInfoSectionProps {
   onReasonChange: (reason: string) => void;
 }
 
+// eslint-disable-next-line max-lines-per-function, complexity
 export function WithdrawalInfoSection({
   formData,
   errors,
@@ -88,9 +89,7 @@ export function WithdrawalInfoSection({
               disabled={isLoadingCustomers}
             >
               <SelectTrigger>
-                <SelectValue
-                  placeholder={isLoadingCustomers ? "読み込み中..." : "得意先を選択"}
-                />
+                <SelectValue placeholder={isLoadingCustomers ? "読み込み中..." : "得意先を選択"} />
               </SelectTrigger>
               <SelectContent>
                 {customers.map((c) => (

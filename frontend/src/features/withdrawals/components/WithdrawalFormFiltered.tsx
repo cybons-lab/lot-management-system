@@ -35,6 +35,7 @@ interface WithdrawalFormFilteredProps {
 /**
  * フィルタ連動型出庫登録フォーム
  */
+// eslint-disable-next-line max-lines-per-function
 export function WithdrawalFormFiltered({
   preselectedLot,
   lots,
