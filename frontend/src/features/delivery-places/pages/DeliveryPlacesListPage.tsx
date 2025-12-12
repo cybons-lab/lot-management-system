@@ -1,25 +1,11 @@
-/* eslint-disable max-lines-per-function */
-/* eslint-disable complexity */
 /**
  * DeliveryPlacesListPage - 納入先マスタ一覧
  */
 import { MapPin, Plus } from "lucide-react";
-import { useState, useCallback, useMemo } from "react";
 
-import type { DeliveryPlaceCreate, DeliveryPlaceUpdate } from "../api";
 import { DeliveryPlaceForm } from "../components/DeliveryPlaceForm";
-import {
-  DeliveryPlacesTable,
-  type DeliveryPlaceWithValidTo,
-} from "../components/DeliveryPlacesTable";
-import {
-  useDeliveryPlaces,
-  useCreateDeliveryPlace,
-  useUpdateDeliveryPlace,
-  useSoftDeleteDeliveryPlace,
-  usePermanentDeleteDeliveryPlace,
-  useRestoreDeliveryPlace,
-} from "../hooks";
+import { DeliveryPlacesTable } from "../components/DeliveryPlacesTable";
+import { useDeliveryPlacesPageState } from "../hooks/useDeliveryPlacesPageState";
 
 import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
 import { Button, Input, Checkbox } from "@/components/ui";
@@ -35,120 +21,59 @@ import {
 } from "@/components/ui/display/alert-dialog";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
-import { useCustomers } from "@/features/customers/hooks";
-import type { SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function DeliveryPlacesListPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sort, setSort] = useState<SortConfig>({
-    column: "delivery_place_code",
-    direction: "asc",
-  });
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<DeliveryPlaceWithValidTo | null>(null);
-  const [showInactive, setShowInactive] = useState(false);
-
-  // Deletion state
-  const [deletingItem, setDeletingItem] = useState<DeliveryPlaceWithValidTo | null>(null);
-  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
-
-  // Restore state
-  const [restoringItem, setRestoringItem] = useState<DeliveryPlaceWithValidTo | null>(null);
-
   const {
-    data: deliveryPlaces = [],
+    // Data
+    deliveryPlaces,
+    customers,
+    sortedData,
     isLoading,
     isError,
     error,
     refetch,
-  } = useDeliveryPlaces({
-    includeInactive: showInactive,
-  });
-  const { useList } = useCustomers();
-  // Include soft-deleted customers to properly display names for delivery places
-  const { data: customers = [] } = useList(true);
-  const { mutate: create, isPending: isCreating } = useCreateDeliveryPlace();
-  const { mutate: update, isPending: isUpdating } = useUpdateDeliveryPlace();
 
-  const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDeleteDeliveryPlace();
-  const { mutate: permanentDelete, isPending: isPermanentDeleting } =
-    usePermanentDeleteDeliveryPlace();
-  const { mutate: restore, isPending: isRestoring } = useRestoreDeliveryPlace();
+    // Filter/sort
+    searchQuery,
+    setSearchQuery,
+    sort,
+    setSort,
+    showInactive,
+    setShowInactive,
 
-  const handleDeleteClick = (row: DeliveryPlaceWithValidTo) => {
-    setDeletingItem(row);
-    setDeleteMode("soft");
-  };
+    // Dialog state
+    isCreateDialogOpen,
+    editingItem,
+    deletingItem,
+    deleteMode,
+    restoringItem,
+    openCreateDialog,
+    closeCreateDialog,
+    openEditDialog,
+    closeEditDialog,
+    openSoftDeleteDialog,
+    openPermanentDeleteDialog,
+    closeDeleteDialog,
+    switchToPermanentDelete,
+    openRestoreDialog,
+    closeRestoreDialog,
 
-  const handlePermanentClick = (row: DeliveryPlaceWithValidTo) => {
-    setDeletingItem(row);
-    setDeleteMode("permanent");
-  };
+    // CRUD handlers
+    handleCreate,
+    handleUpdate,
+    handleSoftDelete,
+    handlePermanentDelete,
+    handleRestore,
 
-  const filteredData = useMemo(() => {
-    if (!searchQuery.trim()) return deliveryPlaces;
-    const query = searchQuery.toLowerCase();
-    return deliveryPlaces.filter(
-      (d) =>
-        d.delivery_place_code.toLowerCase().includes(query) ||
-        d.delivery_place_name.toLowerCase().includes(query),
-    );
-  }, [deliveryPlaces, searchQuery]);
-
-  const sortedData = useMemo(() => {
-    const sorted = [...filteredData];
-    sorted.sort((a, b) => {
-      // @ts-expect-error: sorting logic works with index access for basic properties
-      const aVal = a[sort.column];
-      // @ts-expect-error: sorting logic works with index access for basic properties
-      const bVal = b[sort.column];
-      if (aVal === undefined || bVal === undefined) return 0;
-      const cmp = String(aVal).localeCompare(String(bVal), "ja");
-      return sort.direction === "asc" ? cmp : -cmp;
-    });
-    return sorted;
-  }, [filteredData, sort]);
-
-  const handleCreate = useCallback(
-    (data: DeliveryPlaceCreate) => {
-      create(data, { onSuccess: () => setIsCreateDialogOpen(false) });
-    },
-    [create],
-  );
-
-  const handleUpdate = useCallback(
-    (data: DeliveryPlaceUpdate) => {
-      if (!editingItem) return;
-      update({ id: editingItem.id, data }, { onSuccess: () => setEditingItem(null) });
-    },
-    [editingItem, update],
-  );
-
-  const handleSoftDelete = (endDate: string | null) => {
-    if (!deletingItem) return;
-    softDelete(
-      { id: deletingItem.id, endDate: endDate || undefined },
-      {
-        onSuccess: () => setDeletingItem(null),
-      },
-    );
-  };
-
-  const handlePermanentDelete = () => {
-    if (!deletingItem) return;
-    permanentDelete(deletingItem.id, {
-      onSuccess: () => setDeletingItem(null),
-    });
-  };
-
-  const handleRestore = () => {
-    if (!restoringItem) return;
-    restore(restoringItem.id, {
-      onSuccess: () => setRestoringItem(null),
-    });
-  };
+    // Mutation states
+    isCreating,
+    isUpdating,
+    isSoftDeleting,
+    isPermanentDeleting,
+    isRestoring,
+  } = useDeliveryPlacesPageState();
 
   if (isError) {
     return (
@@ -165,7 +90,7 @@ export function DeliveryPlacesListPage() {
         title="納入先マスタ"
         subtitle="納入先の作成・編集・削除"
         actions={
-          <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
+          <Button size="sm" onClick={openCreateDialog}>
             <Plus className="mr-2 h-4 w-4" />
             新規登録
           </Button>
@@ -213,15 +138,15 @@ export function DeliveryPlacesListPage() {
           isLoading={isLoading}
           sort={sort}
           onSortChange={setSort}
-          onEdit={setEditingItem}
-          onSoftDelete={handleDeleteClick}
-          onPermanentDelete={handlePermanentClick}
-          onRestore={setRestoringItem}
+          onEdit={openEditDialog}
+          onSoftDelete={openSoftDeleteDialog}
+          onPermanentDelete={openPermanentDeleteDialog}
+          onRestore={openRestoreDialog}
         />
       </div>
 
       {/* 新規登録ダイアログ */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => !open && closeCreateDialog()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>納入先新規登録</DialogTitle>
@@ -229,14 +154,14 @@ export function DeliveryPlacesListPage() {
           <DeliveryPlaceForm
             customers={customers}
             onSubmit={handleCreate}
-            onCancel={() => setIsCreateDialogOpen(false)}
+            onCancel={closeCreateDialog}
             isSubmitting={isCreating}
           />
         </DialogContent>
       </Dialog>
 
       {/* 編集ダイアログ */}
-      <Dialog open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)}>
+      <Dialog open={!!editingItem} onOpenChange={(open) => !open && closeEditDialog()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>納入先編集</DialogTitle>
@@ -246,7 +171,7 @@ export function DeliveryPlacesListPage() {
               initialData={editingItem}
               customers={customers}
               onSubmit={handleUpdate}
-              onCancel={() => setEditingItem(null)}
+              onCancel={closeEditDialog}
               isSubmitting={isUpdating}
               isEdit
             />
@@ -257,23 +182,18 @@ export function DeliveryPlacesListPage() {
       {/* 削除ダイアログ (論理削除) */}
       <SoftDeleteDialog
         open={!!deletingItem && deleteMode === "soft"}
-        onOpenChange={(open) => !open && setDeletingItem(null)}
+        onOpenChange={(open) => !open && closeDeleteDialog()}
         title="納入先を無効化しますか？"
         description={`${deletingItem?.delivery_place_name}（${deletingItem?.delivery_place_code}）を無効化します。`}
         onConfirm={handleSoftDelete}
         isPending={isSoftDeleting}
-        onSwitchToPermanent={() => setDeleteMode("permanent")}
+        onSwitchToPermanent={switchToPermanentDelete}
       />
 
       {/* 完全削除ダイアログ (物理削除) */}
       <PermanentDeleteDialog
         open={!!deletingItem && deleteMode === "permanent"}
-        onOpenChange={(open: boolean) => {
-          if (!open) {
-            setDeletingItem(null);
-            setDeleteMode("soft");
-          }
-        }}
+        onOpenChange={(open: boolean) => !open && closeDeleteDialog()}
         onConfirm={handlePermanentDelete}
         isPending={isPermanentDeleting}
         title="納入先を完全に削除しますか？"
@@ -282,10 +202,7 @@ export function DeliveryPlacesListPage() {
       />
 
       {/* 復元確認ダイアログ */}
-      <AlertDialog
-        open={!!restoringItem}
-        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
-      >
+      <AlertDialog open={!!restoringItem} onOpenChange={(open: boolean) => !open && closeRestoreDialog()}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>納入先を復元しますか？</AlertDialogTitle>
