@@ -38,23 +38,28 @@
 主要機能のテストを追加してコード品質を向上させる。
 
 **現状:**
-- テストファイル: 10件 (7 → 10, +3)
-- テスト数: 108 passed, 1 skipped (109 total)
+- テストファイル: 14件 (7 → 14, +7)
+- テスト数: 199 passed, 1 skipped (200 total)
 
 **追加済みテスト:**
 - ✅ `useLotFilters.test.ts` - ロットフィルタリング (16テスト)
 - ✅ `useOrderLineComputed.test.ts` - 受注明細計算 (24テスト)
 - ✅ `allocationCalculations.test.ts` - 引当計算ユーティリティ (35テスト)
+- ✅ `formatQuantity.test.ts` - 数量フォーマット (28テスト)
+- ✅ `number.test.ts` - 数値フォーマット (21テスト)
+- ✅ `status.test.ts` - ステータス判定 (23テスト)
+- ✅ `date.test.ts` - 日付ユーティリティ (19テスト)
 
 **追加すべきテスト（優先順）:**
 - [x] `orders/` - 受注関連のテスト拡充
 - [x] `allocations/` - 引当関連のテスト拡充
 - [x] `inventory/` - 在庫関連のテスト拡充
+- [x] `shared/utils/` - 共通ユーティリティのテスト
 - [ ] `forecasts/` - 予測関連のテスト
 
 **目標:**
 - 主要featureに最低3テストファイルずつ追加
-- テストファイル数: 7 → 20以上 (現在: 10)
+- テストファイル数: 7 → 20以上 (現在: 14)
 
 
 ## 📌 将来対応（P2: 中優先度）
