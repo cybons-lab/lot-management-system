@@ -182,6 +182,8 @@ export interface PlanningAllocationPeriod {
 export interface PlanningAllocationSummary {
   has_data: boolean;
   total_planned_quantity: number;
+  total_demand_quantity: number;
+  shortage_quantity: number;
   lot_breakdown: PlanningAllocationLotBreakdown[];
   by_period: PlanningAllocationPeriod[];
 }
