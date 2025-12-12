@@ -272,7 +272,8 @@
                   "type": "number"
                 },
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
                 }
               ],
               "description": "最小必要数量",
@@ -3486,6 +3487,48 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AlertSummaryResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocations/bulk-auto-allocate": {
+      "post": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Bulk Auto Allocate",
+        "description": "Group-based bulk auto-allocation using FEFO strategy.\n\nCan filter by product, customer, delivery_place, and order_type.",
+        "operationId": "bulk_auto_allocate_api_allocations_bulk_auto_allocate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkAutoAllocateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkAutoAllocateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
             }
@@ -9511,6 +9554,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Delete Assignment Api Assignments  Assignment Id  Delete"
                 }
               }
@@ -9946,6 +9990,7 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "additionalProperties": true,
                   "title": "Response Download Template Api Admin Master Import Template Get"
                 }
               }
@@ -9978,6 +10023,7 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "additionalProperties": true,
                   "type": "object",
                   "title": "Response Download Order Template Api Admin Master Import Template Order Get"
                 }
@@ -11417,7 +11463,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Adjusted Quantity"
@@ -11453,6 +11500,7 @@
           },
           "adjusted_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Adjusted Quantity"
           },
           "reason": {
@@ -11817,6 +11865,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "allocation_type": {
@@ -11920,6 +11969,7 @@
           },
           "shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Shortage Quantity"
           },
           "related_order_line_ids": {
@@ -12069,14 +12119,17 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Shortage Quantity"
           }
         },
@@ -12097,14 +12150,17 @@
         "properties": {
           "total_forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Forecast Quantity"
           },
           "total_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Allocated Quantity"
           },
           "total_shortage_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Shortage Quantity"
           },
           "per_key": {
@@ -12246,6 +12302,7 @@
           },
           "quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity",
             "description": "引当数量"
           },
@@ -12445,6 +12502,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -12469,6 +12527,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -12555,6 +12614,7 @@
           "parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -12645,6 +12705,133 @@
         ],
         "title": "Body_import_from_file_api_admin_master_import_upload_post"
       },
+      "BulkAutoAllocateFailedLine": {
+        "properties": {
+          "line_id": {
+            "type": "integer",
+            "title": "Line Id"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "line_id",
+          "error"
+        ],
+        "title": "BulkAutoAllocateFailedLine",
+        "description": "Failed line in bulk auto-allocate response."
+      },
+      "BulkAutoAllocateRequest": {
+        "properties": {
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id",
+            "description": "製品ID（指定時はその製品のみ対象）"
+          },
+          "customer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id",
+            "description": "得意先ID（指定時はその得意先のみ対象）"
+          },
+          "delivery_place_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Id",
+            "description": "納入先ID（指定時はその納入先のみ対象）"
+          },
+          "order_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^(FORECAST_LINKED|KANBAN|SPOT|ORDER)$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Type",
+            "description": "受注タイプでフィルタ"
+          },
+          "skip_already_allocated": {
+            "type": "boolean",
+            "title": "Skip Already Allocated",
+            "description": "既に全量引当済みの明細をスキップ",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "BulkAutoAllocateRequest",
+        "description": "Bulk auto-allocate request for group-based FEFO allocation."
+      },
+      "BulkAutoAllocateResponse": {
+        "properties": {
+          "processed_lines": {
+            "type": "integer",
+            "title": "Processed Lines",
+            "description": "処理した受注明細数",
+            "default": 0
+          },
+          "allocated_lines": {
+            "type": "integer",
+            "title": "Allocated Lines",
+            "description": "引当を作成した明細数",
+            "default": 0
+          },
+          "total_allocations": {
+            "type": "integer",
+            "title": "Total Allocations",
+            "description": "作成した引当レコード数",
+            "default": 0
+          },
+          "skipped_lines": {
+            "type": "integer",
+            "title": "Skipped Lines",
+            "description": "スキップした明細数（既に引当済み等）",
+            "default": 0
+          },
+          "failed_lines": {
+            "items": {
+              "$ref": "#/components/schemas/BulkAutoAllocateFailedLine"
+            },
+            "type": "array",
+            "title": "Failed Lines",
+            "description": "失敗した明細"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "BulkAutoAllocateResponse",
+        "description": "Bulk auto-allocate response."
+      },
       "BulkUpsertResponse": {
         "properties": {
           "status": {
@@ -12723,6 +12910,7 @@
             "description": "ルール種別（allocation/expiry_warning/kanban/other）"
           },
           "rule_parameters": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
             "description": "ルールパラメータ（JSON）"
@@ -12784,6 +12972,7 @@
             "description": "ルール種別（allocation/expiry_warning/kanban/other）"
           },
           "rule_parameters": {
+            "additionalProperties": true,
             "type": "object",
             "title": "Rule Parameters",
             "description": "ルールパラメータ（JSON）"
@@ -12851,6 +13040,7 @@
           "rule_parameters": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -12889,14 +13079,17 @@
           },
           "current_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Current Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity",
             "description": "引当可能数量"
           },
@@ -14665,7 +14858,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Expected Quantity"
@@ -14722,6 +14916,7 @@
           },
           "expected_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Expected Quantity"
           },
           "expected_expiry_date": {
@@ -14767,11 +14962,13 @@
           },
           "order_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
             "description": "受注数量"
           },
           "already_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Already Allocated Quantity",
             "description": "既存引当数量",
             "default": "0"
@@ -14812,6 +15009,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity",
             "description": "引当数量"
           },
@@ -14916,7 +15114,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Forecast Quantity"
@@ -15028,7 +15227,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Forecast Quantity"
@@ -15211,6 +15411,7 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "unit": {
@@ -15374,6 +15575,7 @@
           },
           "forecast_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Forecast Quantity"
           },
           "unit": {
@@ -15490,7 +15692,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -15671,7 +15874,8 @@
           "total_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -15756,7 +15960,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Planned Quantity"
@@ -15814,6 +16019,7 @@
           },
           "planned_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Planned Quantity"
           },
           "unit": {
@@ -15963,7 +16169,8 @@
           "total_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -16056,14 +16263,17 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Available Quantity"
           },
           "lot_count": {
@@ -16110,6 +16320,7 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "lot_count": {
@@ -16149,6 +16360,7 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "lot_count": {
@@ -16188,23 +16400,28 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Available Quantity"
           },
           "soft_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Soft Allocated Quantity",
             "default": "0"
           },
           "hard_allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Hard Allocated Quantity",
             "default": "0"
           },
@@ -16283,6 +16500,7 @@
           },
           "total_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Total Quantity"
           }
         },
@@ -16445,7 +16663,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Current Quantity",
@@ -16457,7 +16676,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Allocated Quantity",
@@ -16469,7 +16689,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Locked Quantity",
@@ -16601,7 +16822,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -16698,16 +16920,19 @@
           },
           "current_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Current Quantity",
             "default": "0"
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
             "default": "0"
           },
           "locked_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Locked Quantity",
             "default": "0"
           },
@@ -16970,7 +17195,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -16984,7 +17210,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -17108,7 +17335,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               }
             ],
             "title": "Allocated Quantity"
@@ -17139,10 +17367,12 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Allocated Quantity"
           },
           "available_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Available Quantity"
           },
           "product_id": {
@@ -17262,6 +17492,7 @@
           "old_values": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -17274,6 +17505,7 @@
           "new_values": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -17551,6 +17783,7 @@
           "changes": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -17653,7 +17886,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity"
@@ -17816,7 +18050,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               }
             ],
             "title": "Order Quantity",
@@ -17834,7 +18069,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               },
               {
                 "type": "null"
@@ -18075,6 +18311,7 @@
           },
           "order_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
             "title": "Order Quantity",
             "description": "受注数量"
           },
@@ -18087,7 +18324,8 @@
           "converted_quantity": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
               },
               {
                 "type": "null"
@@ -18353,6 +18591,7 @@
           },
           "allocated_quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Allocated Quantity",
             "description": "引当済数量",
             "default": "0"
@@ -19335,6 +19574,7 @@
           "data": {
             "anyOf": [
               {
+                "additionalProperties": true,
                 "type": "object"
               },
               {
@@ -19688,7 +19928,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity Change"
@@ -19699,7 +19940,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity After"
@@ -19760,10 +20002,12 @@
           },
           "quantity_change": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity Change"
           },
           "quantity_after": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity After"
           },
           "reference_type": {
@@ -20188,7 +20432,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Factor",
@@ -20242,7 +20487,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Factor",
@@ -20273,6 +20519,7 @@
           },
           "factor": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Factor",
             "description": "換算係数"
           },
@@ -20317,7 +20564,8 @@
                 "type": "number"
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               },
               {
                 "type": "null"
@@ -20895,7 +21143,8 @@
                 "exclusiveMinimum": 0.0
               },
               {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
               }
             ],
             "title": "Quantity",
@@ -21043,6 +21292,7 @@
           },
           "quantity": {
             "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
             "title": "Quantity"
           },
           "withdrawal_type": {

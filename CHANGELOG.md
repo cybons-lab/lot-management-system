@@ -23,7 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2025-12-12]
 
-### Fixed
+### Changed
+- **[Tooling] Pre-commit Hooks**: フロントエンドのコミット時に ESLint (`eslint --fix`) が実行されるように設定追加
+- **[Tooling] CI**: Schema Synchronization Check を再有効化 (自動生成されたスキーマ差分も同時にコミット)
 - **[API] Products API 500 Error**: `_to_product_out` マッピングに `valid_to` を追加して修正
 - **[API] Auto-Allocate 404 Error**: `POST /bulk-auto-allocate` エンドポイントを実装
 - **[Frontend] Allocation Display**: `useLotAllocationForOrder` の初期化ロジックを修正し、既存引当が0と表示されるバグを解消
