@@ -7,7 +7,8 @@
 
 import { Label } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
-import type { Product, Supplier } from "@/types/api";
+import type { Product } from "@/features/products/validators/product-schema";
+import type { Supplier } from "@/features/suppliers/validators/supplier-schema";
 
 interface LotFilterSectionProps {
   suppliers: Supplier[];

@@ -13,7 +13,7 @@ import type { DeliveryPlace, WithdrawalFormData } from "../hooks/useWithdrawalFo
 
 import { Input, Label } from "@/components/ui";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
-import type { Customer } from "@/types/api";
+import type { Customer } from "@/features/customers/validators/customer-schema";
 
 interface WithdrawalInfoSectionProps {
   formData: WithdrawalFormData;
