@@ -11,7 +11,8 @@ import { useState, useMemo, useCallback } from "react";
 
 import type { UomConversionCreate, UomConversionResponse } from "../api";
 
-import { useCreateUomConversion, useInlineEdit, useUomConversions } from "./index";
+import { useInlineEdit } from "./useInlineEdit";
+import { useCreateUomConversion, useUomConversions } from "./useUomConversions";
 
 import { useProducts } from "@/features/products/hooks";
 import { useSuppliers } from "@/features/suppliers/hooks/useSuppliers";
