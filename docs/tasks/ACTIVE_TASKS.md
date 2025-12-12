@@ -27,6 +27,46 @@
 **残調査:**
 - なぜサマリ(245)と明細合計(199)がズレるのか（Ghost Orderの可能性、またはフィルタリング条件の差異）
 
+---
+
+### P1-9: フロントエンドテスト拡充 ✅
+
+**ステータス:** 完了（目標達成！）
+
+**概要:**
+フロントエンドのテストカバレッジが非常に低い状態（479コンポーネントに対して7テストファイルのみ）。
+主要機能のテストを追加してコード品質を向上させる。
+
+**最終結果:**
+- テストファイル: **20件** (7 → 20, +13) 🎉
+- テスト数: **298 passed**, 1 skipped (299 total)
+
+**追加済みテスト:**
+- ✅ `useLotFilters.test.ts` - ロットフィルタリング (16テスト)
+- ✅ `useOrderLineComputed.test.ts` - 受注明細計算 (24テスト)
+- ✅ `allocationCalculations.test.ts` - 引当計算ユーティリティ (35テスト)
+- ✅ `formatQuantity.test.ts` - 数量フォーマット (28テスト)
+- ✅ `number.test.ts` - 数値フォーマット (21テスト)
+- ✅ `status.test.ts` - ステータス判定 (23テスト)
+- ✅ `shared/libs/utils/date.test.ts` - 日付ユーティリティ (19テスト)
+- ✅ `shared/utils/date.test.ts` - 日付フォーマット (16テスト)
+- ✅ `order.test.ts` - 受注コードフォーマット (14テスト)
+- ✅ `allocations.test.ts` - 引当ロットデータ変換 (15テスト)
+- ✅ `date-utils.test.ts` - Forecast日付ユーティリティ (17テスト)
+- ✅ `aggregation-utils.test.ts` - Forecast集計ユーティリティ (14テスト)
+- ✅ `utils.test.ts` - 共通ライブラリ (11テスト)
+
+**完了項目:**
+- [x] `orders/` - 受注関連のテスト拡充
+- [x] `allocations/` - 引当関連のテスト拡充
+- [x] `inventory/` - 在庫関連のテスト拡充
+- [x] `shared/utils/` - 共通ユーティリティのテスト
+- [x] `shared/libs/` - 共通ライブラリのテスト
+- [x] `forecasts/` - 予測関連のテスト
+
+**目標達成:**
+- ~~テストファイル数: 7 → 20以上~~ ✅ 達成！(20ファイル)
+
 
 ## 📌 将来対応（P2: 中優先度）
 
@@ -55,6 +95,40 @@
 ### P3-1: SAP受注登録の本番化
 
 **現状:** モック実装済み、本番SAP API接続待ち
+
+---
+
+### P3-2: eslint-disable コメント削除 🆕
+
+**ステータス:** 未着手
+
+**概要:**
+31ファイルで `// eslint-disable` が使用されている。適切なコード修正に置き換える。
+
+**影響ファイル例:**
+- `SearchableSelect.tsx`
+- `BatchJobsPage.tsx`
+- `ProductMappingsListPage.tsx`
+- その他28ファイル
+
+---
+
+### P3-3: DDLスキーマ同期 ✅
+
+**ステータス:** 完了（2025-12-12）
+
+**概要:**
+`schema_latest.sql` と SQLAlchemy モデル間で `allocations.lot_id` vs `lot_reference` の差異があった。
+→ **意図的な設計変更**（ビジネスキー参照への移行）であることを確認し、DDLを再ダンプして同期完了。
+
+**対応内容:**
+- `schema_latest.sql` を本番DBから再ダンプ
+- ファイル先頭に「自動生成ファイル」のコメントを追加
+- 更新コマンドをドキュメント化
+
+**参照ドキュメント:**
+- [`docs/architecture/decoupling-migration-plan.md`](../architecture/decoupling-migration-plan.md) - 疎結合化計画
+
 
 ---
 
