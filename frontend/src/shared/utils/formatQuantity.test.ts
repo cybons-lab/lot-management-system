@@ -145,7 +145,7 @@ describe("formatQuantity", () => {
   describe("formatQuantityWithConversion", () => {
     it("formats primary value only when no conversion", () => {
       expect(formatQuantityWithConversion(10, "KG")).toBe("10 KG");
-      expect(formatQuantityWithConversion(10, "KG", null, null)).toBe("10 KG");
+      expect(formatQuantityWithConversion(10, "KG", null, undefined)).toBe("10 KG");
     });
 
     it("formats with conversion when both values provided", () => {

@@ -118,8 +118,20 @@ describe("useOrderLineComputed", () => {
       const lineWithAllocation: OrderLineSource = {
         ...mockOrderLine,
         allocated_lots: [
-          { lot_id: 1, allocated_qty: 30 },
-          { lot_id: 2, allocated_qty: 20 },
+          {
+            lot_id: 1,
+            allocated_qty: 30,
+            allocated_quantity: "30",
+            delivery_place_code: null,
+            delivery_place_name: null,
+          },
+          {
+            lot_id: 2,
+            allocated_qty: 20,
+            allocated_quantity: "20",
+            delivery_place_code: null,
+            delivery_place_name: null,
+          },
         ],
       };
 
@@ -134,7 +146,15 @@ describe("useOrderLineComputed", () => {
     it("全量引当の場合は残数量が0", () => {
       const lineWithFullAllocation: OrderLineSource = {
         ...mockOrderLine,
-        allocated_lots: [{ lot_id: 1, allocated_qty: 100 }],
+        allocated_lots: [
+          {
+            lot_id: 1,
+            allocated_qty: 100,
+            allocated_quantity: "100",
+            delivery_place_code: null,
+            delivery_place_name: null,
+          },
+        ],
       };
 
       const { result } = renderHook(() => useOrderLineComputed(lineWithFullAllocation));
@@ -146,7 +166,15 @@ describe("useOrderLineComputed", () => {
     it("過剰引当でも残数量は0以上", () => {
       const lineWithOverAllocation: OrderLineSource = {
         ...mockOrderLine,
-        allocated_lots: [{ lot_id: 1, allocated_qty: 150 }],
+        allocated_lots: [
+          {
+            lot_id: 1,
+            allocated_qty: 150,
+            allocated_quantity: "150",
+            delivery_place_code: null,
+            delivery_place_name: null,
+          },
+        ],
       };
 
       const { result } = renderHook(() => useOrderLineComputed(lineWithOverAllocation));
@@ -257,6 +285,7 @@ describe("useOrderLineComputed", () => {
           {
             lot_id: 1,
             allocated_qty: 50,
+            allocated_quantity: "50",
             delivery_place_code: "DP-001",
             delivery_place_name: "配送先A",
           },
