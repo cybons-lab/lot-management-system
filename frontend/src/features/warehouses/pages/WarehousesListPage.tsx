@@ -10,18 +10,8 @@ import { useWarehouses } from "../hooks";
 
 import * as styles from "./styles";
 
-import { SoftDeleteDialog, PermanentDeleteDialog } from "@/components/common";
+import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/components/common";
 import { Button, Input, Checkbox } from "@/components/ui";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/display/alert-dialog";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
@@ -381,25 +371,14 @@ export function WarehousesListPage() {
         confirmationPhrase={deletingItem?.warehouse_code || "delete"}
       />
 
-      <AlertDialog
+      <RestoreDialog
         open={!!restoringItem}
-        onOpenChange={(open: boolean) => !open && setRestoringItem(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>倉庫を復元しますか？</AlertDialogTitle>
-            <AlertDialogDescription>
-              {restoringItem?.warehouse_name} を有効状態に戻します。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRestore} disabled={isRestoring}>
-              {isRestoring ? "復元中..." : "復元"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onOpenChange={(open) => !open && setRestoringItem(null)}
+        onConfirm={handleRestore}
+        isPending={isRestoring}
+        title="倉庫を復元しますか？"
+        description={`${restoringItem?.warehouse_name} を有効状態に戻します。`}
+      />
     </div>
   );
 }
