@@ -97,9 +97,12 @@ function HeaderLeftSection({
       </Button>
 
       <div className="flex items-center gap-2 text-sm">
-        <span className="font-mono font-medium text-gray-700">
-          {formatOrderCode(targetLines[0] ?? order)}
-        </span>
+        {(() => {
+          const code = formatOrderCode(targetLines[0] ?? order);
+          // 内部ID (#始まり) は表示しないのでレンダリング自体をスキップ (余白を詰める)
+          if (code.startsWith("#")) return null;
+          return <span className="font-mono font-medium text-gray-700">{code}</span>;
+        })()}
         <span className="hidden text-xs text-gray-500 sm:inline">{order.customer_name}</span>
         <span className="text-xs text-gray-400">|</span>
         <span className={cn("text-xs text-gray-600", isHovered && "font-bold text-gray-900")}>
@@ -170,12 +173,17 @@ function QuantityAndStatusSection({
         <span className="text-xs text-gray-500">明細: {targetLines.length}件</span>
         <span className="text-xs text-gray-400">|</span>
         <span className="text-xs text-gray-500">必要</span>
-        <span className="text-sm font-medium">
+        <span className="inline-block w-14 text-right text-sm font-medium">
           {formatQuantity(totalRequired, targetLines[0]?.unit || "")}
         </span>
         <span className="text-xs text-gray-300">/</span>
         <span className="text-xs text-gray-500">引当</span>
-        <span className={cn("text-sm font-medium", totalAllocated > 0 ? "text-blue-600" : "")}>
+        <span
+          className={cn(
+            "inline-block w-14 text-right text-sm font-medium",
+            totalAllocated > 0 ? "text-blue-600" : "",
+          )}
+        >
           {formatQuantity(totalAllocated, targetLines[0]?.unit || "")}
         </span>
         <span className="text-xs text-gray-400">{targetLines[0]?.unit}</span>

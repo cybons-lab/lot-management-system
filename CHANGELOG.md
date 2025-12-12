@@ -21,7 +21,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Bulk Upsert での `valid_to` フィルタ追加
   - サービス層（`soft_delete_utils.py`）での soft-delete 対応
 
-## [2025-12-11]
+## [2025-12-12]
+
+### Fixed
+- **[API] Products API 500 Error**: `_to_product_out` マッピングに `valid_to` を追加して修正
+- **[API] Auto-Allocate 404 Error**: `POST /bulk-auto-allocate` エンドポイントを実装
+- **[Frontend] Allocation Display**: `useLotAllocationForOrder` の初期化ロジックを修正し、既存引当が0と表示されるバグを解消
+- **[UI] Related Orders Layout**:
+  - 非表示の内部受注IDによる余白(gap)を除去
+  - 数量フィールドに固定幅を適用し、表示ズレを修正
+
+
 
 ### Added
 - **[P1-1] 需要予測→仮受注の自動連動**
