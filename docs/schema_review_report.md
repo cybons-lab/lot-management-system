@@ -1,6 +1,7 @@
 # データベーススキーマ 粗探しレポート
 
 **作成日**: 2025-12-12
+**更新日**: 2025-12-13
 **対象**: lot-management-system v2.1
 
 ---
@@ -27,6 +28,40 @@ sa.ForeignKeyConstraint(["lot_id"], ["lots.id"], ondelete="RESTRICT"),
 **改善案**:
 - 案A: `lot_reference` に統一するなら、マイグレーションから `lot_id` FK を削除
 - 案B: `lot_id` FK に戻して参照整合性を維持（推奨：データ整合性が保証される）
+
+#### 📋 lot_id FK復帰の影響範囲調査結果（2025-12-13追記）
+
+**現状の設計方針**:
+- `allocations` テーブル: `lot_reference` (String) でロット番号を保存
+- `lot_reservations` テーブル: `lot_id` (FK) で直接参照
+- API: `lot_id` で受け取り → Lotを取得 → `lot_number` を `lot_reference` に設定
+- 読み込み時: `lot_reference` から Lot を検索して情報取得
+
+**lot_reference 方式の意図（推測）**:
+- ロットが削除されても引当履歴を残せる（参照整合性の緩和）
+- 業務キーベースでの疎結合化
+
+**lot_id FK に戻した場合の修正必要箇所**:
+
+| カテゴリ | ファイル | 変更内容 |
+|----------|----------|----------|
+| **モデル** | `orders_models.py` | `lot_reference` → `lot_id` (FK) |
+| **リポジトリ** | `allocation_repository.py` | 全メソッドで lot_number 参照を lot_id 参照に |
+| **サービス** | `commit.py` | `lot_reference=lot.lot_number` → `lot_id=lot.id` |
+| | `confirm.py` | lot_reference での検索 → lot_id での検索 |
+| | `cancel.py` | lot_reference での検索 → lot_id での検索 |
+| | `preempt.py` | lot_reference での検索 → lot_id での検索 |
+| | `manual.py` | lot_reference での作成 → lot_id での作成 |
+| | `inventory_service.py` | JOIN条件変更 (`l.lot_number = a.lot_reference` → `l.id = a.lot_id`) |
+| **API** | `v2/allocation/router.py` | レスポンス構築の変更 |
+| **マイグレーション** | 新規作成 | `lot_reference` カラム削除、`lot_id` FK 追加 |
+
+**工数見積**: 中（約15ファイル、1-2日）
+
+**推奨**: 案B（lot_id FK復帰）
+- `lot_reservations` は既に `lot_id` FK を使用しているため、整合性が取れる
+- データ整合性が保証される
+- JOINが文字列マッチから整数比較に変わるためパフォーマンス向上
 
 ---
 
@@ -58,6 +93,28 @@ l.current_quantity - COALESCE(la.allocated_quantity, 0) - l.locked_quantity
 2. `create_views_v2.sql` を `create_views.sql` にリネーム
 3. 関連スクリプトを更新
 
+#### 📋 ビューファイルマージ調査結果（2025-12-13追記）
+
+**v1 (`create_views.sql`) と v2 (`create_views_v2.sql`) の差分**:
+
+| 観点 | v1 (旧) | v2 (新・正) |
+|------|---------|-------------|
+| **allocated_quantity の算出** | `lots.allocated_quantity` カラム直接参照（削除済み） | `lot_reservations` からの集計 |
+| **論理削除対応** | なし | `COALESCE` で対応、`is_deleted` フラグ追加 |
+| **ヘルパービュー** | なし | `v_lot_allocations` 追加 |
+| **コメント** | 最小限 | 各ビューに説明追加 |
+
+**v2 で追加されたビュー**:
+- `v_lot_allocations`: ロットごとの引当数量集計（lot_reservationsから）
+- `v_product_code_to_id`: 製品コード→IDマッピング（論理削除対応）
+
+**v1 のみに存在するビュー**: なし（v2は上位互換）
+
+**推奨対応**:
+1. `create_views.sql` を削除
+2. `create_views_v2.sql` を `create_views.sql` にリネーム
+3. `update_inventory_view.py`, `generate_test_data.py` を v2 方式に更新
+
 ---
 
 ### 3. withdrawals テーブルの nullable 不整合
@@ -86,6 +143,39 @@ sa.Column("withdrawn_by", sa.BigInteger(), nullable=False),
 **改善案**:
 - 案A: マイグレーションを修正して nullable=True に変更（柔軟性重視）
 - 案B: モデルを修正して nullable=False に変更（データ品質重視）
+
+#### 📋 withdrawals ユースケース調査結果（2025-12-13追記）
+
+**ユースケース分析**:
+
+| 質問 | 回答 |
+|------|------|
+| **出庫確定だけ？ドラフトも作る？** | 出庫確定のみ。`create_withdrawal` は即座にDBコミット。ドラフト機能なし。 |
+| **customer_id/delivery_place_id は常に分かる前提？** | **タイプによって異なる**。下記参照。 |
+| **withdrawn_by は「操作者ユーザー」か「作業者」か** | **操作者ユーザー**（`users.id` を参照）。任意入力。 |
+
+**出庫タイプ別の必須項目**:
+
+| タイプ | customer_id | delivery_place_id | withdrawn_by |
+|--------|-------------|-------------------|--------------|
+| `order_manual` (受注手動) | **必須** | 任意 | 任意 |
+| `internal_use` (社内使用) | 任意 | 任意 | 任意 |
+| `disposal` (廃棄処理) | 任意 | 任意 | 任意 |
+| `return` (返品対応) | 任意 | 任意 | 任意 |
+| `sample` (サンプル出荷) | 任意 | 任意 | 任意 |
+| `other` (その他) | 任意 | 任意 | 任意 |
+
+**結論**: **モデルの `nullable=True` が正解**
+
+マイグレーションを修正して DB も `nullable=True` にすべき。
+
+**推奨対応**:
+```sql
+-- 修正マイグレーション
+ALTER TABLE withdrawals ALTER COLUMN customer_id DROP NOT NULL;
+ALTER TABLE withdrawals ALTER COLUMN delivery_place_id DROP NOT NULL;
+ALTER TABLE withdrawals ALTER COLUMN withdrawn_by DROP NOT NULL;
+```
 
 ---
 
