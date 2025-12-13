@@ -3494,6 +3494,305 @@
         }
       }
     },
+    "/api/allocations/preview": {
+      "post": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Preview Allocation",
+        "description": "FEFO allocation preview.",
+        "operationId": "preview_allocation_api_allocations_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FefoPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FefoPreviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocations/commit": {
+      "post": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Commit Allocation",
+        "description": "Commit FEFO allocation.",
+        "operationId": "commit_allocation_api_allocations_commit_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllocationCommitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationCommitResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocations/drag-assign": {
+      "post": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Manual Allocate",
+        "description": "Manual allocation (Drag & Assign).",
+        "operationId": "manual_allocate_api_allocations_drag_assign_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManualAllocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualAllocationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocations/{allocation_id}/confirm": {
+      "patch": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Confirm Allocation",
+        "description": "Confirm allocation (Soft to Hard).",
+        "operationId": "confirm_allocation_api_allocations__allocation_id__confirm_patch",
+        "parameters": [
+          {
+            "name": "allocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Allocation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HardAllocationConfirmRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HardAllocationConfirmResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocations/confirm-batch": {
+      "post": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Confirm Allocations Batch",
+        "description": "Batch confirm allocations.",
+        "operationId": "confirm_allocations_batch_api_allocations_confirm_batch_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HardAllocationBatchConfirmRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HardAllocationBatchConfirmResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocations/{allocation_id}": {
+      "delete": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Cancel Allocation",
+        "description": "Cancel allocation.",
+        "operationId": "cancel_allocation_api_allocations__allocation_id__delete",
+        "parameters": [
+          {
+            "name": "allocation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Allocation Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/allocations/bulk-cancel": {
+      "post": {
+        "tags": [
+          "allocations"
+        ],
+        "summary": "Bulk Cancel",
+        "description": "Bulk cancel allocations.",
+        "operationId": "bulk_cancel_api_allocations_bulk_cancel_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCancelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkCancelResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/allocations/bulk-auto-allocate": {
       "post": {
         "tags": [
@@ -12832,6 +13131,55 @@
         "title": "BulkAutoAllocateResponse",
         "description": "Bulk auto-allocate response."
       },
+      "BulkCancelRequest": {
+        "properties": {
+          "allocation_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Allocation Ids",
+            "description": "取消対象の引当ID一覧"
+          }
+        },
+        "type": "object",
+        "required": [
+          "allocation_ids"
+        ],
+        "title": "BulkCancelRequest",
+        "description": "Bulk cancel allocations request."
+      },
+      "BulkCancelResponse": {
+        "properties": {
+          "cancelled_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Cancelled Ids",
+            "description": "取消成功した引当ID"
+          },
+          "failed_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Failed Ids",
+            "description": "取消失敗した引当ID"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "BulkCancelResponse",
+        "description": "Bulk cancel allocations response."
+      },
       "BulkUpsertResponse": {
         "properties": {
           "status": {
@@ -15730,6 +16078,179 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "HardAllocationBatchConfirmRequest": {
+        "properties": {
+          "allocation_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Allocation Ids",
+            "description": "確定対象の引当ID一覧"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By",
+            "description": "確定操作を行うユーザーID"
+          }
+        },
+        "type": "object",
+        "required": [
+          "allocation_ids"
+        ],
+        "title": "HardAllocationBatchConfirmRequest",
+        "description": "Hard allocation batch confirm request."
+      },
+      "HardAllocationBatchConfirmResponse": {
+        "properties": {
+          "confirmed": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Confirmed",
+            "description": "確定成功した引当ID"
+          },
+          "failed": {
+            "items": {
+              "$ref": "#/components/schemas/HardAllocationBatchFailedItem"
+            },
+            "type": "array",
+            "title": "Failed",
+            "description": "確定失敗した引当"
+          }
+        },
+        "type": "object",
+        "title": "HardAllocationBatchConfirmResponse",
+        "description": "Hard allocation batch confirm response."
+      },
+      "HardAllocationBatchFailedItem": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "error",
+          "message"
+        ],
+        "title": "HardAllocationBatchFailedItem",
+        "description": "Failed item in batch confirm response."
+      },
+      "HardAllocationConfirmRequest": {
+        "properties": {
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By",
+            "description": "確定操作を行うユーザーID"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quantity",
+            "description": "部分確定の場合の数量（未指定で全量確定）"
+          }
+        },
+        "type": "object",
+        "title": "HardAllocationConfirmRequest",
+        "description": "Hard allocation confirm request (Soft → Hard)."
+      },
+      "HardAllocationConfirmResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "order_line_id": {
+            "type": "integer",
+            "title": "Order Line Id"
+          },
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id"
+          },
+          "allocated_quantity": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
+            "title": "Allocated Quantity"
+          },
+          "allocation_type": {
+            "type": "string",
+            "pattern": "^(hard)$",
+            "title": "Allocation Type"
+          },
+          "status": {
+            "type": "string",
+            "pattern": "^(allocated)$",
+            "title": "Status"
+          },
+          "confirmed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Confirmed At"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "order_line_id",
+          "lot_id",
+          "allocated_quantity",
+          "allocation_type",
+          "status",
+          "confirmed_at"
+        ],
+        "title": "HardAllocationConfirmResponse",
+        "description": "Hard allocation confirm response."
+      },
       "ImportResultDetail": {
         "properties": {
           "table_name": {
@@ -17386,6 +17907,10 @@
       },
       "ManualAllocationResponse": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "order_line_id": {
             "type": "integer",
             "title": "Order Line Id"
@@ -17443,6 +17968,7 @@
         },
         "type": "object",
         "required": [
+          "id",
           "order_line_id",
           "lot_id",
           "lot_number",

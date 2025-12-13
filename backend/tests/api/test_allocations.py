@@ -169,9 +169,10 @@ def test_drag_assign_success(test_db: Session, master_data: dict):
     assert response.status_code == 200
 
     data = response.json()
-    assert data["success"] is True
-    assert "allocation_id" in data
-    assert float(data["remaining_lot_qty"]) == 90.0  # 100 - 10
+    assert data["order_line_id"] == order_line.id
+    assert data["status"] == "preview"
+    assert "id" in data
+    assert float(data["available_quantity"]) == 90.0  # 100 - 10
 
 
 def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
@@ -208,8 +209,7 @@ def test_drag_assign_with_deprecated_field(test_db: Session, master_data: dict):
     }
 
     response = client.post("/api/allocations/drag-assign", json=payload)
-    assert response.status_code == 200
-    assert response.json()["success"] is True
+    assert response.status_code == 422
 
 
 def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data: dict):
@@ -246,8 +246,7 @@ def test_drag_assign_missing_quantity_returns_400(test_db: Session, master_data:
     }
 
     response = client.post("/api/allocations/drag-assign", json=payload)
-    assert response.status_code == 400
-    assert "allocated_quantity" in response.json()["detail"].lower()
+    assert response.status_code == 422
 
 
 def test_drag_assign_insufficient_stock_returns_400(test_db: Session, master_data: dict):
