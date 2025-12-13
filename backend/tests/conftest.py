@@ -100,29 +100,42 @@ def db_engine():
                     l.id AS lot_id,
                     l.lot_number,
                     l.product_id,
-                    p.maker_part_code,
-                    p.product_name,
+                    COALESCE(p.maker_part_code, '') AS maker_part_code,
+                    COALESCE(p.product_name, '[削除済み製品]') AS product_name,
                     l.warehouse_id,
-                    w.warehouse_code,
-                    w.warehouse_name,
+                    COALESCE(w.warehouse_code, '') AS warehouse_code,
+                    COALESCE(w.warehouse_name, '[削除済み倉庫]') AS warehouse_name,
                     l.supplier_id,
-                    s.supplier_code,
-                    s.supplier_name,
+                    COALESCE(s.supplier_code, '') AS supplier_code,
+                    COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
                     l.received_date,
                     l.expiry_date,
                     l.current_quantity,
                     COALESCE(r.reserved_qty, 0) AS allocated_quantity,
                     l.locked_quantity,
-                    (l.current_quantity - COALESCE(r.reserved_qty, 0) - l.locked_quantity) AS available_quantity,
+                    GREATEST(l.current_quantity - COALESCE(r.reserved_qty, 0) - l.locked_quantity, 0) AS available_quantity,
                     l.unit,
                     l.status,
-                    (l.expiry_date - CURRENT_DATE) AS days_to_expiry,
+                    l.lock_reason,
+                    CASE WHEN l.expiry_date IS NOT NULL THEN CAST((l.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
+                    l.temporary_lot_key,
+                    usa_primary.user_id AS primary_user_id,
+                    u_primary.username AS primary_username,
+                    u_primary.display_name AS primary_user_display_name,
+                    CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS product_deleted,
+                    CASE WHEN w.valid_to IS NOT NULL AND w.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS warehouse_deleted,
+                    CASE WHEN s.valid_to IS NOT NULL AND s.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS supplier_deleted,
                     l.created_at,
                     l.updated_at
                 FROM lots l
-                JOIN products p ON l.product_id = p.id
-                JOIN warehouses w ON l.warehouse_id = w.id
+                LEFT JOIN products p ON l.product_id = p.id
+                LEFT JOIN warehouses w ON l.warehouse_id = w.id
                 LEFT JOIN suppliers s ON l.supplier_id = s.id
+                LEFT JOIN user_supplier_assignments usa_primary
+                    ON usa_primary.supplier_id = l.supplier_id
+                    AND usa_primary.is_primary = TRUE
+                LEFT JOIN users u_primary
+                    ON u_primary.id = usa_primary.user_id
                 LEFT JOIN (
                     SELECT lot_id, SUM(reserved_qty) as reserved_qty
                     FROM lot_reservations
