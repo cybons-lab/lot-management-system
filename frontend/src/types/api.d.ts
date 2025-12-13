@@ -7203,6 +7203,8 @@ export interface components {
      * @description Manual allocation response (v2.2.1).
      */
     ManualAllocationResponse: {
+      /** Id */
+      id: number;
       /** Order Line Id */
       order_line_id: number;
       /** Lot Id */
