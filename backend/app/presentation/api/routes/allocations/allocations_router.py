@@ -21,6 +21,7 @@ from app.presentation.schemas.allocations.allocations_schema import (
     ManualAllocationResponse,
 )
 
+
 router = APIRouter()
 
 
