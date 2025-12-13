@@ -17907,6 +17907,10 @@
       },
       "ManualAllocationResponse": {
         "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
           "order_line_id": {
             "type": "integer",
             "title": "Order Line Id"
@@ -17964,6 +17968,7 @@
         },
         "type": "object",
         "required": [
+          "id",
           "order_line_id",
           "lot_id",
           "lot_number",
