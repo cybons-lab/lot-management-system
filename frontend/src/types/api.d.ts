@@ -1045,6 +1045,146 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/allocations/preview": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Preview Allocation
+     * @description FEFO allocation preview.
+     */
+    post: operations["preview_allocation_api_allocations_preview_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/commit": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Commit Allocation
+     * @description Commit FEFO allocation.
+     */
+    post: operations["commit_allocation_api_allocations_commit_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/drag-assign": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Manual Allocate
+     * @description Manual allocation (Drag & Assign).
+     */
+    post: operations["manual_allocate_api_allocations_drag_assign_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/{allocation_id}/confirm": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Confirm Allocation
+     * @description Confirm allocation (Soft to Hard).
+     */
+    patch: operations["confirm_allocation_api_allocations__allocation_id__confirm_patch"];
+    trace?: never;
+  };
+  "/api/allocations/confirm-batch": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm Allocations Batch
+     * @description Batch confirm allocations.
+     */
+    post: operations["confirm_allocations_batch_api_allocations_confirm_batch_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/{allocation_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Cancel Allocation
+     * @description Cancel allocation.
+     */
+    delete: operations["cancel_allocation_api_allocations__allocation_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/allocations/bulk-cancel": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Cancel
+     * @description Bulk cancel allocations.
+     */
+    post: operations["bulk_cancel_api_allocations_bulk_cancel_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/allocations/bulk-auto-allocate": {
     parameters: {
       query?: never;
@@ -5037,6 +5177,35 @@ export interface components {
       message: string;
     };
     /**
+     * BulkCancelRequest
+     * @description Bulk cancel allocations request.
+     */
+    BulkCancelRequest: {
+      /**
+       * Allocation Ids
+       * @description 取消対象の引当ID一覧
+       */
+      allocation_ids: number[];
+    };
+    /**
+     * BulkCancelResponse
+     * @description Bulk cancel allocations response.
+     */
+    BulkCancelResponse: {
+      /**
+       * Cancelled Ids
+       * @description 取消成功した引当ID
+       */
+      cancelled_ids?: number[];
+      /**
+       * Failed Ids
+       * @description 取消失敗した引当ID
+       */
+      failed_ids?: number[];
+      /** Message */
+      message: string;
+    };
+    /**
      * BulkUpsertResponse
      * @description Bulk upsert response.
      */
@@ -6290,6 +6459,91 @@ export interface components {
     HTTPValidationError: {
       /** Detail */
       detail?: components["schemas"]["ValidationError"][];
+    };
+    /**
+     * HardAllocationBatchConfirmRequest
+     * @description Hard allocation batch confirm request.
+     */
+    HardAllocationBatchConfirmRequest: {
+      /**
+       * Allocation Ids
+       * @description 確定対象の引当ID一覧
+       */
+      allocation_ids: number[];
+      /**
+       * Confirmed By
+       * @description 確定操作を行うユーザーID
+       */
+      confirmed_by?: string | null;
+    };
+    /**
+     * HardAllocationBatchConfirmResponse
+     * @description Hard allocation batch confirm response.
+     */
+    HardAllocationBatchConfirmResponse: {
+      /**
+       * Confirmed
+       * @description 確定成功した引当ID
+       */
+      confirmed?: number[];
+      /**
+       * Failed
+       * @description 確定失敗した引当
+       */
+      failed?: components["schemas"]["HardAllocationBatchFailedItem"][];
+    };
+    /**
+     * HardAllocationBatchFailedItem
+     * @description Failed item in batch confirm response.
+     */
+    HardAllocationBatchFailedItem: {
+      /** Id */
+      id: number;
+      /** Error */
+      error: string;
+      /** Message */
+      message: string;
+    };
+    /**
+     * HardAllocationConfirmRequest
+     * @description Hard allocation confirm request (Soft → Hard).
+     */
+    HardAllocationConfirmRequest: {
+      /**
+       * Confirmed By
+       * @description 確定操作を行うユーザーID
+       */
+      confirmed_by?: string | null;
+      /**
+       * Quantity
+       * @description 部分確定の場合の数量（未指定で全量確定）
+       */
+      quantity?: number | string | null;
+    };
+    /**
+     * HardAllocationConfirmResponse
+     * @description Hard allocation confirm response.
+     */
+    HardAllocationConfirmResponse: {
+      /** Id */
+      id: number;
+      /** Order Line Id */
+      order_line_id: number;
+      /** Lot Id */
+      lot_id: number;
+      /** Allocated Quantity */
+      allocated_quantity: string;
+      /** Allocation Type */
+      allocation_type: string;
+      /** Status */
+      status: string;
+      /**
+       * Confirmed At
+       * Format: date-time
+       */
+      confirmed_at: string;
+      /** Confirmed By */
+      confirmed_by?: string | null;
     };
     /**
      * ImportResultDetail
@@ -10775,6 +11029,235 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AlertSummaryResponse"];
+        };
+      };
+    };
+  };
+  preview_allocation_api_allocations_preview_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["FefoPreviewRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["FefoPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  commit_allocation_api_allocations_commit_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["AllocationCommitRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationCommitResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  manual_allocate_api_allocations_drag_assign_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ManualAllocationRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ManualAllocationResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  confirm_allocation_api_allocations__allocation_id__confirm_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        allocation_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HardAllocationConfirmRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HardAllocationConfirmResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  confirm_allocations_batch_api_allocations_confirm_batch_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["HardAllocationBatchConfirmRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HardAllocationBatchConfirmResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  cancel_allocation_api_allocations__allocation_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        allocation_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_cancel_api_allocations_bulk_cancel_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["BulkCancelRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BulkCancelResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

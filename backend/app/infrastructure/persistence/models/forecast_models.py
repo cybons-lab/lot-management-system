@@ -45,7 +45,7 @@ class ForecastCurrent(Base):
         nullable=False,
     )
     forecast_date: Mapped[date] = mapped_column(Date, nullable=False)
-    forecast_quantity: Mapped[Decimal] = mapped_column(Numeric, nullable=False)
+    forecast_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
     unit: Mapped[str | None] = mapped_column(String, nullable=True)
     forecast_period: Mapped[str] = mapped_column(String(7), nullable=False)
     snapshot_at: Mapped[datetime] = mapped_column(
@@ -63,7 +63,7 @@ class ForecastCurrent(Base):
 
     __table_args__ = (
         Index(
-            "ix_forecast_current_key",
+            "idx_forecast_current_unique",
             "customer_id",
             "delivery_place_id",
             "product_id",

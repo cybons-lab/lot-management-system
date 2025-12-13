@@ -78,7 +78,6 @@ class Warehouse(SoftDeleteMixin, Base):
             "warehouse_type IN ('internal', 'external', 'supplier')",
             name="chk_warehouse_type",
         ),
-        Index("idx_warehouses_code", "warehouse_code"),
         Index("idx_warehouses_type", "warehouse_type"),
         Index("idx_warehouses_valid_to", "valid_to"),
     )
@@ -112,7 +111,6 @@ class Supplier(SoftDeleteMixin, Base):
 
     __table_args__ = (
         UniqueConstraint("supplier_code", name="uq_suppliers_supplier_code"),
-        Index("idx_suppliers_code", "supplier_code"),
         Index("idx_suppliers_valid_to", "valid_to"),
     )
 
@@ -161,7 +159,6 @@ class Customer(SoftDeleteMixin, Base):
 
     __table_args__ = (
         UniqueConstraint("customer_code", name="uq_customers_customer_code"),
-        Index("idx_customers_code", "customer_code"),
         Index("idx_customers_valid_to", "valid_to"),
     )
 
@@ -211,7 +208,6 @@ class DeliveryPlace(SoftDeleteMixin, Base):
     __table_args__ = (
         UniqueConstraint("delivery_place_code", name="uq_delivery_places_code"),
         Index("idx_delivery_places_customer", "customer_id"),
-        Index("idx_delivery_places_code", "delivery_place_code"),
         Index("idx_delivery_places_valid_to", "valid_to"),
     )
 
@@ -263,7 +259,6 @@ class Product(SoftDeleteMixin, Base):
 
     __table_args__ = (
         UniqueConstraint("maker_part_code", name="uq_products_maker_part_code"),
-        Index("idx_products_code", "maker_part_code"),
         Index("idx_products_name", "product_name"),
         Index("idx_products_valid_to", "valid_to"),
     )
@@ -476,7 +471,7 @@ class CustomerItemJikuMapping(Base):
             ["customer_id", "external_product_code"],
             ["customer_items.customer_id", "customer_items.external_product_code"],
             ondelete="CASCADE",
-            name="fk_customer_item_jiku_customer_item",
+            name="fk_customer_item_jiku_mappings_customer_item",
         ),
         UniqueConstraint(
             "customer_id",
@@ -541,7 +536,7 @@ class CustomerItemDeliverySetting(Base):
             ["customer_id", "external_product_code"],
             ["customer_items.customer_id", "customer_items.external_product_code"],
             ondelete="CASCADE",
-            name="fk_cids_customer_item",
+            name="fk_customer_item_delivery_settings_customer_item",
         ),
         UniqueConstraint(
             "customer_id",
