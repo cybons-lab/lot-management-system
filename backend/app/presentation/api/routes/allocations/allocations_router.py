@@ -7,7 +7,7 @@ from app.application.services.allocations.schemas import (
     AllocationNotFoundError,
 )
 from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.presentation.api.deps import get_db
+from app.core.database import get_db
 from app.presentation.schemas.allocations.allocations_schema import (
     AllocationCommitRequest,
     AllocationCommitResponse,
