@@ -2,7 +2,7 @@
 
 Revision ID: 000000000000
 Revises:
-Create Date: 2025-12-08 17:16:55.753558
+Create Date: 2025-12-13 12:43:50.978345
 
 """
 
@@ -99,6 +99,7 @@ def upgrade() -> None:
         sa.Column("contact_name", sa.String(length=100), nullable=True),
         sa.Column("phone", sa.String(length=50), nullable=True),
         sa.Column("email", sa.String(length=200), nullable=True),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
         ),
@@ -110,6 +111,7 @@ def upgrade() -> None:
     )
     with op.batch_alter_table("customers", schema=None) as batch_op:
         batch_op.create_index("idx_customers_code", ["customer_code"], unique=False)
+        batch_op.create_index("idx_customers_valid_to", ["valid_to"], unique=False)
 
     op.create_table(
         "forecast_history",
@@ -146,6 +148,7 @@ def upgrade() -> None:
         sa.Column("product_name", sa.String(length=200), nullable=False),
         sa.Column("base_unit", sa.String(length=20), nullable=False),
         sa.Column("consumption_limit_days", sa.Integer(), nullable=True),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
         ),
@@ -166,6 +169,7 @@ def upgrade() -> None:
     with op.batch_alter_table("products", schema=None) as batch_op:
         batch_op.create_index("idx_products_code", ["maker_part_code"], unique=False)
         batch_op.create_index("idx_products_name", ["product_name"], unique=False)
+        batch_op.create_index("idx_products_valid_to", ["valid_to"], unique=False)
 
     op.create_table(
         "roles",
@@ -218,6 +222,7 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("supplier_code", sa.String(length=50), nullable=False),
         sa.Column("supplier_name", sa.String(length=200), nullable=False),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
         ),
@@ -229,6 +234,7 @@ def upgrade() -> None:
     )
     with op.batch_alter_table("suppliers", schema=None) as batch_op:
         batch_op.create_index("idx_suppliers_code", ["supplier_code"], unique=False)
+        batch_op.create_index("idx_suppliers_valid_to", ["valid_to"], unique=False)
 
     op.create_table(
         "system_configs",
@@ -290,6 +296,7 @@ def upgrade() -> None:
         sa.Column("warehouse_code", sa.String(length=50), nullable=False),
         sa.Column("warehouse_name", sa.String(length=200), nullable=False),
         sa.Column("warehouse_type", sa.String(length=20), nullable=False),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
         ),
@@ -305,6 +312,7 @@ def upgrade() -> None:
     with op.batch_alter_table("warehouses", schema=None) as batch_op:
         batch_op.create_index("idx_warehouses_code", ["warehouse_code"], unique=False)
         batch_op.create_index("idx_warehouses_type", ["warehouse_type"], unique=False)
+        batch_op.create_index("idx_warehouses_valid_to", ["valid_to"], unique=False)
 
     op.create_table(
         "customer_items",
@@ -318,6 +326,7 @@ def upgrade() -> None:
         sa.Column("special_instructions", sa.Text(), nullable=True),
         sa.Column("shipping_document_template", sa.Text(), nullable=True),
         sa.Column("sap_notes", sa.Text(), nullable=True),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
         ),
@@ -332,14 +341,16 @@ def upgrade() -> None:
     with op.batch_alter_table("customer_items", schema=None) as batch_op:
         batch_op.create_index("idx_customer_items_product", ["product_id"], unique=False)
         batch_op.create_index("idx_customer_items_supplier", ["supplier_id"], unique=False)
+        batch_op.create_index("idx_customer_items_valid_to", ["valid_to"], unique=False)
 
     op.create_table(
         "delivery_places",
         sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("jiku_code", sa.String(length=50), nullable=True),
+        sa.Column("jiku_code", sa.String(length=50), server_default="", nullable=False),
         sa.Column("delivery_place_code", sa.String(length=50), nullable=False),
         sa.Column("delivery_place_name", sa.String(length=200), nullable=False),
         sa.Column("customer_id", sa.BigInteger(), nullable=False),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
         ),
@@ -353,21 +364,22 @@ def upgrade() -> None:
     with op.batch_alter_table("delivery_places", schema=None) as batch_op:
         batch_op.create_index("idx_delivery_places_code", ["delivery_place_code"], unique=False)
         batch_op.create_index("idx_delivery_places_customer", ["customer_id"], unique=False)
+        batch_op.create_index("idx_delivery_places_valid_to", ["valid_to"], unique=False)
 
     op.create_table(
         "inbound_plans",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("plan_number", sa.String(length=50), nullable=False),
-        sa.Column("supplier_id", sa.BigInteger(), nullable=False),
-        sa.Column("planned_arrival_date", sa.Date(), nullable=False),
-        sa.Column(
-            "status", sa.String(length=20), server_default=sa.text("'planned'"), nullable=False
-        ),
         sa.Column(
             "sap_po_number",
             sa.String(length=20),
             nullable=True,
             comment="SAP購買発注番号（業務キー）",
+        ),
+        sa.Column("supplier_id", sa.BigInteger(), nullable=False),
+        sa.Column("planned_arrival_date", sa.Date(), nullable=False),
+        sa.Column(
+            "status", sa.String(length=20), server_default=sa.text("'planned'"), nullable=False
         ),
         sa.Column("notes", sa.Text(), nullable=True),
         sa.Column("created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False),
@@ -379,7 +391,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(["supplier_id"], ["suppliers.id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("plan_number", name="inbound_plans_plan_number_key"),
-        sa.UniqueConstraint("sap_po_number", name="uq_inbound_plans_sap_po_number"),
+        sa.UniqueConstraint("sap_po_number"),
     )
     with op.batch_alter_table("inbound_plans", schema=None) as batch_op:
         batch_op.create_index("idx_inbound_plans_date", ["planned_arrival_date"], unique=False)
@@ -477,7 +489,6 @@ def upgrade() -> None:
     op.create_table(
         "orders",
         sa.Column("id", sa.BigInteger(), nullable=False),
-        # order_number removed in 1fc6aeb192f2
         sa.Column("customer_id", sa.BigInteger(), nullable=False),
         sa.Column("order_date", sa.Date(), nullable=False),
         sa.Column("status", sa.String(length=20), server_default=sa.text("'open'"), nullable=False),
@@ -506,12 +517,48 @@ def upgrade() -> None:
         batch_op.create_index("idx_orders_locked_by", ["locked_by_user_id"], unique=False)
 
     op.create_table(
+        "product_mappings",
+        sa.Column("id", sa.BigInteger(), nullable=False),
+        sa.Column("customer_id", sa.BigInteger(), nullable=False),
+        sa.Column("customer_part_code", sa.String(length=100), nullable=False),
+        sa.Column("supplier_id", sa.BigInteger(), nullable=False),
+        sa.Column("product_id", sa.BigInteger(), nullable=False),
+        sa.Column("base_unit", sa.String(length=20), nullable=False),
+        sa.Column("pack_unit", sa.String(length=20), nullable=True),
+        sa.Column("pack_quantity", sa.Integer(), nullable=True),
+        sa.Column("special_instructions", sa.Text(), nullable=True),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["customer_id"], ["customers.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["supplier_id"], ["suppliers.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "customer_id",
+            "customer_part_code",
+            "supplier_id",
+            name="uq_product_mappings_cust_part_supp",
+        ),
+    )
+    with op.batch_alter_table("product_mappings", schema=None) as batch_op:
+        batch_op.create_index("idx_product_mappings_customer", ["customer_id"], unique=False)
+        batch_op.create_index("idx_product_mappings_product", ["product_id"], unique=False)
+        batch_op.create_index("idx_product_mappings_supplier", ["supplier_id"], unique=False)
+        batch_op.create_index("idx_product_mappings_valid_to", ["valid_to"], unique=False)
+
+    op.create_table(
         "product_suppliers",
         sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
         sa.Column("product_id", sa.BigInteger(), nullable=False),
         sa.Column("supplier_id", sa.BigInteger(), nullable=False),
         sa.Column("is_primary", sa.Boolean(), nullable=False),
         sa.Column("lead_time_days", sa.Integer(), nullable=True),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(
@@ -526,6 +573,7 @@ def upgrade() -> None:
         sa.UniqueConstraint("product_id", "supplier_id", name="uq_product_supplier"),
     )
     with op.batch_alter_table("product_suppliers", schema=None) as batch_op:
+        batch_op.create_index("idx_product_suppliers_valid_to", ["valid_to"], unique=False)
         batch_op.create_index(
             "uq_product_primary_supplier",
             ["product_id"],
@@ -539,6 +587,7 @@ def upgrade() -> None:
         sa.Column("product_id", sa.BigInteger(), nullable=False),
         sa.Column("external_unit", sa.String(length=20), nullable=False),
         sa.Column("factor", sa.Numeric(precision=15, scale=3), nullable=False),
+        sa.Column("valid_to", sa.Date(), server_default=sa.text("'9999-12-31'"), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
         ),
@@ -549,6 +598,9 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("conversion_id"),
         sa.UniqueConstraint("product_id", "external_unit", name="uq_uom_conversions_product_unit"),
     )
+    with op.batch_alter_table("product_uom_conversions", schema=None) as batch_op:
+        batch_op.create_index("idx_product_uom_conversions_valid_to", ["valid_to"], unique=False)
+
     op.create_table(
         "system_client_logs",
         sa.Column("id", sa.BigInteger(), nullable=False),
@@ -628,6 +680,64 @@ def upgrade() -> None:
         )
 
     op.create_table(
+        "customer_item_delivery_settings",
+        sa.Column("id", sa.BigInteger(), nullable=False),
+        sa.Column("customer_id", sa.BigInteger(), nullable=False),
+        sa.Column("external_product_code", sa.String(length=100), nullable=False),
+        sa.Column(
+            "delivery_place_id",
+            sa.BigInteger(),
+            nullable=True,
+            comment="納入先（NULLの場合はデフォルト設定）",
+        ),
+        sa.Column(
+            "jiku_code",
+            sa.String(length=50),
+            nullable=True,
+            comment="次区コード（NULLの場合は全次区共通）",
+        ),
+        sa.Column("shipment_text", sa.Text(), nullable=True, comment="出荷表テキスト（SAP連携用）"),
+        sa.Column("packing_note", sa.Text(), nullable=True, comment="梱包・注意書き"),
+        sa.Column("lead_time_days", sa.Integer(), nullable=True, comment="リードタイム（日）"),
+        sa.Column(
+            "is_default",
+            sa.Boolean(),
+            server_default="FALSE",
+            nullable=False,
+            comment="デフォルト設定フラグ",
+        ),
+        sa.Column("valid_from", sa.Date(), nullable=True, comment="有効開始日"),
+        sa.Column("valid_to", sa.Date(), nullable=True, comment="有効終了日"),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["customer_id", "external_product_code"],
+            ["customer_items.customer_id", "customer_items.external_product_code"],
+            name="fk_cids_customer_item",
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(["delivery_place_id"], ["delivery_places.id"], ondelete="SET NULL"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "customer_id",
+            "external_product_code",
+            "delivery_place_id",
+            "jiku_code",
+            name="uq_customer_item_delivery_settings",
+        ),
+    )
+    with op.batch_alter_table("customer_item_delivery_settings", schema=None) as batch_op:
+        batch_op.create_index(
+            "idx_cids_customer_item", ["customer_id", "external_product_code"], unique=False
+        )
+        batch_op.create_index("idx_cids_delivery_place", ["delivery_place_id"], unique=False)
+        batch_op.create_index("idx_cids_jiku_code", ["jiku_code"], unique=False)
+
+    op.create_table(
         "customer_item_jiku_mappings",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("customer_id", sa.BigInteger(), nullable=False),
@@ -698,6 +808,108 @@ def upgrade() -> None:
         batch_op.create_index("idx_inbound_plan_lines_product", ["product_id"], unique=False)
 
     op.create_table(
+        "order_lines",
+        sa.Column("id", sa.BigInteger(), nullable=False),
+        sa.Column("order_id", sa.BigInteger(), nullable=False),
+        sa.Column(
+            "order_group_id",
+            sa.BigInteger(),
+            nullable=True,
+            comment="受注グループへの参照（得意先×製品×受注日）",
+        ),
+        sa.Column("product_id", sa.BigInteger(), nullable=False),
+        sa.Column("delivery_date", sa.Date(), nullable=False),
+        sa.Column("order_quantity", sa.Numeric(precision=15, scale=3), nullable=False),
+        sa.Column("unit", sa.String(length=20), nullable=False),
+        sa.Column("converted_quantity", sa.Numeric(precision=15, scale=3), nullable=True),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.Column("delivery_place_id", sa.BigInteger(), nullable=False),
+        sa.Column(
+            "customer_order_no",
+            sa.String(length=6),
+            nullable=True,
+            comment="得意先6桁受注番号（業務キー）",
+        ),
+        sa.Column(
+            "customer_order_line_no", sa.String(length=10), nullable=True, comment="得意先側行番号"
+        ),
+        sa.Column(
+            "sap_order_no", sa.String(length=20), nullable=True, comment="SAP受注番号（業務キー）"
+        ),
+        sa.Column(
+            "sap_order_item_no",
+            sa.String(length=6),
+            nullable=True,
+            comment="SAP明細番号（業務キー）",
+        ),
+        sa.Column("shipping_document_text", sa.Text(), nullable=True, comment="出荷表テキスト"),
+        sa.Column(
+            "order_type",
+            sa.String(length=20),
+            server_default=sa.text("'ORDER'"),
+            nullable=False,
+            comment="需要種別: FORECAST_LINKED / KANBAN / SPOT / ORDER",
+        ),
+        sa.Column(
+            "forecast_reference",
+            sa.String(length=100),
+            nullable=True,
+            comment="Forecast business key reference (replaces forecast_id FK)",
+        ),
+        sa.Column(
+            "status", sa.String(length=20), server_default=sa.text("'pending'"), nullable=False
+        ),
+        sa.Column("version", sa.Integer(), server_default=sa.text("1"), nullable=False),
+        sa.CheckConstraint(
+            "order_type IN ('FORECAST_LINKED', 'KANBAN', 'SPOT', 'ORDER')",
+            name="chk_order_lines_order_type",
+        ),
+        sa.CheckConstraint(
+            "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled')",
+            name="chk_order_lines_status",
+        ),
+        sa.ForeignKeyConstraint(["delivery_place_id"], ["delivery_places.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["order_group_id"], ["order_groups.id"], ondelete="SET NULL"),
+        sa.ForeignKeyConstraint(["order_id"], ["orders.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("id"),
+        sa.UniqueConstraint(
+            "order_group_id", "customer_order_no", name="uq_order_lines_customer_key"
+        ),
+    )
+    with op.batch_alter_table("order_lines", schema=None) as batch_op:
+        batch_op.create_index(
+            "idx_order_lines_customer_order_no",
+            ["customer_order_no"],
+            unique=False,
+            postgresql_where=sa.text("customer_order_no IS NOT NULL"),
+        )
+        batch_op.create_index("idx_order_lines_date", ["delivery_date"], unique=False)
+        batch_op.create_index("idx_order_lines_delivery_place", ["delivery_place_id"], unique=False)
+        batch_op.create_index(
+            "idx_order_lines_forecast_reference",
+            ["forecast_reference"],
+            unique=False,
+            postgresql_where=sa.text("forecast_reference IS NOT NULL"),
+        )
+        batch_op.create_index("idx_order_lines_order", ["order_id"], unique=False)
+        batch_op.create_index("idx_order_lines_order_group", ["order_group_id"], unique=False)
+        batch_op.create_index("idx_order_lines_order_type", ["order_type"], unique=False)
+        batch_op.create_index("idx_order_lines_product", ["product_id"], unique=False)
+        batch_op.create_index(
+            "idx_order_lines_sap_order_no",
+            ["sap_order_no"],
+            unique=False,
+            postgresql_where=sa.text("sap_order_no IS NOT NULL"),
+        )
+        batch_op.create_index("idx_order_lines_status", ["status"], unique=False)
+
+    op.create_table(
         "expected_lots",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("inbound_plan_line_id", sa.BigInteger(), nullable=False),
@@ -716,111 +928,6 @@ def upgrade() -> None:
         batch_op.create_index("idx_expected_lots_number", ["expected_lot_number"], unique=False)
 
     op.create_table(
-        "order_lines",
-        sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("order_id", sa.BigInteger(), nullable=False),
-        sa.Column("product_id", sa.BigInteger(), nullable=False),
-        sa.Column("delivery_date", sa.Date(), nullable=False),
-        sa.Column("order_quantity", sa.Numeric(precision=15, scale=3), nullable=False),
-        sa.Column("unit", sa.String(length=20), nullable=False),
-        sa.Column("converted_quantity", sa.Numeric(precision=15, scale=3), nullable=True),
-        sa.Column(
-            "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
-        ),
-        sa.Column(
-            "updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
-        ),
-        sa.Column("delivery_place_id", sa.BigInteger(), nullable=False),
-        sa.Column(
-            "sap_order_no",
-            sa.String(length=20),
-            nullable=True,
-            comment="SAP受注番号（業務キー）",
-        ),
-        sa.Column("shipping_document_text", sa.Text(), nullable=True, comment="出荷表テキスト"),
-        sa.Column(
-            "order_type",
-            sa.String(length=20),
-            server_default=sa.text("'ORDER'"),
-            nullable=False,
-            comment="需要種別: FORECAST_LINKED / KANBAN / SPOT / ORDER",
-        ),
-        sa.Column(
-            "forecast_id",
-            sa.BigInteger(),
-            nullable=True,
-            comment="紐づく予測ID（FORECAST_LINKEDの場合）",
-        ),
-        sa.Column(
-            "status", sa.String(length=20), server_default=sa.text("'pending'"), nullable=False
-        ),
-        sa.Column("version", sa.Integer(), server_default=sa.text("1"), nullable=False),
-        # Added in 77d57966e3f7
-        sa.Column(
-            "order_group_id",
-            sa.BigInteger(),
-            nullable=True,
-            comment="受注グループへの参照（得意先×製品×受注日）",
-        ),
-        sa.Column(
-            "customer_order_no",
-            sa.String(length=6),
-            nullable=True,
-            comment="得意先6桁受注番号（業務キー）",
-        ),
-        sa.Column(
-            "customer_order_line_no",
-            sa.String(length=10),
-            nullable=True,
-            comment="得意先側行番号",
-        ),
-        sa.Column(
-            "sap_order_item_no",
-            sa.String(length=6),
-            nullable=True,
-            comment="SAP明細番号（業務キー）",
-        ),
-        sa.CheckConstraint(
-            "order_type IN ('FORECAST_LINKED', 'KANBAN', 'SPOT', 'ORDER')",
-            name="chk_order_lines_order_type",
-        ),
-        sa.CheckConstraint(
-            "status IN ('pending', 'allocated', 'shipped', 'completed', 'cancelled')",
-            name="chk_order_lines_status",
-        ),
-        sa.ForeignKeyConstraint(["delivery_place_id"], ["delivery_places.id"], ondelete="RESTRICT"),
-        sa.ForeignKeyConstraint(["forecast_id"], ["forecast_current.id"], ondelete="SET NULL"),
-        sa.ForeignKeyConstraint(["order_id"], ["orders.id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["product_id"], ["products.id"], ondelete="RESTRICT"),
-        sa.ForeignKeyConstraint(["order_group_id"], ["order_groups.id"], ondelete="SET NULL"),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "order_group_id", "customer_order_no", name="uq_order_lines_customer_key"
-        ),
-    )
-    with op.batch_alter_table("order_lines", schema=None) as batch_op:
-        batch_op.create_index("idx_order_lines_date", ["delivery_date"], unique=False)
-        batch_op.create_index("idx_order_lines_delivery_place", ["delivery_place_id"], unique=False)
-        batch_op.create_index("idx_order_lines_forecast_id", ["forecast_id"], unique=False)
-        batch_op.create_index("idx_order_lines_order", ["order_id"], unique=False)
-        batch_op.create_index("idx_order_lines_order_type", ["order_type"], unique=False)
-        batch_op.create_index("idx_order_lines_product", ["product_id"], unique=False)
-        batch_op.create_index(
-            "idx_order_lines_sap_order_no",
-            ["sap_order_no"],
-            unique=False,
-            postgresql_where=sa.text("sap_order_no IS NOT NULL"),
-        )
-        batch_op.create_index("idx_order_lines_status", ["status"], unique=False)
-        batch_op.create_index(
-            "idx_order_lines_customer_order_no",
-            ["customer_order_no"],
-            unique=False,
-            postgresql_where=sa.text("customer_order_no IS NOT NULL"),
-        )
-        batch_op.create_index("idx_order_lines_order_group", ["order_group_id"], unique=False)
-
-    op.create_table(
         "lots",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("lot_number", sa.String(length=100), nullable=False),
@@ -832,12 +939,6 @@ def upgrade() -> None:
         sa.Column("expiry_date", sa.Date(), nullable=True),
         sa.Column(
             "current_quantity",
-            sa.Numeric(precision=15, scale=3),
-            server_default=sa.text("0"),
-            nullable=False,
-        ),
-        sa.Column(
-            "allocated_quantity",
             sa.Numeric(precision=15, scale=3),
             server_default=sa.text("0"),
             nullable=False,
@@ -869,9 +970,12 @@ def upgrade() -> None:
             "updated_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
         ),
         sa.Column(
-            "origin_type", sa.String(length=20), server_default=sa.text("'order'"), nullable=False
+            "origin_type", sa.String(length=20), server_default=sa.text("'adhoc'"), nullable=False
         ),
         sa.Column("origin_reference", sa.String(length=255), nullable=True),
+        sa.Column(
+            "temporary_lot_key", sa.UUID(), nullable=True, comment="仮入庫時の一意識別キー（UUID）"
+        ),
         sa.CheckConstraint(
             "inspection_status IN ('not_required','pending','passed','failed')",
             name="chk_lots_inspection_status",
@@ -884,11 +988,6 @@ def upgrade() -> None:
             "status IN ('active','depleted','expired','quarantine','locked')",
             name="chk_lots_status",
         ),
-        sa.CheckConstraint(
-            "allocated_quantity + locked_quantity <= current_quantity",
-            name="chk_lots_allocation_limit",
-        ),
-        sa.CheckConstraint("allocated_quantity >= 0", name="chk_lots_allocated_quantity"),
         sa.CheckConstraint("current_quantity >= 0", name="chk_lots_current_quantity"),
         sa.CheckConstraint("locked_quantity >= 0", name="chk_lots_locked_quantity"),
         sa.ForeignKeyConstraint(["expected_lot_id"], ["expected_lots.id"], ondelete="SET NULL"),
@@ -899,6 +998,8 @@ def upgrade() -> None:
         sa.UniqueConstraint(
             "lot_number", "product_id", "warehouse_id", name="uq_lots_number_product_warehouse"
         ),
+        sa.UniqueConstraint("temporary_lot_key"),
+        sa.UniqueConstraint("temporary_lot_key", name="uq_lots_temporary_lot_key"),
     )
     with op.batch_alter_table("lots", schema=None) as batch_op:
         batch_op.create_index(
@@ -914,6 +1015,12 @@ def upgrade() -> None:
         )
         batch_op.create_index("idx_lots_status", ["status"], unique=False)
         batch_op.create_index("idx_lots_supplier", ["supplier_id"], unique=False)
+        batch_op.create_index(
+            "idx_lots_temporary_lot_key",
+            ["temporary_lot_key"],
+            unique=False,
+            postgresql_where=sa.text("temporary_lot_key IS NOT NULL"),
+        )
         batch_op.create_index("idx_lots_warehouse", ["warehouse_id"], unique=False)
 
     op.create_table(
@@ -1006,7 +1113,7 @@ def upgrade() -> None:
         "allocations",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("order_line_id", sa.BigInteger(), nullable=False),
-        sa.Column("lot_id", sa.BigInteger(), nullable=True),
+        sa.Column("lot_id", sa.BigInteger(), nullable=True, comment="Lot ID (FK to lots table)"),
         sa.Column("inbound_plan_line_id", sa.BigInteger(), nullable=True),
         sa.Column("allocated_quantity", sa.Numeric(precision=15, scale=3), nullable=False),
         sa.Column(
@@ -1054,9 +1161,85 @@ def upgrade() -> None:
         batch_op.create_index(
             "idx_allocations_inbound_plan_line", ["inbound_plan_line_id"], unique=False
         )
-        batch_op.create_index("idx_allocations_lot", ["lot_id"], unique=False)
+        batch_op.create_index("idx_allocations_lot_id", ["lot_id"], unique=False)
         batch_op.create_index("idx_allocations_order_line", ["order_line_id"], unique=False)
         batch_op.create_index("idx_allocations_status", ["status"], unique=False)
+
+    op.create_table(
+        "lot_reservations",
+        sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
+        sa.Column("lot_id", sa.BigInteger(), nullable=False),
+        sa.Column(
+            "source_type",
+            sa.String(length=20),
+            nullable=False,
+            comment="Reservation source: 'forecast' | 'order' | 'manual'",
+        ),
+        sa.Column(
+            "source_id",
+            sa.BigInteger(),
+            nullable=True,
+            comment="ID of the source entity (order_line_id, forecast_group_id, etc.)",
+        ),
+        sa.Column(
+            "reserved_qty",
+            sa.Numeric(precision=15, scale=3),
+            nullable=False,
+            comment="Reserved quantity (must be positive)",
+        ),
+        sa.Column(
+            "status",
+            sa.String(length=20),
+            server_default=sa.text("'active'"),
+            nullable=False,
+            comment="Reservation status: 'temporary' | 'active' | 'confirmed' | 'released'",
+        ),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.Column("updated_at", sa.DateTime(), nullable=True, comment="Timestamp of last update"),
+        sa.Column(
+            "expires_at",
+            sa.DateTime(),
+            nullable=True,
+            comment="Expiration time for temporary reservations",
+        ),
+        sa.Column(
+            "confirmed_at",
+            sa.DateTime(),
+            nullable=True,
+            comment="Timestamp when reservation was confirmed",
+        ),
+        sa.Column(
+            "released_at",
+            sa.DateTime(),
+            nullable=True,
+            comment="Timestamp when reservation was released",
+        ),
+        sa.CheckConstraint(
+            "source_type IN ('forecast', 'order', 'manual')",
+            name="chk_lot_reservations_source_type",
+        ),
+        sa.CheckConstraint(
+            "status IN ('temporary', 'active', 'confirmed', 'released')",
+            name="chk_lot_reservations_status",
+        ),
+        sa.CheckConstraint("reserved_qty > 0", name="chk_lot_reservations_qty_positive"),
+        sa.ForeignKeyConstraint(["lot_id"], ["lots.id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    with op.batch_alter_table("lot_reservations", schema=None) as batch_op:
+        batch_op.create_index(
+            "idx_lot_reservations_expires_at",
+            ["expires_at"],
+            unique=False,
+            postgresql_where=sa.text("expires_at IS NOT NULL"),
+        )
+        batch_op.create_index("idx_lot_reservations_lot_status", ["lot_id", "status"], unique=False)
+        batch_op.create_index(
+            "idx_lot_reservations_source", ["source_type", "source_id"], unique=False
+        )
+        batch_op.create_index("idx_lot_reservations_status", ["status"], unique=False)
 
     op.create_table(
         "stock_history",
@@ -1085,84 +1268,77 @@ def upgrade() -> None:
         batch_op.create_index("idx_stock_history_lot", ["lot_id"], unique=False)
         batch_op.create_index("idx_stock_history_type", ["transaction_type"], unique=False)
 
-    # Create views from SQL file
-    from pathlib import Path
+    op.create_table(
+        "withdrawals",
+        sa.Column("id", sa.BigInteger(), autoincrement=True, nullable=False),
+        sa.Column("lot_id", sa.BigInteger(), nullable=False),
+        sa.Column("quantity", sa.Numeric(precision=15, scale=3), nullable=False),
+        sa.Column("withdrawal_type", sa.String(length=20), nullable=False),
+        sa.Column("customer_id", sa.BigInteger(), nullable=True),
+        sa.Column("delivery_place_id", sa.BigInteger(), nullable=True),
+        sa.Column("ship_date", sa.Date(), nullable=False),
+        sa.Column("reason", sa.Text(), nullable=True),
+        sa.Column("reference_number", sa.String(length=100), nullable=True),
+        sa.Column("withdrawn_by", sa.BigInteger(), nullable=True),
+        sa.Column(
+            "withdrawn_at",
+            sa.DateTime(),
+            server_default=sa.text("CURRENT_TIMESTAMP"),
+            nullable=False,
+        ),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("CURRENT_TIMESTAMP"), nullable=False
+        ),
+        sa.CheckConstraint(
+            "withdrawal_type IN ('order_manual','internal_use','disposal','return','sample','other')",
+            name="chk_withdrawals_type",
+        ),
+        sa.CheckConstraint("quantity > 0", name="chk_withdrawals_quantity"),
+        sa.ForeignKeyConstraint(["customer_id"], ["customers.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["delivery_place_id"], ["delivery_places.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["lot_id"], ["lots.id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["withdrawn_by"], ["users.id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+    with op.batch_alter_table("withdrawals", schema=None) as batch_op:
+        batch_op.create_index("idx_withdrawals_customer", ["customer_id"], unique=False)
+        batch_op.create_index("idx_withdrawals_date", ["ship_date"], unique=False)
+        batch_op.create_index("idx_withdrawals_lot", ["lot_id"], unique=False)
+        batch_op.create_index("idx_withdrawals_type", ["withdrawal_type"], unique=False)
 
-    migration_dir = Path(__file__).resolve().parent
-    backend_dir = migration_dir.parents[1]
-    sql_path = backend_dir / "sql" / "views" / "create_views.sql"
-
-    with open(sql_path, encoding="utf-8") as f:
-        sql_content = f.read()
-        statements = sql_content.split(";")
-        for statement in statements:
-            if statement.strip():
-                op.execute(statement)
-
-    # Seed initial roles and admin user
-    op.execute("""
-        INSERT INTO roles (role_code, role_name, description, created_at, updated_at) 
-        VALUES ('admin', 'Administrator', 'System Administrator', NOW(), NOW()) 
-        ON CONFLICT (role_code) DO NOTHING;
-    """)
-    op.execute("""
-        INSERT INTO roles (role_code, role_name, description, created_at, updated_at) 
-        VALUES ('user', 'General User', 'General User', NOW(), NOW()) 
-        ON CONFLICT (role_code) DO NOTHING;
-    """)
-    op.execute("""
-        INSERT INTO roles (role_code, role_name, description, created_at, updated_at) 
-        VALUES ('viewer', 'Read-only Viewer', 'Read-only Viewer', NOW(), NOW()) 
-        ON CONFLICT (role_code) DO NOTHING;
-    """)
-
-    op.execute("""
-        INSERT INTO users (username, email, password_hash, display_name, is_active, auth_provider, created_at, updated_at)
-        VALUES ('admin', 'admin@example.com', '$2b$12$TuwV8/qk6Y6vISuyQCh8l.VLq3TT36m06j21WFarf29eMwYhQIYmS', 'System Admin', true, 'local', NOW(), NOW())
-        ON CONFLICT (username) DO NOTHING;
-    """)
-
-    op.execute("""
-        INSERT INTO user_roles (user_id, role_id, assigned_at)
-        SELECT u.id, r.id, NOW()
-        FROM users u, roles r
-        WHERE u.username = 'admin' AND r.role_code = 'admin'
-        ON CONFLICT (user_id, role_id) DO NOTHING;
-    """)
+    # ### end Alembic commands ###
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    # Drop views first
-    op.execute("DROP VIEW IF EXISTS public.v_customer_item_jiku_mappings CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_user_supplier_assignments CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_warehouse_code_to_id CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_supplier_code_to_id CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_lots_with_master CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_candidate_lots_by_order_line CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_forecast_order_pairs CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_delivery_place_code_to_id CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_customer_code_to_id CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_order_line_context CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_lot_available_qty CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_customer_daily_products CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_lot_current_stock CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_product_code_to_id CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_order_line_details CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_inventory_summary CASCADE")
-    op.execute("DROP VIEW IF EXISTS public.v_lot_details CASCADE")
+    # ### commands auto generated by Alembic - please adjust! ###
+    with op.batch_alter_table("withdrawals", schema=None) as batch_op:
+        batch_op.drop_index("idx_withdrawals_type")
+        batch_op.drop_index("idx_withdrawals_lot")
+        batch_op.drop_index("idx_withdrawals_date")
+        batch_op.drop_index("idx_withdrawals_customer")
 
+    op.drop_table("withdrawals")
     with op.batch_alter_table("stock_history", schema=None) as batch_op:
         batch_op.drop_index("idx_stock_history_type")
         batch_op.drop_index("idx_stock_history_lot")
         batch_op.drop_index("idx_stock_history_date")
 
     op.drop_table("stock_history")
+    with op.batch_alter_table("lot_reservations", schema=None) as batch_op:
+        batch_op.drop_index("idx_lot_reservations_status")
+        batch_op.drop_index("idx_lot_reservations_source")
+        batch_op.drop_index("idx_lot_reservations_lot_status")
+        batch_op.drop_index(
+            "idx_lot_reservations_expires_at", postgresql_where=sa.text("expires_at IS NOT NULL")
+        )
+
+    op.drop_table("lot_reservations")
     with op.batch_alter_table("allocations", schema=None) as batch_op:
         batch_op.drop_index("idx_allocations_status")
         batch_op.drop_index("idx_allocations_order_line")
-        batch_op.drop_index("idx_allocations_lot")
+        batch_op.drop_index("idx_allocations_lot_id")
         batch_op.drop_index("idx_allocations_inbound_plan_line")
         batch_op.drop_index("idx_allocations_allocation_type")
 
@@ -1188,6 +1364,9 @@ def downgrade() -> None:
     op.drop_table("adjustments")
     with op.batch_alter_table("lots", schema=None) as batch_op:
         batch_op.drop_index("idx_lots_warehouse")
+        batch_op.drop_index(
+            "idx_lots_temporary_lot_key", postgresql_where=sa.text("temporary_lot_key IS NOT NULL")
+        )
         batch_op.drop_index("idx_lots_supplier")
         batch_op.drop_index("idx_lots_status")
         batch_op.drop_index("idx_lots_product_warehouse")
@@ -1198,6 +1377,11 @@ def downgrade() -> None:
         )
 
     op.drop_table("lots")
+    with op.batch_alter_table("expected_lots", schema=None) as batch_op:
+        batch_op.drop_index("idx_expected_lots_number")
+        batch_op.drop_index("idx_expected_lots_line")
+
+    op.drop_table("expected_lots")
     with op.batch_alter_table("order_lines", schema=None) as batch_op:
         batch_op.drop_index("idx_order_lines_status")
         batch_op.drop_index(
@@ -1205,17 +1389,20 @@ def downgrade() -> None:
         )
         batch_op.drop_index("idx_order_lines_product")
         batch_op.drop_index("idx_order_lines_order_type")
+        batch_op.drop_index("idx_order_lines_order_group")
         batch_op.drop_index("idx_order_lines_order")
-        batch_op.drop_index("idx_order_lines_forecast_id")
+        batch_op.drop_index(
+            "idx_order_lines_forecast_reference",
+            postgresql_where=sa.text("forecast_reference IS NOT NULL"),
+        )
         batch_op.drop_index("idx_order_lines_delivery_place")
         batch_op.drop_index("idx_order_lines_date")
+        batch_op.drop_index(
+            "idx_order_lines_customer_order_no",
+            postgresql_where=sa.text("customer_order_no IS NOT NULL"),
+        )
 
     op.drop_table("order_lines")
-    with op.batch_alter_table("expected_lots", schema=None) as batch_op:
-        batch_op.drop_index("idx_expected_lots_number")
-        batch_op.drop_index("idx_expected_lots_line")
-
-    op.drop_table("expected_lots")
     with op.batch_alter_table("inbound_plan_lines", schema=None) as batch_op:
         batch_op.drop_index("idx_inbound_plan_lines_product")
         batch_op.drop_index("idx_inbound_plan_lines_plan")
@@ -1227,6 +1414,12 @@ def downgrade() -> None:
 
     op.drop_table("forecast_current")
     op.drop_table("customer_item_jiku_mappings")
+    with op.batch_alter_table("customer_item_delivery_settings", schema=None) as batch_op:
+        batch_op.drop_index("idx_cids_jiku_code")
+        batch_op.drop_index("idx_cids_delivery_place")
+        batch_op.drop_index("idx_cids_customer_item")
+
+    op.drop_table("customer_item_delivery_settings")
     with op.batch_alter_table("user_supplier_assignments", schema=None) as batch_op:
         batch_op.drop_index(
             "uq_user_supplier_primary_per_supplier", postgresql_where=sa.text("is_primary = TRUE")
@@ -1248,13 +1441,24 @@ def downgrade() -> None:
         batch_op.drop_index("idx_system_client_logs_created_at")
 
     op.drop_table("system_client_logs")
+    with op.batch_alter_table("product_uom_conversions", schema=None) as batch_op:
+        batch_op.drop_index("idx_product_uom_conversions_valid_to")
+
     op.drop_table("product_uom_conversions")
     with op.batch_alter_table("product_suppliers", schema=None) as batch_op:
         batch_op.drop_index(
             "uq_product_primary_supplier", postgresql_where=sa.text("is_primary = true")
         )
+        batch_op.drop_index("idx_product_suppliers_valid_to")
 
     op.drop_table("product_suppliers")
+    with op.batch_alter_table("product_mappings", schema=None) as batch_op:
+        batch_op.drop_index("idx_product_mappings_valid_to")
+        batch_op.drop_index("idx_product_mappings_supplier")
+        batch_op.drop_index("idx_product_mappings_product")
+        batch_op.drop_index("idx_product_mappings_customer")
+
+    op.drop_table("product_mappings")
     with op.batch_alter_table("orders", schema=None) as batch_op:
         batch_op.drop_index("idx_orders_locked_by")
         batch_op.drop_index(
@@ -1264,6 +1468,12 @@ def downgrade() -> None:
         batch_op.drop_index("idx_orders_customer")
 
     op.drop_table("orders")
+    with op.batch_alter_table("order_groups", schema=None) as batch_op:
+        batch_op.drop_index("idx_order_groups_product")
+        batch_op.drop_index("idx_order_groups_date")
+        batch_op.drop_index("idx_order_groups_customer")
+
+    op.drop_table("order_groups")
     with op.batch_alter_table("operation_logs", schema=None) as batch_op:
         batch_op.drop_index("idx_operation_logs_user")
         batch_op.drop_index("idx_operation_logs_type")
@@ -1285,16 +1495,19 @@ def downgrade() -> None:
 
     op.drop_table("inbound_plans")
     with op.batch_alter_table("delivery_places", schema=None) as batch_op:
+        batch_op.drop_index("idx_delivery_places_valid_to")
         batch_op.drop_index("idx_delivery_places_customer")
         batch_op.drop_index("idx_delivery_places_code")
 
     op.drop_table("delivery_places")
     with op.batch_alter_table("customer_items", schema=None) as batch_op:
+        batch_op.drop_index("idx_customer_items_valid_to")
         batch_op.drop_index("idx_customer_items_supplier")
         batch_op.drop_index("idx_customer_items_product")
 
     op.drop_table("customer_items")
     with op.batch_alter_table("warehouses", schema=None) as batch_op:
+        batch_op.drop_index("idx_warehouses_valid_to")
         batch_op.drop_index("idx_warehouses_type")
         batch_op.drop_index("idx_warehouses_code")
 
@@ -1312,6 +1525,7 @@ def downgrade() -> None:
 
     op.drop_table("system_configs")
     with op.batch_alter_table("suppliers", schema=None) as batch_op:
+        batch_op.drop_index("idx_suppliers_valid_to")
         batch_op.drop_index("idx_suppliers_code")
 
     op.drop_table("suppliers")
@@ -1321,6 +1535,7 @@ def downgrade() -> None:
 
     op.drop_table("roles")
     with op.batch_alter_table("products", schema=None) as batch_op:
+        batch_op.drop_index("idx_products_valid_to")
         batch_op.drop_index("idx_products_name")
         batch_op.drop_index("idx_products_code")
 
@@ -1330,6 +1545,7 @@ def downgrade() -> None:
 
     op.drop_table("forecast_history")
     with op.batch_alter_table("customers", schema=None) as batch_op:
+        batch_op.drop_index("idx_customers_valid_to")
         batch_op.drop_index("idx_customers_code")
 
     op.drop_table("customers")
