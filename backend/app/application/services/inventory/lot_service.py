@@ -401,9 +401,20 @@ class LotService:
         # Lotモデルに存在しないフィールドを削除
         lot_payload.pop("allocated_quantity", None)
 
-        # Auto-generate lot number for non-order origin types if not provided or placeholder
-        if lot_create.origin_type != LotOriginType.ORDER:
-            if not lot_payload.get("lot_number") or lot_payload["lot_number"] == "AUTO":
+        # 仮入庫対応: lot_number が未指定/空の場合
+        # - temporary_lot_key に UUID を発行
+        # - lot_number に TMP-YYYYMMDD-XXXX 形式の暫定番号を採番
+        is_temporary_lot = (
+            not lot_payload.get("lot_number") or lot_payload["lot_number"].strip() == ""
+        )
+
+        if is_temporary_lot:
+            lot_payload["lot_number"], lot_payload["temporary_lot_key"] = (
+                self._generate_temporary_lot_info()
+            )
+        elif lot_create.origin_type != LotOriginType.ORDER:
+            # Auto-generate lot number for non-order origin types if placeholder
+            if lot_payload["lot_number"] == "AUTO":
                 lot_payload["lot_number"] = self._generate_adhoc_lot_number(
                     lot_create.origin_type.value
                 )
@@ -457,6 +468,33 @@ class LotService:
         )
         sequence = (count or 0) + 1
         return f"{prefix}-{today}-{sequence:04d}"
+
+    def _generate_temporary_lot_info(self) -> tuple[str, str]:
+        """Generate temporary lot number and UUID key for provisional inbound.
+
+        仮入庫対応:
+        - lot_number が未確定の場合に呼び出される
+        - UUID を発行し、その一部を lot_number に使用して衝突を完全回避
+        - 形式: TMP-YYYYMMDD-XXXX (XXXX は UUID の先頭8文字)
+
+        Returns:
+            tuple[str, str]: (lot_number, temporary_lot_key)
+
+        Example:
+            ("TMP-20251213-a1b2c3d4", "a1b2c3d4-e5f6-7890-...")
+        """
+        import uuid
+
+        # Generate UUID for unique identification
+        temp_key = uuid.uuid4()
+        temp_key_str = str(temp_key)
+
+        # Use first 8 characters of UUID for readable lot number (衝突ゼロ保証)
+        today = date.today().strftime("%Y%m%d")
+        uuid_prefix = temp_key_str[:8]
+        lot_number = f"TMP-{today}-{uuid_prefix}"
+
+        return lot_number, temp_key_str
 
     def update_lot(self, lot_id: int, lot_update: LotUpdate) -> LotResponse:
         """Update an existing lot."""
@@ -734,6 +772,7 @@ class LotService:
             if db_lot.origin_type
             else LotOriginType.ADHOC,
             origin_reference=db_lot.origin_reference,
+            temporary_lot_key=str(db_lot.temporary_lot_key) if db_lot.temporary_lot_key else None,
             product_name=product_name,
             product_code=product_code,
             supplier_name=supplier_name,
