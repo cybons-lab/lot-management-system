@@ -286,10 +286,16 @@ class Product(SoftDeleteMixin, Base):
 class CustomerItem(SoftDeleteMixin, Base):
     """Customer-specific product mappings (得意先品番マッピング).
 
+    【責務境界】受注・出荷ドメイン
+    - 得意先が使用する品番コードの変換
+    - 出荷表テキスト、梱包注意書き、SAP連携
+    - 参照: v_order_line_details, 出荷表生成処理
+
     DDL: customer_items
     Primary key: (customer_id, external_product_code)
     Foreign keys: customer_id -> customers(id), product_id -> products(id), supplier_id -> suppliers(id)
     Supports soft delete via valid_to column.
+    See: docs/SCHEMA_GUIDE.md, docs/adr/ADR-003_customer_items_product_mappings.md
     """
 
     __tablename__ = "customer_items"
@@ -344,10 +350,15 @@ class CustomerItem(SoftDeleteMixin, Base):
 class ProductMapping(SoftDeleteMixin, Base):
     """Product mappings table (商品マスタ).
 
-    4者の関係を表現: 得意先 + 先方品番 + メーカー品番(製品) + 仕入先
+    【責務境界】調達・発注ドメイン
+    - 顧客+先方品番+製品+仕入先の4者マッピング
+    - 将来: 仕入先別単価、リードタイム管理
+    - 参照: 発注処理、仕入先選定ロジック（将来）
+
     DDL: product_mappings
     Primary key: id (BIGSERIAL)
     Supports soft delete via valid_to column (migrated from is_active).
+    See: docs/SCHEMA_GUIDE.md, docs/adr/ADR-003_customer_items_product_mappings.md
     """
 
     __tablename__ = "product_mappings"
