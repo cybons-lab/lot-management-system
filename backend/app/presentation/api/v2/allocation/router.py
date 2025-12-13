@@ -113,7 +113,7 @@ async def manual_allocate(request: ManualAllocationRequest, db: Session = Depend
     return ManualAllocationResponse(
         order_line_id=request.order_line_id,
         lot_id=request.lot_id,
-        lot_number=allocation.lot_reference or "",
+        lot_number=allocation.lot_number or "",
         allocated_quantity=allocation.allocated_quantity,
         available_quantity=Decimal(available),
         product_id=lot.product_id if lot else 0,  # Should exist if allocation succeeded
@@ -147,16 +147,14 @@ async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)
     responses: list[ManualAllocationResponse] = []
 
     # Pre-fetch lots needed
-    lot_refs = {alloc.lot_reference for alloc in allocations if alloc.lot_reference}
+    lot_ids = {alloc.lot_id for alloc in allocations if alloc.lot_id}
     lots = {}
-    if lot_refs:
-        # Assuming lot_number is unique and mapped to lot_reference
-        lots = {l.lot_number: l for l in db.query(Lot).filter(Lot.lot_number.in_(lot_refs)).all()}
+    if lot_ids:
+        lots = {l.id: l for l in db.query(Lot).filter(Lot.id.in_(lot_ids)).all()}
 
     for alloc in allocations:
-        lot = lots.get(alloc.lot_reference) if alloc.lot_reference else None
-        # lot_id is required for response, retrieve from Lot entity found by reference
-        lot_id = lot.id if lot else 0
+        lot = lots.get(alloc.lot_id) if alloc.lot_id else None
+        lot_id = alloc.lot_id or 0
         available_quantity = get_available_quantity(db, lot) if lot else Decimal("0")
 
         # product_id can be fetched from order_line or lot
@@ -168,7 +166,7 @@ async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)
             ManualAllocationResponse(
                 order_line_id=alloc.order_line_id,
                 lot_id=lot_id,
-                lot_number=alloc.lot_reference or "",
+                lot_number=alloc.lot_number or "",
                 allocated_quantity=alloc.allocated_quantity,
                 available_quantity=Decimal(available_quantity),
                 product_id=product_id,

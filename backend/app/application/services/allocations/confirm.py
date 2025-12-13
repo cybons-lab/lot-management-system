@@ -65,15 +65,15 @@ def confirm_hard_allocation(
     if allocation.allocation_type == "hard":
         raise AllocationCommitError("ALREADY_CONFIRMED", f"引当 {allocation_id} は既に確定済みです")
 
-    if not allocation.lot_reference:
+    if not allocation.lot_id:
         raise AllocationCommitError(
             "PROVISIONAL_ALLOCATION", "入荷予定ベースの仮引当は確定できません"
         )
 
-    lot_stmt = select(Lot).where(Lot.lot_number == allocation.lot_reference).with_for_update()
+    lot_stmt = select(Lot).where(Lot.id == allocation.lot_id).with_for_update()
     lot = db.execute(lot_stmt).scalar_one_or_none()
     if not lot:
-        raise AllocationCommitError("LOT_NOT_FOUND", f"Lot {allocation.lot_reference} not found")
+        raise AllocationCommitError("LOT_NOT_FOUND", f"Lot ID {allocation.lot_id} not found")
 
     if lot.status not in ("active",):
         raise AllocationCommitError(
@@ -112,7 +112,7 @@ def confirm_hard_allocation(
         remaining_qty = allocation.allocated_quantity - quantity
         remaining_allocation = Allocation(
             order_line_id=allocation.order_line_id,
-            lot_reference=allocation.lot_reference,
+            lot_id=allocation.lot_id,
             inbound_plan_line_id=allocation.inbound_plan_line_id,
             allocated_quantity=remaining_qty,
             allocation_type="soft",

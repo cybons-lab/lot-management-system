@@ -166,7 +166,7 @@ def create_soft_allocation(
 
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_reference=lot.lot_number,
+        lot_id=lot.id,
         allocated_quantity=quantity,
         allocation_type="soft",
         status="allocated",

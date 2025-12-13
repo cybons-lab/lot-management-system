@@ -323,7 +323,7 @@ def test_cancel_allocation_success(test_db: Session, master_data: dict):
     lot = master_data["lot"]
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_reference=lot.lot_number,
+        lot_id=lot.id,
         allocated_quantity=Decimal("10.000"),
         status="allocated",
     )
@@ -491,7 +491,7 @@ def test_confirm_hard_allocation_success(test_db: Session, master_data: dict):
     # Create soft allocation (allocation_type='soft', using lot_reference)
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_reference=master_data["lot"].lot_number,
+        lot_id=master_data["lot"].id,
         allocated_quantity=Decimal("50.000"),
         allocation_type="soft",
         status="allocated",
@@ -566,7 +566,7 @@ def test_confirm_hard_allocation_partial(test_db: Session, master_data: dict):
     # Create soft allocation for 100 (using lot_reference)
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_reference=master_data["lot"].lot_number,
+        lot_id=master_data["lot"].id,
         allocated_quantity=Decimal("100.000"),
         allocation_type="soft",
         status="allocated",
@@ -645,7 +645,7 @@ def test_confirm_hard_allocation_already_confirmed(test_db: Session, master_data
     # Create already hard allocation (using lot_reference)
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_reference=master_data["lot"].lot_number,
+        lot_id=master_data["lot"].id,
         allocated_quantity=Decimal("10.000"),
         allocation_type="hard",  # Already hard
         status="allocated",
@@ -706,7 +706,7 @@ def test_confirm_hard_allocation_insufficient_stock(test_db: Session, master_dat
     lot = master_data["lot"]
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_reference=lot.lot_number,
+        lot_id=lot.id,
         allocated_quantity=Decimal("80.000"),
         allocation_type="soft",
         status="allocated",
@@ -778,14 +778,14 @@ def test_confirm_batch_success(test_db: Session, master_data: dict):
     # Create multiple soft allocations (using lot_reference)
     allocation1 = Allocation(
         order_line_id=order_line.id,
-        lot_reference=master_data["lot"].lot_number,
+        lot_id=master_data["lot"].id,
         allocated_quantity=Decimal("10.000"),
         allocation_type="soft",
         status="allocated",
     )
     allocation2 = Allocation(
         order_line_id=order_line.id,
-        lot_reference=master_data["lot"].lot_number,
+        lot_id=master_data["lot"].id,
         allocated_quantity=Decimal("20.000"),
         allocation_type="soft",
         status="allocated",
@@ -838,7 +838,7 @@ def test_confirm_batch_partial_failure(test_db: Session, master_data: dict):
     # Create one soft allocation (using lot_reference)
     allocation = Allocation(
         order_line_id=order_line.id,
-        lot_reference=master_data["lot"].lot_number,
+        lot_id=master_data["lot"].id,
         allocated_quantity=Decimal("20.000"),
         allocation_type="soft",
         status="allocated",

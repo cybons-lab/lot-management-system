@@ -1,7 +1,7 @@
 # backend/app/repositories/allocation_repository.py
 """引当リポジトリ DBアクセスのみを責務とし、ビジネスロジックは含まない.
 
-v2.3: lot_referenceベースに移行。allocations.lot_idは廃止。
+v2.4: lot_id (FK) ベースに統一。lot_reference (VARCHAR) は廃止。
 """
 
 from datetime import datetime
@@ -51,8 +51,24 @@ class AllocationRepository:
         )
         return list(self.db.execute(stmt).scalars().all())
 
+    def find_active_by_lot_id(self, lot_id: int) -> list[Allocation]:
+        """ロットIDでアクティブな引当を取得.
+
+        Args:
+            lot_id: ロットID
+
+        Returns:
+            アクティブな引当エンティティのリスト
+        """
+        stmt = (
+            select(Allocation)
+            .where(Allocation.lot_id == lot_id, Allocation.status == "reserved")
+            .order_by(Allocation.created_at)
+        )
+        return list(self.db.execute(stmt).scalars().all())
+
     def find_active_by_lot_reference(self, lot_number: str) -> list[Allocation]:
-        """ロット番号でアクティブな引当を取得.
+        """ロット番号でアクティブな引当を取得（後方互換性のため維持）.
 
         Args:
             lot_number: ロット番号
@@ -60,21 +76,20 @@ class AllocationRepository:
         Returns:
             アクティブな引当エンティティのリスト
         """
-        stmt = (
-            select(Allocation)
-            .where(Allocation.lot_reference == lot_number, Allocation.status == "reserved")
-            .order_by(Allocation.created_at)
-        )
-        return list(self.db.execute(stmt).scalars().all())
+        # lot_number から lot_id を検索して引当を取得
+        lot = self.db.execute(select(Lot).where(Lot.lot_number == lot_number)).scalar_one_or_none()
+        if not lot:
+            return []
+        return self.find_active_by_lot_id(lot.id)
 
     def create(
-        self, order_line_id: int, lot_reference: str, allocated_qty: float, status: str = "reserved"
+        self, order_line_id: int, lot_id: int | None, allocated_qty: float, status: str = "reserved"
     ) -> Allocation:
         """引当を作成.
 
         Args:
             order_line_id: 受注明細ID
-            lot_reference: ロット番号
+            lot_id: ロットID（Noneの場合は仮引当）
             allocated_qty: 引当数量
             status: ステータス（デフォルト: 'reserved'）
 
@@ -83,7 +98,7 @@ class AllocationRepository:
         """
         allocation = Allocation(
             order_line_id=order_line_id,
-            lot_reference=lot_reference,
+            lot_id=lot_id,
             allocated_quantity=allocated_qty,
             status=status,
             created_at=datetime.now(),

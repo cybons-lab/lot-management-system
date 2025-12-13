@@ -37,6 +37,7 @@ from .base_model import Base
 
 if TYPE_CHECKING:  # pragma: no cover - for type checkers only
     from .auth_models import User
+    from .inventory_models import Lot
     from .masters_models import Customer, Product
     from .order_groups_models import OrderGroup
 
@@ -259,10 +260,11 @@ class Allocation(Base):
         ForeignKey("order_lines.id", ondelete="CASCADE"),
         nullable=False,
     )
-    lot_reference: Mapped[str | None] = mapped_column(
-        String(100),
+    lot_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("lots.id", ondelete="RESTRICT"),
         nullable=True,
-        comment="Lot number (business key reference, replaces lot_id FK)",
+        comment="Lot ID (FK to lots table)",
     )
     inbound_plan_line_id: Mapped[int | None] = mapped_column(
         BigInteger,
@@ -302,7 +304,7 @@ class Allocation(Base):
             name="chk_allocation_type",
         ),
         Index("idx_allocations_order_line", "order_line_id"),
-        Index("idx_allocations_lot_reference", "lot_reference"),
+        Index("idx_allocations_lot_id", "lot_id"),
         Index("idx_allocations_inbound_plan_line", "inbound_plan_line_id"),
         Index("idx_allocations_status", "status"),
         Index("idx_allocations_allocation_type", "allocation_type"),
@@ -310,8 +312,14 @@ class Allocation(Base):
 
     # Relationships
     order_line: Mapped[OrderLine] = relationship("OrderLine", back_populates="allocations")
+    lot: Mapped[Lot | None] = relationship("Lot")
 
     @property
     def lot_number(self) -> str | None:
-        """Alias for lot_reference for API compatibility."""
-        return self.lot_reference
+        """Get lot number from the related Lot entity."""
+        return self.lot.lot_number if self.lot else None
+
+    @property
+    def lot_reference(self) -> str | None:
+        """Alias for lot_number for backward compatibility."""
+        return self.lot_number

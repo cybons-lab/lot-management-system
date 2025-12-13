@@ -56,13 +56,13 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, ma
     # Create Allocations (using lot_reference)
     alloc1 = Allocation(
         order_line_id=line.id,
-        lot_reference=lot.lot_number,
+        lot_id=lot.id,
         allocated_quantity=Decimal("10"),
         status="allocated",
     )
     alloc2 = Allocation(
         order_line_id=line.id,
-        lot_reference=lot.lot_number,
+        lot_id=lot.id,
         allocated_quantity=Decimal("20"),
         status="allocated",
     )
@@ -81,7 +81,7 @@ def test_cancel_by_order_line(client, db: Session, normal_user_token_headers, ma
 
     alloc3 = Allocation(
         order_line_id=line2.id,
-        lot_reference=lot.lot_number,
+        lot_id=lot.id,
         allocated_quantity=Decimal("5"),
         status="allocated",
     )

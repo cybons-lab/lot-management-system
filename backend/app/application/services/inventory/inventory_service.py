@@ -97,7 +97,7 @@ class InventoryService:
                 a.allocation_type,
                 SUM(a.allocated_quantity) as qty
             FROM allocations a
-            JOIN lots l ON l.lot_number = a.lot_reference
+            JOIN lots l ON l.id = a.lot_id
             WHERE 1=1
               AND a.status IN ('allocated', 'provisional')
               AND l.product_id IN :product_ids
@@ -195,7 +195,7 @@ class InventoryService:
                 a.allocation_type,
                 SUM(a.allocated_quantity) as qty
             FROM allocations a
-            JOIN lots l ON l.lot_number = a.lot_reference
+            JOIN lots l ON l.id = a.lot_id
             WHERE a.status IN ('allocated', 'provisional')
               AND l.product_id = :product_id
               AND l.warehouse_id = :warehouse_id
