@@ -106,8 +106,8 @@ def commit_allocation(
         raise HTTPException(status_code=400, detail=str(e))
     except AllocationCommitError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise  # グローバルハンドラに委譲
 
 
 @router.post("/drag-assign", response_model=ManualAllocationResponse)
@@ -156,8 +156,8 @@ def manual_allocate(
         raise HTTPException(status_code=400, detail=str(e))
     except AllocationCommitError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise  # グローバルハンドラに委譲
 
 
 @router.patch("/{allocation_id}/confirm", response_model=HardAllocationConfirmResponse)
@@ -304,5 +304,5 @@ def bulk_auto_allocate(
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise  # グローバルハンドラに委譲
