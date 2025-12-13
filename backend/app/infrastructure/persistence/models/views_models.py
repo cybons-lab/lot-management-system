@@ -173,6 +173,8 @@ class VLotDetails(Base):
     status: Mapped[str] = mapped_column(String(20))
     lock_reason: Mapped[str | None] = mapped_column(String)
     days_to_expiry: Mapped[int | None] = mapped_column(Integer)
+    # 仮入庫識別キー（UUID）
+    temporary_lot_key: Mapped[str | None] = mapped_column(String)
     # 担当者情報
     primary_user_id: Mapped[int | None] = mapped_column(Integer)
     primary_username: Mapped[str | None] = mapped_column(String)

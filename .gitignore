@@ -134,3 +134,5 @@ coverage/
 *.tar.gz
 *.zip
 *.rar
+backend/dumps/*.sql
+backend/dumps/

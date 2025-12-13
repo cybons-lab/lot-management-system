@@ -16608,7 +16608,8 @@
         "properties": {
           "lot_number": {
             "type": "string",
-            "title": "Lot Number"
+            "title": "Lot Number",
+            "default": ""
           },
           "product_id": {
             "type": "integer",
@@ -16758,6 +16759,17 @@
             ],
             "title": "Origin Reference"
           },
+          "temporary_lot_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temporary Lot Key"
+          },
           "product_code": {
             "anyOf": [
               {
@@ -16794,14 +16806,13 @@
         },
         "type": "object",
         "required": [
-          "lot_number",
           "product_id",
           "warehouse_id",
           "received_date",
           "unit"
         ],
         "title": "LotCreate",
-        "description": "Payload for creating lots."
+        "description": "Payload for creating lots.\n\n仮入庫対応:\n- lot_number を空 or None で送信すると、サーバー側で TMP-YYYYMMDD-XXXX 形式の\n  暫定ロット番号と temporary_lot_key (UUID) が自動採番される\n- 正式ロット番号が判明次第、update_lot で lot_number を更新可能"
       },
       "LotLock": {
         "properties": {
@@ -16998,6 +17009,17 @@
             ],
             "title": "Origin Reference"
           },
+          "temporary_lot_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temporary Lot Key"
+          },
           "lot_id": {
             "type": "integer",
             "title": "Lot Id"
@@ -17143,6 +17165,17 @@
       },
       "LotUpdate": {
         "properties": {
+          "lot_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Number"
+          },
           "supplier_id": {
             "anyOf": [
               {
@@ -17298,7 +17331,7 @@
         },
         "type": "object",
         "title": "LotUpdate",
-        "description": "Mutable fields for lot updates."
+        "description": "Mutable fields for lot updates.\n\n仮入庫対応:\n- lot_number を更新して TMP-... から正式ロット番号に変更可能"
       },
       "ManualAllocationItem": {
         "properties": {

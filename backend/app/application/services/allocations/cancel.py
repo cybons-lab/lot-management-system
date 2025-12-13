@@ -46,8 +46,8 @@ def cancel_allocation(db: Session, allocation_id: int, *, commit_db: bool = True
         raise AllocationNotFoundError(f"Allocation {allocation_id} not found")
 
     lot = None
-    if allocation.lot_reference:
-        lot_stmt = select(Lot).where(Lot.lot_number == allocation.lot_reference).with_for_update()
+    if allocation.lot_id:
+        lot_stmt = select(Lot).where(Lot.id == allocation.lot_id).with_for_update()
         lot = db.execute(lot_stmt).scalar_one_or_none()
 
     if lot:

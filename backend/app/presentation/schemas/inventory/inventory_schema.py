@@ -73,9 +73,22 @@ class LotBase(BaseSchema):
     origin_type: LotOriginType = LotOriginType.ORDER
     origin_reference: str | None = None
 
+    # Temporary lot registration support
+    # 仮入庫時に付与されるUUID。正式ロット番号確定後も識別子として残る
+    temporary_lot_key: str | None = None
+
 
 class LotCreate(LotBase):
-    """Payload for creating lots."""
+    """Payload for creating lots.
+
+    仮入庫対応:
+    - lot_number を空 or None で送信すると、サーバー側で TMP-YYYYMMDD-XXXX 形式の
+      暫定ロット番号と temporary_lot_key (UUID) が自動採番される
+    - 正式ロット番号が判明次第、update_lot で lot_number を更新可能
+    """
+
+    # lot_number is optional for temporary lot registration
+    lot_number: str = ""  # Empty string triggers temporary lot generation
 
     # Optional fields for looking up IDs
     product_code: str | None = None
@@ -84,7 +97,14 @@ class LotCreate(LotBase):
 
 
 class LotUpdate(BaseSchema):
-    """Mutable fields for lot updates."""
+    """Mutable fields for lot updates.
+
+    仮入庫対応:
+    - lot_number を更新して TMP-... から正式ロット番号に変更可能
+    """
+
+    # Allow updating lot_number (for converting temporary to official)
+    lot_number: str | None = None
 
     supplier_id: int | None = None
     expected_lot_id: int | None = None

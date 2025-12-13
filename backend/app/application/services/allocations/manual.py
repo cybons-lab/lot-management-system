@@ -99,7 +99,7 @@ def allocate_manually(
 
     allocation = Allocation(
         order_line_id=line.id,
-        lot_reference=lot.lot_number,
+        lot_id=lot.id,
         allocated_quantity=quantity,
         status="allocated",
         created_at=datetime.utcnow(),

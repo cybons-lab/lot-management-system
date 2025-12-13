@@ -75,9 +75,17 @@ class InboundReceivingService:
             if line.expected_lots:
                 # Create lots from expected lots
                 for expected_lot in line.expected_lots:
-                    lot_number = expected_lot.expected_lot_number or self._generate_lot_number(
-                        plan.plan_number, line.product_id
+                    # 仮入庫対応: expected_lot_number が空の場合は仮ロットとして登録
+                    is_temporary = (
+                        not expected_lot.expected_lot_number
+                        or expected_lot.expected_lot_number.strip() == ""
                     )
+
+                    if is_temporary:
+                        lot_number, temp_key = self._generate_temporary_lot_info()
+                    else:
+                        lot_number = expected_lot.expected_lot_number
+                        temp_key = None
 
                     db_lot = Lot(
                         lot_number=lot_number,
@@ -90,6 +98,7 @@ class InboundReceivingService:
                         current_quantity=expected_lot.expected_quantity,
                         unit=line.unit,
                         status="active",
+                        temporary_lot_key=temp_key,
                     )
 
                     self.db.add(db_lot)
@@ -175,3 +184,28 @@ class InboundReceivingService:
         sequence = count + 1 if count else 1
 
         return f"{plan_number}-{product_id}-{sequence:03d}"
+
+    def _generate_temporary_lot_info(self) -> tuple[str, str]:
+        """Generate temporary lot number and UUID key for provisional inbound.
+
+        仮入庫対応:
+        - expected_lot_number が未確定の場合に呼び出される
+        - UUID を発行し、その一部を lot_number に使用して衝突を完全回避
+        - 形式: TMP-YYYYMMDD-XXXX (XXXX は UUID の先頭8文字)
+
+        Returns:
+            tuple[str, str]: (lot_number, temporary_lot_key)
+        """
+        import uuid
+        from datetime import date
+
+        # Generate UUID for unique identification
+        temp_key = uuid.uuid4()
+        temp_key_str = str(temp_key)
+
+        # Use first 8 characters of UUID for readable lot number
+        today = date.today().strftime("%Y%m%d")
+        uuid_prefix = temp_key_str[:8]
+        lot_number = f"TMP-{today}-{uuid_prefix}"
+
+        return lot_number, temp_key_str

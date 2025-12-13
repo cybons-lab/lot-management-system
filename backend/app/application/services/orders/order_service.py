@@ -154,11 +154,11 @@ class OrderService:
                 resp.customer_name = get_customer_name(customer) or None
                 resp.customer_code = get_customer_code(customer) or None
 
-            # Populate lot info in allocations (using lot_reference)
+            # Populate lot info in allocations (using lot relationship)
             for i, alloc in enumerate(line.allocations):
                 if i < len(resp.allocations):
-                    if alloc.lot_reference:
-                        resp.allocations[i].lot_number = alloc.lot_reference
+                    if alloc.lot_number:
+                        resp.allocations[i].lot_number = alloc.lot_number
 
             response_lines.append(resp)
 

@@ -65,7 +65,7 @@ def preempt_soft_allocations_for_hard(
         select(Allocation)
         .join(OrderLine, Allocation.order_line_id == OrderLine.id)
         .where(
-            Allocation.lot_reference == lot.lot_number,
+            Allocation.lot_id == lot.id,
             Allocation.allocation_type == "soft",
             Allocation.status == "allocated",
             Allocation.order_line_id != hard_demand_id,

@@ -26,6 +26,7 @@ from sqlalchemy import (
     func,
     text,
 )
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base_model import Base
@@ -129,6 +130,16 @@ class Lot(Base):
     )
     origin_reference: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
+    # Temporary lot registration support
+    # 仮入庫時に lot_number が未確定の場合、この UUID で一意識別する
+    # 正式ロット番号確定後も識別子として残す（監査用ではなく、仮→正式の紐付け用）
+    temporary_lot_key: Mapped[str | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        nullable=True,
+        unique=True,
+        comment="仮入庫時の一意識別キー（UUID）",
+    )
+
     __table_args__ = (
         CheckConstraint("current_quantity >= 0", name="chk_lots_current_quantity"),
         CheckConstraint("locked_quantity >= 0", name="chk_lots_locked_quantity"),
@@ -150,6 +161,10 @@ class Lot(Base):
             "warehouse_id",
             name="uq_lots_number_product_warehouse",
         ),
+        UniqueConstraint(
+            "temporary_lot_key",
+            name="uq_lots_temporary_lot_key",
+        ),
         Index("idx_lots_number", "lot_number"),
         Index("idx_lots_product_warehouse", "product_id", "warehouse_id"),
         Index("idx_lots_status", "status"),
@@ -160,6 +175,11 @@ class Lot(Base):
             "idx_lots_expiry_date",
             "expiry_date",
             postgresql_where=text("expiry_date IS NOT NULL"),
+        ),
+        Index(
+            "idx_lots_temporary_lot_key",
+            "temporary_lot_key",
+            postgresql_where=text("temporary_lot_key IS NOT NULL"),
         ),
     )
 

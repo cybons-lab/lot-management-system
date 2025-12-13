@@ -110,7 +110,7 @@ def persist_allocation_entities(
 
         allocation = Allocation(
             order_line_id=line.id,
-            lot_reference=lot.lot_number,
+            lot_id=lot.id,
             allocated_quantity=alloc_plan.allocate_qty,
             status="allocated",
             created_at=datetime.utcnow(),
