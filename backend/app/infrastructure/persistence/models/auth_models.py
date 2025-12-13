@@ -102,9 +102,7 @@ class Role(Base):
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
 
-    __table_args__ = (
-        UniqueConstraint("role_code", name="uq_roles_role_code"),
-    )
+    __table_args__ = (UniqueConstraint("role_code", name="uq_roles_role_code"),)
 
     # Relationships
     user_roles: Mapped[list[UserRole]] = relationship(

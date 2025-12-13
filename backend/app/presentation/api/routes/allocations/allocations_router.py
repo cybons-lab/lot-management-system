@@ -107,7 +107,7 @@ def confirm_allocation(
         if "already confirmed" in err_msg:
             raise HTTPException(status_code=400, detail={"error": "ALREADY_CONFIRMED"})
         if "insufficient" in err_msg:
-             raise HTTPException(status_code=409, detail={"error": "INSUFFICIENT_STOCK"})
+            raise HTTPException(status_code=409, detail={"error": "INSUFFICIENT_STOCK"})
         raise HTTPException(status_code=400, detail=str(e))
     except AllocationCommitError as e:
         raise HTTPException(status_code=400, detail=str(e))

@@ -89,9 +89,9 @@ def test_get_available_lots_insufficient_stock(client, setup_lot_data):
 def test_list_lots(client, setup_lot_data):
     """Test /api/v2/lot/ endpoint."""
     response = client.get("/api/v2/lot/")
-    assert (
-        response.status_code == 200
-    ), f"Status code: {response.status_code}, Response: {response.text}"
+    assert response.status_code == 200, (
+        f"Status code: {response.status_code}, Response: {response.text}"
+    )
     data = response.json()
     assert isinstance(data, list)
     assert len(data) >= 1
