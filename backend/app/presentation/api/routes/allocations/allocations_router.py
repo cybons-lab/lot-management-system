@@ -2,8 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.application.services.allocations import actions, fefo
-from app.application.services.allocations.schemas import AllocationCommitError
-from app.core.database import get_db
+from app.application.services.allocations.schemas import (
+    AllocationCommitError,
+    AllocationNotFoundError,
+)
+from app.application.services.inventory.stock_calculation import get_available_quantity
+from app.presentation.api.deps import get_db
 from app.presentation.schemas.allocations.allocations_schema import (
     AllocationCommitRequest,
     AllocationCommitResponse,
@@ -11,6 +15,8 @@ from app.presentation.schemas.allocations.allocations_schema import (
     BulkAutoAllocateResponse,
     BulkCancelRequest,
     BulkCancelResponse,
+    FefoLineAllocation,
+    FefoLotAllocation,
     FefoPreviewRequest,
     FefoPreviewResponse,
     HardAllocationBatchConfirmRequest,
@@ -25,6 +31,37 @@ from app.presentation.schemas.allocations.allocations_schema import (
 router = APIRouter()
 
 
+def _map_fefo_preview(result) -> FefoPreviewResponse:
+    """Map internal FefoPreviewResult to FefoPreviewResponse schema."""
+    lines = []
+    for line_plan in result.lines:
+        allocations = [
+            FefoLotAllocation(
+                lot_id=plans.lot_id,
+                lot_number=plans.lot_number,
+                allocated_quantity=plans.allocate_qty,
+                expiry_date=plans.expiry_date,
+                received_date=plans.receipt_date,
+            )
+            for plans in line_plan.allocations
+        ]
+        lines.append(
+            FefoLineAllocation(
+                order_line_id=line_plan.order_line_id,
+                product_id=line_plan.product_id or 0,  # Handle None safety
+                order_quantity=line_plan.required_qty,  # Mapped from required_qty
+                already_allocated_quantity=line_plan.already_allocated_qty,
+                allocations=allocations,
+                warnings=line_plan.warnings,
+            )
+        )
+    return FefoPreviewResponse(
+        order_id=result.order_id,
+        lines=lines,
+        warnings=result.warnings,
+    )
+
+
 @router.post("/preview", response_model=FefoPreviewResponse)
 def preview_allocation(
     request: FefoPreviewRequest,
@@ -33,8 +70,10 @@ def preview_allocation(
     """FEFO allocation preview."""
     try:
         result = fefo.preview_fefo_allocation(db, request.order_id)
-        return FefoPreviewResponse(**result.__dict__)
+        return _map_fefo_preview(result)
     except ValueError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(status_code=404, detail=str(e))
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -48,7 +87,18 @@ def commit_allocation(
     """Commit FEFO allocation."""
     try:
         result = actions.commit_fefo_allocation(db, request.order_id)
-        return result
+        
+        # Map internal result to schema
+        created_ids = [a.id for a in result.created_allocations]
+        preview_response = _map_fefo_preview(result.preview)
+        
+        return AllocationCommitResponse(
+            order_id=request.order_id,
+            created_allocation_ids=created_ids,
+            preview=preview_response,
+            status="committed",
+            message="Commit successful"
+        )
     except ValueError as e:
         if "not found" in str(e).lower():
             raise HTTPException(status_code=404, detail=str(e))
@@ -66,19 +116,42 @@ def manual_allocate(
 ) -> ManualAllocationResponse:
     """Manual allocation (Drag & Assign)."""
     try:
-        result = actions.allocate_manually(
+        allocation = actions.allocate_manually(
             db,
             request.order_line_id,
             request.lot_id,
             float(request.allocated_quantity),
         )
-        return result
+        
+        # Ensure relationships are loaded for response
+        db.refresh(allocation)
+        if not allocation.lot:
+             # Should be loaded by relationship, but explicit load if needed
+             pass
+
+        lot = allocation.lot
+        available_qty = get_available_quantity(db, lot)
+
+        return ManualAllocationResponse(
+            id=allocation.id,
+            order_line_id=allocation.order_line_id,
+            lot_id=allocation.lot_id,
+            lot_number=lot.lot_number,
+            allocated_quantity=allocation.allocated_quantity,
+            available_quantity=available_qty,
+            product_id=lot.product_id,
+            expiry_date=lot.expiry_date,
+            status="preview",
+            message="Allocation created"
+        )
     except ValueError as e:
         err_msg = str(e).lower()
         if "product mismatch" in err_msg:
             raise HTTPException(status_code=404, detail=str(e))
         if "insufficient" in err_msg:
             raise HTTPException(status_code=409, detail=str(e))
+        if "not found" in err_msg:
+            raise HTTPException(status_code=404, detail=str(e))
         raise HTTPException(status_code=400, detail=str(e))
     except AllocationCommitError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -94,24 +167,43 @@ def confirm_allocation(
 ) -> HardAllocationConfirmResponse:
     """Confirm allocation (Soft to Hard)."""
     try:
-        result = actions.confirm_hard_allocation(
+        # returns (allocation, remaining_allocation)
+        confirmed_alloc, _ = actions.confirm_hard_allocation(
             db,
             allocation_id,
-            request.confirmed_by,
-            float(request.quantity) if request.quantity else None,
+            confirmed_by=request.confirmed_by,
+            quantity=request.quantity,
         )
-        return result
+        
+        return HardAllocationConfirmResponse(
+            id=confirmed_alloc.id,
+            order_line_id=confirmed_alloc.order_line_id,
+            lot_id=confirmed_alloc.lot_id,
+            allocated_quantity=confirmed_alloc.allocated_quantity,
+            allocation_type=confirmed_alloc.allocation_type,
+            status=confirmed_alloc.status,
+            confirmed_at=confirmed_alloc.confirmed_at,
+            confirmed_by=confirmed_alloc.confirmed_by
+        )
     except ValueError as e:
         err_msg = str(e).lower()
         if "not found" in err_msg:
-            raise HTTPException(status_code=404, detail="ALLOCATION_NOT_FOUND")
+            raise HTTPException(status_code=404, detail={"error": "ALLOCATION_NOT_FOUND", "message": str(e)})
         if "already confirmed" in err_msg:
-            raise HTTPException(status_code=400, detail={"error": "ALREADY_CONFIRMED"})
+            raise HTTPException(status_code=400, detail={"error": "ALREADY_CONFIRMED", "message": str(e)})
         if "insufficient" in err_msg:
-            raise HTTPException(status_code=409, detail={"error": "INSUFFICIENT_STOCK"})
+            raise HTTPException(status_code=409, detail={"error": "INSUFFICIENT_STOCK", "message": str(e)})
         raise HTTPException(status_code=400, detail=str(e))
     except AllocationCommitError as e:
+        # Map known error codes
+        if getattr(e, "error_code", "") == "ALREADY_CONFIRMED":
+             raise HTTPException(status_code=400, detail={"error": "ALREADY_CONFIRMED", "message": str(e)})
+        if getattr(e, "error_code", "") == "LOT_NOT_FOUND":
+             raise HTTPException(status_code=404, detail={"error": "LOT_NOT_FOUND", "message": str(e)})
+        
         raise HTTPException(status_code=400, detail=str(e))
+    except AllocationNotFoundError as e:
+         raise HTTPException(status_code=404, detail={"error": "ALLOCATION_NOT_FOUND", "message": str(e)})
 
 
 @router.post("/confirm-batch", response_model=HardAllocationBatchConfirmResponse)
@@ -120,14 +212,17 @@ def confirm_allocations_batch(
     db: Session = Depends(get_db),
 ) -> HardAllocationBatchConfirmResponse:
     """Batch confirm allocations."""
-    # Batch confirm logic handles errors internally and returns failed_ids?
-    # confirm_hard_allocations_batch returns {confirmed: [], failed: []}
-    result = actions.confirm_hard_allocations_batch(
+    # returns (confirmed_ids, failed_items)
+    confirmed_ids, failed_items = actions.confirm_hard_allocations_batch(
         db,
         request.allocation_ids,
-        request.confirmed_by,
+        confirmed_by=request.confirmed_by,
     )
-    return result
+    
+    return HardAllocationBatchConfirmResponse(
+        confirmed=confirmed_ids,
+        failed=failed_items
+    )
 
 
 @router.delete("/{allocation_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -150,8 +245,17 @@ def bulk_cancel(
     db: Session = Depends(get_db),
 ) -> BulkCancelResponse:
     """Bulk cancel allocations."""
-    result = actions.bulk_cancel_allocations(db, request.allocation_ids)
-    return result
+    cancelled, failed = actions.bulk_cancel_allocations(db, request.allocation_ids)
+    
+    msg = f"Cancelled {len(cancelled)} allocations"
+    if failed:
+        msg += f", failed {len(failed)}"
+        
+    return BulkCancelResponse(
+        cancelled_ids=cancelled,
+        failed_ids=failed,
+        message=msg
+    )
 
 
 @router.post("/bulk-auto-allocate", response_model=BulkAutoAllocateResponse)

@@ -81,6 +81,7 @@ class ManualAllocationRequest(BaseSchema):
 class ManualAllocationResponse(BaseSchema):
     """Manual allocation response (v2.2.1)."""
 
+    id: int
     order_line_id: int
     lot_id: int
     lot_number: str
