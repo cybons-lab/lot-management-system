@@ -66,7 +66,10 @@ class Order(Base):
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
+        DateTime,
+        nullable=False,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
     )
 
     # Optimistic Locking
@@ -139,7 +142,10 @@ class OrderLine(Base):
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
+        DateTime,
+        nullable=False,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
     )
     delivery_place_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -291,7 +297,10 @@ class Allocation(Base):
         DateTime, nullable=False, server_default=func.current_timestamp()
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.current_timestamp()
+        DateTime,
+        nullable=False,
+        server_default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
     )
 
     __table_args__ = (

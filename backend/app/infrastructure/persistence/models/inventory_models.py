@@ -233,7 +233,7 @@ class StockHistory(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "transaction_type IN ('inbound','allocation','shipment','adjustment','return')",
+            "transaction_type IN ('inbound','allocation','shipment','adjustment','return','allocation_hold','allocation_release','withdrawal')",
             name="chk_stock_history_type",
         ),
         Index("idx_stock_history_lot", "lot_id"),

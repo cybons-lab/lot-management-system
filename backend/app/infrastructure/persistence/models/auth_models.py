@@ -64,8 +64,8 @@ class User(Base):
         UniqueConstraint("email", name="uq_users_email"),
         Index("idx_users_username", "username"),
         Index("idx_users_email", "email"),
+        UniqueConstraint("azure_object_id", name="uq_users_azure_object_id"),
         Index("idx_users_auth_provider", "auth_provider"),
-        Index("idx_users_azure_oid", "azure_object_id", unique=True),
         Index(
             "idx_users_active",
             "is_active",
@@ -104,7 +104,6 @@ class Role(Base):
 
     __table_args__ = (
         UniqueConstraint("role_code", name="uq_roles_role_code"),
-        Index("idx_roles_code", "role_code"),
     )
 
     # Relationships

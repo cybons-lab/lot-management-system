@@ -18,6 +18,7 @@ from sqlalchemy import (
     Index,
     String,
     Text,
+    UniqueConstraint,
     func,
     text,
 )
@@ -126,7 +127,7 @@ class BusinessRule(Base):
             "rule_type IN ('allocation', 'expiry_warning', 'kanban', 'inventory_sync_alert', 'other')",
             name="chk_business_rules_type",
         ),
-        Index("idx_business_rules_code", "rule_code"),
+        UniqueConstraint("rule_code", name="uq_business_rules_rule_code"), # Added UniqueConstraint
         Index("idx_business_rules_type", "rule_type"),
         Index(
             "idx_business_rules_active",

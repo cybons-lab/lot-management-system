@@ -75,7 +75,8 @@ class InboundPlan(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("plan_number", name="inbound_plans_plan_number_key"),
+        UniqueConstraint("plan_number", name="uq_inbound_plans_plan_number"),
+        UniqueConstraint("sap_po_number", name="uq_inbound_plans_sap_po_number"),
         CheckConstraint(
             "status IN ('planned','partially_received','received','cancelled')",
             name="chk_inbound_plans_status",
