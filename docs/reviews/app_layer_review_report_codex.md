@@ -1,20 +1,67 @@
-# 繧｢繝励Μ螻､ 縺ゅｉ謗｢縺励Ξ繝昴・繝・
-## 謖・遭荳隕ｧ
+# アプリ層 あら探しレポート
 
-### 1. 莠育ｴ・庄逕ｨ驥剰ｨ育ｮ励′繝ｭ繝・け謨ｰ驥上ｒ辟｡隕悶＠縺ｦ驕主､ｧ隧穂ｾ｡ (P1)
-- **逞・憾**: 繝ｭ繝・け縺輔ｌ縺溷惠蠎ｫ (`locked_quantity`) 繧呈戟縺､繝ｭ繝・ヨ縺ｧ繧ゆｺ育ｴ・ｽ懈・縺碁壹ｊ縲∝ｮ滄圀縺ｫ蠑輔″蠖薙※蜿ｯ閭ｽ縺ｪ謨ｰ驥上ｒ雜・∴縺ｦ莠育ｴ・〒縺阪ｋ縲ょｾ檎ｶ壹・蜃ｺ蠎ｫ繝ｻ蠑募ｽ薙〒荳崎ｶｳ繧ｨ繝ｩ繝ｼ繧・・繧､繝翫せ谿九′逋ｺ逕溘＠蠕励ｋ縲・- **蜀咲樟/譚｡莉ｶ**: `lots.locked_quantity > 0` 縺ｮ繝ｭ繝・ヨ縺ｫ蟇ｾ縺・`LotReservationService.reserve` 繧貞他縺ｳ蜃ｺ縺吶→縲～locked_quantity` 繧貞ｷｮ縺怜ｼ輔°縺壹↓蜿ｯ逕ｨ驥丞愛螳壹ｒ陦後≧縺溘ａ縲√Ο繝・け蛻・ｒ鬟溘＞霎ｼ繧薙□莠育ｴ・′菴懈・縺輔ｌ繧九ゅ色:backend/app/application/services/inventory/lot_reservation_service.py窶L329-L368縲・- **蜴溷屏**: `_calculate_available_qty` 縺・`current_quantity - reserved_qty` 縺励°隕九※縺翫ｉ縺壹∝酔縺倥し繝ｼ繝薙せ蜀・・莉悶・繝倥Ν繝代・(`stock_calculation.get_available_quantity`)縺梧治逕ｨ縺吶ｋ繝ｭ繝・け謗ｧ髯､繝ｫ繝ｼ繝ｫ縺ｨ荵夜屬縺励※縺・ｋ縲ゅ色:backend/app/application/services/inventory/lot_reservation_service.py窶L329-L368縲代色:backend/app/application/services/inventory/stock_calculation.py窶L35-L55縲・- **蠖ｱ髻ｿ遽・峇**: 莠育ｴ・ｳｻAPI/繧ｵ繝ｼ繝薙せ蜈ｨ闊ｬ・医ヵ繧ｩ繝ｼ繧ｭ繝｣繧ｹ繝医・蜿玲ｳｨ繝ｻ謇句虚莠育ｴ・ｼ峨ゅΟ繝・け蝨ｨ蠎ｫ繧貞ｰ企㍾縺吶ｋ險ｭ險亥燕謠舌′遐ｴ繧峨ｌ縲∝惠蠎ｫ莠碁㍾驟榊・縺ｮ貂ｩ蠎翫↓縺ｪ繧九・- **菫ｮ豁｣譯・*:
-  - *譛蟆・: `_calculate_available_qty` 繧・`current_quantity - reserved - locked_quantity` 縺ｫ鄂ｮ縺肴鋤縺医～get_available_quantity` 縺ｨ蜷御ｸ繝ｭ繧ｸ繝・け縺ｫ縺吶ｋ縲・  - *逅・Φ*: 蝨ｨ蠎ｫ蜿ｯ逕ｨ驥上Ο繧ｸ繝・け繧・繧ｫ謇縺ｫ髮・ｴ・ｼ井ｾ九∴縺ｰ `stock_calculation.get_available_quantity_by_id` 繧貞茜逕ｨ・峨＠縲√し繝ｼ繝薙せ/繝薙Η繝ｼ/繝輔Ο繝ｳ繝医〒蜈ｱ騾壼喧縲・- **菫ｮ豁｣譎ゅ・豕ｨ諢・*: 蜿ｯ逕ｨ驥上′貂帙ｋ縺溘ａ譌｢蟄倥ユ繧ｹ繝医ョ繝ｼ繧ｿ縺ｧ莠育ｴ・､ｱ謨励′蠅励∴繧句庄閭ｽ諤ｧ縺ゅｊ縲ゆｺ育ｴ・ｽ懈・繝ｻ譖ｴ譁ｰ邉ｻ縺ｮE2E繝・せ繝医ｒ隱ｿ謨ｴ縺吶ｋ縺薙→縲・
-### 2. 繝薙Η繝ｼ縺ｮ蠑募ｽ馴寔險医′ confirmed 繧帝勁螟悶＠蝨ｨ蠎ｫ繧帝℃螟ｧ陦ｨ遉ｺ (P1)
-- **逞・憾**: `v_lot_available_qty` 繧・`v_inventory_summary` 縺・confirmed 莠育ｴ・ｒ辟｡隕悶＠縺溷庄逕ｨ驥上ｒ霑斐＠縲√ヵ繝ｭ繝ｳ繝医・蝨ｨ蠎ｫ陦ｨ遉ｺ繧・呵｣懊Ο繝・ヨ驕ｸ螳壹′螳溷惠蠎ｫ繧医ｊ螟壹￥隕狗ｩ阪ｂ繧峨ｌ繧九・- **蜀咲樟/譚｡莉ｶ**: 莠育ｴ・せ繝・・繧ｿ繧ｹ縺・`confirmed` 縺ｮ陦後′蟄伜惠縺吶ｋ繝ｭ繝・ヨ繧・`v_lot_available_qty` 邨檎罰縺ｧ蜿ら・縺吶ｋ縺ｨ縲～allocated_quantity` 縺・縺ｨ縺励※謇ｱ繧上ｌ蜿ｯ逕ｨ驥上′豌ｴ蠅励＠縺輔ｌ繧九ゅ色:backend/sql/views/create_views.sql窶L29-L127縲・- **蜴溷屏**: `v_lot_allocations` 縺ｮ螳夂ｾｩ縺・`status = 'active'` 縺ｮ縺ｿ繧担UM縺励※縺翫ｊ縲√ラ繝｡繧､繝ｳ荳榊､画擅莉ｶ縲径ctive/confirmed縺悟庄逕ｨ驥上ｒ貂帷ｮ励阪↓蜿阪＠縺ｦ縺・ｋ縲ゅ色:backend/sql/views/create_views.sql窶L34-L127縲代色:backend/app/application/services/inventory/lot_reservation_service.py窶L300-L368縲・- **蠖ｱ髻ｿ遽・峇**: 蝨ｨ蠎ｫ髢｢騾｣繝薙Η繝ｼ繧貞茜逕ｨ縺吶ｋ蜈ｨAPI/繝輔Ο繝ｳ繝茨ｼ亥惠蠎ｫ荳隕ｧ縲∝呵｣懊Ο繝・ヨ謠千､ｺ縲∝惠蠎ｫ繧ｵ繝槭Μ・峨ょｮ溷惠蠎ｫ繧医ｊ螟壹＞謨ｰ驥上〒蠑募ｽ薙・蜃ｺ蠎ｫ諢乗晄ｱｺ螳壹′陦後ｏ繧後ｋ蜊ｱ髯ｺ縲・- **菫ｮ豁｣譯・*:
-  - *譛蟆・: `v_lot_allocations` 縺ｮ WHERE 繧・`status IN ('active','confirmed')` 縺ｫ螟画峩縺励∽ｾ晏ｭ倥ン繝･繝ｼ縺ｮ蜿ｯ逕ｨ驥冗ｮ怜・繧呈ｭ｣縺吶・  - *逅・Φ*: 繝峨Γ繧､繝ｳ縺ｮ蜿ｯ逕ｨ驥上Ο繧ｸ繝・け繧偵ン繝･繝ｼ/繧ｵ繝ｼ繝薙せ縺ｧ蜈ｱ騾壹Δ繧ｸ繝･繝ｼ繝ｫ蛹悶＠縲√せ繝・・繧ｿ繧ｹ霑ｽ蜉譎ゅ・謚懊￠貍上ｌ繧偵ユ繧ｹ繝医〒髦ｲ豁｢縲・- **菫ｮ豁｣譎ゅ・豕ｨ諢・*: confirmed蛻・ｒ蜉蜻ｳ縺吶ｋ縺ｨ蜿ｯ逕ｨ驥上′貂帙ｋ縺溘ａ譌｢蟄篭I縺ｮ謨ｰ蛟､縺悟､峨ｏ繧九ゅく繝｣繝・す繝･繧・寔險医ず繝ｧ繝悶′譌ｧ繝薙Η繝ｼ繧貞燕謠舌↓縺励※縺・↑縺・°遒ｺ隱阪☆繧九％縺ｨ縲・
-### 3. 莠育ｴ・｢ｺ螳壹・蜀ｪ遲峨メ繧ｧ繝・け縺梧ｩ溯・縺帙★莠碁㍾遒ｺ螳壹ｒ險ｱ螳ｹ (P2)
-- **逞・憾**: `LotReservationService.confirm` 繧貞酔縺倅ｺ育ｴ・↓蟇ｾ縺励※隍・焚蝗槫他繧薙〒繧ょｸｸ縺ｫ譖ｴ譁ｰ蜃ｦ逅・′襍ｰ繧翫∝・遲画ｧ縺梧球菫昴＆繧後↑縺・ょ､夜Κ縺九ｉ縺ｮ繝ｪ繝医Λ繧､譎ゅ↓荳崎ｦ√↑譖ｴ譁ｰ繝ｻ繧､繝吶Φ繝育匱轣ｫ縺瑚ｵｷ縺薙ｊ蠕励ｋ縲・- **蜀咲樟/譚｡莉ｶ**: `reservation.status` 縺轡B荳翫・譁・ｭ怜・縺縺後√Γ繧ｽ繝・ラ縺ｯ `ReservationStatus.CONFIRMED`・・num繧ｪ繝悶ず繧ｧ繧ｯ繝茨ｼ峨→豈碑ｼ・☆繧九◆繧∽ｸ閾ｴ蛻､螳壹↓螟ｱ謨励＠縲∵ｯ主屓譖ｴ譁ｰ繝悶Ο繝・け繧帝夐℃縺吶ｋ縲ゅ色:backend/app/application/services/inventory/lot_reservation_service.py窶L189-L204縲代色:backend/app/infrastructure/persistence/models/lot_reservations_model.py窶L51-L112縲・- **蜴溷屏**: Enum蝙九→譁・ｭ怜・縺ｮ豈碑ｼ・Α繧ｹ縺ｫ繧医ｊ縲梧里縺ｫconfirmed縺ｪ繧画掠譛殲eturn縲阪→縺・≧繧ｬ繝ｼ繝峨′蜉ｹ縺・※縺・↑縺・・- **蠖ｱ髻ｿ遽・峇**: 莠育ｴ・｢ｺ螳哂PI/繝舌ャ繝√ら┌逕ｨ縺ｪUPDATE縺ｫ繧医ｋ陦後Ο繝・け蟒ｶ髟ｷ繝ｻ逶｣譟ｻ繝ｭ繧ｰ豎壽沒縲∝ｰ・擂繧､繝吶Φ繝磯｣謳ｺ譎ゅ・莠碁㍾騾夂衍繝ｪ繧ｹ繧ｯ縲・- **菫ｮ豁｣譯・*:
-  - *譛蟆・: 豈碑ｼ・→莉｣蜈･繧呈枚蟄怜・繝吶・繧ｹ縺ｫ邨ｱ荳・井ｾ・ `if reservation.status == ReservationStatus.CONFIRMED.value`・峨・  - *逅・Φ*: `status` 繧ｫ繝ｩ繝繧脱num蝙九↓螟画峩縺励￣ydantic/DB蜿梧婿縺ｧEnum繧呈桶縺・ｈ縺・梛螳牙・蛹悶・- **菫ｮ豁｣譎ゅ・豕ｨ諢・*: 繝｢繝・Ν縺ｮ蝙句､画峩譎ゅ・繝槭う繧ｰ繝ｬ繝ｼ繧ｷ繝ｧ繝ｳ縺悟ｿ・ｦ√・num蛹悶☆繧九→譛ｪ遏･蛟､縺ｮ謚募・縺悟ｼｾ縺九ｌ繧狗せ繧偵ユ繧ｹ繝医〒遒ｺ隱阪・
-### 4. 蜃ｺ蠎ｫAPI縺後Μ繧ｽ繝ｼ繧ｹ譛ｪ蟄伜惠繧・00縺ｧ霑斐＠繧ｯ繝ｩ繧､繧｢繝ｳ繝亥・騾√ｒ蝗ｰ髮｣縺ｫ縺吶ｋ (P2)
-- **逞・憾**: 繝ｭ繝・ヨ/蠕玲э蜈・邏榊・蜈医′蟄伜惠縺励↑縺・ｴ蜷医〒繧・TTP 400繧定ｿ斐☆縺溘ａ縲√け繝ｩ繧､繧｢繝ｳ繝医′縲悟・蜉幄ｪ､繧翫阪→縲悟ｯｾ雎｡譛ｪ蟄伜惠縲阪ｒ蛹ｺ蛻･縺ｧ縺阪★縲∝・騾√ｄ繝・・繧ｿ蜷梧悄縺ｮ閾ｪ蜍輔Μ繝医Λ繧､縺後〒縺阪↑縺・・- **蜀咲樟/譚｡莉ｶ**: `/withdrawals` 縺ｫ蟄伜惠縺励↑縺・`lot_id` 縺ｧPOST縺吶ｋ縺ｨ `ValueError` 縺粂TTP 400縺ｫ螟画鋤縺輔ｌ繧九ゅ色:backend/app/presentation/api/routes/inventory/withdrawals_router.py窶L82-L110縲代色:backend/app/application/services/inventory/withdrawal_service.py窶L43-L114縲・- **蜴溷屏**: `WithdrawalService` 縺梧悴蟄伜惠繧・`ValueError` 縺ｧ謚輔￡縲√Ν繝ｼ繧ｿ繝ｼ縺ｧ荳蠕・00縺ｫ繝槭ャ繝斐Φ繧ｰ縺励※縺・ｋ縲・04/409縺ｪ縺ｩ迥ｶ諷九↓蠢懊§縺溘お繝ｩ繝ｼ險ｭ險医′辟｡縺・・- **蠖ｱ髻ｿ遽・峇**: 蜃ｺ蠎ｫ菴懈・API縲ゅけ繝ｩ繧､繧｢繝ｳ繝亥・縺ｮ繧ｨ繝ｩ繝ｼ繝上Φ繝峨Μ繝ｳ繧ｰ縺梧尠譏ｧ縺ｫ縺ｪ繧翫∝酔譛溘ヰ繝・メ繧СPA縺ｮ蜀榊ｮ溯｡悟愛螳壹ｒ隱､繧峨○繧九・- **菫ｮ豁｣譯・*:
-  - *譛蟆・: 譛ｪ蟄伜惠邉ｻ縺ｯ蟆ら畑萓句､悶ｒ謚輔￡縲√Ν繝ｼ繧ｿ繝ｼ縺ｧ404縺ｫ繝槭ャ繝励ょ庄逕ｨ驥丈ｸ崎ｶｳ縺ｯ409(Conflict)縺ｪ縺ｩ諢丞袖縺ｮ縺ゅｋ繧ｹ繝・・繧ｿ繧ｹ繧定ｿ斐☆縲・  - *逅・Φ*: 繝峨Γ繧､繝ｳ萓句､悶ｒ謨ｴ逅・＠繝ｬ繧ｹ繝昴Φ繧ｹ繧ｳ繝ｼ繝・繧ｨ繝ｩ繝ｼ繝｡繝・そ繝ｼ繧ｸ繧堤ｵｱ荳縲√ユ繝ｼ繝悶Ν鬧・虚縺ｮ繧ｨ繝ｩ繝ｼ螟画鋤螻､繧貞ｰ主・縲・- **菫ｮ豁｣譎ゅ・豕ｨ諢・*: 繧ｹ繝・・繧ｿ繧ｹ繧ｳ繝ｼ繝牙､画峩縺ｫ莨ｴ縺・ヵ繝ｭ繝ｳ繝・繝・せ繝医・譛溷ｾ・､譖ｴ譁ｰ縺悟ｿ・ｦ√・
-### 5. 繝薙Η繝ｼ縺ｨ繧ｵ繝ｼ繝薙せ縺ｧ縲御ｺ育ｴ・庄逕ｨ驥上阪・螳夂ｾｩ縺御ｺ碁㍾蛹悶＠讀懆ｨｼ荳崎・ (P2)
-- **逞・憾**: 繧ｵ繝ｼ繝薙せ蛛ｴ縺ｨ繝薙Η繝ｼ蛛ｴ縺ｧ蜿ｯ逕ｨ驥冗ｮ怜・繝ｭ繧ｸ繝・け縺檎焚縺ｪ繧翫√←縺｡繧峨′豁｣縺句愛蛻･縺励▼繧峨＞縲ゆｾ・ 繧ｵ繝ｼ繝薙せ縺ｯ繝ｭ繝・け謗ｧ髯､繧呈Φ螳夲ｼ・stock_calculation.get_available_quantity`・峨√ン繝･繝ｼ縺ｯ繝ｭ繝・け謗ｧ髯､繧貞性繧縺軍eservation繧ｹ繝・・繧ｿ繧ｹ譚｡莉ｶ縺檎焚縺ｪ繧九↑縺ｩ縲∝茜逕ｨ邂・園縺ｫ繧医▲縺ｦ蜿ｯ逕ｨ驥上′螟牙虚縺吶ｋ縲・- **蜀咲樟/譚｡莉ｶ**: 蜷御ｸ繝ｭ繝・ヨ繧・`LotReservationService.get_available_quantity` 縺ｨ `v_lot_available_qty` 縺ｮ荳｡譁ｹ縺ｧ蜿ら・縺吶ｋ縺ｨ縲∽ｺ育ｴ・せ繝・・繧ｿ繧ｹ繧・Ο繝・け閠・・譛臥┌縺ｫ繧医ｊ逡ｰ縺ｪ繧狗ｵ先棡繧定ｿ斐☆縲ゅ色:backend/app/application/services/inventory/lot_reservation_service.py窶L326-L368縲代色:backend/app/application/services/inventory/stock_calculation.py窶L35-L55縲代色:backend/sql/views/create_views.sql窶L113-L170縲・- **蜴溷屏**: 蜿ｯ逕ｨ驥剰ｨ育ｮ励′蜷・園縺ｫ繧ｳ繝斐・縺輔ｌ縲√ラ繝｡繧､繝ｳ荳榊､画擅莉ｶ繧剃ｸ蜈・噪縺ｫ繝・せ繝医〒縺阪※縺・↑縺・・- **蠖ｱ髻ｿ遽・峇**: 蝨ｨ蠎ｫ陦ｨ遉ｺ繝ｻ莠育ｴ・ｽ懈・繝ｻ蛟呵｣懊Ο繝・ヨ謠千､ｺ縺ｮ謨ｴ蜷域ｧ縲ら腸蠅・ｄ蜻ｼ縺ｳ蜃ｺ縺礼ｵ瑚ｷｯ縺ｫ繧医▲縺ｦ蜿ｯ逕ｨ驥上′螟峨ｏ繧九◆繧√√ヰ繧ｰ蜀咲樟繧・屓蟶ｰ隧ｦ鬨薙′蝗ｰ髮｣縲・- **菫ｮ豁｣譯・*:
-  - *譛蟆・: 繧ｵ繝ｼ繝薙せ/繝薙Η繝ｼ縺ｧ蜿ｯ逕ｨ驥上・螳夂ｾｩ繧呈純縺医ｋ・医Ο繝・け謗ｧ髯､ + active/confirmed貂帷ｮ暦ｼ峨ょ・騾夐未謨ｰ繧定ｵｷ轤ｹ縺ｫ繝ｦ繝九ャ繝医ユ繧ｹ繝医ｒ霑ｽ蜉縲・  - *逅・Φ*: 蜿ｯ逕ｨ驥上ｒDB蛛ｴ縺ｯ繝槭ユ繝ｪ繧｢繝ｩ繧､繧ｺ繝峨ン繝･繝ｼ/髢｢謨ｰ縺ｧ荳蜈・喧縺励√し繝ｼ繝薙せ/繝輔Ο繝ｳ繝医・縺昴ｌ繧貞盾辣ｧ縲ゅラ繝｡繧､繝ｳ荳榊､画擅莉ｶ繧貞･醍ｴ・ユ繧ｹ繝医〒諡・ｿ昴・- **菫ｮ豁｣譎ゅ・豕ｨ諢・*: 繝ｭ繧ｸ繝・け邨ｱ荳縺ｫ繧医ｊ蛟､縺悟､峨ｏ繧九◆繧√∽ｾ晏ｭ倥☆繧九Ξ繝昴・繝医ｄ繝輔Ο繝ｳ繝郁｡ｨ遉ｺ縺ｮ譛溷ｾ・､繧呈峩譁ｰ縺吶ｋ縺薙→縲・
-## 荳贋ｽ・莉ｶ縺ｮ縺ｾ縺ｨ繧・1. 莠育ｴ・庄逕ｨ驥剰ｨ育ｮ励′繝ｭ繝・け辟｡隕悶〒驕主､ｧ隧穂ｾ｡・・1・・2. 繝薙Η繝ｼ縺慶onfirmed莠育ｴ・ｒ髯､螟悶＠蜿ｯ逕ｨ驥上ｒ豌ｴ蠅励＠・・1・・3. 莠育ｴ・｢ｺ螳壹・蜀ｪ遲峨メ繧ｧ繝・け荳榊・縺ｧ莠碁㍾譖ｴ譁ｰ繝ｪ繧ｹ繧ｯ・・2・・4. 蜃ｺ蠎ｫAPI縺ｮ繧ｨ繝ｩ繝ｼ繧ｳ繝ｼ繝峨′譖匁乂縺ｧ蠕ｩ譌ｧ荳崎・・・2・・5. 蜿ｯ逕ｨ驥上Ο繧ｸ繝・け縺悟､夐㍾螳夂ｾｩ縺ｧ謨ｴ蜷域ｧ讀懆ｨｼ縺後〒縺阪↑縺・ｼ・2・・
-## 謗ｨ螂ｨ螳溯｡碁・1. **(P1)** 繝薙Η繝ｼ縺ｨ繧ｵ繝ｼ繝薙せ縺ｮ蜿ｯ逕ｨ驥上Ο繧ｸ繝・け繧堤ｵｱ荳・医Ο繝・け繝ｻconfirmed閠・・・峨・2. **(P1)** 繝薙Η繝ｼ縺ｮ髮・ｨ域擅莉ｶ菫ｮ豁｣縺ｫ蜷医ｏ縺帙※繝輔Ο繝ｳ繝・繝ｬ繝昴・繝医・譛溷ｾ・､繧呈峩譁ｰ縲・3. **(P2)** 莠育ｴ・｢ｺ螳壹・蜀ｪ遲画ｧ繧ｬ繝ｼ繝我ｿｮ豁｣・・num豈碑ｼ・・譏ｯ豁｣・峨・4. **(P2)** 蜃ｺ蠎ｫAPI縺ｮ萓句､問・HTTP繧ｹ繝・・繧ｿ繧ｹ繝槭ャ繝斐Φ繧ｰ繧呈紛逅・・5. **(P2)** 蜿ｯ逕ｨ驥剰ｨ育ｮ励・蜈ｱ騾壼喧繝ｻ繝・せ繝域紛蛯呻ｼ医ラ繝｡繧､繝ｳ荳榊､画擅莉ｶ縺ｮ螂醍ｴ・喧・峨・
+## 指摘一覧
+
+### 1. 予約可用量計算がロック数量を無視して過大評価 (P1)
+- **症状**: ロックされた在庫 (`locked_quantity`) を持つロットでも予約作成が通り、実際に引き当て可能な数量を超えて予約できる。後続の出庫・引当で不足エラーやマイナス残が発生し得る。
+- **再現/条件**: `lots.locked_quantity > 0` のロットに対し `LotReservationService.reserve` を呼び出すと、`locked_quantity` を差し引かずに可用量判定を行うため、ロック分を食い込んだ予約が作成される。【F:backend/app/application/services/inventory/lot_reservation_service.py†L329-L368】
+- **原因**: `_calculate_available_qty` が `current_quantity - reserved_qty` しか見ておらず、同じサービス内の他のヘルパー(`stock_calculation.get_available_quantity`)が採用するロック控除ルールと乖離している。【F:backend/app/application/services/inventory/lot_reservation_service.py†L329-L368】【F:backend/app/application/services/inventory/stock_calculation.py†L35-L55】
+- **影響範囲**: 予約系API/サービス全般（フォーキャスト・受注・手動予約）。ロック在庫を尊重する設計前提が破られ、在庫二重配分の温床になる。
+- **修正案**:
+  - *最小*: `_calculate_available_qty` を `current_quantity - reserved - locked_quantity` に置き換え、`get_available_quantity` と同一ロジックにする。
+  - *理想*: 在庫可用量ロジックを1カ所に集約（例えば `stock_calculation.get_available_quantity_by_id` を利用）し、サービス/ビュー/フロントで共通化。
+- **修正時の注意**: 可用量が減るため既存テストデータで予約失敗が増える可能性あり。予約作成・更新系のE2Eテストを調整すること。
+
+### 2. ビューの引当集計が confirmed を除外し在庫を過大表示 (P1)
+- **症状**: `v_lot_available_qty` や `v_inventory_summary` が confirmed 予約を無視した可用量を返し、フロントの在庫表示や候補ロット選定が実在庫より多く見積もられる。
+- **再現/条件**: 予約ステータスが `confirmed` の行が存在するロットを `v_lot_available_qty` 経由で参照すると、`allocated_quantity` が0として扱われ可用量が水増しされる。【F:backend/sql/views/create_views.sql†L29-L127】
+- **原因**: `v_lot_allocations` の定義が `status = 'active'` のみをSUMしており、ドメイン不変条件「active/confirmedが可用量を減算」に反している。【F:backend/sql/views/create_views.sql†L34-L127】【F:backend/app/application/services/inventory/lot_reservation_service.py†L300-L368】
+- **影響範囲**: 在庫関連ビューを利用する全API/フロント（在庫一覧、候補ロット提示、在庫サマリ）。実在庫より多い数量で引当・出庫意思決定が行われる危険。
+- **修正案**:
+  - *最小*: `v_lot_allocations` の WHERE を `status IN ('active','confirmed')` に変更し、依存ビューの可用量算出を正す。
+  - *理想*: ドメインの可用量ロジックをビュー/サービスで共通モジュール化し、ステータス追加時の抜け漏れをテストで防止。
+- **修正時の注意**: confirmed分を加味すると可用量が減るため既存UIの数値が変わる。キャッシュや集計ジョブが旧ビューを前提にしていないか確認すること。
+
+### 3. 予約確定の冪等チェックが機能せず二重確定を許容 (P2)
+- **症状**: `LotReservationService.confirm` を同じ予約に対して複数回呼んでも常に更新処理が走り、冪等性が担保されない。外部からのリトライ時に不要な更新・イベント発火が起こり得る。
+- **再現/条件**: `reservation.status` がDB上は文字列だが、メソッドは `ReservationStatus.CONFIRMED`（Enumオブジェクト）と比較するため一致判定に失敗し、毎回更新ブロックを通過する。【F:backend/app/application/services/inventory/lot_reservation_service.py†L189-L204】【F:backend/app/infrastructure/persistence/models/lot_reservations_model.py†L51-L112】
+- **原因**: Enum型と文字列の比較ミスにより「既にconfirmedなら早期return」というガードが効いていない。
+- **影響範囲**: 予約確定API/バッチ。無用なUPDATEによる行ロック延長・監査ログ汚染、将来イベント連携時の二重通知リスク。
+- **修正案**:
+  - *最小*: 比較と代入を文字列ベースに統一（例: `if reservation.status == ReservationStatus.CONFIRMED.value`）。
+  - *理想*: `status` カラムをEnum型に変更し、Pydantic/DB双方でEnumを扱うよう型安全化。
+- **修正時の注意**: モデルの型変更時はマイグレーションが必要。Enum化すると未知値の投入が弾かれる点をテストで確認。
+
+### 4. 出庫APIがリソース未存在を400で返しクライアント再送を困難にする (P2)
+- **症状**: ロット/得意先/納入先が存在しない場合でもHTTP 400を返すため、クライアントが「入力誤り」と「対象未存在」を区別できず、再送やデータ同期の自動リトライができない。
+- **再現/条件**: `/withdrawals` に存在しない `lot_id` でPOSTすると `ValueError` がHTTP 400に変換される。【F:backend/app/presentation/api/routes/inventory/withdrawals_router.py†L82-L110】【F:backend/app/application/services/inventory/withdrawal_service.py†L43-L114】
+- **原因**: `WithdrawalService` が未存在を `ValueError` で投げ、ルーターで一律400にマッピングしている。404/409など状態に応じたエラー設計が無い。
+- **影響範囲**: 出庫作成API。クライアント側のエラーハンドリングが曖昧になり、同期バッチやRPAの再実行判定を誤らせる。
+- **修正案**:
+  - *最小*: 未存在系は専用例外を投げ、ルーターで404にマップ。可用量不足は409(Conflict)など意味のあるステータスを返す。
+  - *理想*: ドメイン例外を整理しレスポンスコード/エラーメッセージを統一、テーブル駆動のエラー変換層を導入。
+- **修正時の注意**: ステータスコード変更に伴いフロント/テストの期待値更新が必要。
+
+### 5. ビューとサービスで「予約可用量」の定義が二重化し検証不能 (P2)
+- **症状**: サービス側とビュー側で可用量算出ロジックが異なり、どちらが正か判別しづらい。例: サービスはロック控除を想定（`stock_calculation.get_available_quantity`）、ビューはロック控除を含むがReservationステータス条件が異なるなど、利用箇所によって可用量が変動する。
+- **再現/条件**: 同一ロットを `LotReservationService.get_available_quantity` と `v_lot_available_qty` の両方で参照すると、予約ステータスやロック考慮有無により異なる結果を返す。【F:backend/app/application/services/inventory/lot_reservation_service.py†L326-L368】【F:backend/app/application/services/inventory/stock_calculation.py†L35-L55】【F:backend/sql/views/create_views.sql†L113-L170】
+- **原因**: 可用量計算が各所にコピーされ、ドメイン不変条件を一元的にテストできていない。
+- **影響範囲**: 在庫表示・予約作成・候補ロット提示の整合性。環境や呼び出し経路によって可用量が変わるため、バグ再現や回帰試験が困難。
+- **修正案**:
+  - *最小*: サービス/ビューで可用量の定義を揃える（ロック控除 + active/confirmed減算）。共通関数を起点にユニットテストを追加。
+  - *理想*: 可用量をDB側はマテリアライズドビュー/関数で一元化し、サービス/フロントはそれを参照。ドメイン不変条件を契約テストで担保。
+- **修正時の注意**: ロジック統一により値が変わるため、依存するレポートやフロント表示の期待値を更新すること。
+
+## 上位5件のまとめ
+1. 予約可用量計算がロック無視で過大評価（P1）
+2. ビューがconfirmed予約を除外し可用量を水増し（P1）
+3. 予約確定の冪等チェック不全で二重更新リスク（P2）
+4. 出庫APIのエラーコードが曖昧で復旧不能（P2）
+5. 可用量ロジックが多重定義で整合性検証ができない（P2）
+
+## 推奨実行順
+1. **(P1)** ビューとサービスの可用量ロジックを統一（ロック・confirmed考慮）。
+2. **(P1)** ビューの集計条件修正に合わせてフロント/レポートの期待値を更新。
+3. **(P2)** 予約確定の冪等性ガード修正（Enum比較の是正）。
+4. **(P2)** 出庫APIの例外→HTTPステータスマッピングを整理。
+5. **(P2)** 可用量計算の共通化・テスト整備（ドメイン不変条件の契約化）。
