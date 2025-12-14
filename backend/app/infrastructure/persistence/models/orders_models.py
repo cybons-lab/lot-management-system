@@ -243,7 +243,38 @@ class OrderLine(Base):
 
     @property
     def allocated_quantity(self) -> Decimal:
-        """Calculate total allocated quantity from allocations."""
+        """Calculate total allocated quantity.
+
+        P3: Uses lot_reservations as the source of truth.
+        Falls back to allocations for backward compatibility during migration.
+        """
+        # Import here to avoid circular dependency
+        from sqlalchemy.orm import object_session
+
+        from app.infrastructure.persistence.models.lot_reservations_model import (
+            LotReservation,
+            ReservationSourceType,
+        )
+
+        session = object_session(self)
+        if session is None:
+            # Detached object, use legacy allocations
+            return sum((a.allocated_quantity for a in self.allocations), Decimal("0"))
+
+        # P3: Primary source is lot_reservations
+        reservations = (
+            session.query(LotReservation)
+            .filter(
+                LotReservation.source_type == ReservationSourceType.ORDER,
+                LotReservation.source_id == self.id,
+            )
+            .all()
+        )
+
+        if reservations:
+            return sum((r.reserved_qty for r in reservations), Decimal("0"))
+
+        # Fallback to allocations during migration
         return sum((a.allocated_quantity for a in self.allocations), Decimal("0"))
 
 

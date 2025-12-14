@@ -3,6 +3,8 @@
 Handles Soft to Hard allocation conversion:
 - Confirm hard allocation (single)
 - Batch confirmation
+
+P3: CONFIRMED status requires successful SAP registration via SapGateway.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from app.application.services.allocations.utils import (
 )
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
 from app.core.time_utils import utcnow
+from app.infrastructure.external.sap_gateway import SapGateway, get_sap_gateway
 from app.infrastructure.persistence.models import Allocation, Lot, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
@@ -39,6 +42,7 @@ def confirm_hard_allocation(
     confirmed_by: str | None = None,
     quantity: Decimal | None = None,
     commit_db: bool = True,
+    sap_gateway: SapGateway | None = None,
 ) -> tuple[Allocation, Allocation | None]:
     """Soft引当をHard引当に確定（Soft → Hard変換）.
 
@@ -46,8 +50,9 @@ def confirm_hard_allocation(
         db: データベースセッション
         allocation_id: 引当ID
         confirmed_by: 確定操作を行ったユーザーID（オプション）
-        quantity: 部分確定の場合の数量（未指定で全量確定）
+        quantity: 部分確定の場合の数量（未指定で全量確定）※現在は非サポート
         commit_db: Trueの場合、処理完了後にcommitを実行（デフォルト: True）
+        sap_gateway: SAP Gateway実装（未指定時はデフォルトのMockSapGatewayを使用）
 
     Returns:
         tuple[Allocation, Allocation | None]:
@@ -112,28 +117,16 @@ def confirm_hard_allocation(
     )
 
     now = utcnow()
-    remaining_allocation: Allocation | None = None
 
+    # P3: Partial confirmation is no longer supported (avoid Allocation() creation)
+    # Full quantity confirmation only
     if quantity is not None and quantity < allocation.allocated_quantity:
-        remaining_qty = allocation.allocated_quantity - quantity
-        remaining_allocation = Allocation(
-            order_line_id=allocation.order_line_id,
-            lot_id=allocation.lot_id,
-            inbound_plan_line_id=allocation.inbound_plan_line_id,
-            allocated_quantity=remaining_qty,
-            allocation_type="soft",
-            status=allocation.status,
-            created_at=now,
-            updated_at=now,
+        raise AllocationCommitError(
+            "PARTIAL_CONFIRM_NOT_SUPPORTED",
+            "部分確定は現在サポートされていません。全量確定のみ可能です。",
         )
-        db.add(remaining_allocation)
-        allocation.allocated_quantity = confirm_qty
 
-    allocation.allocation_type = "hard"
-    allocation.confirmed_at = now
-    allocation.confirmed_by = confirmed_by
-    allocation.updated_at = now
-
+    # Find or create LotReservation
     reservation = (
         db.query(LotReservation)
         .filter(
@@ -144,9 +137,43 @@ def confirm_hard_allocation(
         )
         .first()
     )
-    if reservation:
-        reservation.status = ReservationStatus.CONFIRMED
-        reservation.confirmed_at = now
+
+    if not reservation:
+        # Create new reservation if not exists
+        reservation = LotReservation(
+            lot_id=lot.id,
+            source_type=ReservationSourceType.ORDER,
+            source_id=allocation.order_line_id,
+            reserved_qty=confirm_qty,
+            status=ReservationStatus.ACTIVE,
+            created_at=now,
+        )
+        db.add(reservation)
+        db.flush()
+
+    # P3: Call SAP Gateway for CONFIRMED transition
+    gateway = sap_gateway or get_sap_gateway()
+    sap_result = gateway.register_allocation(reservation)
+
+    if not sap_result.success:
+        # SAP registration failed - keep as ACTIVE, do not confirm
+        raise AllocationCommitError(
+            "SAP_REGISTRATION_FAILED",
+            f"SAP登録に失敗しました: {sap_result.error_message}",
+        )
+
+    # SAP registration succeeded - update reservation with SAP info
+    reservation.status = ReservationStatus.CONFIRMED
+    reservation.confirmed_at = now
+    reservation.sap_document_no = sap_result.document_no
+    reservation.sap_registered_at = sap_result.registered_at
+
+    # Update allocation record (legacy, for backward compat)
+    allocation.allocation_type = "hard"
+    allocation.confirmed_at = now
+    allocation.confirmed_by = confirmed_by
+    allocation.updated_at = now
+
     lot.updated_at = now
 
     db.flush()
@@ -160,8 +187,6 @@ def confirm_hard_allocation(
     if commit_db:
         db.commit()
         db.refresh(allocation)
-        if remaining_allocation:
-            db.refresh(remaining_allocation)
 
         from app.domain.events import AllocationConfirmedEvent, EventDispatcher
 
@@ -172,7 +197,8 @@ def confirm_hard_allocation(
         )
         EventDispatcher.queue(event)
 
-    return allocation, remaining_allocation
+    # P3: No remaining_allocation (partial confirm not supported)
+    return allocation, None
 
 
 def confirm_hard_allocations_batch(
