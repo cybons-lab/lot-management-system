@@ -6,7 +6,7 @@ v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import cast
 
@@ -18,6 +18,7 @@ from app.application.services.inventory.stock_calculation import (
     get_available_quantity,
     get_reserved_quantity,
 )
+from app.core.time_utils import utcnow
 from app.domain.lot import (
     FefoPolicy,
     InsufficientLotStockError,
@@ -525,7 +526,7 @@ class LotService:
         for key, value in updates.items():
             setattr(db_lot, key, value)
 
-        db_lot.updated_at = datetime.now()
+        db_lot.updated_at = utcnow()
 
         try:
             self.db.commit()
@@ -573,7 +574,7 @@ class LotService:
         if lock_data.reason:
             db_lot.lock_reason = lock_data.reason
 
-        db_lot.updated_at = datetime.now()
+        db_lot.updated_at = utcnow()
 
         try:
             self.db.commit()
@@ -613,7 +614,7 @@ class LotService:
                 )
             db_lot.locked_quantity = locked_qty - quantity_to_unlock
 
-        db_lot.updated_at = datetime.now()
+        db_lot.updated_at = utcnow()
         self.db.commit()
 
         lot_view = self.db.query(VLotDetails).filter(VLotDetails.lot_id == lot_id).first()
@@ -662,7 +663,7 @@ class LotService:
                 )
 
             lot.current_quantity = Decimal(str(projected_quantity))
-            lot.updated_at = datetime.now()
+            lot.updated_at = utcnow()
             quantity_after = lot.current_quantity
 
             db_movement.quantity_after = lot.current_quantity

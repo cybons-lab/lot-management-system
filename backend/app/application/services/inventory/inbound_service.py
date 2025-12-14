@@ -1,10 +1,10 @@
 """Inbound plan service layer."""
 
-from datetime import datetime
 
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.inventory.inbound_line_service import InboundLineService
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.inbound_models import InboundPlan, InboundPlanLine
 from app.presentation.schemas.inventory.inbound_schema import (
     InboundPlanCreate,
@@ -199,7 +199,7 @@ class InboundService:
         for key, value in update_data.items():
             setattr(db_plan, key, value)
 
-        db_plan.updated_at = datetime.now()
+        db_plan.updated_at = utcnow()
 
         self.db.commit()
         self.db.refresh(db_plan)

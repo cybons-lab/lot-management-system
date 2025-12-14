@@ -4,12 +4,12 @@
 v2.4: lot_id (FK) ベースに統一。lot_reference (VARCHAR) は廃止。
 """
 
-from datetime import datetime
 from typing import cast
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import Allocation, Lot
 
 
@@ -101,7 +101,7 @@ class AllocationRepository:
             lot_id=lot_id,
             allocated_quantity=allocated_qty,
             status=status,
-            created_at=datetime.now(),
+            created_at=utcnow(),
         )
         self.db.add(allocation)
         # NOTE: commitはservice層で行う
@@ -115,7 +115,7 @@ class AllocationRepository:
             new_status: 新しいステータス
         """
         allocation.status = new_status
-        allocation.updated_at = datetime.now()
+        allocation.updated_at = utcnow()
         # NOTE: commitはservice層で行う
 
     def delete(self, allocation: Allocation) -> None:
@@ -159,7 +159,7 @@ class AllocationRepository:
             from decimal import Decimal
 
             lot.current_quantity += Decimal(str(quantity_delta))
-            lot.updated_at = datetime.now()
+            lot.updated_at = utcnow()
         # NOTE: commitはservice層で行う
 
     def update_lot_allocated_quantity(self, lot_id: int, allocated_delta: float) -> None:

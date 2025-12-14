@@ -1,12 +1,12 @@
 """User service (ユーザー管理サービス)."""
 
-from datetime import datetime
 from typing import cast
 
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.common.base_service import BaseService
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.auth_models import User, UserRole
 from app.presentation.schemas.system.users_schema import UserCreate, UserRoleAssignment, UserUpdate
 
@@ -109,7 +109,7 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
         for key, value in update_data.items():
             setattr(db_user, key, value)
 
-        db_user.updated_at = datetime.now()
+        db_user.updated_at = utcnow()
         self.db.commit()
         self.db.refresh(db_user)
         return db_user
@@ -146,6 +146,6 @@ class UserService(BaseService[User, UserCreate, UserUpdate, int]):
         if not db_user:
             return False
 
-        db_user.last_login_at = datetime.now()
+        db_user.last_login_at = utcnow()
         self.db.commit()
         return True

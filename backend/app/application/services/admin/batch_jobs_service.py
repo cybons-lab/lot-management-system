@@ -1,10 +1,10 @@
 """Batch jobs service (バッチジョブサービス)."""
 
-from datetime import datetime
 
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.logs_models import BatchJob
 from app.presentation.schemas.system.batch_jobs_schema import BatchJobCreate, BatchJobUpdate
 
@@ -71,10 +71,10 @@ class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate, int]
             db_job.result_message = result_message
 
         if status == "running" and db_job.started_at is None:
-            db_job.started_at = datetime.now()
+            db_job.started_at = utcnow()
 
         if status in ("completed", "failed"):
-            db_job.completed_at = datetime.now()
+            db_job.completed_at = utcnow()
 
         self.db.commit()
         self.db.refresh(db_job)
@@ -100,7 +100,7 @@ class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate, int]
 
         # Update status to running
         db_job.status = "running"
-        db_job.started_at = datetime.now()
+        db_job.started_at = utcnow()
 
         self.db.commit()
         self.db.refresh(db_job)
@@ -131,7 +131,7 @@ class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate, int]
             db_job.status = "failed"
             db_job.result_message = f"Error: {str(e)}"
 
-        db_job.completed_at = datetime.now()
+        db_job.completed_at = utcnow()
         self.db.commit()
         self.db.refresh(db_job)
 
@@ -147,7 +147,7 @@ class BatchJobService(BaseService[BatchJob, BatchJobCreate, BatchJobUpdate, int]
             return None  # Can't cancel completed or failed jobs
 
         db_job.status = "failed"
-        db_job.completed_at = datetime.now()
+        db_job.completed_at = utcnow()
         db_job.result_message = "Job cancelled by user"
 
         self.db.commit()

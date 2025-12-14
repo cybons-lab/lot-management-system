@@ -1,7 +1,6 @@
 """Forecast service for v2.4 schema (forecast_current / forecast_history)."""
 
 from collections import defaultdict
-from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import and_
@@ -16,6 +15,7 @@ from app.application.services.common.soft_delete_utils import (
     get_product_code,
     get_product_name,
 )
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent, ForecastHistory
 from app.infrastructure.persistence.models.orders_models import Order, OrderLine
 from app.presentation.schemas.forecasts.forecast_schema import (
@@ -253,7 +253,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         for key, value in update_data.items():
             setattr(db_forecast, key, value)
 
-        db_forecast.updated_at = datetime.now()
+        db_forecast.updated_at = utcnow()
 
         self.db.commit()
         self.db.refresh(db_forecast)
@@ -435,7 +435,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         if order_line:
             # Update quantity
             order_line.order_quantity = Decimal(str(forecast.forecast_quantity))
-            order_line.updated_at = datetime.now()
+            order_line.updated_at = utcnow()
             self.db.flush()
 
             # Trigger auto-allocation

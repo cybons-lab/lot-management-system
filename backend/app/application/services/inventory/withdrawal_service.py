@@ -3,7 +3,6 @@
 出庫（受注外出庫）のビジネスロジック。
 """
 
-from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy.orm import Session, joinedload
@@ -17,6 +16,7 @@ from app.application.services.common.soft_delete_utils import (
     get_product_name,
 )
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
+from app.core.time_utils import utcnow
 from app.domain.events import EventDispatcher, StockChangedEvent
 from app.infrastructure.persistence.models import (
     Customer,
@@ -197,7 +197,7 @@ class WithdrawalService:
 
         # ロットの現在数量を減算
         lot.current_quantity = new_quantity
-        lot.updated_at = datetime.now()
+        lot.updated_at = utcnow()
 
         # 数量がゼロになった場合はステータスを更新
         if new_quantity == Decimal("0"):
@@ -211,7 +211,7 @@ class WithdrawalService:
             quantity_after=new_quantity,
             reference_type="withdrawal",
             reference_id=withdrawal.id,
-            transaction_date=datetime.now(),
+            transaction_date=utcnow(),
         )
         self.db.add(stock_history)
 

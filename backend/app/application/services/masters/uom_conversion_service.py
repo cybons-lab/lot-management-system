@@ -1,12 +1,13 @@
 # backend/app/services/masters/uom_conversion_service.py
 """UOM conversion service (単位換算マスタ管理)."""
 
-from datetime import date, datetime
+from datetime import date
 from typing import cast
 
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import ProductUomConversion
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse, BulkUpsertSummary
 from app.presentation.schemas.masters.uom_conversions_schema import (
@@ -72,7 +73,7 @@ class UomConversionService(
         for key, value in update_data.items():
             setattr(conversion, key, value)
 
-        conversion.updated_at = datetime.now()
+        conversion.updated_at = utcnow()
         self.db.commit()
         self.db.refresh(conversion)
         return conversion
@@ -186,7 +187,7 @@ class UomConversionService(
                 if existing:
                     # UPDATE
                     existing.factor = row.factor
-                    existing.updated_at = datetime.now()
+                    existing.updated_at = utcnow()
                     summary["updated"] += 1
                 else:
                     # CREATE

@@ -3,6 +3,8 @@
 import time
 from datetime import datetime, timedelta
 
+from app.core.time_utils import utcnow
+
 
 class RPALockManager:
     """RPA実行のロック管理（メモリベース）."""
@@ -22,7 +24,7 @@ class RPALockManager:
         Returns:
             ロック取得成功時True、失敗時False
         """
-        now = datetime.now()
+        now = utcnow()
 
         # 既存のロックが有効かチェック
         if self._lock_until and now < self._lock_until:
@@ -42,7 +44,7 @@ class RPALockManager:
         if not self._lock_until:
             return False
 
-        now = datetime.now()
+        now = utcnow()
         return now < self._lock_until
 
     def get_remaining_seconds(self) -> int:
@@ -54,7 +56,7 @@ class RPALockManager:
         if not self.is_locked() or self._lock_until is None:
             return 0
 
-        now = datetime.now()
+        now = utcnow()
         remaining = (self._lock_until - now).total_seconds()
         return max(0, int(remaining))
 
