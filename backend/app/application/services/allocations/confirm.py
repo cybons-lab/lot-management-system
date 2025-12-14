@@ -7,7 +7,6 @@ Handles Soft to Hard allocation conversion:
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -24,6 +23,7 @@ from app.application.services.allocations.utils import (
     update_order_line_status,
 )
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import Allocation, Lot, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
@@ -57,13 +57,19 @@ def confirm_hard_allocation(
     Raises:
         AllocationNotFoundError: 引当が見つからない場合
         AllocationCommitError: 確定に失敗した場合
+
+    Note:
+        This operation is idempotent. If the allocation is already confirmed,
+        it returns successfully without making changes.
     """
     allocation = db.get(Allocation, allocation_id)
     if not allocation:
         raise AllocationNotFoundError(f"Allocation {allocation_id} not found")
 
+    # P1-3: Idempotent confirm - return success if already confirmed
     if allocation.allocation_type == "hard":
-        raise AllocationCommitError("ALREADY_CONFIRMED", f"引当 {allocation_id} は既に確定済みです")
+        # Already confirmed, return idempotently without error
+        return allocation, None
 
     if not allocation.lot_id:
         raise AllocationCommitError(
@@ -105,7 +111,7 @@ def confirm_hard_allocation(
         hard_demand_id=allocation.order_line_id,
     )
 
-    now = datetime.utcnow()
+    now = utcnow()
     remaining_allocation: Allocation | None = None
 
     if quantity is not None and quantity < allocation.allocated_quantity:
