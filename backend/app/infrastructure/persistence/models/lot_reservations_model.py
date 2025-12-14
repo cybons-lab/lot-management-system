@@ -142,6 +142,19 @@ class LotReservation(Base):
         comment="Timestamp when reservation was released",
     )
 
+    # SAP Registration markers (P3: explicit CONFIRMED signal)
+    sap_document_no: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        comment="SAP document number (set on successful SAP registration)",
+    )
+
+    sap_registered_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+        comment="Timestamp when reservation was registered in SAP",
+    )
+
     __table_args__ = (
         # Check constraints
         CheckConstraint(

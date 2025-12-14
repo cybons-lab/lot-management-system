@@ -87,45 +87,44 @@ class AllocationRepository:
     ) -> Allocation:
         """引当を作成.
 
-        Args:
-            order_line_id: 受注明細ID
-            lot_id: ロットID（Noneの場合は仮引当）
-            allocated_qty: 引当数量
-            status: ステータス（デフォルト: 'reserved'）
+        FROZEN: allocations への書き込みは禁止されています。
+        lot_reservations を使用してください。
 
-        Returns:
-            作成された引当エンティティ
+        Raises:
+            RuntimeError: allocations writes are disabled
         """
-        allocation = Allocation(
-            order_line_id=order_line_id,
-            lot_id=lot_id,
-            allocated_quantity=allocated_qty,
-            status=status,
-            created_at=utcnow(),
+        raise RuntimeError(
+            "allocations writes are disabled; use lot_reservations instead. "
+            "See P3 migration plan in docs/reviews/integrated_app_layer_issues_action_plan.md"
         )
-        self.db.add(allocation)
-        # NOTE: commitはservice層で行う
-        return allocation
 
     def update_status(self, allocation: Allocation, new_status: str) -> None:
         """引当ステータスを更新.
 
-        Args:
-            allocation: 引当エンティティ
-            new_status: 新しいステータス
+        FROZEN: allocations への書き込みは禁止されています。
+        lot_reservations を使用してください。
+
+        Raises:
+            RuntimeError: allocations writes are disabled
         """
-        allocation.status = new_status
-        allocation.updated_at = utcnow()
-        # NOTE: commitはservice層で行う
+        raise RuntimeError(
+            "allocations writes are disabled; use lot_reservations instead. "
+            "See P3 migration plan in docs/reviews/integrated_app_layer_issues_action_plan.md"
+        )
 
     def delete(self, allocation: Allocation) -> None:
         """引当を削除.
 
-        Args:
-            allocation: 引当エンティティ
+        FROZEN: allocations への書き込みは禁止されています。
+        lot_reservations を使用してください。
+
+        Raises:
+            RuntimeError: allocations writes are disabled
         """
-        self.db.delete(allocation)
-        # NOTE: commitはservice層で行う
+        raise RuntimeError(
+            "allocations writes are disabled; use lot_reservations instead. "
+            "See P3 migration plan in docs/reviews/integrated_app_layer_issues_action_plan.md"
+        )
 
     def get_lot(self, lot_id: int) -> Lot | None:
         """ロットを取得.
