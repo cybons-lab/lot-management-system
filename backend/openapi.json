@@ -2358,7 +2358,7 @@
           "orders"
         ],
         "summary": "Get Confirmed Order Lines",
-        "description": "Get all order lines that are fully allocated and not yet registered in\nSAP.\n\nReturns lines where allocated_quantity >= converted_quantity and sap_order_no is NULL.\n\nNote: Both allocated_quantity and converted_quantity are in internal management units.\n      Do NOT compare with order_quantity as it uses the original order unit (PCS/ML/etc).",
+        "description": "Get all order lines that are fully reserved and not yet registered in\nSAP.\n\nReturns lines where reserved_quantity >= converted_quantity and sap_order_no is NULL.\n\nP3: Uses LotReservation instead of Allocation.",
         "operationId": "get_confirmed_order_lines_api_orders_confirmed_order_lines_get",
         "responses": {
           "200": {
@@ -13725,9 +13725,9 @@
             "type": "number",
             "title": "Order Quantity"
           },
-          "allocated_quantity": {
+          "reserved_quantity": {
             "type": "number",
-            "title": "Allocated Quantity"
+            "title": "Reserved Quantity"
           },
           "unit": {
             "type": "string",
@@ -13759,7 +13759,7 @@
           "product_code",
           "product_name",
           "order_quantity",
-          "allocated_quantity",
+          "reserved_quantity",
           "unit",
           "delivery_date"
         ],
