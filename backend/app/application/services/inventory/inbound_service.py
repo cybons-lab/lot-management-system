@@ -1,6 +1,5 @@
 """Inbound plan service layer."""
 
-
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.inventory.inbound_line_service import InboundLineService

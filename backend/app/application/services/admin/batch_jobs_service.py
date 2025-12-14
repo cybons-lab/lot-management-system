@@ -1,6 +1,5 @@
 """Batch jobs service (バッチジョブサービス)."""
 
-
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService

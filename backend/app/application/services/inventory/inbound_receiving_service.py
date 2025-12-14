@@ -1,6 +1,5 @@
 """Inbound receiving service layer."""
 
-
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
