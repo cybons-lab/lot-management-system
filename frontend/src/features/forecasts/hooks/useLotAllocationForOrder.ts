@@ -34,12 +34,13 @@ export const useLotAllocationForOrder = (order: OrderWithLinesResponse) => {
     const initialStatuses: LineStatusMap = {};
 
     allLines.forEach((line) => {
-      // Map allocations
-      if (line.allocations && line.allocations.length > 0) {
+      // Map reservations
+      const reservations = Array.isArray(line.reservations) ? line.reservations : [];
+      if (reservations.length > 0) {
         const lineAllocMap: Record<number, number> = {};
-        line.allocations.forEach((alloc) => {
+        reservations.forEach((alloc) => {
           if (alloc.lot_id) {
-            lineAllocMap[alloc.lot_id] = Number(alloc.allocated_quantity);
+            lineAllocMap[alloc.lot_id] = Number(alloc.reserved_qty ?? 0);
           }
         });
         initialAllocations[line.id] = lineAllocMap;

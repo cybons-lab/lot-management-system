@@ -2,7 +2,6 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Lot Management API",
-    "description": "材料ロット管理システム - バックエンドAPI",
     "version": "2.0.0"
   },
   "paths": {
@@ -1492,6 +1491,22 @@
                 }
               ],
               "title": "Warehouse Id"
+            }
+          },
+          {
+            "name": "supplier_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Supplier Id"
             }
           }
         ],

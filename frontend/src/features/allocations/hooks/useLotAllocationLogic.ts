@@ -55,16 +55,13 @@ export function useLotAllocationLogic() {
         // For now, let's only initialize if empty to be safe, or if we trust re-fetch means current truth.
         // Given the "values buried" issue, simply initializing from DB is key.
         // Let's check if the line has allocations in DB.
-        if (line.allocations && line.allocations.length > 0) {
+        const reservations = Array.isArray(line.reservations) ? line.reservations : [];
+        if (reservations.length > 0) {
           const lineAllocs: Record<number, number> = {};
-          line.allocations.forEach((alloc) => {
-            // Use lot_id if available (from schema fix), or lot_reference mapping if needed.
-            // But API v2 allocation object should have lot_id if we fixed it?
-            // Actually, the AllocationDetail schema has optional lot_id.
-            // If lot_id is missing, we can't map it easily to the UI which expects lot_id.
-            // But let's assume valid allocations have lot_id.
+          reservations.forEach((alloc) => {
+            // Use lot_id if available
             if (alloc.lot_id) {
-              lineAllocs[alloc.lot_id] = Number(alloc.allocated_quantity);
+              lineAllocs[alloc.lot_id] = Number(alloc.reserved_qty ?? 0);
             }
           });
 
@@ -86,9 +83,10 @@ export function useLotAllocationLogic() {
       let hasChanges = false;
 
       allLines.forEach((line) => {
-        // If we have allocations, and status is not set, set it to "clean" (committed)
+        // If we have reservations, and status is not set, set it to "clean" (committed)
         // This implies we have DB data and no unsaved changes yet.
-        if (line.allocations && line.allocations.length > 0) {
+        const reservations = Array.isArray(line.reservations) ? line.reservations : [];
+        if (reservations.length > 0) {
           if (next[line.id] !== "committed" && next[line.id] !== "draft") {
             next[line.id] = "committed";
             hasChanges = true;

@@ -63,11 +63,12 @@ export function AllocationRowContainer({
   const currentAllocations = getLineAllocations(line.id);
   const canSave = lineStatus === "draft" && !isOverAllocated;
 
-  // Calculate allocationState from backend allocations
+  // Calculate allocationState from backend reservations
   let allocationState: "none" | "soft" | "hard" | "mixed" = "none";
-  if (line.allocations && line.allocations.length > 0) {
-    const hasHard = line.allocations.some((a) => a.allocation_type === "hard");
-    const hasSoft = line.allocations.some((a) => a.allocation_type === "soft");
+  const reservations = Array.isArray(line.reservations) ? line.reservations : [];
+  if (reservations.length > 0) {
+    const hasHard = reservations.some((a) => a.status === "confirmed");
+    const hasSoft = reservations.some((a) => a.status === "active" || a.status === "temporary");
     if (hasHard && hasSoft) allocationState = "mixed";
     else if (hasHard) allocationState = "hard";
     else if (hasSoft) allocationState = "soft";

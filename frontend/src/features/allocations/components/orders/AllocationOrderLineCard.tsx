@@ -161,17 +161,26 @@ export function AllocationOrderLineCard({
       )}
 
       {/* 引当詳細(あれば表示) */}
-      {line.allocations?.length || line.allocated_lots?.length ? (
+      {(Array.isArray(line.reservations) && line.reservations.length > 0) ||
+      line.allocated_lots?.length ? (
         <div className="mt-2 border-t border-gray-200 pt-2">
           <div className="flex items-center justify-between">
             <div className="text-xs font-medium text-gray-500">引当内訳</div>
             <div className="text-[10px] text-gray-400">
-              {(line.allocations || line.allocated_lots || []).length}件
+              {(
+                (Array.isArray(line.reservations) ? line.reservations : []) ||
+                line.allocated_lots ||
+                []
+              ).length}
+              件
             </div>
           </div>
           <div className="mt-1 flex flex-col gap-1">
             {(
-              (line.allocations || line.allocated_lots || []) as Array<{
+              ((Array.isArray(line.reservations) ? line.reservations : []) ||
+                line.allocated_lots ||
+                []) as Array<{
+                reserved_qty?: number | string | null;
                 allocated_quantity?: number | string | null;
                 allocated_qty?: number | null;
                 lot_number?: string | null;
@@ -179,11 +188,11 @@ export function AllocationOrderLineCard({
                 status?: string;
               }>
             ).map((alloc, idx) => {
-              // Handle both API naming (allocated_quantity) and legacy (allocated_qty)
-              const qty = Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0);
+              // Handle both API naming
+              const qty = Number(alloc.reserved_qty ?? alloc.allocated_quantity ?? alloc.allocated_qty ?? 0);
               // Handle generic API response where lot_number might be missing in type but present in runtime
               const lotNum = alloc.lot_number || `ID:${alloc.lot_id}`;
-              const isProvisional = alloc.status === "provisional";
+              const isProvisional = alloc.status === "temporary" || alloc.status === "provisional";
 
               return (
                 <div key={idx} className="flex justify-between text-[11px] text-gray-600">

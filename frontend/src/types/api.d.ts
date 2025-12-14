@@ -9922,6 +9922,7 @@ export interface operations {
         limit?: number;
         product_id?: number | null;
         warehouse_id?: number | null;
+        supplier_id?: number | null;
       };
       header?: never;
       path?: never;
