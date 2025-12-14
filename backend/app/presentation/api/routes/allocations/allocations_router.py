@@ -87,10 +87,10 @@ def commit_allocation(
 ) -> AllocationCommitResponse:
     """Commit FEFO allocation."""
     try:
-        result = actions.commit_fefo_allocation(db, request.order_id)
+        result = actions.commit_fefo_reservation(db, request.order_id)
 
         # Map internal result to schema
-        created_ids = [a.id for a in result.created_allocations]
+        created_ids = [a.id for a in result.created_reservations]
         preview_response = _map_fefo_preview(result.preview)
 
         return AllocationCommitResponse(
@@ -117,7 +117,7 @@ def manual_allocate(
 ) -> ManualAllocationResponse:
     """Manual allocation (Drag & Assign)."""
     try:
-        allocation = actions.allocate_manually(
+        reservation = actions.create_manual_reservation(
             db,
             request.order_line_id,
             request.lot_id,
@@ -125,25 +125,21 @@ def manual_allocate(
         )
 
         # Ensure relationships are loaded for response
-        db.refresh(allocation)
-        if not allocation.lot:
-            # Should be loaded by relationship, but explicit load if needed
-            pass
-
-        lot = allocation.lot
+        db.refresh(reservation)
+        lot = reservation.lot
         available_qty = get_available_quantity(db, lot)
 
         return ManualAllocationResponse(
-            id=allocation.id,
-            order_line_id=allocation.order_line_id,
-            lot_id=allocation.lot_id,
-            lot_number=lot.lot_number,
-            allocated_quantity=allocation.allocated_quantity,
+            id=reservation.id,
+            order_line_id=reservation.source_id,
+            lot_id=reservation.lot_id,
+            lot_number=lot.lot_number if lot else "",
+            allocated_quantity=reservation.reserved_qty,
             available_quantity=available_qty,
-            product_id=lot.product_id,
-            expiry_date=lot.expiry_date,
+            product_id=lot.product_id if lot else 0,
+            expiry_date=lot.expiry_date if lot else None,
             status="preview",
-            message="Allocation created",
+            message="Reservation created",
         )
     except ValueError as e:
         err_msg = str(e).lower()
@@ -168,23 +164,22 @@ def confirm_allocation(
 ) -> HardAllocationConfirmResponse:
     """Confirm allocation (Soft to Hard)."""
     try:
-        # returns (allocation, remaining_allocation)
-        confirmed_alloc, _ = actions.confirm_hard_allocation(
+        # returns confirmed reservation
+        confirmed_res = actions.confirm_reservation(
             db,
             allocation_id,
             confirmed_by=request.confirmed_by,
-            quantity=request.quantity,
         )
 
         return HardAllocationConfirmResponse(
-            id=confirmed_alloc.id,
-            order_line_id=confirmed_alloc.order_line_id,
-            lot_id=confirmed_alloc.lot_id,
-            allocated_quantity=confirmed_alloc.allocated_quantity,
-            allocation_type=confirmed_alloc.allocation_type,
-            status=confirmed_alloc.status,
-            confirmed_at=confirmed_alloc.confirmed_at,
-            confirmed_by=confirmed_alloc.confirmed_by,
+            id=confirmed_res.id,
+            order_line_id=confirmed_res.source_id,
+            lot_id=confirmed_res.lot_id,
+            allocated_quantity=confirmed_res.reserved_qty,
+            allocation_type="hard" if confirmed_res.status.value == "confirmed" else "soft",
+            status=confirmed_res.status.value,
+            confirmed_at=confirmed_res.confirmed_at,
+            confirmed_by=None,
         )
     except ValueError as e:
         err_msg = str(e).lower()
@@ -238,7 +233,7 @@ def confirm_allocations_batch(
 ) -> HardAllocationBatchConfirmResponse:
     """Batch confirm allocations."""
     # returns (confirmed_ids, failed_items)
-    confirmed_ids, failed_items = actions.confirm_hard_allocations_batch(
+    confirmed_ids, failed_items = actions.confirm_reservations_batch(
         db,
         request.allocation_ids,
         confirmed_by=request.confirmed_by,
@@ -254,7 +249,7 @@ def cancel_allocation(
 ):
     """Cancel allocation."""
     try:
-        actions.cancel_allocation(db, allocation_id)
+        actions.release_reservation(db, allocation_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except AllocationCommitError as e:
@@ -267,7 +262,7 @@ def bulk_cancel(
     db: Session = Depends(get_db),
 ) -> BulkCancelResponse:
     """Bulk cancel allocations."""
-    cancelled, failed = actions.bulk_cancel_allocations(db, request.allocation_ids)
+    cancelled, failed = actions.bulk_release_reservations(db, request.allocation_ids)
 
     msg = f"Cancelled {len(cancelled)} allocations"
     if failed:
@@ -286,13 +281,13 @@ def bulk_auto_allocate(
     Can filter by product, customer, delivery_place, and order_type.
     """
     try:
-        result = actions.auto_allocate_bulk(
+        result = actions.auto_reserve_bulk(
             db,
             product_id=request.product_id,
             customer_id=request.customer_id,
             delivery_place_id=request.delivery_place_id,
             order_type=request.order_type,
-            skip_already_allocated=request.skip_already_allocated,
+            skip_already_reserved=request.skip_already_allocated,
         )
         # Helper string construction moved to logic or kept here if simple
         # Assuming result is a dict with necessary fields

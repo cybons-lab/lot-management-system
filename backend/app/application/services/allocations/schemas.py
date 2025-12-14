@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import date
 
 from app.domain.errors import DomainError, InsufficientStockError  # noqa: F401
-from app.infrastructure.persistence.models import Allocation
+from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 
 
 @dataclass
@@ -40,7 +40,7 @@ class FefoPreviewResult:
 @dataclass
 class FefoCommitResult:
     preview: FefoPreviewResult
-    created_allocations: list[Allocation]
+    created_reservations: list[LotReservation]  # P3: Renamed from created_allocations
 
 
 class AllocationCommitError(DomainError):

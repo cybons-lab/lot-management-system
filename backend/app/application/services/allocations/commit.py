@@ -1,18 +1,19 @@
-"""FEFO allocation commit operations.
+"""FEFO reservation commit operations.
 
-Handles commit of FEFO-based allocations:
+Handles commit of FEFO-based reservations:
 - Validate commit eligibility
-- Persist allocation entities with pessimistic locking
-- Execute FEFO allocation commit
+- Persist reservation entities with pessimistic locking
+- Execute FEFO reservation commit
+
+P3: Uses LotReservation exclusively.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from app.application.services.allocations.fefo import preview_fefo_allocation
 from app.application.services.allocations.schemas import (
@@ -25,7 +26,8 @@ from app.application.services.allocations.utils import (
     update_order_allocation_status,
 )
 from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.infrastructure.persistence.models import Allocation, Lot, Order, OrderLine
+from app.core.time_utils import utcnow
+from app.infrastructure.persistence.models import Lot, Order, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -48,17 +50,17 @@ def validate_commit_eligibility(order: Order) -> None:
         )
 
 
-def persist_allocation_entities(
+def persist_reservation_entities(
     db: Session,
     line_plan: FefoLinePlan,
-    created: list[Allocation],
+    created: list[LotReservation],
 ) -> None:
-    """Persist allocation entities with pessimistic locking.
+    """Persist reservation entities with pessimistic locking.
 
     Args:
         db: Database session
         line_plan: Line allocation plan
-        created: List to append created allocations
+        created: List to append created reservations
 
     Raises:
         AllocationCommitError: If persistence fails
@@ -68,17 +70,15 @@ def persist_allocation_entities(
     if not line_plan.allocations:
         return
 
-    line_stmt = (
-        select(OrderLine)
-        .options(joinedload(OrderLine.allocations))
-        .where(OrderLine.id == line_plan.order_line_id)
-    )
-    line = db.execute(line_stmt).unique().scalar_one_or_none()
+    line_stmt = select(OrderLine).where(OrderLine.id == line_plan.order_line_id)
+    line = db.execute(line_stmt).scalar_one_or_none()
     if not line:
         raise AllocationCommitError(f"OrderLine {line_plan.order_line_id} not found")
 
     if line_plan.next_div and not getattr(line, "next_div", None):
         line.next_div = line_plan.next_div  # type: ignore[attr-defined]
+
+    now = utcnow()
 
     for alloc_plan in line_plan.allocations:
         lot_stmt = select(Lot).where(Lot.id == alloc_plan.lot_id).with_for_update()
@@ -103,45 +103,36 @@ def persist_allocation_entities(
             source_id=line.id,
             reserved_qty=Decimal(str(alloc_plan.allocate_qty)),
             status=ReservationStatus.ACTIVE,
-            created_at=datetime.utcnow(),
+            created_at=now,
         )
         db.add(reservation)
-        lot.updated_at = datetime.utcnow()
-
-        allocation = Allocation(
-            order_line_id=line.id,
-            lot_id=lot.id,
-            allocated_quantity=alloc_plan.allocate_qty,
-            status="allocated",
-            created_at=datetime.utcnow(),
-        )
-        db.add(allocation)
-        created.append(allocation)
+        lot.updated_at = now
+        created.append(reservation)
 
 
-def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
-    """FEFO引当確定（状態: open|part_allocated のみ許容）.
+def commit_fefo_reservation(db: Session, order_id: int) -> FefoCommitResult:
+    """FEFO予約確定（状態: open|part_allocated のみ許容）.
 
     Args:
         db: データベースセッション
         order_id: 注文ID
 
     Returns:
-        FefoCommitResult: 引当確定結果
+        FefoCommitResult: 予約確定結果
 
     Raises:
         ValueError: 注文が見つからない、または状態が不正な場合
-        AllocationCommitError: 引当確定中にエラーが発生した場合
+        AllocationCommitError: 予約確定中にエラーが発生した場合
     """
     order = _load_order(db, order_id)
     validate_commit_eligibility(order)
 
     preview = preview_fefo_allocation(db, order_id)
 
-    created: list[Allocation] = []
+    created: list[LotReservation] = []
     try:
         for line_plan in preview.lines:
-            persist_allocation_entities(db, line_plan, created)
+            persist_reservation_entities(db, line_plan, created)
 
         update_order_allocation_status(db, order_id)
 
@@ -150,4 +141,4 @@ def commit_fefo_allocation(db: Session, order_id: int) -> FefoCommitResult:
         db.rollback()
         raise
 
-    return FefoCommitResult(preview=preview, created_allocations=created)
+    return FefoCommitResult(preview=preview, created_reservations=created)

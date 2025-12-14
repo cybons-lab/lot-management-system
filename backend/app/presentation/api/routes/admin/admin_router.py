@@ -13,7 +13,6 @@ from app.application.services.auth.user_service import UserService
 from app.core.config import settings
 from app.core.database import truncate_all_tables
 from app.infrastructure.persistence.models import (
-    Allocation,
     Customer,
     Lot,
     Order,
@@ -21,6 +20,11 @@ from app.infrastructure.persistence.models import (
     Role,
     Supplier,
     Warehouse,
+)
+from app.infrastructure.persistence.models.lot_reservations_model import (
+    LotReservation,
+    ReservationSourceType,
+    ReservationStatus,
 )
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import get_current_admin, get_current_user
@@ -58,12 +62,18 @@ def get_dashboard_stats(
 
     total_orders = db.query(func.count(Order.id)).scalar() or 0
 
+    # P3: Use LotReservation instead of Allocation
     unallocated_subquery = (
         db.query(OrderLine.order_id)
-        .outerjoin(Allocation, Allocation.order_line_id == OrderLine.id)
+        .outerjoin(
+            LotReservation,
+            (LotReservation.source_type == ReservationSourceType.ORDER)
+            & (LotReservation.source_id == OrderLine.id)
+            & (LotReservation.status != ReservationStatus.RELEASED),
+        )
         .group_by(OrderLine.id, OrderLine.order_id, OrderLine.order_quantity)
         .having(
-            func.coalesce(func.sum(Allocation.allocated_quantity), 0)
+            func.coalesce(func.sum(LotReservation.reserved_qty), 0)
             < func.coalesce(OrderLine.order_quantity, 0)
         )
         .subquery()

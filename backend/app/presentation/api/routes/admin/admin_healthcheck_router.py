@@ -7,13 +7,14 @@ from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models.forecast_models import Forecast
 from app.infrastructure.persistence.models.inventory_models import Lot, StockMovement
+from app.infrastructure.persistence.models.lot_reservations_model import LotReservation
 from app.infrastructure.persistence.models.masters_models import (
     Customer,
     Product,
     Supplier,
     Warehouse,
 )
-from app.infrastructure.persistence.models.orders_models import Allocation, Order, OrderLine
+from app.infrastructure.persistence.models.orders_models import Order, OrderLine
 from app.presentation.api.deps import get_db
 
 
@@ -45,7 +46,7 @@ def get_db_counts(db: Session = Depends(get_db)):
     # 受注テーブル
     counts["orders"] = db.scalar(select(func.count()).select_from(Order)) or 0
     counts["order_lines"] = db.scalar(select(func.count()).select_from(OrderLine)) or 0
-    counts["allocations"] = db.scalar(select(func.count()).select_from(Allocation)) or 0
+    counts["reservations"] = db.scalar(select(func.count()).select_from(LotReservation)) or 0
 
     # VIEWは件数取得が難しい場合があるのでスキップ
     # counts["lot_current_stock"] = ...
@@ -54,7 +55,7 @@ def get_db_counts(db: Session = Depends(get_db)):
         counts["customers"] + counts["products"] + counts["warehouses"] + counts["suppliers"]
     )
     inventory_total = counts["lots"] + counts["stock_movements"]
-    orders_total = counts["orders"] + counts["order_lines"] + counts["allocations"]
+    orders_total = counts["orders"] + counts["order_lines"] + counts["reservations"]
     forecasts_total = counts["forecasts"]
 
     return {

@@ -7,7 +7,6 @@ from sqlalchemy import func, nulls_last, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.infrastructure.persistence.models import (
-    Allocation,
     Lot,
     Order,
     OrderLine,
@@ -15,6 +14,7 @@ from app.infrastructure.persistence.models import (
 )
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
+    ReservationSourceType,
     ReservationStatus,
 )
 from app.presentation.schemas.inventory.inventory_schema import LotStatus
@@ -35,8 +35,8 @@ def _load_order(db: Session, order_id: int) -> Order:
     """
     stmt = (
         select(Order)
-        .options(  # type: ignore[assignment]
-            selectinload(Order.order_lines).joinedload(OrderLine.allocations),
+        .options(
+            selectinload(Order.order_lines).selectinload(OrderLine.lot_reservations),
             selectinload(Order.order_lines).joinedload(OrderLine.product),
         )
         .where(Order.id == order_id)
@@ -49,14 +49,14 @@ def _load_order(db: Session, order_id: int) -> Order:
 
 
 def _existing_allocated_qty(line: OrderLine) -> float:
-    """Calculate already allocated quantity for an order line."""
+    """Calculate already allocated quantity for an order line.
+
+    P3: Uses lot_reservations instead of allocations.
+    """
+    reservations = getattr(line, "lot_reservations", []) or []
     return cast(
         float,
-        sum(
-            alloc.allocated_quantity
-            for alloc in line.allocations
-            if getattr(alloc, "status", "reserved") != "cancelled"
-        ),
+        sum(res.reserved_qty for res in reservations if res.status != ReservationStatus.RELEASED),
     )
 
 
@@ -136,7 +136,9 @@ def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
 
 
 def update_order_line_status(db: Session, order_line_id: int) -> None:
-    """Update OrderLine status based on allocation completion.
+    """Update OrderLine status based on reservation completion.
+
+    P3: Uses LotReservation instead of Allocation.
 
     Args:
         db: Database session
@@ -144,12 +146,13 @@ def update_order_line_status(db: Session, order_line_id: int) -> None:
     """
     EPSILON = Decimal("1e-6")
 
-    # Load order line with allocations
-    # Calculate allocated quantity using SQL aggregation
-    stmt = select(func.coalesce(func.sum(Allocation.allocated_quantity), 0.0)).where(
-        Allocation.order_line_id == order_line_id, Allocation.status != "cancelled"
+    # Calculate reserved quantity using SQL aggregation
+    stmt = select(func.coalesce(func.sum(LotReservation.reserved_qty), 0.0)).where(
+        LotReservation.source_type == ReservationSourceType.ORDER,
+        LotReservation.source_id == order_line_id,
+        LotReservation.status != ReservationStatus.RELEASED,
     )
-    allocated_qty = Decimal(str(db.execute(stmt).scalar() or 0.0))
+    reserved_qty = Decimal(str(db.execute(stmt).scalar() or 0.0))
 
     # Load order line to update status
     line = db.get(OrderLine, order_line_id)
@@ -160,11 +163,11 @@ def update_order_line_status(db: Session, order_line_id: int) -> None:
         str(line.converted_quantity if line.converted_quantity else line.order_quantity or 0)
     )
 
-    # Update line status based on allocation
+    # Update line status based on reservation
     new_status = "pending"
-    if allocated_qty + EPSILON >= required_qty:
+    if reserved_qty + EPSILON >= required_qty:
         new_status = "allocated"
-    elif allocated_qty > EPSILON:
+    elif reserved_qty > EPSILON:
         new_status = "pending"  # or part_allocated?
 
     from sqlalchemy import update
@@ -173,7 +176,9 @@ def update_order_line_status(db: Session, order_line_id: int) -> None:
 
 
 def update_order_allocation_status(db: Session, order_id: int) -> None:
-    """Update order status based on allocation completion.
+    """Update order status based on reservation completion.
+
+    P3: Uses LotReservation instead of Allocation.
 
     Args:
         db: Database session
@@ -185,10 +190,15 @@ def update_order_allocation_status(db: Session, order_id: int) -> None:
     totals_stmt = (
         select(
             OrderLine.id,
-            func.coalesce(func.sum(Allocation.allocated_quantity), 0.0),
+            func.coalesce(func.sum(LotReservation.reserved_qty), 0.0),
             func.coalesce(OrderLine.converted_quantity, OrderLine.order_quantity),
         )
-        .outerjoin(Allocation, Allocation.order_line_id == OrderLine.id)
+        .outerjoin(
+            LotReservation,
+            (LotReservation.source_type == ReservationSourceType.ORDER)
+            & (LotReservation.source_id == OrderLine.id)
+            & (LotReservation.status != ReservationStatus.RELEASED),
+        )
         .where(OrderLine.order_id == order_id)
         .group_by(
             OrderLine.id,
@@ -200,12 +210,12 @@ def update_order_allocation_status(db: Session, order_id: int) -> None:
     fully_allocated = True
     any_allocated = False
 
-    for _, allocated_total, required_qty in totals:
-        allocated_total = float(allocated_total)
+    for _, reserved_total, required_qty in totals:
+        reserved_total = float(reserved_total)
         required_qty = float(required_qty or 0.0)
-        if allocated_total > EPSILON:
+        if reserved_total > EPSILON:
             any_allocated = True
-        if allocated_total + EPSILON < required_qty:
+        if reserved_total + EPSILON < required_qty:
             fully_allocated = False
 
     # Determine new status
