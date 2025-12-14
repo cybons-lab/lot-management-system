@@ -33,11 +33,16 @@ async def list_inventory(
     limit: int = Query(default=100, ge=1, le=1000),
     product_id: int | None = None,
     warehouse_id: int | None = None,
+    supplier_id: int | None = None,
     db: Session = Depends(get_db),
 ):
     service = InventoryService(db)
     return service.get_inventory_items(
-        skip=skip, limit=limit, product_id=product_id, warehouse_id=warehouse_id
+        skip=skip,
+        limit=limit,
+        product_id=product_id,
+        warehouse_id=warehouse_id,
+        supplier_id=supplier_id,
     )
 
 

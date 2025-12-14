@@ -20,7 +20,7 @@ import {
   useInventoryBySupplier,
   useInventoryByWarehouse,
 } from "@/hooks/api";
-import { useProductsQuery, useWarehousesQuery } from "@/hooks/api/useMastersQuery";
+import { useProductsQuery, useWarehousesQuery, useSuppliersQuery } from "@/hooks/api/useMastersQuery";
 import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import { FormDialog } from "@/shared/components/form";
@@ -43,12 +43,14 @@ export function InventoryPage() {
   const [filters, setFilters] = useState({
     product_id: "",
     warehouse_id: "",
+    supplier_id: "",
   });
 
   // Build query params for items
   const queryParams = {
     product_id: filters.product_id ? Number(filters.product_id) : undefined,
     warehouse_id: filters.warehouse_id ? Number(filters.warehouse_id) : undefined,
+    supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
   };
 
   // Data Fetching
@@ -68,6 +70,7 @@ export function InventoryPage() {
   // Master data for filter options
   const { data: products = [] } = useProductsQuery();
   const { data: warehouses = [] } = useWarehousesQuery();
+  const { data: suppliers = [] } = useSuppliersQuery();
 
   // Generate filter options
   const productOptions = useMemo(
@@ -86,6 +89,15 @@ export function InventoryPage() {
         label: `${w.warehouse_code} - ${w.warehouse_name} `,
       })),
     [warehouses],
+  );
+
+  const supplierOptions = useMemo(
+    () =>
+      suppliers.map((s) => ({
+        value: String(s.id),
+        label: `${s.supplier_code} - ${s.supplier_name} `,
+      })),
+    [suppliers],
   );
 
   // Lot creation mutation
@@ -242,6 +254,15 @@ export function InventoryPage() {
                   placeholder="倉庫を検索..."
                 />
               </div>
+              <div>
+                <Label className="mb-2 block text-sm font-medium">仕入先</Label>
+                <SearchableSelect
+                  options={supplierOptions}
+                  value={filters.supplier_id}
+                  onChange={(value) => setFilters({ ...filters, supplier_id: value })}
+                  placeholder="仕入先を検索..."
+                />
+              </div>
             </div>
           </Section>
         )}
@@ -254,11 +275,9 @@ export function InventoryPage() {
           {overviewMode === "supplier" && (
             <InventoryBySupplierTable
               data={supplierQuery.data || []}
-              onViewDetail={(_supplierId) => {
-                // Switch to items view and filter by supplier
-                // Note: Need supplier filter in future. For now, navigate to items
+              onViewDetail={(supplierId) => {
+                setFilters({ ...filters, supplier_id: String(supplierId) });
                 setOverviewMode("items");
-                toast.info("仕入先フィルターは今後実装予定です");
               }}
             />
           )}

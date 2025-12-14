@@ -94,11 +94,8 @@ export const getInventoryItems = (params?: InventoryItemsListParams) => {
   if (params?.skip !== undefined) searchParams.append("skip", params.skip.toString());
   if (params?.limit !== undefined) searchParams.append("limit", params.limit.toString());
   if (params?.product_id) searchParams.append("product_id", params.product_id.toString());
-  // v2 API uses warehouse_id for filter? Check api.d.ts.
-  // api.d.ts says list_inventory_... parameters query has warehouse_id?
-  // Wait, let's verify parameters for /api/v2/inventory/. I didn't verify detail.
-  // Assuming it accepts warehouse_id based on previous v1.
   if (params?.warehouse_id) searchParams.append("warehouse_id", params.warehouse_id.toString());
+  if (params?.supplier_id) searchParams.append("supplier_id", params.supplier_id.toString());
 
   const queryString = searchParams.toString();
   return http.get<InventoryItem[]>(`v2/inventory/${queryString ? "?" + queryString : ""}`);
