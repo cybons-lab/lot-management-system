@@ -155,12 +155,23 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
     return service.update_lot(lot_id, lot)
 
 
-@router.delete("/{lot_id}", status_code=204)
+@router.delete("/{lot_id}", status_code=403)
 def delete_lot(lot_id: int, db: Session = Depends(get_db)):
-    """ロット削除."""
-    service = LotService(db)
-    service.delete_lot(lot_id)
-    return None
+    """ロット削除 (無効化).
+
+    ロットの物理削除はポリシーにより禁止されています。
+    在庫調整には /api/lots/{lot_id}/adjustment エンドポイントを使用してください。
+    """
+    from fastapi import HTTPException
+
+    raise HTTPException(
+        status_code=403,
+        detail={
+            "error": "LOT_DELETE_FORBIDDEN",
+            "message": "ロットの物理削除は禁止されています。在庫調整機能を使用してください。",
+            "guidance": "POST /api/inventory/adjustments を使用して在庫を調整してください。",
+        },
+    )
 
 
 @router.post("/{lot_id}/lock", response_model=LotResponse)
