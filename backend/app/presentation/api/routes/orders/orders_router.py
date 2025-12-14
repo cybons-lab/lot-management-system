@@ -15,7 +15,12 @@ from app.application.services.allocations.actions import (  # 追加
 from app.application.services.assignments.assignment_service import UserSupplierAssignmentService
 from app.application.services.common.uow_service import UnitOfWork
 from app.application.services.orders.order_service import OrderService
-from app.infrastructure.persistence.models import Allocation, Order, OrderLine, User
+from app.infrastructure.persistence.models import Order, OrderLine, User
+from app.infrastructure.persistence.models.lot_reservations_model import (
+    LotReservation,
+    ReservationSourceType,
+    ReservationStatus,
+)
 from app.presentation.api.deps import get_db, get_uow
 from app.presentation.api.routes.auth.auth_router import get_current_user, get_current_user_optional
 from app.presentation.schemas.orders.orders_schema import (
@@ -105,34 +110,38 @@ def save_manual_allocations(
     全ての操作を1つのトランザクションで実行し、エラー時はロールバックします。
     """
     try:
-        # 1. 既存の引当を全てキャンセル（在庫を解放、commit無し）
-        existing_allocations = (
-            db.query(Allocation).filter(Allocation.order_line_id == order_line_id).all()
+        # 1. P3: 既存の予約を全てリリース（在庫を解放、commit無し）
+        existing_reservations = (
+            db.query(LotReservation)
+            .filter(
+                LotReservation.source_type == ReservationSourceType.ORDER,
+                LotReservation.source_id == order_line_id,
+                LotReservation.status != ReservationStatus.RELEASED,
+            )
+            .all()
         )
-        for alloc in existing_allocations:
-            cancel_allocation(db, alloc.id, commit_db=False)
+        for res in existing_reservations:
+            cancel_allocation(db, res.id, commit_db=False)
 
-        # 2. 新しい引当を作成（在庫を引き当てる、commit無し）
+        # 2. 新しい予約を作成（在庫を引き当てる、commit無し）
         created_ids = []
         for item in payload.allocations:
             if item.quantity <= 0:
                 continue
 
-            allocation = allocate_manually(
+            reservation = allocate_manually(
                 db, order_line_id, item.lot_id, item.quantity, commit_db=False
             )
-            created_ids.append(allocation.id)
+            created_ids.append(reservation.id)
 
         # 3. 全て成功してから一括commit
         db.commit()
 
-        # 4. 作成された引当をrefresh
-        for alloc_id in created_ids:
-            refreshed_alloc: Allocation | None = (
-                db.query(Allocation).filter(Allocation.id == alloc_id).first()
-            )
-            if refreshed_alloc:
-                db.refresh(refreshed_alloc)
+        # 4. 作成された予約をrefresh
+        for res_id in created_ids:
+            refreshed_res = db.get(LotReservation, res_id)
+            if refreshed_res:
+                db.refresh(refreshed_res)
 
         logger.info(f"Saved allocations for line {order_line_id}: {len(created_ids)} items")
 

@@ -1,11 +1,12 @@
-"""Soft allocation preemption for hard allocation.
+"""Soft reservation preemption for hard allocation.
 
-Handles automatic release of soft allocations when hard allocation is requested.
+Handles automatic release of soft reservations when hard allocation is requested.
+
+P3: Uses LotReservation exclusively.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import case as sa_case
@@ -16,7 +17,8 @@ from app.application.services.allocations.utils import (
     update_order_allocation_status,
     update_order_line_status,
 )
-from app.infrastructure.persistence.models import Allocation, Lot, OrderLine
+from app.core.time_utils import utcnow
+from app.infrastructure.persistence.models import Lot, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -31,24 +33,24 @@ def _get_available_quantity_for_preempt(db: Session, lot: Lot) -> Decimal:
     return get_available_quantity(db, lot)
 
 
-def preempt_soft_allocations_for_hard(
+def preempt_soft_reservations_for_hard(
     db: Session,
     lot_id: int,
     required_qty: Decimal,
     hard_demand_id: int,
 ) -> list[dict]:
-    """Hard引当時に同ロットのSoft引当を自動解除.
+    """Hard確定時に同ロットのSoft予約を自動解除.
 
     優先度: KANBAN > ORDER > FORECAST (優先度の低いものから解除)
 
     Args:
         db: データベースセッション
         lot_id: ロットID
-        required_qty: 必要数量（Hard引当する数量）
-        hard_demand_id: 新しいHard需要のorder_line_id
+        required_qty: 必要数量（Hard確定する数量）
+        hard_demand_id: 新しいHard需要のsource_id
 
     Returns:
-        list[dict]: 解除された引当情報のリスト
+        list[dict]: 解除された予約情報のリスト
     """
     lot_stmt = select(Lot).where(Lot.id == lot_id).with_for_update()
     lot = db.execute(lot_stmt).scalar_one_or_none()
@@ -61,14 +63,18 @@ def preempt_soft_allocations_for_hard(
 
     shortage = required_qty - available
 
-    soft_allocations_stmt = (
-        select(Allocation)
-        .join(OrderLine, Allocation.order_line_id == OrderLine.id)
+    # Get soft reservations (ACTIVE, not CONFIRMED) ordered by priority
+    soft_reservations_stmt = (
+        select(LotReservation)
+        .outerjoin(
+            OrderLine,
+            (LotReservation.source_type == ReservationSourceType.ORDER)
+            & (LotReservation.source_id == OrderLine.id),
+        )
         .where(
-            Allocation.lot_id == lot.id,
-            Allocation.allocation_type == "soft",
-            Allocation.status == "allocated",
-            Allocation.order_line_id != hard_demand_id,
+            LotReservation.lot_id == lot_id,
+            LotReservation.status == ReservationStatus.ACTIVE,
+            LotReservation.source_id != hard_demand_id,
         )
         .order_by(
             sa_case(
@@ -78,69 +84,56 @@ def preempt_soft_allocations_for_hard(
                 (OrderLine.order_type == "FORECAST_LINKED", 1),
                 else_=3,
             ).asc(),
-            Allocation.created_at.asc(),
+            LotReservation.created_at.asc(),
         )
     )
 
-    soft_allocations = db.execute(soft_allocations_stmt).scalars().all()
+    soft_reservations = db.execute(soft_reservations_stmt).scalars().all()
 
     released_info: list[dict] = []
     remaining_shortage = shortage
 
-    for allocation in soft_allocations:
+    now = utcnow()
+
+    for reservation in soft_reservations:
         if remaining_shortage <= 0:
             break
 
-        release_qty = min(allocation.allocated_quantity, remaining_shortage)
+        release_qty = min(reservation.reserved_qty, remaining_shortage)
 
-        reservations = (
-            db.query(LotReservation)
-            .filter(
-                LotReservation.lot_id == lot_id,
-                LotReservation.source_id == allocation.order_line_id,
-                LotReservation.source_type == ReservationSourceType.ORDER,
-                LotReservation.status.in_([ReservationStatus.ACTIVE, ReservationStatus.CONFIRMED]),
-            )
-            .all()
-        )
+        order_line = None
+        if reservation.source_type == ReservationSourceType.ORDER and reservation.source_id:
+            order_line = db.get(OrderLine, reservation.source_id)
 
-        order_line_id = allocation.order_line_id
-        order_line = db.get(OrderLine, order_line_id)
-
-        if release_qty < allocation.allocated_quantity:
-            allocation.allocated_quantity -= release_qty
-
-            for reservation in reservations:
-                if reservation.reserved_qty > release_qty:
-                    reservation.reserved_qty -= release_qty
-                    break
-                else:
-                    reservation.reserved_qty -= release_qty
+        if release_qty < reservation.reserved_qty:
+            # Partial release - reduce quantity
+            reservation.reserved_qty -= release_qty
+            reservation.updated_at = now
 
             released_info.append(
                 {
-                    "allocation_id": allocation.id,
-                    "order_line_id": order_line_id,
+                    "reservation_id": reservation.id,
+                    "source_id": reservation.source_id,
                     "released_qty": float(release_qty),
                     "order_type": order_line.order_type if order_line else "UNKNOWN",
                 }
             )
         else:
-            for reservation in reservations:
-                reservation.status = ReservationStatus.RELEASED
-                reservation.released_at = datetime.utcnow()
+            # Full release
+            reservation.status = ReservationStatus.RELEASED
+            reservation.released_at = now
+            reservation.updated_at = now
 
             released_info.append(
                 {
-                    "allocation_id": allocation.id,
-                    "order_line_id": order_line_id,
+                    "reservation_id": reservation.id,
+                    "source_id": reservation.source_id,
                     "released_qty": float(release_qty),
                     "order_type": order_line.order_type if order_line else "UNKNOWN",
                 }
             )
-            db.delete(allocation)
 
-        lot.updated_at = datetime.utcnow()
+        lot.updated_at = now
         remaining_shortage -= release_qty
 
         if order_line:
@@ -150,3 +143,7 @@ def preempt_soft_allocations_for_hard(
     db.flush()
 
     return released_info
+
+
+# Backward compatibility alias
+preempt_soft_allocations_for_hard = preempt_soft_reservations_for_hard

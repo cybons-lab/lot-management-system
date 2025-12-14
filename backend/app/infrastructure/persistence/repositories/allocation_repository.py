@@ -1,7 +1,7 @@
 # backend/app/repositories/allocation_repository.py
-"""引当リポジトリ DBアクセスのみを責務とし、ビジネスロジックは含まない.
+"""予約リポジトリ - P3: LotReservation ベースに完全移行.
 
-v2.4: lot_id (FK) ベースに統一。lot_reference (VARCHAR) は廃止。
+v3.0: Allocation を廃止し、LotReservation のみを使用。
 """
 
 from typing import cast
@@ -10,126 +10,146 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.time_utils import utcnow
-from app.infrastructure.persistence.models import Allocation, Lot
+from app.infrastructure.persistence.models import Lot
+from app.infrastructure.persistence.models.lot_reservations_model import (
+    LotReservation,
+    ReservationSourceType,
+    ReservationStatus,
+)
 
 
-class AllocationRepository:
-    """引当リポジトリ（SQLAlchemy 2.0準拠）."""
+class ReservationRepository:
+    """予約リポジトリ（P3: LotReservation ベース）."""
 
     def __init__(self, db: Session):
         self.db = db
 
-    def find_by_id(self, allocation_id: int) -> Allocation | None:
-        """IDで引当を取得.
+    def find_by_id(self, reservation_id: int) -> LotReservation | None:
+        """IDで予約を取得.
 
         Args:
-            allocation_id: 引当ID
+            reservation_id: 予約ID
 
         Returns:
-            引当エンティティ（存在しない場合はNone）
+            予約エンティティ（存在しない場合はNone）
         """
         stmt = (
-            select(Allocation)
-            .options(joinedload(Allocation.order_line))
-            .where(Allocation.id == allocation_id)
+            select(LotReservation)
+            .options(joinedload(LotReservation.lot))
+            .where(LotReservation.id == reservation_id)
         )
-        return cast(Allocation | None, self.db.execute(stmt).scalar_one_or_none())
+        return cast(LotReservation | None, self.db.execute(stmt).scalar_one_or_none())
 
-    def find_by_order_line_id(self, order_line_id: int) -> list[Allocation]:
-        """受注明細IDで引当を取得.
+    def find_by_order_line_id(self, order_line_id: int) -> list[LotReservation]:
+        """受注明細IDで予約を取得.
 
         Args:
             order_line_id: 受注明細ID
 
         Returns:
-            引当エンティティのリスト
+            予約エンティティのリスト
         """
         stmt = (
-            select(Allocation)
-            .where(Allocation.order_line_id == order_line_id)
-            .order_by(Allocation.created_at)
+            select(LotReservation)
+            .where(
+                LotReservation.source_type == ReservationSourceType.ORDER,
+                LotReservation.source_id == order_line_id,
+            )
+            .order_by(LotReservation.created_at)
         )
         return list(self.db.execute(stmt).scalars().all())
 
-    def find_active_by_lot_id(self, lot_id: int) -> list[Allocation]:
-        """ロットIDでアクティブな引当を取得.
+    def find_active_by_lot_id(self, lot_id: int) -> list[LotReservation]:
+        """ロットIDでアクティブな予約を取得.
 
         Args:
             lot_id: ロットID
 
         Returns:
-            アクティブな引当エンティティのリスト
+            アクティブな予約エンティティのリスト
         """
         stmt = (
-            select(Allocation)
-            .where(Allocation.lot_id == lot_id, Allocation.status == "reserved")
-            .order_by(Allocation.created_at)
+            select(LotReservation)
+            .where(
+                LotReservation.lot_id == lot_id,
+                LotReservation.status.in_([ReservationStatus.ACTIVE, ReservationStatus.CONFIRMED]),
+            )
+            .order_by(LotReservation.created_at)
         )
         return list(self.db.execute(stmt).scalars().all())
 
-    def find_active_by_lot_reference(self, lot_number: str) -> list[Allocation]:
-        """ロット番号でアクティブな引当を取得（後方互換性のため維持）.
+    def find_active_by_lot_number(self, lot_number: str) -> list[LotReservation]:
+        """ロット番号でアクティブな予約を取得.
 
         Args:
             lot_number: ロット番号
 
         Returns:
-            アクティブな引当エンティティのリスト
+            アクティブな予約エンティティのリスト
         """
-        # lot_number から lot_id を検索して引当を取得
         lot = self.db.execute(select(Lot).where(Lot.lot_number == lot_number)).scalar_one_or_none()
         if not lot:
             return []
         return self.find_active_by_lot_id(lot.id)
 
     def create(
-        self, order_line_id: int, lot_id: int | None, allocated_qty: float, status: str = "reserved"
-    ) -> Allocation:
-        """引当を作成.
+        self,
+        lot_id: int,
+        source_type: ReservationSourceType,
+        source_id: int,
+        reserved_qty: float,
+        status: ReservationStatus = ReservationStatus.ACTIVE,
+    ) -> LotReservation:
+        """予約を作成.
 
-        FROZEN: allocations への書き込みは禁止されています。
-        lot_reservations を使用してください。
+        Args:
+            lot_id: ロットID
+            source_type: ソースタイプ (ORDER, FORECAST, MANUAL)
+            source_id: ソースID（order_line_id 等）
+            reserved_qty: 予約数量
+            status: ステータス（デフォルト: ACTIVE）
 
-        Raises:
-            RuntimeError: allocations writes are disabled
+        Returns:
+            作成された予約エンティティ
         """
-        raise RuntimeError(
-            "allocations writes are disabled; use lot_reservations instead. "
-            "See P3 migration plan in docs/reviews/integrated_app_layer_issues_action_plan.md"
+        from decimal import Decimal
+
+        reservation = LotReservation(
+            lot_id=lot_id,
+            source_type=source_type,
+            source_id=source_id,
+            reserved_qty=Decimal(str(reserved_qty)),
+            status=status,
+            created_at=utcnow(),
         )
+        self.db.add(reservation)
+        return reservation
 
-    def update_status(self, allocation: Allocation, new_status: str) -> None:
-        """引当ステータスを更新.
+    def update_status(self, reservation: LotReservation, new_status: ReservationStatus) -> None:
+        """予約ステータスを更新.
 
-        FROZEN: allocations への書き込みは禁止されています。
-        lot_reservations を使用してください。
-
-        Raises:
-            RuntimeError: allocations writes are disabled
+        Args:
+            reservation: 予約エンティティ
+            new_status: 新しいステータス
         """
-        raise RuntimeError(
-            "allocations writes are disabled; use lot_reservations instead. "
-            "See P3 migration plan in docs/reviews/integrated_app_layer_issues_action_plan.md"
-        )
+        reservation.status = new_status
+        reservation.updated_at = utcnow()
 
-    def delete(self, allocation: Allocation) -> None:
-        """引当を削除.
+        if new_status == ReservationStatus.CONFIRMED:
+            reservation.confirmed_at = utcnow()
+        elif new_status == ReservationStatus.RELEASED:
+            reservation.released_at = utcnow()
 
-        FROZEN: allocations への書き込みは禁止されています。
-        lot_reservations を使用してください。
+    def release(self, reservation: LotReservation) -> None:
+        """予約を解放（論理削除）.
 
-        Raises:
-            RuntimeError: allocations writes are disabled
+        Args:
+            reservation: 予約エンティティ
         """
-        raise RuntimeError(
-            "allocations writes are disabled; use lot_reservations instead. "
-            "See P3 migration plan in docs/reviews/integrated_app_layer_issues_action_plan.md"
-        )
+        self.update_status(reservation, ReservationStatus.RELEASED)
 
     def get_lot(self, lot_id: int) -> Lot | None:
         """ロットを取得.
-
-        v2.2: lot_current_stock の代わりに lots テーブルを直接参照。
 
         Args:
             lot_id: ロットID
@@ -140,43 +160,6 @@ class AllocationRepository:
         stmt = select(Lot).where(Lot.id == lot_id)
         return cast(Lot | None, self.db.execute(stmt).scalar_one_or_none())
 
-    def update_lot_quantities(self, lot_id: int, quantity_delta: float) -> None:
-        """ロット在庫数量を更新.
 
-        v2.2: lots.current_quantity を直接更新。
-
-        Args:
-            lot_id: ロットID
-            quantity_delta: 数量変動（正=増加、負=減少）
-
-        Note:
-            allocated_quantity の更新は別途行う必要があります。
-            このメソッドは current_quantity のみを更新します。
-        """
-        lot = self.get_lot(lot_id)
-        if lot:
-            from decimal import Decimal
-
-            lot.current_quantity += Decimal(str(quantity_delta))
-            lot.updated_at = utcnow()
-        # NOTE: commitはservice層で行う
-
-    def update_lot_allocated_quantity(self, lot_id: int, allocated_delta: float) -> None:
-        """ロットの引当数量を更新.
-
-        DEPRECATED: This method is deprecated. Use LotReservation instead.
-        v2.3: allocated_quantity is now dynamically calculated from lot_reservations.
-
-        Args:
-            lot_id: ロットID
-            allocated_delta: 引当数量変動（正=増加、負=減少）
-        """
-        import warnings
-
-        warnings.warn(
-            "update_lot_allocated_quantity is deprecated. Use LotReservation instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        # No-op: allocated_quantity is now calculated from lot_reservations
-        pass
+# Backward compatibility alias
+AllocationRepository = ReservationRepository

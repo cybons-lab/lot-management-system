@@ -1,8 +1,10 @@
-"""Auto-allocation operations.
+"""Auto-reservation operations.
 
 Handles FEFO-based automatic allocation:
-- Single line auto-allocation
-- Bulk auto-allocation with filtering
+- Single line auto-reservation
+- Bulk auto-reservation with filtering
+
+P3: Uses LotReservation exclusively.
 """
 
 from __future__ import annotations
@@ -12,23 +14,28 @@ from typing import Any
 
 from sqlalchemy.orm import Session
 
-from app.application.services.allocations.manual import allocate_manually
+from app.application.services.allocations.manual import create_manual_reservation
 from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.infrastructure.persistence.models import Allocation, Lot, Order, OrderLine
+from app.infrastructure.persistence.models import Lot, Order, OrderLine
+from app.infrastructure.persistence.models.lot_reservations_model import (
+    LotReservation,
+    ReservationSourceType,
+    ReservationStatus,
+)
 
 
-def auto_allocate_line(
+def auto_reserve_line(
     db: Session,
     order_line_id: int,
-) -> list[Allocation]:
-    """受注明細に対してFEFO戦略で自動引当を実行.
+) -> list[LotReservation]:
+    """受注明細に対してFEFO戦略で自動予約を実行.
 
     Args:
         db: データベースセッション
         order_line_id: 受注明細ID
 
     Returns:
-        list[Allocation]: 作成された引当一覧
+        list[LotReservation]: 作成された予約一覧
 
     Raises:
         ValueError: 受注明細が見つからない場合
@@ -37,14 +44,18 @@ def auto_allocate_line(
     if not line:
         raise ValueError(f"OrderLine {order_line_id} not found")
 
-    existing_allocations = (
-        db.query(Allocation)
-        .filter(Allocation.order_line_id == order_line_id, Allocation.status == "allocated")
+    existing_reservations = (
+        db.query(LotReservation)
+        .filter(
+            LotReservation.source_type == ReservationSourceType.ORDER,
+            LotReservation.source_id == order_line_id,
+            LotReservation.status != ReservationStatus.RELEASED,
+        )
         .all()
     )
-    already_allocated = sum(a.allocated_quantity for a in existing_allocations)
+    already_reserved = sum(r.reserved_qty for r in existing_reservations)
 
-    required_qty = Decimal(str(line.order_quantity)) - already_allocated
+    required_qty = Decimal(str(line.order_quantity)) - already_reserved
     if required_qty <= 0:
         return []
 
@@ -59,7 +70,7 @@ def auto_allocate_line(
         .all()
     )
 
-    created_allocations: list[Allocation] = []
+    created_reservations: list[LotReservation] = []
     remaining_qty = required_qty
 
     for lot in candidate_lots:
@@ -70,40 +81,40 @@ def auto_allocate_line(
         if available <= 0:
             continue
 
-        allocate_qty = min(available, remaining_qty)
+        reserve_qty = min(available, remaining_qty)
 
-        allocation = allocate_manually(
+        reservation = create_manual_reservation(
             db,
             order_line_id=order_line_id,
             lot_id=lot.id,
-            quantity=allocate_qty,
+            quantity=reserve_qty,
             commit_db=False,
         )
-        created_allocations.append(allocation)
-        remaining_qty -= allocate_qty
+        created_reservations.append(reservation)
+        remaining_qty -= reserve_qty
 
-    if created_allocations:
+    if created_reservations:
         db.commit()
-        for alloc in created_allocations:
-            db.refresh(alloc)
+        for res in created_reservations:
+            db.refresh(res)
 
-    return created_allocations
+    return created_reservations
 
 
-def _auto_allocate_line_no_commit(
+def _auto_reserve_line_no_commit(
     db: Session,
     order_line_id: int,
     required_qty: Decimal,
-) -> list[Allocation]:
-    """auto_allocate_line の内部版（コミットなし）.
+) -> list[LotReservation]:
+    """auto_reserve_line の内部版（コミットなし）.
 
     Args:
         db: データベースセッション
         order_line_id: 受注明細ID
-        required_qty: 必要数量（既存引当を差し引いた残数）
+        required_qty: 必要数量（既存予約を差し引いた残数）
 
     Returns:
-        list[Allocation]: 作成された引当一覧
+        list[LotReservation]: 作成された予約一覧
     """
     if required_qty <= 0:
         return []
@@ -123,7 +134,7 @@ def _auto_allocate_line_no_commit(
         .all()
     )
 
-    created_allocations: list[Allocation] = []
+    created_reservations: list[LotReservation] = []
     remaining_qty = required_qty
 
     for lot in candidate_lots:
@@ -134,34 +145,33 @@ def _auto_allocate_line_no_commit(
         if available <= 0:
             continue
 
-        allocate_qty = min(available, remaining_qty)
+        reserve_qty = min(available, remaining_qty)
 
-        allocation = allocate_manually(
+        reservation = create_manual_reservation(
             db,
             order_line_id=order_line_id,
             lot_id=lot.id,
-            quantity=allocate_qty,
+            quantity=reserve_qty,
             commit_db=False,
         )
-        created_allocations.append(allocation)
-        remaining_qty -= allocate_qty
+        created_reservations.append(reservation)
+        remaining_qty -= reserve_qty
 
-    return created_allocations
+    return created_reservations
 
 
-def auto_allocate_bulk(
+def auto_reserve_bulk(
     db: Session,
     *,
     product_id: int | None = None,
     customer_id: int | None = None,
     delivery_place_id: int | None = None,
     order_type: str | None = None,
-    skip_already_allocated: bool = True,
+    skip_already_reserved: bool = True,
 ) -> dict:
-    """複数受注明細に対して一括でFEFO自動引当を実行.
+    """複数受注明細に対して一括でFEFO自動予約を実行.
 
     フィルタリング条件を指定して対象を絞り込み可能。
-    フォーキャストグループ、個別受注、全受注への一括引当に対応。
 
     Args:
         db: データベースセッション
@@ -169,7 +179,7 @@ def auto_allocate_bulk(
         customer_id: 得意先ID（指定時はその得意先のみ対象）
         delivery_place_id: 納入先ID（指定時はその納入先のみ対象）
         order_type: 受注タイプ（FORECAST_LINKED, KANBAN, SPOT, ORDER）
-        skip_already_allocated: True の場合、既に全量引当済みの明細はスキップ
+        skip_already_reserved: True の場合、既に全量予約済みの明細はスキップ
 
     Returns:
         dict: 処理結果サマリー
@@ -199,8 +209,8 @@ def auto_allocate_bulk(
 
     result: dict[str, Any] = {
         "processed_lines": 0,
-        "allocated_lines": 0,
-        "total_allocations": 0,
+        "reserved_lines": 0,
+        "total_reservations": 0,
         "skipped_lines": 0,
         "failed_lines": [],
     }
@@ -208,30 +218,37 @@ def auto_allocate_bulk(
     for line in order_lines:
         result["processed_lines"] += 1
 
-        existing_allocations = (
-            db.query(Allocation)
+        existing_reservations = (
+            db.query(LotReservation)
             .filter(
-                Allocation.order_line_id == line.id,
-                Allocation.status == "allocated",
+                LotReservation.source_type == ReservationSourceType.ORDER,
+                LotReservation.source_id == line.id,
+                LotReservation.status != ReservationStatus.RELEASED,
             )
             .all()
         )
-        already_allocated = sum(a.allocated_quantity for a in existing_allocations)
-        required_qty = Decimal(str(line.order_quantity)) - already_allocated
+        already_reserved = sum(r.reserved_qty for r in existing_reservations)
+        required_qty = Decimal(str(line.order_quantity)) - already_reserved
 
-        if required_qty <= 0 and skip_already_allocated:
+        if required_qty <= 0 and skip_already_reserved:
             result["skipped_lines"] += 1
             continue
 
         try:
-            allocations = _auto_allocate_line_no_commit(db, line.id, required_qty)
-            if allocations:
-                result["allocated_lines"] += 1
-                result["total_allocations"] += len(allocations)
+            reservations = _auto_reserve_line_no_commit(db, line.id, required_qty)
+            if reservations:
+                result["reserved_lines"] += 1
+                result["total_reservations"] += len(reservations)
         except Exception as e:
             result["failed_lines"].append({"line_id": line.id, "error": str(e)})
 
-    if result["total_allocations"] > 0:
+    if result["total_reservations"] > 0:
         db.commit()
 
     return result
+
+
+# Backward compatibility aliases
+auto_allocate_line = auto_reserve_line
+_auto_allocate_line_no_commit = _auto_reserve_line_no_commit
+auto_allocate_bulk = auto_reserve_bulk

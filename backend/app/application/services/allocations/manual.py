@@ -1,13 +1,14 @@
-"""Manual allocation operations.
+"""Manual reservation operations.
 
 Handles manual allocation (Drag & Assign):
-- Direct lot-to-order-line allocation
-- Event dispatching for allocation creation
+- Direct lot-to-order-line reservation
+- Event dispatching for reservation creation
+
+P3: Uses LotReservation exclusively.
 """
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
@@ -18,7 +19,8 @@ from app.application.services.allocations.utils import (
     update_order_line_status,
 )
 from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.infrastructure.persistence.models import Allocation, Lot, OrderLine
+from app.core.time_utils import utcnow
+from app.infrastructure.persistence.models import Lot, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -26,30 +28,30 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 )
 
 
-def allocate_manually(
+def create_manual_reservation(
     db: Session,
     order_line_id: int,
     lot_id: int,
     quantity: float | Decimal,
     *,
     commit_db: bool = True,
-) -> Allocation:
-    """手動引当実行 (Drag & Assign).
+) -> LotReservation:
+    """手動予約作成 (Drag & Assign).
 
-    v2.3: AllocationCreatedEvent を発行するように拡張。
+    P3: LotReservation のみを作成。Allocation は作成しない。
 
     Args:
         db: データベースセッション
         order_line_id: 受注明細ID
         lot_id: ロットID
-        quantity: 引当数量
-        commit_db: Trueの場合、処理完了後にcommitを実行（デフォルト: True）
+        quantity: 予約数量
+        commit_db: Trueの場合、処理完了後にcommitを実行
 
     Returns:
-        Allocation: 作成された引当オブジェクト
+        LotReservation: 作成された予約オブジェクト
 
     Raises:
-        AllocationCommitError: 引当に失敗した場合
+        AllocationCommitError: 予約に失敗した場合
         ValueError: パラメータが不正な場合
     """
     from app.domain.events import AllocationCreatedEvent, EventDispatcher
@@ -62,7 +64,7 @@ def allocate_manually(
         quantity = Decimal(quantity)
 
     if quantity <= 0:
-        raise ValueError("Allocation quantity must be positive")
+        raise ValueError("Reservation quantity must be positive")
 
     line = db.query(OrderLine).filter(OrderLine.id == order_line_id).first()
     if not line:
@@ -86,25 +88,18 @@ def allocate_manually(
             f"Insufficient stock: required {quantity}, available {available}"
         )
 
+    now = utcnow()
+
     reservation = LotReservation(
         lot_id=lot.id,
         source_type=ReservationSourceType.ORDER,
         source_id=line.id,
         reserved_qty=quantity,
         status=ReservationStatus.ACTIVE,
-        created_at=datetime.utcnow(),
+        created_at=now,
     )
     db.add(reservation)
-    lot.updated_at = datetime.utcnow()
-
-    allocation = Allocation(
-        order_line_id=line.id,
-        lot_id=lot.id,
-        allocated_quantity=quantity,
-        status="allocated",
-        created_at=datetime.utcnow(),
-    )
-    db.add(allocation)
+    lot.updated_at = now
 
     db.flush()
 
@@ -113,10 +108,10 @@ def allocate_manually(
 
     if commit_db:
         db.commit()
-        db.refresh(allocation)
+        db.refresh(reservation)
 
         event = AllocationCreatedEvent(
-            allocation_id=allocation.id,
+            allocation_id=reservation.id,  # P3: Use reservation ID
             order_line_id=order_line_id,
             lot_id=lot_id,
             quantity=quantity,
@@ -124,4 +119,8 @@ def allocate_manually(
         )
         EventDispatcher.queue(event)
 
-    return allocation
+    return reservation
+
+
+# Backward compatibility alias
+allocate_manually = create_manual_reservation

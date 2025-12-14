@@ -1,11 +1,19 @@
-"""Confirmed order lines endpoint for SAP registration."""
+"""Confirmed order lines endpoint for SAP registration.
+
+P3: Uses LotReservation instead of Allocation.
+"""
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.infrastructure.persistence.models import Allocation, Customer, Order, OrderLine, Product
+from app.infrastructure.persistence.models import Customer, Order, OrderLine, Product
+from app.infrastructure.persistence.models.lot_reservations_model import (
+    LotReservation,
+    ReservationSourceType,
+    ReservationStatus,
+)
 from app.presentation.api.deps import get_db
 
 
@@ -24,7 +32,7 @@ class ConfirmedOrderLineResponse(BaseModel):
     product_code: str
     product_name: str
     order_quantity: float
-    allocated_quantity: float
+    reserved_quantity: float  # P3: Renamed from allocated_quantity
     unit: str
     delivery_date: str
     sap_order_no: str | None = None
@@ -34,21 +42,24 @@ class ConfirmedOrderLineResponse(BaseModel):
 
 @router.get("/confirmed-order-lines", response_model=list[ConfirmedOrderLineResponse])
 def get_confirmed_order_lines(db: Session = Depends(get_db)):
-    """Get all order lines that are fully allocated and not yet registered in
+    """Get all order lines that are fully reserved and not yet registered in
     SAP.
 
-    Returns lines where allocated_quantity >= converted_quantity and sap_order_no is NULL.
+    Returns lines where reserved_quantity >= converted_quantity and sap_order_no is NULL.
 
-    Note: Both allocated_quantity and converted_quantity are in internal management units.
-          Do NOT compare with order_quantity as it uses the original order unit (PCS/ML/etc).
+    P3: Uses LotReservation instead of Allocation.
     """
-    # Subquery to calculate allocated quantity per line
-    alloc_subq = (
+    # Subquery to calculate reserved quantity per line
+    res_subq = (
         select(
-            Allocation.order_line_id,
-            func.coalesce(func.sum(Allocation.allocated_quantity), 0).label("allocated_qty"),
+            LotReservation.source_id.label("order_line_id"),
+            func.coalesce(func.sum(LotReservation.reserved_qty), 0).label("reserved_qty"),
         )
-        .group_by(Allocation.order_line_id)
+        .where(
+            LotReservation.source_type == ReservationSourceType.ORDER,
+            LotReservation.status != ReservationStatus.RELEASED,
+        )
+        .group_by(LotReservation.source_id)
         .subquery()
     )
 
@@ -64,7 +75,7 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
             Product.maker_part_code.label("product_code"),
             Product.product_name,
             OrderLine.order_quantity,
-            func.coalesce(alloc_subq.c.allocated_qty, 0).label("allocated_quantity"),
+            func.coalesce(res_subq.c.reserved_qty, 0).label("reserved_quantity"),
             OrderLine.unit,
             OrderLine.delivery_date,
             OrderLine.sap_order_no,
@@ -72,11 +83,11 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
         .join(Order, OrderLine.order_id == Order.id)
         .join(Customer, Order.customer_id == Customer.id)
         .join(Product, OrderLine.product_id == Product.id)
-        .outerjoin(alloc_subq, OrderLine.id == alloc_subq.c.order_line_id)
+        .outerjoin(res_subq, OrderLine.id == res_subq.c.order_line_id)
         .where(OrderLine.sap_order_no.is_(None))  # SAP未登録
         .where(
-            func.coalesce(alloc_subq.c.allocated_qty, 0) >= OrderLine.converted_quantity
-        )  # 引当確定済み (内部単位で比較)
+            func.coalesce(res_subq.c.reserved_qty, 0) >= OrderLine.converted_quantity
+        )  # 予約確定済み (内部単位で比較)
         .order_by(OrderLine.delivery_date.asc())
     )
 
@@ -93,7 +104,7 @@ def get_confirmed_order_lines(db: Session = Depends(get_db)):
             product_code=r.product_code,
             product_name=r.product_name,
             order_quantity=float(r.order_quantity),
-            allocated_quantity=float(r.allocated_quantity),
+            reserved_quantity=float(r.reserved_quantity),
             unit=r.unit,
             delivery_date=str(r.delivery_date),
             sap_order_no=r.sap_order_no,

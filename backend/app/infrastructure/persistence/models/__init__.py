@@ -39,7 +39,7 @@ from .masters_models import (
     Warehouse,
 )
 from .order_groups_models import OrderGroup
-from .orders_models import Allocation, Order, OrderLine
+from .orders_models import Order, OrderLine
 from .product_supplier_models import ProductSupplier
 from .seed_snapshot_model import SeedSnapshot
 from .soft_delete_mixin import INFINITE_VALID_TO, SoftDeleteMixin
@@ -98,7 +98,6 @@ __all__ = [
     "Order",
     "OrderLine",
     "OrderGroup",
-    "Allocation",
     # Forecast
     "ForecastCurrent",
     "ForecastHistory",
