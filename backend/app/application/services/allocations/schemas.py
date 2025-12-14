@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
-from app.domain.errors import DomainError
+from app.domain.errors import DomainError, InsufficientStockError  # noqa: F401
 from app.infrastructure.persistence.models import Allocation
 
 
@@ -72,25 +72,3 @@ class AllocationNotFoundError(DomainError):
     """Raised when the specified allocation is not found in DB."""
 
     pass
-
-
-class InsufficientStockError(DomainError):
-    """Raised when there is not enough stock to confirm allocation.
-
-    Attributes:
-        lot_id: Lot ID with insufficient stock
-        lot_number: Lot number for display
-        required: Required quantity
-        available: Available quantity
-    """
-
-    def __init__(self, lot_id: int, lot_number: str, required: float, available: float):
-        self.lot_id = lot_id
-        self.lot_number = lot_number
-        self.required = required
-        self.available = available
-        message = (
-            f"ロット {self.lot_number} の在庫が不足しています "
-            f"(必要: {self.required}, 利用可能: {self.available})"
-        )
-        super().__init__(message)

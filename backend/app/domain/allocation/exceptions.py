@@ -1,7 +1,11 @@
 # backend/app/domain/allocation/exceptions.py
 """引当ドメインの例外定義."""
 
-from app.domain.errors import DomainError
+# Re-export consolidated InsufficientStockError for backward compatibility
+from app.domain.errors import (
+    DomainError,
+    InsufficientStockError,  # noqa: F401
+)
 
 
 class ValidationError(DomainError):
@@ -32,17 +36,6 @@ class InvalidTransitionError(DomainError):
     def __init__(self, from_state: str, to_state: str):
         message = f"Invalid transition: {from_state} -> {to_state}"
         super().__init__(message, code="INVALID_TRANSITION")
-
-
-class InsufficientStockError(DomainError):
-    """在庫不足エラー."""
-
-    def __init__(self, lot_id: int, required: float, available: float):
-        message = f"Insufficient stock for lot {lot_id}: required={required}, available={available}"
-        super().__init__(message, code="INSUFFICIENT_STOCK")
-        self.lot_id = lot_id
-        self.required = required
-        self.available = available
 
 
 class AlreadyAllocatedError(DomainError):
