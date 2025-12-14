@@ -20,7 +20,11 @@ import {
   useInventoryBySupplier,
   useInventoryByWarehouse,
 } from "@/hooks/api";
-import { useProductsQuery, useWarehousesQuery, useSuppliersQuery } from "@/hooks/api/useMastersQuery";
+import {
+  useProductsQuery,
+  useWarehousesQuery,
+  useSuppliersQuery,
+} from "@/hooks/api/useMastersQuery";
 import { useCreateLot } from "@/hooks/mutations";
 import { useDialog } from "@/hooks/ui";
 import { FormDialog } from "@/shared/components/form";

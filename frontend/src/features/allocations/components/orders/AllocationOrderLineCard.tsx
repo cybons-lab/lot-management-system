@@ -167,11 +167,13 @@ export function AllocationOrderLineCard({
           <div className="flex items-center justify-between">
             <div className="text-xs font-medium text-gray-500">引当内訳</div>
             <div className="text-[10px] text-gray-400">
-              {(
-                (Array.isArray(line.reservations) ? line.reservations : []) ||
-                line.allocated_lots ||
-                []
-              ).length}
+              {
+                (
+                  (Array.isArray(line.reservations) ? line.reservations : []) ||
+                  line.allocated_lots ||
+                  []
+                ).length
+              }
               件
             </div>
           </div>
@@ -189,7 +191,9 @@ export function AllocationOrderLineCard({
               }>
             ).map((alloc, idx) => {
               // Handle both API naming
-              const qty = Number(alloc.reserved_qty ?? alloc.allocated_quantity ?? alloc.allocated_qty ?? 0);
+              const qty = Number(
+                alloc.reserved_qty ?? alloc.allocated_quantity ?? alloc.allocated_qty ?? 0,
+              );
               // Handle generic API response where lot_number might be missing in type but present in runtime
               const lotNum = alloc.lot_number || `ID:${alloc.lot_id}`;
               const isProvisional = alloc.status === "temporary" || alloc.status === "provisional";
