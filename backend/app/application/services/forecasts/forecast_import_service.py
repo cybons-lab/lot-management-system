@@ -1,11 +1,11 @@
 """Forecast import service layer."""
 
 from collections import defaultdict
-from datetime import datetime
 
 from sqlalchemy import and_
 from sqlalchemy.orm import Session
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.forecast_models import ForecastCurrent, ForecastHistory
 from app.infrastructure.persistence.models.masters_models import Customer, DeliveryPlace, Product
 from app.presentation.schemas.forecasts.forecast_schema import (
@@ -86,7 +86,7 @@ class ForecastImportService:
             grouped[key].append(item)
 
         # Process each group
-        snapshot_at = datetime.now()
+        snapshot_at = utcnow()
 
         for (customer_id, delivery_place_id, product_id), group_items in grouped.items():
             if replace_existing:

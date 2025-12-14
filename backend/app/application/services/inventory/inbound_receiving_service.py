@@ -1,11 +1,10 @@
 """Inbound receiving service layer."""
 
-from datetime import datetime
-
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.core.config import settings
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.inbound_models import (
     InboundPlan,
     InboundPlanLine,
@@ -153,7 +152,7 @@ class InboundReceivingService:
 
         # Update plan status
         plan.status = InboundPlanStatus.RECEIVED
-        plan.updated_at = datetime.now()
+        plan.updated_at = utcnow()
 
         self.db.commit()
 

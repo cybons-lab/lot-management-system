@@ -5,8 +5,10 @@ production, replace with actual SAP API client.
 """
 
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
+
+from app.core.time_utils import utcnow
 
 
 class SAPMockClient:
@@ -52,7 +54,7 @@ class SAPMockClient:
 
             mock_data[product_id] = {
                 "sap_total": Decimal(str(round(sap_qty, 2))),
-                "timestamp": datetime.now(),
+                "timestamp": utcnow(),
             }
 
         return mock_data
@@ -67,7 +69,7 @@ class SAPMockClient:
             - UI確認のため、日付は現在日からの相対値で生成
             - 数量はDecimalで返し、単位も併せて提供
         """
-        today = datetime.now().date()
+        today = utcnow().date()
 
         return [
             {

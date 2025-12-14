@@ -1,11 +1,11 @@
 """Inventory adjustment service layer."""
 
-from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.inventory_models import (
     Adjustment,
     Lot,
@@ -151,7 +151,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
 
         # Update lot quantity
         lot.current_quantity = new_quantity
-        lot.updated_at = datetime.now()
+        lot.updated_at = utcnow()
 
         # Update lot status if necessary
         if new_quantity == Decimal("0"):
@@ -165,7 +165,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
             quantity_after=new_quantity,
             reference_type="adjustment",
             reference_id=db_adjustment.id,
-            transaction_date=datetime.now(),
+            transaction_date=utcnow(),
         )
 
         self.db.add(stock_history)

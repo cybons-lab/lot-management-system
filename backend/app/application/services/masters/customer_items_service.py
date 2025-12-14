@@ -1,11 +1,12 @@
 """Customer items service (得意先品番マッピング管理)."""
 
-from datetime import date, datetime
+from datetime import date
 from typing import cast
 
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.masters_models import CustomerItem
 from app.presentation.schemas.masters.customer_items_schema import (
     CustomerItemBulkRow,
@@ -155,7 +156,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
         for key, value in item.model_dump(exclude_unset=True).items():
             setattr(db_item, key, value)
 
-        db_item.updated_at = datetime.now()
+        db_item.updated_at = utcnow()
         self.db.commit()
         self.db.refresh(db_item)
         return self._enrich_item(db_item)
@@ -266,7 +267,7 @@ class CustomerItemsService(BaseService[CustomerItem, CustomerItemCreate, Custome
                     existing.pack_unit = row.pack_unit
                     existing.pack_quantity = row.pack_quantity
                     existing.special_instructions = row.special_instructions
-                    existing.updated_at = datetime.now()
+                    existing.updated_at = utcnow()
                     summary["updated"] += 1
                 else:
                     # CREATE

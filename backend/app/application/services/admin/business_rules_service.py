@@ -1,11 +1,11 @@
 """Business rules service (業務ルールサービス)."""
 
-from datetime import datetime
 from typing import cast
 
 from sqlalchemy.orm import Session
 
 from app.application.services.common.base_service import BaseService
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models.logs_models import BusinessRule
 from app.presentation.schemas.system.business_rules_schema import (
     BusinessRuleCreate,
@@ -76,7 +76,7 @@ class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, Business
         for key, value in update_data.items():
             setattr(db_rule, key, value)
 
-        db_rule.updated_at = datetime.now()
+        db_rule.updated_at = utcnow()
         self.db.commit()
         self.db.refresh(db_rule)
         return db_rule
@@ -88,7 +88,7 @@ class BusinessRuleService(BaseService[BusinessRule, BusinessRuleCreate, Business
             return None
 
         db_rule.is_active = not db_rule.is_active
-        db_rule.updated_at = datetime.now()
+        db_rule.updated_at = utcnow()
         self.db.commit()
         self.db.refresh(db_rule)
         return db_rule

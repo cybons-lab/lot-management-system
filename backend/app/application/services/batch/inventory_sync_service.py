@@ -1,11 +1,11 @@
 """Inventory synchronization service for SAP integration."""
 
-from datetime import datetime
 from decimal import Decimal
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.core.time_utils import utcnow
 from app.infrastructure.external.sap_mock_client import SAPMockClient
 from app.infrastructure.persistence.models.logs_models import BusinessRule
 
@@ -154,10 +154,10 @@ class InventorySyncService:
                     "sap_qty": disc["sap_qty"],
                     "diff_pct": disc["diff_pct"],
                     "diff_amount": disc["diff_amount"],
-                    "checked_at": datetime.now().isoformat(),
+                    "checked_at": utcnow().isoformat(),
                 }
                 existing_alert.is_active = True
-                existing_alert.updated_at = datetime.now()
+                existing_alert.updated_at = utcnow()
                 created_alerts.append(existing_alert)
             else:
                 # 新しいアラート作成
@@ -171,7 +171,7 @@ class InventorySyncService:
                         "sap_qty": disc["sap_qty"],
                         "diff_pct": disc["diff_pct"],
                         "diff_amount": disc["diff_amount"],
-                        "checked_at": datetime.now().isoformat(),
+                        "checked_at": utcnow().isoformat(),
                     },
                     is_active=True,
                 )
