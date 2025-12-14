@@ -7,10 +7,10 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItem,
     DeliveryPlace,
     Product,
-    ProductSupplier,
     Supplier,
     Warehouse,
 )
+from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
 
 from .utils import fake
 
