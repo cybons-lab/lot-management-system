@@ -50,7 +50,7 @@ class OrderService:
         primary_supplier_ids: list[int] | None = None,
     ) -> list[OrderWithLinesResponse]:
         stmt = select(Order).options(  # type: ignore[assignment]
-            selectinload(Order.order_lines).selectinload(OrderLine.allocations)
+            selectinload(Order.order_lines).selectinload(OrderLine.product)
         )
 
         if customer_code:
@@ -116,7 +116,6 @@ class OrderService:
             .join(Order, OrderLine.order_id == Order.id)
             .options(
                 selectinload(OrderLine.order).selectinload(Order.customer),
-                selectinload(OrderLine.allocations),
                 selectinload(OrderLine.product),
             )
         )
@@ -154,11 +153,8 @@ class OrderService:
                 resp.customer_name = get_customer_name(customer) or None
                 resp.customer_code = get_customer_code(customer) or None
 
-            # Populate lot info in allocations (using lot relationship)
-            for i, alloc in enumerate(line.allocations):
-                if i < len(resp.allocations):
-                    if alloc.lot_number:
-                        resp.allocations[i].lot_number = alloc.lot_number
+            # P3: lot_reservations don't have lot_number directly
+            # lot info is available via reservation.lot.lot_number if needed
 
             response_lines.append(resp)
 
@@ -173,7 +169,6 @@ class OrderService:
             select(Order)
             .options(
                 selectinload(Order.order_lines).selectinload(OrderLine.product),
-                selectinload(Order.order_lines).selectinload(OrderLine.allocations),
                 selectinload(Order.customer),
             )
             .where(Order.id == order_id)
@@ -255,11 +250,11 @@ class OrderService:
 
         # Auto-allocate KANBAN/SPOT lines (Soft allocation)
         if lines_for_auto_alloc:
-            from app.application.services.allocations.actions import auto_allocate_line
+            from app.application.services.allocations.actions import auto_reserve_line
 
             for line_id in lines_for_auto_alloc:
                 try:
-                    auto_allocate_line(self.db, line_id)
+                    auto_reserve_line(self.db, line_id)
                 except Exception as e:
                     # Log but don't fail order creation
                     import logging

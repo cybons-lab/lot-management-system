@@ -12146,113 +12146,6 @@
         "title": "AllocationCommitResponse",
         "description": "Allocation commit response (v2.2.1)."
       },
-      "AllocationDetail": {
-        "properties": {
-          "id": {
-            "type": "integer",
-            "title": "Id"
-          },
-          "order_line_id": {
-            "type": "integer",
-            "title": "Order Line Id"
-          },
-          "lot_id": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lot Id"
-          },
-          "allocated_quantity": {
-            "type": "string",
-            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
-            "title": "Allocated Quantity"
-          },
-          "allocation_type": {
-            "type": "string",
-            "pattern": "^(soft|hard)$",
-            "title": "Allocation Type",
-            "description": "soft: 推奨引当, hard: 確定引当",
-            "default": "soft"
-          },
-          "status": {
-            "type": "string",
-            "pattern": "^(allocated|provisional|shipped|cancelled)$",
-            "title": "Status"
-          },
-          "confirmed_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmed At"
-          },
-          "confirmed_by": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Confirmed By"
-          },
-          "created_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created At"
-          },
-          "updated_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Updated At"
-          },
-          "lot_number": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Lot Number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "order_line_id",
-          "allocated_quantity",
-          "status"
-        ],
-        "title": "AllocationDetail",
-        "description": "Allocation detail (DDL: allocations)."
-      },
       "AllocationGap": {
         "properties": {
           "customer_id": {
@@ -19146,12 +19039,12 @@
             "title": "Forecast Period",
             "description": "予測期間（YYYY-MM）"
           },
-          "allocations": {
+          "reservations": {
             "items": {
-              "$ref": "#/components/schemas/AllocationDetail"
+              "$ref": "#/components/schemas/ReservationDetail"
             },
             "type": "array",
-            "title": "Allocations"
+            "title": "Reservations"
           },
           "allocated_quantity": {
             "type": "string",
@@ -20040,6 +19933,102 @@
         "type": "object",
         "title": "ProductUpdate",
         "description": "Payload to partially update a product."
+      },
+      "ReservationDetail": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id"
+          },
+          "source_type": {
+            "type": "string",
+            "title": "Source Type",
+            "description": "forecast | order | manual"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "reserved_qty": {
+            "type": "string",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d{0,3}0*$",
+            "title": "Reserved Qty",
+            "description": "予約数量"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "temporary | active | confirmed | released"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed At"
+          },
+          "lot_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "lot_id",
+          "source_type",
+          "reserved_qty",
+          "status"
+        ],
+        "title": "ReservationDetail",
+        "description": "Reservation detail (DDL: lot_reservations)."
       },
       "ReservationResponse": {
         "properties": {

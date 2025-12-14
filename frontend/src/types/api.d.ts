@@ -4695,38 +4695,6 @@ export interface components {
       message?: string | null;
     };
     /**
-     * AllocationDetail
-     * @description Allocation detail (DDL: allocations).
-     */
-    AllocationDetail: {
-      /** Id */
-      id: number;
-      /** Order Line Id */
-      order_line_id: number;
-      /** Lot Id */
-      lot_id?: number | null;
-      /** Allocated Quantity */
-      allocated_quantity: string;
-      /**
-       * Allocation Type
-       * @description soft: 推奨引当, hard: 確定引当
-       * @default soft
-       */
-      allocation_type: string;
-      /** Status */
-      status: string;
-      /** Confirmed At */
-      confirmed_at?: string | null;
-      /** Confirmed By */
-      confirmed_by?: string | null;
-      /** Created At */
-      created_at?: string | null;
-      /** Updated At */
-      updated_at?: string | null;
-      /** Lot Number */
-      lot_number?: string | null;
-    };
-    /**
      * AllocationGap
      * @description 不足情報.
      */
@@ -7772,8 +7740,8 @@ export interface components {
        * @description 予測期間（YYYY-MM）
        */
       forecast_period?: string | null;
-      /** Allocations */
-      allocations?: components["schemas"]["AllocationDetail"][];
+      /** Reservations */
+      reservations?: components["schemas"]["ReservationDetail"][];
       /**
        * Allocated Quantity
        * @description 引当済数量
@@ -8189,6 +8157,41 @@ export interface components {
       maker_item_code?: string | null;
       /** Is Active */
       is_active?: boolean | null;
+    };
+    /**
+     * ReservationDetail
+     * @description Reservation detail (DDL: lot_reservations).
+     */
+    ReservationDetail: {
+      /** Id */
+      id: number;
+      /** Lot Id */
+      lot_id: number;
+      /**
+       * Source Type
+       * @description forecast | order | manual
+       */
+      source_type: string;
+      /** Source Id */
+      source_id?: number | null;
+      /**
+       * Reserved Qty
+       * @description 予約数量
+       */
+      reserved_qty: string;
+      /**
+       * Status
+       * @description temporary | active | confirmed | released
+       */
+      status: string;
+      /** Created At */
+      created_at?: string | null;
+      /** Updated At */
+      updated_at?: string | null;
+      /** Confirmed At */
+      confirmed_at?: string | null;
+      /** Lot Number */
+      lot_number?: string | null;
     };
     /** ReservationResponse */
     ReservationResponse: {

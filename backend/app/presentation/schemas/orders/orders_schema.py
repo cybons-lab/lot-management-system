@@ -6,6 +6,8 @@ Updated 2025-12-08: Added business key columns for order management:
 - order_group_id: Reference to order_groups
 - customer_order_no: Customer's 6-digit order number
 - sap_order_no, sap_order_item_no: SAP business keys
+
+Updated 2025-12-14: Changed allocations to reservations (P3 migration)
 """
 
 from __future__ import annotations
@@ -15,7 +17,6 @@ from decimal import Decimal
 
 from pydantic import Field
 
-from app.presentation.schemas.allocations.allocations_schema import AllocationDetail
 from app.presentation.schemas.common.base import BaseSchema
 
 
@@ -65,12 +66,27 @@ class OrderWithLinesResponse(OrderResponse):
 
 
 # ============================================================
-# Allocation (引当実績) - Simplified for orders_schema
+# Reservation (予約実績) - P3: Replaces Allocation
 # ============================================================
 
 
-# Alias for backward compatibility and clarity in Order context
-AllocationResponse = AllocationDetail
+class ReservationDetail(BaseSchema):
+    """Reservation detail (DDL: lot_reservations)."""
+
+    id: int
+    lot_id: int
+    source_type: str = Field(..., description="forecast | order | manual")
+    source_id: int | None = None
+    reserved_qty: Decimal = Field(..., decimal_places=3, description="予約数量")
+    status: str = Field(..., description="temporary | active | confirmed | released")
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    confirmed_at: datetime | None = None
+
+    # Flattened Lot Info (optional, populated by service)
+    lot_number: str | None = None
+
+    model_config = {"from_attributes": True}
 
 
 # ============================================================
@@ -154,8 +170,9 @@ class OrderLineResponse(OrderLineBase):
     delivery_place_name: str | None = None
     forecast_period: str | None = Field(None, description="予測期間（YYYY-MM）")
 
-    # Allocation Info
-    allocations: list[AllocationResponse] = Field(default_factory=list)
+    # P3: Reservation Info (replaces allocations)
+    # Note: reservations are populated separately due to property-based access
+    reservations: list[ReservationDetail] = Field(default_factory=list)
     allocated_quantity: Decimal = Field(default=Decimal("0"), description="引当済数量")
 
     model_config = {"from_attributes": True}
