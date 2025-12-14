@@ -2115,7 +2115,7 @@
           "lots"
         ],
         "summary": "Delete Lot",
-        "description": "ロット削除.",
+        "description": "ロット削除 (無効化).\n\nロットの物理削除はポリシーにより禁止されています。\n在庫調整には /api/lots/{lot_id}/adjustment エンドポイントを使用してください。",
         "operationId": "delete_lot_api_lots__lot_id__delete",
         "parameters": [
           {
@@ -2129,8 +2129,13 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "Successful Response"
+          "403": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
           },
           "422": {
             "description": "Validation Error",
