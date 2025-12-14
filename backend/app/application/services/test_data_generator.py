@@ -15,14 +15,12 @@ from .test_data.masters import (
     generate_warehouses,
 )
 from .test_data.orders import generate_orders
-from .test_data.users import generate_users
 from .test_data.utils import clear_data
 
 
 # Re-export all functions for backward compatibility
 __all__ = [
     "clear_data",
-    "generate_users",
     "generate_warehouses",
     "generate_suppliers",
     "generate_customers_and_delivery_places",
@@ -39,9 +37,6 @@ __all__ = [
 def generate_all_test_data(db: Session):
     try:
         clear_data(db)
-
-        # Generate users first (for authentication)
-        generate_users(db)
 
         warehouses = generate_warehouses(db)
         suppliers = generate_suppliers(db)
