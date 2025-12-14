@@ -8,8 +8,9 @@ P3: Add SAP registration markers to lot_reservations.
 CONFIRMED status requires explicit SAP registration.
 """
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 
 # revision identifiers, used by Alembic.

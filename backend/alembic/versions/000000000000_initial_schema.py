@@ -1309,7 +1309,9 @@ def upgrade() -> None:
     # Apply database views from SQL file
     import pathlib
 
-    views_sql_path = pathlib.Path(__file__).parent.parent.parent / "sql" / "views" / "create_views.sql"
+    views_sql_path = (
+        pathlib.Path(__file__).parent.parent.parent / "sql" / "views" / "create_views.sql"
+    )
     if views_sql_path.exists():
         with open(views_sql_path, encoding="utf-8") as f:
             views_sql = f.read()

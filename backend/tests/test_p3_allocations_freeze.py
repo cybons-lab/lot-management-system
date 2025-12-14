@@ -50,13 +50,14 @@ class TestSapGateway:
 
     def test_mock_sap_gateway_returns_success(self):
         """MockSapGateway should return successful registration."""
+        from decimal import Decimal
+
         from app.infrastructure.external.sap_gateway import MockSapGateway
         from app.infrastructure.persistence.models.lot_reservations_model import (
             LotReservation,
             ReservationSourceType,
             ReservationStatus,
         )
-        from decimal import Decimal
 
         gateway = MockSapGateway()
         reservation = LotReservation(
@@ -79,13 +80,14 @@ class TestSapGateway:
 
     def test_failing_sap_gateway_returns_failure(self):
         """FailingSapGateway should return failed registration."""
+        from decimal import Decimal
+
         from app.infrastructure.external.sap_gateway import FailingSapGateway
         from app.infrastructure.persistence.models.lot_reservations_model import (
             LotReservation,
             ReservationSourceType,
             ReservationStatus,
         )
-        from decimal import Decimal
 
         gateway = FailingSapGateway()
         reservation = LotReservation(
