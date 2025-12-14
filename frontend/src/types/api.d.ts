@@ -557,7 +557,10 @@ export interface paths {
     post?: never;
     /**
      * Delete Lot
-     * @description ロット削除.
+     * @description ロット削除 (無効化).
+     *
+     *     ロットの物理削除はポリシーにより禁止されています。
+     *     在庫調整には /api/lots/{lot_id}/adjustment エンドポイントを使用してください。
      */
     delete: operations["delete_lot_api_lots__lot_id__delete"];
     options?: never;
@@ -10290,11 +10293,13 @@ export interface operations {
     requestBody?: never;
     responses: {
       /** @description Successful Response */
-      204: {
+      403: {
         headers: {
           [name: string]: unknown;
         };
-        content?: never;
+        content: {
+          "application/json": unknown;
+        };
       };
       /** @description Validation Error */
       422: {

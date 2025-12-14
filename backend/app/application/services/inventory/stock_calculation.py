@@ -16,20 +16,51 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 )
 
 
-def get_reserved_quantity(db: Session, lot_id: int) -> Decimal:
-    """Get total reserved quantity for a lot from lot_reservations.
+def get_confirmed_reserved_quantity(db: Session, lot_id: int) -> Decimal:
+    """Get total CONFIRMED reserved quantity for a lot from lot_reservations.
 
-    Only includes 'active' and 'confirmed' reservations.
+    Only confirmed reservations affect Available Qty (per §1.2 invariant).
+    Provisional (ACTIVE) reservations do NOT reduce Available Qty.
     """
     result = (
         db.query(func.coalesce(func.sum(LotReservation.reserved_qty), Decimal(0)))
         .filter(
             LotReservation.lot_id == lot_id,
-            LotReservation.status.in_([ReservationStatus.ACTIVE, ReservationStatus.CONFIRMED]),
+            LotReservation.status == ReservationStatus.CONFIRMED,
         )
         .scalar()
     )
     return Decimal(result) if result else Decimal(0)
+
+
+def get_provisional_quantity(db: Session, lot_id: int) -> Decimal:
+    """Get total provisional (ACTIVE) reserved quantity for a lot.
+
+    This is for UI display purposes only. Provisional reservations
+    do NOT affect Available Qty calculations.
+    """
+    result = (
+        db.query(func.coalesce(func.sum(LotReservation.reserved_qty), Decimal(0)))
+        .filter(
+            LotReservation.lot_id == lot_id,
+            LotReservation.status == ReservationStatus.ACTIVE,
+        )
+        .scalar()
+    )
+    return Decimal(result) if result else Decimal(0)
+
+
+def get_reserved_quantity(db: Session, lot_id: int) -> Decimal:
+    """Get total reserved quantity for a lot from lot_reservations.
+
+    DEPRECATED: Use get_confirmed_reserved_quantity for Available Qty calculation.
+    This function now only returns CONFIRMED reservations for backward compatibility
+    with the invariant: Available = Current - Locked - ConfirmedReserved.
+
+    Note: Previously included both ACTIVE and CONFIRMED. Changed per §1.2 to only
+    count CONFIRMED reservations.
+    """
+    return get_confirmed_reserved_quantity(db, lot_id)
 
 
 def get_available_quantity(db: Session, lot: Lot) -> Decimal:
@@ -81,7 +112,7 @@ def reserved_quantity_subquery(db: Session):
             LotReservation.lot_id.label("lot_id"),
             func.sum(LotReservation.reserved_qty).label("reserved_qty"),
         )
-        .filter(LotReservation.status.in_([ReservationStatus.ACTIVE, ReservationStatus.CONFIRMED]))
+        .filter(LotReservation.status == ReservationStatus.CONFIRMED)
         .group_by(LotReservation.lot_id)
         .subquery()
     )
