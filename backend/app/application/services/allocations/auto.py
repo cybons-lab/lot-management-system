@@ -246,9 +246,3 @@ def auto_reserve_bulk(
         db.commit()
 
     return result
-
-
-# Backward compatibility aliases
-auto_allocate_line = auto_reserve_line
-_auto_allocate_line_no_commit = _auto_reserve_line_no_commit
-auto_allocate_bulk = auto_reserve_bulk

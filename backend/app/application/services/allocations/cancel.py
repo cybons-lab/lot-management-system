@@ -141,9 +141,3 @@ def release_reservations_for_order_line(db: Session, order_line_id: int) -> list
             db.commit()
 
     return released_ids
-
-
-# Backward compatibility aliases
-cancel_allocation = release_reservation
-bulk_cancel_allocations = bulk_release_reservations
-cancel_allocations_for_order_line = release_reservations_for_order_line

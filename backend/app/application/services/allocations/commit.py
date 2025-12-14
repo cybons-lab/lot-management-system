@@ -142,8 +142,3 @@ def commit_fefo_reservation(db: Session, order_id: int) -> FefoCommitResult:
         raise
 
     return FefoCommitResult(preview=preview, created_reservations=created)
-
-
-# Backward compatibility aliases
-persist_allocation_entities = persist_reservation_entities
-commit_fefo_allocation = commit_fefo_reservation

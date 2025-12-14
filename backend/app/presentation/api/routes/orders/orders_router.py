@@ -8,9 +8,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.application.services.allocations.actions import (  # 追加
-    allocate_manually,
-    cancel_allocation,
+from app.application.services.allocations.actions import (
+    create_manual_reservation,
+    release_reservation,
 )
 from app.application.services.assignments.assignment_service import UserSupplierAssignmentService
 from app.application.services.common.uow_service import UnitOfWork
@@ -121,7 +121,7 @@ def save_manual_allocations(
             .all()
         )
         for res in existing_reservations:
-            cancel_allocation(db, res.id, commit_db=False)
+            release_reservation(db, res.id, commit_db=False)
 
         # 2. 新しい予約を作成（在庫を引き当てる、commit無し）
         created_ids = []
@@ -129,7 +129,7 @@ def save_manual_allocations(
             if item.quantity <= 0:
                 continue
 
-            reservation = allocate_manually(
+            reservation = create_manual_reservation(
                 db, order_line_id, item.lot_id, item.quantity, commit_db=False
             )
             created_ids.append(reservation.id)

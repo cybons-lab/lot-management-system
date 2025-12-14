@@ -143,7 +143,3 @@ def preempt_soft_reservations_for_hard(
     db.flush()
 
     return released_info
-
-
-# Backward compatibility alias
-preempt_soft_allocations_for_hard = preempt_soft_reservations_for_hard

@@ -12,9 +12,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.application.services.allocations.actions import (
-    allocate_manually,
-    cancel_allocation,
-    commit_fefo_allocation,
+    commit_fefo_reservation,
+    create_manual_reservation,
+    release_reservation,
 )
 from app.application.services.allocations.fefo import preview_fefo_allocation
 from app.application.services.allocations.schemas import AllocationNotFoundError
@@ -84,7 +84,7 @@ async def preview_allocations(request: FefoPreviewRequest, db: Session = Depends
 @router.post("/commit", response_model=AllocationCommitResponse)
 async def commit_allocation(request: AllocationCommitRequest, db: Session = Depends(get_db)):
     try:
-        result = commit_fefo_allocation(db, request.order_id)
+        result = commit_fefo_reservation(db, request.order_id)
     except ValueError as exc:
         message = str(exc)
         if "not found" in message.lower():
@@ -107,7 +107,7 @@ async def commit_allocation(request: AllocationCommitRequest, db: Session = Depe
 @router.post("/manual", response_model=ManualAllocationResponse)
 async def manual_allocate(request: ManualAllocationRequest, db: Session = Depends(get_db)):
     try:
-        reservation = allocate_manually(
+        reservation = create_manual_reservation(
             db,
             order_line_id=request.order_line_id,
             lot_id=request.lot_id,
@@ -139,7 +139,7 @@ async def manual_allocate(request: ManualAllocationRequest, db: Session = Depend
 @router.delete("/{allocation_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_allocation(allocation_id: int, db: Session = Depends(get_db)):
     try:
-        cancel_allocation(db, allocation_id)
+        release_reservation(db, allocation_id)
         return None
     except AllocationNotFoundError:
         raise HTTPException(status_code=404, detail="reservation not found")

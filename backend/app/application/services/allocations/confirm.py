@@ -212,8 +212,3 @@ def confirm_reservations_batch(
         db.commit()
 
     return confirmed_ids, failed_items
-
-
-# Backward compatibility aliases
-confirm_hard_allocation = confirm_reservation
-confirm_hard_allocations_batch = confirm_reservations_batch

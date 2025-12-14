@@ -120,7 +120,3 @@ def create_manual_reservation(
         EventDispatcher.queue(event)
 
     return reservation
-
-
-# Backward compatibility alias
-allocate_manually = create_manual_reservation
