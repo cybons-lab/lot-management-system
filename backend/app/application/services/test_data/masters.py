@@ -7,6 +7,7 @@ from app.infrastructure.persistence.models.masters_models import (
     CustomerItem,
     DeliveryPlace,
     Product,
+    ProductSupplier,
     Supplier,
     Warehouse,
 )
@@ -105,20 +106,38 @@ def generate_products(db: Session) -> list[Product]:
 def generate_customer_items(
     db: Session, customers: list[Customer], products: list[Product], suppliers: list[Supplier]
 ):
-    # Product-centric mapping: Each product is primarily for 1 customer
-    # 10-20% of products are shared with 2-3 customers (rare cases)
+    """Generate CustomerItem and ProductSupplier records.
+
+    Each product is assigned to:
+    - 1-2 suppliers (via product_suppliers table)
+    - 1-3 customers (via customer_items table)
+    """
+    # Track which products already have suppliers to avoid duplicates
+    product_supplier_pairs: set[tuple[int, int]] = set()
 
     for p in products:
-        # Primary customer for this product
-        primary_customer = random.choice(customers)
+        # 1. Assign 1-2 suppliers to this product
+        if suppliers:
+            num_suppliers = random.randint(1, min(2, len(suppliers)))
+            selected_suppliers = random.sample(suppliers, num_suppliers)
 
-        # Determine if this product is shared (10-20% chance)
+            for idx, supplier in enumerate(selected_suppliers):
+                if (p.id, supplier.id) not in product_supplier_pairs:
+                    ps = ProductSupplier(
+                        product_id=p.id,
+                        supplier_id=supplier.id,
+                        is_primary=(idx == 0),  # First supplier is primary
+                    )
+                    db.add(ps)
+                    product_supplier_pairs.add((p.id, supplier.id))
+
+        # 2. Assign this product to customers
+        primary_customer = random.choice(customers)
         is_shared = random.random() < 0.15  # 15% of products are shared
 
         customers_for_product = [primary_customer]
 
         if is_shared:
-            # Add 1-2 additional customers
             num_additional = random.randint(1, 2)
             other_customers = [c for c in customers if c.id != primary_customer.id]
             if other_customers:
