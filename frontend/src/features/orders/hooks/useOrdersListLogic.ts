@@ -32,13 +32,18 @@ function applySearchFilter(line: OrderLineRow, searchTerm: string): boolean {
  */
 function applyUnallocatedFilter(line: OrderLineRow): boolean {
   const orderQty = Number(line.order_quantity ?? line.quantity ?? 0);
-  const allocations = line.allocations || line.allocated_lots || [];
-  const allocatedQty = allocations.reduce((acc: number, alloc: unknown) => {
+  const reservations = Array.isArray(line.reservations)
+    ? line.reservations
+    : Array.isArray(line.allocated_lots)
+      ? line.allocated_lots
+      : [];
+  const allocatedQty = reservations.reduce((acc: number, alloc: unknown) => {
     const item = alloc as {
+      reserved_qty?: number | string;
       allocated_quantity?: number | string;
       allocated_qty?: number | string;
     };
-    return acc + Number(item.allocated_quantity ?? item.allocated_qty ?? 0);
+    return acc + Number(item.reserved_qty ?? item.allocated_quantity ?? item.allocated_qty ?? 0);
   }, 0);
   return orderQty > 0 && allocatedQty < orderQty;
 }

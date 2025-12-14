@@ -27,7 +27,10 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationStatus,
 )
 from app.presentation.api.deps import get_db
-from app.presentation.api.routes.auth.auth_router import get_current_admin, get_current_user
+from app.presentation.api.routes.auth.auth_router import (
+    get_current_admin,
+    get_current_user_optional,
+)
 from app.presentation.schemas.admin.admin_schema import (
     DashboardStatsResponse,
     FullSampleDataRequest,
@@ -44,7 +47,7 @@ logger = logging.getLogger(__name__)
 @router.get("/stats", response_model=DashboardStatsResponse)
 def get_dashboard_stats(
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),  # Authenticated users can view stats
+    current_user=Depends(get_current_user_optional),  # Allow anonymous access for dashboard
 ):
     """ダッシュボード用の統計情報を返す.
 
@@ -267,7 +270,7 @@ def get_allocatable_lots(
     wh: str | None = None,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user=Depends(get_current_user),  # Authenticated users
+    current_user=Depends(get_current_user_optional),  # Allow anonymous access
 ):
     """診断API: 引当可能ロット一覧（読み取り専用）.
 

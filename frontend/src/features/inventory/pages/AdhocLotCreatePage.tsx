@@ -70,7 +70,10 @@ export function AdhocLotCreatePage() {
       return createLot(payload);
     },
     onSuccess: (result) => {
+      // Invalidate all related queries for hot reload
       queryClient.invalidateQueries({ queryKey: ["lots"] });
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["inventory"] });
       toast.success(`ロットを作成しました: ${result.lot_number}`);
       navigate("/inventory");
     },

@@ -237,35 +237,37 @@ class OrderLine(Base):
     )
     product: Mapped[Product] = relationship("Product", back_populates="order_lines")
 
+    # P3: lot_reservations accessed via property to avoid complex primaryjoin
+    # NOTE: underscore prefix prevents Pydantic from_attributes from reading this
+    @property
+    def _lot_reservations(self) -> list:
+        """Get lot reservations for this order line from the session."""
+        from sqlalchemy.orm import object_session
+
+        from app.infrastructure.persistence.models.lot_reservations_model import (
+            LotReservation,
+        )
+
+        session = object_session(self)
+        if session is None:
+            return []
+
+        return (
+            session.query(LotReservation)
+            .filter(
+                LotReservation.source_type == "order",
+                LotReservation.source_id == self.id,
+            )
+            .all()
+        )
+
     @property
     def allocated_quantity(self) -> Decimal:
         """Calculate total allocated quantity from lot_reservations.
 
         P3: lot_reservations is the single source of truth.
         """
-        # Import here to avoid circular dependency
-        from sqlalchemy.orm import object_session
-
-        from app.infrastructure.persistence.models.lot_reservations_model import (
-            LotReservation,
-            ReservationSourceType,
-        )
-
-        session = object_session(self)
-        if session is None:
-            # Detached object, return zero
-            return Decimal("0")
-
-        # P3: Primary source is lot_reservations
-        reservations = (
-            session.query(LotReservation)
-            .filter(
-                LotReservation.source_type == ReservationSourceType.ORDER,
-                LotReservation.source_id == self.id,
-            )
-            .all()
-        )
-
+        reservations = self._lot_reservations
         return sum((r.reserved_qty for r in reservations), Decimal("0"))
 
 

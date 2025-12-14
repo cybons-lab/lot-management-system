@@ -28,6 +28,7 @@ class InventoryService:
         limit: int = 100,
         product_id: int | None = None,
         warehouse_id: int | None = None,
+        supplier_id: int | None = None,
     ) -> list[InventoryItemResponse]:
         """Get inventory items from v_inventory_summary view with product and
         warehouse names.
@@ -37,41 +38,78 @@ class InventoryService:
             limit: Maximum number of records to return
             product_id: Filter by product ID
             warehouse_id: Filter by warehouse ID
+            supplier_id: Filter by supplier ID (filters lots by supplier)
 
         Returns:
             List of inventory items
         """
         # Join with products and warehouses to get names
-        query = """
-            SELECT 
-                v.product_id, 
-                v.warehouse_id, 
-                v.total_quantity, 
-                v.allocated_quantity, 
-                v.available_quantity, 
-                v.last_updated,
-                p.product_name,
-                p.maker_part_code AS product_code,
-                w.warehouse_name,
-                w.warehouse_code
-            FROM v_inventory_summary v
-            LEFT JOIN products p ON v.product_id = p.id
-            LEFT JOIN warehouses w ON v.warehouse_id = w.id
-            WHERE 1=1
-        """
-        params = {}
+        # If supplier_id is specified, we join lots to filter by supplier
+        if supplier_id is not None:
+            # Need to aggregate lots directly since v_inventory_summary doesn't have supplier_id
+            query = """
+                SELECT 
+                    l.product_id, 
+                    l.warehouse_id, 
+                    SUM(l.current_quantity) as total_quantity,
+                    SUM(l.locked_quantity) as allocated_quantity,
+                    SUM(l.current_quantity - l.locked_quantity) as available_quantity,
+                    MAX(l.updated_at) as last_updated,
+                    p.product_name,
+                    p.maker_part_code AS product_code,
+                    w.warehouse_name,
+                    w.warehouse_code
+                FROM lots l
+                LEFT JOIN products p ON l.product_id = p.id
+                LEFT JOIN warehouses w ON l.warehouse_id = w.id
+                WHERE l.current_quantity > 0 AND l.status = 'active'
+                  AND l.supplier_id = :supplier_id
+            """
+            params = {"supplier_id": supplier_id}
 
-        if product_id is not None:
-            query += " AND v.product_id = :product_id"
-            params["product_id"] = product_id
+            if product_id is not None:
+                query += " AND l.product_id = :product_id"
+                params["product_id"] = product_id
 
-        if warehouse_id is not None:
-            query += " AND v.warehouse_id = :warehouse_id"
-            params["warehouse_id"] = warehouse_id
+            if warehouse_id is not None:
+                query += " AND l.warehouse_id = :warehouse_id"
+                params["warehouse_id"] = warehouse_id
 
-        query += " ORDER BY v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
-        params["limit"] = limit
-        params["skip"] = skip
+            query += " GROUP BY l.product_id, l.warehouse_id, p.product_name, p.maker_part_code, w.warehouse_name, w.warehouse_code"
+            query += " ORDER BY l.product_id, l.warehouse_id LIMIT :limit OFFSET :skip"
+            params["limit"] = limit
+            params["skip"] = skip
+        else:
+            query = """
+                SELECT 
+                    v.product_id, 
+                    v.warehouse_id, 
+                    v.total_quantity, 
+                    v.allocated_quantity, 
+                    v.available_quantity, 
+                    v.last_updated,
+                    p.product_name,
+                    p.maker_part_code AS product_code,
+                    w.warehouse_name,
+                    w.warehouse_code
+                FROM v_inventory_summary v
+                LEFT JOIN products p ON v.product_id = p.id
+                LEFT JOIN warehouses w ON v.warehouse_id = w.id
+                WHERE 1=1
+            """
+            params = {}
+
+            if product_id is not None:
+                query += " AND v.product_id = :product_id"
+                params["product_id"] = product_id
+
+            if warehouse_id is not None:
+                query += " AND v.warehouse_id = :warehouse_id"
+                params["warehouse_id"] = warehouse_id
+
+            query += " ORDER BY v.product_id, v.warehouse_id LIMIT :limit OFFSET :skip"
+            params["limit"] = limit
+            params["skip"] = skip
 
         from sqlalchemy import text
 

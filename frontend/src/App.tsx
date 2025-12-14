@@ -18,7 +18,14 @@ function App() {
       <AuthProvider>
         <SystemStatus />
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/login"
+            element={
+              <TopNavLayout>
+                <LoginPage />
+              </TopNavLayout>
+            }
+          />
           <Route
             path="*"
             element={

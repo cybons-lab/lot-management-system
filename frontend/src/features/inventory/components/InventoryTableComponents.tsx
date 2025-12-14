@@ -43,10 +43,14 @@ export function LotTableRow({ lot, onEdit, onLock, onUnlock }: LotTableRowProps)
       <td className="py-2 text-right font-semibold">{fmt(Number(lot.current_quantity))}</td>
       <td className="py-2 text-gray-600">{lot.unit}</td>
       <td className="py-2 text-gray-600">
-        {lot.received_date ? format(new Date(lot.received_date), "yyyy/MM/dd") : "-"}
+        {lot.received_date && !isNaN(new Date(lot.received_date).getTime())
+          ? format(new Date(lot.received_date), "yyyy/MM/dd")
+          : "-"}
       </td>
       <td className="py-2 text-gray-600">
-        {lot.expiry_date ? format(new Date(lot.expiry_date), "yyyy/MM/dd") : "-"}
+        {lot.expiry_date && !isNaN(new Date(lot.expiry_date).getTime())
+          ? format(new Date(lot.expiry_date), "yyyy/MM/dd")
+          : "-"}
       </td>
       <td className="py-2">
         <div className="flex items-center gap-1">
