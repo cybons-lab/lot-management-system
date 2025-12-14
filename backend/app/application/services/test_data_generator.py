@@ -54,7 +54,8 @@ def generate_all_test_data(db: Session):
         generate_lots(db, products, warehouses, suppliers, forecast_totals)
 
         # Step 3: Generate reservations (requires lots to exist)
-        generate_reservations(db)
+        # TODO: Fix generate_reservations - currently causes f405 error
+        # generate_reservations(db)
 
         # Step 4: Generate orders
         generate_orders(db, customers, products, products_with_forecast, delivery_places)
