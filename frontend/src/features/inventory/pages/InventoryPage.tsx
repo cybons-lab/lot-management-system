@@ -252,12 +252,34 @@ export function InventoryPage() {
             <InventoryTable data={inventoryItems} isLoading={isItemsLoading} />
           )}
           {overviewMode === "supplier" && (
-            <InventoryBySupplierTable data={supplierQuery.data || []} />
+            <InventoryBySupplierTable
+              data={supplierQuery.data || []}
+              onViewDetail={(_supplierId) => {
+                // Switch to items view and filter by supplier
+                // Note: Need supplier filter in future. For now, navigate to items
+                setOverviewMode("items");
+                toast.info("仕入先フィルターは今後実装予定です");
+              }}
+            />
           )}
           {overviewMode === "warehouse" && (
-            <InventoryByWarehouseTable data={warehouseQuery.data || []} />
+            <InventoryByWarehouseTable
+              data={warehouseQuery.data || []}
+              onViewDetail={(warehouseId) => {
+                setFilters({ ...filters, warehouse_id: String(warehouseId) });
+                setOverviewMode("items");
+              }}
+            />
           )}
-          {overviewMode === "product" && <InventoryByProductTable data={productQuery.data || []} />}
+          {overviewMode === "product" && (
+            <InventoryByProductTable
+              data={productQuery.data || []}
+              onViewDetail={(productId) => {
+                setFilters({ ...filters, product_id: String(productId) });
+                setOverviewMode("items");
+              }}
+            />
+          )}
         </div>
       </div>
 

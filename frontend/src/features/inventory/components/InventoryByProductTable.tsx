@@ -1,5 +1,6 @@
 import type { InventoryByProductResponse } from "../types/InventoryAggregationTypes";
 
+import { Button } from "@/components/ui";
 import {
   Table,
   TableBody,
@@ -13,9 +14,14 @@ import { fmt } from "@/shared/utils/number";
 interface InventoryByProductTableProps {
   data: InventoryByProductResponse[];
   onRowClick?: (productCode: string) => void;
+  onViewDetail?: (productId: number) => void;
 }
 
-export function InventoryByProductTable({ data, onRowClick }: InventoryByProductTableProps) {
+export function InventoryByProductTable({
+  data,
+  onRowClick,
+  onViewDetail,
+}: InventoryByProductTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -28,6 +34,7 @@ export function InventoryByProductTable({ data, onRowClick }: InventoryByProduct
             <TableHead className="text-right">有効在庫</TableHead>
             <TableHead className="text-right">倉庫数</TableHead>
             <TableHead className="text-right">ロット数</TableHead>
+            <TableHead className="text-right">アクション</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -52,11 +59,23 @@ export function InventoryByProductTable({ data, onRowClick }: InventoryByProduct
               <TableCell className="text-right font-mono">{fmt(row.available_quantity)}</TableCell>
               <TableCell className="text-right font-mono">{row.warehouse_count}</TableCell>
               <TableCell className="text-right font-mono">{row.lot_count}</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetail?.(row.product_id);
+                  }}
+                >
+                  詳細
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
           {data.length === 0 && (
             <TableRow>
-              <TableCell colSpan={7} className="h-24 text-center">
+              <TableCell colSpan={8} className="h-24 text-center">
                 データがありません
               </TableCell>
             </TableRow>

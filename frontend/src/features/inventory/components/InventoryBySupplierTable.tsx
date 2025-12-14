@@ -2,7 +2,7 @@ import { Crown } from "lucide-react";
 
 import type { InventoryBySupplierResponse } from "../types/InventoryAggregationTypes";
 
-import { Badge } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
 import {
   Table,
   TableBody,
@@ -16,9 +16,14 @@ import { fmt } from "@/shared/utils/number";
 interface InventoryBySupplierTableProps {
   data: InventoryBySupplierResponse[];
   onRowClick?: (supplierCode: string) => void;
+  onViewDetail?: (supplierId: number) => void;
 }
 
-export function InventoryBySupplierTable({ data, onRowClick }: InventoryBySupplierTableProps) {
+export function InventoryBySupplierTable({
+  data,
+  onRowClick,
+  onViewDetail,
+}: InventoryBySupplierTableProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -29,6 +34,7 @@ export function InventoryBySupplierTable({ data, onRowClick }: InventoryBySuppli
             <TableHead className="text-right">総在庫数</TableHead>
             <TableHead className="text-right">製品数</TableHead>
             <TableHead className="text-right">ロット数</TableHead>
+            <TableHead className="text-right">アクション</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -62,11 +68,23 @@ export function InventoryBySupplierTable({ data, onRowClick }: InventoryBySuppli
               <TableCell className="text-right font-mono">{fmt(row.total_quantity)}</TableCell>
               <TableCell className="text-right font-mono">{row.product_count}</TableCell>
               <TableCell className="text-right font-mono">{row.lot_count}</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewDetail?.(row.supplier_id);
+                  }}
+                >
+                  詳細
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
           {data.length === 0 && (
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
+              <TableCell colSpan={6} className="h-24 text-center">
                 データがありません
               </TableCell>
             </TableRow>
