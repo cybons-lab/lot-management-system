@@ -266,10 +266,9 @@ class OrderLine(Base):
         """Calculate total allocated quantity from lot_reservations.
 
         P3: lot_reservations is the single source of truth.
-        NOTE: Returns 0 during Pydantic validation to avoid N+1 queries.
-        Use direct query for actual allocation data.
         """
-        return Decimal("0")  # TODO: Populate via service layer instead of property
+        reservations = self._lot_reservations
+        return sum((r.reserved_qty for r in reservations), Decimal("0"))
 
 
 # NOTE: Allocation class removed in P3.
