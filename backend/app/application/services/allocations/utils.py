@@ -178,6 +178,11 @@ def update_order_allocation_status(db: Session, order_id: int) -> None:
 
     P3: Uses LotReservation instead of Allocation.
 
+    H-06 Fix: ステータスの巻き戻しを正しく処理。
+    - fully_allocated → allocated
+    - 部分引当 → part_allocated（既存ステータスに関係なく）
+    - 全解放 → open（allocated/part_allocatedから戻す）
+
     Args:
         db: Database session
         order_id: Order ID
@@ -216,18 +221,21 @@ def update_order_allocation_status(db: Session, order_id: int) -> None:
         if reserved_total + EPSILON < required_qty:
             fully_allocated = False
 
-    # Determine new status
-    new_status = None
-
-    # Get current status to avoid regression if needed, but here we recalculate
+    # Get current status
     target_order = db.execute(select(Order.status).where(Order.id == order_id)).scalar_one()
 
-    if fully_allocated:
+    # H-06 Fix: 正しいステータス遷移ロジック
+    new_status = None
+    if fully_allocated and any_allocated:
         new_status = "allocated"
-    elif any_allocated and target_order not in {"allocated", "part_allocated"}:
+    elif any_allocated:
+        # 部分引当: 既存ステータスに関係なく part_allocated に
         new_status = "part_allocated"
+    elif not any_allocated and target_order in {"allocated", "part_allocated"}:
+        # H-06 Fix: 全解放時は open に戻す
+        new_status = "open"
 
-    if new_status:
+    if new_status and new_status != target_order:
         from sqlalchemy import update
 
         db.execute(update(Order).where(Order.id == order_id).values(status=new_status))

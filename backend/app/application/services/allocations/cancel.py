@@ -119,6 +119,10 @@ def release_reservations_for_order_line(db: Session, order_line_id: int) -> list
 
     Returns:
         list[int]: 解放された予約IDのリスト
+
+    Note:
+        H-03 Fix: ダブルコミットを解消。予約解放とOrderLineステータス更新を
+        同一トランザクションで処理し、1回のコミットで完了する。
     """
     reservations = (
         db.query(LotReservation)
@@ -139,12 +143,12 @@ def release_reservations_for_order_line(db: Session, order_line_id: int) -> list
             continue
 
     if released_ids:
-        db.commit()
-
+        # H-03 Fix: OrderLineステータス更新を先に行い、1回だけコミット
         line = db.get(OrderLine, order_line_id)
         if line:
             update_order_allocation_status(db, line.order_id)
             update_order_line_status(db, line.id)
-            db.commit()
+
+        db.commit()
 
     return released_ids
