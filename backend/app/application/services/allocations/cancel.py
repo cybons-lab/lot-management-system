@@ -26,6 +26,7 @@ from app.infrastructure.persistence.models import Lot, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
+    ReservationStateMachine,
     ReservationStatus,
 )
 
@@ -49,11 +50,18 @@ def release_reservation(db: Session, reservation_id: int, *, commit_db: bool = T
     if reservation.status == ReservationStatus.RELEASED:
         return
 
-    # Guard: CONFIRMED reservations cannot be released without SAP cancellation (not implemented)
+    # H-04/H-05 Fix: Use ReservationStateMachine for strict state transition validation
+    if not ReservationStateMachine.can_release(reservation.status):
+        raise AllocationCommitError(
+            "INVALID_STATE_TRANSITION",
+            f"Cannot release reservation {reservation_id} from status '{reservation.status}'",
+        )
+
+    # Additional guard: CONFIRMED reservations require SAP cancellation (not implemented)
     if reservation.status == ReservationStatus.CONFIRMED:
         raise AllocationCommitError(
             "CANNOT_CANCEL_CONFIRMED",
-            f"Reservation {reservation_id} is already confirmed and cannot be cancelled directly",
+            f"Reservation {reservation_id} is confirmed. SAP cancellation required (not implemented)",
         )
 
     now = utcnow()

@@ -32,6 +32,7 @@ from app.infrastructure.persistence.models import Lot, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
+    ReservationStateMachine,
     ReservationStatus,
 )
 
@@ -74,11 +75,11 @@ def confirm_reservation(
     if reservation.status == ReservationStatus.CONFIRMED:
         return reservation
 
-    # Guard: RELEASED reservations cannot be confirmed (state machine violation)
-    if reservation.status == ReservationStatus.RELEASED:
+    # H-04/H-05 Fix: Use ReservationStateMachine for strict state transition validation
+    if not ReservationStateMachine.can_confirm(reservation.status):
         raise AllocationCommitError(
-            "ALREADY_RELEASED",
-            f"Released reservation {reservation_id} cannot be confirmed",
+            "INVALID_STATE_TRANSITION",
+            f"Cannot confirm reservation {reservation_id} from status '{reservation.status}'",
         )
 
     if not reservation.lot_id:

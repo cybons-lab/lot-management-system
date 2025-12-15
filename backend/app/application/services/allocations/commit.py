@@ -81,6 +81,12 @@ def persist_reservation_entities(
     now = utcnow()
 
     for alloc_plan in line_plan.allocations:
+        # M-01 Fix: Validate quantity is positive
+        if alloc_plan.allocate_qty <= 0:
+            raise AllocationCommitError(
+                f"Invalid allocation quantity: {alloc_plan.allocate_qty}. Must be positive."
+            )
+
         lot_stmt = select(Lot).where(Lot.id == alloc_plan.lot_id).with_for_update()
         lot = db.execute(lot_stmt).scalar_one_or_none()
         if not lot:
