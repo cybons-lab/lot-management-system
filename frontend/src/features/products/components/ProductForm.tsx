@@ -146,7 +146,7 @@ export function ProductForm({
 
       <div className={formStyles.field}>
         <Label htmlFor="customer_part_no" className={formStyles.label}>
-          得意先品番
+          先方品番
         </Label>
         <Input
           id="customer_part_no"
