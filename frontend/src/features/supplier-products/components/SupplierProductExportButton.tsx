@@ -1,55 +1,18 @@
 /**
- * SupplierProductExportButton - 仕入先商品エクスポート (Backend API)
+ * SupplierProductExportButton - 仕入先製品エクスポート (Backend API)
  */
-import { FileSpreadsheet, FileText } from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
-
-import { Button } from "@/components/ui";
-import { http } from "@/shared/api/http-client";
+import { ExportButton } from "@/shared/components/ExportButton";
 
 interface Props {
-  size?: "sm" | "default";
+  size?: "default" | "sm" | "lg";
 }
 
 export function SupplierProductExportButton({ size = "default" }: Props) {
-  const [isExporting, setIsExporting] = useState(false);
-
-  const handleExport = async (format: "csv" | "xlsx") => {
-    try {
-      setIsExporting(true);
-      const filename = `supplier_products_${new Date().toISOString().slice(0, 10)}.${format}`;
-      await http.download(`/masters/supplier-products/export/download?format=${format}`, filename);
-    } catch (error) {
-      console.error("Export failed:", error);
-      toast.error("エクスポートに失敗しました");
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
   return (
-    <div className="flex gap-2">
-      <Button
-        variant="outline"
-        size={size}
-        onClick={() => handleExport("csv")}
-        disabled={isExporting}
-        title="CSV形式でダウンロード"
-      >
-        <FileText className="mr-2 h-4 w-4" />
-        CSV
-      </Button>
-      <Button
-        variant="outline"
-        size={size}
-        onClick={() => handleExport("xlsx")}
-        disabled={isExporting}
-        title="Excel形式でダウンロード"
-      >
-        <FileSpreadsheet className="mr-2 h-4 w-4" />
-        Excel
-      </Button>
-    </div>
+    <ExportButton
+      apiPath="/masters/supplier-products/export/download"
+      filePrefix="supplier_products"
+      size={size}
+    />
   );
 }

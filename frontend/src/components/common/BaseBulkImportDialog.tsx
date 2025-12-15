@@ -64,14 +64,16 @@ export function BaseBulkImportDialog({
           <div className="rounded-lg border-2 border-dashed p-4 text-center">
             <input
               type="file"
-              accept=".csv"
+              accept=".xlsx,.xls"
               onChange={onFileChange}
               className="hidden"
-              id="bulk-csv-input"
+              id="bulk-excel-input"
             />
-            <label htmlFor="bulk-csv-input" className="cursor-pointer">
+            <label htmlFor="bulk-excel-input" className="cursor-pointer">
               <Upload className="mx-auto h-8 w-8 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-600">{file ? file.name : "CSVファイルを選択"}</p>
+              <p className="mt-2 text-sm text-gray-600">
+                {file ? file.name : "Excelファイルを選択"}
+              </p>
             </label>
           </div>
 

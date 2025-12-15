@@ -20,7 +20,7 @@ export function BulkImportFileUpload({
   hint,
   onFileChange,
   disabled = false,
-  accept = ".csv",
+  accept = ".xlsx,.xls",
 }: BulkImportFileUploadProps) {
   return (
     <div className="space-y-2">

@@ -5,8 +5,31 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { uploadMasterImport, getMasterImportTemplate } from "../api";
+import { uploadMasterImport } from "../api";
 import type { MasterImportResponse, TemplateGroup } from "../types";
+
+/**
+ * テンプレートをダウンロードするヘルパー関数
+ */
+async function downloadTemplate(group: TemplateGroup): Promise<void> {
+  const endpoint =
+    group === "supply"
+      ? "/masters/suppliers/template/download?format=xlsx"
+      : "/masters/customers/template/download?format=xlsx";
+
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}${endpoint}`);
+  if (!response.ok) {
+    throw new Error("テンプレートのダウンロードに失敗しました");
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `master_import_template_${group}.xlsx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export function useMasterImport() {
   const [file, setFile] = useState<File | null>(null);
@@ -58,15 +81,7 @@ export function useMasterImport() {
   const handleDownloadTemplate = useCallback(async (group: TemplateGroup) => {
     setIsDownloadingTemplate(true);
     try {
-      const template = await getMasterImportTemplate(group);
-      const json = JSON.stringify(template, null, 2);
-      const blob = new Blob([json], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `master_import_template_${group}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      await downloadTemplate(group);
       toast.success("テンプレートをダウンロードしました");
     } catch (error) {
       const message =
