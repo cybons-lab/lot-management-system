@@ -15,6 +15,7 @@ import * as styles from "./styles";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 
 // eslint-disable-next-line max-lines-per-function
@@ -22,6 +23,7 @@ export function UsersListPage() {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   // Fetch users
   const { data: users, isLoading, isError } = useUsers({ is_active: isActiveFilter });
@@ -83,11 +85,20 @@ export function UsersListPage() {
           <MasterPageActions
             exportApiPath="/users/export/download"
             exportFilePrefix="users"
+            onImportClick={() => setIsImportDialogOpen(true)}
             onCreateClick={handleCreateNew}
             createLabel="新規ユーザー作成"
           />
         )}
       </div>
+
+      {/* インポートダイアログ */}
+      <MasterImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        title="ユーザー一括インポート"
+        group="user"
+      />
 
       {/* Create Form */}
       {showForm && (
