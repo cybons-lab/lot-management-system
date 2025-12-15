@@ -121,7 +121,7 @@ export interface MasterImportResponse {
 // Template Types
 // ============================================================
 
-export type TemplateGroup = "supply" | "customer" | "order" | "delivery_place";
+export type TemplateGroup = "supply" | "customer" | "order" | "delivery_place" | "user";
 
 export interface MasterImportTemplate {
   supply_data?: SupplyDataImport;

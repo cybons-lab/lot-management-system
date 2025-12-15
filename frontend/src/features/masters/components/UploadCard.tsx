@@ -44,7 +44,6 @@ export function UploadCard(props: UploadCardProps) {
           onImport={onImport}
           onClear={onClear}
         />
-        <CsvInfoBox />
       </CardContent>
     </Card>
   );
@@ -127,17 +126,6 @@ function ActionButtons(props: {
       <Button variant="outline" onClick={props.onClear} disabled={props.isUploading}>
         クリア
       </Button>
-    </div>
-  );
-}
-
-function CsvInfoBox() {
-  return (
-    <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-800">
-      <p className="font-medium">CSVファイルについて</p>
-      <p className="mt-1 text-blue-600">
-        CSVファイルは文字コードの問題が発生しやすいため、Excelファイル(.xlsx)の使用を推奨します。
-      </p>
     </div>
   );
 }
