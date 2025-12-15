@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 import type { CreateUserRequest } from "../api";
-import { UserExportButton } from "../components/UserExportButton";
 import { UserForm } from "../components/UserForm";
 import { useUsers, useCreateUser, useDeleteUser } from "../hooks";
 
@@ -16,6 +15,7 @@ import * as styles from "./styles";
 
 import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 
 // eslint-disable-next-line max-lines-per-function
 export function UsersListPage() {
@@ -79,10 +79,14 @@ export function UsersListPage() {
           <h2 className={styles.header.title}>ユーザー管理</h2>
           <p className={styles.header.description}>ユーザーの作成・編集・削除</p>
         </div>
-        <div className="flex gap-2">
-          <UserExportButton size="sm" />
-          {!showForm && <Button onClick={handleCreateNew}>新規ユーザー作成</Button>}
-        </div>
+        {!showForm && (
+          <MasterPageActions
+            exportApiPath="/users/export/download"
+            exportFilePrefix="users"
+            onCreateClick={handleCreateNew}
+            createLabel="新規ユーザー作成"
+          />
+        )}
       </div>
 
       {/* Create Form */}

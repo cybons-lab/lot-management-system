@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.infrastructure.persistence.models import Customer, DeliveryPlace
 from app.presentation.schemas.masters.masters_schema import (
@@ -19,6 +20,34 @@ from app.presentation.schemas.masters.masters_schema import (
 
 
 router = APIRouter(prefix="/delivery-places", tags=["delivery-places"])
+
+
+@router.get("/template/download")
+def download_delivery_places_template(format: str = "xlsx", include_sample: bool = True):
+    """Download delivery place import template.
+
+    Args:
+        format: 'csv' or 'xlsx' (default: xlsx)
+        include_sample: Whether to include a sample row (default: True)
+
+    Returns:
+        Template file for delivery place import
+    """
+    return ExportService.export_template(
+        "delivery_places", format=format, include_sample=include_sample
+    )
+
+
+@router.get("/export/download")
+def export_delivery_places(format: str = "xlsx", db: Session = Depends(get_db)):
+    """Export delivery places to CSV or Excel."""
+    query = db.query(DeliveryPlace).filter(DeliveryPlace.valid_to > func.current_date())
+    places = query.order_by(DeliveryPlace.id).all()
+    data = [DeliveryPlaceResponse.model_validate(p).model_dump() for p in places]
+
+    if format == "xlsx":
+        return ExportService.export_to_excel(data, "delivery_places")
+    return ExportService.export_to_csv(data, "delivery_places")
 
 
 @router.get("", response_model=list[DeliveryPlaceResponse])

@@ -1,10 +1,9 @@
-import { Pencil, Plus, Trash2, Upload, Warehouse as WarehouseIcon, RotateCcw } from "lucide-react";
+import { Pencil, Trash2, Warehouse as WarehouseIcon, RotateCcw } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import type { Warehouse, WarehouseCreate } from "../api";
 import { WarehouseBulkImportDialog } from "../components/WarehouseBulkImportDialog";
-import { WarehouseExportButton } from "../components/WarehouseExportButton";
 import { WarehouseForm } from "../components/WarehouseForm";
 import { useWarehouses } from "../hooks";
 
@@ -16,6 +15,7 @@ import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { formatDate } from "@/shared/utils/date";
 
@@ -270,17 +270,12 @@ export function WarehousesListPage() {
         title="倉庫マスタ"
         subtitle="倉庫の作成・編集・削除、一括インポート/エクスポート"
         actions={
-          <div className={styles.actionBar}>
-            <WarehouseExportButton size="sm" />
-            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              インポート
-            </Button>
-            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              新規登録
-            </Button>
-          </div>
+          <MasterPageActions
+            exportApiPath="/masters/warehouses/export/download"
+            exportFilePrefix="warehouses"
+            onImportClick={() => setIsImportDialogOpen(true)}
+            onCreateClick={() => setIsCreateDialogOpen(true)}
+          />
         }
       />
 
