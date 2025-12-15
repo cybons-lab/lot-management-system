@@ -99,6 +99,15 @@ def confirm_reservation(
 
     confirm_qty = reservation.reserved_qty
 
+    # Expiry Check
+    # TODO: Future requirement: Support configurable expiry margin (e.g., X days before expiry)
+    # Currently strictly checks if expiry_date < today
+    if lot.expiry_date and lot.expiry_date < utcnow().date():
+        raise AllocationCommitError(
+            "LOT_EXPIRED",
+            f"Lot {lot.lot_number} has expired (Expiry: {lot.expiry_date})",
+        )
+
     reserved_qty = get_reserved_quantity(db, lot.id)
     if lot.current_quantity < reserved_qty:
         available = lot.current_quantity - (reserved_qty - reservation.reserved_qty)
