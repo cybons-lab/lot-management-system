@@ -267,11 +267,28 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
   // 全引当をキャンセル
   const cancelAllAllocations = async () => {
     if (!orderLine) return;
+
+    // Get allocation IDs from orderLine
+    const allocations = (orderLine.allocations || orderLine.allocated_lots || []) as Allocation[];
+    const allocationIds = allocations
+      .map((a) => a.id)
+      .filter((id): id is number => id !== undefined);
+
+    if (allocationIds.length === 0) {
+      toast.info("取り消す引当がありません");
+      setLotAllocations({});
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await allocationsApi.cancelAllocationsByLine(orderLine.id);
+      const result = await allocationsApi.cancelAllocationsByLine(orderLine.id, allocationIds);
+      if (!result.success && result.failed_ids.length > 0) {
+        toast.warning(`一部の引当の取り消しに失敗しました (${result.failed_ids.length}件)`);
+      } else {
+        toast.success("引当を取り消しました");
+      }
       setLotAllocations({});
-      toast.success("引当を取り消しました");
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Failed to cancel allocations", error);

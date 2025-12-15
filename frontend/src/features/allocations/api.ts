@@ -137,22 +137,61 @@ export type AllocationResult = {
   order_id: number;
 };
 
+/**
+ * Create allocations for an order line
+ * @deprecated Use saveManualAllocations instead for v2 API
+ *
+ * This function now delegates to saveManualAllocations (v2) for compatibility
+ */
 export async function createAllocations(
   payload: CreateAllocationPayload,
 ): Promise<AllocationResult> {
-  // Use v1 endpoint if available, but manual allocation Logic is migrated to v2 manual suggestion + commit?
-  // Or just use the old endpoint if it still exists.
-  // Assuming frontend logic expects the old behavior.
-  await http.post("allocations", payload);
-  return { order_id: payload.order_line_id }; // Stub return
+  // Convert legacy payload format to v2 format
+  const v2Allocations = payload.allocations.map((a) => ({
+    lot_id: a.lotId,
+    quantity: a.quantity,
+  }));
+
+  await saveManualAllocations({
+    order_line_id: payload.order_line_id,
+    allocations: v2Allocations,
+  });
+
+  return { order_id: payload.order_line_id };
 }
 
-export const cancelAllocationsByLine = (orderLineId: number) => {
-  return http.post<{
-    success: boolean;
-    message: string;
+/**
+ * Cancel all allocations for an order line
+ * Uses bulk-cancel endpoint with allocation IDs
+ *
+ * @param orderLineId - Order line ID
+ * @param allocationIds - Array of allocation IDs to cancel (must be provided by caller)
+ */
+export const cancelAllocationsByLine = async (
+  orderLineId: number,
+  allocationIds: number[],
+) => {
+  if (allocationIds.length === 0) {
+    return {
+      success: true,
+      message: "No allocations to cancel",
+      cancelled_ids: [] as number[],
+      failed_ids: [] as number[],
+    };
+  }
+
+  const result = await http.post<{
     cancelled_ids: number[];
-  }>("allocations/cancel-by-order-line", { order_line_id: orderLineId });
+    failed_ids: number[];
+    message: string;
+  }>("allocations/bulk-cancel", { allocation_ids: allocationIds });
+
+  return {
+    success: result.failed_ids.length === 0,
+    message: result.message,
+    cancelled_ids: result.cancelled_ids,
+    failed_ids: result.failed_ids,
+  };
 };
 
 export const confirmAllocationsBatch = (data: {

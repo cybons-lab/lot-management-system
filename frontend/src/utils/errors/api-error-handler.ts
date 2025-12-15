@@ -130,11 +130,44 @@ export async function getErrorCode(error: HTTPError): Promise<string | null> {
 
 /**
  * 在庫不足エラーかどうかを判定
+ * エラーコード INSUFFICIENT_STOCK または 409 ステータスで判定
  */
-export function isInsufficientStockError(error: unknown): boolean {
+export async function isInsufficientStockError(error: unknown): Promise<boolean> {
   if (error instanceof Error && "response" in error) {
     const httpError = error as HTTPError;
-    return httpError.response?.status === 409 && httpError.message.includes("在庫");
+
+    // First check: 409 status code
+    if (httpError.response?.status !== 409) {
+      return false;
+    }
+
+    // Try to extract error code from response body
+    try {
+      const body = await httpError.response.clone().json();
+      // Check for error code in various formats
+      const errorCode =
+        body?.error_code || body?.error || (body?.detail as Record<string, unknown>)?.error;
+      if (errorCode === "INSUFFICIENT_STOCK") {
+        return true;
+      }
+    } catch {
+      // If body parsing fails, fall back to status code check
+    }
+
+    // Fallback: 409 status is likely a stock conflict
+    return true;
+  }
+  return false;
+}
+
+/**
+ * 在庫不足エラーかどうかを判定（同期版）
+ * レスポンスボディを読めない場合はステータスコードのみで判定
+ */
+export function isInsufficientStockErrorSync(error: unknown): boolean {
+  if (error instanceof Error && "response" in error) {
+    const httpError = error as HTTPError;
+    return httpError.response?.status === 409;
   }
   return false;
 }
