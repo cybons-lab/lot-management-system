@@ -561,6 +561,9 @@ export interface paths {
      *
      *     ロットの物理削除はポリシーにより禁止されています。
      *     在庫調整には /api/lots/{lot_id}/adjustment エンドポイントを使用してください。
+     *
+     *     Note:
+     *         M-04 Fix: 認証チェックを追加。未認証ユーザーは401を返す。
      */
     delete: operations["delete_lot_api_lots__lot_id__delete"];
     options?: never;
@@ -5054,9 +5057,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -5072,9 +5073,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
     };
     /**
@@ -5126,9 +5125,7 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | {
-            [key: string]: unknown;
-          }
+        | Record<string, never>
         | null;
       /** Job Id */
       job_id: number;
@@ -5343,9 +5340,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -5387,9 +5382,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: {
-        [key: string]: unknown;
-      };
+      rule_parameters: Record<string, never>;
       /**
        * Is Active
        * @description 有効フラグ
@@ -5428,9 +5421,7 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: {
-        [key: string]: unknown;
-      } | null;
+      rule_parameters?: Record<string, never> | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -7343,16 +7334,12 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: {
-        [key: string]: unknown;
-      } | null;
+      old_values?: Record<string, never> | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: {
-        [key: string]: unknown;
-      } | null;
+      new_values?: Record<string, never> | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -7512,9 +7499,7 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: {
-        [key: string]: unknown;
-      } | null;
+      changes?: Record<string, never> | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -8325,9 +8310,7 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: {
-        [key: string]: unknown;
-      } | null;
+      data?: Record<string, never> | null;
     };
     /**
      * RoleCreate
@@ -15427,9 +15410,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -15733,9 +15714,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
       /** @description Validation Error */
@@ -15764,9 +15743,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": {
-            [key: string]: unknown;
-          };
+          "application/json": Record<string, never>;
         };
       };
     };
