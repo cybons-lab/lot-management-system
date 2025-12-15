@@ -171,13 +171,19 @@ def confirm_allocation(
             confirmed_by=request.confirmed_by,
         )
 
+        # status is stored as string in DB, not Enum
+        status_str = (
+            confirmed_res.status.value
+            if hasattr(confirmed_res.status, "value")
+            else confirmed_res.status
+        )
         return HardAllocationConfirmResponse(
             id=confirmed_res.id,
             order_line_id=confirmed_res.source_id,
             lot_id=confirmed_res.lot_id,
             allocated_quantity=confirmed_res.reserved_qty,
-            allocation_type="hard" if confirmed_res.status.value == "confirmed" else "soft",
-            status=confirmed_res.status.value,
+            allocation_type="hard" if status_str == "confirmed" else "soft",
+            status=status_str,
             confirmed_at=confirmed_res.confirmed_at,
             confirmed_by=None,
         )

@@ -1,15 +1,17 @@
 /**
- * CustomerItemForm (v2.2 - Phase G-1)
+ * CustomerItemForm (v2.3 - プルダウン対応)
  * Form component for creating customer item mappings
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { CreateCustomerItemRequest } from "../api";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
+import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
 
 interface CustomerItemFormProps {
   onSubmit: (data: CreateCustomerItemRequest) => void;
@@ -22,6 +24,10 @@ export function CustomerItemForm({
   onCancel,
   isSubmitting = false,
 }: CustomerItemFormProps) {
+  // Master data for select options
+  const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
+  const { data: products = [], isLoading: isLoadingProducts } = useProductsQuery();
+
   const [formData, setFormData] = useState<CreateCustomerItemRequest>({
     customer_id: 0,
     external_product_code: "",
@@ -35,19 +41,47 @@ export function CustomerItemForm({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Generate select options
+  const customerOptions = useMemo(
+    () =>
+      customers.map((c) => ({
+        value: String(c.id),
+        label: `${c.customer_code} - ${c.customer_name}`,
+      })),
+    [customers],
+  );
+
+  // 先方品番（製品名）形式のオプション - 先方品番があるもののみ
+  const productOptions = useMemo(
+    () =>
+      products
+        .filter((p) => p.customer_part_no)
+        .map((p) => ({
+          value: String(p.id),
+          label: `${p.customer_part_no}（${p.product_name}）`,
+          customer_part_no: p.customer_part_no,
+        })),
+    [products],
+  );
+
+  const handleProductSelect = (value: string) => {
+    const selected = productOptions.find((opt) => opt.value === value);
+    setFormData({
+      ...formData,
+      product_id: value ? Number(value) : 0,
+      external_product_code: selected?.customer_part_no ?? "",
+    });
+  };
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.customer_id || formData.customer_id <= 0) {
-      newErrors.customer_id = "得意先IDを入力してください";
-    }
-
-    if (!formData.external_product_code || formData.external_product_code.trim() === "") {
-      newErrors.external_product_code = "得意先品番を入力してください";
+      newErrors.customer_id = "得意先を選択してください";
     }
 
     if (!formData.product_id || formData.product_id <= 0) {
-      newErrors.product_id = "製品IDを入力してください";
+      newErrors.product_id = "先方品番を選択してください";
     }
 
     if (!formData.base_unit || formData.base_unit.trim() === "") {
@@ -68,84 +102,43 @@ export function CustomerItemForm({
     onSubmit(formData);
   };
 
+  const isLoading = isLoadingCustomers || isLoadingProducts;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Customer ID */}
+      {/* Customer Selection */}
       <div>
         <Label htmlFor="customer_id" className="mb-2 block text-sm font-medium">
-          得意先ID <span className="text-red-500">*</span>
+          得意先 <span className="text-red-500">*</span>
         </Label>
-        <Input
-          id="customer_id"
-          type="number"
-          value={formData.customer_id || ""}
-          onChange={(e) =>
+        <SearchableSelect
+          options={customerOptions}
+          value={formData.customer_id ? String(formData.customer_id) : ""}
+          onChange={(value) =>
             setFormData({
               ...formData,
-              customer_id: e.target.value ? Number(e.target.value) : 0,
+              customer_id: value ? Number(value) : 0,
             })
           }
-          placeholder="得意先IDを入力"
-          disabled={isSubmitting}
+          placeholder={isLoadingCustomers ? "読込中..." : "得意先を検索..."}
+          disabled={isSubmitting || isLoading}
         />
         {errors.customer_id && <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>}
       </div>
 
-      {/* External Product Code */}
-      <div>
-        <Label htmlFor="external_product_code" className="mb-2 block text-sm font-medium">
-          得意先品番 <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id="external_product_code"
-          type="text"
-          value={formData.external_product_code}
-          onChange={(e) => setFormData({ ...formData, external_product_code: e.target.value })}
-          placeholder="得意先品番を入力"
-          disabled={isSubmitting}
-          maxLength={100}
-        />
-        {errors.external_product_code && (
-          <p className="mt-1 text-sm text-red-600">{errors.external_product_code}</p>
-        )}
-      </div>
-
-      {/* Product ID */}
+      {/* 先方品番（製品）選択 */}
       <div>
         <Label htmlFor="product_id" className="mb-2 block text-sm font-medium">
-          製品ID <span className="text-red-500">*</span>
+          先方品番 <span className="text-red-500">*</span>
         </Label>
-        <Input
-          id="product_id"
-          type="number"
-          value={formData.product_id || ""}
-          onChange={(e) =>
-            setFormData({ ...formData, product_id: e.target.value ? Number(e.target.value) : 0 })
-          }
-          placeholder="製品IDを入力"
-          disabled={isSubmitting}
+        <SearchableSelect
+          options={productOptions}
+          value={formData.product_id ? String(formData.product_id) : ""}
+          onChange={handleProductSelect}
+          placeholder={isLoadingProducts ? "読込中..." : "先方品番を検索..."}
+          disabled={isSubmitting || isLoading}
         />
         {errors.product_id && <p className="mt-1 text-sm text-red-600">{errors.product_id}</p>}
-      </div>
-
-      {/* Supplier ID */}
-      <div>
-        <Label htmlFor="supplier_id" className="mb-2 block text-sm font-medium">
-          仕入先ID
-        </Label>
-        <Input
-          id="supplier_id"
-          type="number"
-          value={formData.supplier_id ?? ""}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              supplier_id: e.target.value ? Number(e.target.value) : null,
-            })
-          }
-          placeholder="仕入先IDを入力（オプション）"
-          disabled={isSubmitting}
-        />
       </div>
 
       {/* Base Unit */}
@@ -225,7 +218,7 @@ export function CustomerItemForm({
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           キャンセル
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || isLoading}>
           {isSubmitting ? "登録中..." : "登録"}
         </Button>
       </div>

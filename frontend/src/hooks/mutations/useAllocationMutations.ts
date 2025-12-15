@@ -171,12 +171,12 @@ export function useBulkCancelAllocations(options?: {
 export function useCancelAllAllocationsForLine(options?: {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
-}): UseMutationResult<void, Error, number> {
+}): UseMutationResult<void, Error, { orderLineId: number; allocationIds: number[] }> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (orderLineId: number) => {
-      await cancelAllocationsByLine(orderLineId);
+    mutationFn: async ({ orderLineId, allocationIds }) => {
+      await cancelAllocationsByLine(orderLineId, allocationIds);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

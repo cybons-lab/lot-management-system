@@ -76,7 +76,7 @@ export function ProductForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className={formStyles.grid} noValidate>
       <div className={formStyles.field}>
         <Label htmlFor="product_code" className={formStyles.label}>
-          製品コード <span className="text-red-500">*</span>
+          先方品番 <span className="text-red-500">*</span>
         </Label>
         <Input
           id="product_code"
@@ -146,7 +146,7 @@ export function ProductForm({
 
       <div className={formStyles.field}>
         <Label htmlFor="customer_part_no" className={formStyles.label}>
-          得意先品番
+          先方品番
         </Label>
         <Input
           id="customer_part_no"

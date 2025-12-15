@@ -31,12 +31,14 @@ DROP VIEW IF EXISTS public.v_customer_item_jiku_mappings CASCADE;
 -- view定義内ではCTE使えない場合もあるので、LATERAL JOINなど検討したが
 -- PostgreSQLならCTEで問題ない。
 
+-- Per §1.2 invariant: Available = Current - Locked - ConfirmedReserved
+-- Only CONFIRMED reservations affect Available Qty
 CREATE VIEW public.v_lot_allocations AS
 SELECT
     lot_id,
     SUM(reserved_qty) as allocated_quantity
 FROM public.lot_reservations
-WHERE status = 'active'
+WHERE status = 'confirmed'
 GROUP BY lot_id;
 
 -- 現在在庫ビュー
@@ -222,13 +224,8 @@ ORDER BY
     l.lot_id;
 
 
--- v_order_line_details は allocations テーブル結合も必要だが
--- allocationsテーブルが lot_reference に変更されたため
--- 引当数量の集計方法を見直す必要がある。
--- ただし、今回の要件では v_order_line_details のエラー報告はないので
--- 一旦 v_lot_details 等の復旧を優先する。
--- allocationsテーブルも残ってはいるが lot_id がないので注意。
-
+-- v_order_line_details: P3統一により lot_reservations を使用
+-- allocations テーブルは廃止済み、lot_reservations が唯一の正
 CREATE VIEW public.v_order_line_details AS
 SELECT
     o.id AS order_id,
@@ -254,8 +251,8 @@ SELECT
     dp.jiku_code,
     ci.external_product_code,
     COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
-    -- allocationsテーブルからの集計 (lot_reference経由でなく order_line_id で集計)
-    COALESCE(alloc_sum.allocated_qty, 0) AS allocated_quantity,
+    -- lot_reservations から集計（ACTIVE + CONFIRMED = 有効な予約）
+    COALESCE(res_sum.allocated_qty, 0) AS allocated_quantity,
     -- 論理削除フラグ
     CASE WHEN c.valid_to IS NOT NULL AND c.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS customer_deleted,
     CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS product_deleted,
@@ -267,12 +264,13 @@ LEFT JOIN public.products p ON ol.product_id = p.id
 LEFT JOIN public.delivery_places dp ON ol.delivery_place_id = dp.id
 LEFT JOIN public.customer_items ci ON ci.customer_id = o.customer_id AND ci.product_id = ol.product_id
 LEFT JOIN public.suppliers s ON ci.supplier_id = s.id
--- allocations集計サブクエリ
+-- lot_reservations 集計サブクエリ（ORDER タイプ、非リリース状態）
 LEFT JOIN (
-    SELECT order_line_id, SUM(allocated_quantity) as allocated_qty
-    FROM public.allocations
-    GROUP BY order_line_id
-) alloc_sum ON alloc_sum.order_line_id = ol.id;
+    SELECT source_id, SUM(reserved_qty) as allocated_qty
+    FROM public.lot_reservations
+    WHERE source_type = 'ORDER' AND status IN ('active', 'confirmed')
+    GROUP BY source_id
+) res_sum ON res_sum.source_id = ol.id;
 
 COMMENT ON VIEW public.v_order_line_details IS '受注明細の詳細情報ビュー（soft-delete対応）';
 

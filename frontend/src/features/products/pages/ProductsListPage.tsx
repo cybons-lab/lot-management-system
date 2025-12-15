@@ -37,7 +37,7 @@ function createColumns(
   return [
     {
       id: "product_code",
-      header: "製品コード",
+      header: "先方品番",
       cell: (row) => (
         <div className="flex items-center">
           <span className="font-mono text-sm font-medium text-gray-900">{row.product_code}</span>
