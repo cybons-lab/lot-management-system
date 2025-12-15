@@ -63,7 +63,10 @@ def confirm_reservation(
     Note:
         This operation is idempotent. If already confirmed, returns successfully.
     """
-    reservation = db.get(LotReservation, reservation_id)
+    # Use select with_for_update to lock the reservation row
+    stmt = select(LotReservation).where(LotReservation.id == reservation_id).with_for_update()
+    reservation = db.execute(stmt).scalar_one_or_none()
+
     if not reservation:
         raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
 
