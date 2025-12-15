@@ -19,6 +19,68 @@ from app.presentation.schemas.system.users_schema import (
 router = APIRouter(prefix="/users", tags=["users"], dependencies=[Depends(get_current_admin)])
 
 
+@router.get("/template/download")
+def download_users_template(format: str = "xlsx", include_sample: bool = True):
+    """Download user import template.
+
+    Args:
+        format: 'csv' or 'xlsx' (default: xlsx)
+        include_sample: Whether to include a sample row (default: True)
+
+    Returns:
+        Template file for user import
+    """
+    return ExportService.export_template("users", format=format, include_sample=include_sample)
+
+
+@router.post("/bulk", status_code=status.HTTP_201_CREATED)
+def bulk_create_users(
+    users: list[UserCreate],
+    db: Session = Depends(get_db),
+):
+    """ユーザー一括登録.
+
+    Args:
+        users: 登録するユーザーのリスト
+        db: データベースセッション
+
+    Returns:
+        登録結果のサマリー
+    """
+    service = UserService(db)
+    created_count = 0
+    skipped_count = 0
+    errors = []
+
+    for user_data in users:
+        try:
+            # Check for duplicate username
+            existing_user = service.get_by_username(user_data.username)
+            if existing_user:
+                skipped_count += 1
+                errors.append(f"Username '{user_data.username}' already exists")
+                continue
+
+            # Check for duplicate email
+            existing_email = service.get_by_email(user_data.email)
+            if existing_email:
+                skipped_count += 1
+                errors.append(f"Email '{user_data.email}' already exists")
+                continue
+
+            service.create(user_data)
+            created_count += 1
+        except Exception as e:
+            skipped_count += 1
+            errors.append(f"Failed to create user '{user_data.username}': {str(e)}")
+
+    return {
+        "created": created_count,
+        "skipped": skipped_count,
+        "errors": errors[:10],  # Limit errors to first 10
+    }
+
+
 @router.get("", response_model=list[UserResponse])
 def list_users(
     skip: int = Query(0, ge=0),

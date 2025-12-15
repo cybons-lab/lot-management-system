@@ -3128,6 +3128,60 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/users/template/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Users Template
+     * @description Download user import template.
+     *
+     *     Args:
+     *         format: 'csv' or 'xlsx' (default: xlsx)
+     *         include_sample: Whether to include a sample row (default: True)
+     *
+     *     Returns:
+     *         Template file for user import
+     */
+    get: operations["download_users_template_api_users_template_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/users/bulk": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Bulk Create Users
+     * @description ユーザー一括登録.
+     *
+     *     Args:
+     *         users: 登録するユーザーのリスト
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         登録結果のサマリー
+     */
+    post: operations["bulk_create_users_api_users_bulk_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/users": {
     parameters: {
       query?: never;
@@ -14720,6 +14774,71 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ClientLogResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  download_users_template_api_users_template_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+        include_sample?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bulk_create_users_api_users_bulk_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["UserCreate"][];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */

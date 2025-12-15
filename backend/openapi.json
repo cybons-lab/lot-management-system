@@ -9071,6 +9071,112 @@
         }
       }
     },
+    "/api/users/template/download": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Download Users Template",
+        "description": "Download user import template.\n\nArgs:\n    format: 'csv' or 'xlsx' (default: xlsx)\n    include_sample: Whether to include a sample row (default: True)\n\nReturns:\n    Template file for user import",
+        "operationId": "download_users_template_api_users_template_download_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "xlsx",
+              "title": "Format"
+            }
+          },
+          {
+            "name": "include_sample",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Include Sample"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/bulk": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Bulk Create Users",
+        "description": "\u30e6\u30fc\u30b6\u30fc\u4e00\u62ec\u767b\u9332.\n\nArgs:\n    users: \u767b\u9332\u3059\u308b\u30e6\u30fc\u30b6\u30fc\u306e\u30ea\u30b9\u30c8\n    db: \u30c7\u30fc\u30bf\u30d9\u30fc\u30b9\u30bb\u30c3\u30b7\u30e7\u30f3\n\nReturns:\n    \u767b\u9332\u7d50\u679c\u306e\u30b5\u30de\u30ea\u30fc",
+        "operationId": "bulk_create_users_api_users_bulk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/UserCreate"
+                },
+                "type": "array",
+                "title": "Users"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/api/users": {
       "get": {
         "tags": [
