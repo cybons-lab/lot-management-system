@@ -49,6 +49,13 @@ def release_reservation(db: Session, reservation_id: int, *, commit_db: bool = T
     if reservation.status == ReservationStatus.RELEASED:
         return
 
+    # Guard: CONFIRMED reservations cannot be released without SAP cancellation (not implemented)
+    if reservation.status == ReservationStatus.CONFIRMED:
+        raise AllocationCommitError(
+            "CANNOT_CANCEL_CONFIRMED",
+            f"Reservation {reservation_id} is already confirmed and cannot be cancelled directly",
+        )
+
     now = utcnow()
 
     lot = None

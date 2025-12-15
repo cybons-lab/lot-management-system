@@ -63,7 +63,10 @@ def confirm_reservation(
     Note:
         This operation is idempotent. If already confirmed, returns successfully.
     """
-    reservation = db.get(LotReservation, reservation_id)
+    # Use select with_for_update to lock the reservation row
+    stmt = select(LotReservation).where(LotReservation.id == reservation_id).with_for_update()
+    reservation = db.execute(stmt).scalar_one_or_none()
+
     if not reservation:
         raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
 
@@ -95,6 +98,15 @@ def confirm_reservation(
         )
 
     confirm_qty = reservation.reserved_qty
+
+    # Expiry Check
+    # TODO: Future requirement: Support configurable expiry margin (e.g., X days before expiry)
+    # Currently strictly checks if expiry_date < today
+    if lot.expiry_date and lot.expiry_date < utcnow().date():
+        raise AllocationCommitError(
+            "LOT_EXPIRED",
+            f"Lot {lot.lot_number} has expired (Expiry: {lot.expiry_date})",
+        )
 
     reserved_qty = get_reserved_quantity(db, lot.id)
     if lot.current_quantity < reserved_qty:

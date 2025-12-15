@@ -9,29 +9,15 @@
 
 ---
 
-## ✅ 最近完了したタスク
+## 🔥 対応中（P0: 最優先）
 
-### P3-4: customer_items / product_mappings 責務分離
+### V-02: SAP連携の部分的失敗（Partial Failure）の修正
 
-**ステータス:** 完了（2025-12-14）
+**ステータス:** 保留（2025-12-15）
 
 **概要:**
-`customer_items` と `product_mappings` の責務を明確化し、ドキュメント整備を実施。
-
-**成果物:**
-- [ADR-003](adr/ADR-003_customer_items_product_mappings.md) - 責務分離の設計判断（採用済み）
-- [SCHEMA_GUIDE.md](SCHEMA_GUIDE.md) - テーブル責務境界ガイド
-- [P3分析レポート](P3_customer_items_product_mappings_analysis.md) - 設計分析
-
-**責務境界:**
-| テーブル | ドメイン | 用途 |
-|----------|----------|------|
-| customer_items | 受注・出荷 | 品番変換、出荷設定、SAP連携 |
-| product_mappings | 調達・発注 | 4者マッピング、将来の単価/LT管理 |
-
----
-
-## 🔥 対応中（P0: 最優先）
+SAP連携後にDBコミットが失敗した場合、リトライによってSAP側で二重計上される脆弱性がある。
+修正にはSAP側の「べき等性キー」対応または補償トランザクションが必要だが、SAP側の仕様確認が必要なため一時保留。
 
 ### P0-1: 製品マスタの先方品番・メーカー品番が保存されない問題
 
@@ -112,4 +98,3 @@
 - **完了機能:** [`docs/COMPLETED_FEATURES.adoc`](COMPLETED_FEATURES.adoc)
 - **スキーマガイド:** [`docs/SCHEMA_GUIDE.md`](SCHEMA_GUIDE.md)
 - **ADR一覧:** [`docs/adr/`](adr/)
-
