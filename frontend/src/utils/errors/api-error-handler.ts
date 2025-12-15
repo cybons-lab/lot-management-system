@@ -48,6 +48,16 @@ export const ERROR_CODE_MESSAGES: Record<string, string> = {
   ALREADY_CONFIRMED: "この引当は既に確定されています。",
   ALLOCATION_NOT_FOUND: "指定された引当が見つかりません。",
 
+  // FE-02 Fix: Add new backend error codes
+  ALREADY_RELEASED: "この予約は既に解放されています。",
+  PROVISIONAL_RESERVATION: "入荷予定ベースの仮予約は確定できません。",
+  LOT_NOT_FOUND: "指定されたロットが見つかりません。",
+  LOT_NOT_ACTIVE: "指定されたロットは有効ではありません。",
+  LOT_EXPIRED: "指定されたロットは有効期限が切れています。",
+  SAP_REGISTRATION_FAILED: "SAP登録に失敗しました。システム管理者に連絡してください。",
+  CANNOT_CANCEL_CONFIRMED: "確定済みの予約はキャンセルできません。SAP連携が必要です。",
+  INVALID_STATE_TRANSITION: "この状態からの遷移は許可されていません。",
+
   // 競合関連
   CONFLICT: "他のユーザーが同時に操作を行ったため、処理が競合しました。再度お試しください。",
   DUPLICATE: "同じデータが既に存在します。",

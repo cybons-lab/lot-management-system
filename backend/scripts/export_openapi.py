@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -10,7 +11,12 @@ sys.path.append(str(Path(__file__).parent.parent))
 # DB接続が必要ないため、ダミーのURLを設定してcreate_engineのエラーを回避
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
-from app.main import app
+# ログ出力を抑制してOpenAPIスキーマ生成への混入を防ぐ
+logging.disable(logging.CRITICAL)
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
+from app.main import app  # noqa: E402
 
 
 def export_openapi():

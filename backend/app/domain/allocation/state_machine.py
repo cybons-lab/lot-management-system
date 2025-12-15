@@ -1,5 +1,13 @@
 # backend/app/domain/allocation/state_machine.py
-"""引当状態遷移マシン 引当ステータスの遷移ルールを集約管理."""
+"""引当状態遷移マシン 引当ステータスの遷移ルールを集約管理.
+
+DEPRECATED: allocations テーブル廃止に伴い、このモジュールは非推奨です。
+代わりに ReservationStateMachine を使用してください。
+
+from app.infrastructure.persistence.models import ReservationStateMachine
+
+See: C-03 in vulnerability_audit_report.md
+"""
 
 from enum import Enum
 
@@ -7,7 +15,10 @@ from .exceptions import InvalidTransitionError
 
 
 class AllocationStatus(Enum):
-    """引当ステータス."""
+    """引当ステータス.
+
+    DEPRECATED: ReservationStatus を使用してください。
+    """
 
     ACTIVE = "active"  # 有効（引当済み）
     SHIPPED = "shipped"  # 出荷済み
@@ -16,6 +27,8 @@ class AllocationStatus(Enum):
 
 class AllocationStateMachine:
     """引当状態遷移マシン.
+
+    DEPRECATED: このクラスは非推奨です。ReservationStateMachine を使用してください。
 
     状態遷移ルール:
     - active -> shipped (出荷時)

@@ -9,13 +9,17 @@ See: docs/architecture/system_invariants.md
 
 from __future__ import annotations
 
-from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
     Lot,
     LotReservation,
@@ -145,7 +149,7 @@ class LotReservationService:
         )
 
         if status == ReservationStatus.CONFIRMED.value:
-            reservation.confirmed_at = datetime.utcnow()
+            reservation.confirmed_at = utcnow()
 
         self.db.add(reservation)
         self.db.flush()  # Get the ID without committing
@@ -171,7 +175,7 @@ class LotReservationService:
             raise ReservationNotFoundError(reservation_id)
 
         reservation.status = ReservationStatus.RELEASED.value
-        reservation.released_at = datetime.utcnow()
+        reservation.released_at = utcnow()
         self.db.flush()
 
     def confirm(self, reservation_id: int) -> LotReservation:
@@ -194,12 +198,12 @@ class LotReservationService:
             return reservation
 
         reservation.status = ReservationStatus.CONFIRMED
-        reservation.confirmed_at = datetime.utcnow()
-        reservation.updated_at = datetime.utcnow()
+        reservation.confirmed_at = utcnow()
+        reservation.updated_at = utcnow()
 
         # 関連するLotの更新日時も更新
         if reservation.lot:
-            reservation.lot.updated_at = datetime.utcnow()
+            reservation.lot.updated_at = utcnow()
 
         return reservation
 
@@ -238,13 +242,13 @@ class LotReservationService:
         if new_status:
             reservation.status = new_status
             if new_status == ReservationStatus.CONFIRMED and not reservation.confirmed_at:
-                reservation.confirmed_at = datetime.utcnow()
+                reservation.confirmed_at = utcnow()
 
-        reservation.updated_at = datetime.utcnow()
+        reservation.updated_at = utcnow()
 
         # 関連するLotの更新日時も更新
         if reservation.lot:
-            reservation.lot.updated_at = datetime.utcnow()
+            reservation.lot.updated_at = utcnow()
 
         return reservation
 

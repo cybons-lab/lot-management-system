@@ -25,6 +25,7 @@ from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog
 from .lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
+    ReservationStateMachine,
     ReservationStatus,
 )
 from .masters_models import (
@@ -93,6 +94,7 @@ __all__ = [
     # Reservations
     "LotReservation",
     "ReservationSourceType",
+    "ReservationStateMachine",
     "ReservationStatus",
     # Orders
     "Order",

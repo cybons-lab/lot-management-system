@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.application.services.assignments.assignment_service import UserSupplierAssignmentService
+from app.application.services.auth.auth_service import AuthService
 from app.application.services.inventory.lot_service import LotService
 from app.core.database import get_db
 from app.infrastructure.persistence.models.auth_models import User
@@ -156,12 +157,21 @@ def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
 
 
 @router.delete("/{lot_id}", status_code=403)
-def delete_lot(lot_id: int, db: Session = Depends(get_db)):
+def delete_lot(
+    lot_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),  # M-04 Fix: 認証必須
+):
     """ロット削除 (無効化).
 
     ロットの物理削除はポリシーにより禁止されています。
     在庫調整には /api/lots/{lot_id}/adjustment エンドポイントを使用してください。
+
+    Note:
+        M-04 Fix: 認証チェックを追加。未認証ユーザーは401を返す。
     """
+    # lot_id, current_user は使用しないが、認証ログのために必要
+    _ = lot_id, db, current_user
     from fastapi import HTTPException
 
     raise HTTPException(

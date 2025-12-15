@@ -51,17 +51,122 @@ class ReservationSourceType(str, PyEnum):
 class ReservationStatus(str, PyEnum):
     """Status of a lot reservation.
 
-    State machine:
-    - TEMPORARY: Short-lived reservation (may expire)
-    - ACTIVE: Valid reservation, included in available qty calculation
-    - CONFIRMED: Finalized reservation (hard allocation)
-    - RELEASED: Reservation released, no longer affects available qty
+    State machine transitions:
+    - TEMPORARY → ACTIVE (一時予約の確定)
+    - TEMPORARY → RELEASED (一時予約の失効)
+    - ACTIVE → CONFIRMED (SAP登録による確定)
+    - ACTIVE → RELEASED (予約の解放)
+    - CONFIRMED → RELEASED (確定後の解放 - SAP連携必須)
+    - RELEASED → (終端状態: 遷移不可)
     """
 
     TEMPORARY = "temporary"
     ACTIVE = "active"
     CONFIRMED = "confirmed"
     RELEASED = "released"
+
+
+class ReservationStateMachine:
+    """予約状態遷移マシン.
+
+    C-03 Fix: AllocationStateMachine を廃止し、ReservationStatus ベースに統一。
+    lot_reservations テーブルの状態遷移を管理する唯一のステートマシン。
+
+    状態遷移ルール:
+    - temporary → active (仮予約の本確定)
+    - temporary → released (仮予約の失効/キャンセル)
+    - active → confirmed (SAP登録による確定)
+    - active → released (予約解放)
+    - confirmed → released (確定解除 - 要SAP連携)
+    - released → (遷移不可: 終端状態)
+    """
+
+    TRANSITIONS: dict[ReservationStatus, set[ReservationStatus]] = {
+        ReservationStatus.TEMPORARY: {
+            ReservationStatus.ACTIVE,
+            ReservationStatus.RELEASED,
+        },
+        ReservationStatus.ACTIVE: {
+            ReservationStatus.CONFIRMED,
+            ReservationStatus.RELEASED,
+        },
+        ReservationStatus.CONFIRMED: {
+            ReservationStatus.RELEASED,  # Note: SAP連携必須
+        },
+        ReservationStatus.RELEASED: set(),  # 終端状態
+    }
+
+    @classmethod
+    def can_transition(
+        cls, from_status: str | ReservationStatus, to_status: str | ReservationStatus
+    ) -> bool:
+        """指定された状態遷移が可能かチェック.
+
+        Args:
+            from_status: 遷移元ステータス
+            to_status: 遷移先ステータス
+
+        Returns:
+            遷移可能なら True
+        """
+        if isinstance(from_status, str):
+            try:
+                from_status = ReservationStatus(from_status)
+            except ValueError:
+                return False
+
+        if isinstance(to_status, str):
+            try:
+                to_status = ReservationStatus(to_status)
+            except ValueError:
+                return False
+
+        return to_status in cls.TRANSITIONS.get(from_status, set())
+
+    @classmethod
+    def validate_transition(
+        cls,
+        from_status: str | ReservationStatus,
+        to_status: str | ReservationStatus,
+        operation: str = "transition",
+    ) -> None:
+        """状態遷移をバリデーション（不正な場合は例外）.
+
+        Args:
+            from_status: 遷移元ステータス
+            to_status: 遷移先ステータス
+            operation: 操作名（エラーメッセージ用）
+
+        Raises:
+            ValueError: 不正な遷移の場合
+        """
+        from_str = from_status.value if isinstance(from_status, ReservationStatus) else from_status
+        to_str = to_status.value if isinstance(to_status, ReservationStatus) else to_status
+
+        if not cls.can_transition(from_status, to_status):
+            raise ValueError(
+                f"Invalid reservation status transition: {from_str} → {to_str} ({operation})"
+            )
+
+    @classmethod
+    def can_confirm(cls, status: str | ReservationStatus) -> bool:
+        """確定可能かチェック（ACTIVE → CONFIRMED）."""
+        return cls.can_transition(status, ReservationStatus.CONFIRMED)
+
+    @classmethod
+    def can_release(cls, status: str | ReservationStatus) -> bool:
+        """解放可能かチェック."""
+        return cls.can_transition(status, ReservationStatus.RELEASED)
+
+    @classmethod
+    def is_terminal(cls, status: str | ReservationStatus) -> bool:
+        """終端状態（遷移不可）かチェック."""
+        if isinstance(status, str):
+            try:
+                status = ReservationStatus(status)
+            except ValueError:
+                return False
+        return len(cls.TRANSITIONS.get(status, set())) == 0
 
 
 class LotReservation(Base):

@@ -254,14 +254,14 @@ class TestStateMachine:
     """状態遷移のテスト"""
 
     def test_valid_transitions(self):
-        """許可された状態遷移"""
+        """許可された状態遷移 (AllocationStateMachine - deprecated)"""
         from app.domain.allocation import AllocationStateMachine
 
         assert AllocationStateMachine.can_transition("active", "shipped") is True
         assert AllocationStateMachine.can_transition("active", "cancelled") is True
 
     def test_invalid_transitions(self):
-        """禁止された状態遷移"""
+        """禁止された状態遷移 (AllocationStateMachine - deprecated)"""
         from app.domain.allocation import AllocationStateMachine, InvalidTransitionError
 
         assert AllocationStateMachine.can_transition("shipped", "active") is False
@@ -269,3 +269,71 @@ class TestStateMachine:
 
         with pytest.raises(InvalidTransitionError):
             AllocationStateMachine.validate_transition("shipped", "active")
+
+
+class TestReservationStateMachine:
+    """ReservationStateMachine のテスト (C-03: 新しい統一ステートマシン)"""
+
+    def test_valid_transitions(self):
+        """許可された状態遷移"""
+        from app.infrastructure.persistence.models import ReservationStateMachine
+
+        # TEMPORARY → ACTIVE
+        assert ReservationStateMachine.can_transition("temporary", "active") is True
+        # TEMPORARY → RELEASED
+        assert ReservationStateMachine.can_transition("temporary", "released") is True
+        # ACTIVE → CONFIRMED
+        assert ReservationStateMachine.can_transition("active", "confirmed") is True
+        # ACTIVE → RELEASED
+        assert ReservationStateMachine.can_transition("active", "released") is True
+        # CONFIRMED → RELEASED
+        assert ReservationStateMachine.can_transition("confirmed", "released") is True
+
+    def test_invalid_transitions(self):
+        """禁止された状態遷移"""
+        from app.infrastructure.persistence.models import ReservationStateMachine
+
+        # RELEASED は終端状態
+        assert ReservationStateMachine.can_transition("released", "active") is False
+        assert ReservationStateMachine.can_transition("released", "confirmed") is False
+
+        # 逆方向の遷移は不可
+        assert ReservationStateMachine.can_transition("confirmed", "active") is False
+        assert ReservationStateMachine.can_transition("active", "temporary") is False
+
+    def test_validate_transition_raises_on_invalid(self):
+        """不正な遷移で例外が発生すること"""
+        from app.infrastructure.persistence.models import ReservationStateMachine
+
+        with pytest.raises(ValueError) as exc_info:
+            ReservationStateMachine.validate_transition("released", "active")
+
+        assert "Invalid reservation status transition" in str(exc_info.value)
+        assert "released → active" in str(exc_info.value)
+
+    def test_can_confirm(self):
+        """確定可能かチェック"""
+        from app.infrastructure.persistence.models import ReservationStateMachine
+
+        assert ReservationStateMachine.can_confirm("active") is True
+        assert ReservationStateMachine.can_confirm("temporary") is False
+        assert ReservationStateMachine.can_confirm("confirmed") is False
+        assert ReservationStateMachine.can_confirm("released") is False
+
+    def test_can_release(self):
+        """解放可能かチェック"""
+        from app.infrastructure.persistence.models import ReservationStateMachine
+
+        assert ReservationStateMachine.can_release("active") is True
+        assert ReservationStateMachine.can_release("confirmed") is True
+        assert ReservationStateMachine.can_release("temporary") is True
+        assert ReservationStateMachine.can_release("released") is False
+
+    def test_is_terminal(self):
+        """終端状態チェック"""
+        from app.infrastructure.persistence.models import ReservationStateMachine
+
+        assert ReservationStateMachine.is_terminal("released") is True
+        assert ReservationStateMachine.is_terminal("active") is False
+        assert ReservationStateMachine.is_terminal("confirmed") is False
+        assert ReservationStateMachine.is_terminal("temporary") is False

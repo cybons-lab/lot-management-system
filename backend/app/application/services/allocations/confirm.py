@@ -32,6 +32,7 @@ from app.infrastructure.persistence.models import Lot, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
+    ReservationStateMachine,
     ReservationStatus,
 )
 
@@ -74,11 +75,11 @@ def confirm_reservation(
     if reservation.status == ReservationStatus.CONFIRMED:
         return reservation
 
-    # Guard: RELEASED reservations cannot be confirmed (state machine violation)
-    if reservation.status == ReservationStatus.RELEASED:
+    # H-04/H-05 Fix: Use ReservationStateMachine for strict state transition validation
+    if not ReservationStateMachine.can_confirm(reservation.status):
         raise AllocationCommitError(
-            "ALREADY_RELEASED",
-            f"Released reservation {reservation_id} cannot be confirmed",
+            "INVALID_STATE_TRANSITION",
+            f"Cannot confirm reservation {reservation_id} from status '{reservation.status}'",
         )
 
     if not reservation.lot_id:
@@ -188,9 +189,23 @@ def confirm_reservations_batch(
         tuple[list[int], list[dict]]:
             - 確定成功した予約ID一覧
             - 確定失敗した予約情報一覧
+
+    Note:
+        C-02 Fix: 処理開始前に全予約の行ロックを事前取得することで、
+        途中で他プロセスが同じロットの在庫を使い切る問題を防止。
     """
     confirmed_ids: list[int] = []
     failed_items: list[dict] = []
+
+    if not reservation_ids:
+        return confirmed_ids, failed_items
+
+    # C-02 Fix: 全予約の行ロックを事前取得してレースコンディションを防止
+    # これにより、batch処理中に他プロセスが同じロットの在庫を操作できなくなる
+    lock_stmt = (
+        select(LotReservation).where(LotReservation.id.in_(reservation_ids)).with_for_update()
+    )
+    db.execute(lock_stmt).scalars().all()
 
     for reservation_id in reservation_ids:
         try:
