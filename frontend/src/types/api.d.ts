@@ -4549,7 +4549,7 @@ export interface paths {
     trace?: never;
   };
 }
-export type webhooks = { [key: string]: unknown };
+export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
     /**
@@ -5057,7 +5057,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | { [key: string]: unknown }
+        | {
+            [key: string]: unknown;
+          }
         | null;
     };
     /**
@@ -5073,7 +5075,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | { [key: string]: unknown }
+        | {
+            [key: string]: unknown;
+          }
         | null;
     };
     /**
@@ -5125,7 +5129,9 @@ export interface components {
         | {
             [key: string]: unknown;
           }
-        | { [key: string]: unknown }
+        | {
+            [key: string]: unknown;
+          }
         | null;
       /** Job Id */
       job_id: number;
@@ -5340,7 +5346,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: { [key: string]: unknown };
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -5382,7 +5390,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters: { [key: string]: unknown };
+      rule_parameters: {
+        [key: string]: unknown;
+      };
       /**
        * Is Active
        * @description 有効フラグ
@@ -5421,7 +5431,9 @@ export interface components {
        * Rule Parameters
        * @description ルールパラメータ（JSON）
        */
-      rule_parameters?: { [key: string]: unknown } | null;
+      rule_parameters?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Is Active
        * @description 有効フラグ
@@ -7334,12 +7346,16 @@ export interface components {
        * Old Values
        * @description 変更前の値（JSON）
        */
-      old_values?: { [key: string]: unknown } | null;
+      old_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * New Values
        * @description 変更後の値（JSON）
        */
-      new_values?: { [key: string]: unknown } | null;
+      new_values?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Changed By
        * @description 変更者（ユーザーID）
@@ -7499,7 +7515,9 @@ export interface components {
        * Changes
        * @description 変更内容（JSON）
        */
-      changes?: { [key: string]: unknown } | null;
+      changes?: {
+        [key: string]: unknown;
+      } | null;
       /**
        * Ip Address
        * @description IPアドレス
@@ -8310,7 +8328,9 @@ export interface components {
       /** Message */
       message?: string | null;
       /** Data */
-      data?: { [key: string]: unknown } | null;
+      data?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * RoleCreate
@@ -8421,7 +8441,7 @@ export interface components {
      * SAPSyncRequest
      * @description Payload for SAP purchase order synchronization.
      */
-    SAPSyncRequest: { [key: string]: unknown };
+    SAPSyncRequest: Record<string, never>;
     /**
      * SAPSyncResponse
      * @description Response model for SAP synchronization.
@@ -9284,7 +9304,7 @@ export interface components {
   headers: never;
   pathItems: never;
 }
-export type $defs = { [key: string]: unknown };
+export type $defs = Record<string, never>;
 export interface operations {
   list_lots_api_v2_lot__get: {
     parameters: {
