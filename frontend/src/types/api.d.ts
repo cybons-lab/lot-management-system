@@ -1727,6 +1727,53 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/delivery-places/template/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Download Delivery Places Template
+     * @description Download delivery place import template.
+     *
+     *     Args:
+     *         format: 'csv' or 'xlsx' (default: xlsx)
+     *         include_sample: Whether to include a sample row (default: True)
+     *
+     *     Returns:
+     *         Template file for delivery place import
+     */
+    get: operations["download_delivery_places_template_api_masters_delivery_places_template_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/delivery-places/export/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Export Delivery Places
+     * @description Export delivery places to CSV or Excel.
+     */
+    get: operations["export_delivery_places_api_masters_delivery_places_export_download_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/masters/delivery-places": {
     parameters: {
       query?: never;
@@ -12113,6 +12160,69 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["BulkUpsertResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  download_delivery_places_template_api_masters_delivery_places_template_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+        include_sample?: boolean;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  export_delivery_places_api_masters_delivery_places_export_download_get: {
+    parameters: {
+      query?: {
+        format?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
