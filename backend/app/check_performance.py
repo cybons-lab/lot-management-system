@@ -12,15 +12,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.application.services.allocations.confirm import confirm_reservations_batch
+from app.infrastructure.external import sap_gateway
 from app.infrastructure.external.sap_gateway import SapRegistrationResult
 from app.infrastructure.persistence.models import (
     Lot,
     LotReservation,
     Product,
-    ReservationStatus,
     Warehouse,
 )
-from app.infrastructure.external import sap_gateway
 from app.infrastructure.persistence.models.base_model import Base
 
 
@@ -73,7 +72,6 @@ print(f"[Test] Batch confirming {BATCH_SIZE} reservations...")
 start_time = time.time()
 
 # Mocking internal confirm_reservation to assume it uses the mock SAP
-
 
 
 sap_gateway._default_gateway = mock_sap
