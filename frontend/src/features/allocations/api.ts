@@ -167,10 +167,7 @@ export async function createAllocations(
  * @param orderLineId - Order line ID
  * @param allocationIds - Array of allocation IDs to cancel (must be provided by caller)
  */
-export const cancelAllocationsByLine = async (
-  orderLineId: number,
-  allocationIds: number[],
-) => {
+export const cancelAllocationsByLine = async (_orderLineId: number, allocationIds: number[]) => {
   if (allocationIds.length === 0) {
     return {
       success: true,
