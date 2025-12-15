@@ -12,10 +12,14 @@ import type { MasterImportResponse, TemplateGroup } from "../types";
  * テンプレートをダウンロードするヘルパー関数
  */
 async function downloadTemplate(group: TemplateGroup): Promise<void> {
-  const endpoint =
-    group === "supply"
-      ? "/masters/suppliers/template/download?format=xlsx"
-      : "/masters/customers/template/download?format=xlsx";
+  let endpoint: string;
+  if (group === "supply") {
+    endpoint = "/masters/suppliers/template/download?format=xlsx";
+  } else if (group === "delivery_place") {
+    endpoint = "/masters/delivery-places/template/download?format=xlsx";
+  } else {
+    endpoint = "/masters/customers/template/download?format=xlsx";
+  }
 
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || "/api"}${endpoint}`);
   if (!response.ok) {

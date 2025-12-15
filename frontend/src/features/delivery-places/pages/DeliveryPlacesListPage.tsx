@@ -2,6 +2,7 @@
  * DeliveryPlacesListPage - 納入先マスタ一覧
  */
 import { MapPin } from "lucide-react";
+import { useState } from "react";
 
 import { DeliveryPlaceForm } from "../components/DeliveryPlaceForm";
 import { DeliveryPlacesTable } from "../components/DeliveryPlacesTable";
@@ -11,6 +12,7 @@ import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/compon
 import { Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
@@ -67,6 +69,9 @@ export function DeliveryPlacesListPage() {
     isRestoring,
   } = useDeliveryPlacesPageState();
 
+  // インポートダイアログのstate
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+
   if (isError) {
     return (
       <div className="space-y-6 px-6 py-6 md:px-8">
@@ -81,7 +86,14 @@ export function DeliveryPlacesListPage() {
       <PageHeader
         title="納入先マスタ"
         subtitle="納入先の作成・編集・削除"
-        actions={<MasterPageActions onCreateClick={openCreateDialog} />}
+        actions={
+          <MasterPageActions
+            exportApiPath="/masters/delivery-places/export/download"
+            exportFilePrefix="delivery_places"
+            onImportClick={() => setIsImportDialogOpen(true)}
+            onCreateClick={openCreateDialog}
+          />
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -196,6 +208,14 @@ export function DeliveryPlacesListPage() {
         isPending={isRestoring}
         title="納入先を復元しますか？"
         description={`${restoringItem?.delivery_place_name} を有効状態に戻します。`}
+      />
+
+      {/* インポートダイアログ */}
+      <MasterImportDialog
+        open={isImportDialogOpen}
+        onOpenChange={setIsImportDialogOpen}
+        title="納入先マスタ インポート"
+        group="delivery_place"
       />
     </div>
   );
