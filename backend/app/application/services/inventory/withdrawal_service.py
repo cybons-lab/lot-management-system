@@ -15,6 +15,10 @@ from app.application.services.common.soft_delete_utils import (
     get_product_code,
     get_product_name,
 )
+from app.application.services.inventory.lot_reservation_service import (
+    ReservationInsufficientStockError,
+    ReservationLotNotFoundError,
+)
 from app.application.services.inventory.stock_calculation import get_reserved_quantity
 from app.core.time_utils import utcnow
 from app.domain.events import EventDispatcher, StockChangedEvent
@@ -140,16 +144,13 @@ class WithdrawalService:
         lot = self.db.query(Lot).filter(Lot.id == data.lot_id).with_for_update().first()
 
         if not lot:
-            raise ValueError(f"ロット（ID={data.lot_id}）が見つかりません")
+            raise ReservationLotNotFoundError(data.lot_id)
 
         # 利用可能数量をチェック (using lot_reservations)
         reserved_qty = get_reserved_quantity(self.db, lot.id)
         available_quantity = lot.current_quantity - reserved_qty - lot.locked_quantity
         if data.quantity > available_quantity:
-            raise ValueError(
-                f"利用可能数量が不足しています。"
-                f"出庫数量: {data.quantity}, 利用可能: {available_quantity}"
-            )
+            raise ReservationInsufficientStockError(lot.id, data.quantity, available_quantity)
 
         # 得意先・納入場所を確認（受注手動の場合のみ必須）
         customer = None
