@@ -7,8 +7,10 @@ from app.application.services.allocations.schemas import (
     AllocationNotFoundError,
     InsufficientStockError,
 )
+from app.application.services.auth.auth_service import AuthService
 from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.core.database import get_db
+from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.schemas.allocations.allocations_schema import (
     AllocationCommitRequest,
     AllocationCommitResponse,
@@ -67,6 +69,7 @@ def _map_fefo_preview(result) -> FefoPreviewResponse:
 def preview_allocation(
     request: FefoPreviewRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
 ) -> FefoPreviewResponse:
     """FEFO allocation preview."""
     try:
@@ -84,6 +87,7 @@ def preview_allocation(
 def commit_allocation(
     request: AllocationCommitRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
 ) -> AllocationCommitResponse:
     """Commit FEFO allocation."""
     try:
@@ -114,6 +118,7 @@ def commit_allocation(
 def manual_allocate(
     request: ManualAllocationRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
 ) -> ManualAllocationResponse:
     """Manual allocation (Drag & Assign)."""
     try:
@@ -161,6 +166,7 @@ def confirm_allocation(
     allocation_id: int,
     request: HardAllocationConfirmRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
 ) -> HardAllocationConfirmResponse:
     """Confirm allocation (Soft to Hard)."""
     try:
@@ -236,6 +242,7 @@ def confirm_allocation(
 def confirm_allocations_batch(
     request: HardAllocationBatchConfirmRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
 ) -> HardAllocationBatchConfirmResponse:
     """Batch confirm allocations."""
     # returns (confirmed_ids, failed_items)
@@ -252,6 +259,7 @@ def confirm_allocations_batch(
 def cancel_allocation(
     allocation_id: int,
     db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
 ):
     """Cancel allocation."""
     try:
@@ -266,6 +274,7 @@ def cancel_allocation(
 def bulk_cancel(
     request: BulkCancelRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
 ) -> BulkCancelResponse:
     """Bulk cancel allocations."""
     cancelled, failed = actions.bulk_release_reservations(db, request.allocation_ids)
@@ -281,6 +290,7 @@ def bulk_cancel(
 def bulk_auto_allocate(
     request: BulkAutoAllocateRequest,
     db: Session = Depends(get_db),
+    current_user: User = Depends(AuthService.get_current_user),
 ) -> BulkAutoAllocateResponse:
     """Group-based bulk auto-allocation using FEFO strategy.
 
