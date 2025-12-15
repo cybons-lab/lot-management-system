@@ -71,6 +71,13 @@ def confirm_reservation(
     if reservation.status == ReservationStatus.CONFIRMED:
         return reservation
 
+    # Guard: RELEASED reservations cannot be confirmed (state machine violation)
+    if reservation.status == ReservationStatus.RELEASED:
+        raise AllocationCommitError(
+            "ALREADY_RELEASED",
+            f"Released reservation {reservation_id} cannot be confirmed",
+        )
+
     if not reservation.lot_id:
         raise AllocationCommitError(
             "PROVISIONAL_RESERVATION", "入荷予定ベースの仮予約は確定できません"

@@ -97,16 +97,14 @@ def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
         List of (Lot, available_quantity) tuples sorted by FEFO order
     """
     # Subquery for reserved quantity per lot
+    # Per §1.2 invariant: Available = Current - Locked - ConfirmedReserved
+    # Only CONFIRMED reservations affect Available Qty (ACTIVE/provisional do not)
     reserved_subq = (
         select(
             LotReservation.lot_id,
             func.coalesce(func.sum(LotReservation.reserved_qty), 0).label("reserved"),
         )
-        .where(
-            LotReservation.status.in_(
-                [ReservationStatus.ACTIVE.value, ReservationStatus.CONFIRMED.value]
-            )
-        )
+        .where(LotReservation.status == ReservationStatus.CONFIRMED.value)
         .group_by(LotReservation.lot_id)
         .subquery()
     )
