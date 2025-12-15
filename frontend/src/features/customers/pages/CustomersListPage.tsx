@@ -1,9 +1,8 @@
-import { Pencil, Plus, Trash2, Upload, Users, RotateCcw } from "lucide-react";
+import { Users, RotateCcw, Pencil, Trash2 } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import type { Customer, CustomerCreate } from "../api";
-import { CustomerExportButton } from "../components/CustomerExportButton";
 import { CustomerForm } from "../components/CustomerForm";
 import { useCustomers } from "../hooks";
 
@@ -16,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { formatDate } from "@/shared/utils/date";
 
@@ -283,17 +283,12 @@ export function CustomersListPage() {
         title="得意先マスタ"
         subtitle="得意先の作成・編集・削除、一括インポート/エクスポート"
         actions={
-          <div className={styles.actionBar}>
-            <CustomerExportButton size="sm" />
-            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              インポート
-            </Button>
-            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              新規登録
-            </Button>
-          </div>
+          <MasterPageActions
+            exportApiPath="/masters/customers/export/download"
+            exportFilePrefix="customers"
+            onImportClick={() => setIsImportDialogOpen(true)}
+            onCreateClick={() => setIsCreateDialogOpen(true)}
+          />
         }
       />
 

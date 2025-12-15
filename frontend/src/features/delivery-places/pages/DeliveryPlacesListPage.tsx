@@ -1,17 +1,18 @@
 /**
  * DeliveryPlacesListPage - 納入先マスタ一覧
  */
-import { MapPin, Plus } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 import { DeliveryPlaceForm } from "../components/DeliveryPlaceForm";
 import { DeliveryPlacesTable } from "../components/DeliveryPlacesTable";
 import { useDeliveryPlacesPageState } from "../hooks/useDeliveryPlacesPageState";
 
 import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/components/common";
-import { Button, Input, Checkbox } from "@/components/ui";
+import { Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 // eslint-disable-next-line max-lines-per-function
@@ -80,12 +81,7 @@ export function DeliveryPlacesListPage() {
       <PageHeader
         title="納入先マスタ"
         subtitle="納入先の作成・編集・削除"
-        actions={
-          <Button size="sm" onClick={openCreateDialog}>
-            <Plus className="mr-2 h-4 w-4" />
-            新規登録
-          </Button>
-        }
+        actions={<MasterPageActions onCreateClick={openCreateDialog} />}
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

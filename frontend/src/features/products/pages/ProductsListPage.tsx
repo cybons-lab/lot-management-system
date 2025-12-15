@@ -1,10 +1,9 @@
-import { Package, Pencil, Plus, Trash2, Upload, RotateCcw } from "lucide-react";
+import { Package, Pencil, Trash2, RotateCcw } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import type { Product } from "../api";
 import { ProductBulkImportDialog } from "../components/ProductBulkImportDialog";
-import { ProductExportButton } from "../components/ProductExportButton";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
 import { useProducts } from "../hooks/useProducts";
 
@@ -16,6 +15,7 @@ import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { formatDate } from "@/shared/utils/date";
 
@@ -278,17 +278,12 @@ export function ProductsListPage() {
         title="商品マスタ"
         subtitle="商品の作成・編集・削除、一括インポート/エクスポート"
         actions={
-          <div className={styles.actionBar}>
-            <ProductExportButton size="sm" />
-            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              インポート
-            </Button>
-            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              新規登録
-            </Button>
-          </div>
+          <MasterPageActions
+            exportApiPath="/masters/products/export/download"
+            exportFilePrefix="products"
+            onImportClick={() => setIsImportDialogOpen(true)}
+            onCreateClick={() => setIsCreateDialogOpen(true)}
+          />
         }
       />
 

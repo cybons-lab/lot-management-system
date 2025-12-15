@@ -1,9 +1,8 @@
-import { Pencil, Plus, Trash2, Truck, Upload, RotateCcw } from "lucide-react";
+import { Pencil, Trash2, Truck, RotateCcw } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 import type { Supplier, SupplierCreate } from "../api";
-import { SupplierExportButton } from "../components/SupplierExportButton";
 import { SupplierForm } from "../components/SupplierForm";
 import { useSuppliers } from "../hooks";
 
@@ -14,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
+import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { formatDate } from "@/shared/utils/date";
 
@@ -251,17 +251,12 @@ export function SuppliersListPage() {
         title="仕入先マスタ"
         subtitle="仕入先の作成・編集・削除、一括インポート/エクスポート"
         actions={
-          <div className="flex items-center gap-2">
-            <SupplierExportButton size="sm" />
-            <Button variant="outline" size="sm" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="mr-2 h-4 w-4" />
-              インポート
-            </Button>
-            <Button size="sm" onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              新規登録
-            </Button>
-          </div>
+          <MasterPageActions
+            exportApiPath="/masters/suppliers/export/download"
+            exportFilePrefix="suppliers"
+            onImportClick={() => setIsImportDialogOpen(true)}
+            onCreateClick={() => setIsCreateDialogOpen(true)}
+          />
         }
       />
 
