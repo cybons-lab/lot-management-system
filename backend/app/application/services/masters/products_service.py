@@ -121,8 +121,6 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             data["maker_part_code"] = data.pop("product_code")
 
         # Remove fields not in model
-        data.pop("customer_part_no", None)
-        data.pop("maker_item_code", None)
         data.pop("is_active", None)
 
         # Set default base_unit if not present (Model requires it)
@@ -149,8 +147,6 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
             data["maker_part_code"] = data.pop("product_code")
 
         # Remove fields not in model
-        data.pop("customer_part_no", None)
-        data.pop("maker_item_code", None)
         data.pop("is_active", None)
 
         for field, value in data.items():
@@ -224,8 +220,6 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
                     data["maker_part_code"] = product_code
 
                 # Remove fields not in model
-                data.pop("customer_part_no", None)
-                data.pop("maker_item_code", None)
                 data.pop("is_active", None)
 
                 # Set default base_unit if not present
