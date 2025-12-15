@@ -76,7 +76,7 @@ export function ProductForm({
     <form onSubmit={handleSubmit(handleFormSubmit)} className={formStyles.grid} noValidate>
       <div className={formStyles.field}>
         <Label htmlFor="product_code" className={formStyles.label}>
-          先方品番 <span className="text-red-500">*</span>
+          製品コード <span className="text-red-500">*</span>
         </Label>
         <Input
           id="product_code"

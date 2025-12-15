@@ -15,7 +15,7 @@ describe("ProductForm", () => {
     expect(screen.getByLabelText(/社内単位/)).toBeInTheDocument();
     expect(screen.getByLabelText(/外部単位/)).toBeInTheDocument();
     expect(screen.getByLabelText(/内部単位あたりの数量/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/得意先品番/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/先方品番/)).toBeInTheDocument();
     expect(screen.getByLabelText(/メーカー品番/)).toBeInTheDocument();
     expect(screen.getByLabelText(/有効/)).toBeInTheDocument();
   });
@@ -115,7 +115,7 @@ describe("ProductForm", () => {
     expect(screen.getByLabelText(/社内単位/)).toHaveValue("EA");
     expect(screen.getByLabelText(/外部単位/)).toHaveValue("CS");
     expect(screen.getByLabelText(/内部単位あたりの数量/)).toHaveValue(12);
-    expect(screen.getByLabelText(/得意先品番/)).toHaveValue("CP-123");
+    expect(screen.getByLabelText(/先方品番/)).toHaveValue("CP-123");
     expect(screen.getByLabelText(/メーカー品番/)).toHaveValue("MK-456");
     expect(screen.getByLabelText(/有効/)).not.toBeChecked();
 
