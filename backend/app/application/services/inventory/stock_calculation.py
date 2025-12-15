@@ -51,14 +51,13 @@ def get_provisional_quantity(db: Session, lot_id: int) -> Decimal:
 
 
 def get_reserved_quantity(db: Session, lot_id: int) -> Decimal:
-    """Get total reserved quantity for a lot from lot_reservations.
+    """Get total reserved quantity for a lot (Confirmed ONLY).
 
-    DEPRECATED: Use get_confirmed_reserved_quantity for Available Qty calculation.
-    This function now only returns CONFIRMED reservations for backward compatibility
-    with the invariant: Available = Current - Locked - ConfirmedReserved.
+    Used for Reservation Validation (Loose availability).
+    Calculates `current - confirmed - locked`.
 
-    Note: Previously included both ACTIVE and CONFIRMED. Changed per §1.2 to only
-    count CONFIRMED reservations.
+    Note: Active (Provisional) reservations are EXCLUDED to allow overbooking/provisional
+    reservations even if stock is insufficient, per business requirement.
     """
     return get_confirmed_reserved_quantity(db, lot_id)
 

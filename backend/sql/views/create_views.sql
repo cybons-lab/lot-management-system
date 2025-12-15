@@ -38,7 +38,7 @@ SELECT
     lot_id,
     SUM(reserved_qty) as allocated_quantity
 FROM public.lot_reservations
-WHERE status = 'confirmed'
+WHERE status IN ('active', 'confirmed')
 GROUP BY lot_id;
 
 -- 現在在庫ビュー

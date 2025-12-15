@@ -6,6 +6,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.application.services.inventory.lot_reservation_service import (
+    ReservationInsufficientStockError,
+    ReservationLotNotFoundError,
+)
 from app.application.services.inventory.withdrawal_service import WithdrawalService
 from app.presentation.api.deps import get_db
 from app.presentation.schemas.inventory.withdrawal_schema import (
@@ -104,6 +108,16 @@ def create_withdrawal(
 
     try:
         return service.create_withdrawal(data)
+    except ReservationLotNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
+    except ReservationInsufficientStockError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        ) from e
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

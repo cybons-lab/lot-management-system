@@ -16,9 +16,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from datetime import datetime
 
-from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.application.services.inventory import stock_calculation
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
     Lot,
@@ -194,10 +194,10 @@ class LotReservationService:
         if not reservation:
             raise ReservationNotFoundError(f"Reservation {reservation_id} not found")
 
-        if reservation.status == ReservationStatus.CONFIRMED:
+        if reservation.status == ReservationStatus.CONFIRMED.value:
             return reservation
 
-        reservation.status = ReservationStatus.CONFIRMED
+        reservation.status = ReservationStatus.CONFIRMED.value
         reservation.confirmed_at = utcnow()
         reservation.updated_at = utcnow()
 
@@ -313,19 +313,7 @@ class LotReservationService:
         Returns:
             Total reserved quantity
         """
-        result = self.db.execute(
-            select(func.coalesce(func.sum(LotReservation.reserved_qty), 0)).where(
-                LotReservation.lot_id == lot_id,
-                LotReservation.status.in_(
-                    [
-                        ReservationStatus.ACTIVE.value,
-                        ReservationStatus.CONFIRMED.value,
-                    ]
-                ),
-            )
-        ).scalar()
-
-        return Decimal(str(result)) if result else Decimal("0")
+        return stock_calculation.get_reserved_quantity(self.db, lot_id)
 
     def get_available_quantity(self, lot_id: int) -> Decimal:
         """Get the available quantity for a lot.
@@ -365,10 +353,7 @@ class LotReservationService:
         if not lot:
             return Decimal("0")
 
-        reserved = self.get_reserved_quantity(lot_id)
-        current = lot.current_quantity or Decimal("0")
-
-        return current - reserved
+        return stock_calculation.get_available_quantity(self.db, lot)
 
     def get_by_id(self, reservation_id: int) -> LotReservation | None:
         """Get a reservation by ID.
