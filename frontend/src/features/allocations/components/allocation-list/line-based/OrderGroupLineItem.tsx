@@ -1,6 +1,6 @@
 import { CheckCircle } from "lucide-react";
 
-import type { LineStatus } from "../../../hooks/useLotAllocation";
+import { useAllocationContextData } from "../../../hooks/useAllocationContext";
 import { AllocationRowContainer } from "../../lots/AllocationRowContainer";
 import * as styles from "../LineBasedAllocationList.styles";
 
@@ -10,34 +10,22 @@ import { type LineWithOrderInfo } from "./types";
 interface OrderGroupLineItemProps {
   lineItem: LineWithOrderInfo;
   isChecked: boolean;
-  productMap: Record<number, string>;
   onLineCheckChange: (lineId: number, checked: boolean) => void;
-  getLineAllocations: (lineId: number) => Record<number, number>;
-  onLotAllocationChange: (lineId: number, lotId: number, quantity: number) => void;
-  onAutoAllocate: (lineId: number) => void;
-  onClearAllocations: (lineId: number) => void;
-  onSaveAllocations: (lineId: number) => void;
-  lineStatus: LineStatus;
-  isOverAllocated: boolean;
-  isActive: boolean;
-  onActivate: () => void;
 }
 
+/**
+ * OrderGroupLineItem - グループ内の明細アイテム
+ *
+ * AllocationRowContainerはuseAllocationContextからハンドラーを取得するため、
+ * ここでのProps数を大幅に削減。
+ */
 export function OrderGroupLineItem({
   lineItem,
   isChecked,
-  productMap,
   onLineCheckChange,
-  getLineAllocations,
-  onLotAllocationChange,
-  onAutoAllocate,
-  onClearAllocations,
-  onSaveAllocations,
-  lineStatus,
-  isOverAllocated,
-  isActive,
-  onActivate,
 }: OrderGroupLineItemProps) {
+  // productMapはJotai atomから取得
+  const { productMap } = useAllocationContextData();
   return (
     <div className={styles.orderCard(isChecked)}>
       <div className={styles.orderCardHeader(isChecked)}>
@@ -66,15 +54,6 @@ export function OrderGroupLineItem({
             customerName={lineItem.customer_name}
             productName={getProductName(lineItem.line, productMap)}
             deliveryPlaceName={getDeliveryPlaceName(lineItem.order, lineItem.line)}
-            getLineAllocations={getLineAllocations}
-            onLotAllocationChange={onLotAllocationChange}
-            onAutoAllocate={onAutoAllocate}
-            onClearAllocations={onClearAllocations}
-            onSaveAllocations={onSaveAllocations}
-            lineStatus={lineStatus}
-            isOverAllocated={isOverAllocated}
-            isActive={isActive}
-            onActivate={onActivate}
           />
         </div>
       )}
