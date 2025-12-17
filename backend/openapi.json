@@ -11993,6 +11993,414 @@
         ]
       }
     },
+    "/api/rpa/material-delivery-note/runs": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Create Run",
+        "description": "CSV取込でRunを作成.\n\nmultipart/form-dataでCSVファイルをアップロード。\nパース結果をDBに保存し、run_idを返す。",
+        "operationId": "create_run_api_rpa_material_delivery_note_runs_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_run_api_rpa_material_delivery_note_runs_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunCreateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "List Runs",
+        "description": "Run一覧取得.",
+        "operationId": "list_runs_api_rpa_material_delivery_note_runs_get",
+        "parameters": [
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 1,
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Run",
+        "description": "Run詳細取得（items含む）.",
+        "operationId": "get_run_api_rpa_material_delivery_note_runs__run_id__get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}": {
+      "patch": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Update Item",
+        "description": "Item更新（issue_flag / complete_flag / delivery_quantity）.",
+        "operationId": "update_item_api_rpa_material_delivery_note_runs__run_id__items__item_id__patch",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunItemUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/items/batch-update": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Batch Update Items",
+        "description": "指定したItemsを一括更新する.",
+        "operationId": "batch_update_items_api_rpa_material_delivery_note_runs__run_id__items_batch_update_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunBatchUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/complete-all": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Complete All Items",
+        "description": "全Itemsを完了にする.",
+        "operationId": "complete_all_items_api_rpa_material_delivery_note_runs__run_id__complete_all_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/step2": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Execute Step2",
+        "description": "Step2実行.\n\n事前条件: 全Itemsが完了していること。\nPower Automate Flowを呼び出してStep2を実行します。",
+        "operationId": "execute_step2_api_rpa_material_delivery_note_runs__run_id__step2_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Step2ExecuteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Step2ExecuteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/execute": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Execute Material Delivery Note",
+        "description": "Power Automate Cloud Flowを呼び出して素材納品書発行を実行.\n\n既存の「素材納品書発行」ボタンの機能を拡張し、\nURL/JSONを指定してFlowをトリガーする。",
+        "operationId": "execute_material_delivery_note_api_rpa_material_delivery_note_execute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MaterialDeliveryNoteExecuteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaterialDeliveryNoteExecuteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -13147,6 +13555,20 @@
         ],
         "title": "BatchJobResponse",
         "description": "バッチジョブレスポンス."
+      },
+      "Body_create_run_api_rpa_material_delivery_note_runs_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_create_run_api_rpa_material_delivery_note_runs_post"
       },
       "Body_import_from_file_api_admin_master_import_upload_post": {
         "properties": {
@@ -18397,6 +18819,75 @@
         "title": "MaterialDeliveryDocumentResponse",
         "description": "素材納品書発行レスポンス."
       },
+      "MaterialDeliveryNoteExecuteRequest": {
+        "properties": {
+          "flow_url": {
+            "type": "string",
+            "title": "Flow Url",
+            "description": "Power Automate Cloud FlowのHTTP Trigger URL"
+          },
+          "json_payload": {
+            "type": "string",
+            "title": "Json Payload",
+            "description": "Flowに送信するJSONペイロード（文字列）",
+            "default": "{}"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "開始日"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date",
+            "description": "終了日"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flow_url",
+          "start_date",
+          "end_date"
+        ],
+        "title": "MaterialDeliveryNoteExecuteRequest",
+        "description": "素材納品書発行実行リクエスト（Power Automate Cloud Flow用）."
+      },
+      "MaterialDeliveryNoteExecuteResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "実行ステータス (success, error, locked)"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "メッセージ"
+          },
+          "flow_response": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Response",
+            "description": "Flow応答"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message"
+        ],
+        "title": "MaterialDeliveryNoteExecuteResponse",
+        "description": "素材納品書発行実行レスポンス."
+      },
       "MySuppliersResponse": {
         "properties": {
           "user_id": {
@@ -20529,6 +21020,466 @@
         "title": "RoleUpdate",
         "description": "Schema for updating a role."
       },
+      "RpaRunBatchUpdateRequest": {
+        "properties": {
+          "item_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Item Ids"
+          },
+          "update_data": {
+            "$ref": "#/components/schemas/RpaRunItemUpdateRequest"
+          }
+        },
+        "type": "object",
+        "required": [
+          "item_ids",
+          "update_data"
+        ],
+        "title": "RpaRunBatchUpdateRequest",
+        "description": "RPA Run Batch update request schema."
+      },
+      "RpaRunCreateResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "item_count": {
+            "type": "integer",
+            "title": "Item Count"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "item_count",
+          "message"
+        ],
+        "title": "RpaRunCreateResponse",
+        "description": "RPA Run create response schema."
+      },
+      "RpaRunItemResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "row_no": {
+            "type": "integer",
+            "title": "Row No"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "destination": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination"
+          },
+          "layer_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Layer Code"
+          },
+          "material_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Material Code"
+          },
+          "delivery_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Date"
+          },
+          "delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Quantity"
+          },
+          "shipping_vehicle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Vehicle"
+          },
+          "issue_flag": {
+            "type": "boolean",
+            "title": "Issue Flag",
+            "default": true
+          },
+          "complete_flag": {
+            "type": "boolean",
+            "title": "Complete Flag",
+            "default": false
+          },
+          "match_result": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Result"
+          },
+          "sap_registered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Registered"
+          },
+          "order_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order No"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "row_no"
+        ],
+        "title": "RpaRunItemResponse",
+        "description": "RPA Run Item response schema."
+      },
+      "RpaRunItemUpdateRequest": {
+        "properties": {
+          "issue_flag": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Flag"
+          },
+          "complete_flag": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Complete Flag"
+          },
+          "delivery_quantity": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Quantity"
+          }
+        },
+        "type": "object",
+        "title": "RpaRunItemUpdateRequest",
+        "description": "RPA Run Item update request schema."
+      },
+      "RpaRunListResponse": {
+        "properties": {
+          "runs": {
+            "items": {
+              "$ref": "#/components/schemas/RpaRunSummaryResponse"
+            },
+            "type": "array",
+            "title": "Runs"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "runs",
+          "total"
+        ],
+        "title": "RpaRunListResponse",
+        "description": "RPA Run list response schema."
+      },
+      "RpaRunResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "rpa_type": {
+            "type": "string",
+            "title": "Rpa Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "started_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started By User Id"
+          },
+          "started_by_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started By Username"
+          },
+          "step2_executed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step2 Executed At"
+          },
+          "step2_executed_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step2 Executed By User Id"
+          },
+          "step2_executed_by_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step2 Executed By Username"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "item_count": {
+            "type": "integer",
+            "title": "Item Count",
+            "default": 0
+          },
+          "complete_count": {
+            "type": "integer",
+            "title": "Complete Count",
+            "default": 0
+          },
+          "all_items_complete": {
+            "type": "boolean",
+            "title": "All Items Complete",
+            "default": false
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RpaRunItemResponse"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rpa_type",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "RpaRunResponse",
+        "description": "RPA Run response schema."
+      },
+      "RpaRunSummaryResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "rpa_type": {
+            "type": "string",
+            "title": "Rpa Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "started_by_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started By Username"
+          },
+          "step2_executed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step2 Executed At"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "item_count": {
+            "type": "integer",
+            "title": "Item Count",
+            "default": 0
+          },
+          "complete_count": {
+            "type": "integer",
+            "title": "Complete Count",
+            "default": 0
+          },
+          "all_items_complete": {
+            "type": "boolean",
+            "title": "All Items Complete",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "rpa_type",
+          "status",
+          "created_at"
+        ],
+        "title": "RpaRunSummaryResponse",
+        "description": "RPA Run summary response schema (for list views)."
+      },
       "SAPOrderRegistrationRequest": {
         "properties": {
           "order_ids": {
@@ -20726,6 +21677,79 @@
         ],
         "title": "ShipmentTextResponse",
         "description": "Response schema for shipment text lookup."
+      },
+      "Step2ExecuteRequest": {
+        "properties": {
+          "flow_url": {
+            "type": "string",
+            "title": "Flow Url",
+            "description": "Power Automate Cloud FlowのHTTP Trigger URL"
+          },
+          "json_payload": {
+            "type": "string",
+            "title": "Json Payload",
+            "description": "Flowに送信するJSONペイロード（文字列）",
+            "default": "{}"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date",
+            "description": "開始日"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date",
+            "description": "終了日"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flow_url",
+          "start_date",
+          "end_date"
+        ],
+        "title": "Step2ExecuteRequest",
+        "description": "Step2 execution request schema."
+      },
+      "Step2ExecuteResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "executed_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Executed At"
+          },
+          "flow_response": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flow Response",
+            "description": "Flow応答"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "message",
+          "executed_at"
+        ],
+        "title": "Step2ExecuteResponse",
+        "description": "Step2 execution response schema."
       },
       "StockHistoryCreate": {
         "properties": {

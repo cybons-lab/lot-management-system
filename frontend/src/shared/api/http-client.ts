@@ -200,6 +200,13 @@ export const http = {
   },
 
   /**
+   * POST request with FormData
+   */
+  async postFormData<T>(url: string, formData: FormData, options?: Options): Promise<T> {
+    return apiClient.post(url, { body: formData, ...options }).json<T>();
+  },
+
+  /**
    * PUT request
    */
   async put<T>(url: string, data?: unknown, options?: Options): Promise<T> {

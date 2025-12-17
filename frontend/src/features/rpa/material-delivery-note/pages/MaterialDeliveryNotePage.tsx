@@ -1,0 +1,107 @@
+/**
+ * MaterialDeliveryNotePage
+ * 素材納品書発行のメニューページ - Step1/Step2/履歴へのナビゲーション
+ */
+
+import { CheckSquare, FileText, History, Play, Wrench } from "lucide-react";
+import { Link } from "react-router-dom";
+
+import { Button } from "@/components/ui";
+import { ROUTES } from "@/constants/routes";
+import { PageContainer } from "@/shared/components/layout/PageContainer";
+import { PageHeader } from "@/shared/components/layout/PageHeader";
+
+interface MenuCardProps {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  to: string;
+  variant?: "default" | "secondary";
+}
+
+function MenuCard({ title, description, icon, to, variant = "default" }: MenuCardProps) {
+  return (
+    <Link to={to} className="block">
+      <div className="group rounded-lg border border-gray-200 bg-white p-6 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md">
+        <div className="flex items-start gap-4">
+          <div
+            className={`flex h-12 w-12 items-center justify-center rounded-lg ${
+              variant === "secondary"
+                ? "bg-gray-100 text-gray-600"
+                : "bg-indigo-100 text-indigo-600"
+            }`}
+          >
+            {icon}
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-indigo-600">
+              {title}
+            </h3>
+            <p className="mt-1 text-sm text-gray-600">{description}</p>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+export function MaterialDeliveryNotePage() {
+  return (
+    <PageContainer>
+      <PageHeader title="素材納品書発行" subtitle="CSV取込からStep2実行までのワークフロー" />
+
+      <div className="mx-auto max-w-3xl space-y-4">
+        {/* Step1: CSV取込 */}
+        <MenuCard
+          title="Step1: CSV取込"
+          description="CSVファイルをアップロードしてデータを登録します。発行/完了フラグを確認・編集できます。"
+          icon={<FileText className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1}
+        />
+
+        {/* Step2: 内容確認 */}
+        <MenuCard
+          title="Step2: 内容確認"
+          description="取込データの確認・編集を行います。詳細ページで発行/完了フラグを操作します。"
+          icon={<CheckSquare className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2}
+        />
+
+        {/* Step3: 実行 */}
+        <MenuCard
+          title="Step3: 実行"
+          description="全チェック完了後、Step3を実行します。Power Automateフローを呼び出します。"
+          icon={<Play className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3}
+        />
+
+        {/* 履歴一覧 */}
+        <MenuCard
+          title="実行履歴"
+          description="過去のCSV取込・実行履歴を確認できます。"
+          icon={<History className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS}
+          variant="secondary"
+        />
+
+        {/* クラウドフロー実行（汎用） */}
+        <MenuCard
+          title="クラウドフロー実行 (汎用)"
+          description="Runデータを使用せず、直接URLとJSONを指定してクラウドフローを実行します。"
+          icon={<Wrench className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CLOUD_FLOW_EXECUTE}
+          variant="secondary"
+        />
+      </div>
+
+      {/* RPAトップへ戻るリンク */}
+      <div className="mx-auto mt-8 max-w-3xl">
+        <Link to={ROUTES.RPA.ROOT}>
+          <Button variant="outline" size="sm">
+            ← RPAトップへ戻る
+          </Button>
+        </Link>
+      </div>
+    </PageContainer>
+  );
+}

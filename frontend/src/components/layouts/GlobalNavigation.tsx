@@ -72,7 +72,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "RPA",
-    href: ROUTES.RPA,
+    href: ROUTES.RPA.ROOT,
     icon: Settings,
     color: "text-gray-600",
     activeColor: "text-indigo-600 bg-indigo-50",

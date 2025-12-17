@@ -4528,6 +4528,159 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/material-delivery-note/runs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Runs
+     * @description Run一覧取得.
+     */
+    get: operations["list_runs_api_rpa_material_delivery_note_runs_get"];
+    put?: never;
+    /**
+     * Create Run
+     * @description CSV取込でRunを作成.
+     *
+     *     multipart/form-dataでCSVファイルをアップロード。
+     *     パース結果をDBに保存し、run_idを返す。
+     */
+    post: operations["create_run_api_rpa_material_delivery_note_runs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Run
+     * @description Run詳細取得（items含む）.
+     */
+    get: operations["get_run_api_rpa_material_delivery_note_runs__run_id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Item
+     * @description Item更新（issue_flag / complete_flag / delivery_quantity）.
+     */
+    patch: operations["update_item_api_rpa_material_delivery_note_runs__run_id__items__item_id__patch"];
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/items/batch-update": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Batch Update Items
+     * @description 指定したItemsを一括更新する.
+     */
+    post: operations["batch_update_items_api_rpa_material_delivery_note_runs__run_id__items_batch_update_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/complete-all": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete All Items
+     * @description 全Itemsを完了にする.
+     */
+    post: operations["complete_all_items_api_rpa_material_delivery_note_runs__run_id__complete_all_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/step2": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Step2
+     * @description Step2実行.
+     *
+     *     事前条件: 全Itemsが完了していること。
+     *     Power Automate Flowを呼び出してStep2を実行します。
+     */
+    post: operations["execute_step2_api_rpa_material_delivery_note_runs__run_id__step2_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/execute": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Material Delivery Note
+     * @description Power Automate Cloud Flowを呼び出して素材納品書発行を実行.
+     *
+     *     既存の「素材納品書発行」ボタンの機能を拡張し、
+     *     URL/JSONを指定してFlowをトリガーする。
+     */
+    post: operations["execute_material_delivery_note_api_rpa_material_delivery_note_execute_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/": {
     parameters: {
       query?: never;
@@ -5161,6 +5314,14 @@ export interface components {
        * @description 作成日時
        */
       created_at: string;
+    };
+    /** Body_create_run_api_rpa_material_delivery_note_runs_post */
+    Body_create_run_api_rpa_material_delivery_note_runs_post: {
+      /**
+       * File
+       * Format: binary
+       */
+      file: string;
     };
     /** Body_import_from_file_api_admin_master_import_upload_post */
     Body_import_from_file_api_admin_master_import_upload_post: {
@@ -7462,6 +7623,58 @@ export interface components {
       execution_time_seconds: number;
     };
     /**
+     * MaterialDeliveryNoteExecuteRequest
+     * @description 素材納品書発行実行リクエスト（Power Automate Cloud Flow用）.
+     */
+    MaterialDeliveryNoteExecuteRequest: {
+      /**
+       * Flow Url
+       * @description Power Automate Cloud FlowのHTTP Trigger URL
+       */
+      flow_url: string;
+      /**
+       * Json Payload
+       * @description Flowに送信するJSONペイロード（文字列）
+       * @default {}
+       */
+      json_payload: string;
+      /**
+       * Start Date
+       * Format: date
+       * @description 開始日
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       * @description 終了日
+       */
+      end_date: string;
+    };
+    /**
+     * MaterialDeliveryNoteExecuteResponse
+     * @description 素材納品書発行実行レスポンス.
+     */
+    MaterialDeliveryNoteExecuteResponse: {
+      /**
+       * Status
+       * @description 実行ステータス (success, error, locked)
+       */
+      status: string;
+      /**
+       * Message
+       * @description メッセージ
+       */
+      message: string;
+      /**
+       * Flow Response
+       * @description Flow応答
+       */
+      flow_response?: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /**
      * MySuppliersResponse
      * @description 現在のユーザーの担当仕入先ID一覧.
      */
@@ -8403,6 +8616,183 @@ export interface components {
       description?: string | null;
     };
     /**
+     * RpaRunBatchUpdateRequest
+     * @description RPA Run Batch update request schema.
+     */
+    RpaRunBatchUpdateRequest: {
+      /** Item Ids */
+      item_ids: number[];
+      update_data: components["schemas"]["RpaRunItemUpdateRequest"];
+    };
+    /**
+     * RpaRunCreateResponse
+     * @description RPA Run create response schema.
+     */
+    RpaRunCreateResponse: {
+      /** Id */
+      id: number;
+      /** Status */
+      status: string;
+      /** Item Count */
+      item_count: number;
+      /** Message */
+      message: string;
+    };
+    /**
+     * RpaRunItemResponse
+     * @description RPA Run Item response schema.
+     */
+    RpaRunItemResponse: {
+      /** Id */
+      id: number;
+      /** Row No */
+      row_no: number;
+      /** Status */
+      status?: string | null;
+      /** Destination */
+      destination?: string | null;
+      /** Layer Code */
+      layer_code?: string | null;
+      /** Material Code */
+      material_code?: string | null;
+      /** Delivery Date */
+      delivery_date?: string | null;
+      /** Delivery Quantity */
+      delivery_quantity?: number | null;
+      /** Shipping Vehicle */
+      shipping_vehicle?: string | null;
+      /**
+       * Issue Flag
+       * @default true
+       */
+      issue_flag: boolean;
+      /**
+       * Complete Flag
+       * @default false
+       */
+      complete_flag: boolean;
+      /** Match Result */
+      match_result?: boolean | null;
+      /** Sap Registered */
+      sap_registered?: boolean | null;
+      /** Order No */
+      order_no?: string | null;
+    };
+    /**
+     * RpaRunItemUpdateRequest
+     * @description RPA Run Item update request schema.
+     */
+    RpaRunItemUpdateRequest: {
+      /** Issue Flag */
+      issue_flag?: boolean | null;
+      /** Complete Flag */
+      complete_flag?: boolean | null;
+      /** Delivery Quantity */
+      delivery_quantity?: number | null;
+    };
+    /**
+     * RpaRunListResponse
+     * @description RPA Run list response schema.
+     */
+    RpaRunListResponse: {
+      /** Runs */
+      runs: components["schemas"]["RpaRunSummaryResponse"][];
+      /** Total */
+      total: number;
+    };
+    /**
+     * RpaRunResponse
+     * @description RPA Run response schema.
+     */
+    RpaRunResponse: {
+      /** Id */
+      id: number;
+      /** Rpa Type */
+      rpa_type: string;
+      /** Status */
+      status: string;
+      /** Started At */
+      started_at?: string | null;
+      /** Started By User Id */
+      started_by_user_id?: number | null;
+      /** Started By Username */
+      started_by_username?: string | null;
+      /** Step2 Executed At */
+      step2_executed_at?: string | null;
+      /** Step2 Executed By User Id */
+      step2_executed_by_user_id?: number | null;
+      /** Step2 Executed By Username */
+      step2_executed_by_username?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /**
+       * Item Count
+       * @default 0
+       */
+      item_count: number;
+      /**
+       * Complete Count
+       * @default 0
+       */
+      complete_count: number;
+      /**
+       * All Items Complete
+       * @default false
+       */
+      all_items_complete: boolean;
+      /**
+       * Items
+       * @default []
+       */
+      items: components["schemas"]["RpaRunItemResponse"][];
+    };
+    /**
+     * RpaRunSummaryResponse
+     * @description RPA Run summary response schema (for list views).
+     */
+    RpaRunSummaryResponse: {
+      /** Id */
+      id: number;
+      /** Rpa Type */
+      rpa_type: string;
+      /** Status */
+      status: string;
+      /** Started At */
+      started_at?: string | null;
+      /** Started By Username */
+      started_by_username?: string | null;
+      /** Step2 Executed At */
+      step2_executed_at?: string | null;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Item Count
+       * @default 0
+       */
+      item_count: number;
+      /**
+       * Complete Count
+       * @default 0
+       */
+      complete_count: number;
+      /**
+       * All Items Complete
+       * @default false
+       */
+      all_items_complete: boolean;
+    };
+    /**
      * SAPOrderRegistrationRequest
      * @description Request schema for SAP order registration.
      */
@@ -8489,6 +8879,57 @@ export interface components {
        * @description データソース: 'delivery_setting' | 'customer_item' | 'none'
        */
       source: string;
+    };
+    /**
+     * Step2ExecuteRequest
+     * @description Step2 execution request schema.
+     */
+    Step2ExecuteRequest: {
+      /**
+       * Flow Url
+       * @description Power Automate Cloud FlowのHTTP Trigger URL
+       */
+      flow_url: string;
+      /**
+       * Json Payload
+       * @description Flowに送信するJSONペイロード（文字列）
+       * @default {}
+       */
+      json_payload: string;
+      /**
+       * Start Date
+       * Format: date
+       * @description 開始日
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       * @description 終了日
+       */
+      end_date: string;
+    };
+    /**
+     * Step2ExecuteResponse
+     * @description Step2 execution response schema.
+     */
+    Step2ExecuteResponse: {
+      /** Status */
+      status: string;
+      /** Message */
+      message: string;
+      /**
+       * Executed At
+       * Format: date-time
+       */
+      executed_at: string;
+      /**
+       * Flow Response
+       * @description Flow応答
+       */
+      flow_response?: {
+        [key: string]: unknown;
+      } | null;
     };
     /**
      * StockHistoryCreate
@@ -16583,6 +17024,272 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["MaterialDeliveryDocumentResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_runs_api_rpa_material_delivery_note_runs_get: {
+    parameters: {
+      query?: {
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_run_api_rpa_material_delivery_note_runs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_create_run_api_rpa_material_delivery_note_runs_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunCreateResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_run_api_rpa_material_delivery_note_runs__run_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_item_api_rpa_material_delivery_note_runs__run_id__items__item_id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+        item_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaRunItemUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  batch_update_items_api_rpa_material_delivery_note_runs__run_id__items_batch_update_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaRunBatchUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  complete_all_items_api_rpa_material_delivery_note_runs__run_id__complete_all_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_step2_api_rpa_material_delivery_note_runs__run_id__step2_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["Step2ExecuteRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Step2ExecuteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_material_delivery_note_api_rpa_material_delivery_note_execute_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["MaterialDeliveryNoteExecuteRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["MaterialDeliveryNoteExecuteResponse"];
         };
       };
       /** @description Validation Error */
