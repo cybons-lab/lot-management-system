@@ -290,7 +290,7 @@ def bulk_cancel(
 def bulk_auto_allocate(
     request: BulkAutoAllocateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(AuthService.get_current_user),
+    current_user: User | None = Depends(AuthService.get_current_user_optional),
 ) -> BulkAutoAllocateResponse:
     """Group-based bulk auto-allocation using FEFO strategy.
 
@@ -306,13 +306,20 @@ def bulk_auto_allocate(
             skip_already_reserved=request.skip_already_allocated,
         )
         # Helper string construction moved to logic or kept here if simple
-        # Assuming result is a dict with necessary fields
+        # result keys: processed_lines, reserved_lines, total_reservations, skipped_lines, failed_lines
         result["message"] = (
             f"処理数: {result['processed_lines']}件, "
-            f"引当数: {result['allocated_lines']}件, "
-            f"作成: {result['total_allocations']}ロット"
+            f"引当数: {result['reserved_lines']}件, "
+            f"作成: {result['total_reservations']}ロット"
         )
-        return result
+        # Map result keys to BulkAutoAllocateResponse schema (allocated_lines, total_allocations)
+        return BulkAutoAllocateResponse(
+            processed_lines=result["processed_lines"],
+            allocated_lines=result["reserved_lines"],
+            total_allocations=result["total_reservations"],
+            skipped_lines=result.get("skipped_lines", 0),
+            message=result["message"],
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception:
