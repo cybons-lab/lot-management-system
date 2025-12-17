@@ -25,6 +25,7 @@ dependencies = [
     "pandas>=2.2.0",
     "openpyxl>=3.1.0",
     "PyJWT>=2.8.0",
+    "httpx>=0.28.1",
 ]
 
 [tool.ruff]
