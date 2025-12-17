@@ -141,7 +141,7 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
                 )
                 .options(
                     joinedload(Order.order_lines).selectinload(OrderLine.product),
-                    joinedload(Order.order_lines).selectinload(OrderLine.allocations),
+                    # Note: allocations removed in P3 migration - now using lot_reservations
                     joinedload(Order.customer),
                 )
                 .distinct()

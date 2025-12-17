@@ -55,7 +55,8 @@ def clear_database(db: Session):
     print("🗑️  Clearing database...")
 
     # Delete in correct order (foreign key constraints)
-    db.execute(text("DELETE FROM allocations"))
+    # P3: allocations table replaced by lot_reservations
+    db.execute(text("DELETE FROM lot_reservations"))
     db.execute(text("DELETE FROM allocation_traces"))
     db.execute(text("DELETE FROM order_lines"))
     db.execute(text("DELETE FROM orders"))

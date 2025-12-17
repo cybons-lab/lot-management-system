@@ -128,19 +128,29 @@ class InventoryService:
         if not found_products:
             return []
 
+        # P3: allocations table replaced by lot_reservations
+        # soft = active, hard = confirmed
         alloc_query = """
             SELECT 
                 l.product_id,
                 l.warehouse_id,
-                a.allocation_type,
-                SUM(a.allocated_quantity) as qty
-            FROM allocations a
-            JOIN lots l ON l.id = a.lot_id
-            WHERE 1=1
-              AND a.status IN ('allocated', 'provisional')
+                CASE 
+                    WHEN r.status = 'active' THEN 'soft'
+                    WHEN r.status = 'confirmed' THEN 'hard'
+                    ELSE 'soft'
+                END as allocation_type,
+                SUM(r.reserved_qty) as qty
+            FROM lot_reservations r
+            JOIN lots l ON l.id = r.lot_id
+            WHERE r.status IN ('active', 'confirmed')
               AND l.product_id IN :product_ids
               AND l.warehouse_id IN :warehouse_ids
-            GROUP BY l.product_id, l.warehouse_id, a.allocation_type
+            GROUP BY l.product_id, l.warehouse_id, 
+                CASE 
+                    WHEN r.status = 'active' THEN 'soft'
+                    WHEN r.status = 'confirmed' THEN 'hard'
+                    ELSE 'soft'
+                END
         """
 
         alloc_rows = self.db.execute(
@@ -228,16 +238,26 @@ class InventoryService:
             return None
 
         # Get Allocation breakdown
+        # P3: allocations table replaced by lot_reservations
         alloc_query = """
             SELECT 
-                a.allocation_type,
-                SUM(a.allocated_quantity) as qty
-            FROM allocations a
-            JOIN lots l ON l.id = a.lot_id
-            WHERE a.status IN ('allocated', 'provisional')
+                CASE 
+                    WHEN r.status = 'active' THEN 'soft'
+                    WHEN r.status = 'confirmed' THEN 'hard'
+                    ELSE 'soft'
+                END as allocation_type,
+                SUM(r.reserved_qty) as qty
+            FROM lot_reservations r
+            JOIN lots l ON l.id = r.lot_id
+            WHERE r.status IN ('active', 'confirmed')
               AND l.product_id = :product_id
               AND l.warehouse_id = :warehouse_id
-            GROUP BY a.allocation_type
+            GROUP BY 
+                CASE 
+                    WHEN r.status = 'active' THEN 'soft'
+                    WHEN r.status = 'confirmed' THEN 'hard'
+                    ELSE 'soft'
+                END
         """
         alloc_rows = self.db.execute(
             text(alloc_query), {"product_id": product_id, "warehouse_id": warehouse_id}
