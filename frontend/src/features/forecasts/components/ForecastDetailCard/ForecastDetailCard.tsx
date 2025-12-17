@@ -66,8 +66,7 @@ export function ForecastDetailCard({
       } else {
         toast.info(result.message);
       }
-      // 関連クエリを無効化して再取得 - 包括的に無効化（forecasts も含む）
-      // 関連クエリを無効化して再取得 - 包括的に無効化（forecasts も含む）
+      // 関連クエリを無効化して再取得 - 包括的に無効化
       Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["forecasts"],
@@ -78,6 +77,14 @@ export function ForecastDetailCard({
           queryKey: ["allocations"],
           exact: false,
           refetchType: "all",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [
+            "planning-allocation-summary",
+            group_key.customer_id,
+            group_key.delivery_place_id,
+            group_key.product_id,
+          ],
         }),
       ]);
     },
