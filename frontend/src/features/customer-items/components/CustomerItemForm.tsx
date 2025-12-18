@@ -1,11 +1,19 @@
 /**
- * CustomerItemForm (v2.3 - プルダウン対応)
+ * CustomerItemForm (v2.4 - react-hook-form + Zod)
  * Form component for creating customer item mappings
  */
 
-import { useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMemo } from "react";
+import { useForm, Controller } from "react-hook-form";
 
 import type { CreateCustomerItemRequest } from "../api";
+
+import {
+  customerItemFormSchema,
+  type CustomerItemFormData,
+  CUSTOMER_ITEM_FORM_DEFAULTS,
+} from "./customerItemFormSchema";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
@@ -28,18 +36,15 @@ export function CustomerItemForm({
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
   const { data: products = [], isLoading: isLoadingProducts } = useProductsQuery();
 
-  const [formData, setFormData] = useState<CreateCustomerItemRequest>({
-    customer_id: 0,
-    external_product_code: "",
-    product_id: 0,
-    supplier_id: null,
-    base_unit: "EA",
-    pack_unit: null,
-    pack_quantity: null,
-    special_instructions: null,
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<CustomerItemFormData>({
+    resolver: zodResolver(customerItemFormSchema),
+    defaultValues: CUSTOMER_ITEM_FORM_DEFAULTS,
   });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Generate select options
   const customerOptions = useMemo(
@@ -66,64 +71,39 @@ export function CustomerItemForm({
 
   const handleProductSelect = (value: string) => {
     const selected = productOptions.find((opt) => opt.value === value);
-    setFormData({
-      ...formData,
-      product_id: value ? Number(value) : 0,
-      external_product_code: selected?.customer_part_no ?? "",
-    });
+    setValue("product_id", value ? Number(value) : 0);
+    setValue("external_product_code", selected?.customer_part_no ?? "");
   };
 
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.customer_id || formData.customer_id <= 0) {
-      newErrors.customer_id = "得意先を選択してください";
-    }
-
-    if (!formData.product_id || formData.product_id <= 0) {
-      newErrors.product_id = "先方品番を選択してください";
-    }
-
-    if (!formData.base_unit || formData.base_unit.trim() === "") {
-      newErrors.base_unit = "基本単位を入力してください";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
-
-    onSubmit(formData);
+  const handleFormSubmit = (data: CustomerItemFormData) => {
+    onSubmit(data as CreateCustomerItemRequest);
   };
 
   const isLoading = isLoadingCustomers || isLoadingProducts;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       {/* Customer Selection */}
       <div>
         <Label htmlFor="customer_id" className="mb-2 block text-sm font-medium">
           得意先 <span className="text-red-500">*</span>
         </Label>
-        <SearchableSelect
-          options={customerOptions}
-          value={formData.customer_id ? String(formData.customer_id) : ""}
-          onChange={(value) =>
-            setFormData({
-              ...formData,
-              customer_id: value ? Number(value) : 0,
-            })
-          }
-          placeholder={isLoadingCustomers ? "読込中..." : "得意先を検索..."}
-          disabled={isSubmitting || isLoading}
+        <Controller
+          name="customer_id"
+          control={control}
+          render={({ field }) => (
+            <SearchableSelect
+              options={customerOptions}
+              value={field.value ? String(field.value) : ""}
+              onChange={(value) => field.onChange(value ? Number(value) : 0)}
+              placeholder={isLoadingCustomers ? "読込中..." : "得意先を検索..."}
+              disabled={isSubmitting || isLoading}
+            />
+          )}
         />
-        {errors.customer_id && <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>}
+        {errors.customer_id && (
+          <p className="mt-1 text-sm text-red-600">{errors.customer_id.message}</p>
+        )}
       </div>
 
       {/* 先方品番（製品）選択 */}
@@ -131,14 +111,24 @@ export function CustomerItemForm({
         <Label htmlFor="product_id" className="mb-2 block text-sm font-medium">
           先方品番 <span className="text-red-500">*</span>
         </Label>
-        <SearchableSelect
-          options={productOptions}
-          value={formData.product_id ? String(formData.product_id) : ""}
-          onChange={handleProductSelect}
-          placeholder={isLoadingProducts ? "読込中..." : "先方品番を検索..."}
-          disabled={isSubmitting || isLoading}
+        <Controller
+          name="product_id"
+          control={control}
+          render={({ field }) => (
+            <SearchableSelect
+              options={productOptions}
+              value={field.value ? String(field.value) : ""}
+              onChange={(value) => {
+                handleProductSelect(value);
+              }}
+              placeholder={isLoadingProducts ? "読込中..." : "先方品番を検索..."}
+              disabled={isSubmitting || isLoading}
+            />
+          )}
         />
-        {errors.product_id && <p className="mt-1 text-sm text-red-600">{errors.product_id}</p>}
+        {errors.product_id && (
+          <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
+        )}
       </div>
 
       {/* Base Unit */}
@@ -146,16 +136,23 @@ export function CustomerItemForm({
         <Label htmlFor="base_unit" className="mb-2 block text-sm font-medium">
           基本単位 <span className="text-red-500">*</span>
         </Label>
-        <Input
-          id="base_unit"
-          type="text"
-          value={formData.base_unit}
-          onChange={(e) => setFormData({ ...formData, base_unit: e.target.value })}
-          placeholder="基本単位を入力（例: EA, KG, CS）"
-          disabled={isSubmitting}
-          maxLength={20}
+        <Controller
+          name="base_unit"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              id="base_unit"
+              type="text"
+              placeholder="基本単位を入力（例: EA, KG, CS）"
+              disabled={isSubmitting}
+              maxLength={20}
+            />
+          )}
         />
-        {errors.base_unit && <p className="mt-1 text-sm text-red-600">{errors.base_unit}</p>}
+        {errors.base_unit && (
+          <p className="mt-1 text-sm text-red-600">{errors.base_unit.message}</p>
+        )}
         <p className="mt-1 text-xs text-gray-500">例: EA（個）, KG（キログラム）, CS（ケース）</p>
       </div>
 
@@ -164,14 +161,21 @@ export function CustomerItemForm({
         <Label htmlFor="pack_unit" className="mb-2 block text-sm font-medium">
           梱包単位
         </Label>
-        <Input
-          id="pack_unit"
-          type="text"
-          value={formData.pack_unit ?? ""}
-          onChange={(e) => setFormData({ ...formData, pack_unit: e.target.value || null })}
-          placeholder="梱包単位を入力（オプション）"
-          disabled={isSubmitting}
-          maxLength={20}
+        <Controller
+          name="pack_unit"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              value={field.value ?? ""}
+              onChange={(e) => field.onChange(e.target.value || null)}
+              id="pack_unit"
+              type="text"
+              placeholder="梱包単位を入力（オプション）"
+              disabled={isSubmitting}
+              maxLength={20}
+            />
+          )}
         />
       </div>
 
@@ -180,18 +184,19 @@ export function CustomerItemForm({
         <Label htmlFor="pack_quantity" className="mb-2 block text-sm font-medium">
           梱包数量
         </Label>
-        <Input
-          id="pack_quantity"
-          type="number"
-          value={formData.pack_quantity ?? ""}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              pack_quantity: e.target.value ? Number(e.target.value) : null,
-            })
-          }
-          placeholder="梱包数量を入力（オプション）"
-          disabled={isSubmitting}
+        <Controller
+          name="pack_quantity"
+          control={control}
+          render={({ field }) => (
+            <Input
+              id="pack_quantity"
+              type="number"
+              value={field.value ?? ""}
+              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+              placeholder="梱包数量を入力（オプション）"
+              disabled={isSubmitting}
+            />
+          )}
         />
       </div>
 
@@ -200,16 +205,20 @@ export function CustomerItemForm({
         <Label htmlFor="special_instructions" className="mb-2 block text-sm font-medium">
           特記事項
         </Label>
-        <textarea
-          id="special_instructions"
-          value={formData.special_instructions ?? ""}
-          onChange={(e) =>
-            setFormData({ ...formData, special_instructions: e.target.value || null })
-          }
-          placeholder="特記事項を入力（オプション）"
-          rows={3}
-          className="w-full rounded-md border px-3 py-2 text-sm"
-          disabled={isSubmitting}
+        <Controller
+          name="special_instructions"
+          control={control}
+          render={({ field }) => (
+            <textarea
+              id="special_instructions"
+              value={field.value ?? ""}
+              onChange={(e) => field.onChange(e.target.value || null)}
+              placeholder="特記事項を入力（オプション）"
+              rows={3}
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              disabled={isSubmitting}
+            />
+          )}
         />
       </div>
 
