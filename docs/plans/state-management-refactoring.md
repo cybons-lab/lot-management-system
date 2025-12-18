@@ -1,5 +1,16 @@
 # フロントエンド状態管理リファクタリング計画
 
+## 進捗状況
+
+| フェーズ | ステータス | 完了日 |
+|---------|----------|--------|
+| Phase 1: Allocation Context導入 | ✅ 完了 | 2025-12-18 |
+| Phase 2: AllocationInputSection最適化 | ✅ 完了 | 2025-12-18 |
+| Phase 3: InventoryPage状態管理改善 | 🔲 未着手 | - |
+| Phase 4: ForecastDetailCard分割 | 🔲 未着手 | - |
+
+---
+
 ## 1. 現状分析サマリー
 
 ### 1.1 既存のJotai Atoms (6個)
@@ -52,223 +63,405 @@ LineBasedAllocationList
 
 ## 3. 段階的リファクタリング計画
 
-### フェーズ1: Allocation Context導入 (最優先)
+### フェーズ1: Allocation Context導入 ✅ 完了
 
-#### 目的
-- 7階層のProp Drillingを解消
-- ハンドラと状態を一括管理
+#### 実装済みの内容
 
-#### 変更するファイル
-1. **新規作成**: `src/features/allocations/store/allocation-context.ts`
-2. **新規作成**: `src/features/allocations/components/AllocationProvider.tsx`
-3. **新規作成**: `src/features/allocations/hooks/useAllocationContext.ts`
-4. **修正**: `src/features/allocations/components/allocation-list/LineBasedAllocationList.tsx`
-5. **修正**: `src/features/allocations/components/allocation-list/line-based/AllocationListContent.tsx`
-6. **修正**: `src/features/allocations/components/allocation-list/line-based/AllocationListRow.tsx`
-7. **修正**: `src/features/allocations/components/allocation-list/line-based/LineItem.tsx`
-8. **修正**: `src/features/allocations/components/lots/AllocationRowContainer.tsx`
-9. **修正**: `src/features/allocations/components/lots/LotAllocationPanel.tsx`
-10. **修正**: `src/features/allocations/components/lots/LotAllocationList.tsx`
-11. **修正**: `src/features/allocations/components/lots/LotListCard.tsx`
+**新規作成ファイル:**
+- `src/features/allocations/store/allocation-context.ts` - 共有atoms定義
+- `src/features/allocations/hooks/useAllocationContext.ts` - 型安全なhooks
+- `src/features/allocations/components/AllocationProvider.tsx` - Providerコンポーネント
 
-#### 具体的な実装内容
+**修正ファイル:**
+- `LineBasedAllocationList.tsx` - AllocationProviderでラップ
+- `AllocationListContent.tsx` - props削減 (AllocationListProps → { logic: LogicResult })
+- `AllocationListRow.tsx` - props削減 (30 → 11)
+- `LineItem.tsx` - props削減 (17 → 6)、useAllocationContextData()使用
+- `OrderGroup.tsx` - props削減 (14 → 4)
+- `OrderGroupLineItem.tsx` - props削減 (14 → 3)、useAllocationContextData()使用
+- `AllocationRowContainer.tsx` - props削減 (13 → 5)、useAllocationContext()使用
 
-**Step 1: Allocation Context Atomsの作成**
-
-```typescript
-// src/features/allocations/store/allocation-context.ts
-import { atom } from "jotai";
-import type { CandidateLotItem } from "../api";
-import type { LineStatus, AllocationsByLine } from "../types";
-
-// ========== State Atoms ==========
-export const allocationsByLineAtom = atom<AllocationsByLine>({});
-export const lineStatusesAtom = atom<Record<number, LineStatus>>({});
-export const activeLineIdAtom = atom<number | null>(null);
-
-// ========== Context Data Atoms ==========
-export const allocationContextDataAtom = atom<{
-  productMap: Record<number, string>;
-  customerMap: Record<number, string>;
-}>({
-  productMap: {},
-  customerMap: {},
-});
-
-// ========== Handler Atoms (write-only) ==========
-export const allocationHandlersAtom = atom<{
-  onLotAllocationChange: (lineId: number, lotId: number, quantity: number) => void;
-  onAutoAllocate: (lineId: number) => void;
-  onClearAllocations: (lineId: number) => void;
-  onSaveAllocations: (lineId: number) => void;
-  getLineAllocations: (lineId: number) => Record<number, number>;
-  isOverAllocated: (lineId: number) => boolean;
-} | null>(null);
-```
-
-**Step 2: Context Hook作成**
-
-```typescript
-// src/features/allocations/hooks/useAllocationContext.ts
-import { useAtomValue } from "jotai";
-import {
-  allocationHandlersAtom,
-  allocationContextDataAtom,
-  lineStatusesAtom,
-  activeLineIdAtom,
-} from "../store/allocation-context";
-
-export function useAllocationContext() {
-  const handlers = useAtomValue(allocationHandlersAtom);
-  const contextData = useAtomValue(allocationContextDataAtom);
-  const lineStatuses = useAtomValue(lineStatusesAtom);
-  const activeLineId = useAtomValue(activeLineIdAtom);
-
-  if (!handlers) {
-    throw new Error("useAllocationContext must be used within AllocationProvider");
-  }
-
-  return {
-    ...handlers,
-    ...contextData,
-    lineStatuses,
-    activeLineId,
-  };
-}
-```
-
-**Step 3: Provider層の実装**
-
-```typescript
-// src/features/allocations/components/AllocationProvider.tsx
-import { useSetAtom } from "jotai";
-import { useEffect } from "react";
-import {
-  allocationContextDataAtom,
-  allocationHandlersAtom,
-  lineStatusesAtom,
-  activeLineIdAtom,
-} from "../store/allocation-context";
-
-interface AllocationProviderProps {
-  children: React.ReactNode;
-  productMap: Record<number, string>;
-  customerMap: Record<number, string>;
-  handlers: { /* handler types */ };
-  lineStatuses: Record<number, LineStatus>;
-  activeLineId: number | null;
-}
-
-export function AllocationProvider({
-  children,
-  productMap,
-  customerMap,
-  handlers,
-  lineStatuses,
-  activeLineId,
-}: AllocationProviderProps) {
-  const setContextData = useSetAtom(allocationContextDataAtom);
-  const setHandlers = useSetAtom(allocationHandlersAtom);
-  const setStatuses = useSetAtom(lineStatusesAtom);
-  const setActiveLineId = useSetAtom(activeLineIdAtom);
-
-  useEffect(() => {
-    setContextData({ productMap, customerMap });
-  }, [productMap, customerMap, setContextData]);
-
-  useEffect(() => {
-    setHandlers(handlers);
-  }, [handlers, setHandlers]);
-
-  useEffect(() => {
-    setStatuses(lineStatuses);
-  }, [lineStatuses, setStatuses]);
-
-  useEffect(() => {
-    setActiveLineId(activeLineId);
-  }, [activeLineId, setActiveLineId]);
-
-  return <>{children}</>;
-}
-```
-
-#### 期待される効果
-- Props数: 49個 → 約10個 (80%削減)
+#### 成果
+- Props数: 60-79%削減
+- 82行のコード削減（net）
 - 中間コンポーネントからhandler propsを完全除去
-- コンポーネントの責務が明確化
-
-#### リスクと対策
-| リスク | 対策 |
-|--------|------|
-| Atom更新タイミングの不整合 | useEffect依存配列を慎重に設定 |
-| パフォーマンス低下 | atom selectorsで不要な再レンダリング防止 |
-| 既存機能の破壊 | 段階的移行、既存propsを一時的に維持 |
 
 ---
 
-### フェーズ2: AllocationInputSection最適化
+### フェーズ2: AllocationInputSection最適化 ✅ 完了
 
-#### 目的
-- 18個のPropsを削減
-- コンポーネントの責務を分離
+#### 実装済みの内容
 
-#### 変更するファイル
-1. **修正**: `src/features/allocations/components/lots/AllocationInputSection.tsx`
-2. **修正**: `src/features/allocations/components/lots/LotListCard.tsx`
-3. **新規作成**: `src/features/allocations/hooks/useLotInputState.ts`
+**追加atom:**
+- `currentLineContextAtom` - ForecastTooltip用のコンテキスト（customerId, deliveryPlaceId, productId）
 
-#### 期待される効果
-- Props: 18個 → 3-4個
-- 柔軟なレイアウト変更が可能
+**追加hooks:**
+- `useCurrentLineContext()` - コンテキスト取得
+- `useSetCurrentLineContext()` - コンテキスト設定
+
+**修正ファイル:**
+- `LotAllocationPanel.tsx` - useEffectでcurrentLineContextを設定
+- `LotAllocationList.tsx` - props削減 (10 → 7)
+- `LotListCard.tsx` - props削減 (10 → 7)
+- `AllocationInputSection.tsx` - props削減 (18 → 12)、InputWithForecastがuseCurrentLineContext()を使用
+
+#### 成果
+- Props: customerId/deliveryPlaceId/productIdの伝達が不要に
+- ForecastTooltipが必要なデータをcontextから直接取得
 
 ---
 
-### フェーズ3: InventoryPage状態管理改善
+### フェーズ3: InventoryPage状態管理改善 🔲 未着手
 
 #### 目的
 - useState/useQuery混在の整理
 - フィルタ状態のJotai化
+- ページリロード時の状態復元
+
+#### 現状の問題点
+`InventoryPage.tsx` (328行) には以下のuseStateがある：
+```typescript
+const [overviewMode, setOverviewMode] = useState<OverviewMode>("items");
+const [filters, setFilters] = useState({
+  product_id: "",
+  warehouse_id: "",
+  supplier_id: "",
+});
+```
+→ リロード時に状態がリセットされる
 
 #### 変更するファイル
 1. **修正**: `src/features/inventory/state.ts`
 2. **修正**: `src/features/inventory/pages/InventoryPage.tsx`
 3. **新規作成**: `src/features/inventory/hooks/useInventoryPageState.ts`
 
-#### 具体的な実装内容
+#### 具体的な実装手順
+
+**Step 1: state.tsに新しいatomを追加**
 
 ```typescript
 // src/features/inventory/state.ts に追加
+
+/**
+ * ページビューモード
+ */
+export type OverviewMode = "items" | "product" | "supplier" | "warehouse";
+
+/**
+ * アイテムビュー用フィルタ
+ */
+export interface InventoryItemFilters {
+  product_id: string;
+  warehouse_id: string;
+  supplier_id: string;
+}
+
+/**
+ * 在庫ページの状態
+ * キー: inv:pageState
+ */
 export const inventoryPageStateAtom = atomWithStorage<{
-  overviewMode: "items" | "product" | "supplier" | "warehouse";
+  overviewMode: OverviewMode;
+  filters: InventoryItemFilters;
 }>(
   "inv:pageState",
-  { overviewMode: "items" },
-  createSessionStorageAdapter(),
+  {
+    overviewMode: "items",
+    filters: {
+      product_id: "",
+      warehouse_id: "",
+      supplier_id: "",
+    },
+  },
+  createSessionStorageAdapter<{
+    overviewMode: OverviewMode;
+    filters: InventoryItemFilters;
+  }>(),
   { getOnInit: true },
 );
 ```
 
+**Step 2: カスタムhookの作成**
+
+```typescript
+// src/features/inventory/hooks/useInventoryPageState.ts
+
+import { useAtom } from "jotai";
+import { useCallback, useMemo } from "react";
+import { inventoryPageStateAtom, type OverviewMode, type InventoryItemFilters } from "../state";
+
+export function useInventoryPageState() {
+  const [state, setState] = useAtom(inventoryPageStateAtom);
+
+  const setOverviewMode = useCallback(
+    (mode: OverviewMode) => {
+      setState((prev) => ({ ...prev, overviewMode: mode }));
+    },
+    [setState],
+  );
+
+  const setFilters = useCallback(
+    (filters: InventoryItemFilters) => {
+      setState((prev) => ({ ...prev, filters }));
+    },
+    [setState],
+  );
+
+  const updateFilter = useCallback(
+    <K extends keyof InventoryItemFilters>(key: K, value: InventoryItemFilters[K]) => {
+      setState((prev) => ({
+        ...prev,
+        filters: { ...prev.filters, [key]: value },
+      }));
+    },
+    [setState],
+  );
+
+  // queryParams変換
+  const queryParams = useMemo(() => ({
+    product_id: state.filters.product_id ? Number(state.filters.product_id) : undefined,
+    warehouse_id: state.filters.warehouse_id ? Number(state.filters.warehouse_id) : undefined,
+    supplier_id: state.filters.supplier_id ? Number(state.filters.supplier_id) : undefined,
+  }), [state.filters]);
+
+  return {
+    overviewMode: state.overviewMode,
+    filters: state.filters,
+    queryParams,
+    setOverviewMode,
+    setFilters,
+    updateFilter,
+  };
+}
+```
+
+**Step 3: InventoryPage.tsxの修正**
+
+```typescript
+// src/features/inventory/pages/InventoryPage.tsx
+
+// 変更前:
+// const [overviewMode, setOverviewMode] = useState<OverviewMode>("items");
+// const [filters, setFilters] = useState({...});
+// const queryParams = {...};
+
+// 変更後:
+import { useInventoryPageState } from "../hooks/useInventoryPageState";
+
+export function InventoryPage() {
+  const {
+    overviewMode,
+    filters,
+    queryParams,
+    setOverviewMode,
+    updateFilter,
+  } = useInventoryPageState();
+
+  // ... 残りのコードは変更なし
+  // ただし setFilters({ ...filters, product_id: value }) のような箇所は
+  // updateFilter("product_id", value) に変更
+}
+```
+
 #### 期待される効果
 - コンポーネント内のuseState: 2個 → 0個
-- ブラウザタブ間での状態共有
-- リロード後の状態復元
+- リロード後の状態復元（sessionStorage）
+- フィルタ設定がビューモード切替後も維持
+
+#### 注意点
+- `useInventoryItems(queryParams)` の呼び出しは変更なし
+- queryParamsの計算はhook内でメモ化済み
 
 ---
 
-### フェーズ4: ForecastDetailCard分割
+### フェーズ4: ForecastDetailCard分割 🔲 未着手
 
 #### 目的
-- 300行超えのコンポーネントを分割
-- 4つのmutation定義を外部化
+- 309行のコンポーネントを分割
+- 4つのmutation定義を外部化して再利用可能に
+
+#### 現状の問題点
+`ForecastDetailCard.tsx` (309行) には以下の4つのmutationが定義されている：
+- `autoAllocateMutation` (L56-95) - グループ自動引当
+- `updateForecastMutation` (L98-141) - フォーキャスト更新/削除
+- `createForecastMutation` (L144-184) - フォーキャスト新規作成
+- invalidateQueries処理が各mutationで重複（約40行×3）
 
 #### 変更するファイル
-1. **修正**: `src/features/forecasts/components/ForecastDetailCard/ForecastDetailCard.tsx`
-2. **新規作成**: `src/features/forecasts/hooks/useForecastMutations.ts`
-3. **新規作成**: `src/features/forecasts/components/ForecastDetailCard/ForecastCardBody.tsx`
+1. **新規作成**: `src/features/forecasts/hooks/useForecastMutations.ts`
+2. **修正**: `src/features/forecasts/components/ForecastDetailCard/ForecastDetailCard.tsx`
+
+#### 具体的な実装手順
+
+**Step 1: useForecastMutationsの作成**
+
+```typescript
+// src/features/forecasts/hooks/useForecastMutations.ts
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { bulkAutoAllocate } from "@/features/allocations/api";
+import { createForecast, deleteForecast, updateForecast } from "@/features/forecasts/api";
+
+interface ForecastGroupKey {
+  customer_id: number;
+  delivery_place_id: number;
+  product_id: number;
+}
+
+/**
+ * フォーキャスト関連の共通クエリ無効化
+ */
+function useInvalidateForecastQueries() {
+  const queryClient = useQueryClient();
+
+  return (groupKey: ForecastGroupKey) => {
+    return Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["forecasts"],
+        exact: false,
+        refetchType: "all",
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["allocations"],
+        exact: false,
+        refetchType: "all",
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [
+          "planning-allocation-summary",
+          groupKey.customer_id,
+          groupKey.delivery_place_id,
+          groupKey.product_id,
+        ],
+      }),
+    ]);
+  };
+}
+
+/**
+ * フォーキャストCRUD操作のmutations
+ */
+export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
+  const invalidateQueries = useInvalidateForecastQueries();
+
+  // グループ自動引当
+  const autoAllocate = useMutation({
+    mutationFn: () => bulkAutoAllocate({
+      product_id: groupKey.product_id,
+      customer_id: groupKey.customer_id,
+      delivery_place_id: groupKey.delivery_place_id,
+    }),
+    onSuccess: (result) => {
+      if (result.allocated_lines > 0) {
+        toast.success(result.message);
+      } else {
+        toast.info(result.message);
+      }
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Auto-allocate failed:", error);
+      toast.error("自動引当に失敗しました");
+    },
+  });
+
+  // フォーキャスト更新（0なら削除）
+  const update = useMutation({
+    mutationFn: async ({ forecastId, quantity }: { forecastId: number; quantity: number }) => {
+      if (quantity === 0) {
+        await deleteForecast(forecastId);
+        return null;
+      }
+      return updateForecast(forecastId, { forecast_quantity: quantity });
+    },
+    onSuccess: (_, variables) => {
+      toast.success(variables.quantity === 0 ? "フォーキャストを削除しました" : "フォーキャストを更新しました");
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Update/Delete forecast failed:", error);
+      toast.error("フォーキャストの操作に失敗しました");
+    },
+  });
+
+  // フォーキャスト新規作成
+  const create = useMutation({
+    mutationFn: (data: { dateKey: string; quantity: number }) =>
+      createForecast({
+        customer_id: groupKey.customer_id,
+        delivery_place_id: groupKey.delivery_place_id,
+        product_id: groupKey.product_id,
+        forecast_date: data.dateKey,
+        forecast_quantity: data.quantity,
+        unit: unit,
+        forecast_period: data.dateKey.slice(0, 7),
+      }),
+    onSuccess: () => {
+      toast.success("フォーキャストを作成しました");
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Create forecast failed:", error);
+      toast.error("フォーキャストの作成に失敗しました");
+    },
+  });
+
+  return {
+    autoAllocate,
+    update,
+    create,
+    // ヘルパー関数
+    handleUpdateQuantity: (forecastId: number, newQuantity: number) =>
+      update.mutateAsync({ forecastId, quantity: newQuantity }),
+    handleCreateForecast: (dateKey: string, quantity: number) =>
+      create.mutateAsync({ dateKey, quantity }),
+  };
+}
+```
+
+**Step 2: ForecastDetailCardの修正**
+
+```typescript
+// src/features/forecasts/components/ForecastDetailCard/ForecastDetailCard.tsx
+
+// 変更前（L56-192の削除）:
+// const autoAllocateMutation = useMutation({...});
+// const updateForecastMutation = useMutation({...});
+// const createForecastMutation = useMutation({...});
+// const handleUpdateQuantity = ...
+// const handleCreateForecast = ...
+
+// 変更後:
+import { useForecastMutations } from "@/features/forecasts/hooks/useForecastMutations";
+
+export function ForecastDetailCard({ group, ... }: ForecastDetailCardProps) {
+  const { group_key, forecasts = [] } = group;
+  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+
+  const { dailyData, dailyForecastIds, unit, ... } = useForecastCalculations(group);
+
+  // 4つのmutationを1行で取得
+  const {
+    autoAllocate,
+    handleUpdateQuantity,
+    handleCreateForecast,
+  } = useForecastMutations(group_key, unit);
+
+  // ... 残りのJSXは変更なし
+  // autoAllocateMutation.mutate() → autoAllocate.mutate()
+  // autoAllocateMutation.isPending → autoAllocate.isPending
+}
+```
 
 #### 期待される効果
-- ForecastDetailCard: 300行 → 約80行
-- mutation定義の再利用可能化
+- ForecastDetailCard: 309行 → 約180行（130行削減）
+- mutation定義の重複排除（invalidateQueries処理を一箇所に）
+- 他コンポーネントでの再利用が可能
+
+#### 追加リファクタリング候補（任意）
+- `ForecastCardBody.tsx`への表示部分分離（さらに50行程度削減可能）
+- テストの追加（`useForecastMutations.test.ts`）
 
 ---
 
@@ -300,15 +493,15 @@ describe("AllocationProvider integration", () => {
 
 ## 5. 実装スケジュール
 
-| フェーズ | 所要時間目安 | 依存関係 |
-|---------|-------------|---------|
-| フェーズ1: Allocation Context | 2-3日 | なし |
-| フェーズ2: AllocationInputSection | 1日 | フェーズ1完了後 |
-| フェーズ3: InventoryPage | 1日 | フェーズ1と並行可能 |
-| フェーズ4: ForecastDetailCard | 1日 | フェーズ1と並行可能 |
-| テスト・検証 | 1-2日 | 全フェーズ完了後 |
+| フェーズ | 所要時間目安 | 依存関係 | ステータス |
+|---------|-------------|---------|----------|
+| フェーズ1: Allocation Context | 2-3日 | なし | ✅ 完了 |
+| フェーズ2: AllocationInputSection | 1日 | フェーズ1完了後 | ✅ 完了 |
+| フェーズ3: InventoryPage | 1日 | なし（独立） | 🔲 未着手 |
+| フェーズ4: ForecastDetailCard | 1日 | なし（独立） | 🔲 未着手 |
+| テスト・検証 | 1-2日 | 全フェーズ完了後 | 🔲 未着手 |
 
-**合計: 6-8日**
+**残り作業: 約3-4日（フェーズ3, 4, テスト）**
 
 ---
 
