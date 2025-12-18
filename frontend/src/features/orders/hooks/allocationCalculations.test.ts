@@ -76,10 +76,11 @@ describe("allocationCalculations", () => {
         lot_number: "L1",
         product_id: 1,
         product_code: "P1",
-        warehouse_id: 1,
         warehouse_code: "W1",
         expiry_date: "2025-01-01",
-        created_at: "2024-01-01",
+        free_qty: 10,
+        current_quantity: 10,
+        allocated_quantity: 0,
       },
       {
         lot_id: 2,
@@ -87,10 +88,11 @@ describe("allocationCalculations", () => {
         lot_number: "L2",
         product_id: 1,
         product_code: "P1",
-        warehouse_id: 1,
         warehouse_code: "W1",
         expiry_date: "2025-02-01",
-        created_at: "2024-01-01",
+        free_qty: 5,
+        current_quantity: 5,
+        allocated_quantity: 0,
       },
     ];
 
