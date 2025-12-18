@@ -6,7 +6,16 @@
 
 import { z } from "zod";
 
-import type { AdhocOriginType } from "./AdhocLotCreateForm";
+/**
+ * ロット起点タイプ（アドホック画面で選択可能な値のみ）
+ */
+export const ADHOC_ORIGIN_TYPES = [
+  { value: "sample", label: "サンプル" },
+  { value: "safety_stock", label: "安全在庫" },
+  { value: "adhoc", label: "その他" },
+] as const;
+
+export type AdhocOriginType = (typeof ADHOC_ORIGIN_TYPES)[number]["value"];
 
 /**
  * 入庫登録フォームのスキーマ

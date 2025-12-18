@@ -13,8 +13,13 @@ import { Controller, useForm } from "react-hook-form";
 import {
   adhocLotCreateSchema,
   ADHOC_LOT_FORM_DEFAULTS,
+  ADHOC_ORIGIN_TYPES,
   type AdhocLotFormData,
+  type AdhocOriginType,
 } from "./adhocLotCreateSchema";
+
+// Re-export for backward compatibility
+export { ADHOC_ORIGIN_TYPES, type AdhocOriginType };
 
 import {
   Button,
@@ -26,17 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui";
-
-/**
- * ロット起点タイプ（アドホック画面で選択可能な値のみ）
- */
-export const ADHOC_ORIGIN_TYPES = [
-  { value: "sample", label: "サンプル" },
-  { value: "safety_stock", label: "安全在庫" },
-  { value: "adhoc", label: "その他" },
-] as const;
-
-export type AdhocOriginType = (typeof ADHOC_ORIGIN_TYPES)[number]["value"];
 
 /**
  * アドホックロット作成データの型定義
