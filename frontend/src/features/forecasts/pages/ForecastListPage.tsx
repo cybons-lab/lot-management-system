@@ -1,6 +1,7 @@
 /**
- * ForecastListPage (v2.4)
+ * ForecastListPage (v2.5)
  * Forecast list page with grouped structure (customer × delivery_place × product)
+ * フィルタとグループ展開状態がsessionStorageで永続化される
  */
 
 import { useMutation } from "@tanstack/react-query";
@@ -11,6 +12,7 @@ import { toast } from "sonner";
 import type { ForecastGroup } from "../api";
 import { ForecastListCard } from "../components";
 import { useForecasts, useDeleteForecast } from "../hooks";
+import { useForecastListPageState } from "../hooks/useForecastListPageState";
 
 import {
   AlertDialog,
@@ -33,21 +35,14 @@ import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function ForecastListPage() {
   const navigate = useNavigate();
-  const [filters, setFilters] = useState({
-    customer_id: "",
-    delivery_place_id: "",
-    product_id: "",
-  });
 
-  // 確認ダイアログの状態
+  // フィルタとグループ展開状態（sessionStorageで永続化）
+  const { filters, openGroupKeys, queryParams, updateFilter, toggleGroupKey, setOpenGroupKeys } =
+    useForecastListPageState();
+
+  // 確認ダイアログの状態（一時的なUI状態なので永続化しない）
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [pendingPeriods, setPendingPeriods] = useState<string[]>([]);
-
-  const queryParams = {
-    customer_id: filters.customer_id ? Number(filters.customer_id) : undefined,
-    delivery_place_id: filters.delivery_place_id ? Number(filters.delivery_place_id) : undefined,
-    product_id: filters.product_id ? Number(filters.product_id) : undefined,
-  };
 
   const { data: response, isLoading, isError, refetch } = useForecasts(queryParams);
 
@@ -127,8 +122,6 @@ export function ForecastListPage() {
     });
   };
 
-  const [openGroupKeys, setOpenGroupKeys] = useState<Set<string>>(new Set());
-
   // スクロール監視用
   const [focusedGroupKey, setFocusedGroupKey] = useState<string | null>(null);
   const itemsRef = useRef<Map<string, HTMLDivElement | null>>(new Map());
@@ -139,38 +132,21 @@ export function ForecastListPage() {
     return `${k.customer_id}-${k.delivery_place_id}-${k.product_id}`;
   };
 
+  // データが変わったときにopenGroupKeysを調整
   useEffect(() => {
     if (response && response.items.length > 0) {
-      setOpenGroupKeys((prev) => {
-        const next = new Set(prev);
-        const currentKeys = new Set(response.items.map(getGroupKey));
-        for (const key of next) {
-          if (!currentKeys.has(key)) {
-            next.delete(key);
-          }
-        }
-        if (next.size === 0 && response.items[0]) {
-          next.add(getGroupKey(response.items[0]));
-        }
-        if (prev.size === next.size && [...prev].every((x) => next.has(x))) {
-          return prev;
-        }
-        return next;
-      });
-    }
-  }, [response]);
+      const currentKeys = new Set(response.items.map(getGroupKey));
+      const validKeys = Array.from(openGroupKeys).filter((key) => currentKeys.has(key));
 
-  const handleToggle = (groupKey: string) => {
-    setOpenGroupKeys((prev) => {
-      const next = new Set(prev);
-      if (next.has(groupKey)) {
-        next.delete(groupKey);
-      } else {
-        next.add(groupKey);
+      // 開いているグループがなければ最初のグループを開く
+      if (validKeys.length === 0 && response.items[0]) {
+        setOpenGroupKeys([getGroupKey(response.items[0])]);
+      } else if (validKeys.length !== openGroupKeys.size) {
+        // 存在しないキーを削除
+        setOpenGroupKeys(validKeys);
       }
-      return next;
-    });
-  };
+    }
+  }, [response, openGroupKeys, setOpenGroupKeys]);
 
   // スクロール監視
   useEffect(() => {
@@ -225,7 +201,7 @@ export function ForecastListPage() {
     <PageContainer>
       <PageHeader
         title="フォーキャスト一覧"
-        subtitle="顧客×納入先×製品でグループ化（v2.4）"
+        subtitle="顧客×納入先×製品でグループ化（v2.5）"
         actions={
           <div className="flex gap-2">
             <Button
@@ -247,7 +223,7 @@ export function ForecastListPage() {
             <SearchableSelect
               options={customerOptions}
               value={filters.customer_id}
-              onChange={(value) => setFilters({ ...filters, customer_id: value })}
+              onChange={(value) => updateFilter("customer_id", value)}
               placeholder="得意先を検索..."
             />
           </div>
@@ -256,7 +232,7 @@ export function ForecastListPage() {
             <SearchableSelect
               options={deliveryPlaceOptions}
               value={filters.delivery_place_id}
-              onChange={(value) => setFilters({ ...filters, delivery_place_id: value })}
+              onChange={(value) => updateFilter("delivery_place_id", value)}
               placeholder="納入場所を検索..."
             />
           </div>
@@ -265,7 +241,7 @@ export function ForecastListPage() {
             <SearchableSelect
               options={productOptions}
               value={filters.product_id}
-              onChange={(value) => setFilters({ ...filters, product_id: value })}
+              onChange={(value) => updateFilter("product_id", value)}
               placeholder="製品を検索..."
             />
           </div>
@@ -309,7 +285,7 @@ export function ForecastListPage() {
                   isOpen={isOpen}
                   isActive={isOpen}
                   isFocused={groupKey === focusedGroupKey}
-                  onToggle={() => handleToggle(groupKey)}
+                  onToggle={() => toggleGroupKey(groupKey)}
                 />
               );
             })}
