@@ -8,6 +8,10 @@
 | Phase 2: AllocationInputSection最適化 | ✅ 完了 | 2025-12-18 |
 | Phase 3: InventoryPage状態管理改善 | 🔲 未着手 | - |
 | Phase 4: ForecastDetailCard分割 | 🔲 未着手 | - |
+| Phase 5: WithdrawalForm react-hook-form移行 | 🔲 未着手 | - |
+| Phase 6: AdhocLotCreateForm react-hook-form移行 | 🔲 未着手 | - |
+| Phase 7: 共通ダイアログ管理hook作成 | 🔲 未着手 | - |
+| Phase 8: AllocationInput状態同期修正 | 🔲 未着手 | - |
 
 ---
 
@@ -465,6 +469,423 @@ export function ForecastDetailCard({ group, ... }: ForecastDetailCardProps) {
 
 ---
 
+### フェーズ5: WithdrawalForm react-hook-form移行 🔲 未着手
+
+#### 目的
+- 手動フォーム状態管理をreact-hook-form + Zodに移行
+- 100行以上のコード削減
+- バリデーション処理の改善
+
+#### 現状の問題点
+`WithdrawalForm.tsx` (388行) には以下の問題がある：
+
+```typescript
+// 手動フォーム状態（L64-82）
+const [formData, setFormData] = useState({
+  lot_id: preselectedLot?.id.toString() || "",
+  customer_id: "",
+  warehouse_id: "",
+  quantity: "",
+  withdrawal_date: format(new Date(), "yyyy-MM-dd"),
+  notes: "",
+  delivery_place_id: "",
+  order_line_id: "",
+});
+const [error, setError] = useState<string | null>(null);
+
+// useEffectで状態同期（L87-116）
+useEffect(() => {
+  if (preselectedLot) {
+    setFormData((prev) => ({
+      ...prev,
+      lot_id: preselectedLot.id.toString(),
+      warehouse_id: preselectedLot.warehouse_id?.toString() || "",
+    }));
+  }
+}, [preselectedLot]);
+
+// 配送先取得のuseEffect（L97-116）
+useEffect(() => {
+  const fetchDeliveryPlaces = async () => {
+    if (formData.customer_id) {
+      setIsLoadingDeliveryPlaces(true);
+      // fetch logic...
+    }
+  };
+  fetchDeliveryPlaces();
+}, [formData.customer_id]);
+```
+
+#### 変更するファイル
+1. **修正**: `src/features/withdrawals/components/WithdrawalForm.tsx`
+
+#### 具体的な実装手順
+
+**Step 1: Zodスキーマの定義**
+
+```typescript
+// src/features/withdrawals/components/WithdrawalForm.tsx 冒頭に追加
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+const withdrawalFormSchema = z.object({
+  lot_id: z.string().min(1, "ロットを選択してください"),
+  customer_id: z.string().min(1, "顧客を選択してください"),
+  warehouse_id: z.string().min(1, "倉庫を選択してください"),
+  quantity: z.string()
+    .min(1, "数量を入力してください")
+    .refine((val) => Number(val) > 0, "数量は1以上を入力してください"),
+  withdrawal_date: z.string().min(1, "出庫日を選択してください"),
+  notes: z.string().optional(),
+  delivery_place_id: z.string().optional(),
+  order_line_id: z.string().optional(),
+});
+
+type WithdrawalFormData = z.infer<typeof withdrawalFormSchema>;
+```
+
+**Step 2: useFormへの移行**
+
+```typescript
+// 変更前:
+const [formData, setFormData] = useState({...});
+const [error, setError] = useState<string | null>(null);
+
+// 変更後:
+const form = useForm<WithdrawalFormData>({
+  resolver: zodResolver(withdrawalFormSchema),
+  defaultValues: {
+    lot_id: preselectedLot?.id.toString() || "",
+    customer_id: "",
+    warehouse_id: preselectedLot?.warehouse_id?.toString() || "",
+    quantity: "",
+    withdrawal_date: format(new Date(), "yyyy-MM-dd"),
+    notes: "",
+    delivery_place_id: "",
+    order_line_id: "",
+  },
+});
+
+const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
+const customerId = watch("customer_id");
+```
+
+**Step 3: useEffectの簡素化**
+
+```typescript
+// preselectedLot変更時の同期
+useEffect(() => {
+  if (preselectedLot) {
+    setValue("lot_id", preselectedLot.id.toString());
+    setValue("warehouse_id", preselectedLot.warehouse_id?.toString() || "");
+  }
+}, [preselectedLot, setValue]);
+
+// 配送先取得（customerIdをwatchで監視）
+const { data: deliveryPlaces, isLoading: isLoadingDeliveryPlaces } = useQuery({
+  queryKey: ["deliveryPlaces", customerId],
+  queryFn: () => fetchDeliveryPlaces(Number(customerId)),
+  enabled: !!customerId,
+});
+```
+
+**Step 4: フォームフィールドの修正**
+
+```typescript
+// 変更前:
+<Input
+  value={formData.quantity}
+  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+/>
+{error && <p className="text-red-500">{error}</p>}
+
+// 変更後:
+<Input {...register("quantity")} />
+{errors.quantity && <p className="text-red-500">{errors.quantity.message}</p>}
+```
+
+#### 期待される効果
+- 行数: 388行 → 約280行（100行以上削減）
+- useState: 5個 → 0個
+- useEffect: 3個 → 1個
+- 型安全なバリデーション
+
+---
+
+### フェーズ6: AdhocLotCreateForm react-hook-form移行 🔲 未着手
+
+#### 目的
+- Phase 5と同様のパターンで移行
+- 手動フォーム状態をreact-hook-formに統一
+
+#### 現状の問題点
+```typescript
+// 手動フォーム状態（L77-80）
+const [productId, setProductId] = useState<string>("");
+const [warehouseId, setWarehouseId] = useState<string>("");
+const [supplierId, setSupplierId] = useState<string>("");
+const [quantity, setQuantity] = useState<string>("");
+```
+
+#### 変更するファイル
+1. **修正**: `src/features/inventory/components/AdhocLotCreateForm.tsx`
+
+#### 具体的な実装手順
+
+**Step 1: Zodスキーマ**
+
+```typescript
+const adhocLotSchema = z.object({
+  product_id: z.string().min(1, "製品を選択してください"),
+  warehouse_id: z.string().min(1, "倉庫を選択してください"),
+  supplier_id: z.string().min(1, "仕入先を選択してください"),
+  quantity: z.string()
+    .min(1, "数量を入力してください")
+    .refine((val) => Number(val) > 0, "数量は1以上を入力してください"),
+  expiry_date: z.string().optional(),
+  lot_number: z.string().optional(),
+});
+```
+
+**Step 2: useFormへの移行**
+
+```typescript
+const form = useForm<z.infer<typeof adhocLotSchema>>({
+  resolver: zodResolver(adhocLotSchema),
+  defaultValues: {
+    product_id: "",
+    warehouse_id: "",
+    supplier_id: "",
+    quantity: "",
+    expiry_date: "",
+    lot_number: "",
+  },
+});
+```
+
+#### 期待される効果
+- useState: 4個 → 0個
+- フォームバリデーションの統一
+
+---
+
+### フェーズ7: 共通ダイアログ管理hook作成 🔲 未着手
+
+#### 目的
+- リストページで繰り返されるダイアログ状態管理を共通化
+- 4ページ × 9 useState → 4ページ × 1 hook
+
+#### 現状の問題点
+以下のページで同じパターンのuseStateが9個ずつ存在：
+- `WarehousesListPage.tsx` (379行)
+- `SuppliersListPage.tsx` (365行)
+- `ProductsListPage.tsx` (387行)
+- `CustomersListPage.tsx`
+
+```typescript
+// 各ページで繰り返されるパターン
+const [isCreateOpen, setIsCreateOpen] = useState(false);
+const [isEditOpen, setIsEditOpen] = useState(false);
+const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+const [isImportOpen, setIsImportOpen] = useState(false);
+const [selectedItem, setSelectedItem] = useState<T | null>(null);
+const [itemToDelete, setItemToDelete] = useState<T | null>(null);
+// ... さらに続く
+```
+
+#### 変更するファイル
+1. **新規作成**: `src/hooks/ui/useListPageDialogs.ts`
+2. **修正**: 上記4ページ
+
+#### 具体的な実装手順
+
+**Step 1: 共通hookの作成**
+
+```typescript
+// src/hooks/ui/useListPageDialogs.ts
+
+import { useState, useCallback, useMemo } from "react";
+
+type DialogType = "create" | "edit" | "delete" | "import" | "detail";
+
+interface DialogState<T> {
+  type: DialogType | null;
+  item: T | null;
+}
+
+export function useListPageDialogs<T>() {
+  const [state, setState] = useState<DialogState<T>>({
+    type: null,
+    item: null,
+  });
+
+  const openCreate = useCallback(() => {
+    setState({ type: "create", item: null });
+  }, []);
+
+  const openEdit = useCallback((item: T) => {
+    setState({ type: "edit", item });
+  }, []);
+
+  const openDelete = useCallback((item: T) => {
+    setState({ type: "delete", item });
+  }, []);
+
+  const openImport = useCallback(() => {
+    setState({ type: "import", item: null });
+  }, []);
+
+  const openDetail = useCallback((item: T) => {
+    setState({ type: "detail", item });
+  }, []);
+
+  const close = useCallback(() => {
+    setState({ type: null, item: null });
+  }, []);
+
+  const dialogs = useMemo(() => ({
+    isCreateOpen: state.type === "create",
+    isEditOpen: state.type === "edit",
+    isDeleteOpen: state.type === "delete",
+    isImportOpen: state.type === "import",
+    isDetailOpen: state.type === "detail",
+    selectedItem: state.item,
+  }), [state]);
+
+  return {
+    ...dialogs,
+    openCreate,
+    openEdit,
+    openDelete,
+    openImport,
+    openDetail,
+    close,
+  };
+}
+```
+
+**Step 2: リストページでの使用**
+
+```typescript
+// 変更前（WarehousesListPage.tsx）:
+const [isCreateOpen, setIsCreateOpen] = useState(false);
+const [isEditOpen, setIsEditOpen] = useState(false);
+const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null);
+// ... 他のuseState
+
+// 変更後:
+import { useListPageDialogs } from "@/hooks/ui/useListPageDialogs";
+
+const {
+  isCreateOpen,
+  isEditOpen,
+  isDeleteOpen,
+  selectedItem: selectedWarehouse,
+  openCreate,
+  openEdit,
+  openDelete,
+  close,
+} = useListPageDialogs<Warehouse>();
+```
+
+#### 期待される効果
+- 各ページでuseState: 9個 → 1個（hook呼び出し）
+- 4ページで約100行削減
+- ダイアログ状態管理の一貫性向上
+
+---
+
+### フェーズ8: AllocationInput状態同期修正 🔲 未着手
+
+#### 目的
+- 状態同期のアンチパターンを修正
+- 循環依存リスクを排除
+
+#### 現状の問題点
+`AllocationInput.tsx` (L15-22):
+
+```typescript
+const [inputValue, setInputValue] = useState(value.toString());
+
+useEffect(() => {
+  if (Number(inputValue) !== value) {
+    setInputValue(value.toString());  // 循環依存のリスク
+  }
+}, [inputValue, value]);  // inputValueが依存配列にある
+```
+
+**問題点:**
+- `inputValue`が依存配列にあるため、`setInputValue`が呼ばれるとuseEffectが再実行される
+- 不要な再レンダリングの可能性
+- 状態の不整合が起きやすい
+
+#### 変更するファイル
+1. **修正**: `src/features/allocations/components/shared/AllocationInput.tsx`
+
+#### 具体的な実装手順
+
+**Option A: 依存配列から除外**
+
+```typescript
+const [inputValue, setInputValue] = useState(value.toString());
+
+// valueのみを依存配列に
+useEffect(() => {
+  setInputValue(value.toString());
+}, [value]);  // inputValueを除外
+```
+
+**Option B: 制御コンポーネントパターン（推奨）**
+
+```typescript
+// 内部状態を持たず、親からの値を直接使用
+interface AllocationInputProps {
+  value: number;
+  onChange: (value: number) => void;
+  // ...
+}
+
+export function AllocationInput({ value, onChange, ...props }: AllocationInputProps) {
+  const [localValue, setLocalValue] = useState(value.toString());
+
+  // フォーカスが外れた時のみ親に通知
+  const handleBlur = () => {
+    const numValue = Number(localValue);
+    if (!isNaN(numValue) && numValue !== value) {
+      onChange(numValue);
+    }
+  };
+
+  // 親の値が変わった時のみ同期（refを使って比較）
+  const prevValueRef = useRef(value);
+  useEffect(() => {
+    if (prevValueRef.current !== value) {
+      setLocalValue(value.toString());
+      prevValueRef.current = value;
+    }
+  }, [value]);
+
+  return (
+    <Input
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value)}
+      onBlur={handleBlur}
+      {...props}
+    />
+  );
+}
+```
+
+#### 期待される効果
+- 循環依存リスクの排除
+- 予測可能な状態更新
+- パフォーマンス改善
+
+---
+
 ## 4. テスト戦略
 
 ### 4.1 ユニットテスト
@@ -493,15 +914,26 @@ describe("AllocationProvider integration", () => {
 
 ## 5. 実装スケジュール
 
-| フェーズ | 所要時間目安 | 依存関係 | ステータス |
-|---------|-------------|---------|----------|
-| フェーズ1: Allocation Context | 2-3日 | なし | ✅ 完了 |
-| フェーズ2: AllocationInputSection | 1日 | フェーズ1完了後 | ✅ 完了 |
-| フェーズ3: InventoryPage | 1日 | なし（独立） | 🔲 未着手 |
-| フェーズ4: ForecastDetailCard | 1日 | なし（独立） | 🔲 未着手 |
-| テスト・検証 | 1-2日 | 全フェーズ完了後 | 🔲 未着手 |
+| フェーズ | 所要時間目安 | 依存関係 | ステータス | 優先度 |
+|---------|-------------|---------|----------|-------|
+| フェーズ1: Allocation Context | 2-3日 | なし | ✅ 完了 | - |
+| フェーズ2: AllocationInputSection | 1日 | フェーズ1完了後 | ✅ 完了 | - |
+| フェーズ3: InventoryPage | 1日 | なし（独立） | 🔲 未着手 | 中 |
+| フェーズ4: ForecastDetailCard | 1日 | なし（独立） | 🔲 未着手 | 中 |
+| フェーズ5: WithdrawalForm | 1日 | なし（独立） | 🔲 未着手 | 高 |
+| フェーズ6: AdhocLotCreateForm | 0.5日 | なし（独立） | 🔲 未着手 | 高 |
+| フェーズ7: 共通ダイアログhook | 1日 | なし（独立） | 🔲 未着手 | 中 |
+| フェーズ8: AllocationInput修正 | 0.5日 | なし（独立） | 🔲 未着手 | 中 |
+| テスト・検証 | 1-2日 | 全フェーズ完了後 | 🔲 未着手 | - |
 
-**残り作業: 約3-4日（フェーズ3, 4, テスト）**
+**残り作業: 約7-8日（フェーズ3-8, テスト）**
+
+### 推奨実装順序
+
+1. **フェーズ5-6** (高優先度): react-hook-form移行 → コード削減効果が大きい
+2. **フェーズ8** (中優先度): AllocationInput修正 → バグリスク排除
+3. **フェーズ3-4** (中優先度): Jotai/mutation整理 → 保守性向上
+4. **フェーズ7** (中優先度): 共通ダイアログhook → 4ページに影響
 
 ---
 
