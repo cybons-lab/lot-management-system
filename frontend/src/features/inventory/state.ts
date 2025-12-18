@@ -137,3 +137,45 @@ export const summarySettingsAtom = atomWithStorage<SummarySettings>(
   createSessionStorageAdapter<SummarySettings>(),
   { getOnInit: true },
 );
+
+// ============================================
+// Inventory Page State
+// ============================================
+
+/**
+ * ページビューモード
+ */
+export type OverviewMode = "items" | "product" | "supplier" | "warehouse";
+
+/**
+ * アイテムビュー用フィルタ
+ */
+export interface InventoryItemFilters {
+  product_id: string;
+  warehouse_id: string;
+  supplier_id: string;
+}
+
+/**
+ * 在庫ページの状態
+ * キー: inv:pageState
+ */
+export const inventoryPageStateAtom = atomWithStorage<{
+  overviewMode: OverviewMode;
+  filters: InventoryItemFilters;
+}>(
+  "inv:pageState",
+  {
+    overviewMode: "items",
+    filters: {
+      product_id: "",
+      warehouse_id: "",
+      supplier_id: "",
+    },
+  },
+  createSessionStorageAdapter<{
+    overviewMode: OverviewMode;
+    filters: InventoryItemFilters;
+  }>(),
+  { getOnInit: true },
+);

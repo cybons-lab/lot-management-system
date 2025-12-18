@@ -8,7 +8,7 @@
 import { atom } from "jotai";
 
 import type { CandidateLotItem } from "../api";
-import type { AllocationsByLine, LineStatus } from "../types";
+import type { LineStatus } from "../types";
 
 // ========== State Atoms ==========
 

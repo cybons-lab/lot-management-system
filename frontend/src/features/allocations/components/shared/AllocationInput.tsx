@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui";
-// Toastを使う場合
 import { cn } from "@/shared/libs/utils";
+
 interface AllocationInputProps {
   value: number;
   max: number;
@@ -11,15 +11,23 @@ interface AllocationInputProps {
   disabled?: boolean;
 }
 
+/**
+ * 引当数量入力コンポーネント
+ *
+ * 制御コンポーネントパターンを使用し、親の値変更時のみローカル状態を同期
+ */
 export function AllocationInput({ value, max, onChange, disabled = false }: AllocationInputProps) {
   const [inputValue, setInputValue] = useState(value.toString());
   const [isShaking, setIsShaking] = useState(false);
 
+  // 親の値が変わった時のみ同期（refを使って比較）
+  const prevValueRef = useRef(value);
   useEffect(() => {
-    if (Number(inputValue) !== value) {
+    if (prevValueRef.current !== value) {
       setInputValue(value.toString());
+      prevValueRef.current = value;
     }
-  }, [inputValue, value]);
+  }, [value]);
 
   useEffect(() => {
     if (isShaking) {

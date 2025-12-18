@@ -6,12 +6,12 @@
 |---------|----------|--------|
 | Phase 1: Allocation Context導入 | ✅ 完了 | 2025-12-18 |
 | Phase 2: AllocationInputSection最適化 | ✅ 完了 | 2025-12-18 |
-| Phase 3: InventoryPage状態管理改善 | 🔲 未着手 | - |
-| Phase 4: ForecastDetailCard分割 | 🔲 未着手 | - |
-| Phase 5: WithdrawalForm react-hook-form移行 | 🔲 未着手 | - |
-| Phase 6: AdhocLotCreateForm react-hook-form移行 | 🔲 未着手 | - |
+| Phase 3: InventoryPage状態管理改善 | ✅ 完了 | 2025-12-18 |
+| Phase 4: ForecastDetailCard分割 | ✅ 完了 | 2025-12-18 |
+| Phase 5: WithdrawalForm react-hook-form移行 | ✅ 完了 | 2025-12-18 |
+| Phase 6: AdhocLotCreateForm react-hook-form移行 | ✅ 完了 | 2025-12-18 |
 | Phase 7: 共通ダイアログ管理hook作成 | 🔲 未着手 | - |
-| Phase 8: AllocationInput状態同期修正 | 🔲 未着手 | - |
+| Phase 8: AllocationInput状態同期修正 | ✅ 完了 | 2025-12-18 |
 
 ---
 
@@ -115,7 +115,7 @@ LineBasedAllocationList
 
 ---
 
-### フェーズ3: InventoryPage状態管理改善 🔲 未着手
+### フェーズ3: InventoryPage状態管理改善 ✅ 完了
 
 #### 目的
 - useState/useQuery混在の整理
@@ -278,7 +278,7 @@ export function InventoryPage() {
 
 ---
 
-### フェーズ4: ForecastDetailCard分割 🔲 未着手
+### フェーズ4: ForecastDetailCard分割 ✅ 完了
 
 #### 目的
 - 309行のコンポーネントを分割
@@ -469,7 +469,7 @@ export function ForecastDetailCard({ group, ... }: ForecastDetailCardProps) {
 
 ---
 
-### フェーズ5: WithdrawalForm react-hook-form移行 🔲 未着手
+### フェーズ5: WithdrawalForm react-hook-form移行 ✅ 完了
 
 #### 目的
 - 手動フォーム状態管理をreact-hook-form + Zodに移行
@@ -614,7 +614,7 @@ const { data: deliveryPlaces, isLoading: isLoadingDeliveryPlaces } = useQuery({
 
 ---
 
-### フェーズ6: AdhocLotCreateForm react-hook-form移行 🔲 未着手
+### フェーズ6: AdhocLotCreateForm react-hook-form移行 ✅ 完了
 
 #### 目的
 - Phase 5と同様のパターンで移行
@@ -798,7 +798,7 @@ const {
 
 ---
 
-### フェーズ8: AllocationInput状態同期修正 🔲 未着手
+### フェーズ8: AllocationInput状態同期修正 ✅ 完了
 
 #### 目的
 - 状態同期のアンチパターンを修正
@@ -918,15 +918,15 @@ describe("AllocationProvider integration", () => {
 |---------|-------------|---------|----------|-------|
 | フェーズ1: Allocation Context | 2-3日 | なし | ✅ 完了 | - |
 | フェーズ2: AllocationInputSection | 1日 | フェーズ1完了後 | ✅ 完了 | - |
-| フェーズ3: InventoryPage | 1日 | なし（独立） | 🔲 未着手 | 中 |
-| フェーズ4: ForecastDetailCard | 1日 | なし（独立） | 🔲 未着手 | 中 |
-| フェーズ5: WithdrawalForm | 1日 | なし（独立） | 🔲 未着手 | 高 |
-| フェーズ6: AdhocLotCreateForm | 0.5日 | なし（独立） | 🔲 未着手 | 高 |
+| フェーズ3: InventoryPage | 1日 | なし（独立） | ✅ 完了 | 中 |
+| フェーズ4: ForecastDetailCard | 1日 | なし（独立） | ✅ 完了 | 中 |
+| フェーズ5: WithdrawalForm | 1日 | なし（独立） | ✅ 完了 | 高 |
+| フェーズ6: AdhocLotCreateForm | 0.5日 | なし（独立） | ✅ 完了 | 高 |
 | フェーズ7: 共通ダイアログhook | 1日 | なし（独立） | 🔲 未着手 | 中 |
-| フェーズ8: AllocationInput修正 | 0.5日 | なし（独立） | 🔲 未着手 | 中 |
+| フェーズ8: AllocationInput修正 | 0.5日 | なし（独立） | ✅ 完了 | 中 |
 | テスト・検証 | 1-2日 | 全フェーズ完了後 | 🔲 未着手 | - |
 
-**残り作業: 約7-8日（フェーズ3-8, テスト）**
+**残り作業: フェーズ7（約1日）+ テスト・検証**
 
 ### 推奨実装順序
 

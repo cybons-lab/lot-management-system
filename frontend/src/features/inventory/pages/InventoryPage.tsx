@@ -1,5 +1,5 @@
 import { ArrowUpFromLine, Box, History, Home, List, Package, Truck } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -13,6 +13,7 @@ import { InventoryTable } from "@/features/inventory/components/InventoryTable";
 import { LotCreateForm } from "@/features/inventory/components/LotCreateForm";
 import { StatCard } from "@/features/inventory/components/StatCard";
 import { useInventoryItems } from "@/features/inventory/hooks";
+import { useInventoryPageState } from "@/features/inventory/hooks/useInventoryPageState";
 import { useInventoryStats } from "@/features/inventory/hooks/useInventoryStats";
 import * as styles from "@/features/inventory/pages/styles";
 import {
@@ -33,29 +34,14 @@ import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 import { fmt } from "@/shared/utils/number";
 
-type OverviewMode = "items" | "product" | "supplier" | "warehouse";
-
 export function InventoryPage() {
   const navigate = useNavigate();
   // Lot creation dialog
   const createDialog = useDialog();
 
-  // Overview View Mode
-  const [overviewMode, setOverviewMode] = useState<OverviewMode>("items");
-
-  // Filters for Items View
-  const [filters, setFilters] = useState({
-    product_id: "",
-    warehouse_id: "",
-    supplier_id: "",
-  });
-
-  // Build query params for items
-  const queryParams = {
-    product_id: filters.product_id ? Number(filters.product_id) : undefined,
-    warehouse_id: filters.warehouse_id ? Number(filters.warehouse_id) : undefined,
-    supplier_id: filters.supplier_id ? Number(filters.supplier_id) : undefined,
-  };
+  // Page state (Jotai atom - persisted in sessionStorage)
+  const { overviewMode, filters, queryParams, setOverviewMode, updateFilter, setFilters } =
+    useInventoryPageState();
 
   // Data Fetching
   const {
@@ -64,7 +50,7 @@ export function InventoryPage() {
     refetch: refetchItems,
   } = useInventoryItems(queryParams);
 
-  const supplierQuery = useInventoryBySupplier(); // 引数なし
+  const supplierQuery = useInventoryBySupplier();
   const warehouseQuery = useInventoryByWarehouse();
   const productQuery = useInventoryByProduct();
 
@@ -245,7 +231,7 @@ export function InventoryPage() {
                 <SearchableSelect
                   options={productOptions}
                   value={filters.product_id}
-                  onChange={(value) => setFilters({ ...filters, product_id: value })}
+                  onChange={(value) => updateFilter("product_id", value)}
                   placeholder="製品を検索..."
                 />
               </div>
@@ -254,7 +240,7 @@ export function InventoryPage() {
                 <SearchableSelect
                   options={warehouseOptions}
                   value={filters.warehouse_id}
-                  onChange={(value) => setFilters({ ...filters, warehouse_id: value })}
+                  onChange={(value) => updateFilter("warehouse_id", value)}
                   placeholder="倉庫を検索..."
                 />
               </div>
@@ -263,7 +249,7 @@ export function InventoryPage() {
                 <SearchableSelect
                   options={supplierOptions}
                   value={filters.supplier_id}
-                  onChange={(value) => setFilters({ ...filters, supplier_id: value })}
+                  onChange={(value) => updateFilter("supplier_id", value)}
                   placeholder="仕入先を検索..."
                 />
               </div>

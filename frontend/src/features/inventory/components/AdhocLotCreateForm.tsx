@@ -3,9 +3,18 @@
  *
  * アドホックロット新規登録フォーム（受注非連動ロット用）
  * origin_type: sample, safety_stock, adhoc をサポート
+ * react-hook-form + zodを使用した型安全なバリデーション
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useMemo } from "react";
+import { Controller, useForm } from "react-hook-form";
+
+import {
+  adhocLotCreateSchema,
+  ADHOC_LOT_FORM_DEFAULTS,
+  type AdhocLotFormData,
+} from "./adhocLotCreateSchema";
 
 import {
   Button,
@@ -65,7 +74,7 @@ interface AdhocLotCreateFormProps {
 /**
  * 入庫登録（旧アドホックロット作成）フォーム
  */
-// eslint-disable-next-line max-lines-per-function
+// eslint-disable-next-line max-lines-per-function -- Form component with many fields
 export function AdhocLotCreateForm({
   onSubmit,
   onCancel,
@@ -74,10 +83,23 @@ export function AdhocLotCreateForm({
   warehouses,
   suppliers,
 }: AdhocLotCreateFormProps) {
-  const [selectedOriginType, setSelectedOriginType] = useState<AdhocOriginType>("adhoc");
-  const [selectedProduct, setSelectedProduct] = useState<string>("");
-  const [selectedWarehouse, setSelectedWarehouse] = useState<string>("");
-  const [selectedSupplier, setSelectedSupplier] = useState<string>("none"); // Default to "none" (or empty)
+  // react-hook-form setup
+  const {
+    control,
+    handleSubmit,
+    watch,
+    setValue,
+    register,
+    formState: { errors },
+  } = useForm<AdhocLotFormData>({
+    resolver: zodResolver(adhocLotCreateSchema),
+    defaultValues: ADHOC_LOT_FORM_DEFAULTS,
+  });
+
+  // 監視対象のフィールド
+  const selectedSupplier = watch("supplier_code");
+  const selectedProduct = watch("product_id");
+  const selectedWarehouse = watch("warehouse_id");
 
   // Filter products based on selected supplier
   const filteredProducts = useMemo(() => {
@@ -97,40 +119,32 @@ export function AdhocLotCreateForm({
     if (selectedProduct && filteredProducts.length > 0) {
       const exists = filteredProducts.find((p) => p.id.toString() === selectedProduct);
       if (!exists) {
-        setSelectedProduct("");
+        setValue("product_id", "");
       }
     }
-  }, [selectedSupplier, filteredProducts, selectedProduct]);
+  }, [selectedSupplier, filteredProducts, selectedProduct, setValue]);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-
-    if (!selectedProduct || !selectedWarehouse) {
-      return;
-    }
-
-    const data: AdhocLotCreateData = {
-      lot_number: formData.get("lot_number") as string,
-      product_id: parseInt(selectedProduct, 10),
-      warehouse_id: parseInt(selectedWarehouse, 10),
-      origin_type: selectedOriginType,
-      origin_reference: (formData.get("origin_reference") as string) || undefined,
-      supplier_code: selectedSupplier && selectedSupplier !== "none" ? selectedSupplier : undefined,
-      current_quantity: Number(formData.get("current_quantity")),
-      unit: formData.get("unit") as string,
-      received_date: formData.get("received_date") as string,
-      expiry_date: (formData.get("expiry_date") as string) || undefined,
+  const onFormSubmit = async (data: AdhocLotFormData) => {
+    const submitData: AdhocLotCreateData = {
+      lot_number: data.lot_number,
+      product_id: parseInt(data.product_id, 10),
+      warehouse_id: parseInt(data.warehouse_id, 10),
+      origin_type: data.origin_type,
+      origin_reference: data.origin_reference || undefined,
+      supplier_code:
+        data.supplier_code && data.supplier_code !== "none" ? data.supplier_code : undefined,
+      current_quantity: Number(data.current_quantity),
+      unit: data.unit,
+      received_date: data.received_date,
+      expiry_date: data.expiry_date || undefined,
     };
 
-    await onSubmit(data);
+    await onSubmit(submitData);
   };
 
-  const today = new Date().toISOString().split("T")[0];
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      /* Manual Lot Number Input */
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      {/* Manual Lot Number Input */}
       <div className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
         ロット番号は手動で入力してください。
       </div>
@@ -141,86 +155,116 @@ export function AdhocLotCreateForm({
             <Label htmlFor="lot_number">ロット番号 *</Label>
             <span className="text-muted-foreground text-xs">(例: LOT-2025-001)</span>
           </div>
-          <Input id="lot_number" name="lot_number" required placeholder="" className="font-mono" />
+          <Input id="lot_number" {...register("lot_number")} placeholder="" className="font-mono" />
+          {errors.lot_number && (
+            <p className="mt-1 text-sm text-red-600">{errors.lot_number.message}</p>
+          )}
         </div>
 
         {/* Row 1: Lot Type & Supplier */}
         {/* ロット種別 */}
         <div>
           <Label htmlFor="origin_type">ロット種別 *</Label>
-          <Select
-            value={selectedOriginType}
-            onValueChange={(v) => setSelectedOriginType(v as AdhocOriginType)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="種別を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {ADHOC_ORIGIN_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Controller
+            name="origin_type"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="種別を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ADHOC_ORIGIN_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
 
         {/* 仕入先（任意だが製品絞り込みに使用） */}
         <div>
           <Label htmlFor="supplier_code">仕入先（製品絞り込み）</Label>
-          <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
-            <SelectTrigger>
-              <SelectValue placeholder="仕入先を選択（任意）" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">指定なし（全製品表示）</SelectItem>
-              {suppliers.map((supplier) => (
-                <SelectItem key={supplier.id} value={supplier.supplier_code}>
-                  {supplier.supplier_code} - {supplier.supplier_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Controller
+            name="supplier_code"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value ?? "none"} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="仕入先を選択（任意）" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">指定なし（全製品表示）</SelectItem>
+                  {suppliers.map((supplier) => (
+                    <SelectItem key={supplier.id} value={supplier.supplier_code}>
+                      {supplier.supplier_code} - {supplier.supplier_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
         </div>
 
         {/* Row 2: Product & Warehouse */}
         {/* 製品選択 */}
         <div>
           <Label htmlFor="product_id">製品 *</Label>
-          <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-            <SelectTrigger>
-              <SelectValue placeholder="製品を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {filteredProducts.map((product) => (
-                <SelectItem key={product.id} value={product.id.toString()}>
-                  {product.product_code} - {product.product_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Controller
+            name="product_id"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="製品を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredProducts.map((product) => (
+                    <SelectItem key={product.id} value={product.id.toString()}>
+                      {product.product_code} - {product.product_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
           {selectedSupplier !== "none" && filteredProducts.length === 0 && (
             <p className="mt-1 text-xs text-red-500">
               この仕入先に関連付けられた製品はありません。
             </p>
+          )}
+          {errors.product_id && (
+            <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
           )}
         </div>
 
         {/* 倉庫選択 */}
         <div>
           <Label htmlFor="warehouse_id">倉庫 *</Label>
-          <Select value={selectedWarehouse} onValueChange={setSelectedWarehouse}>
-            <SelectTrigger>
-              <SelectValue placeholder="倉庫を選択" />
-            </SelectTrigger>
-            <SelectContent>
-              {warehouses.map((warehouse) => (
-                <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
-                  {warehouse.warehouse_code} - {warehouse.warehouse_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Controller
+            name="warehouse_id"
+            control={control}
+            render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger>
+                  <SelectValue placeholder="倉庫を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {warehouses.map((warehouse) => (
+                    <SelectItem key={warehouse.id} value={warehouse.id.toString()}>
+                      {warehouse.warehouse_code} - {warehouse.warehouse_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.warehouse_id && (
+            <p className="mt-1 text-sm text-red-600">{errors.warehouse_id.message}</p>
+          )}
         </div>
 
         {/* Row 3: Quantity & Unit */}
@@ -232,50 +276,43 @@ export function AdhocLotCreateForm({
           </div>
           <Input
             id="current_quantity"
-            name="current_quantity"
             type="number"
-            required
+            {...register("current_quantity")}
             min="0"
             step="0.001"
             placeholder=""
           />
+          {errors.current_quantity && (
+            <p className="mt-1 text-sm text-red-600">{errors.current_quantity.message}</p>
+          )}
         </div>
 
         {/* 単位（コンボボックス） */}
         <div>
           <Label htmlFor="unit">単位 *</Label>
-          <Input
-            id="unit"
-            name="unit"
-            required
-            placeholder="例: EA"
-            defaultValue="EA"
-            list="unit-options"
-          />
+          <Input id="unit" {...register("unit")} placeholder="例: EA" list="unit-options" />
           <datalist id="unit-options">
             <option value="EA" />
             <option value="KG" />
             <option value="CAN" />
           </datalist>
+          {errors.unit && <p className="mt-1 text-sm text-red-600">{errors.unit.message}</p>}
         </div>
 
         {/* Row 4: Dates */}
         {/* 入荷日 */}
         <div>
           <Label htmlFor="received_date">入荷日 *</Label>
-          <Input
-            id="received_date"
-            name="received_date"
-            type="date"
-            required
-            defaultValue={today}
-          />
+          <Input id="received_date" type="date" {...register("received_date")} />
+          {errors.received_date && (
+            <p className="mt-1 text-sm text-red-600">{errors.received_date.message}</p>
+          )}
         </div>
 
         {/* 有効期限 */}
         <div>
           <Label htmlFor="expiry_date">有効期限</Label>
-          <Input id="expiry_date" name="expiry_date" type="date" />
+          <Input id="expiry_date" type="date" {...register("expiry_date")} />
         </div>
 
         {/* Row 5: Reference */}
@@ -284,7 +321,7 @@ export function AdhocLotCreateForm({
           <Label htmlFor="origin_reference">備考（参照情報）</Label>
           <Input
             id="origin_reference"
-            name="origin_reference"
+            {...register("origin_reference")}
             placeholder="例: キャンペーン用サンプル、チケット#123"
           />
         </div>
