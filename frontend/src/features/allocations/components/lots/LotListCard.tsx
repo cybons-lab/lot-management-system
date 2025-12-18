@@ -1,6 +1,9 @@
 /**
  * LotListCard - Refactored
  * Card component for displaying lot allocation options.
+ *
+ * customerId, deliveryPlaceId, productIdはcurrentLineContextAtomから取得されるため、
+ * propsでの受け渡しが不要になった（Phase 2）
  */
 import type { CandidateLotItem } from "../../api";
 
@@ -15,9 +18,6 @@ interface LotListCardProps {
   allocatedQty: number;
   maxAllocatable: number;
   requiredQty: number;
-  customerId?: number | null;
-  deliveryPlaceId?: number | null;
-  productId?: number | null;
   rank: number;
   onAllocationChange: (qty: number) => void;
   onFullAllocation: (qty: number) => void;
@@ -28,9 +28,6 @@ export function LotListCard({
   allocatedQty,
   maxAllocatable,
   requiredQty,
-  customerId,
-  deliveryPlaceId,
-  productId,
   rank,
   onAllocationChange,
   onFullAllocation,
@@ -79,9 +76,6 @@ export function LotListCard({
         freeQty={freeQty}
         remainingInLot={remainingInLot}
         limit={limit}
-        customerId={customerId}
-        deliveryPlaceId={deliveryPlaceId}
-        productId={productId}
         isShaking={isShaking}
         isConfirmed={isConfirmed}
         handleInputChange={handleInputChange}
