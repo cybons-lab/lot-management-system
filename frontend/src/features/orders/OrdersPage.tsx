@@ -2,13 +2,13 @@ import { Loader2, RefreshCcw } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 
+import { useOrdersPageState } from "./hooks/useOrdersPageState";
+
 import { Button } from "@/components/ui";
 import { OrderCard } from "@/features/orders/components/display/OrderCard";
 import { OrderFilters } from "@/features/orders/components/filters/OrderFilters";
 import { useOrdersList } from "@/features/orders/hooks/useOrders";
 import type { OrderWithLinesResponse, OrdersListParams } from "@/shared/types/aliases";
-
-const DEFAULT_FILTERS: OrdersListParams = { limit: 20, skip: 0 };
 
 function normaliseOrders(data: unknown): OrderWithLinesResponse[] {
   if (!data) return [];
@@ -32,7 +32,8 @@ function normaliseOrders(data: unknown): OrderWithLinesResponse[] {
 }
 
 export function OrdersPage() {
-  const [filters, setFilters] = React.useState<OrdersListParams>(DEFAULT_FILTERS);
+  // フィルタ状態（sessionStorageで永続化）
+  const { filters, setFilters, resetFilters } = useOrdersPageState();
 
   const ordersQuery = useOrdersList(filters);
   const orders = React.useMemo(() => normaliseOrders(ordersQuery.data), [ordersQuery.data]);
@@ -42,13 +43,16 @@ export function OrdersPage() {
   }, [ordersQuery]);
 
   const handleReset = React.useCallback(() => {
-    setFilters(DEFAULT_FILTERS);
+    resetFilters();
     ordersQuery.refetch();
-  }, [ordersQuery]);
+  }, [ordersQuery, resetFilters]);
 
-  const handleChange = React.useCallback((next: OrdersListParams) => {
-    setFilters(next);
-  }, []);
+  const handleChange = React.useCallback(
+    (next: OrdersListParams) => {
+      setFilters(next);
+    },
+    [setFilters],
+  );
 
   React.useEffect(() => {
     if (ordersQuery.error) {

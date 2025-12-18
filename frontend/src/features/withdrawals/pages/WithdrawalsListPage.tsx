@@ -1,19 +1,18 @@
 /**
  * WithdrawalsListPage
  *
- * 出庫履歴一覧ページ
+ * 出庫履歴一覧ページ（フィルタ永続化対応）
  */
 
 import { formatDistanceToNow } from "date-fns";
 /* eslint-disable max-lines-per-function */
 import { ja } from "date-fns/locale";
 import { ArrowLeft, Plus } from "lucide-react";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { WITHDRAWAL_TYPE_LABELS } from "../api";
-import type { WithdrawalType } from "../api";
 import { useWithdrawals } from "../hooks";
+import { useWithdrawalsPageState } from "../hooks/useWithdrawalsPageState";
 
 import {
   Button,
@@ -35,8 +34,9 @@ const PAGE_SIZE = 20;
 
 export function WithdrawalsListPage() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const [filterType, setFilterType] = useState<WithdrawalType | "all">("all");
+
+  // フィルタ・ページ状態（sessionStorageで永続化）
+  const { page, filterType, setPage, setFilterType } = useWithdrawalsPageState();
 
   const { useList } = useWithdrawals();
   const { data, isLoading, isError, error } = useList({
@@ -99,13 +99,7 @@ export function WithdrawalsListPage() {
         <CardContent>
           <div className="flex gap-4">
             <div className="w-48">
-              <Select
-                value={filterType}
-                onValueChange={(v) => {
-                  setFilterType(v as WithdrawalType | "all");
-                  setPage(1);
-                }}
-              >
+              <Select value={filterType} onValueChange={setFilterType}>
                 <SelectTrigger>
                   <SelectValue placeholder="出庫タイプ" />
                 </SelectTrigger>

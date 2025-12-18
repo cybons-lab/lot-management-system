@@ -1,11 +1,14 @@
 /**
- * RoleForm (v2.2 - Phase G-2)
+ * RoleForm (v2.3 - react-hook-form + Zod)
  * Form component for creating roles
  */
 
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
 
 import type { CreateRoleRequest } from "../api";
+
+import { roleFormSchema, type RoleFormData, ROLE_FORM_DEFAULTS } from "./roleFormSchema";
 
 import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
@@ -18,56 +21,43 @@ interface RoleFormProps {
 }
 
 export function RoleForm({ onSubmit, onCancel, isSubmitting = false }: RoleFormProps) {
-  const [formData, setFormData] = useState<CreateRoleRequest>({
-    role_code: "",
-    role_name: "",
-    description: "",
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RoleFormData>({
+    resolver: zodResolver(roleFormSchema),
+    defaultValues: ROLE_FORM_DEFAULTS,
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.role_code || formData.role_code.trim() === "") {
-      newErrors.role_code = "ロールコードを入力してください";
-    }
-
-    if (!formData.role_name || formData.role_name.trim() === "") {
-      newErrors.role_name = "ロール名を入力してください";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
-
-    onSubmit(formData);
+  const handleFormSubmit = (data: RoleFormData) => {
+    onSubmit(data as CreateRoleRequest);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       {/* Role Code */}
       <div>
         <Label htmlFor="role_code" className="mb-2 block text-sm font-medium">
           ロールコード <span className="text-red-500">*</span>
         </Label>
-        <Input
-          id="role_code"
-          type="text"
-          value={formData.role_code}
-          onChange={(e) => setFormData({ ...formData, role_code: e.target.value })}
-          placeholder="ロールコードを入力（例: ADMIN, USER, MANAGER）"
-          disabled={isSubmitting}
-          maxLength={50}
+        <Controller
+          name="role_code"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              id="role_code"
+              type="text"
+              placeholder="ロールコードを入力（例: ADMIN, USER, MANAGER）"
+              disabled={isSubmitting}
+              maxLength={50}
+            />
+          )}
         />
-        {errors.role_code && <p className="mt-1 text-sm text-red-600">{errors.role_code}</p>}
+        {errors.role_code && (
+          <p className="mt-1 text-sm text-red-600">{errors.role_code.message}</p>
+        )}
         <p className="mt-1 text-xs text-gray-500">一意の識別子として使用されます（大文字推奨）</p>
       </div>
 
@@ -76,16 +66,23 @@ export function RoleForm({ onSubmit, onCancel, isSubmitting = false }: RoleFormP
         <Label htmlFor="role_name" className="mb-2 block text-sm font-medium">
           ロール名 <span className="text-red-500">*</span>
         </Label>
-        <Input
-          id="role_name"
-          type="text"
-          value={formData.role_name}
-          onChange={(e) => setFormData({ ...formData, role_name: e.target.value })}
-          placeholder="ロール名を入力（例: 管理者、一般ユーザー）"
-          disabled={isSubmitting}
-          maxLength={100}
+        <Controller
+          name="role_name"
+          control={control}
+          render={({ field }) => (
+            <Input
+              {...field}
+              id="role_name"
+              type="text"
+              placeholder="ロール名を入力（例: 管理者、一般ユーザー）"
+              disabled={isSubmitting}
+              maxLength={100}
+            />
+          )}
         />
-        {errors.role_name && <p className="mt-1 text-sm text-red-600">{errors.role_name}</p>}
+        {errors.role_name && (
+          <p className="mt-1 text-sm text-red-600">{errors.role_name.message}</p>
+        )}
       </div>
 
       {/* Description */}
@@ -93,14 +90,20 @@ export function RoleForm({ onSubmit, onCancel, isSubmitting = false }: RoleFormP
         <Label htmlFor="description" className="mb-2 block text-sm font-medium">
           説明
         </Label>
-        <textarea
-          id="description"
-          value={formData.description ?? ""}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
-          placeholder="ロールの説明を入力（オプション）"
-          rows={3}
-          className="w-full rounded-md border px-3 py-2 text-sm"
-          disabled={isSubmitting}
+        <Controller
+          name="description"
+          control={control}
+          render={({ field }) => (
+            <textarea
+              id="description"
+              value={field.value ?? ""}
+              onChange={(e) => field.onChange(e.target.value || null)}
+              placeholder="ロールの説明を入力（オプション）"
+              rows={3}
+              className="w-full rounded-md border px-3 py-2 text-sm"
+              disabled={isSubmitting}
+            />
+          )}
         />
       </div>
 
