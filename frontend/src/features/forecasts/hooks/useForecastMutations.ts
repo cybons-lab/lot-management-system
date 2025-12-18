@@ -1,0 +1,133 @@
+/**
+ * useForecastMutations.ts
+ *
+ * フォーキャスト関連のmutations（自動引当、更新、作成）を集約したカスタムフック
+ * クエリ無効化処理を一箇所にまとめて重複を排除
+ */
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { bulkAutoAllocate } from "@/features/allocations/api";
+import { createForecast, deleteForecast, updateForecast } from "@/features/forecasts/api";
+
+interface ForecastGroupKey {
+  customer_id: number;
+  delivery_place_id: number;
+  product_id: number;
+}
+
+/**
+ * フォーキャスト関連の共通クエリ無効化
+ */
+function useInvalidateForecastQueries() {
+  const queryClient = useQueryClient();
+
+  return (groupKey: ForecastGroupKey) => {
+    return Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: ["forecasts"],
+        exact: false,
+        refetchType: "all",
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["allocations"],
+        exact: false,
+        refetchType: "all",
+      }),
+      queryClient.invalidateQueries({
+        queryKey: [
+          "planning-allocation-summary",
+          groupKey.customer_id,
+          groupKey.delivery_place_id,
+          groupKey.product_id,
+        ],
+      }),
+    ]);
+  };
+}
+
+/**
+ * フォーキャストCRUD操作のmutations
+ */
+export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
+  const invalidateQueries = useInvalidateForecastQueries();
+
+  // グループ自動引当
+  const autoAllocate = useMutation({
+    mutationFn: () =>
+      bulkAutoAllocate({
+        product_id: groupKey.product_id,
+        customer_id: groupKey.customer_id,
+        delivery_place_id: groupKey.delivery_place_id,
+      }),
+    onSuccess: (result) => {
+      if (result.allocated_lines > 0) {
+        toast.success(result.message);
+      } else {
+        toast.info(result.message);
+      }
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Auto-allocate failed:", error);
+      toast.error("自動引当に失敗しました");
+    },
+  });
+
+  // フォーキャスト更新（0なら削除）
+  const update = useMutation({
+    mutationFn: async ({ forecastId, quantity }: { forecastId: number; quantity: number }) => {
+      if (quantity === 0) {
+        await deleteForecast(forecastId);
+        return null;
+      }
+      return updateForecast(forecastId, { forecast_quantity: quantity });
+    },
+    onSuccess: (_, variables) => {
+      toast.success(
+        variables.quantity === 0 ? "フォーキャストを削除しました" : "フォーキャストを更新しました",
+      );
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Update/Delete forecast failed:", error);
+      toast.error("フォーキャストの操作に失敗しました");
+    },
+  });
+
+  // フォーキャスト新規作成
+  const create = useMutation({
+    mutationFn: (data: { dateKey: string; quantity: number }) =>
+      createForecast({
+        customer_id: groupKey.customer_id,
+        delivery_place_id: groupKey.delivery_place_id,
+        product_id: groupKey.product_id,
+        forecast_date: data.dateKey,
+        forecast_quantity: data.quantity,
+        unit: unit,
+        forecast_period: data.dateKey.slice(0, 7), // YYYY-MM
+      }),
+    onSuccess: () => {
+      toast.success("フォーキャストを作成しました");
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Create forecast failed:", error);
+      toast.error("フォーキャストの作成に失敗しました");
+    },
+  });
+
+  return {
+    autoAllocate,
+    update,
+    create,
+    // ヘルパー関数
+    handleUpdateQuantity: (forecastId: number, newQuantity: number) =>
+      update.mutateAsync({ forecastId, quantity: newQuantity }),
+    handleCreateForecast: (dateKey: string, quantity: number) =>
+      create.mutateAsync({ dateKey, quantity }),
+    // isPending統合
+    isMutating: autoAllocate.isPending || update.isPending || create.isPending,
+  };
+}

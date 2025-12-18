@@ -8,10 +8,7 @@ interface LotAllocationListProps {
   candidateLots: CandidateLotItem[];
   lotAllocations: Record<number, number>;
   remainingNeeded: number;
-  requiredQty: number; // 新規: 明細の総要求数
-  customerId?: number | null;
-  deliveryPlaceId?: number | null;
-  productId?: number | null;
+  requiredQty: number;
   isActive: boolean;
   onLotAllocationChange: (lotId: number, quantity: number) => void;
 }
@@ -19,15 +16,15 @@ interface LotAllocationListProps {
 /**
  * ロット一覧表示コンポーネント
  * 各ロットカードの表示とインタラクションを管理
+ *
+ * customerId, deliveryPlaceId, productIdはcurrentLineContextAtomから取得されるため、
+ * propsでの受け渡しが不要になった（Phase 2）
  */
 export function LotAllocationList({
   candidateLots,
   lotAllocations,
   remainingNeeded,
   requiredQty,
-  customerId,
-  deliveryPlaceId,
-  productId,
   isActive,
   onLotAllocationChange,
 }: LotAllocationListProps) {
@@ -87,9 +84,6 @@ export function LotAllocationList({
                   allocatedQty={allocatedQty}
                   maxAllocatable={maxAllocatable}
                   requiredQty={requiredQty}
-                  customerId={customerId}
-                  deliveryPlaceId={deliveryPlaceId}
-                  productId={productId}
                   rank={index + 1}
                   onAllocationChange={(qty) => onLotAllocationChange(lotId, qty)}
                   onFullAllocation={(qty) => handleFullAllocation(lotId, qty)}

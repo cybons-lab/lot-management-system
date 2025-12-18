@@ -6,27 +6,27 @@ import { AllocationListRow } from "./AllocationListRow";
 import { BulkActionsHeader } from "./BulkActionsHeader";
 import { FilterBar } from "./FilterBar";
 import { JumpButtons } from "./JumpButtons";
-import type { AllocationListProps } from "./types";
 import type { useAllocationListLogic } from "./useAllocationListLogic";
 
 type LogicResult = ReturnType<typeof useAllocationListLogic>;
 
-interface AllocationListContentProps extends AllocationListProps {
+interface AllocationListContentProps {
   logic: LogicResult;
 }
 
-// Pure presentation component with many props passed down - difficult to split further naturally
-// eslint-disable-next-line max-lines-per-function
-export function AllocationListContent(props: AllocationListContentProps) {
-  const { logic, ...parentProps } = props;
+/**
+ * AllocationListContent - 引当リストのメインコンテンツ
+ *
+ * 引当関連のハンドラーはAllocationProviderを通じてJotai atomに設定されているため、
+ * ここではlogicのみを受け取り、チェックボックス関連のハンドラーのみを子に渡す。
+ */
+export function AllocationListContent({ logic }: AllocationListContentProps) {
   const {
     selectedLineIds,
     filterStatus,
     setFilterStatus,
     viewMode,
     setViewMode,
-    activeLineId,
-    setActiveLineId,
     checkedSectionRef,
     listRef,
     allFlatLines,
@@ -100,18 +100,8 @@ export function AllocationListContent(props: AllocationListContentProps) {
               firstCheckedIndex={firstCheckedIndex}
               sortedLinesLength={sortedLines.length}
               checkedSectionRef={checkedSectionRef}
-              activeLineId={activeLineId}
-              onActivate={setActiveLineId}
               handleCheckChange={handleCheckChange}
               handleGroupCheckChange={handleGroupCheckChange}
-              productMap={parentProps.productMap}
-              getLineAllocations={parentProps.getLineAllocations}
-              onLotAllocationChange={parentProps.onLotAllocationChange}
-              onAutoAllocate={parentProps.onAutoAllocate}
-              onClearAllocations={parentProps.onClearAllocations}
-              onSaveAllocations={parentProps.onSaveAllocations}
-              lineStatuses={parentProps.lineStatuses}
-              isOverAllocated={parentProps.isOverAllocated}
             />
           );
         })}

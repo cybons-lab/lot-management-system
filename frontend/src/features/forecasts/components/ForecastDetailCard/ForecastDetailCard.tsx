@@ -1,5 +1,5 @@
 /**
- * ForecastDetailCard - Visual forecast display with grid layout (v2.5 - Refactored)
+ * ForecastDetailCard - Visual forecast display with grid layout (v2.6 - Refactored with useForecastMutations)
  *
  * 3-section layout:
  * - Section 1: Compact header (customer, product, delivery place)
@@ -7,9 +7,7 @@
  * - Section 3: Dekad (left) and Monthly (right) aggregations beneath the grid
  */
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
 
 import { ForecastAggregations } from "./ForecastAggregations";
 import { ForecastCardHeader } from "./ForecastCardHeader";
@@ -23,8 +21,7 @@ import { formatDateKey, getTodayStart } from "./utils/date-utils";
 import { WarehouseInfoCard } from "./WarehouseInfoCard";
 
 import { Card, CardContent } from "@/components/ui";
-import { bulkAutoAllocate } from "@/features/allocations/api";
-import { createForecast, deleteForecast, updateForecast } from "@/features/forecasts/api";
+import { useForecastMutations } from "@/features/forecasts/hooks/useForecastMutations";
 import { cn } from "@/shared/libs/utils";
 
 export function ForecastDetailCard({
@@ -38,7 +35,6 @@ export function ForecastDetailCard({
 }: ForecastDetailCardProps) {
   const { group_key, forecasts = [] } = group;
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
-  const queryClient = useQueryClient();
 
   // Calculate all forecast data using custom hook
   const {
@@ -52,143 +48,22 @@ export function ForecastDetailCard({
     targetMonthTotal,
   } = useForecastCalculations(group);
 
-  // グループ自動引当 mutation
-  const autoAllocateMutation = useMutation({
-    mutationFn: () =>
-      bulkAutoAllocate({
-        product_id: group_key.product_id,
-        customer_id: group_key.customer_id,
-        delivery_place_id: group_key.delivery_place_id,
-      }),
-    onSuccess: (result) => {
-      if (result.allocated_lines > 0) {
-        toast.success(result.message);
-      } else {
-        toast.info(result.message);
-      }
-      // 関連クエリを無効化して再取得 - 包括的に無効化
-      Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["forecasts"],
-          exact: false,
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["allocations"],
-          exact: false,
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "planning-allocation-summary",
-            group_key.customer_id,
-            group_key.delivery_place_id,
-            group_key.product_id,
-          ],
-        }),
-      ]);
-    },
-    onError: (error) => {
-      console.error("Auto-allocate failed:", error);
-      toast.error("自動引当に失敗しました");
-    },
-  });
+  // Forecast mutations (自動引当、更新、作成を1つのhookで取得)
+  const {
+    autoAllocate,
+    update,
+    create,
+    handleUpdateQuantity: updateQuantity,
+    handleCreateForecast: createForecastAsync,
+  } = useForecastMutations(group_key, unit);
 
-  // フォーキャスト更新 mutation (0なら削除)
-  const updateForecastMutation = useMutation({
-    mutationFn: async ({ forecastId, quantity }: { forecastId: number; quantity: number }) => {
-      if (quantity === 0) {
-        // 削除
-        await deleteForecast(forecastId);
-        return null;
-      }
-      return updateForecast(forecastId, { forecast_quantity: quantity });
-    },
-    onSuccess: (_, variables) => {
-      if (variables.quantity === 0) {
-        toast.success("フォーキャストを削除しました");
-      } else {
-        toast.success("フォーキャストを更新しました");
-      }
-      // クエリ無効化: forecasts, allocations, planning-allocation-summary
-      // クエリ無効化: forecasts, allocations を広範に再取得
-      // paramsが含まれていても前方一致で無効化されるように設定
-      Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["forecasts"],
-          exact: false,
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["allocations"],
-          exact: false,
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "planning-allocation-summary",
-            group_key.customer_id,
-            group_key.delivery_place_id,
-            group_key.product_id,
-          ],
-        }),
-      ]);
-    },
-    onError: (error) => {
-      console.error("Update/Delete forecast failed:", error);
-      toast.error("フォーキャストの操作に失敗しました");
-    },
-  });
-
-  // フォーキャスト新規作成 mutation
-  const createForecastMutation = useMutation({
-    mutationFn: (data: { dateKey: string; quantity: number }) =>
-      createForecast({
-        customer_id: group_key.customer_id,
-        delivery_place_id: group_key.delivery_place_id,
-        product_id: group_key.product_id,
-        forecast_date: data.dateKey,
-        forecast_quantity: data.quantity,
-        unit: unit,
-        forecast_period: data.dateKey.slice(0, 7), // YYYY-MM
-      }),
-    onSuccess: () => {
-      toast.success("フォーキャストを作成しました");
-      // クエリ無効化: forecasts, allocations, planning-allocation-summary
-      // クエリ無効化: forecasts, allocations, planning-allocation-summary
-      Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["forecasts"],
-          exact: false,
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["allocations"],
-          exact: false,
-          refetchType: "all",
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [
-            "planning-allocation-summary",
-            group_key.customer_id,
-            group_key.delivery_place_id,
-            group_key.product_id,
-          ],
-        }),
-      ]);
-    },
-    onError: (error) => {
-      console.error("Create forecast failed:", error);
-      toast.error("フォーキャストの作成に失敗しました");
-    },
-  });
-
-  const handleUpdateQuantity = async (forecastId: number, newQuantity: number) => {
-    await updateForecastMutation.mutateAsync({ forecastId, quantity: newQuantity });
+  // ラッパー関数（Promise<void>を返すように）
+  const handleUpdateQuantity = async (forecastId: number, newQuantity: number): Promise<void> => {
+    await updateQuantity(forecastId, newQuantity);
   };
 
-  const handleCreateForecast = async (dateKey: string, quantity: number) => {
-    await createForecastMutation.mutateAsync({ dateKey, quantity });
+  const handleCreateForecast = async (dateKey: string, quantity: number): Promise<void> => {
+    await createForecastAsync(dateKey, quantity);
   };
 
   // Early return if no forecasts
@@ -220,7 +95,7 @@ export function ForecastDetailCard({
 
   // 自動引当ハンドラー
   const handleAutoAllocate = () => {
-    autoAllocateMutation.mutate();
+    autoAllocate.mutate();
   };
 
   return (
@@ -268,7 +143,7 @@ export function ForecastDetailCard({
                 onDateHover={setHoveredDate}
                 onUpdateQuantity={handleUpdateQuantity}
                 onCreateForecast={handleCreateForecast}
-                isUpdating={updateForecastMutation.isPending || createForecastMutation.isPending}
+                isUpdating={update.isPending || create.isPending}
               />
 
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />

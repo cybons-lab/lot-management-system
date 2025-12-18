@@ -1,12 +1,15 @@
 /**
  * Allocation input section for LotListCard.
  * Displays quantity input and action buttons.
+ *
+ * customerId, deliveryPlaceId, productIdはcurrentLineContextAtomから取得（Phase 2）
  */
 import { AnimatePresence } from "framer-motion";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import type { CandidateLotItem } from "../../api";
+import { useCurrentLineContext } from "../../hooks/useAllocationContext";
 
 import { ForecastTooltip } from "./ForecastTooltip";
 import { useForecastData } from "./hooks/useForecastData";
@@ -21,9 +24,6 @@ interface AllocationInputSectionProps {
   freeQty: number;
   remainingInLot: number;
   limit: number;
-  customerId?: number | null;
-  deliveryPlaceId?: number | null;
-  productId?: number | null;
   // State from hook
   isShaking: boolean;
   isConfirmed: boolean;
@@ -71,9 +71,6 @@ interface InputWithForecastProps {
   isConfirmed: boolean;
   isShaking: boolean;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  customerId?: number | null;
-  deliveryPlaceId?: number | null;
-  productId?: number | null;
 }
 
 function InputWithForecast({
@@ -83,10 +80,10 @@ function InputWithForecast({
   isConfirmed,
   isShaking,
   handleInputChange,
-  customerId,
-  deliveryPlaceId,
-  productId,
 }: InputWithForecastProps) {
+  // Get customerId, deliveryPlaceId, productId from context (Phase 2)
+  const { customerId, deliveryPlaceId, productId } = useCurrentLineContext();
+
   // Forecast tooltip state
   const [showForecast, setShowForecast] = useState(false);
   const { data: forecasts, isLoading: isForecastLoading } = useForecastData(
@@ -211,9 +208,6 @@ export function AllocationInputSection({
   freeQty,
   remainingInLot,
   limit,
-  customerId,
-  deliveryPlaceId,
-  productId,
   isShaking,
   isConfirmed,
   handleInputChange,
@@ -237,9 +231,6 @@ export function AllocationInputSection({
         isConfirmed={isConfirmed}
         isShaking={isShaking}
         handleInputChange={handleInputChange}
-        customerId={customerId}
-        deliveryPlaceId={deliveryPlaceId}
-        productId={productId}
       />
 
       <ActionButtons

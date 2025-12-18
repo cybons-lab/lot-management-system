@@ -1,5 +1,5 @@
 import { useAllocationCandidates } from "../../hooks/api";
-import type { LineStatus } from "../../hooks/useLotAllocation";
+import { useAllocationContext } from "../../hooks/useAllocationContext";
 
 import { LotAllocationPanel } from "./LotAllocationPanel";
 
@@ -8,36 +8,41 @@ import type { OrderLine, OrderWithLinesResponse } from "@/shared/types/aliases";
 interface AllocationRowContainerProps {
   order: OrderWithLinesResponse;
   line: OrderLine;
-  getLineAllocations: (lineId: number) => Record<number, number>;
-  onLotAllocationChange: (lineId: number, lotId: number, quantity: number) => void;
-  onAutoAllocate: (lineId: number) => void;
-  onClearAllocations: (lineId: number) => void;
-  onSaveAllocations: (lineId: number) => void;
-  lineStatus: LineStatus;
-  isOverAllocated: boolean;
   customerName?: string;
   productName?: string;
   deliveryPlaceName?: string;
-  isActive: boolean;
-  onActivate: () => void;
 }
 
+/**
+ * AllocationRowContainer - ロット引当行のコンテナ
+ *
+ * useAllocationContextを使用してハンドラーと状態をJotai atomから取得。
+ * これにより、親コンポーネントからのProp Drillingが不要になる。
+ */
 export function AllocationRowContainer({
   order,
   line,
-  getLineAllocations,
-  onLotAllocationChange,
-  onAutoAllocate,
-  onClearAllocations,
-  onSaveAllocations,
-  lineStatus,
-  isOverAllocated,
   customerName,
   productName,
   deliveryPlaceName,
-  isActive,
-  onActivate,
 }: AllocationRowContainerProps) {
+  // Jotai atomからハンドラーと状態を取得
+  const {
+    getLineAllocations,
+    isOverAllocated: checkIsOverAllocated,
+    onLotAllocationChange,
+    onAutoAllocate,
+    onClearAllocations,
+    onSaveAllocations,
+    lineStatuses,
+    activeLineId,
+    setActiveLineId,
+  } = useAllocationContext();
+
+  const lineStatus = lineStatuses[line.id] ?? "clean";
+  const isOverAllocated = checkIsOverAllocated(line.id);
+  const isActive = activeLineId === line.id;
+  const onActivate = () => setActiveLineId(line.id);
   const { data, isLoading, error } = useAllocationCandidates({
     order_line_id: line.id,
     product_id: Number(line.product_id || 0),

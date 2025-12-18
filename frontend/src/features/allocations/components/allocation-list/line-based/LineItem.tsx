@@ -1,7 +1,7 @@
 import { CheckCircle } from "lucide-react";
 import type { RefObject } from "react";
 
-import type { LineStatus } from "../../../hooks/useLotAllocation";
+import { useAllocationContextData } from "../../../hooks/useAllocationContext";
 import { AllocationRowContainer } from "../../lots/AllocationRowContainer";
 import * as styles from "../LineBasedAllocationList.styles";
 
@@ -9,41 +9,31 @@ import { getDeliveryPlaceName, getProductName } from "./helpers";
 import { LineItemHeader } from "./LineItemHeader";
 import type { LineWithOrderInfo } from "./types";
 
+interface LineItemProps {
+  item: LineWithOrderInfo;
+  isChecked: boolean;
+  isFirstChecked: boolean;
+  checkedSectionRef?: RefObject<HTMLDivElement | null>;
+  totalCheckedCount: number;
+  onCheckChange: (lineId: number, checked: boolean) => void;
+}
+
+/**
+ * LineItem - 明細行アイテムコンポーネント
+ *
+ * AllocationRowContainerはuseAllocationContextからハンドラーを取得するため、
+ * ここでのProps数を大幅に削減。
+ */
 export function LineItem({
   item,
   isChecked,
   isFirstChecked,
   checkedSectionRef,
   totalCheckedCount,
-  productMap,
   onCheckChange,
-  getLineAllocations,
-  onLotAllocationChange,
-  onAutoAllocate,
-  onClearAllocations,
-  onSaveAllocations,
-  lineStatuses,
-  isOverAllocated,
-  activeLineId,
-  onActivate,
-}: {
-  item: LineWithOrderInfo;
-  isChecked: boolean;
-  isFirstChecked: boolean;
-  checkedSectionRef?: RefObject<HTMLDivElement | null>;
-  totalCheckedCount: number;
-  productMap: Record<number, string>;
-  onCheckChange: (lineId: number, checked: boolean) => void;
-  getLineAllocations: (lineId: number) => Record<number, number>;
-  onLotAllocationChange: (lineId: number, lotId: number, quantity: number) => void;
-  onAutoAllocate: (lineId: number) => void;
-  onClearAllocations: (lineId: number) => void;
-  onSaveAllocations: (lineId: number) => void;
-  lineStatuses: Record<number, LineStatus>;
-  isOverAllocated: (lineId: number) => boolean;
-  activeLineId: number | null;
-  onActivate: (lineId: number) => void;
-}) {
+}: LineItemProps) {
+  // productMapはJotai atomから取得
+  const { productMap } = useAllocationContextData();
   return (
     <div className="pb-4">
       {/* マーカー */}
@@ -72,15 +62,6 @@ export function LineItem({
               customerName={item.customer_name}
               productName={getProductName(item.line, productMap)}
               deliveryPlaceName={getDeliveryPlaceName(item.order, item.line)}
-              getLineAllocations={getLineAllocations}
-              onLotAllocationChange={onLotAllocationChange}
-              onAutoAllocate={onAutoAllocate}
-              onClearAllocations={onClearAllocations}
-              onSaveAllocations={onSaveAllocations}
-              lineStatus={lineStatuses[item.id] || "clean"}
-              isOverAllocated={isOverAllocated(item.id)}
-              isActive={activeLineId === item.id}
-              onActivate={() => onActivate(item.id)}
             />
           </div>
         )}

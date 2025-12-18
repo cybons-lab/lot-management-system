@@ -1,6 +1,8 @@
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 import type { CandidateLotItem } from "../../api";
+import { useSetCurrentLineContext } from "../../hooks/useAllocationContext";
 import { getCustomerName, getDeliveryPlaceName, getProductName } from "../../utils/orderLineUtils";
 
 import { AllocationEmptyState } from "./AllocationEmptyState";
@@ -79,6 +81,21 @@ export function LotAllocationPanel({
   hasUnsavedChanges = false,
   allocationState = "none",
 }: LotAllocationPanelProps & { deliveryPlaceName?: string }) {
+  // Set current line context for ForecastTooltip (Phase 2)
+  const setCurrentLineContext = useSetCurrentLineContext();
+  useEffect(() => {
+    setCurrentLineContext({
+      customerId: order?.customer_id ?? null,
+      deliveryPlaceId: orderLine?.delivery_place_id ?? null,
+      productId: orderLine?.product_id ?? null,
+    });
+  }, [
+    order?.customer_id,
+    orderLine?.delivery_place_id,
+    orderLine?.product_id,
+    setCurrentLineContext,
+  ]);
+
   // 数量計算（カスタムフックで集約）
   const calculations = useAllocationCalculations({
     orderLine,
@@ -235,9 +252,6 @@ export function LotAllocationPanel({
                 lotAllocations={lotAllocations}
                 remainingNeeded={remainingNeeded}
                 requiredQty={requiredQty}
-                customerId={order?.customer_id}
-                deliveryPlaceId={orderLine?.delivery_place_id}
-                productId={orderLine?.product_id}
                 isActive={isActive}
                 onLotAllocationChange={onLotAllocationChange}
               />
