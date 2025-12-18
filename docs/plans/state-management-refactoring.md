@@ -10,7 +10,7 @@
 | Phase 4: ForecastDetailCard分割 | ✅ 完了 | 2025-12-18 |
 | Phase 5: WithdrawalForm react-hook-form移行 | ✅ 完了 | 2025-12-18 |
 | Phase 6: AdhocLotCreateForm react-hook-form移行 | ✅ 完了 | 2025-12-18 |
-| Phase 7: 共通ダイアログ管理hook作成 | 🔲 未着手 | - |
+| Phase 7: 共通ダイアログ管理hook作成 | ✅ 完了 | 2025-12-18 |
 | Phase 8: AllocationInput状態同期修正 | ✅ 完了 | 2025-12-18 |
 
 ---
@@ -671,7 +671,7 @@ const form = useForm<z.infer<typeof adhocLotSchema>>({
 
 ---
 
-### フェーズ7: 共通ダイアログ管理hook作成 🔲 未着手
+### フェーズ7: 共通ダイアログ管理hook作成 ✅ 完了
 
 #### 目的
 - リストページで繰り返されるダイアログ状態管理を共通化
@@ -922,11 +922,11 @@ describe("AllocationProvider integration", () => {
 | フェーズ4: ForecastDetailCard | 1日 | なし（独立） | ✅ 完了 | 中 |
 | フェーズ5: WithdrawalForm | 1日 | なし（独立） | ✅ 完了 | 高 |
 | フェーズ6: AdhocLotCreateForm | 0.5日 | なし（独立） | ✅ 完了 | 高 |
-| フェーズ7: 共通ダイアログhook | 1日 | なし（独立） | 🔲 未着手 | 中 |
+| フェーズ7: 共通ダイアログhook | 1日 | なし（独立） | ✅ 完了 | 中 |
 | フェーズ8: AllocationInput修正 | 0.5日 | なし（独立） | ✅ 完了 | 中 |
 | テスト・検証 | 1-2日 | 全フェーズ完了後 | 🔲 未着手 | - |
 
-**残り作業: フェーズ7（約1日）+ テスト・検証**
+**残り作業: テスト・検証のみ**
 
 ### 推奨実装順序
 
