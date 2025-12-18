@@ -89,7 +89,12 @@ export function LotAllocationPanel({
       deliveryPlaceId: orderLine?.delivery_place_id ?? null,
       productId: orderLine?.product_id ?? null,
     });
-  }, [order?.customer_id, orderLine?.delivery_place_id, orderLine?.product_id, setCurrentLineContext]);
+  }, [
+    order?.customer_id,
+    orderLine?.delivery_place_id,
+    orderLine?.product_id,
+    setCurrentLineContext,
+  ]);
 
   // 数量計算（カスタムフックで集約）
   const calculations = useAllocationCalculations({

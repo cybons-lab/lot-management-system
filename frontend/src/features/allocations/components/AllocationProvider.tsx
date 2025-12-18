@@ -8,6 +8,7 @@
 import { useSetAtom } from "jotai";
 import { useEffect, useMemo } from "react";
 
+import type { CandidateLotItem } from "../api";
 import type { AllocationHandlers } from "../store/allocation-context";
 import {
   activeLineIdAtom,
@@ -16,8 +17,6 @@ import {
   lineStatusesAtom,
 } from "../store/allocation-context";
 import type { LineStatus } from "../types";
-
-import type { CandidateLotItem } from "../api";
 
 export interface AllocationProviderProps {
   children: React.ReactNode;
