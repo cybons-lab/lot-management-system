@@ -11,6 +11,7 @@ import {
   activeLineIdAtom,
   allocationContextDataAtom,
   allocationHandlersAtom,
+  currentLineContextAtom,
   lineStatusesAtom,
   setActiveLineIdAtom,
 } from "../store/allocation-context";
@@ -84,4 +85,20 @@ export function useAllocationContext() {
     setActiveLineId,
     isActive: (lineId: number) => activeLineId === lineId,
   };
+}
+
+/**
+ * Access current line context (customerId, deliveryPlaceId, productId)
+ * Used by ForecastTooltip in AllocationInputSection
+ */
+export function useCurrentLineContext() {
+  return useAtomValue(currentLineContextAtom);
+}
+
+/**
+ * Set current line context
+ * Used by LotAllocationPanel
+ */
+export function useSetCurrentLineContext() {
+  return useSetAtom(currentLineContextAtom);
 }

@@ -98,3 +98,19 @@ export const updateLineStatusAtom = atom(
     }));
   },
 );
+
+// ========== Line Context Atoms (Phase 2) ==========
+
+/**
+ * Current line context for ForecastTooltip
+ * Set by LotAllocationPanel, consumed by AllocationInputSection
+ */
+export const currentLineContextAtom = atom<{
+  customerId: number | null;
+  deliveryPlaceId: number | null;
+  productId: number | null;
+}>({
+  customerId: null,
+  deliveryPlaceId: null,
+  productId: null,
+});
