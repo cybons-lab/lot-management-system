@@ -1,18 +1,18 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 
+import {
+  type Allocation,
+  calculateDbAllocationsTotal,
+  calculateTotalAllocated,
+  checkUnsavedChanges,
+  calculateAutoAllocation,
+} from "./allocationCalculations";
+
 import * as allocationsApi from "@/features/allocations/api";
 import type { CandidateLotItem } from "@/features/allocations/api";
 import * as ordersApi from "@/features/orders/api";
 import type { OrderLine } from "@/shared/types/aliases";
-
-interface Allocation {
-  id?: number;
-  lot_id: number;
-  allocated_quantity?: number | string;
-  quantity?: number;
-  allocation_type?: string;
-}
 
 interface UseOrderLineAllocationProps {
   orderLine: OrderLine | null;
@@ -26,71 +26,34 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Calculate totals
+  const existingAllocations = useMemo(
+    () => (orderLine?.allocations || orderLine?.allocated_lots || []) as Allocation[],
+    [orderLine],
+  );
+
   const hardAllocatedDb = useMemo(() => {
-    const allocations = (orderLine?.allocations || orderLine?.allocated_lots || []) as Allocation[];
-    if (!Array.isArray(allocations)) return 0;
-    return allocations
-      .filter((a) => a.allocation_type === "hard")
-      .reduce((sum, a) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
-  }, [orderLine]);
+    return calculateDbAllocationsTotal(existingAllocations, "hard");
+  }, [existingAllocations]);
 
-  // DBに存在するSOFT引当の合計（Hard確定ボタンの表示制御に使用）
   const softAllocatedDb = useMemo(() => {
-    const allocations = (orderLine?.allocations || orderLine?.allocated_lots || []) as Allocation[];
-    if (!Array.isArray(allocations)) return 0;
-    return allocations
-      .filter((a) => a.allocation_type === "soft")
-      .reduce((sum, a) => sum + Number(a.allocated_quantity || a.quantity || 0), 0);
-  }, [orderLine]);
+    return calculateDbAllocationsTotal(existingAllocations, "soft");
+  }, [existingAllocations]);
 
+  // Local State Calculations
   const totalAllocated = useMemo(() => {
-    return Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
+    return calculateTotalAllocated(lotAllocations);
   }, [lotAllocations]);
 
   const hardAllocated = Math.min(totalAllocated, hardAllocatedDb);
   const softAllocated = Math.max(0, totalAllocated - hardAllocatedDb);
 
-  // 状態判定: DBに引当があるか
+  // Status Checks
   const hasDbAllocations = hardAllocatedDb + softAllocatedDb > 0;
 
-  // 状態判定: 未保存の変更があるか（ローカル編集がDB状態と異なる）
-  // eslint-disable-next-line complexity -- ローカルとDB状態の比較には複数の条件分岐が必要
   const hasUnsavedChanges = useMemo(() => {
-    // ローカルの引当が0件ならDBと異なる可能性をチェック
-    const localTotal = Object.values(lotAllocations).reduce((sum, qty) => sum + qty, 0);
-    const dbTotal = hardAllocatedDb + softAllocatedDb;
+    return checkUnsavedChanges(lotAllocations, existingAllocations);
+  }, [lotAllocations, existingAllocations]);
 
-    // 簡易判定: 合計が異なるか、ローカルに編集があるか
-    if (localTotal !== dbTotal) return true;
-    if (localTotal === 0 && dbTotal === 0) return false;
-
-    // 詳細判定: 各ロットの数量が一致するか
-    const existingAllocations = (orderLine?.allocations ||
-      orderLine?.allocated_lots ||
-      []) as Allocation[];
-    const dbAllocMap = new Map<number, number>();
-    existingAllocations.forEach((a) => {
-      if (a.lot_id) {
-        dbAllocMap.set(a.lot_id, Number(a.allocated_quantity || a.quantity || 0));
-      }
-    });
-
-    // ローカルとDBで各ロットの数量を比較
-    for (const [lotId, qty] of Object.entries(lotAllocations)) {
-      const dbQty = dbAllocMap.get(Number(lotId)) || 0;
-      if (qty !== dbQty) return true;
-    }
-    // DBにあってローカルにないものをチェック
-    for (const [lotId, dbQty] of dbAllocMap.entries()) {
-      const localQty = lotAllocations[lotId] || 0;
-      if (localQty !== dbQty) return true;
-    }
-
-    return false;
-  }, [lotAllocations, hardAllocatedDb, softAllocatedDb, orderLine]);
-
-  // 引当の状態: 'none' | 'soft' | 'hard' | 'mixed'
   const allocationState = useMemo(() => {
     if (hardAllocatedDb === 0 && softAllocatedDb === 0) return "none" as const;
     if (hardAllocatedDb > 0 && softAllocatedDb === 0) return "hard" as const;
@@ -98,7 +61,7 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     return "mixed" as const;
   }, [hardAllocatedDb, softAllocatedDb]);
 
-  // Fetch candidates when orderLine changes
+  // Effects
   useEffect(() => {
     if (!orderLine) {
       setCandidateLots([]);
@@ -115,12 +78,14 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
         });
         setCandidateLots(res.items);
 
-        // Initialize allocations from existing orderLine.allocations or allocated_lots
+        // Initialize allocations
         const initialAllocations: Record<number, number> = {};
-        const existingAllocations = orderLine.allocations || orderLine.allocated_lots || [];
+        const currentAllocations = (orderLine.allocations ||
+          orderLine.allocated_lots ||
+          []) as Allocation[];
 
-        if (Array.isArray(existingAllocations)) {
-          (existingAllocations as Allocation[]).forEach((alloc) => {
+        if (Array.isArray(currentAllocations)) {
+          currentAllocations.forEach((alloc) => {
             if (alloc.lot_id) {
               initialAllocations[alloc.lot_id] = Number(
                 alloc.allocated_quantity || alloc.quantity || 0,
@@ -140,6 +105,7 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     fetchCandidates();
   }, [orderLine]);
 
+  // Actions
   const changeAllocation = useCallback((lotId: number, quantity: number) => {
     setLotAllocations((prev) => ({
       ...prev,
@@ -154,19 +120,7 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
   const autoAllocate = useCallback(() => {
     if (!orderLine || candidateLots.length === 0) return;
 
-    let remaining = Number(orderLine.order_quantity);
-    const newAllocations: Record<number, number> = {};
-
-    for (const lot of candidateLots) {
-      if (remaining <= 0) break;
-
-      const available = Number(lot.available_quantity || 0);
-      const allocQty = Math.min(remaining, available);
-      if (allocQty > 0) {
-        newAllocations[lot.lot_id] = allocQty;
-        remaining -= allocQty;
-      }
-    }
+    const newAllocations = calculateAutoAllocation(Number(orderLine.order_quantity), candidateLots);
     setLotAllocations(newAllocations);
   }, [orderLine, candidateLots]);
 
@@ -264,11 +218,9 @@ export function useOrderLineAllocation({ orderLine, onSuccess }: UseOrderLineAll
     }
   };
 
-  // 全引当をキャンセル
   const cancelAllAllocations = async () => {
     if (!orderLine) return;
 
-    // Get allocation IDs from orderLine
     const allocations = (orderLine.allocations || orderLine.allocated_lots || []) as Allocation[];
     const allocationIds = allocations
       .map((a) => a.id)
