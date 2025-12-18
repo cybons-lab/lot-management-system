@@ -13,6 +13,7 @@ import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/compon
 import { Button, Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { useListPageDialogs } from "@/hooks/ui";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
@@ -159,14 +160,25 @@ export function ProductsListPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "product_code", direction: "asc" });
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
 
-  // Delete & Restore state
-  const [deletingItem, setDeletingItem] = useState<Product | null>(null);
-  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
-  const [restoringItem, setRestoringItem] = useState<Product | null>(null);
+  // Dialog management with shared hook
+  const {
+    isCreateOpen,
+    isImportOpen,
+    isSoftDeleteOpen,
+    isPermanentDeleteOpen,
+    isRestoreOpen,
+    deletingItem,
+    restoringItem,
+    openCreate,
+    openImport,
+    openSoftDelete,
+    openPermanentDelete,
+    openRestore,
+    close,
+    switchToPermanentDelete,
+  } = useListPageDialogs<Product>();
 
   const { useList, useCreate, useSoftDelete, usePermanentDelete, useRestore } = useProducts();
   const { data: products = [], isLoading, isError, error, refetch } = useList(showInactive);
@@ -174,9 +186,6 @@ export function ProductsListPage() {
   const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDelete();
   const { mutate: permanentDelete, isPending: isPermanentDeleting } = usePermanentDelete();
   const { mutate: restore, isPending: isRestoring } = useRestore();
-
-  // エラー時は簡易表示
-  // Note: hooksの呼び出し順序を維持するため、条件分岐は後で行う
 
   const filteredProducts = useMemo(() => {
     if (!searchQuery.trim()) return products;
@@ -208,56 +217,40 @@ export function ProductsListPage() {
     [navigate],
   );
 
-  const handleDeleteClick = (row: Product) => {
-    setDeletingItem(row);
-    setDeleteMode("soft");
-  };
-
-  const handlePermanentClick = (row: Product) => {
-    setDeletingItem(row);
-    setDeleteMode("permanent");
-  };
-
   const columns = useMemo(
     () =>
       createColumns(
-        (row) => setRestoringItem(row),
-        (row) => handlePermanentClick(row),
+        (row) => openRestore(row),
+        (row) => openPermanentDelete(row),
         (row) => navigate(`/products/${row.product_code}`),
-        (row) => handleDeleteClick(row),
+        (row) => openSoftDelete(row),
       ),
-    [navigate],
+    [navigate, openRestore, openPermanentDelete, openSoftDelete],
   );
 
   const handleCreate = useCallback(
     (data: ProductFormOutput) => {
-      createProduct(data, { onSuccess: () => setIsCreateDialogOpen(false) });
+      createProduct(data, { onSuccess: close });
     },
-    [createProduct],
+    [createProduct, close],
   );
 
   const handleSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
     softDelete(
       { id: deletingItem.product_code, endDate: endDate || undefined },
-      {
-        onSuccess: () => setDeletingItem(null),
-      },
+      { onSuccess: close },
     );
   };
 
   const handlePermanentDelete = () => {
     if (!deletingItem) return;
-    permanentDelete(deletingItem.product_code, {
-      onSuccess: () => setDeletingItem(null),
-    });
+    permanentDelete(deletingItem.product_code, { onSuccess: close });
   };
 
   const handleRestore = () => {
     if (!restoringItem) return;
-    restore(restoringItem.product_code, {
-      onSuccess: () => setRestoringItem(null),
-    });
+    restore(restoringItem.product_code, { onSuccess: close });
   };
 
   if (isError) {
@@ -281,8 +274,8 @@ export function ProductsListPage() {
           <MasterPageActions
             exportApiPath="/masters/products/export/download"
             exportFilePrefix="products"
-            onImportClick={() => setIsImportDialogOpen(true)}
-            onCreateClick={() => setIsCreateDialogOpen(true)}
+            onImportClick={openImport}
+            onCreateClick={openCreate}
           />
         }
       />
@@ -334,39 +327,30 @@ export function ProductsListPage() {
         />
       </div>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog open={isCreateOpen} onOpenChange={(open) => !open && close()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>商品新規登録</DialogTitle>
           </DialogHeader>
-          <ProductForm
-            onSubmit={handleCreate}
-            onCancel={() => setIsCreateDialogOpen(false)}
-            isSubmitting={isCreating}
-          />
+          <ProductForm onSubmit={handleCreate} onCancel={close} isSubmitting={isCreating} />
         </DialogContent>
       </Dialog>
 
-      <ProductBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+      <ProductBulkImportDialog open={isImportOpen} onOpenChange={(open) => !open && close()} />
 
       <SoftDeleteDialog
-        open={!!deletingItem && deleteMode === "soft"}
-        onOpenChange={(open) => !open && setDeletingItem(null)}
+        open={isSoftDeleteOpen}
+        onOpenChange={(open) => !open && close()}
         title="商品を無効化しますか？"
         description={`${deletingItem?.product_name}（${deletingItem?.product_code}）を無効化します。`}
         onConfirm={handleSoftDelete}
         isPending={isSoftDeleting}
-        onSwitchToPermanent={() => setDeleteMode("permanent")}
+        onSwitchToPermanent={switchToPermanentDelete}
       />
 
       <PermanentDeleteDialog
-        open={!!deletingItem && deleteMode === "permanent"}
-        onOpenChange={(open: boolean) => {
-          if (!open) {
-            setDeletingItem(null);
-            setDeleteMode("soft");
-          }
-        }}
+        open={isPermanentDeleteOpen}
+        onOpenChange={(open) => !open && close()}
         onConfirm={handlePermanentDelete}
         isPending={isPermanentDeleting}
         title="商品を完全に削除しますか？"
@@ -375,8 +359,8 @@ export function ProductsListPage() {
       />
 
       <RestoreDialog
-        open={!!restoringItem}
-        onOpenChange={(open) => !open && setRestoringItem(null)}
+        open={isRestoreOpen}
+        onOpenChange={(open) => !open && close()}
         onConfirm={handleRestore}
         isPending={isRestoring}
         title="商品を復元しますか？"

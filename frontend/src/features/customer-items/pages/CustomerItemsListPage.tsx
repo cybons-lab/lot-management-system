@@ -1,6 +1,7 @@
 /**
  * CustomerItemsListPage - Refactored
  * 得意先品番マッピング一覧ページ
+ * useListPageDialogsを使用してダイアログ状態を管理
  */
 import { Package, Plus, Upload } from "lucide-react";
 import { useState } from "react";
@@ -18,6 +19,7 @@ import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/compon
 import { Button, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { useListPageDialogs } from "@/hooks/ui";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
 export function CustomerItemsListPage() {
@@ -45,13 +47,23 @@ export function CustomerItemsListPage() {
     isRestoring,
   } = useCustomerItemsPage();
 
+  // 詳細ダイアログ用（独自管理）
   const [selectedItem, setSelectedItem] = useState<CustomerItem | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
-  // Delete/Restore state
-  const [deletingItem, setDeletingItem] = useState<CustomerItem | null>(null);
-  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
-  const [restoringItem, setRestoringItem] = useState<CustomerItem | null>(null);
+  // 削除/復元ダイアログ用
+  const {
+    isSoftDeleteOpen,
+    isPermanentDeleteOpen,
+    isRestoreOpen,
+    deletingItem,
+    restoringItem,
+    openSoftDelete,
+    openPermanentDelete,
+    openRestore,
+    close: closeDeleteDialog,
+    switchToPermanentDelete,
+  } = useListPageDialogs<CustomerItem>();
 
   const handleRowClick = (item: CustomerItem) => {
     setSelectedItem(item);
@@ -65,19 +77,19 @@ export function CustomerItemsListPage() {
       deletingItem.external_product_code,
       endDate || undefined,
     );
-    setDeletingItem(null);
+    closeDeleteDialog();
   };
 
   const executePermanentDelete = () => {
     if (!deletingItem) return;
     handlePermanentDelete(deletingItem.customer_id, deletingItem.external_product_code);
-    setDeletingItem(null);
+    closeDeleteDialog();
   };
 
   const executeRestore = () => {
     if (!restoringItem) return;
     handleRestore(restoringItem.customer_id, restoringItem.external_product_code);
-    setRestoringItem(null);
+    closeDeleteDialog();
   };
 
   return (
@@ -137,15 +149,9 @@ export function CustomerItemsListPage() {
       <CustomerItemsTable
         items={filteredItems}
         isLoading={isLoading}
-        onSoftDelete={(item) => {
-          setDeletingItem(item);
-          setDeleteMode("soft");
-        }}
-        onPermanentDelete={(item) => {
-          setDeletingItem(item);
-          setDeleteMode("permanent");
-        }}
-        onRestore={setRestoringItem}
+        onSoftDelete={openSoftDelete}
+        onPermanentDelete={openPermanentDelete}
+        onRestore={openRestore}
         onRowClick={handleRowClick}
       />
 
@@ -178,23 +184,18 @@ export function CustomerItemsListPage() {
 
       {/* Delete/Restore Dialogs */}
       <SoftDeleteDialog
-        open={!!deletingItem && deleteMode === "soft"}
-        onOpenChange={(open) => !open && setDeletingItem(null)}
+        open={isSoftDeleteOpen}
+        onOpenChange={(open) => !open && closeDeleteDialog()}
         title="マッピングを無効化しますか？"
         description={`${deletingItem?.customer_name} - ${deletingItem?.product_name} の設定を無効化します。`}
         onConfirm={executeSoftDelete}
         isPending={isSoftDeleting}
-        onSwitchToPermanent={() => setDeleteMode("permanent")}
+        onSwitchToPermanent={switchToPermanentDelete}
       />
 
       <PermanentDeleteDialog
-        open={!!deletingItem && deleteMode === "permanent"}
-        onOpenChange={(open: boolean) => {
-          if (!open) {
-            setDeletingItem(null);
-            setDeleteMode("soft");
-          }
-        }}
+        open={isPermanentDeleteOpen}
+        onOpenChange={(open) => !open && closeDeleteDialog()}
         onConfirm={executePermanentDelete}
         isPending={isPermanentDeleting}
         title="マッピングを完全に削除しますか？"
@@ -203,8 +204,8 @@ export function CustomerItemsListPage() {
       />
 
       <RestoreDialog
-        open={!!restoringItem}
-        onOpenChange={(open) => !open && setRestoringItem(null)}
+        open={isRestoreOpen}
+        onOpenChange={(open) => !open && closeDeleteDialog()}
         onConfirm={executeRestore}
         isPending={isRestoring}
         title="設定を復元しますか？"

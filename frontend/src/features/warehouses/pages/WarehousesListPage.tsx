@@ -13,6 +13,7 @@ import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/compon
 import { Button, Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { useListPageDialogs } from "@/hooks/ui";
 import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
@@ -155,14 +156,25 @@ export function WarehousesListPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<SortConfig>({ column: "warehouse_code", direction: "asc" });
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [showInactive, setShowInactive] = useState(false);
 
-  // Delete & Restore state
-  const [deletingItem, setDeletingItem] = useState<Warehouse | null>(null);
-  const [deleteMode, setDeleteMode] = useState<"soft" | "permanent">("soft");
-  const [restoringItem, setRestoringItem] = useState<Warehouse | null>(null);
+  // Dialog management with shared hook
+  const {
+    isCreateOpen,
+    isImportOpen,
+    isSoftDeleteOpen,
+    isPermanentDeleteOpen,
+    isRestoreOpen,
+    deletingItem,
+    restoringItem,
+    openCreate,
+    openImport,
+    openSoftDelete,
+    openPermanentDelete,
+    openRestore,
+    close,
+    switchToPermanentDelete,
+  } = useListPageDialogs<Warehouse>();
 
   const { useList, useCreate, useSoftDelete, usePermanentDelete, useRestore } = useWarehouses();
   const { data: warehouses = [], isLoading, isError, error, refetch } = useList(showInactive);
@@ -200,56 +212,40 @@ export function WarehousesListPage() {
     [navigate],
   );
 
-  const handleDeleteClick = (row: Warehouse) => {
-    setDeletingItem(row);
-    setDeleteMode("soft");
-  };
-
-  const handlePermanentClick = (row: Warehouse) => {
-    setDeletingItem(row);
-    setDeleteMode("permanent");
-  };
-
   const columns = useMemo(
     () =>
       createColumns(
-        (row) => setRestoringItem(row),
-        (row) => handlePermanentClick(row),
+        (row) => openRestore(row),
+        (row) => openPermanentDelete(row),
         (row) => navigate(`/warehouses/${row.warehouse_code}`),
-        (row) => handleDeleteClick(row),
+        (row) => openSoftDelete(row),
       ),
-    [navigate],
+    [navigate, openRestore, openPermanentDelete, openSoftDelete],
   );
 
   const handleCreate = useCallback(
     (data: WarehouseCreate) => {
-      createWarehouse(data, { onSuccess: () => setIsCreateDialogOpen(false) });
+      createWarehouse(data, { onSuccess: close });
     },
-    [createWarehouse],
+    [createWarehouse, close],
   );
 
   const handleSoftDelete = (endDate: string | null) => {
     if (!deletingItem) return;
     softDelete(
       { id: deletingItem.warehouse_code, endDate: endDate || undefined },
-      {
-        onSuccess: () => setDeletingItem(null),
-      },
+      { onSuccess: close },
     );
   };
 
   const handlePermanentDelete = () => {
     if (!deletingItem) return;
-    permanentDelete(deletingItem.warehouse_code, {
-      onSuccess: () => setDeletingItem(null),
-    });
+    permanentDelete(deletingItem.warehouse_code, { onSuccess: close });
   };
 
   const handleRestore = () => {
     if (!restoringItem) return;
-    restore(restoringItem.warehouse_code, {
-      onSuccess: () => setRestoringItem(null),
-    });
+    restore(restoringItem.warehouse_code, { onSuccess: close });
   };
 
   if (isError) {
@@ -273,8 +269,8 @@ export function WarehousesListPage() {
           <MasterPageActions
             exportApiPath="/masters/warehouses/export/download"
             exportFilePrefix="warehouses"
-            onImportClick={() => setIsImportDialogOpen(true)}
-            onCreateClick={() => setIsCreateDialogOpen(true)}
+            onImportClick={openImport}
+            onCreateClick={openCreate}
           />
         }
       />
@@ -326,39 +322,30 @@ export function WarehousesListPage() {
         />
       </div>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog open={isCreateOpen} onOpenChange={(open) => !open && close()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>倉庫新規登録</DialogTitle>
           </DialogHeader>
-          <WarehouseForm
-            onSubmit={handleCreate}
-            onCancel={() => setIsCreateDialogOpen(false)}
-            isSubmitting={isCreating}
-          />
+          <WarehouseForm onSubmit={handleCreate} onCancel={close} isSubmitting={isCreating} />
         </DialogContent>
       </Dialog>
 
-      <WarehouseBulkImportDialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen} />
+      <WarehouseBulkImportDialog open={isImportOpen} onOpenChange={(open) => !open && close()} />
 
       <SoftDeleteDialog
-        open={!!deletingItem && deleteMode === "soft"}
-        onOpenChange={(open) => !open && setDeletingItem(null)}
+        open={isSoftDeleteOpen}
+        onOpenChange={(open) => !open && close()}
         title="倉庫を無効化しますか？"
         description={`${deletingItem?.warehouse_name}（${deletingItem?.warehouse_code}）を無効化します。`}
         onConfirm={handleSoftDelete}
         isPending={isSoftDeleting}
-        onSwitchToPermanent={() => setDeleteMode("permanent")}
+        onSwitchToPermanent={switchToPermanentDelete}
       />
 
       <PermanentDeleteDialog
-        open={!!deletingItem && deleteMode === "permanent"}
-        onOpenChange={(open: boolean) => {
-          if (!open) {
-            setDeletingItem(null);
-            setDeleteMode("soft");
-          }
-        }}
+        open={isPermanentDeleteOpen}
+        onOpenChange={(open) => !open && close()}
         onConfirm={handlePermanentDelete}
         isPending={isPermanentDeleting}
         title="倉庫を完全に削除しますか？"
@@ -367,8 +354,8 @@ export function WarehousesListPage() {
       />
 
       <RestoreDialog
-        open={!!restoringItem}
-        onOpenChange={(open) => !open && setRestoringItem(null)}
+        open={isRestoreOpen}
+        onOpenChange={(open) => !open && close()}
         onConfirm={handleRestore}
         isPending={isRestoring}
         title="倉庫を復元しますか？"
