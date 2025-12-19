@@ -17,6 +17,7 @@ import {
   batchUpdateItems,
   type MaterialDeliveryNoteExecuteRequest,
   type Step2ExecuteRequest,
+  type RpaRun,
 } from "../api";
 
 const QUERY_KEY = "material-delivery-note-runs";
@@ -78,11 +79,33 @@ export function useUpdateItem(runId: number) {
         delivery_quantity?: number;
       };
     }) => updateItem(runId, itemId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
+    onMutate: async ({ itemId, data }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: [QUERY_KEY, runId] });
+
+      // Snapshot the previous value
+      const previousRun = queryClient.getQueryData<RpaRun>([QUERY_KEY, runId]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData<RpaRun>([QUERY_KEY, runId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          items: old.items.map((item) => (item.id === itemId ? { ...item, ...data } : item)),
+        };
+      });
+
+      // Return a context object with the snapshotted value
+      return { previousRun };
     },
-    onError: (error: Error) => {
+    onError: (error: Error, _variables, context) => {
+      if (context?.previousRun) {
+        queryClient.setQueryData([QUERY_KEY, runId], context.previousRun);
+      }
       toast.error(`更新に失敗しました: ${error.message}`);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
     },
   });
 }
@@ -171,3 +194,6 @@ export function useExecuteMaterialDeliveryNote() {
     },
   });
 }
+
+export * from "./useCloudFlow";
+export * from "./useLayerCodes";

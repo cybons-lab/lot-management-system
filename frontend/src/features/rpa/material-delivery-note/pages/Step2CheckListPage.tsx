@@ -26,12 +26,25 @@ import { ROUTES } from "@/constants/routes";
 import { PageContainer } from "@/shared/components/layout/PageContainer";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
+// ステータス表示用のマッピング
+const STATUS_LABELS: Record<
+  string,
+  { label: string; variant: "secondary" | "default" | "destructive" }
+> = {
+  downloaded: { label: "ダウンロード完了", variant: "secondary" },
+  draft: { label: "ダウンロード完了", variant: "secondary" }, // Legacy
+  ready_for_step2: { label: "確認完了", variant: "default" },
+};
+
 export function Step2CheckListPage() {
   const { data, isLoading, error } = useRuns(0, 100);
 
   const checkRuns = useMemo(() => {
     if (!data?.runs) return [];
-    return data.runs.filter((run) => run.status === "draft" || run.status === "ready_for_step2");
+    return data.runs.filter(
+      (run) =>
+        run.status === "downloaded" || run.status === "draft" || run.status === "ready_for_step2",
+    );
   }, [data]);
 
   if (isLoading) {
@@ -64,13 +77,16 @@ export function Step2CheckListPage() {
         <div className="rounded-md border bg-white shadow-sm">
           <div className="border-b bg-gray-50 p-4">
             <h3 className="font-medium text-gray-900">Step2 確認待ち一覧</h3>
-            <p className="text-sm text-gray-500">CSV取込済みで、確認・編集が必要なデータです。</p>
+            <p className="text-sm text-gray-500">
+              ダウンロード済みで、確認・編集が必要なデータです。
+            </p>
           </div>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>ステータス</TableHead>
+                <TableHead>取得期間</TableHead>
                 <TableHead>取込日時</TableHead>
                 <TableHead>実行ユーザー</TableHead>
                 <TableHead>進捗</TableHead>
@@ -80,40 +96,53 @@ export function Step2CheckListPage() {
             <TableBody>
               {checkRuns.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-gray-500">
+                  <TableCell colSpan={7} className="py-8 text-center text-gray-500">
                     確認待ちのデータはありません。
                     <br />
-                    Step1でCSVを取り込んでください。
+                    Step1で進度実績をダウンロードしてください。
                   </TableCell>
                 </TableRow>
               ) : (
-                checkRuns.map((run) => (
-                  <TableRow key={run.id}>
-                    <TableCell>{run.id}</TableCell>
-                    <TableCell>
-                      <Badge variant={run.status === "draft" ? "secondary" : "default"}>
-                        {run.status === "draft" ? "下書き" : "確認完了"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(run.created_at), "yyyy/MM/dd HH:mm", {
-                        locale: ja,
-                      })}
-                    </TableCell>
-                    <TableCell>{run.started_by_username || "-"}</TableCell>
-                    <TableCell>
-                      {run.complete_count} / {run.item_count} 件
-                      {run.all_items_complete && <span className="ml-2 text-green-600">✓</span>}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id)}>
-                        <Button size="sm" className="gap-2">
-                          データ確認・編集 <ArrowRight className="h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))
+                checkRuns.map((run) => {
+                  const statusInfo = STATUS_LABELS[run.status] || {
+                    label: run.status,
+                    variant: "secondary" as const,
+                  };
+                  return (
+                    <TableRow key={run.id}>
+                      <TableCell>{run.id}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {run.data_start_date && run.data_end_date ? (
+                          <span className="text-sm">
+                            {run.data_start_date} 〜 {run.data_end_date}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(run.created_at), "yyyy/MM/dd HH:mm", {
+                          locale: ja,
+                        })}
+                      </TableCell>
+                      <TableCell>{run.started_by_username || "-"}</TableCell>
+                      <TableCell>
+                        {run.complete_count} / {run.item_count} 件
+                        {run.all_items_complete && <span className="ml-2 text-green-600">✓</span>}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id)}>
+                          <Button size="sm" className="gap-2">
+                            データ確認・編集 <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

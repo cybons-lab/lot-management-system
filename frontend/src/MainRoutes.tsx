@@ -42,6 +42,8 @@ import { ProductsListPage, ProductDetailPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
 import {
+  CsvImportPage,
+  LayerCodeMappingsPage,
   MaterialDeliveryNotePage,
   CloudFlowExecutePage,
   RunDetailPage,
@@ -246,6 +248,10 @@ export function MainRoutes() {
 
       {/* RPA */}
       <Route path={ROUTES.RPA.ROOT} element={<RPAPage />} />
+      <Route
+        path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES}
+        element={<LayerCodeMappingsPage />}
+      />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT} element={<MaterialDeliveryNotePage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1} element={<Step1Page />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2} element={<Step2CheckListPage />} />
@@ -256,6 +262,7 @@ export function MainRoutes() {
         element={<CloudFlowExecutePage />}
       />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS} element={<RunsListPage />} />
+      <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CSV_IMPORT} element={<CsvImportPage />} />
       <Route path="/rpa/material-delivery-note/runs/:runId" element={<RunDetailPage />} />
 
       {/* Catch all - redirect to dashboard */}

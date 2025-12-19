@@ -4,7 +4,7 @@ import { Check, CheckCircle2, ChevronLeft, Play, X, Filter } from "lucide-react"
 import { useState, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { useCompleteAllItems, useRun, useUpdateItem, useBatchUpdateItems } from "../hooks";
+import { useRun, useUpdateItem, useBatchUpdateItems } from "../hooks";
 
 import { Button } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
@@ -41,20 +41,37 @@ export function RunDetailPage() {
   const { data: run, isLoading, error } = useRun(id);
   const updateItemMutation = useUpdateItem(id);
   const batchUpdateMutation = useBatchUpdateItems(id);
-  const completeAllMutation = useCompleteAllItems(id);
 
   // Filter Logic
   const filteredItems = useMemo(() => {
     if (!run?.items) return [];
-    if (layerFilter === "all") return run.items;
-    return run.items.filter((item) => item.layer_code === layerFilter);
+
+    let items = run.items;
+    if (layerFilter !== "all") {
+      items = items.filter((item) => item.layer_code === layerFilter);
+    }
+
+    // Sort by row_no securely
+    return [...items].sort((a, b) => a.row_no - b.row_no);
   }, [run?.items, layerFilter]);
 
-  // Unique Layer Codes
+  // Unique Layer Options
   const layerOptions = useMemo(() => {
     if (!run?.items) return [];
-    const codes = new Set(run.items.map((item) => item.layer_code).filter(Boolean));
-    return Array.from(codes).sort();
+    const uniqueCodes = Array.from(
+      new Set(run.items.map((item) => item.layer_code).filter(Boolean)),
+    );
+
+    return uniqueCodes.sort().map((code) => {
+      const item = run.items.find((i) => i.layer_code === code);
+      const makerName = item?.maker_name;
+      const label = makerName ? `${makerName} (${code})` : (code as string);
+
+      return {
+        value: code as string,
+        label,
+      };
+    });
   }, [run?.items]);
 
   if (isLoading) return <div>Loading...</div>;
@@ -85,29 +102,19 @@ export function RunDetailPage() {
     });
   };
 
-  const handleBatchComplete = () => {
-    const targetIds = filteredItems.filter((item) => !item.complete_flag).map((item) => item.id);
+  const handleBatchIssueToggle = () => {
+    const allSelected = filteredItems.every((item) => item.issue_flag);
+    const targetIds = filteredItems.map((item) => item.id);
 
-    if (targetIds.length === 0) {
-      alert("完了対象のデータがありません（全て完了済みです）");
-      return;
-    }
+    if (targetIds.length === 0) return;
 
-    const message =
-      layerFilter === "all"
-        ? "全ての明細を完了にしますか？"
-        : `表示中の${filteredItems.length}件（未完了${targetIds.length}件）を完了にしますか？`;
+    // Toggle: If all selected, uncheck all. Otherwise, check all.
+    const newValue = !allSelected;
 
-    if (confirm(message)) {
-      if (layerFilter === "all") {
-        completeAllMutation.mutate();
-      } else {
-        batchUpdateMutation.mutate({
-          itemIds: targetIds,
-          data: { complete_flag: true },
-        });
-      }
-    }
+    batchUpdateMutation.mutate({
+      itemIds: targetIds,
+      data: { issue_flag: newValue },
+    });
   };
 
   const handleGoToStep3 = () => {
@@ -115,6 +122,8 @@ export function RunDetailPage() {
   };
 
   const isEditable = run.status === "draft" || run.status === "ready_for_step2";
+  const isAllIssuesChecked =
+    filteredItems.length > 0 && filteredItems.every((item) => item.issue_flag);
 
   return (
     <PageContainer>
@@ -133,20 +142,6 @@ export function RunDetailPage() {
         subtitle={`取込日時: ${format(new Date(run.created_at), "yyyy/MM/dd HH:mm")}`}
         actions={
           <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              onClick={handleBatchComplete}
-              disabled={
-                run.all_items_complete ||
-                completeAllMutation.isPending ||
-                batchUpdateMutation.isPending ||
-                !isEditable
-              }
-            >
-              <CheckCircle2 className="mr-2 h-4 w-4" />
-              {layerFilter === "all" ? "全チェック完了" : "表示中を一括完了"}
-            </Button>
-
             <Button
               onClick={handleGoToStep3}
               disabled={!run.all_items_complete || run.status !== "ready_for_step2"}
@@ -192,25 +187,48 @@ export function RunDetailPage() {
         )}
       </div>
 
-      {/* フィルタエリア */}
-      <div className="mb-4 flex items-center gap-2">
-        <Filter className="h-4 w-4 text-gray-500" />
-        <Select value={layerFilter} onValueChange={setLayerFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="層別フィルタ" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">全て表示</SelectItem>
-            {layerOptions.map((code) => (
-              <SelectItem key={code} value={code as string}>
-                {code}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {layerFilter !== "all" && (
-          <div className="ml-2 text-sm text-gray-500">{filteredItems.length} 件表示中</div>
-        )}
+      {/* フィルタと操作エリア */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-gray-500" />
+          <Select value={layerFilter} onValueChange={setLayerFilter}>
+            <SelectTrigger className="w-[250px]">
+              <SelectValue placeholder="メーカー・層別フィルタ" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全て表示</SelectItem>
+              {layerOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleBatchIssueToggle}
+            disabled={!isEditable || filteredItems.length === 0 || batchUpdateMutation.isPending}
+            className="ml-2"
+          >
+            {isAllIssuesChecked ? (
+              <>
+                <X className="mr-2 h-4 w-4" />
+                表示中の発行チェックを外す
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="mr-2 h-4 w-4" />
+                表示中に発行チェックを付与
+              </>
+            )}
+          </Button>
+
+          {layerFilter !== "all" && (
+            <div className="ml-2 text-sm text-gray-500">{filteredItems.length} 件表示中</div>
+          )}
+        </div>
       </div>
 
       <div className="rounded-md border bg-white shadow-sm">
@@ -221,15 +239,17 @@ export function RunDetailPage() {
               <TableHead>ステータス</TableHead>
               <TableHead>出荷先</TableHead>
               <TableHead>層別</TableHead>
+              <TableHead>メーカー名</TableHead>
               <TableHead>材質コード</TableHead>
               <TableHead>納期</TableHead>
               <TableHead className="w-[100px]">納入量</TableHead>
               <TableHead>出荷便</TableHead>
               <TableHead className="text-center">発行</TableHead>
-              <TableHead className="text-center">完了</TableHead>
+              <TableHead className="text-center">発行完了</TableHead>
               <TableHead className="text-center">突合</TableHead>
               <TableHead className="text-center">SAP</TableHead>
               <TableHead>受発注No</TableHead>
+              <TableHead>結果</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -238,9 +258,8 @@ export function RunDetailPage() {
                 <TableCell>{item.row_no}</TableCell>
                 <TableCell className="text-xs">{item.status}</TableCell>
                 <TableCell>{item.destination}</TableCell>
-                <TableCell>
-                  <Badge variant="outline">{item.layer_code}</Badge>
-                </TableCell>
+                <TableCell>{item.layer_code}</TableCell>
+                <TableCell className="text-sm">{item.maker_name}</TableCell>
                 <TableCell>{item.material_code}</TableCell>
                 <TableCell>
                   {item.delivery_date ? format(new Date(item.delivery_date), "MM/dd") : ""}
@@ -266,14 +285,14 @@ export function RunDetailPage() {
                   <Checkbox
                     checked={item.issue_flag}
                     onCheckedChange={() => handleToggleIssue(item.id, item.issue_flag)}
-                    disabled={updateItemMutation.isPending || !isEditable}
+                    disabled={!isEditable}
                   />
                 </TableCell>
                 <TableCell className="text-center">
                   <Checkbox
                     checked={item.complete_flag}
                     onCheckedChange={() => handleToggleComplete(item.id, item.complete_flag)}
-                    disabled={updateItemMutation.isPending || !isEditable}
+                    disabled={!isEditable}
                   />
                 </TableCell>
                 <TableCell className="text-center">
@@ -288,6 +307,16 @@ export function RunDetailPage() {
                   {item.sap_registered === false && <X className="mx-auto h-4 w-4 text-red-400" />}
                 </TableCell>
                 <TableCell className="text-xs text-gray-500">{item.order_no}</TableCell>
+                <TableCell>
+                  {item.result_status === "success" && (
+                    <Badge className="bg-green-600 hover:bg-green-700">成功</Badge>
+                  )}
+                  {item.result_status === "failure" && (
+                    <Badge className="bg-orange-500 hover:bg-orange-600">失敗</Badge>
+                  )}
+                  {item.result_status === "error" && <Badge variant="destructive">エラー</Badge>}
+                  {item.result_status === "pending" && <Badge variant="secondary">待機</Badge>}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

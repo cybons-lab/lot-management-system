@@ -18,11 +18,14 @@ if TYPE_CHECKING:
 class RpaRunStatus:
     """RPA Run status constants."""
 
-    DRAFT = "draft"
-    READY_FOR_STEP2 = "ready_for_step2"
+    DOWNLOADED = "downloaded"  # ダウンロード完了（確認前）
+    READY_FOR_STEP2 = "ready_for_step2"  # 確認完了
     STEP2_RUNNING = "step2_running"
     DONE = "done"
     CANCELLED = "cancelled"
+
+    # Legacy alias for backward compatibility
+    DRAFT = "downloaded"
 
 
 class RpaRun(Base):
@@ -38,7 +41,12 @@ class RpaRun(Base):
     rpa_type: Mapped[str] = mapped_column(
         String(50), server_default="material_delivery_note", nullable=False
     )
-    status: Mapped[str] = mapped_column(String(30), server_default="draft", nullable=False)
+    status: Mapped[str] = mapped_column(String(30), server_default="downloaded", nullable=False)
+
+    # 取得データの期間
+    data_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    data_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     started_by_user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
@@ -62,7 +70,10 @@ class RpaRun(Base):
 
     # Relationships
     items: Mapped[list[RpaRunItem]] = relationship(
-        "RpaRunItem", back_populates="run", cascade="all, delete-orphan"
+        "RpaRunItem",
+        back_populates="run",
+        cascade="all, delete-orphan",
+        order_by="RpaRunItem.row_no",
     )
     started_by_user: Mapped[User | None] = relationship("User", foreign_keys=[started_by_user_id])
     step2_executed_by_user: Mapped[User | None] = relationship(
@@ -112,14 +123,17 @@ class RpaRunItem(Base):
 
     # Flags
     issue_flag: Mapped[bool] = mapped_column(
-        Boolean, server_default=text("true"), nullable=False
-    )  # 発行
+        Boolean, server_default=text("false"), nullable=False
+    )  # 発行フラグ
     complete_flag: Mapped[bool] = mapped_column(
         Boolean, server_default=text("false"), nullable=False
-    )  # 完了
+    )  # 発行完了フラグ
     match_result: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # 突合結果
     sap_registered: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # SAP登録
     order_no: Mapped[str | None] = mapped_column(String(100), nullable=True)  # 受発注No
+
+    # 結果ステータス (pending/success/failure/error)
+    result_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False

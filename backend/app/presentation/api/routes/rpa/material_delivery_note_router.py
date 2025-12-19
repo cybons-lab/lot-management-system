@@ -14,6 +14,7 @@ from app.application.services.rpa import (
     call_power_automate_flow,
     get_lock_manager,
 )
+from app.infrastructure.persistence.models import LayerCodeMapping
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import (
@@ -38,8 +39,26 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/rpa/material-delivery-note", tags=["rpa-material-delivery-note"])
 
 
-def _build_run_response(run) -> RpaRunResponse:
+def _get_maker_map(db: Session, layer_codes: list[str]) -> dict[str, str]:
+    """層別コードに対応するメーカー名のマップを取得."""
+    if not layer_codes:
+        return {}
+    mappings = (
+        db.query(LayerCodeMapping).filter(LayerCodeMapping.layer_code.in_(set(layer_codes))).all()
+    )
+    return {m.layer_code: m.maker_name for m in mappings}
+
+
+def _build_run_response(run, maker_map: dict[str, str] = None) -> RpaRunResponse:
     """RpaRunからレスポンスを構築."""
+    maker_map = maker_map or {}
+    items = []
+    for item in run.items:
+        resp_item = RpaRunItemResponse.model_validate(item)
+        resp_item.maker_name = maker_map.get(item.layer_code)
+        resp_item.result_status = item.result_status
+        items.append(resp_item)
+
     return RpaRunResponse(
         id=run.id,
         rpa_type=run.rpa_type,
@@ -57,7 +76,7 @@ def _build_run_response(run) -> RpaRunResponse:
         item_count=run.item_count,
         complete_count=run.complete_count,
         all_items_complete=run.all_items_complete,
-        items=[RpaRunItemResponse.model_validate(item) for item in run.items],
+        items=items,
     )
 
 
@@ -67,6 +86,8 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
         id=run.id,
         rpa_type=run.rpa_type,
         status=run.status,
+        data_start_date=run.data_start_date,
+        data_end_date=run.data_end_date,
         started_at=run.started_at,
         started_by_username=run.started_by_user.username if run.started_by_user else None,
         step2_executed_at=run.step2_executed_at,
@@ -153,7 +174,10 @@ def get_run(
             detail=f"Run not found: {run_id}",
         )
 
-    return _build_run_response(run)
+    layer_codes = [item.layer_code for item in run.items if item.layer_code]
+    maker_map = _get_maker_map(db, layer_codes)
+
+    return _build_run_response(run, maker_map)
 
 
 @router.patch(
@@ -182,7 +206,12 @@ def update_item(
             detail=f"Item not found: run_id={run_id}, item_id={item_id}",
         )
 
-    return RpaRunItemResponse.model_validate(item)
+    resp_item = RpaRunItemResponse.model_validate(item)
+    if item.layer_code:
+        maker_map = _get_maker_map(db, [item.layer_code])
+        resp_item.maker_name = maker_map.get(item.layer_code)
+
+    return resp_item
 
 
 @router.post(
@@ -210,7 +239,10 @@ def batch_update_items(
             detail=f"Run not found: {run_id}",
         )
 
-    return _build_run_response(run)
+    layer_codes = [item.layer_code for item in run.items if item.layer_code]
+    maker_map = _get_maker_map(db, layer_codes)
+
+    return _build_run_response(run, maker_map)
 
 
 @router.post(
@@ -231,7 +263,10 @@ def complete_all_items(
             detail=f"Run not found: {run_id}",
         )
 
-    return _build_run_response(run)
+    layer_codes = [item.layer_code for item in run.items if item.layer_code]
+    maker_map = _get_maker_map(db, layer_codes)
+
+    return _build_run_response(run, maker_map)
 
 
 @router.post(

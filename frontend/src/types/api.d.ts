@@ -318,6 +318,51 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v2/forecast/suggestions/regenerate-group": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Regenerate Suggestions For Group
+     * @description フォーキャストグループ単位で計画引当（Suggestions）を再生成.
+     *
+     *     「計画引当を更新」ボタンの個別グループ版。
+     *     既存のSuggestionsを削除し、FEFOで再計算する。
+     */
+    post: operations["regenerate_suggestions_for_group_api_v2_forecast_suggestions_regenerate_group_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/suggestions/clear-group": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Clear Suggestions For Group
+     * @description フォーキャストグループ単位で計画引当（Suggestions）を削除.
+     *
+     *     「計画引当クリア」ボタン用。既存のSuggestionsを削除する。
+     */
+    delete: operations["clear_suggestions_for_group_api_v2_forecast_suggestions_clear_group_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v2/forecast/suggestions/group-summary": {
     parameters: {
       query?: never;
@@ -4681,6 +4726,129 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/cloud-flow/jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Job History
+     * @description ジョブ履歴を取得.
+     */
+    get: operations["get_job_history_api_rpa_cloud_flow_jobs_get"];
+    put?: never;
+    /**
+     * Create Job
+     * @description ジョブを作成（キューに追加）.
+     *
+     *     ゲストユーザーは実行不可。
+     *     他ユーザーが実行中の場合は待機状態で追加。
+     */
+    post: operations["create_job_api_rpa_cloud_flow_jobs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/cloud-flow/jobs/current": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Queue Status
+     * @description 現在のキュー状態を取得.
+     *
+     *     - current_job: 実行中のジョブ
+     *     - pending_jobs: 待機中のジョブ一覧
+     *     - your_position: 自分の待ち順番
+     */
+    get: operations["get_queue_status_api_rpa_cloud_flow_jobs_current_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/cloud-flow/configs/{config_key}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Config
+     * @description 設定を取得.
+     */
+    get: operations["get_config_api_rpa_cloud_flow_configs__config_key__get"];
+    /**
+     * Update Config
+     * @description 設定を登録/更新.
+     */
+    put: operations["update_config_api_rpa_cloud_flow_configs__config_key__put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/layer-codes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Layer Codes
+     * @description 層別コード一覧取得.
+     */
+    get: operations["list_layer_codes_api_rpa_layer_codes_get"];
+    put?: never;
+    /**
+     * Create Layer Code
+     * @description 層別コード作成.
+     */
+    post: operations["create_layer_code_api_rpa_layer_codes_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/layer-codes/{layer_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Layer Code
+     * @description 層別コード更新.
+     */
+    put: operations["update_layer_code_api_rpa_layer_codes__layer_code__put"];
+    post?: never;
+    /**
+     * Delete Layer Code
+     * @description 層別コード削除.
+     */
+    delete: operations["delete_layer_code_api_rpa_layer_codes__layer_code__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/": {
     parameters: {
       query?: never;
@@ -5686,6 +5854,101 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+    };
+    /**
+     * CloudFlowConfigResponse
+     * @description 設定レスポンス.
+     */
+    CloudFlowConfigResponse: {
+      /** Id */
+      id: number;
+      /** Config Key */
+      config_key: string;
+      /** Config Value */
+      config_value: string;
+      /** Description */
+      description?: string | null;
+    };
+    /**
+     * CloudFlowConfigUpdate
+     * @description 設定更新リクエスト.
+     */
+    CloudFlowConfigUpdate: {
+      /** Config Value */
+      config_value: string;
+      /** Description */
+      description?: string | null;
+    };
+    /**
+     * CloudFlowJobCreate
+     * @description ジョブ作成リクエスト.
+     */
+    CloudFlowJobCreate: {
+      /** Job Type */
+      job_type: string;
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       */
+      end_date: string;
+    };
+    /**
+     * CloudFlowJobResponse
+     * @description ジョブレスポンス.
+     */
+    CloudFlowJobResponse: {
+      /** Id */
+      id: number;
+      /** Job Type */
+      job_type: string;
+      /** Status */
+      status: string;
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       */
+      end_date: string;
+      /** Requested By */
+      requested_by?: string | null;
+      /**
+       * Requested At
+       * Format: date-time
+       */
+      requested_at: string;
+      /** Started At */
+      started_at?: string | null;
+      /** Completed At */
+      completed_at?: string | null;
+      /** Result Message */
+      result_message?: string | null;
+      /** Error Message */
+      error_message?: string | null;
+      /** Position In Queue */
+      position_in_queue?: number | null;
+    };
+    /**
+     * CloudFlowQueueStatus
+     * @description 現在のキュー状態.
+     */
+    CloudFlowQueueStatus: {
+      current_job?: components["schemas"]["CloudFlowJobResponse"] | null;
+      /**
+       * Pending Jobs
+       * @default []
+       */
+      pending_jobs: components["schemas"]["CloudFlowJobResponse"][];
+      /** Your Position */
+      your_position?: number | null;
     };
     /**
      * ConfirmedOrderLineResponse
@@ -7129,6 +7392,35 @@ export interface components {
       total_warehouses: number;
       /** Total Quantity */
       total_quantity: string;
+    };
+    /** LayerCodeCreate */
+    LayerCodeCreate: {
+      /** Maker Name */
+      maker_name: string;
+      /** Layer Code */
+      layer_code: string;
+    };
+    /** LayerCodeResponse */
+    LayerCodeResponse: {
+      /** Maker Name */
+      maker_name: string;
+      /** Layer Code */
+      layer_code: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /** LayerCodeUpdate */
+    LayerCodeUpdate: {
+      /** Maker Name */
+      maker_name: string;
     };
     /** ListResponse[CandidateLotItem] */
     ListResponse_CandidateLotItem_: {
@@ -8663,7 +8955,7 @@ export interface components {
       shipping_vehicle?: string | null;
       /**
        * Issue Flag
-       * @default true
+       * @default false
        */
       issue_flag: boolean;
       /**
@@ -8677,6 +8969,10 @@ export interface components {
       sap_registered?: boolean | null;
       /** Order No */
       order_no?: string | null;
+      /** Result Status */
+      result_status?: string | null;
+      /** Maker Name */
+      maker_name?: string | null;
     };
     /**
      * RpaRunItemUpdateRequest
@@ -8765,6 +9061,10 @@ export interface components {
       rpa_type: string;
       /** Status */
       status: string;
+      /** Data Start Date */
+      data_start_date?: string | null;
+      /** Data End Date */
+      data_end_date?: string | null;
       /** Started At */
       started_at?: string | null;
       /** Started By Username */
@@ -10409,6 +10709,82 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AllocationSuggestionListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  regenerate_suggestions_for_group_api_v2_forecast_suggestions_regenerate_group_post: {
+    parameters: {
+      query: {
+        /** @description 得意先ID */
+        customer_id: number;
+        /** @description 納入先ID */
+        delivery_place_id: number;
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 期間 (YYYY-MM)、省略時は全期間 */
+        forecast_period?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_suggestions_for_group_api_v2_forecast_suggestions_clear_group_delete: {
+    parameters: {
+      query: {
+        /** @description 得意先ID */
+        customer_id: number;
+        /** @description 納入先ID */
+        delivery_place_id: number;
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 期間 (YYYY-MM)、省略時は全期間 */
+        forecast_period?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -17291,6 +17667,286 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["MaterialDeliveryNoteExecuteResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_job_history_api_rpa_cloud_flow_jobs_get: {
+    parameters: {
+      query?: {
+        job_type?: string;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowJobResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_job_api_rpa_cloud_flow_jobs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CloudFlowJobCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowJobResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_queue_status_api_rpa_cloud_flow_jobs_current_get: {
+    parameters: {
+      query?: {
+        job_type?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowQueueStatus"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_config_api_rpa_cloud_flow_configs__config_key__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_key: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowConfigResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_config_api_rpa_cloud_flow_configs__config_key__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_key: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CloudFlowConfigUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowConfigResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_layer_codes_api_rpa_layer_codes_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LayerCodeResponse"][];
+        };
+      };
+    };
+  };
+  create_layer_code_api_rpa_layer_codes_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LayerCodeCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LayerCodeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_layer_code_api_rpa_layer_codes__layer_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        layer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LayerCodeUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LayerCodeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_layer_code_api_rpa_layer_codes__layer_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        layer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

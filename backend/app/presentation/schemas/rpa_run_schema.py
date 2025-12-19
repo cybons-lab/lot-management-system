@@ -17,11 +17,13 @@ class RpaRunItemResponse(BaseModel):
     delivery_date: date | None = None
     delivery_quantity: int | None = None
     shipping_vehicle: str | None = None
-    issue_flag: bool = True
+    issue_flag: bool = False
     complete_flag: bool = False
     match_result: bool | None = None
     sap_registered: bool | None = None
     order_no: str | None = None
+    result_status: str | None = None
+    maker_name: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -69,6 +71,8 @@ class RpaRunSummaryResponse(BaseModel):
     id: int
     rpa_type: str
     status: str
+    data_start_date: date | None = None
+    data_end_date: date | None = None
     started_at: datetime | None = None
     started_by_username: str | None = None
     step2_executed_at: datetime | None = None

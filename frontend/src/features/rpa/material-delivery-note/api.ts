@@ -21,6 +21,8 @@ export interface RpaRunItem {
   match_result: boolean | null;
   sap_registered: boolean | null;
   order_no: string | null;
+  maker_name: string | null;
+  result_status: string | null;
 }
 
 export interface RpaRun {
@@ -45,6 +47,8 @@ export interface RpaRunSummary {
   id: number;
   rpa_type: string;
   status: string;
+  data_start_date: string | null;
+  data_end_date: string | null;
   started_at: string | null;
   started_by_username: string | null;
   step2_executed_at: string | null;
@@ -182,3 +186,33 @@ export async function executeMaterialDeliveryNote(
     request,
   );
 }
+
+// Layer Codes
+export interface LayerCodeMapping {
+  layer_code: string;
+  maker_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type LayerCodeCreate = Pick<LayerCodeMapping, "layer_code" | "maker_name">;
+export type LayerCodeUpdate = Pick<LayerCodeMapping, "maker_name">;
+
+export const getLayerCodes = async (): Promise<LayerCodeMapping[]> => {
+  return await http.get<LayerCodeMapping[]>("rpa/layer-codes");
+};
+
+export const createLayerCode = async (data: LayerCodeCreate): Promise<LayerCodeMapping> => {
+  return await http.post<LayerCodeMapping>("rpa/layer-codes", data);
+};
+
+export const updateLayerCode = async (
+  layer_code: string,
+  data: LayerCodeUpdate,
+): Promise<LayerCodeMapping> => {
+  return await http.put<LayerCodeMapping>(`rpa/layer-codes/${layer_code}`, data);
+};
+
+export const deleteLayerCode = async (layer_code: string): Promise<void> => {
+  await http.delete(`rpa/layer-codes/${layer_code}`);
+};

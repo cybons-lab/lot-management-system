@@ -3,7 +3,7 @@
  * 素材納品書発行のメニューページ - Step1/Step2/履歴へのナビゲーション
  */
 
-import { CheckSquare, FileText, History, Play, Wrench } from "lucide-react";
+import { CheckSquare, Download, FileText, History, Play, Settings, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Button } from "@/components/ui";
@@ -51,11 +51,11 @@ export function MaterialDeliveryNotePage() {
       <PageHeader title="素材納品書発行" subtitle="CSV取込からStep2実行までのワークフロー" />
 
       <div className="mx-auto max-w-3xl space-y-4">
-        {/* Step1: CSV取込 */}
+        {/* Step1: 進度実績ダウンロード */}
         <MenuCard
-          title="Step1: CSV取込"
-          description="CSVファイルをアップロードしてデータを登録します。発行/完了フラグを確認・編集できます。"
-          icon={<FileText className="h-6 w-6" />}
+          title="Step1: 進度実績ダウンロード"
+          description="Power Automateフローを呼び出して進度実績データをダウンロードします。"
+          icon={<Download className="h-6 w-6" />}
           to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1}
         />
 
@@ -84,12 +84,28 @@ export function MaterialDeliveryNotePage() {
           variant="secondary"
         />
 
+        {/* CSV取込（一時使用） */}
+        <MenuCard
+          title="CSV取込（一時使用）"
+          description="CSVファイルをアップロードしてデータを登録します。"
+          icon={<FileText className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CSV_IMPORT}
+          variant="secondary"
+        />
+
         {/* クラウドフロー実行（汎用） */}
         <MenuCard
           title="クラウドフロー実行 (汎用)"
           description="Runデータを使用せず、直接URLとJSONを指定してクラウドフローを実行します。"
           icon={<Wrench className="h-6 w-6" />}
           to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CLOUD_FLOW_EXECUTE}
+          variant="secondary"
+        />
+        <MenuCard
+          title="層別コードマスタ"
+          description="層別コードとメーカー名の対応付を管理します。"
+          icon={<Settings className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES}
           variant="secondary"
         />
       </div>
