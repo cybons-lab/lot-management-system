@@ -135,10 +135,12 @@ def create_jyun_forecasts_from_daily(
 ) -> list[ForecastCurrent]:
     """Create jyun (10-day period) forecast entries with realistic variance.
 
-    Creates 3 entries for the target month:
-    - 上旬 (1st-10th): forecast_date = 1st of month
+    Creates 2 entries for the target month (SAP format - no upper dekad):
     - 中旬 (11th-20th): forecast_date = 11th of month
     - 下旬 (21st-end): forecast_date = 21st of month
+
+    Note: 上旬 (1st-10th) is NOT generated as SAP forecast data only provides
+    middle and lower dekad values.
 
     Each jyun quantity is based on actual daily period total with ±15-25% variance
     to simulate forecasting uncertainty.
@@ -154,12 +156,12 @@ def create_jyun_forecasts_from_daily(
         rng: Random instance for reproducible randomness
 
     Returns:
-        List of 3 ForecastCurrent entries (joujun, chuujun, gejun)
+        List of 2 ForecastCurrent entries (chuujun, gejun)
 
     Example:
         >>> from random import Random
         >>> rng = Random(42)
-        >>> period_totals = {'joujun': Decimal(500), 'chuujun': Decimal(600), ...}
+        >>> period_totals = {'chuujun': Decimal(600), 'gejun': Decimal(700)}
         >>> entries = create_jyun_forecasts_from_daily(
         ...     customer_id=1,
         ...     delivery_place_id=1,
@@ -169,7 +171,7 @@ def create_jyun_forecasts_from_daily(
         ...     now=datetime.utcnow(),
         ...     rng=rng,
         ... )
-        >>> # Returns 3 entries with quantities ≈ 500±25%, 600±25%, ...
+        >>> # Returns 2 entries with quantities ≈ 600±25%, 700±25%
     """
     entries = []
     # Jyun forecast_period is next month
@@ -177,8 +179,8 @@ def create_jyun_forecasts_from_daily(
     forecast_period = next_month.strftime("%Y-%m")
 
     # Define jyun periods with their corresponding keys
+    # Note: 上旬 (joujun) is NOT included as SAP only provides 中旬/下旬
     jyun_configs = [
-        (1, "joujun"),  # 上旬 (1st-10th)
         (11, "chuujun"),  # 中旬 (11th-20th)
         (21, "gejun"),  # 下旬 (21st-end)
     ]

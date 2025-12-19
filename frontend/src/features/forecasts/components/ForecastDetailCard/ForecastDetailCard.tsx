@@ -1,10 +1,10 @@
 /**
- * ForecastDetailCard - Visual forecast display with grid layout (v2.6 - Refactored with useForecastMutations)
+ * ForecastDetailCard - Visual forecast display with grid layout (v2.7 - SAP format support)
  *
  * 3-section layout:
  * - Section 1: Compact header (customer, product, delivery place)
- * - Section 2: Daily grid that always starts on the first day of the target month
- * - Section 3: Dekad (left) and Monthly (right) aggregations beneath the grid
+ * - Section 2: Daily grids (current month + next month first 10 days in separate sections)
+ * - Section 3: Dekad (middle/lower only) and Monthly aggregations beneath the grid
  */
 
 import { useState } from "react";
@@ -42,7 +42,8 @@ export function ForecastDetailCard({
     dailyForecastIds,
     unit,
     targetMonthStartDate,
-    dates,
+    currentMonthDates,
+    nextMonthFirst10Dates,
     dekadData,
     monthlyData,
     targetMonthTotal,
@@ -86,6 +87,14 @@ export function ForecastDetailCard({
   const targetMonthLabel = `${targetMonthStartDate.getFullYear()}年${
     targetMonthStartDate.getMonth() + 1
   }月`;
+
+  // Next month label for the second grid
+  const nextMonthDate = new Date(
+    targetMonthStartDate.getFullYear(),
+    targetMonthStartDate.getMonth() + 1,
+    1,
+  );
+  const nextMonthLabel = `${nextMonthDate.getFullYear()}年${nextMonthDate.getMonth() + 1}月`;
 
   const customerDisplay = group_key.customer_name ?? `得意先ID:${group_key.customer_id}`;
   const deliveryPlaceDisplay =
@@ -146,8 +155,9 @@ export function ForecastDetailCard({
 
           <div className="grid gap-6 md:grid-cols-12">
             <div className="space-y-4 md:col-span-7">
+              {/* Current month daily grid */}
               <ForecastDailyGrid
-                dates={dates}
+                dates={currentMonthDates}
                 dailyData={dailyData}
                 dailyForecastIds={dailyForecastIds}
                 targetMonthLabel={targetMonthLabel}
@@ -159,6 +169,23 @@ export function ForecastDetailCard({
                 onCreateForecast={handleCreateForecast}
                 isUpdating={update.isPending || create.isPending}
               />
+
+              {/* Next month first 10 days grid (SAP format) */}
+              <div className="rounded-lg border border-blue-100 bg-blue-50/30 p-3">
+                <ForecastDailyGrid
+                  dates={nextMonthFirst10Dates}
+                  dailyData={dailyData}
+                  dailyForecastIds={dailyForecastIds}
+                  targetMonthLabel={`${nextMonthLabel} (1〜10日)`}
+                  todayKey={todayKey}
+                  todayStart={todayStart}
+                  hoveredDate={hoveredDate}
+                  onDateHover={setHoveredDate}
+                  onUpdateQuantity={handleUpdateQuantity}
+                  onCreateForecast={handleCreateForecast}
+                  isUpdating={update.isPending || create.isPending}
+                />
+              </div>
 
               <ForecastAggregations dekadData={dekadData} monthlyData={monthlyData} />
             </div>
