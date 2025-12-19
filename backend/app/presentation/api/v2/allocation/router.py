@@ -124,6 +124,7 @@ async def manual_allocate(request: ManualAllocationRequest, db: Session = Depend
     res_status = "allocated" if reservation.status == ReservationStatus.ACTIVE else "confirmed"
 
     return ManualAllocationResponse(
+        id=reservation.id,
         order_line_id=request.order_line_id,
         lot_id=request.lot_id,
         lot_number=lot_number,
@@ -182,6 +183,7 @@ async def list_allocations_by_order(order_id: int, db: Session = Depends(get_db)
 
         responses.append(
             ManualAllocationResponse(
+                id=res.id,
                 order_line_id=res.source_id or 0,
                 lot_id=lot_id,
                 lot_number=lot.lot_number if lot else "",

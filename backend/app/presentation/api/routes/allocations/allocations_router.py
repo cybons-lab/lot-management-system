@@ -136,8 +136,8 @@ def manual_allocate(
 
         return ManualAllocationResponse(
             id=reservation.id,
-            order_line_id=reservation.source_id,
-            lot_id=reservation.lot_id,
+            order_line_id=reservation.source_id or 0,
+            lot_id=reservation.lot_id or 0,
             lot_number=lot.lot_number if lot else "",
             allocated_quantity=reservation.reserved_qty,
             available_quantity=available_qty,
@@ -185,12 +185,12 @@ def confirm_allocation(
         )
         return HardAllocationConfirmResponse(
             id=confirmed_res.id,
-            order_line_id=confirmed_res.source_id,
-            lot_id=confirmed_res.lot_id,
+            order_line_id=confirmed_res.source_id or 0,
+            lot_id=confirmed_res.lot_id or 0,
             allocated_quantity=confirmed_res.reserved_qty,
             allocation_type="hard" if status_str == "confirmed" else "soft",
-            status=status_str,
-            confirmed_at=confirmed_res.confirmed_at,
+            status="allocated",
+            confirmed_at=confirmed_res.confirmed_at or confirmed_res.updated_at,
             confirmed_by=None,
         )
     except ValueError as e:
@@ -252,7 +252,20 @@ def confirm_allocations_batch(
         confirmed_by=request.confirmed_by,
     )
 
-    return HardAllocationBatchConfirmResponse(confirmed=confirmed_ids, failed=failed_items)
+    from app.presentation.schemas.allocations.allocations_schema import (
+        HardAllocationBatchFailedItem,
+    )
+
+    failed_items_typed = [
+        HardAllocationBatchFailedItem(
+            id=item["id"],
+            error=item["error"],
+            message=item["message"],
+        )
+        for item in failed_items
+    ]
+
+    return HardAllocationBatchConfirmResponse(confirmed=confirmed_ids, failed=failed_items_typed)
 
 
 @router.delete("/{allocation_id}", status_code=status.HTTP_204_NO_CONTENT)

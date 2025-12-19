@@ -414,10 +414,10 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
         self.db.flush()  # Ensure ID is generated
 
         # Trigger auto-allocation
-        from app.application.services.allocations.actions import auto_allocate_line
+        from app.application.services.allocations.actions import auto_reserve_line
 
         try:
-            auto_allocate_line(self.db, order_line.id)
+            auto_reserve_line(self.db, order_line.id)
         except Exception:
             # Ignore allocation errors during forecast creation/update to prevent blocking
             # but ideally log this. For now just pass.
@@ -439,10 +439,10 @@ class ForecastService(BaseService[ForecastCurrent, ForecastCreate, ForecastUpdat
             self.db.flush()
 
             # Trigger auto-allocation
-            from app.application.services.allocations.actions import auto_allocate_line
+            from app.application.services.allocations.actions import auto_reserve_line
 
             try:
-                auto_allocate_line(self.db, order_line.id)
+                auto_reserve_line(self.db, order_line.id)
             except Exception:
                 pass
         else:

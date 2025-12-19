@@ -28,10 +28,10 @@ export function ForecastCardHeaderActions({
             event.stopPropagation();
             onAutoAllocate();
           }}
-          title="このフォーキャストグループの全受注に対して自動引当を実行します"
+          title="このフォーキャストグループの関連受注にFEFO方式で在庫を引き当てます"
         >
           <Wand2 className="h-3 w-3" />
-          自動引当
+          受注引当
         </Button>
       ) : null}
 

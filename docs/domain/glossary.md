@@ -18,6 +18,20 @@
 | **確定引当** | Confirmed Reservation | SAP連携などが完了し、確実に出庫が必要な状態。有効在庫から減算される。 |
 | **引当推奨** | Allocation Suggestion | システムが提案する引当案。ユーザーが確認または自動承認することで予約となる。 |
 
+## 製品・品番関連 (Product & Part Numbers)
+| 用語 (JP) | 用語 (EN) | 定義 |
+| :--- | :--- | :--- |
+| **製品コード** | Product Code | 社内で製品を一意に識別するためのコード。DB上は `products.maker_part_code` カラムに格納。API/スキーマでは `product_code` として公開。 |
+| **先方品番** | Customer Part No | 得意先（顧客）が使用する品番。得意先ごとに異なる場合がある。DB上は `products.customer_part_no` カラム。 |
+| **メーカー品番** | Maker Item Code | 仕入先（メーカー）が使用する品番。仕入先からの納品書等で使用される。DB上は `products.maker_item_code` カラム。 |
+| **外部製品コード** | External Product Code | 顧客品目マスタ（`customer_items`）で使用される、得意先固有の製品識別コード。先方品番と同義の場合も多い。 |
+
+> [!NOTE]
+> **品番体系の注意点**
+> - DBカラム名 `maker_part_code` は歴史的経緯により命名されているが、実際の用途は「社内製品コード」です
+> - `maker_item_code` が「メーカー（仕入先）の品番」を表します
+> - 外部システム連携時は、どの品番体系を使用するか明確にする必要があります
+
 ## 入出荷関連 (Shipping & Receiving)
 | 用語 (JP) | 用語 (EN) | 定義 |
 | :--- | :--- | :--- |

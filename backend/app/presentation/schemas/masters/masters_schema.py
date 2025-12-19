@@ -50,8 +50,6 @@ class WarehouseResponse(WarehouseBase):
 
     id: int
     created_at: datetime
-    id: int
-    created_at: datetime
     updated_at: datetime
     valid_to: date
 
@@ -97,8 +95,6 @@ class SupplierUpdate(BaseSchema):
 class SupplierResponse(SupplierBase):
     """Supplier response (DDL: suppliers)."""
 
-    id: int
-    created_at: datetime
     id: int
     created_at: datetime
     updated_at: datetime
@@ -156,8 +152,6 @@ class CustomerResponse(CustomerBase):
 
     id: int
     created_at: datetime
-    id: int
-    created_at: datetime
     updated_at: datetime
     valid_to: date
 
@@ -209,8 +203,6 @@ class DeliveryPlaceResponse(DeliveryPlaceBase):
 
     id: int
     created_at: datetime
-    id: int
-    created_at: datetime
     updated_at: datetime
     valid_to: date
 
@@ -257,8 +249,6 @@ class ProductMappingUpdate(BaseSchema):
 class ProductMappingResponse(ProductMappingBase):
     """Product mapping response (DDL: product_mappings)."""
 
-    id: int
-    created_at: datetime
     id: int
     created_at: datetime
     updated_at: datetime
@@ -344,7 +334,6 @@ class SupplierProductResponse(SupplierProductBase):
     product_name: str
     supplier_code: str
     supplier_name: str
-    created_at: datetime
     created_at: datetime
     updated_at: datetime
     valid_to: date

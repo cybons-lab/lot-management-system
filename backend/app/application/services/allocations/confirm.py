@@ -113,19 +113,20 @@ def confirm_reservation(
     if lot.current_quantity < reserved_qty:
         available = lot.current_quantity - (reserved_qty - reservation.reserved_qty)
         raise InsufficientStockError(
-            lot_id=lot.id,
-            lot_number=lot.lot_number,
             required=float(confirm_qty),
             available=float(max(available, Decimal(0))),
+            lot_id=lot.id,
+            lot_number=lot.lot_number,
         )
 
     # Preempt other soft reservations if needed
-    preempt_soft_reservations_for_hard(
-        db,
-        lot_id=lot.id,
-        required_qty=confirm_qty,
-        hard_demand_id=reservation.source_id,
-    )
+    if reservation.source_id is not None:
+        preempt_soft_reservations_for_hard(
+            db,
+            lot_id=lot.id,
+            required_qty=confirm_qty,
+            hard_demand_id=reservation.source_id,
+        )
 
     now = utcnow()
 

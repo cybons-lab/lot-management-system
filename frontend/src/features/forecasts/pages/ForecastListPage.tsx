@@ -90,11 +90,11 @@ export function ForecastListPage() {
   const generateMutation = useMutation({
     mutationFn: generateAllocationSuggestions,
     onSuccess: (data) => {
-      toast.success(`引当推奨を生成しました。\n生成数: ${data.suggestions.length}件`);
+      toast.success(`計画引当を更新しました。\n生成数: ${data.suggestions.length}件`);
     },
     onError: (error) => {
       console.error("Generation failed:", error);
-      toast.error("引当推奨の生成に失敗しました");
+      toast.error("計画引当の更新に失敗しました");
     },
   });
 
@@ -209,7 +209,7 @@ export function ForecastListPage() {
               onClick={handleGenerateSuggestions}
               disabled={generateMutation.isPending}
             >
-              {generateMutation.isPending ? "生成中..." : "引当推奨生成"}
+              {generateMutation.isPending ? "更新中..." : "計画引当を更新"}
             </Button>
             <Button onClick={() => navigate(ROUTES.FORECASTS.IMPORT)}>一括インポート</Button>
           </div>
@@ -293,20 +293,20 @@ export function ForecastListPage() {
         </div>
       )}
 
-      {/* 引当推奨生成 確認ダイアログ */}
+      {/* 計画引当更新 確認ダイアログ */}
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>引当推奨の生成</AlertDialogTitle>
+            <AlertDialogTitle>計画引当の更新</AlertDialogTitle>
             <AlertDialogDescription>
-              {pendingPeriods.join(", ")} の引当推奨を生成しますか？
+              {pendingPeriods.join(", ")} の計画引当を更新しますか？
               <br />
               既存の推奨は上書きされます。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>キャンセル</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmGenerate}>生成する</AlertDialogAction>
+            <AlertDialogAction onClick={handleConfirmGenerate}>更新する</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
