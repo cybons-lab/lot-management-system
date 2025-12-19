@@ -54,6 +54,7 @@ export interface ForecastCardHeaderProps {
   onToggle?: () => void;
   onAutoAllocate?: () => void;
   onRegenerateSuggestions?: () => void;
+  onClearSuggestions?: () => void;
   onDelete?: (forecastId: number) => void;
   isDeleting?: boolean;
   firstForecastId?: number;

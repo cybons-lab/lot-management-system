@@ -52,6 +52,7 @@ export function ForecastDetailCard({
   const {
     autoAllocate,
     regenerateSuggestions,
+    clearSuggestions,
     update,
     create,
     handleUpdateQuantity: updateQuantity,
@@ -104,6 +105,11 @@ export function ForecastDetailCard({
     regenerateSuggestions.mutate();
   };
 
+  // 計画引当クリアハンドラー（AllocationSuggestions削除）
+  const handleClearSuggestions = () => {
+    clearSuggestions.mutate();
+  };
+
   return (
     <Card
       className={cn(
@@ -128,6 +134,7 @@ export function ForecastDetailCard({
         onToggle={onToggle}
         onAutoAllocate={handleAutoAllocate}
         onRegenerateSuggestions={handleRegenerateSuggestions}
+        onClearSuggestions={handleClearSuggestions}
         onDelete={onDelete}
         isDeleting={isDeleting}
         firstForecastId={forecasts[0]?.id}

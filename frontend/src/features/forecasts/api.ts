@@ -143,3 +143,27 @@ export const regenerateGroupSuggestions = (params: RegenerateGroupSuggestionsPar
     {},
   );
 };
+
+/**
+ * Clear allocation suggestions for a specific forecast group
+ * @endpoint DELETE /v2/forecast/suggestions/clear-group
+ */
+export interface ClearGroupSuggestionsResponse {
+  status: string;
+  deleted_count: number;
+  message: string;
+}
+
+export const clearGroupSuggestions = (params: RegenerateGroupSuggestionsParams) => {
+  const searchParams = new URLSearchParams();
+  searchParams.append("customer_id", params.customer_id.toString());
+  searchParams.append("delivery_place_id", params.delivery_place_id.toString());
+  searchParams.append("product_id", params.product_id.toString());
+  if (params.forecast_period) {
+    searchParams.append("forecast_period", params.forecast_period);
+  }
+
+  return http.delete<ClearGroupSuggestionsResponse>(
+    `v2/forecast/suggestions/clear-group?${searchParams.toString()}`,
+  );
+};

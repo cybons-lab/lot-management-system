@@ -11,6 +11,7 @@ import { toast } from "sonner";
 
 import { bulkAutoAllocate } from "@/features/allocations/api";
 import {
+  clearGroupSuggestions,
   createForecast,
   deleteForecast,
   regenerateGroupSuggestions,
@@ -105,6 +106,24 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
     },
   });
 
+  // グループ単位の計画引当クリア（AllocationSuggestions削除）
+  const clearSuggestions = useMutation({
+    mutationFn: () =>
+      clearGroupSuggestions({
+        customer_id: groupKey.customer_id,
+        delivery_place_id: groupKey.delivery_place_id,
+        product_id: groupKey.product_id,
+      }),
+    onSuccess: (result) => {
+      toast.success(result.message);
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Clear suggestions failed:", error);
+      toast.error("計画引当のクリアに失敗しました");
+    },
+  });
+
   // フォーキャスト更新（0なら削除）
   const update = useMutation({
     mutationFn: async ({ forecastId, quantity }: { forecastId: number; quantity: number }) => {
@@ -151,6 +170,7 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
   return {
     autoAllocate,
     regenerateSuggestions,
+    clearSuggestions,
     update,
     create,
     // ヘルパー関数
@@ -162,6 +182,7 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
     isMutating:
       autoAllocate.isPending ||
       regenerateSuggestions.isPending ||
+      clearSuggestions.isPending ||
       update.isPending ||
       create.isPending,
   };
