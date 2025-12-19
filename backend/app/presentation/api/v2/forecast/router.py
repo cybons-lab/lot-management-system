@@ -133,6 +133,28 @@ def list_allocation_suggestions(
     )
 
 
+@router.post("/suggestions/regenerate-group", response_model=AllocationSuggestionPreviewResponse)
+def regenerate_suggestions_for_group(
+    customer_id: int = Query(..., description="得意先ID"),
+    delivery_place_id: int = Query(..., description="納入先ID"),
+    product_id: int = Query(..., description="製品ID"),
+    forecast_period: str | None = Query(None, description="期間 (YYYY-MM)、省略時は全期間"),
+    db: Session = Depends(get_db),
+) -> Any:
+    """フォーキャストグループ単位で計画引当（Suggestions）を再生成.
+
+    「計画引当を更新」ボタンの個別グループ版。
+    既存のSuggestionsを削除し、FEFOで再計算する。
+    """
+    service = AllocationSuggestionService(db)
+    return service.regenerate_for_group(
+        customer_id=customer_id,
+        delivery_place_id=delivery_place_id,
+        product_id=product_id,
+        forecast_period=forecast_period,
+    )
+
+
 @router.get("/suggestions/group-summary")
 def get_allocation_suggestions_by_group(
     customer_id: int = Query(..., description="得意先ID"),

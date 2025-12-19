@@ -51,6 +51,7 @@ export function ForecastDetailCard({
   // Forecast mutations (自動引当、更新、作成を1つのhookで取得)
   const {
     autoAllocate,
+    regenerateSuggestions,
     update,
     create,
     handleUpdateQuantity: updateQuantity,
@@ -93,9 +94,14 @@ export function ForecastDetailCard({
 
   const groupKey = `${group_key.customer_id}-${group_key.delivery_place_id}-${group_key.product_id}`;
 
-  // 自動引当ハンドラー
+  // 受注引当ハンドラー（受注明細へのFEFO引当）
   const handleAutoAllocate = () => {
     autoAllocate.mutate();
+  };
+
+  // 計画引当更新ハンドラー（AllocationSuggestions再生成）
+  const handleRegenerateSuggestions = () => {
+    regenerateSuggestions.mutate();
   };
 
   return (
@@ -121,6 +127,7 @@ export function ForecastDetailCard({
         isOpen={isOpen}
         onToggle={onToggle}
         onAutoAllocate={handleAutoAllocate}
+        onRegenerateSuggestions={handleRegenerateSuggestions}
         onDelete={onDelete}
         isDeleting={isDeleting}
         firstForecastId={forecasts[0]?.id}

@@ -1,4 +1,4 @@
-import { ChevronDown, Wand2 } from "lucide-react";
+import { ChevronDown, RefreshCw, Wand2 } from "lucide-react";
 
 import { type ForecastCardHeaderProps } from "./types";
 
@@ -7,11 +7,17 @@ import { cn } from "@/shared/libs/utils";
 
 type ForecastCardHeaderActionsProps = Pick<
   ForecastCardHeaderProps,
-  "onAutoAllocate" | "onDelete" | "isDeleting" | "firstForecastId" | "isOpen"
+  | "onAutoAllocate"
+  | "onRegenerateSuggestions"
+  | "onDelete"
+  | "isDeleting"
+  | "firstForecastId"
+  | "isOpen"
 >;
 
 export function ForecastCardHeaderActions({
   onAutoAllocate,
+  onRegenerateSuggestions,
   onDelete,
   isDeleting,
   firstForecastId,
@@ -19,6 +25,22 @@ export function ForecastCardHeaderActions({
 }: ForecastCardHeaderActionsProps) {
   return (
     <div className="flex flex-shrink-0 items-center gap-2 pt-1">
+      {onRegenerateSuggestions ? (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 gap-1 px-2 text-xs"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRegenerateSuggestions();
+          }}
+          title="このグループの計画引当（Suggestions）を再計算します"
+        >
+          <RefreshCw className="h-3 w-3" />
+          計画引当
+        </Button>
+      ) : null}
+
       {onAutoAllocate ? (
         <Button
           variant="outline"
