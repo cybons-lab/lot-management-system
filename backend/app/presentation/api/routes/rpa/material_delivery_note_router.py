@@ -6,7 +6,7 @@
 import json
 import logging
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.application.services.rpa import (
@@ -103,32 +103,35 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
     response_model=RpaRunCreateResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_run(
+def create_run(
     file: UploadFile = File(...),
+    import_type: str = Form("material_delivery_note"),
     db: Session = Depends(get_db),
-    current_user: User | None = Depends(get_current_user_optional),
+    user: User | None = Depends(get_current_user_optional),
 ):
-    """CSV取込でRunを作成.
+    """CSVファイルからRunを作成する.
 
-    multipart/form-dataでCSVファイルをアップロード。
-    パース結果をDBに保存し、run_idを返す。
+    Args:
+        file: アップロードされたCSVファイル
+        import_type: インポート形式 (default: material_delivery_note)
+        db: DBセッション
+        user: 実行ユーザー
     """
-    if not file.filename or not file.filename.lower().endswith(".csv"):
+    if not file.filename.endswith(".csv"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="ファイルはCSV形式である必要があります",
+            detail="File must be a CSV file",
         )
 
     try:
-        content = await file.read()
+        content = file.file.read()
         service = MaterialDeliveryNoteService(db)
-        run = service.create_run_from_csv(content, user=current_user)
-
+        run = service.create_run_from_csv(content, import_type, user)
         return RpaRunCreateResponse(
             id=run.id,
             status=run.status,
             item_count=run.item_count,
-            message=f"CSV取込完了: {run.item_count}件のデータを登録しました",
+            message="CSV uploaded and items created successfully",
         )
     except ValueError as e:
         raise HTTPException(
@@ -136,10 +139,10 @@ async def create_run(
             detail=str(e),
         )
     except Exception as e:
-        logger.exception("CSV取込エラー")
+        logger.exception("Error creating run")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"CSV取込に失敗しました: {e!s}",
+            detail=f"Internal server error: {e!s}",
         )
 
 

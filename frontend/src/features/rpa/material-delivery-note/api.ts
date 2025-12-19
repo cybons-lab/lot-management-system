@@ -100,11 +100,12 @@ export interface MaterialDeliveryNoteExecuteResponse {
 // API Functions
 
 /**
- * CSVファイルをアップロードしてRunを作成
+ * Run作成 (CSVアップロード)
  */
-export async function createRun(file: File): Promise<RpaRunCreateResponse> {
+export async function createRun(file: File, importType = "material_delivery_note") {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("import_type", importType);
 
   return http.postFormData<RpaRunCreateResponse>("rpa/material-delivery-note/runs", formData);
 }

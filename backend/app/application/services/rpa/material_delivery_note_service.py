@@ -29,22 +29,31 @@ class MaterialDeliveryNoteService:
     def create_run_from_csv(
         self,
         file_content: bytes,
+        import_type: str = "material_delivery_note",
         user: User | None = None,
     ) -> RpaRun:
         """CSVファイルからRunを作成する.
 
         Args:
             file_content: CSVファイルのバイト列
+            import_type: インポート形式
             user: 実行ユーザー
 
         Returns:
             作成されたRpaRun
 
         Raises:
-            ValueError: CSVのパースに失敗した場合
+            ValueError: CSVのパースに失敗した場合、または未知のimport_typeの場合
         """
-        # Parse CSV
-        parsed_rows = parse_material_delivery_csv(file_content)
+        # Parse CSV based on import_type
+        if import_type == "material_delivery_note":
+            parsed_rows = parse_material_delivery_csv(file_content)
+        elif import_type == "pattern_b":  # TODO: Update with actual key when known
+            # For now, raise not implemented or handle accordingly
+            # parsed_rows = parse_pattern_b_csv(file_content)
+            raise ValueError("Pattern B import is not yet implemented")
+        else:
+            raise ValueError(f"Unknown import type: {import_type}")
 
         if not parsed_rows:
             raise ValueError("CSV is empty or invalid")
