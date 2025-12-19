@@ -9,7 +9,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import Lot, Product, Role, StockHistory, User, Warehouse
-from app.main import app
+from app.main import application
 from app.presentation.api.deps import get_db
 
 
@@ -26,13 +26,22 @@ def _truncate_all(db: Session):
 def test_db(db: Session):
     _truncate_all(db)
 
+    from app.application.services.auth.auth_service import AuthService
+    from app.core import database as core_database
+    from app.infrastructure.persistence.models import User
+
     def override_get_db():
         yield db
 
-    app.dependency_overrides[get_db] = override_get_db
+    def override_get_current_user():
+        return User(id=1, username="test_user", is_active=True)
+
+    application.dependency_overrides[get_db] = override_get_db
+    application.dependency_overrides[core_database.get_db] = override_get_db
+    application.dependency_overrides[AuthService.get_current_user] = override_get_current_user
     yield db
     _truncate_all(db)
-    app.dependency_overrides.clear()
+    application.dependency_overrides.clear()
 
 
 @pytest.fixture
@@ -77,20 +86,20 @@ def sample_lot(test_db: Session):
     test_db.refresh(lot)
 
     # Return both lot and user_id
-    lot.test_user_id = user.id
+    lot.test_user_id = user.id  # type: ignore[attr-defined]
     return lot
 
 
 def test_create_adjustment_success(test_db: Session, sample_lot: Lot):
     """Test creating an adjustment."""
-    client = TestClient(app)
+    client = TestClient(application)
 
     adjustment_data = {
         "lot_id": sample_lot.id,
         "adjusted_quantity": 10.0,
         "adjustment_type": "physical_count",
         "reason": "Test adjustment",
-        "adjusted_by": sample_lot.test_user_id,
+        "adjusted_by": sample_lot.test_user_id,  # type: ignore[attr-defined]
     }
 
     response = client.post("/api/adjustments", json=adjustment_data)
@@ -102,14 +111,14 @@ def test_create_adjustment_success(test_db: Session, sample_lot: Lot):
 
 def test_create_adjustment_negative_quantity(test_db: Session, sample_lot: Lot):
     """Test creating adjustment with negative quantity."""
-    client = TestClient(app)
+    client = TestClient(application)
 
     adjustment_data = {
         "lot_id": sample_lot.id,
         "adjusted_quantity": -50.0,
         "adjustment_type": "damage",
         "reason": "Decrease test",
-        "adjusted_by": sample_lot.test_user_id,
+        "adjusted_by": sample_lot.test_user_id,  # type: ignore[attr-defined]
     }
 
     response = client.post("/api/adjustments", json=adjustment_data)
@@ -118,14 +127,14 @@ def test_create_adjustment_negative_quantity(test_db: Session, sample_lot: Lot):
 
 def test_create_adjustment_invalid_lot_returns_400(test_db: Session, sample_lot: Lot):
     """Test creating adjustment for non-existent lot."""
-    client = TestClient(app)
+    client = TestClient(application)
 
     adjustment_data = {
         "lot_id": 99999,
         "adjusted_quantity": 10.0,
         "adjustment_type": "other",
         "reason": "Test",
-        "adjusted_by": sample_lot.test_user_id,
+        "adjusted_by": sample_lot.test_user_id,  # type: ignore[attr-defined]
     }
 
     response = client.post("/api/adjustments", json=adjustment_data)
@@ -134,7 +143,7 @@ def test_create_adjustment_invalid_lot_returns_400(test_db: Session, sample_lot:
 
 def test_list_adjustments_success(test_db: Session, sample_lot: Lot):
     """Test listing adjustments."""
-    client = TestClient(app)
+    client = TestClient(application)
 
     # Create some adjustments
     adj_data = {
@@ -142,7 +151,7 @@ def test_list_adjustments_success(test_db: Session, sample_lot: Lot):
         "adjusted_quantity": 10.0,
         "adjustment_type": "found",
         "reason": "Test",
-        "adjusted_by": sample_lot.test_user_id,
+        "adjusted_by": sample_lot.test_user_id,  # type: ignore[attr-defined]
     }
     client.post("/api/adjustments", json=adj_data)
 
@@ -153,14 +162,14 @@ def test_list_adjustments_success(test_db: Session, sample_lot: Lot):
 
 def test_list_adjustments_with_lot_filter(test_db: Session, sample_lot: Lot):
     """Test listing adjustments filtered by lot_id."""
-    client = TestClient(app)
+    client = TestClient(application)
 
     adj_data = {
         "lot_id": sample_lot.id,
         "adjusted_quantity": 10.0,
         "adjustment_type": "loss",
         "reason": "Test",
-        "adjusted_by": sample_lot.test_user_id,
+        "adjusted_by": sample_lot.test_user_id,  # type: ignore[attr-defined]
     }
     client.post("/api/adjustments", json=adj_data)
 
@@ -173,14 +182,14 @@ def test_list_adjustments_with_lot_filter(test_db: Session, sample_lot: Lot):
 
 def test_list_adjustments_with_type_filter(test_db: Session, sample_lot: Lot):
     """Test listing adjustments filtered by type."""
-    client = TestClient(app)
+    client = TestClient(application)
 
     adj_data = {
         "lot_id": sample_lot.id,
         "adjusted_quantity": 10.0,
         "adjustment_type": "physical_count",
         "reason": "Test",
-        "adjusted_by": sample_lot.test_user_id,
+        "adjusted_by": sample_lot.test_user_id,  # type: ignore[attr-defined]
     }
     client.post("/api/adjustments", json=adj_data)
 

@@ -42,6 +42,7 @@ def confirm_reservation(
     reservation_id: int,
     *,
     confirmed_by: str | None = None,
+    quantity: Decimal | None = None,
     commit_db: bool = True,
     sap_gateway: SapGateway | None = None,
 ) -> LotReservation:
@@ -51,18 +52,12 @@ def confirm_reservation(
         db: データベースセッション
         reservation_id: 予約ID
         confirmed_by: 確定操作を行ったユーザーID（オプション）
+        quantity: 確定数量（指定時は部分確定、残りはACTIVEのまま分割）
         commit_db: Trueの場合、処理完了後にcommitを実行
         sap_gateway: SAP Gateway実装（未指定時はデフォルトのMockSapGatewayを使用）
 
     Returns:
         確定された予約
-
-    Raises:
-        AllocationNotFoundError: 予約が見つからない場合
-        AllocationCommitError: 確定に失敗した場合
-
-    Note:
-        This operation is idempotent. If already confirmed, returns successfully.
     """
     # Use select with_for_update to lock the reservation row
     stmt = select(LotReservation).where(LotReservation.id == reservation_id).with_for_update()
@@ -72,7 +67,7 @@ def confirm_reservation(
         raise AllocationNotFoundError(f"Reservation {reservation_id} not found")
 
     # Idempotent: return success if already confirmed
-    if reservation.status == ReservationStatus.CONFIRMED:
+    if str(reservation.status) == ReservationStatus.CONFIRMED.value:
         return reservation
 
     # H-04/H-05 Fix: Use ReservationStateMachine for strict state transition validation
@@ -86,6 +81,24 @@ def confirm_reservation(
         raise AllocationCommitError(
             "PROVISIONAL_RESERVATION", "入荷予定ベースの仮予約は確定できません"
         )
+
+    # Handle partial confirmation (splitting)
+    if quantity is not None and quantity < reservation.reserved_qty:
+        remainder_qty = reservation.reserved_qty - quantity
+        if remainder_qty > 0:
+            # Create new reservation for remainder
+            remainder = LotReservation(
+                lot_id=reservation.lot_id,
+                source_type=reservation.source_type,
+                source_id=reservation.source_id,
+                reserved_qty=remainder_qty,
+                status=reservation.status,  # Keep original status (e.g. ACTIVE)
+                created_at=utcnow(),
+                # Copy other relevant fields if necessary
+            )
+            db.add(remainder)
+            reservation.reserved_qty = quantity
+            db.flush()
 
     lot_stmt = select(Lot).where(Lot.id == reservation.lot_id).with_for_update()
     lot = db.execute(lot_stmt).scalar_one_or_none()
@@ -143,6 +156,7 @@ def confirm_reservation(
     # SAP registration succeeded - update reservation with SAP info
     reservation.status = ReservationStatus.CONFIRMED
     reservation.confirmed_at = now
+    reservation.confirmed_by = confirmed_by
     reservation.sap_document_no = sap_result.document_no
     reservation.sap_registered_at = sap_result.registered_at
     reservation.updated_at = now

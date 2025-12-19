@@ -36,7 +36,7 @@ def _load_order(db: Session, order_id: int) -> Order:
     stmt = (
         select(Order)
         .options(
-            selectinload(Order.order_lines).selectinload(OrderLine.lot_reservations),
+            selectinload(Order.order_lines),
             selectinload(Order.order_lines).joinedload(OrderLine.product),
         )
         .where(Order.id == order_id)
@@ -53,7 +53,7 @@ def _existing_allocated_qty(line: OrderLine) -> float:
 
     P3: Uses lot_reservations instead of allocations.
     """
-    reservations = getattr(line, "lot_reservations", []) or []
+    reservations = getattr(line, "_lot_reservations", []) or []
     return cast(
         float,
         sum(res.reserved_qty for res in reservations if res.status != ReservationStatus.RELEASED),

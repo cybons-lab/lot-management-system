@@ -175,6 +175,7 @@ def confirm_allocation(
             db,
             allocation_id,
             confirmed_by=request.confirmed_by,
+            quantity=request.quantity,
         )
 
         # status is stored as string in DB, not Enum
@@ -191,7 +192,7 @@ def confirm_allocation(
             allocation_type="hard" if status_str == "confirmed" else "soft",
             status="allocated",
             confirmed_at=confirmed_res.confirmed_at or confirmed_res.updated_at,
-            confirmed_by=None,
+            confirmed_by=confirmed_res.confirmed_by,
         )
     except ValueError as e:
         err_msg = str(e).lower()
@@ -222,7 +223,7 @@ def confirm_allocation(
         raise HTTPException(status_code=400, detail=str(e))
     except AllocationNotFoundError as e:
         raise HTTPException(
-            status_code=404, detail={"error": "ALLOCATION_NOT_FOUND", "message": str(e)}
+            status_code=404, detail={"error": "RESERVATION_NOT_FOUND", "message": str(e)}
         )
     except InsufficientStockError as e:
         raise HTTPException(
