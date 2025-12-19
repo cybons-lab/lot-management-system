@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **[Backend Tests] テスト環境デバッグ・ロジック修正**
+  - `confirm.py`: 部分確定ロジック実装、冪等性チェック修正（str vs Enum比較）
+  - `lot_reservations_model.py`: `confirmed_by` カラム追加（Alembic migration含む）
+  - `allocations_router.py`: `confirmed_by` 返却修正、エラーコード `RESERVATION_NOT_FOUND` に統一
+  - `utils.py`: `_lot_reservations` プロパティ使用に修正（削除済み `lot_reservations` リレーション参照を修正）
+  - `test_allocations.py`: アサーション修正、`confirmed_at` 設定追加、available_quantity期待値修正
+  - `test_allocation_suggestions.py`: 誤った422アサーション削除
+  - `test_adjustments.py`, `conftest.py`: 認証・DB依存性オーバーライド修正
+
 ### Added
 - **[P2-4] フォーキャスト詳細：他グループ引当の表示**
   - 計画引当サマリのロット内訳に「他グループ」列を追加
