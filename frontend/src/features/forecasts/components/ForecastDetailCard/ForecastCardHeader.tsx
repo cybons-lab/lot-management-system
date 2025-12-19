@@ -22,8 +22,9 @@ export function ForecastCardHeader({
   isOpen,
   onToggle,
   onAutoAllocate,
+  onRegenerateSuggestions,
+  onClearSuggestions,
   onDelete,
-  isDeleting,
   firstForecastId,
 }: ForecastCardHeaderProps) {
   return (
@@ -45,8 +46,9 @@ export function ForecastCardHeader({
 
         <ForecastCardHeaderActions
           onAutoAllocate={onAutoAllocate}
+          onRegenerateSuggestions={onRegenerateSuggestions}
+          onClearSuggestions={onClearSuggestions}
           onDelete={onDelete}
-          isDeleting={isDeleting}
           firstForecastId={firstForecastId}
           isOpen={isOpen}
         />

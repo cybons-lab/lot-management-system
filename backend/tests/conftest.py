@@ -6,9 +6,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-import app.infrastructure.persistence.models  # Register all models
 from app.infrastructure.persistence.models.base_model import Base
-from app.main import app
+from app.main import application
 
 
 # Load Hypothesis settings
@@ -179,13 +178,13 @@ def db_engine():
                     dp.jiku_code,
                     ci.external_product_code,
                     s.supplier_name,
-                    COALESCE(SUM(a.allocated_quantity), 0) AS allocated_quantity
+                    COALESCE(SUM(a.reserved_qty), 0) AS allocated_quantity
                 FROM order_lines ol
                 JOIN orders o ON ol.order_id = o.id
                 LEFT JOIN customers c ON o.customer_id = c.id
                 LEFT JOIN products p ON ol.product_id = p.id
                 LEFT JOIN delivery_places dp ON ol.delivery_place_id = dp.id
-                LEFT JOIN allocations a ON ol.id = a.order_line_id
+                LEFT JOIN lot_reservations a ON ol.id = a.source_id AND a.source_type = 'order' AND a.status IN ('active', 'confirmed')
                 LEFT JOIN customer_items ci ON o.customer_id = ci.customer_id AND ol.product_id = ci.product_id
                 LEFT JOIN suppliers s ON ci.supplier_id = s.id
                 GROUP BY
@@ -256,11 +255,11 @@ def client(db) -> Generator[TestClient]:
     def override_get_db():
         yield db
 
-    app.dependency_overrides[api_deps.get_db] = override_get_db
-    app.dependency_overrides[core_database.get_db] = override_get_db
-    with TestClient(app) as c:
+    application.dependency_overrides[api_deps.get_db] = override_get_db
+    application.dependency_overrides[core_database.get_db] = override_get_db
+    with TestClient(application) as c:
         yield c
-    app.dependency_overrides.clear()
+    application.dependency_overrides.clear()
 
 
 @pytest.fixture

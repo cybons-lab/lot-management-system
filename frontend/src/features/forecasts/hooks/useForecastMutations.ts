@@ -4,12 +4,19 @@
  * フォーキャスト関連のmutations（自動引当、更新、作成）を集約したカスタムフック
  * クエリ無効化処理を一箇所にまとめて重複を排除
  */
+/* eslint-disable max-lines-per-function */
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { bulkAutoAllocate } from "@/features/allocations/api";
-import { createForecast, deleteForecast, updateForecast } from "@/features/forecasts/api";
+import {
+  clearGroupSuggestions,
+  createForecast,
+  deleteForecast,
+  regenerateGroupSuggestions,
+  updateForecast,
+} from "@/features/forecasts/api";
 
 interface ForecastGroupKey {
   customer_id: number;
@@ -53,7 +60,7 @@ function useInvalidateForecastQueries() {
 export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
   const invalidateQueries = useInvalidateForecastQueries();
 
-  // グループ自動引当
+  // グループ自動引当（受注明細へのFEFO引当）
   const autoAllocate = useMutation({
     mutationFn: () =>
       bulkAutoAllocate({
@@ -71,7 +78,49 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
     },
     onError: (error) => {
       console.error("Auto-allocate failed:", error);
-      toast.error("自動引当に失敗しました");
+      toast.error("受注引当に失敗しました");
+    },
+  });
+
+  // グループ単位の計画引当更新（AllocationSuggestions再生成）
+  const regenerateSuggestions = useMutation({
+    mutationFn: () =>
+      regenerateGroupSuggestions({
+        customer_id: groupKey.customer_id,
+        delivery_place_id: groupKey.delivery_place_id,
+        product_id: groupKey.product_id,
+      }),
+    onSuccess: (result) => {
+      const allocated = result.stats.total_allocated_quantity;
+      const shortage = result.stats.total_shortage_quantity;
+      if (shortage > 0) {
+        toast.warning(`計画引当を更新しました（不足: ${shortage}）`);
+      } else {
+        toast.success(`計画引当を更新しました（引当数量: ${allocated}）`);
+      }
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Regenerate suggestions failed:", error);
+      toast.error("計画引当の更新に失敗しました");
+    },
+  });
+
+  // グループ単位の計画引当クリア（AllocationSuggestions削除）
+  const clearSuggestions = useMutation({
+    mutationFn: () =>
+      clearGroupSuggestions({
+        customer_id: groupKey.customer_id,
+        delivery_place_id: groupKey.delivery_place_id,
+        product_id: groupKey.product_id,
+      }),
+    onSuccess: (result) => {
+      toast.success(result.message);
+      invalidateQueries(groupKey);
+    },
+    onError: (error) => {
+      console.error("Clear suggestions failed:", error);
+      toast.error("計画引当のクリアに失敗しました");
     },
   });
 
@@ -120,6 +169,8 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
 
   return {
     autoAllocate,
+    regenerateSuggestions,
+    clearSuggestions,
     update,
     create,
     // ヘルパー関数
@@ -128,6 +179,11 @@ export function useForecastMutations(groupKey: ForecastGroupKey, unit: string) {
     handleCreateForecast: (dateKey: string, quantity: number) =>
       create.mutateAsync({ dateKey, quantity }),
     // isPending統合
-    isMutating: autoAllocate.isPending || update.isPending || create.isPending,
+    isMutating:
+      autoAllocate.isPending ||
+      regenerateSuggestions.isPending ||
+      clearSuggestions.isPending ||
+      update.isPending ||
+      create.isPending,
   };
 }

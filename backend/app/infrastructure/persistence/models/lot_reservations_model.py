@@ -241,6 +241,12 @@ class LotReservation(Base):
         comment="Timestamp when reservation was confirmed",
     )
 
+    confirmed_by: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+        comment="User who confirmed the reservation",
+    )
+
     released_at: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,

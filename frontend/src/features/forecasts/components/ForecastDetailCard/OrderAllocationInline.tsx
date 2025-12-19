@@ -2,6 +2,7 @@ import { Loader2 } from "lucide-react";
 
 import { LotCandidateRow } from "./LotCandidateRow";
 
+import { type CandidateLotItem } from "@/features/allocations/api";
 import { ALLOCATION_CONSTANTS } from "@/features/allocations/constants";
 import { useAllocationCandidates } from "@/features/allocations/hooks/api/useAllocationCandidates";
 import type { useLotAllocationForOrder } from "@/features/forecasts/hooks/useLotAllocationForOrder";
@@ -14,7 +15,74 @@ interface OrderAllocationInlineProps {
   logic: ReturnType<typeof useLotAllocationForOrder>;
 }
 
-// eslint-disable-next-line complexity
+interface AllocationStatusHeaderProps {
+  requiredQty: number;
+  allocatedTotal: number;
+  remainingQty: number;
+  unit: string;
+}
+
+function AllocationStatusHeader({
+  requiredQty,
+  allocatedTotal,
+  remainingQty,
+  unit,
+}: AllocationStatusHeaderProps) {
+  return (
+    <div className="mb-2 flex items-center gap-4 text-sm font-medium text-gray-700">
+      <div>
+        必要: <span className="font-bold">{formatQuantity(requiredQty, unit)}</span>
+      </div>
+      <div>/</div>
+      <div className={cn(allocatedTotal > 0 ? "text-blue-600" : "")}>
+        引当済: <span className="font-bold">{formatQuantity(allocatedTotal, unit)}</span>
+      </div>
+      <div>/</div>
+      <div className={cn(remainingQty > 0 ? "text-orange-600" : "text-green-600")}>
+        残: <span className="font-bold">{formatQuantity(remainingQty, unit)}</span>
+      </div>
+      <div className="ml-auto text-xs text-gray-500">単位: {unit}</div>
+    </div>
+  );
+}
+
+interface CandidateLotListProps {
+  candidates: CandidateLotItem[];
+  line: OrderLine;
+  allocationsMap: Record<number, number>;
+  allocatedTotal: number;
+  requiredQty: number;
+  onChangeAllocation: (lineId: number, lotId: number, value: number) => void;
+  onSave: () => Promise<void>;
+}
+
+function CandidateLotList({
+  candidates,
+  line,
+  allocationsMap,
+  allocatedTotal,
+  requiredQty,
+  onChangeAllocation,
+  onSave,
+}: CandidateLotListProps) {
+  return (
+    <div className="space-y-1">
+      {candidates.map((lot) => (
+        <LotCandidateRow
+          key={lot.lot_id}
+          lot={lot}
+          line={line}
+          currentQty={allocationsMap[lot.lot_id] || 0}
+          allocatedTotal={allocatedTotal}
+          requiredQty={requiredQty}
+          onChangeAllocation={onChangeAllocation}
+          onSave={onSave}
+        />
+      ))}
+    </div>
+  );
+}
+
 export function OrderAllocationInline({ line, logic }: OrderAllocationInlineProps) {
   const { getAllocationsForLine, changeAllocation, saveAllocations } = logic;
 
@@ -66,37 +134,23 @@ export function OrderAllocationInline({ line, logic }: OrderAllocationInlineProp
   return (
     <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3">
       {/* ヘッダー情報 */}
-      <div className="mb-2 flex items-center gap-4 text-sm font-medium text-gray-700">
-        <div>
-          必要: <span className="font-bold">{formatQuantity(requiredQty, line.unit || "PCS")}</span>
-        </div>
-        <div>/</div>
-        <div className={cn(allocatedTotal > 0 ? "text-blue-600" : "")}>
-          引当済:{" "}
-          <span className="font-bold">{formatQuantity(allocatedTotal, line.unit || "PCS")}</span>
-        </div>
-        <div>/</div>
-        <div className={cn(remainingQty > 0 ? "text-orange-600" : "text-green-600")}>
-          残: <span className="font-bold">{formatQuantity(remainingQty, line.unit || "PCS")}</span>
-        </div>
-        <div className="ml-auto text-xs text-gray-500">単位: {line.unit || "PCS"}</div>
-      </div>
+      <AllocationStatusHeader
+        requiredQty={requiredQty}
+        allocatedTotal={allocatedTotal}
+        remainingQty={remainingQty}
+        unit={line.unit || "PCS"}
+      />
 
       {/* ロット候補リスト */}
-      <div className="space-y-1">
-        {candidates.map((lot) => (
-          <LotCandidateRow
-            key={lot.lot_id}
-            lot={lot}
-            line={line}
-            currentQty={allocationsMap[lot.lot_id] || 0}
-            allocatedTotal={allocatedTotal}
-            requiredQty={requiredQty}
-            onChangeAllocation={changeAllocation}
-            onSave={handleSave}
-          />
-        ))}
-      </div>
+      <CandidateLotList
+        candidates={candidates}
+        line={line}
+        allocationsMap={allocationsMap}
+        allocatedTotal={allocatedTotal}
+        requiredQty={requiredQty}
+        onChangeAllocation={changeAllocation}
+        onSave={handleSave}
+      />
     </div>
   );
 }

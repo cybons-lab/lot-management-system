@@ -130,10 +130,10 @@ class TestP2InsufficientStockErrorMapping:
 
         # Arrange & Act
         error = InsufficientStockError(
-            lot_id=123,
-            lot_number="LOT-001",
             required=100.0,
             available=50.0,
+            lot_id=123,
+            lot_number="LOT-001",
         )
 
         # Assert
@@ -152,10 +152,10 @@ class TestP2InsufficientStockErrorMapping:
 
         # Arrange & Act
         error = InsufficientStockError(
-            lot_id=456,
-            lot_number="LOT-XYZ",
             required=200.0,
             available=100.0,
+            lot_id=456,
+            lot_number="LOT-XYZ",
         )
 
         # Assert

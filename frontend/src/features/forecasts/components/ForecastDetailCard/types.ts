@@ -53,6 +53,8 @@ export interface ForecastCardHeaderProps {
   isOpen: boolean;
   onToggle?: () => void;
   onAutoAllocate?: () => void;
+  onRegenerateSuggestions?: () => void;
+  onClearSuggestions?: () => void;
   onDelete?: (forecastId: number) => void;
   isDeleting?: boolean;
   firstForecastId?: number;
