@@ -87,14 +87,16 @@ export function Step3DetailPage() {
     return [...items].sort((a, b) => a.row_no - b.row_no);
   }, [run?.items, layerFilter]);
 
-  // Unique Layer Options
+  // Unique Layer Options - 発行対象(issue_flag=true)のアイテムを持つメーカーのみ
   const layerOptions = useMemo(() => {
     if (!run?.items) return [];
+    // 発行対象のアイテムのみからメーカーを抽出
+    const issuedItems = run.items.filter((item) => item.issue_flag);
     const uniqueCodes = Array.from(
-      new Set(run.items.map((item) => item.layer_code).filter(Boolean)),
+      new Set(issuedItems.map((item) => item.layer_code).filter(Boolean)),
     );
     return uniqueCodes.sort().map((code) => {
-      const item = run.items.find((i) => i.layer_code === code);
+      const item = issuedItems.find((i) => i.layer_code === code);
       const makerName = item?.maker_name;
       const label = makerName ? `${makerName} (${code})` : (code as string);
       return { value: code as string, label };
