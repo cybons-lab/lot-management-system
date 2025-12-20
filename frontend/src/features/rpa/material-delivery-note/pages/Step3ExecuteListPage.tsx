@@ -162,6 +162,7 @@ export function Step3ExecuteListPage() {
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>ステータス</TableHead>
+                <TableHead>対象期間</TableHead>
                 <TableHead>取込日時</TableHead>
                 <TableHead>実行ユーザー</TableHead>
                 <TableHead>進捗</TableHead>
@@ -171,7 +172,7 @@ export function Step3ExecuteListPage() {
             <TableBody>
               {displayRuns.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-gray-500">
+                  <TableCell colSpan={7} className="py-8 text-center text-gray-500">
                     実行待ちのデータはありません。
                   </TableCell>
                 </TableRow>
@@ -186,6 +187,15 @@ export function Step3ExecuteListPage() {
                       <TableCell>{run.id}</TableCell>
                       <TableCell>
                         <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {run.data_start_date && run.data_end_date ? (
+                          <span className="text-sm">
+                            {run.data_start_date} 〜 {run.data_end_date}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {format(new Date(run.created_at), "yyyy/MM/dd HH:mm", {
