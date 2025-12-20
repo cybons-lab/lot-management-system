@@ -10,15 +10,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import {
-  Check,
-  ChevronLeft,
-  X,
-  Filter,
-  Loader2,
-  ExternalLink,
-  AlertCircle,
-} from "lucide-react";
+import { ChevronLeft, Filter, Loader2, ExternalLink, AlertCircle } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -84,10 +76,11 @@ export function Step3DetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["rpa-run", id] }),
   });
 
-  // Filter Logic
+  // Filter Logic - Step3では発行対象(issue_flag=true)のアイテムのみ表示
   const filteredItems = useMemo(() => {
     if (!run?.items) return [];
-    let items = run.items;
+    // 発行対象のアイテムのみを対象とする
+    let items = run.items.filter((item) => item.issue_flag);
     if (layerFilter !== "all") {
       items = items.filter((item) => item.layer_code === layerFilter);
     }
@@ -260,7 +253,6 @@ export function Step3DetailPage() {
                   <TableHead>材質コード</TableHead>
                   <TableHead>納期</TableHead>
                   <TableHead>出荷便</TableHead>
-                  <TableHead className="text-center">発行対象</TableHead>
                   <TableHead>結果</TableHead>
                 </TableRow>
               </TableHeader>
@@ -276,13 +268,6 @@ export function Step3DetailPage() {
                       {item.delivery_date ? format(new Date(item.delivery_date), "MM/dd") : ""}
                     </TableCell>
                     <TableCell>{item.shipping_vehicle}</TableCell>
-                    <TableCell className="text-center">
-                      {item.issue_flag ? (
-                        <Check className="mx-auto h-4 w-4 text-green-600" />
-                      ) : (
-                        <X className="mx-auto h-4 w-4 text-gray-300" />
-                      )}
-                    </TableCell>
                     <TableCell>
                       {item.result_status === "success" && (
                         <Badge className="bg-green-600">成功</Badge>
@@ -300,10 +285,7 @@ export function Step3DetailPage() {
                       {item.result_status === "processing" && (
                         <Badge className="animate-pulse bg-blue-500">処理中</Badge>
                       )}
-                      {!item.result_status && item.issue_flag && (
-                        <Badge variant="outline">未開始</Badge>
-                      )}
-                      {!item.issue_flag && <span className="text-gray-400">-</span>}
+                      {!item.result_status && <Badge variant="outline">未開始</Badge>}
                     </TableCell>
                   </TableRow>
                 ))}
