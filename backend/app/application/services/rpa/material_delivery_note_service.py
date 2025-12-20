@@ -575,12 +575,19 @@ class MaterialDeliveryNoteService:
         if run.status == RpaRunStatus.STEP2_RUNNING:
             # Check if any item is still processing or pending (for issued items)
             # Ignore items where issue_flag is False
+            # Note: notin_() ignores NULL, so we need explicit NULL check
+            from sqlalchemy import or_
+
             unprocessed_count = (
                 self.db.query(RpaRunItem)
                 .filter(
                     RpaRunItem.run_id == run_id,
                     RpaRunItem.issue_flag.is_(True),
-                    RpaRunItem.result_status.notin_(["success", "failure", "error"]),
+                    or_(
+                        RpaRunItem.result_status.is_(None),  # NULL = unprocessed
+                        RpaRunItem.result_status == "pending",  # pending = not yet processed
+                        RpaRunItem.result_status == "processing",  # processing = in progress
+                    ),
                 )
                 .count()
             )
