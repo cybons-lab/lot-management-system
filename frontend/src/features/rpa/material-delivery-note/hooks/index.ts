@@ -3,7 +3,7 @@
  * TanStack Query hooks for Material Delivery Note operations
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import {
@@ -18,6 +18,7 @@ import {
   type MaterialDeliveryNoteExecuteRequest,
   type Step2ExecuteRequest,
   type RpaRun,
+  type RpaRunListResponse,
 } from "../api";
 
 const QUERY_KEY = "material-delivery-note-runs";
@@ -25,21 +26,30 @@ const QUERY_KEY = "material-delivery-note-runs";
 /**
  * Run一覧を取得
  */
-export function useRuns(skip = 0, limit = 100) {
+export function useRuns(
+  skip = 0,
+  limit = 100,
+  options?: Partial<UseQueryOptions<RpaRunListResponse, Error>>,
+) {
   return useQuery({
     queryKey: [QUERY_KEY, skip, limit],
     queryFn: () => getRuns(skip, limit),
+    ...options,
   });
 }
 
 /**
  * Run詳細を取得
  */
-export function useRun(runId: number | undefined) {
+export function useRun(
+  runId: number | undefined,
+  options?: Partial<UseQueryOptions<RpaRun, Error>>,
+) {
   return useQuery({
     queryKey: [QUERY_KEY, runId],
     queryFn: () => getRun(runId!),
-    enabled: runId !== undefined,
+    enabled: runId !== undefined && (options?.enabled ?? true),
+    ...options,
   });
 }
 

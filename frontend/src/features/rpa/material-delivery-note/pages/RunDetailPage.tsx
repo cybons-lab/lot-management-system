@@ -38,7 +38,7 @@ export function RunDetailPage() {
   // UI State
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
-  const { data: run, isLoading, error } = useRun(id);
+  const { data: run, isLoading, error } = useRun(id, { refetchInterval: 3000 });
   const updateItemMutation = useUpdateItem(id);
   const batchUpdateMutation = useBatchUpdateItems(id);
 
