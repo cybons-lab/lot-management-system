@@ -11,19 +11,28 @@ import {
   calculateDekadAggregations,
   calculateMonthlyAggregation,
 } from "../utils/aggregation-utils";
-import { getDatesForMonth, getMonthStart } from "../utils/date-utils";
+import {
+  getDatesForMonth,
+  getDatesForNextMonthFirst10Days,
+  getMonthStart,
+} from "../utils/date-utils";
 
 interface UseForecastCalculationsResult {
   dailyData: Map<string, number>;
   dailyForecastIds: Map<string, number>;
   unit: string;
   targetMonthStartDate: Date;
-  dates: Date[];
+  /** 当月の全日付 */
+  currentMonthDates: Date[];
+  /** 翌月1日〜10日の日付 */
+  nextMonthFirst10Dates: Date[];
   dekadMonth: AggregationMonth;
   monthlyMonth: AggregationMonth;
   dekadData: DekadData[];
   monthlyData: MonthlyData | null;
   targetMonthTotal: number;
+  /** 翌月10日までの合計 */
+  nextMonthFirst10Total: number;
 }
 
 /**
@@ -114,8 +123,17 @@ export function useForecastCalculations(group: ForecastGroup): UseForecastCalcul
     return getMonthStart(today);
   }, [forecasts]);
 
-  // Generate all dates for the target month
-  const dates = useMemo(() => getDatesForMonth(targetMonthStartDate), [targetMonthStartDate]);
+  // Generate all dates for the current target month
+  const currentMonthDates = useMemo(
+    () => getDatesForMonth(targetMonthStartDate),
+    [targetMonthStartDate],
+  );
+
+  // Generate dates for next month's first 10 days (SAP format)
+  const nextMonthFirst10Dates = useMemo(
+    () => getDatesForNextMonthFirst10Days(targetMonthStartDate),
+    [targetMonthStartDate],
+  );
 
   // Calculate aggregation months (dekad: next month, monthly: month after next)
   const { dekadMonth, monthlyMonth } = useMemo(() => {
@@ -130,6 +148,7 @@ export function useForecastCalculations(group: ForecastGroup): UseForecastCalcul
   }, [targetMonthStartDate]);
 
   // Calculate dekad aggregations from jyun forecasts
+  // SAP format: only 中旬 (11-20) and 下旬 (21-end), no 上旬 (1-10)
   const dekadData = useMemo(() => {
     if (jyunForecasts.length === 0) {
       // Fallback: calculate from daily data if no jyun forecasts available
@@ -137,7 +156,7 @@ export function useForecastCalculations(group: ForecastGroup): UseForecastCalcul
     }
 
     // Use jyun forecast data directly
-    // Jyun forecasts have forecast_date on 1st, 11th, or 21st
+    // Jyun forecasts have forecast_date on 11th or 21st (no 1st for 上旬)
     const dekadMap = new Map<number, number>();
 
     for (const forecast of jyunForecasts) {
@@ -145,19 +164,17 @@ export function useForecastCalculations(group: ForecastGroup): UseForecastCalcul
       const day = date.getDate();
       const qty = Number(forecast.forecast_quantity) || 0;
 
-      if (day === 1) {
-        dekadMap.set(1, qty); // 上旬
-      } else if (day === 11) {
+      if (day === 11) {
         dekadMap.set(11, qty); // 中旬
       } else if (day === 21) {
         dekadMap.set(21, qty); // 下旬
       }
+      // Note: day === 1 (上旬) is intentionally skipped
     }
 
     const monthLabel = `${dekadMonth.month + 1}月`;
 
     return [
-      { label: `${monthLabel} 上旬`, total: Math.round(dekadMap.get(1) || 0) },
       { label: `${monthLabel} 中旬`, total: Math.round(dekadMap.get(11) || 0) },
       { label: `${monthLabel} 下旬`, total: Math.round(dekadMap.get(21) || 0) },
     ];
@@ -183,18 +200,29 @@ export function useForecastCalculations(group: ForecastGroup): UseForecastCalcul
   }, [monthlyForecasts, dailyData, monthlyMonth]);
 
   // Calculate target month total
-  const targetMonthTotal = useMemo(() => calculateDailyTotal(dates, dailyData), [dates, dailyData]);
+  const targetMonthTotal = useMemo(
+    () => calculateDailyTotal(currentMonthDates, dailyData),
+    [currentMonthDates, dailyData],
+  );
+
+  // Calculate next month first 10 days total
+  const nextMonthFirst10Total = useMemo(
+    () => calculateDailyTotal(nextMonthFirst10Dates, dailyData),
+    [nextMonthFirst10Dates, dailyData],
+  );
 
   return {
     dailyData,
     dailyForecastIds,
     unit,
     targetMonthStartDate,
-    dates,
+    currentMonthDates,
+    nextMonthFirst10Dates,
     dekadMonth,
     monthlyMonth,
     dekadData,
     monthlyData,
     targetMonthTotal,
+    nextMonthFirst10Total,
   };
 }

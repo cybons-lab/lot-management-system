@@ -6,17 +6,17 @@ import type { ForecastAggregationsProps } from "./types";
 
 /**
  * Display dekad (旬) and monthly aggregations side by side
- * - Left side: Dekad aggregations (上旬・中旬・下旬)
+ * - Left side: Dekad aggregations (中旬・下旬) - SAP format (no 上旬)
  * - Right side: Monthly aggregation
  */
 export function ForecastAggregations({ dekadData, monthlyData }: ForecastAggregationsProps) {
   return (
     <div className="grid gap-6 border-t pt-4 md:grid-cols-2">
-      {/* Dekad aggregations (left side) */}
+      {/* Dekad aggregations (left side) - 中旬・下旬 only (SAP format) */}
       <div className="space-y-3">
         <h4 className="text-sm font-semibold text-gray-700">旬別指示</h4>
         {dekadData.length > 0 ? (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {dekadData.map((dekad) => (
               <div
                 key={dekad.label}

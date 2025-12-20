@@ -13,9 +13,9 @@ import {
 
 describe("aggregation-utils", () => {
   describe("calculateDekadAggregations", () => {
-    it("correctly aggregates by dekad (旬)", () => {
+    it("correctly aggregates by dekad (旬) - SAP format: only 中旬 and 下旬", () => {
       const dailyData = new Map<string, number>([
-        // First dekad (上旬): 1-10
+        // First dekad (上旬): 1-10 - these are NOT included in SAP aggregation
         ["2025-06-01", 10],
         ["2025-06-05", 20],
         ["2025-06-10", 30],
@@ -31,10 +31,10 @@ describe("aggregation-utils", () => {
 
       const result = calculateDekadAggregations(dailyData, dekadMonth);
 
-      expect(result).toHaveLength(3);
-      expect(result[0]).toEqual({ label: "6月 上旬", total: 60 }); // 10+20+30
-      expect(result[1]).toEqual({ label: "6月 中旬", total: 90 }); // 40+50
-      expect(result[2]).toEqual({ label: "6月 下旬", total: 130 }); // 60+70
+      // SAP format: only 2 dekads (中旬 and 下旬), no 上旬
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({ label: "6月 中旬", total: 90 }); // 40+50
+      expect(result[1]).toEqual({ label: "6月 下旬", total: 130 }); // 60+70
     });
 
     it("returns empty array for null dekadMonth", () => {
@@ -47,7 +47,7 @@ describe("aggregation-utils", () => {
 
     it("ignores dates from other months", () => {
       const dailyData = new Map<string, number>([
-        ["2025-06-01", 100],
+        ["2025-06-15", 100], // 中旬
         ["2025-07-01", 200], // Different month
       ]);
 
@@ -55,23 +55,22 @@ describe("aggregation-utils", () => {
 
       const result = calculateDekadAggregations(dailyData, dekadMonth);
 
-      expect(result[0].total).toBe(100);
-      expect(result[1].total).toBe(0);
-      expect(result[2].total).toBe(0);
+      expect(result[0].total).toBe(100); // 中旬
+      expect(result[1].total).toBe(0); // 下旬
     });
 
     it("rounds totals to integers", () => {
       const dailyData = new Map<string, number>([
-        ["2025-06-01", 10.4],
-        ["2025-06-02", 10.4],
-        ["2025-06-03", 10.4],
+        ["2025-06-15", 10.4],
+        ["2025-06-16", 10.4],
+        ["2025-06-17", 10.4],
       ]);
 
       const dekadMonth: AggregationMonth = { year: 2025, month: 5 };
 
       const result = calculateDekadAggregations(dailyData, dekadMonth);
 
-      expect(result[0].total).toBe(31); // Rounded
+      expect(result[0].total).toBe(31); // 中旬 - Rounded
     });
 
     it("handles empty dailyData", () => {
@@ -80,9 +79,8 @@ describe("aggregation-utils", () => {
 
       const result = calculateDekadAggregations(dailyData, dekadMonth);
 
-      expect(result[0].total).toBe(0);
-      expect(result[1].total).toBe(0);
-      expect(result[2].total).toBe(0);
+      expect(result[0].total).toBe(0); // 中旬
+      expect(result[1].total).toBe(0); // 下旬
     });
   });
 

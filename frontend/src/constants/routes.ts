@@ -87,18 +87,21 @@ export const ROUTES = {
     SEED_SNAPSHOTS: "/admin/seed-snapshots",
   },
 
-  // RPA
   RPA: {
     ROOT: "/rpa",
     MATERIAL_DELIVERY_NOTE: {
       ROOT: "/rpa/material-delivery-note",
       STEP1: "/rpa/material-delivery-note/step1",
+      CSV_IMPORT: "/rpa/material-delivery-note/csv-import",
       STEP2: "/rpa/material-delivery-note/step2",
       STEP3: "/rpa/material-delivery-note/step3",
       STEP3_EXECUTE: (runId: number | string) => `/rpa/material-delivery-note/step3/${runId}`,
+      STEP4: "/rpa/material-delivery-note/step4",
+      STEP4_DETAIL: (runId: number | string) => `/rpa/material-delivery-note/step4/${runId}`,
       CLOUD_FLOW_EXECUTE: "/rpa/material-delivery-note/execute",
       RUNS: "/rpa/material-delivery-note/runs",
       RUN_DETAIL: (runId: number | string) => `/rpa/material-delivery-note/runs/${runId}`,
+      LAYER_CODES: "/rpa/material-delivery-note/layer-codes",
     },
   },
 } as const;

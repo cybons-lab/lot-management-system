@@ -7,6 +7,7 @@ All models strictly follow the DDL v2.2
 from .assignments.assignment_models import UserSupplierAssignment
 from .auth_models import Role, User, UserRole
 from .base_model import Base
+from .cloud_flow_models import CloudFlowConfig, CloudFlowJob, CloudFlowJobStatus
 from .forecast_models import Forecast, ForecastCurrent, ForecastHistory
 from .inbound_models import ExpectedLot, InboundPlan, InboundPlanLine, InboundPlanStatus
 from .inventory_models import (
@@ -21,6 +22,7 @@ from .inventory_models import (
     StockMovementReason,  # Backward compatibility alias
     StockTransactionType,
 )
+from .layer_code_models import LayerCodeMapping
 from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog
 from .lot_reservations_model import (
     LotReservation,
@@ -146,4 +148,10 @@ __all__ = [
     "RpaRun",
     "RpaRunItem",
     "RpaRunStatus",
+    # Cloud Flow
+    "CloudFlowConfig",
+    "CloudFlowJob",
+    "CloudFlowJobStatus",
+    # Layer Code
+    "LayerCodeMapping",
 ]

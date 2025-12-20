@@ -21,6 +21,11 @@ export interface RpaRunItem {
   match_result: boolean | null;
   sap_registered: boolean | null;
   order_no: string | null;
+  maker_name: string | null;
+  result_status: string | null;
+  lock_flag: boolean;
+  item_no: string | null;
+  lot_no: string | null;
 }
 
 export interface RpaRun {
@@ -33,10 +38,14 @@ export interface RpaRun {
   step2_executed_at: string | null;
   step2_executed_by_user_id: number | null;
   step2_executed_by_username: string | null;
+  external_done_at: string | null;
+  external_done_by_username: string | null;
+  step4_executed_at: string | null;
   created_at: string;
   updated_at: string;
   item_count: number;
   complete_count: number;
+  issue_count: number;
   all_items_complete: boolean;
   items: RpaRunItem[];
 }
@@ -45,12 +54,17 @@ export interface RpaRunSummary {
   id: number;
   rpa_type: string;
   status: string;
+  data_start_date: string | null;
+  data_end_date: string | null;
   started_at: string | null;
   started_by_username: string | null;
   step2_executed_at: string | null;
+  external_done_at: string | null;
+  step4_executed_at: string | null;
   created_at: string;
   item_count: number;
   complete_count: number;
+  issue_count: number;
   all_items_complete: boolean;
 }
 
@@ -74,10 +88,10 @@ export interface Step2ExecuteResponse {
 }
 
 export interface Step2ExecuteRequest {
-  flow_url: string;
-  json_payload: string;
-  start_date: string;
-  end_date: string;
+  flow_url?: string;
+  json_payload?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface MaterialDeliveryNoteExecuteRequest {
@@ -96,11 +110,12 @@ export interface MaterialDeliveryNoteExecuteResponse {
 // API Functions
 
 /**
- * CSVファイルをアップロードしてRunを作成
+ * Run作成 (CSVアップロード)
  */
-export async function createRun(file: File): Promise<RpaRunCreateResponse> {
+export async function createRun(file: File, importType = "material_delivery_note") {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("import_type", importType);
 
   return http.postFormData<RpaRunCreateResponse>("rpa/material-delivery-note/runs", formData);
 }
@@ -122,7 +137,7 @@ export async function getRun(runId: number): Promise<RpaRun> {
 }
 
 /**
- * Itemを更新（issue_flag / complete_flag）
+ * Itemを更新（issue_flag / complete_flag / lot_no）
  */
 export async function updateItem(
   runId: number,
@@ -131,6 +146,7 @@ export async function updateItem(
     issue_flag?: boolean;
     complete_flag?: boolean;
     delivery_quantity?: number;
+    lot_no?: string;
   },
 ): Promise<RpaRunItem> {
   return http.patch<RpaRunItem>(`rpa/material-delivery-note/runs/${runId}/items/${itemId}`, data);
@@ -182,3 +198,62 @@ export async function executeMaterialDeliveryNote(
     request,
   );
 }
+
+/**
+ * 外部手順完了をマーク
+ */
+export async function markExternalDone(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/external-done`, {});
+}
+
+/**
+ * Step4: 突合チェック実行
+ */
+export async function executeStep4Check(
+  runId: number,
+  file: File,
+): Promise<{ match: number; mismatch: number }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return http.postFormData<{ match: number; mismatch: number }>(
+    `rpa/material-delivery-note/runs/${runId}/step4-check`,
+    formData,
+  );
+}
+
+/**
+ * Step4 NGアイテムの再実行
+ */
+export async function retryFailedItems(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/retry-failed`, {});
+}
+
+// Layer Codes
+export interface LayerCodeMapping {
+  layer_code: string;
+  maker_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type LayerCodeCreate = Pick<LayerCodeMapping, "layer_code" | "maker_name">;
+export type LayerCodeUpdate = Pick<LayerCodeMapping, "maker_name">;
+
+export const getLayerCodes = async (): Promise<LayerCodeMapping[]> => {
+  return await http.get<LayerCodeMapping[]>("rpa/layer-codes");
+};
+
+export const createLayerCode = async (data: LayerCodeCreate): Promise<LayerCodeMapping> => {
+  return await http.post<LayerCodeMapping>("rpa/layer-codes", data);
+};
+
+export const updateLayerCode = async (
+  layer_code: string,
+  data: LayerCodeUpdate,
+): Promise<LayerCodeMapping> => {
+  return await http.put<LayerCodeMapping>(`rpa/layer-codes/${layer_code}`, data);
+};
+
+export const deleteLayerCode = async (layer_code: string): Promise<void> => {
+  await http.delete(`rpa/layer-codes/${layer_code}`);
+};

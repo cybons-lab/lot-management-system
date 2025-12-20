@@ -7,14 +7,15 @@ import type { AggregationMonth, DekadData, MonthlyData } from "../types";
 
 /**
  * Calculate dekad (旬) aggregations for a given month
- * Dekad periods:
- * - First dekad (上旬): 1-10
+ * SAP provides only middle and lower dekad values:
  * - Second dekad (中旬): 11-20
  * - Third dekad (下旬): 21-end of month
  *
+ * Note: First dekad (上旬/1-10) is NOT included as SAP does not provide this data
+ *
  * @param dailyData - Map of date strings (YYYY-MM-DD) to quantities
  * @param dekadMonth - Target month for aggregation
- * @returns Array of dekad aggregations with labels and totals
+ * @returns Array of 2 dekad aggregations with labels and totals (中旬, 下旬)
  */
 export function calculateDekadAggregations(
   dailyData: Map<string, number>,
@@ -22,7 +23,6 @@ export function calculateDekadAggregations(
 ): DekadData[] {
   if (!dekadMonth) return [];
 
-  let jouTotal = 0; // 上旬 (first dekad)
   let chuTotal = 0; // 中旬 (second dekad)
   let geTotal = 0; // 下旬 (third dekad)
 
@@ -32,20 +32,18 @@ export function calculateDekadAggregations(
       const day = date.getDate();
       const numQty = Number(qty) || 0;
 
-      if (day <= DEKAD_BOUNDARIES.FIRST) {
-        jouTotal += numQty;
-      } else if (day <= DEKAD_BOUNDARIES.SECOND) {
+      if (day > DEKAD_BOUNDARIES.FIRST && day <= DEKAD_BOUNDARIES.SECOND) {
         chuTotal += numQty;
-      } else {
+      } else if (day > DEKAD_BOUNDARIES.SECOND) {
         geTotal += numQty;
       }
+      // Note: 上旬 (day <= 10) is intentionally skipped
     }
   }
 
   const monthLabel = `${dekadMonth.month + 1}月`;
 
   return [
-    { label: `${monthLabel} 上旬`, total: Math.round(jouTotal) },
     { label: `${monthLabel} 中旬`, total: Math.round(chuTotal) },
     { label: `${monthLabel} 下旬`, total: Math.round(geTotal) },
   ];

@@ -6,7 +6,7 @@
 import json
 import logging
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.application.services.rpa import (
@@ -14,6 +14,7 @@ from app.application.services.rpa import (
     call_power_automate_flow,
     get_lock_manager,
 )
+from app.infrastructure.persistence.models import LayerCodeMapping
 from app.infrastructure.persistence.models.auth_models import User
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import (
@@ -28,6 +29,7 @@ from app.presentation.schemas.rpa_run_schema import (
     RpaRunItemUpdateRequest,
     RpaRunListResponse,
     RpaRunResponse,
+    RpaRunResultUpdateRequest,
     RpaRunSummaryResponse,
     Step2ExecuteRequest,
     Step2ExecuteResponse,
@@ -38,8 +40,26 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/rpa/material-delivery-note", tags=["rpa-material-delivery-note"])
 
 
-def _build_run_response(run) -> RpaRunResponse:
+def _get_maker_map(db: Session, layer_codes: list[str]) -> dict[str, str]:
+    """層別コードに対応するメーカー名のマップを取得."""
+    if not layer_codes:
+        return {}
+    mappings = (
+        db.query(LayerCodeMapping).filter(LayerCodeMapping.layer_code.in_(set(layer_codes))).all()
+    )
+    return {m.layer_code: m.maker_name for m in mappings}
+
+
+def _build_run_response(run, maker_map: dict[str, str] = None) -> RpaRunResponse:
     """RpaRunからレスポンスを構築."""
+    maker_map = maker_map or {}
+    items = []
+    for item in run.items:
+        resp_item = RpaRunItemResponse.model_validate(item)
+        resp_item.maker_name = maker_map.get(item.layer_code)
+        resp_item.result_status = item.result_status
+        items.append(resp_item)
+
     return RpaRunResponse(
         id=run.id,
         rpa_type=run.rpa_type,
@@ -56,8 +76,14 @@ def _build_run_response(run) -> RpaRunResponse:
         updated_at=run.updated_at,
         item_count=run.item_count,
         complete_count=run.complete_count,
+        issue_count=run.issue_count,
         all_items_complete=run.all_items_complete,
-        items=[RpaRunItemResponse.model_validate(item) for item in run.items],
+        items=items,
+        external_done_at=run.external_done_at,
+        external_done_by_username=run.external_done_by_user.username
+        if run.external_done_by_user
+        else None,
+        step4_executed_at=run.step4_executed_at,
     )
 
 
@@ -67,13 +93,18 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
         id=run.id,
         rpa_type=run.rpa_type,
         status=run.status,
+        data_start_date=run.data_start_date,
+        data_end_date=run.data_end_date,
         started_at=run.started_at,
         started_by_username=run.started_by_user.username if run.started_by_user else None,
         step2_executed_at=run.step2_executed_at,
         created_at=run.created_at,
         item_count=run.item_count,
         complete_count=run.complete_count,
+        issue_count=run.issue_count,
         all_items_complete=run.all_items_complete,
+        external_done_at=run.external_done_at,
+        step4_executed_at=run.step4_executed_at,
     )
 
 
@@ -82,32 +113,35 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
     response_model=RpaRunCreateResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_run(
+def create_run(
     file: UploadFile = File(...),
+    import_type: str = Form("material_delivery_note"),
     db: Session = Depends(get_db),
-    current_user: User | None = Depends(get_current_user_optional),
+    user: User | None = Depends(get_current_user_optional),
 ):
-    """CSV取込でRunを作成.
+    """CSVファイルからRunを作成する.
 
-    multipart/form-dataでCSVファイルをアップロード。
-    パース結果をDBに保存し、run_idを返す。
+    Args:
+        file: アップロードされたCSVファイル
+        import_type: インポート形式 (default: material_delivery_note)
+        db: DBセッション
+        user: 実行ユーザー
     """
-    if not file.filename or not file.filename.lower().endswith(".csv"):
+    if not file.filename.endswith(".csv"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="ファイルはCSV形式である必要があります",
+            detail="File must be a CSV file",
         )
 
     try:
-        content = await file.read()
+        content = file.file.read()
         service = MaterialDeliveryNoteService(db)
-        run = service.create_run_from_csv(content, user=current_user)
-
+        run = service.create_run_from_csv(content, import_type, user)
         return RpaRunCreateResponse(
             id=run.id,
             status=run.status,
             item_count=run.item_count,
-            message=f"CSV取込完了: {run.item_count}件のデータを登録しました",
+            message="CSV uploaded and items created successfully",
         )
     except ValueError as e:
         raise HTTPException(
@@ -115,10 +149,10 @@ async def create_run(
             detail=str(e),
         )
     except Exception as e:
-        logger.exception("CSV取込エラー")
+        logger.exception("Error creating run")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"CSV取込に失敗しました: {e!s}",
+            detail=f"Internal server error: {e!s}",
         )
 
 
@@ -153,7 +187,10 @@ def get_run(
             detail=f"Run not found: {run_id}",
         )
 
-    return _build_run_response(run)
+    layer_codes = [item.layer_code for item in run.items if item.layer_code]
+    maker_map = _get_maker_map(db, layer_codes)
+
+    return _build_run_response(run, maker_map)
 
 
 @router.patch(
@@ -167,22 +204,64 @@ def update_item(
     db: Session = Depends(get_db),
 ):
     """Item更新（issue_flag / complete_flag / delivery_quantity）."""
-    service = MaterialDeliveryNoteService(db)
-    item = service.update_item(
-        run_id=run_id,
-        item_id=item_id,
-        issue_flag=request.issue_flag,
-        complete_flag=request.complete_flag,
-        delivery_quantity=request.delivery_quantity,
-    )
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Item not found: run_id={run_id}, item_id={item_id}",
+    try:
+        service = MaterialDeliveryNoteService(db)
+        item = service.update_item(
+            run_id=run_id,
+            item_id=item_id,
+            issue_flag=request.issue_flag,
+            complete_flag=request.complete_flag,
+            delivery_quantity=request.delivery_quantity,
+            lot_no=request.lot_no,
         )
 
-    return RpaRunItemResponse.model_validate(item)
+        if not item:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Item not found: run_id={run_id}, item_id={item_id}",
+            )
+
+        resp_item = RpaRunItemResponse.model_validate(item)
+        if item.layer_code:
+            maker_map = _get_maker_map(db, [item.layer_code])
+            resp_item.maker_name = maker_map.get(item.layer_code)
+
+        return resp_item
+    except ValueError as e:
+        logger.error(f"ValueError in update_item: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.exception("Unexpected error in update_item")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {e!s}",
+        )
+
+
+@router.get(
+    "/runs/{run_id}/next-item",
+    response_model=RpaRunItemResponse | None,
+)
+def get_next_processing_item(
+    run_id: int,
+    db: Session = Depends(get_db),
+):
+    """次に処理すべき未完了アイテムを取得する."""
+    service = MaterialDeliveryNoteService(db)
+    item = service.get_next_processing_item(run_id)
+
+    if not item:
+        return None
+
+    resp_item = RpaRunItemResponse.model_validate(item)
+    if item.layer_code:
+        maker_map = _get_maker_map(db, [item.layer_code])
+        resp_item.maker_name = maker_map.get(item.layer_code)
+
+    return resp_item
 
 
 @router.post(
@@ -210,7 +289,10 @@ def batch_update_items(
             detail=f"Run not found: {run_id}",
         )
 
-    return _build_run_response(run)
+    layer_codes = [item.layer_code for item in run.items if item.layer_code]
+    maker_map = _get_maker_map(db, layer_codes)
+
+    return _build_run_response(run, maker_map)
 
 
 @router.post(
@@ -221,7 +303,7 @@ def complete_all_items(
     run_id: int,
     db: Session = Depends(get_db),
 ):
-    """全Itemsを完了にする."""
+    """Step2完了としてステータスを更新する."""
     service = MaterialDeliveryNoteService(db)
     run = service.complete_all_items(run_id)
 
@@ -231,7 +313,10 @@ def complete_all_items(
             detail=f"Run not found: {run_id}",
         )
 
-    return _build_run_response(run)
+    layer_codes = [item.layer_code for item in run.items if item.layer_code]
+    maker_map = _get_maker_map(db, layer_codes)
+
+    return _build_run_response(run, maker_map)
 
 
 @router.post(
@@ -287,6 +372,91 @@ async def execute_step2(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Step2実行に失敗しました: {e!s}",
         )
+
+
+@router.post("/runs/{run_id}/external-done", response_model=RpaRunResponse)
+def mark_external_done(
+    run_id: int,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+):
+    """外部手順完了をマークする."""
+    service = MaterialDeliveryNoteService(db)
+    try:
+        run = service.mark_external_done(run_id, current_user)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(db, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.patch(
+    "/runs/{run_id}/items/{item_id}/rpa-result",
+    response_model=RpaRunItemResponse,
+)
+def update_item_result(
+    run_id: int,
+    item_id: int,
+    request: RpaRunResultUpdateRequest,
+    db: Session = Depends(get_db),
+):
+    """PADからの結果更新."""
+    service = MaterialDeliveryNoteService(db)
+    item = service.update_item_result(
+        run_id=run_id,
+        item_id=item_id,
+        result_status=request.result_status,
+        sap_registered=request.sap_registered,
+        issue_flag=request.issue_flag,
+    )
+    if not item:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    resp_item = RpaRunItemResponse.model_validate(item)
+    if item.layer_code:
+        maker_map = _get_maker_map(db, [item.layer_code])
+        resp_item.maker_name = maker_map.get(item.layer_code)
+    return resp_item
+
+
+@router.post("/runs/{run_id}/step4-check", response_model=dict)
+def execute_step4_check(
+    run_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """Step4: 突合チェック実行.
+
+    Returns:
+        {"match": int, "mismatch": int}
+    """
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="CSV file required")
+
+    service = MaterialDeliveryNoteService(db)
+    try:
+        content = file.file.read()
+        result = service.execute_step4_check(run_id, content)
+        return result
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/runs/{run_id}/retry-failed", response_model=RpaRunResponse)
+def retry_failed_items(
+    run_id: int,
+    db: Session = Depends(get_db),
+):
+    """Step4 NGアイテムのみStep3再実行."""
+    service = MaterialDeliveryNoteService(db)
+    try:
+        run = service.retry_step3_failed(run_id)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(db, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post(

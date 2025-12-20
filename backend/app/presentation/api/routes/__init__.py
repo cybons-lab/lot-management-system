@@ -57,10 +57,10 @@ from app.presentation.api.routes.orders import (
     orders_router,
 )
 from app.presentation.api.routes.rpa import (
+    cloud_flow_router,
+    layer_code_router,
     material_delivery_note_router,
-)
-from app.presentation.api.routes.rpa import (
-    router as rpa_router,
+    rpa_router,
 )
 from app.presentation.api.routes.system.system_router import router as system_router
 from app.presentation.api.v2 import api_router as api_v2_router
@@ -138,6 +138,8 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(sap_router, prefix=prefix)
     app.include_router(rpa_router, prefix=prefix)
     app.include_router(material_delivery_note_router, prefix=prefix)
+    app.include_router(cloud_flow_router, prefix=prefix)
+    app.include_router(layer_code_router, prefix=prefix)
 
 
 __all__ = [

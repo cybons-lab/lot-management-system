@@ -42,14 +42,18 @@ import { ProductsListPage, ProductDetailPage } from "@/features/products";
 import { RolesListPage } from "@/features/roles/pages/RolesListPage";
 import { RPAPage } from "@/features/rpa";
 import {
+  CsvImportPage,
+  LayerCodeMappingsPage,
   MaterialDeliveryNotePage,
   CloudFlowExecutePage,
   RunDetailPage,
   RunsListPage,
   Step1Page,
   Step2CheckListPage,
-  Step3ExecutePage,
-  Step3SelectPage,
+  Step3ExecuteListPage,
+  Step3DetailPage,
+  Step4DetailPage,
+  Step4ListPage,
 } from "@/features/rpa/material-delivery-note";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
 import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
@@ -246,17 +250,24 @@ export function MainRoutes() {
 
       {/* RPA */}
       <Route path={ROUTES.RPA.ROOT} element={<RPAPage />} />
+      <Route
+        path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.LAYER_CODES}
+        element={<LayerCodeMappingsPage />}
+      />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT} element={<MaterialDeliveryNotePage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1} element={<Step1Page />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2} element={<Step2CheckListPage />} />
-      <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3} element={<Step3SelectPage />} />
-      <Route path="/rpa/material-delivery-note/step3/:runId" element={<Step3ExecutePage />} />
+      <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3} element={<Step3ExecuteListPage />} />
       <Route
         path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CLOUD_FLOW_EXECUTE}
         element={<CloudFlowExecutePage />}
       />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS} element={<RunsListPage />} />
+      <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CSV_IMPORT} element={<CsvImportPage />} />
       <Route path="/rpa/material-delivery-note/runs/:runId" element={<RunDetailPage />} />
+      <Route path="/rpa/material-delivery-note/step3/:runId" element={<Step3DetailPage />} />
+      <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4} element={<Step4ListPage />} />
+      <Route path="/rpa/material-delivery-note/step4/:runId" element={<Step4DetailPage />} />
 
       {/* Catch all - redirect to dashboard */}
       <Route path="*" element={<Navigate to={ROUTES.DASHBOARD} replace />} />

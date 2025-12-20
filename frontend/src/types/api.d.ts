@@ -318,6 +318,51 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v2/forecast/suggestions/regenerate-group": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Regenerate Suggestions For Group
+     * @description フォーキャストグループ単位で計画引当（Suggestions）を再生成.
+     *
+     *     「計画引当を更新」ボタンの個別グループ版。
+     *     既存のSuggestionsを削除し、FEFOで再計算する。
+     */
+    post: operations["regenerate_suggestions_for_group_api_v2_forecast_suggestions_regenerate_group_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v2/forecast/suggestions/clear-group": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Clear Suggestions For Group
+     * @description フォーキャストグループ単位で計画引当（Suggestions）を削除.
+     *
+     *     「計画引当クリア」ボタン用。既存のSuggestionsを削除する。
+     */
+    delete: operations["clear_suggestions_for_group_api_v2_forecast_suggestions_clear_group_delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v2/forecast/suggestions/group-summary": {
     parameters: {
       query?: never;
@@ -4543,10 +4588,13 @@ export interface paths {
     put?: never;
     /**
      * Create Run
-     * @description CSV取込でRunを作成.
+     * @description CSVファイルからRunを作成する.
      *
-     *     multipart/form-dataでCSVファイルをアップロード。
-     *     パース結果をDBに保存し、run_idを返す。
+     *     Args:
+     *         file: アップロードされたCSVファイル
+     *         import_type: インポート形式 (default: material_delivery_note)
+     *         db: DBセッション
+     *         user: 実行ユーザー
      */
     post: operations["create_run_api_rpa_material_delivery_note_runs_post"];
     delete?: never;
@@ -4595,6 +4643,26 @@ export interface paths {
     patch: operations["update_item_api_rpa_material_delivery_note_runs__run_id__items__item_id__patch"];
     trace?: never;
   };
+  "/api/rpa/material-delivery-note/runs/{run_id}/next-item": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Next Processing Item
+     * @description 次に処理すべき未完了アイテムを取得する.
+     */
+    get: operations["get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/material-delivery-note/runs/{run_id}/items/batch-update": {
     parameters: {
       query?: never;
@@ -4626,7 +4694,7 @@ export interface paths {
     put?: never;
     /**
      * Complete All Items
-     * @description 全Itemsを完了にする.
+     * @description Step2完了としてステータスを更新する.
      */
     post: operations["complete_all_items_api_rpa_material_delivery_note_runs__run_id__complete_all_post"];
     delete?: never;
@@ -4658,6 +4726,89 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/material-delivery-note/runs/{run_id}/external-done": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Mark External Done
+     * @description 外部手順完了をマークする.
+     */
+    post: operations["mark_external_done_api_rpa_material_delivery_note_runs__run_id__external_done_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/rpa-result": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update Item Result
+     * @description PADからの結果更新.
+     */
+    patch: operations["update_item_result_api_rpa_material_delivery_note_runs__run_id__items__item_id__rpa_result_patch"];
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/step4-check": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Execute Step4 Check
+     * @description Step4: 突合チェック実行.
+     *
+     *     Returns:
+     *         {"match": int, "mismatch": int}
+     */
+    post: operations["execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/retry-failed": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Retry Failed Items
+     * @description Step4 NGアイテムのみStep3再実行.
+     */
+    post: operations["retry_failed_items_api_rpa_material_delivery_note_runs__run_id__retry_failed_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/material-delivery-note/execute": {
     parameters: {
       query?: never;
@@ -4676,6 +4827,129 @@ export interface paths {
      */
     post: operations["execute_material_delivery_note_api_rpa_material_delivery_note_execute_post"];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/cloud-flow/jobs": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Job History
+     * @description ジョブ履歴を取得.
+     */
+    get: operations["get_job_history_api_rpa_cloud_flow_jobs_get"];
+    put?: never;
+    /**
+     * Create Job
+     * @description ジョブを作成（キューに追加）.
+     *
+     *     ゲストユーザーは実行不可。
+     *     他ユーザーが実行中の場合は待機状態で追加。
+     */
+    post: operations["create_job_api_rpa_cloud_flow_jobs_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/cloud-flow/jobs/current": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Queue Status
+     * @description 現在のキュー状態を取得.
+     *
+     *     - current_job: 実行中のジョブ
+     *     - pending_jobs: 待機中のジョブ一覧
+     *     - your_position: 自分の待ち順番
+     */
+    get: operations["get_queue_status_api_rpa_cloud_flow_jobs_current_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/cloud-flow/configs/{config_key}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Config
+     * @description 設定を取得.
+     */
+    get: operations["get_config_api_rpa_cloud_flow_configs__config_key__get"];
+    /**
+     * Update Config
+     * @description 設定を登録/更新.
+     */
+    put: operations["update_config_api_rpa_cloud_flow_configs__config_key__put"];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/layer-codes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Layer Codes
+     * @description 層別コード一覧取得.
+     */
+    get: operations["list_layer_codes_api_rpa_layer_codes_get"];
+    put?: never;
+    /**
+     * Create Layer Code
+     * @description 層別コード作成.
+     */
+    post: operations["create_layer_code_api_rpa_layer_codes_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/layer-codes/{layer_code}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Update Layer Code
+     * @description 層別コード更新.
+     */
+    put: operations["update_layer_code_api_rpa_layer_codes__layer_code__put"];
+    post?: never;
+    /**
+     * Delete Layer Code
+     * @description 層別コード削除.
+     */
+    delete: operations["delete_layer_code_api_rpa_layer_codes__layer_code__delete"];
     options?: never;
     head?: never;
     patch?: never;
@@ -5322,6 +5596,19 @@ export interface components {
        * Format: binary
        */
       file: string;
+      /**
+       * Import Type
+       * @default material_delivery_note
+       */
+      import_type: string;
+    };
+    /** Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post */
+    Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post: {
+      /**
+       * File
+       * Format: binary
+       */
+      file: string;
     };
     /** Body_import_from_file_api_admin_master_import_upload_post */
     Body_import_from_file_api_admin_master_import_upload_post: {
@@ -5686,6 +5973,101 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+    };
+    /**
+     * CloudFlowConfigResponse
+     * @description 設定レスポンス.
+     */
+    CloudFlowConfigResponse: {
+      /** Id */
+      id: number;
+      /** Config Key */
+      config_key: string;
+      /** Config Value */
+      config_value: string;
+      /** Description */
+      description?: string | null;
+    };
+    /**
+     * CloudFlowConfigUpdate
+     * @description 設定更新リクエスト.
+     */
+    CloudFlowConfigUpdate: {
+      /** Config Value */
+      config_value: string;
+      /** Description */
+      description?: string | null;
+    };
+    /**
+     * CloudFlowJobCreate
+     * @description ジョブ作成リクエスト.
+     */
+    CloudFlowJobCreate: {
+      /** Job Type */
+      job_type: string;
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       */
+      end_date: string;
+    };
+    /**
+     * CloudFlowJobResponse
+     * @description ジョブレスポンス.
+     */
+    CloudFlowJobResponse: {
+      /** Id */
+      id: number;
+      /** Job Type */
+      job_type: string;
+      /** Status */
+      status: string;
+      /**
+       * Start Date
+       * Format: date
+       */
+      start_date: string;
+      /**
+       * End Date
+       * Format: date
+       */
+      end_date: string;
+      /** Requested By */
+      requested_by?: string | null;
+      /**
+       * Requested At
+       * Format: date-time
+       */
+      requested_at: string;
+      /** Started At */
+      started_at?: string | null;
+      /** Completed At */
+      completed_at?: string | null;
+      /** Result Message */
+      result_message?: string | null;
+      /** Error Message */
+      error_message?: string | null;
+      /** Position In Queue */
+      position_in_queue?: number | null;
+    };
+    /**
+     * CloudFlowQueueStatus
+     * @description 現在のキュー状態.
+     */
+    CloudFlowQueueStatus: {
+      current_job?: components["schemas"]["CloudFlowJobResponse"] | null;
+      /**
+       * Pending Jobs
+       * @default []
+       */
+      pending_jobs: components["schemas"]["CloudFlowJobResponse"][];
+      /** Your Position */
+      your_position?: number | null;
     };
     /**
      * ConfirmedOrderLineResponse
@@ -7129,6 +7511,35 @@ export interface components {
       total_warehouses: number;
       /** Total Quantity */
       total_quantity: string;
+    };
+    /** LayerCodeCreate */
+    LayerCodeCreate: {
+      /** Maker Name */
+      maker_name: string;
+      /** Layer Code */
+      layer_code: string;
+    };
+    /** LayerCodeResponse */
+    LayerCodeResponse: {
+      /** Maker Name */
+      maker_name: string;
+      /** Layer Code */
+      layer_code: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /** LayerCodeUpdate */
+    LayerCodeUpdate: {
+      /** Maker Name */
+      maker_name: string;
     };
     /** ListResponse[CandidateLotItem] */
     ListResponse_CandidateLotItem_: {
@@ -8663,7 +9074,7 @@ export interface components {
       shipping_vehicle?: string | null;
       /**
        * Issue Flag
-       * @default true
+       * @default false
        */
       issue_flag: boolean;
       /**
@@ -8677,6 +9088,19 @@ export interface components {
       sap_registered?: boolean | null;
       /** Order No */
       order_no?: string | null;
+      /** Result Status */
+      result_status?: string | null;
+      /** Maker Name */
+      maker_name?: string | null;
+      /**
+       * Lock Flag
+       * @default false
+       */
+      lock_flag: boolean;
+      /** Item No */
+      item_no?: string | null;
+      /** Lot No */
+      lot_no?: string | null;
     };
     /**
      * RpaRunItemUpdateRequest
@@ -8689,6 +9113,12 @@ export interface components {
       complete_flag?: boolean | null;
       /** Delivery Quantity */
       delivery_quantity?: number | null;
+      /** Result Status */
+      result_status?: string | null;
+      /** Sap Registered */
+      sap_registered?: boolean | null;
+      /** Lot No */
+      lot_no?: string | null;
     };
     /**
      * RpaRunListResponse
@@ -8723,6 +9153,12 @@ export interface components {
       step2_executed_by_user_id?: number | null;
       /** Step2 Executed By Username */
       step2_executed_by_username?: string | null;
+      /** External Done At */
+      external_done_at?: string | null;
+      /** External Done By Username */
+      external_done_by_username?: string | null;
+      /** Step4 Executed At */
+      step4_executed_at?: string | null;
       /**
        * Created At
        * Format: date-time
@@ -8744,6 +9180,11 @@ export interface components {
        */
       complete_count: number;
       /**
+       * Issue Count
+       * @default 0
+       */
+      issue_count: number;
+      /**
        * All Items Complete
        * @default false
        */
@@ -8753,6 +9194,18 @@ export interface components {
        * @default []
        */
       items: components["schemas"]["RpaRunItemResponse"][];
+    };
+    /**
+     * RpaRunResultUpdateRequest
+     * @description RPA Run Result update request schema (PAD).
+     */
+    RpaRunResultUpdateRequest: {
+      /** Result Status */
+      result_status?: string | null;
+      /** Sap Registered */
+      sap_registered?: boolean | null;
+      /** Issue Flag */
+      issue_flag?: boolean | null;
     };
     /**
      * RpaRunSummaryResponse
@@ -8765,12 +9218,20 @@ export interface components {
       rpa_type: string;
       /** Status */
       status: string;
+      /** Data Start Date */
+      data_start_date?: string | null;
+      /** Data End Date */
+      data_end_date?: string | null;
       /** Started At */
       started_at?: string | null;
       /** Started By Username */
       started_by_username?: string | null;
       /** Step2 Executed At */
       step2_executed_at?: string | null;
+      /** External Done At */
+      external_done_at?: string | null;
+      /** Step4 Executed At */
+      step4_executed_at?: string | null;
       /**
        * Created At
        * Format: date-time
@@ -8786,6 +9247,11 @@ export interface components {
        * @default 0
        */
       complete_count: number;
+      /**
+       * Issue Count
+       * @default 0
+       */
+      issue_count: number;
       /**
        * All Items Complete
        * @default false
@@ -8889,7 +9355,7 @@ export interface components {
        * Flow Url
        * @description Power Automate Cloud FlowのHTTP Trigger URL
        */
-      flow_url: string;
+      flow_url?: string | null;
       /**
        * Json Payload
        * @description Flowに送信するJSONペイロード（文字列）
@@ -8898,16 +9364,14 @@ export interface components {
       json_payload: string;
       /**
        * Start Date
-       * Format: date
        * @description 開始日
        */
-      start_date: string;
+      start_date?: string | null;
       /**
        * End Date
-       * Format: date
        * @description 終了日
        */
-      end_date: string;
+      end_date?: string | null;
     };
     /**
      * Step2ExecuteResponse
@@ -10409,6 +10873,82 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AllocationSuggestionListResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  regenerate_suggestions_for_group_api_v2_forecast_suggestions_regenerate_group_post: {
+    parameters: {
+      query: {
+        /** @description 得意先ID */
+        customer_id: number;
+        /** @description 納入先ID */
+        delivery_place_id: number;
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 期間 (YYYY-MM)、省略時は全期間 */
+        forecast_period?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AllocationSuggestionPreviewResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  clear_suggestions_for_group_api_v2_forecast_suggestions_clear_group_delete: {
+    parameters: {
+      query: {
+        /** @description 得意先ID */
+        customer_id: number;
+        /** @description 納入先ID */
+        delivery_place_id: number;
+        /** @description 製品ID */
+        product_id: number;
+        /** @description 期間 (YYYY-MM)、省略時は全期間 */
+        forecast_period?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */
@@ -17169,6 +17709,37 @@ export interface operations {
       };
     };
   };
+  get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunItemResponse"] | null;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   batch_update_items_api_rpa_material_delivery_note_runs__run_id__items_batch_update_post: {
     parameters: {
       query?: never;
@@ -17270,6 +17841,141 @@ export interface operations {
       };
     };
   };
+  mark_external_done_api_rpa_material_delivery_note_runs__run_id__external_done_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_item_result_api_rpa_material_delivery_note_runs__run_id__items__item_id__rpa_result_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+        item_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["RpaRunResultUpdateRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  retry_failed_items_api_rpa_material_delivery_note_runs__run_id__retry_failed_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   execute_material_delivery_note_api_rpa_material_delivery_note_execute_post: {
     parameters: {
       query?: never;
@@ -17291,6 +17997,286 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["MaterialDeliveryNoteExecuteResponse"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_job_history_api_rpa_cloud_flow_jobs_get: {
+    parameters: {
+      query?: {
+        job_type?: string;
+        limit?: number;
+        offset?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowJobResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_job_api_rpa_cloud_flow_jobs_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CloudFlowJobCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowJobResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_queue_status_api_rpa_cloud_flow_jobs_current_get: {
+    parameters: {
+      query?: {
+        job_type?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowQueueStatus"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_config_api_rpa_cloud_flow_configs__config_key__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_key: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowConfigResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_config_api_rpa_cloud_flow_configs__config_key__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        config_key: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["CloudFlowConfigUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CloudFlowConfigResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_layer_codes_api_rpa_layer_codes_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LayerCodeResponse"][];
+        };
+      };
+    };
+  };
+  create_layer_code_api_rpa_layer_codes_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LayerCodeCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LayerCodeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_layer_code_api_rpa_layer_codes__layer_code__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        layer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LayerCodeUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LayerCodeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_layer_code_api_rpa_layer_codes__layer_code__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        layer_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

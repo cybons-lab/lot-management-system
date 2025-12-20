@@ -16,6 +16,24 @@ export function getDatesForMonth(targetMonth: Date): Date[] {
 }
 
 /**
+ * Get dates for the next month's first 10 days (翌月1日〜10日)
+ * SAP forecast data includes daily data up to the 10th of the next month
+ * @param targetMonth - The target month (any date within the month)
+ * @returns Array of Date objects representing first 10 days of next month
+ */
+export function getDatesForNextMonthFirst10Days(targetMonth: Date): Date[] {
+  const year = targetMonth.getFullYear();
+  const month = targetMonth.getMonth();
+  // Next month's first 10 days
+  const nextMonthStart = new Date(year, month + 1, 1);
+
+  return Array.from(
+    { length: 10 },
+    (_, index) => new Date(nextMonthStart.getFullYear(), nextMonthStart.getMonth(), index + 1),
+  );
+}
+
+/**
  * Format date as YYYY-MM-DD for comparison and map keys
  * @param date - Date object to format
  * @returns Date string in YYYY-MM-DD format

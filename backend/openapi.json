@@ -1346,6 +1346,176 @@
         }
       }
     },
+    "/api/v2/forecast/suggestions/regenerate-group": {
+      "post": {
+        "tags": [
+          "v2-forecast"
+        ],
+        "summary": "Regenerate Suggestions For Group",
+        "description": "フォーキャストグループ単位で計画引当（Suggestions）を再生成.\n\n「計画引当を更新」ボタンの個別グループ版。\n既存のSuggestionsを削除し、FEFOで再計算する。",
+        "operationId": "regenerate_suggestions_for_group_api_v2_forecast_suggestions_regenerate_group_post",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "得意先ID",
+              "title": "Customer Id"
+            },
+            "description": "得意先ID"
+          },
+          {
+            "name": "delivery_place_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "納入先ID",
+              "title": "Delivery Place Id"
+            },
+            "description": "納入先ID"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "製品ID",
+              "title": "Product Id"
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "forecast_period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "期間 (YYYY-MM)、省略時は全期間",
+              "title": "Forecast Period"
+            },
+            "description": "期間 (YYYY-MM)、省略時は全期間"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllocationSuggestionPreviewResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v2/forecast/suggestions/clear-group": {
+      "delete": {
+        "tags": [
+          "v2-forecast"
+        ],
+        "summary": "Clear Suggestions For Group",
+        "description": "フォーキャストグループ単位で計画引当（Suggestions）を削除.\n\n「計画引当クリア」ボタン用。既存のSuggestionsを削除する。",
+        "operationId": "clear_suggestions_for_group_api_v2_forecast_suggestions_clear_group_delete",
+        "parameters": [
+          {
+            "name": "customer_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "得意先ID",
+              "title": "Customer Id"
+            },
+            "description": "得意先ID"
+          },
+          {
+            "name": "delivery_place_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "納入先ID",
+              "title": "Delivery Place Id"
+            },
+            "description": "納入先ID"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "製品ID",
+              "title": "Product Id"
+            },
+            "description": "製品ID"
+          },
+          {
+            "name": "forecast_period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "期間 (YYYY-MM)、省略時は全期間",
+              "title": "Forecast Period"
+            },
+            "description": "期間 (YYYY-MM)、省略時は全期間"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Clear Suggestions For Group Api V2 Forecast Suggestions Clear Group Delete"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v2/forecast/suggestions/group-summary": {
       "get": {
         "tags": [
@@ -11999,7 +12169,7 @@
           "rpa-material-delivery-note"
         ],
         "summary": "Create Run",
-        "description": "CSV取込でRunを作成.\n\nmultipart/form-dataでCSVファイルをアップロード。\nパース結果をDBに保存し、run_idを返す。",
+        "description": "CSVファイルからRunを作成する.\n\nArgs:\n    file: アップロードされたCSVファイル\n    import_type: インポート形式 (default: material_delivery_note)\n    db: DBセッション\n    user: 実行ユーザー",
         "operationId": "create_run_api_rpa_material_delivery_note_runs_post",
         "security": [
           {
@@ -12200,6 +12370,57 @@
         }
       }
     },
+    "/api/rpa/material-delivery-note/runs/{run_id}/next-item": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Next Processing Item",
+        "description": "次に処理すべき未完了アイテムを取得する.",
+        "operationId": "get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RpaRunItemResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Next Processing Item Api Rpa Material Delivery Note Runs  Run Id  Next Item Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/material-delivery-note/runs/{run_id}/items/batch-update": {
       "post": {
         "tags": [
@@ -12259,7 +12480,7 @@
           "rpa-material-delivery-note"
         ],
         "summary": "Complete All Items",
-        "description": "全Itemsを完了にする.",
+        "description": "Step2完了としてステータスを更新する.",
         "operationId": "complete_all_items_api_rpa_material_delivery_note_runs__run_id__complete_all_post",
         "parameters": [
           {
@@ -12354,6 +12575,214 @@
         }
       }
     },
+    "/api/rpa/material-delivery-note/runs/{run_id}/external-done": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Mark External Done",
+        "description": "外部手順完了をマークする.",
+        "operationId": "mark_external_done_api_rpa_material_delivery_note_runs__run_id__external_done_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/rpa-result": {
+      "patch": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Update Item Result",
+        "description": "PADからの結果更新.",
+        "operationId": "update_item_result_api_rpa_material_delivery_note_runs__run_id__items__item_id__rpa_result_patch",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunResultUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/step4-check": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Execute Step4 Check",
+        "description": "Step4: 突合チェック実行.\n\nReturns:\n    {\"match\": int, \"mismatch\": int}",
+        "operationId": "execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Execute Step4 Check Api Rpa Material Delivery Note Runs  Run Id  Step4 Check Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/retry-failed": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Retry Failed Items",
+        "description": "Step4 NGアイテムのみStep3再実行.",
+        "operationId": "retry_failed_items_api_rpa_material_delivery_note_runs__run_id__retry_failed_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/material-delivery-note/execute": {
       "post": {
         "tags": [
@@ -12399,6 +12828,430 @@
             "OAuth2PasswordBearer": []
           }
         ]
+      }
+    },
+    "/api/rpa/cloud-flow/jobs": {
+      "post": {
+        "tags": [
+          "cloud-flow"
+        ],
+        "summary": "Create Job",
+        "description": "ジョブを作成（キューに追加）.\n\nゲストユーザーは実行不可。\n他ユーザーが実行中の場合は待機状態で追加。",
+        "operationId": "create_job_api_rpa_cloud_flow_jobs_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudFlowJobCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudFlowJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "cloud-flow"
+        ],
+        "summary": "Get Job History",
+        "description": "ジョブ履歴を取得.",
+        "operationId": "get_job_history_api_rpa_cloud_flow_jobs_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "progress_download",
+              "title": "Job Type"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CloudFlowJobResponse"
+                  },
+                  "title": "Response Get Job History Api Rpa Cloud Flow Jobs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/cloud-flow/jobs/current": {
+      "get": {
+        "tags": [
+          "cloud-flow"
+        ],
+        "summary": "Get Queue Status",
+        "description": "現在のキュー状態を取得.\n\n- current_job: 実行中のジョブ\n- pending_jobs: 待機中のジョブ一覧\n- your_position: 自分の待ち順番",
+        "operationId": "get_queue_status_api_rpa_cloud_flow_jobs_current_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "progress_download",
+              "title": "Job Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudFlowQueueStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/cloud-flow/configs/{config_key}": {
+      "get": {
+        "tags": [
+          "cloud-flow"
+        ],
+        "summary": "Get Config",
+        "description": "設定を取得.",
+        "operationId": "get_config_api_rpa_cloud_flow_configs__config_key__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Config Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudFlowConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "cloud-flow"
+        ],
+        "summary": "Update Config",
+        "description": "設定を登録/更新.",
+        "operationId": "update_config_api_rpa_cloud_flow_configs__config_key__put",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "config_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Config Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloudFlowConfigUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloudFlowConfigResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/layer-codes": {
+      "get": {
+        "tags": [
+          "rpa-layer-codes"
+        ],
+        "summary": "List Layer Codes",
+        "description": "層別コード一覧取得.",
+        "operationId": "list_layer_codes_api_rpa_layer_codes_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LayerCodeResponse"
+                  },
+                  "type": "array",
+                  "title": "Response List Layer Codes Api Rpa Layer Codes Get"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "rpa-layer-codes"
+        ],
+        "summary": "Create Layer Code",
+        "description": "層別コード作成.",
+        "operationId": "create_layer_code_api_rpa_layer_codes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LayerCodeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayerCodeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/layer-codes/{layer_code}": {
+      "put": {
+        "tags": [
+          "rpa-layer-codes"
+        ],
+        "summary": "Update Layer Code",
+        "description": "層別コード更新.",
+        "operationId": "update_layer_code_api_rpa_layer_codes__layer_code__put",
+        "parameters": [
+          {
+            "name": "layer_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Layer Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LayerCodeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LayerCodeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "rpa-layer-codes"
+        ],
+        "summary": "Delete Layer Code",
+        "description": "層別コード削除.",
+        "operationId": "delete_layer_code_api_rpa_layer_codes__layer_code__delete",
+        "parameters": [
+          {
+            "name": "layer_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Layer Code"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/": {
@@ -13562,6 +14415,11 @@
             "type": "string",
             "format": "binary",
             "title": "File"
+          },
+          "import_type": {
+            "type": "string",
+            "title": "Import Type",
+            "default": "material_delivery_note"
           }
         },
         "type": "object",
@@ -13569,6 +14427,20 @@
           "file"
         ],
         "title": "Body_create_run_api_rpa_material_delivery_note_runs_post"
+      },
+      "Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post"
       },
       "Body_import_from_file_api_admin_master_import_upload_post": {
         "properties": {
@@ -14255,6 +15127,238 @@
         ],
         "title": "ClientLogResponse",
         "description": "Client log response schema."
+      },
+      "CloudFlowConfigResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "config_key": {
+            "type": "string",
+            "title": "Config Key"
+          },
+          "config_value": {
+            "type": "string",
+            "title": "Config Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "config_key",
+          "config_value"
+        ],
+        "title": "CloudFlowConfigResponse",
+        "description": "設定レスポンス."
+      },
+      "CloudFlowConfigUpdate": {
+        "properties": {
+          "config_value": {
+            "type": "string",
+            "title": "Config Value"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "config_value"
+        ],
+        "title": "CloudFlowConfigUpdate",
+        "description": "設定更新リクエスト."
+      },
+      "CloudFlowJobCreate": {
+        "properties": {
+          "job_type": {
+            "type": "string",
+            "title": "Job Type"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_type",
+          "start_date",
+          "end_date"
+        ],
+        "title": "CloudFlowJobCreate",
+        "description": "ジョブ作成リクエスト."
+      },
+      "CloudFlowJobResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "job_type": {
+            "type": "string",
+            "title": "Job Type"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Start Date"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "End Date"
+          },
+          "requested_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested By"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "completed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Completed At"
+          },
+          "result_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Message"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          },
+          "position_in_queue": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position In Queue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "job_type",
+          "status",
+          "start_date",
+          "end_date",
+          "requested_at"
+        ],
+        "title": "CloudFlowJobResponse",
+        "description": "ジョブレスポンス."
+      },
+      "CloudFlowQueueStatus": {
+        "properties": {
+          "current_job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CloudFlowJobResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pending_jobs": {
+            "items": {
+              "$ref": "#/components/schemas/CloudFlowJobResponse"
+            },
+            "type": "array",
+            "title": "Pending Jobs",
+            "default": []
+          },
+          "your_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Your Position"
+          }
+        },
+        "type": "object",
+        "title": "CloudFlowQueueStatus",
+        "description": "現在のキュー状態."
       },
       "ConfirmedOrderLineResponse": {
         "properties": {
@@ -17613,6 +18717,71 @@
           "total_quantity"
         ],
         "title": "InventoryStats"
+      },
+      "LayerCodeCreate": {
+        "properties": {
+          "maker_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Maker Name"
+          },
+          "layer_code": {
+            "type": "string",
+            "maxLength": 50,
+            "title": "Layer Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "maker_name",
+          "layer_code"
+        ],
+        "title": "LayerCodeCreate"
+      },
+      "LayerCodeResponse": {
+        "properties": {
+          "maker_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Maker Name"
+          },
+          "layer_code": {
+            "type": "string",
+            "title": "Layer Code"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "maker_name",
+          "layer_code",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "LayerCodeResponse"
+      },
+      "LayerCodeUpdate": {
+        "properties": {
+          "maker_name": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Maker Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "maker_name"
+        ],
+        "title": "LayerCodeUpdate"
       },
       "ListResponse_CandidateLotItem_": {
         "properties": {
@@ -21161,7 +22330,7 @@
           "issue_flag": {
             "type": "boolean",
             "title": "Issue Flag",
-            "default": true
+            "default": false
           },
           "complete_flag": {
             "type": "boolean",
@@ -21200,6 +22369,55 @@
               }
             ],
             "title": "Order No"
+          },
+          "result_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Status"
+          },
+          "maker_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Name"
+          },
+          "lock_flag": {
+            "type": "boolean",
+            "title": "Lock Flag",
+            "default": false
+          },
+          "item_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item No"
+          },
+          "lot_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No"
           }
         },
         "type": "object",
@@ -21245,6 +22463,39 @@
               }
             ],
             "title": "Delivery Quantity"
+          },
+          "result_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Status"
+          },
+          "sap_registered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Registered"
+          },
+          "lot_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No"
           }
         },
         "type": "object",
@@ -21355,6 +22606,41 @@
             ],
             "title": "Step2 Executed By Username"
           },
+          "external_done_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Done At"
+          },
+          "external_done_by_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Done By Username"
+          },
+          "step4_executed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step4 Executed At"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -21373,6 +22659,11 @@
           "complete_count": {
             "type": "integer",
             "title": "Complete Count",
+            "default": 0
+          },
+          "issue_count": {
+            "type": "integer",
+            "title": "Issue Count",
             "default": 0
           },
           "all_items_complete": {
@@ -21400,6 +22691,46 @@
         "title": "RpaRunResponse",
         "description": "RPA Run response schema."
       },
+      "RpaRunResultUpdateRequest": {
+        "properties": {
+          "result_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Status"
+          },
+          "sap_registered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Registered"
+          },
+          "issue_flag": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Flag"
+          }
+        },
+        "type": "object",
+        "title": "RpaRunResultUpdateRequest",
+        "description": "RPA Run Result update request schema (PAD)."
+      },
       "RpaRunSummaryResponse": {
         "properties": {
           "id": {
@@ -21413,6 +22744,30 @@
           "status": {
             "type": "string",
             "title": "Status"
+          },
+          "data_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Start Date"
+          },
+          "data_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data End Date"
           },
           "started_at": {
             "anyOf": [
@@ -21449,6 +22804,30 @@
             ],
             "title": "Step2 Executed At"
           },
+          "external_done_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Done At"
+          },
+          "step4_executed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step4 Executed At"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -21462,6 +22841,11 @@
           "complete_count": {
             "type": "integer",
             "title": "Complete Count",
+            "default": 0
+          },
+          "issue_count": {
+            "type": "integer",
+            "title": "Issue Count",
             "default": 0
           },
           "all_items_complete": {
@@ -21681,7 +23065,14 @@
       "Step2ExecuteRequest": {
         "properties": {
           "flow_url": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Flow Url",
             "description": "Power Automate Cloud FlowのHTTP Trigger URL"
           },
@@ -21692,24 +23083,33 @@
             "default": "{}"
           },
           "start_date": {
-            "type": "string",
-            "format": "date",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Start Date",
             "description": "開始日"
           },
           "end_date": {
-            "type": "string",
-            "format": "date",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "End Date",
             "description": "終了日"
           }
         },
         "type": "object",
-        "required": [
-          "flow_url",
-          "start_date",
-          "end_date"
-        ],
         "title": "Step2ExecuteRequest",
         "description": "Step2 execution request schema."
       },
