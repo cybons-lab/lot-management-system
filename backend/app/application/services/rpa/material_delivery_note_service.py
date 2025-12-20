@@ -366,9 +366,18 @@ class MaterialDeliveryNoteService:
         # Resolve parameters
         actual_flow_url = flow_url
         if not actual_flow_url:
+            # DBから設定値を取得、なければ環境変数をフォールバック
+            from app.application.services.system_config_service import (
+                ConfigKeys,
+                SystemConfigService,
+            )
             from app.core.config import settings
 
-            actual_flow_url = settings.CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE
+            config_service = SystemConfigService(self.db)
+            actual_flow_url = config_service.get(
+                ConfigKeys.CLOUD_FLOW_URL_MATERIAL_DELIVERY,
+                settings.CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE,  # Fallback
+            )
 
         if not actual_flow_url:
             # If still no URL, we might skip flow execution or error.
