@@ -12370,6 +12370,57 @@
         }
       }
     },
+    "/api/rpa/material-delivery-note/runs/{run_id}/next-item": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Next Processing Item",
+        "description": "次に処理すべき未完了アイテムを取得する.",
+        "operationId": "get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/RpaRunItemResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Next Processing Item Api Rpa Material Delivery Note Runs  Run Id  Next Item Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/material-delivery-note/runs/{run_id}/items/batch-update": {
       "post": {
         "tags": [
@@ -22163,6 +22214,28 @@
               }
             ],
             "title": "Delivery Quantity"
+          },
+          "result_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Status"
+          },
+          "sap_registered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Registered"
           }
         },
         "type": "object",

@@ -60,50 +60,29 @@ function RunActionCell({ run }: { run: RpaRunSummary }) {
     }
   };
 
-  const handleGoToDetail = () => {
-    navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id));
-  };
-
-  if (run.status === "step2_running") {
-    return (
-      <Button size="sm" variant="outline" className="cursor-not-allowed gap-2 opacity-70">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        実行中...
-      </Button>
-    );
-  }
-
-  // 実行済み、または実行中から完了へ遷移した場合
-  if (
-    run.status === "done" ||
-    (run.status !== "ready_for_step2" && run.status !== "step2_running")
-  ) {
-    return (
-      <Button size="sm" variant="default" className="gap-2" onClick={handleGoToDetail}>
-        詳細へ <ArrowRight className="h-4 w-4" />
-      </Button>
-    );
-  }
-
   return (
-    <Button
-      size="sm"
-      className="gap-2"
-      onClick={handleExecute}
-      disabled={executeMutation.isPending || run.status !== "ready_for_step2"}
-    >
-      {executeMutation.isPending ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          起動中...
-        </>
-      ) : (
-        <>
-          <Play className="h-4 w-4" />
-          実行
-        </>
+    <div className="flex justify-end gap-2">
+      {run.status === "ready_for_step2" && (
+        <Button size="sm" onClick={handleExecute} disabled={executeMutation.isPending}>
+          {executeMutation.isPending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              起動中...
+            </>
+          ) : (
+            <>
+              <Play className="mr-2 h-4 w-4" />
+              実行
+            </>
+          )}
+        </Button>
       )}
-    </Button>
+      <Button variant="outline" size="sm" asChild>
+        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id)}>
+          詳細 <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
+    </div>
   );
 }
 

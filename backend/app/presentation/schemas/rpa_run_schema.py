@@ -34,6 +34,8 @@ class RpaRunItemUpdateRequest(BaseModel):
     issue_flag: bool | None = None
     complete_flag: bool | None = None
     delivery_quantity: int | None = Field(default=None, ge=0)
+    result_status: str | None = None
+    sap_registered: bool | None = None
 
 
 class RpaRunBatchUpdateRequest(BaseModel):

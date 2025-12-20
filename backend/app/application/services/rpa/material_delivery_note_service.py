@@ -134,6 +134,8 @@ class MaterialDeliveryNoteService:
         issue_flag: bool | None = None,
         complete_flag: bool | None = None,
         delivery_quantity: int | None = None,
+        result_status: str | None = None,
+        sap_registered: bool | None = None,
         commit: bool = True,
     ) -> RpaRunItem | None:
         """Itemを更新する.
@@ -144,6 +146,8 @@ class MaterialDeliveryNoteService:
             issue_flag: 発行フラグ
             complete_flag: 完了フラグ
             delivery_quantity: 納入量
+            result_status: 結果ステータス
+            sap_registered: SAP登録済みフラグ
             commit: コミットするかどうか
 
         Returns:
@@ -164,6 +168,10 @@ class MaterialDeliveryNoteService:
             item.complete_flag = complete_flag
         if delivery_quantity is not None:
             item.delivery_quantity = delivery_quantity
+        if result_status is not None:
+            item.result_status = result_status
+        if sap_registered is not None:
+            item.sap_registered = sap_registered
 
         item.updated_at = utcnow()
 
@@ -353,6 +361,56 @@ class MaterialDeliveryNoteService:
             run.status = RpaRunStatus.READY_FOR_STEP2
             run.updated_at = utcnow()
             self.db.commit()
+
+    def get_next_processing_item(self, run_id: int) -> RpaRunItem | None:
+        """次に処理すべき未完了アイテムを取得する.
+
+        条件: issue_flag=True かつ まだ処理が完了していない(result_status != success/failure/error/processing)
+        優先順位: 同じ層別コード(layer_code)を持つアイテム数が少ない順（小ロット優先）-> row_no順
+        """
+        from collections import Counter
+
+        from sqlalchemy import or_
+
+        # 1. 未処理のアイテムを取得
+        # result_status が NULL か pending のものを対象とする
+        candidates = (
+            self.db.query(RpaRunItem)
+            .filter(
+                RpaRunItem.run_id == run_id,
+                RpaRunItem.issue_flag.is_(True),
+                or_(
+                    RpaRunItem.result_status.is_(None),
+                    RpaRunItem.result_status == "pending",
+                ),
+            )
+            .all()
+        )
+
+        if not candidates:
+            return None
+
+        # 2. 層別コードごとの件数をカウント
+        # レイヤー(メーカー)ごとの残件数が少ない順に処理する
+        layer_counts = Counter([item.layer_code for item in candidates])
+
+        # 3. ソート: 件数昇順 -> row_no昇順
+        # Noneのlayer_codeは件数0扱いになるかキーエラーになるのでgetで処理
+        sorted_candidates = sorted(
+            candidates,
+            key=lambda x: (layer_counts.get(x.layer_code, 0), x.row_no),
+        )
+
+        target_item = sorted_candidates[0]
+
+        # 4. ステータスを processing に更新して他プロセスが取らないようにする
+        target_item.result_status = "processing"
+        target_item.updated_at = utcnow()
+        # Item更新のみなので flush/commit
+        self.db.commit()
+        self.db.refresh(target_item)
+
+        return target_item
 
 
 async def call_power_automate_flow(

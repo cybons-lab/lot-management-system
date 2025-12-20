@@ -4643,6 +4643,26 @@ export interface paths {
     patch: operations["update_item_api_rpa_material_delivery_note_runs__run_id__items__item_id__patch"];
     trace?: never;
   };
+  "/api/rpa/material-delivery-note/runs/{run_id}/next-item": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Next Processing Item
+     * @description 次に処理すべき未完了アイテムを取得する.
+     */
+    get: operations["get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/material-delivery-note/runs/{run_id}/items/batch-update": {
     parameters: {
       query?: never;
@@ -8993,6 +9013,10 @@ export interface components {
       complete_flag?: boolean | null;
       /** Delivery Quantity */
       delivery_quantity?: number | null;
+      /** Result Status */
+      result_status?: string | null;
+      /** Sap Registered */
+      sap_registered?: boolean | null;
     };
     /**
      * RpaRunListResponse
@@ -17538,6 +17562,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["RpaRunItemResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunItemResponse"] | null;
         };
       };
       /** @description Validation Error */

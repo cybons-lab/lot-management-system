@@ -1,10 +1,10 @@
 /* eslint-disable max-lines-per-function, complexity */
 import { format } from "date-fns";
-import { Check, CheckCircle2, ChevronLeft, Play, X, Filter } from "lucide-react";
+import { Check, CheckCircle2, ChevronLeft, Play, X, Filter, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
-import { useRun, useUpdateItem, useBatchUpdateItems } from "../hooks";
+import { useRun, useUpdateItem, useBatchUpdateItems, useExecuteStep2 } from "../hooks";
 
 import { Button } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
@@ -33,14 +33,13 @@ export function RunDetailPage() {
   const { runId } = useParams();
   const id = parseInt(runId || "0", 10);
 
-  const navigate = useNavigate();
-
   // UI State
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
   const { data: run, isLoading, error } = useRun(id, { refetchInterval: 3000 });
   const updateItemMutation = useUpdateItem(id);
   const batchUpdateMutation = useBatchUpdateItems(id);
+  const executeMutation = useExecuteStep2(id);
 
   // Filter Logic
   const filteredItems = useMemo(() => {
@@ -117,9 +116,15 @@ export function RunDetailPage() {
     });
   };
 
-  const handleGoToStep3 = () => {
-    // Navigate to Step3 List Page
-    navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3);
+  const handleExecuteStep2 = async () => {
+    if (!run) return;
+    if (!confirm(`本当に実行してよろしいですか？\nRun ID: ${run.id}`)) return;
+
+    try {
+      await executeMutation.mutateAsync({});
+    } catch {
+      // error handled by hook
+    }
   };
 
   const isEditable = run.status === "draft" || run.status === "ready_for_step2";
@@ -143,13 +148,21 @@ export function RunDetailPage() {
         subtitle={`取込日時: ${format(new Date(run.created_at), "yyyy/MM/dd HH:mm")}`}
         actions={
           <div className="flex gap-2">
-            <Button
-              onClick={handleGoToStep3}
-              disabled={!run.all_items_complete || run.status !== "ready_for_step2"}
-            >
-              <Play className="mr-2 h-4 w-4" />
-              Step3へ進む（実行）
-            </Button>
+            {run.status === "ready_for_step2" && (
+              <Button onClick={handleExecuteStep2} disabled={executeMutation.isPending}>
+                {executeMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    起動中...
+                  </>
+                ) : (
+                  <>
+                    <Play className="mr-2 h-4 w-4" />
+                    実行
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         }
       />

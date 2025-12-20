@@ -201,6 +201,8 @@ def update_item(
         issue_flag=request.issue_flag,
         complete_flag=request.complete_flag,
         delivery_quantity=request.delivery_quantity,
+        result_status=request.result_status,
+        sap_registered=request.sap_registered,
     )
 
     if not item:
@@ -208,6 +210,29 @@ def update_item(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Item not found: run_id={run_id}, item_id={item_id}",
         )
+
+    resp_item = RpaRunItemResponse.model_validate(item)
+    if item.layer_code:
+        maker_map = _get_maker_map(db, [item.layer_code])
+        resp_item.maker_name = maker_map.get(item.layer_code)
+
+    return resp_item
+
+
+@router.get(
+    "/runs/{run_id}/next-item",
+    response_model=RpaRunItemResponse | None,
+)
+def get_next_processing_item(
+    run_id: int,
+    db: Session = Depends(get_db),
+):
+    """次に処理すべき未完了アイテムを取得する."""
+    service = MaterialDeliveryNoteService(db)
+    item = service.get_next_processing_item(run_id)
+
+    if not item:
+        return None
 
     resp_item = RpaRunItemResponse.model_validate(item)
     if item.layer_code:
