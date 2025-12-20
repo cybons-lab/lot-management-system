@@ -522,7 +522,7 @@ class MaterialDeliveryNoteService:
             return
 
         # DRAFT -> READY_FOR_STEP2 (Step2完了)
-        if run.status == RpaRunStatus.DRAFT and run.all_items_complete:
+        if run.status == RpaRunStatus.DRAFT and (run.issue_count > 0 or run.all_items_complete):
             run.status = RpaRunStatus.READY_FOR_STEP2
             run.updated_at = utcnow()
             self.db.commit()
