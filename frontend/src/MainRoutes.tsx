@@ -51,7 +51,7 @@ import {
   Step1Page,
   Step2CheckListPage,
   Step3ExecutePage,
-  Step3SelectPage,
+  Step3ExecuteListPage,
 } from "@/features/rpa/material-delivery-note";
 import { SupplierProductsPage } from "@/features/supplier-products/pages/SupplierProductsPage";
 import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
@@ -255,7 +255,7 @@ export function MainRoutes() {
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT} element={<MaterialDeliveryNotePage />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP1} element={<Step1Page />} />
       <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2} element={<Step2CheckListPage />} />
-      <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3} element={<Step3SelectPage />} />
+      <Route path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3} element={<Step3ExecuteListPage />} />
       <Route path="/rpa/material-delivery-note/step3/:runId" element={<Step3ExecutePage />} />
       <Route
         path={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.CLOUD_FLOW_EXECUTE}
