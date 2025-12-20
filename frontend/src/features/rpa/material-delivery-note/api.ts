@@ -23,6 +23,9 @@ export interface RpaRunItem {
   order_no: string | null;
   maker_name: string | null;
   result_status: string | null;
+  lock_flag: boolean;
+  item_no: string | null;
+  lot_no: string | null;
 }
 
 export interface RpaRun {

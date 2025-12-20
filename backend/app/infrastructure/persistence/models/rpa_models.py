@@ -173,6 +173,11 @@ class RpaRunItem(Base):
     match_result: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # 突合結果
     sap_registered: Mapped[bool | None] = mapped_column(Boolean, nullable=True)  # SAP登録
     order_no: Mapped[str | None] = mapped_column(String(100), nullable=True)  # 受発注No
+    lock_flag: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false"), nullable=False
+    )  # 編集ロック（Step3開始時にON）
+    item_no: Mapped[str | None] = mapped_column(String(100), nullable=True)  # アイテムNo
+    lot_no: Mapped[str | None] = mapped_column(String(100), nullable=True)  # ロットNo（Step4入力）
 
     # 結果ステータス (pending/success/failure/error)
     result_status: Mapped[str | None] = mapped_column(String(20), nullable=True)

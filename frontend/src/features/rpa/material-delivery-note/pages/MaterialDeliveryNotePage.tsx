@@ -1,4 +1,3 @@
-/* eslint-disable max-lines-per-function */
 /**
  * MaterialDeliveryNotePage
  * 素材納品書発行のメニューページ - Step1/Step2/履歴へのナビゲーション
@@ -76,25 +75,13 @@ export function MaterialDeliveryNotePage() {
           to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3}
         />
 
-        {/* Step4: 突合・レビュー - 直接URLでアクセス */}
-        <div className="rounded-lg border border-gray-200 bg-gray-50 p-6">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100 text-green-600">
-              <CheckSquare className="h-6 w-6" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900">Step4: 突合・レビュー</h3>
-              <p className="mt-1 text-sm text-gray-600">
-                外部手順完了後、CSVを再取得して突合チェックを行います。
-                <br />
-                <span className="text-xs text-gray-500">
-                  ※ Step3完了後は自動遷移しません。外部手順完了ボタンを押下してStep4へ進めます。
-                  履歴一覧からもアクセス可能です。
-                </span>
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Step4: レビュー・SAP登録 */}
+        <MenuCard
+          title="Step4: レビュー・SAP登録"
+          description="突合OKデータのレビューとSAP登録を行います。履歴一覧からアクセス可能です。"
+          icon={<CheckSquare className="h-6 w-6" />}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS}
+        />
 
         {/* 履歴一覧 */}
         <MenuCard

@@ -83,24 +83,26 @@ export function Step4DetailPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["rpa-run", id] }),
   });
 
-  // Filter Logic
+  // Filter Logic - Step4では突合○のアイテムのみ表示
   const filteredItems = useMemo(() => {
     if (!run?.items) return [];
-    let items = run.items;
+    // 突合OKのアイテムのみを対象とする
+    let items = run.items.filter((item) => item.match_result === true);
     if (layerFilter !== "all") {
       items = items.filter((item) => item.layer_code === layerFilter);
     }
     return [...items].sort((a, b) => a.row_no - b.row_no);
   }, [run?.items, layerFilter]);
 
-  // Unique Layer Options
+  // Unique Layer Options - 突合OKのアイテムを持つメーカーのみ
   const layerOptions = useMemo(() => {
     if (!run?.items) return [];
+    const matchedItems = run.items.filter((item) => item.match_result === true);
     const uniqueCodes = Array.from(
-      new Set(run.items.map((item) => item.layer_code).filter(Boolean)),
+      new Set(matchedItems.map((item) => item.layer_code).filter(Boolean)),
     );
     return uniqueCodes.sort().map((code) => {
-      const item = run.items.find((i) => i.layer_code === code);
+      const item = matchedItems.find((i) => i.layer_code === code);
       const makerName = item?.maker_name;
       const label = makerName ? `${makerName} (${code})` : (code as string);
       return { value: code as string, label };
@@ -253,32 +255,35 @@ export function Step4DetailPage() {
             )}
           </div>
 
-          {/* テーブル - Step4専用列 */}
+          {/* テーブル - Step4専用列（突合OKのみ表示） */}
           <div className="rounded-md border bg-white shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[100px]">ロットNo</TableHead>
+                  <TableHead className="w-[80px]">アイテムNo</TableHead>
                   <TableHead className="w-[50px]">No</TableHead>
+                  <TableHead>ステータス</TableHead>
                   <TableHead>出荷先</TableHead>
                   <TableHead>層別</TableHead>
                   <TableHead>メーカー名</TableHead>
                   <TableHead>材質コード</TableHead>
                   <TableHead>納期</TableHead>
                   <TableHead>出荷便</TableHead>
-                  <TableHead className="text-center">発行対象</TableHead>
-                  <TableHead className="text-center">SAP</TableHead>
-                  <TableHead>受発注No</TableHead>
                   <TableHead className="text-center">突合</TableHead>
-                  <TableHead>結果</TableHead>
+                  <TableHead className="text-center">SAP</TableHead>
+                  <TableHead>受注No</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredItems.map((item) => (
-                  <TableRow
-                    key={item.id}
-                    className={item.match_result === false ? "bg-red-50" : ""}
-                  >
+                  <TableRow key={item.id}>
+                    <TableCell className="font-mono text-sm">
+                      {item.lot_no || <span className="text-red-500">未入力</span>}
+                    </TableCell>
+                    <TableCell className="text-sm">{item.item_no || "-"}</TableCell>
                     <TableCell>{item.row_no}</TableCell>
+                    <TableCell className="text-sm">{item.status || "-"}</TableCell>
                     <TableCell>{item.destination}</TableCell>
                     <TableCell>{item.layer_code}</TableCell>
                     <TableCell className="text-sm">{item.maker_name}</TableCell>
@@ -288,11 +293,7 @@ export function Step4DetailPage() {
                     </TableCell>
                     <TableCell>{item.shipping_vehicle}</TableCell>
                     <TableCell className="text-center">
-                      {item.issue_flag ? (
-                        <Check className="mx-auto h-4 w-4 text-green-600" />
-                      ) : (
-                        <X className="mx-auto h-4 w-4 text-gray-300" />
-                      )}
+                      <Check className="mx-auto h-4 w-4 text-green-600" />
                     </TableCell>
                     <TableCell className="text-center">
                       {item.sap_registered === true && (
@@ -301,28 +302,9 @@ export function Step4DetailPage() {
                       {item.sap_registered === false && (
                         <X className="mx-auto h-4 w-4 text-red-400" />
                       )}
+                      {item.sap_registered === null && <span className="text-gray-400">-</span>}
                     </TableCell>
-                    <TableCell className="text-xs text-gray-500">{item.order_no}</TableCell>
-                    <TableCell className="text-center">
-                      {item.match_result === true && (
-                        <Check className="mx-auto h-4 w-4 text-green-600" />
-                      )}
-                      {item.match_result === false && (
-                        <X className="mx-auto h-4 w-4 text-red-600" />
-                      )}
-                      {item.match_result === null && <span className="text-gray-400">-</span>}
-                    </TableCell>
-                    <TableCell>
-                      {item.result_status === "success" && (
-                        <Badge className="bg-green-600">成功</Badge>
-                      )}
-                      {item.result_status === "failure" && (
-                        <Badge className="bg-orange-500">失敗</Badge>
-                      )}
-                      {item.result_status === "error" && (
-                        <Badge variant="destructive">エラー</Badge>
-                      )}
-                    </TableCell>
+                    <TableCell className="text-xs text-gray-500">{item.order_no || "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
