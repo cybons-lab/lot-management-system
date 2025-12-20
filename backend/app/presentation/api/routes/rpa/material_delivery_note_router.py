@@ -212,8 +212,6 @@ def update_item(
             issue_flag=request.issue_flag,
             complete_flag=request.complete_flag,
             delivery_quantity=request.delivery_quantity,
-            result_status=request.result_status,
-            sap_registered=request.sap_registered,
         )
 
         if not item:
