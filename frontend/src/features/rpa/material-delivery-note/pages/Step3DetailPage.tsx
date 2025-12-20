@@ -258,8 +258,6 @@ export function Step3DetailPage() {
                   <TableHead>出荷便</TableHead>
                   <TableHead>結果</TableHead>
                   <TableHead className="text-center">突合</TableHead>
-                  <TableHead className="text-center">SAP</TableHead>
-                  <TableHead>受注No</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -299,12 +297,6 @@ export function Step3DetailPage() {
                       {item.match_result === false && <Badge variant="destructive">×</Badge>}
                       {item.match_result === null && <span className="text-gray-400">-</span>}
                     </TableCell>
-                    <TableCell className="text-center">
-                      {item.sap_registered === true && <Badge className="bg-green-600">○</Badge>}
-                      {item.sap_registered === false && <Badge variant="destructive">×</Badge>}
-                      {item.sap_registered === null && <span className="text-gray-400">-</span>}
-                    </TableCell>
-                    <TableCell className="text-sm">{item.order_no || "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
