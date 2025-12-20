@@ -134,13 +134,19 @@ export function RunDetailPage() {
 
   return (
     <PageContainer>
-      <div className="mb-4">
+      {/* ナビゲーションバー */}
+      <div className="mb-4 flex items-center justify-between">
         <Link
-          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP2}
           className="flex items-center text-sm text-gray-500 hover:text-gray-900"
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
-          履歴一覧へ戻る
+          Step2一覧へ戻る
+        </Link>
+        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT}>
+          <Button variant="outline" size="sm">
+            メニューへ戻る
+          </Button>
         </Link>
       </div>
 

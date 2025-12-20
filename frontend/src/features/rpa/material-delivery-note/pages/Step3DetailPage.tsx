@@ -10,7 +10,7 @@
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ChevronLeft, Filter, Loader2, ExternalLink, AlertCircle } from "lucide-react";
+import { ChevronLeft, Filter, Loader2, ExternalLink, AlertCircle, ArrowRight } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 
@@ -135,13 +135,19 @@ export function Step3DetailPage() {
 
   return (
     <PageContainer>
-      <div className="mb-4">
+      {/* ナビゲーションバー */}
+      <div className="mb-4 flex items-center justify-between">
         <Link
           to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3}
           className="flex items-center text-sm text-gray-500 hover:text-gray-900"
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
           Step3一覧へ戻る
+        </Link>
+        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT}>
+          <Button variant="outline" size="sm">
+            メニューへ戻る
+          </Button>
         </Link>
       </div>
 
@@ -211,6 +217,16 @@ export function Step3DetailPage() {
                   {format(new Date(run.step2_executed_at), "yyyy/MM/dd HH:mm")}
                 </div>
               </div>
+            )}
+            {/* Step4へ進むボタン（Step3完了以降） */}
+            {["step3_done", "step4_checking", "step4_ng_retry", "step4_review", "done"].includes(
+              run.status,
+            ) && (
+              <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4_DETAIL(run.id)}>
+                <Button variant="default">
+                  Step4へ進む <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
             )}
           </div>
 

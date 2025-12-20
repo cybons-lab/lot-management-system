@@ -6,7 +6,7 @@
 /* eslint-disable max-lines-per-function */
 import { format } from "date-fns";
 import { ja } from "date-fns/locale";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, ChevronLeft } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
@@ -38,17 +38,21 @@ const STATUS_LABELS: Record<
   done: { label: "完了", variant: "secondary" },
 };
 
-// Step4でアクセス可能なステータス
-const STEP4_STATUSES = ["step3_done", "step4_checking", "step4_ng_retry", "step4_review", "done"];
+// Step4対象のステータス（処理中）
+const STEP4_ACTIVE_STATUSES = ["step3_done", "step4_checking", "step4_ng_retry", "step4_review"];
 
 export function Step4ListPage() {
   // 5秒ごとにポーリングして進捗を更新
   const { data, isLoading, error } = useRuns(0, 100, { refetchInterval: 5000 });
 
-  const step4Runs = useMemo(
-    () => data?.runs.filter((run) => STEP4_STATUSES.includes(run.status)) ?? [],
+  // 処理中（対象）
+  const activeRuns = useMemo(
+    () => data?.runs.filter((run) => STEP4_ACTIVE_STATUSES.includes(run.status)) ?? [],
     [data],
   );
+
+  // 完了済み
+  const doneRuns = useMemo(() => data?.runs.filter((run) => run.status === "done") ?? [], [data]);
 
   if (isLoading) {
     return (
@@ -68,24 +72,33 @@ export function Step4ListPage() {
 
   return (
     <PageContainer>
+      {/* ナビゲーションバー */}
+      <div className="mb-4 flex items-center justify-between">
+        <Link
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3}
+          className="flex items-center text-sm text-gray-500 hover:text-gray-900"
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Step3一覧へ戻る
+        </Link>
+        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT}>
+          <Button variant="outline" size="sm">
+            メニューへ戻る
+          </Button>
+        </Link>
+      </div>
+
       <PageHeader
         title="Step4: レビュー・SAP登録"
         subtitle="突合完了後のデータをレビューし、SAP登録を行います"
       />
 
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.ROOT}>
-            <Button variant="outline">メニューへ戻る</Button>
-          </Link>
-        </div>
-
+      <div className="space-y-6">
+        {/* Step4対象ブロック */}
         <div className="rounded-md border bg-white shadow-sm">
-          <div className="border-b bg-gray-50 p-4">
-            <h3 className="font-medium text-gray-900">Step4 対象一覧</h3>
-            <p className="text-sm text-gray-500">
-              Step3完了後、レビュー・SAP登録が可能なデータです。
-            </p>
+          <div className="border-b bg-blue-50 p-4">
+            <h3 className="font-medium text-blue-900">Step4 対象一覧</h3>
+            <p className="text-sm text-blue-700">レビュー・SAP登録が必要なデータです。</p>
           </div>
           <Table>
             <TableHeader>
@@ -100,7 +113,7 @@ export function Step4ListPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {step4Runs.length === 0 ? (
+              {activeRuns.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="py-8 text-center text-gray-500">
                     Step4対象のデータはありません。
@@ -109,7 +122,7 @@ export function Step4ListPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                step4Runs.map((run) => {
+                activeRuns.map((run) => {
                   const statusInfo = STATUS_LABELS[run.status] || {
                     label: run.status,
                     variant: "secondary" as const,
@@ -147,7 +160,7 @@ export function Step4ListPage() {
                         {run.issue_count} / {run.item_count} 件
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" asChild>
+                        <Button variant="default" size="sm" asChild>
                           <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4_DETAIL(run.id)}>
                             詳細 <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
@@ -156,6 +169,78 @@ export function Step4ListPage() {
                     </TableRow>
                   );
                 })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* 完了済みブロック */}
+        <div className="rounded-md border bg-white shadow-sm">
+          <div className="border-b bg-gray-50 p-4">
+            <h3 className="font-medium text-gray-900">完了済み</h3>
+            <p className="text-sm text-gray-500">SAP登録が完了したデータです。</p>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>ステータス</TableHead>
+                <TableHead>対象期間</TableHead>
+                <TableHead>取込日時</TableHead>
+                <TableHead>完了日時</TableHead>
+                <TableHead>発行対象</TableHead>
+                <TableHead className="text-right">アクション</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {doneRuns.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-6 text-center text-gray-500">
+                    完了済みのデータはありません。
+                  </TableCell>
+                </TableRow>
+              ) : (
+                doneRuns.map((run) => (
+                  <TableRow key={run.id}>
+                    <TableCell>{run.id}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary">完了</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {run.data_start_date && run.data_end_date ? (
+                        <span className="text-sm">
+                          {run.data_start_date} 〜 {run.data_end_date}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(run.created_at), "yyyy/MM/dd HH:mm", {
+                        locale: ja,
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      {run.step4_executed_at ? (
+                        format(new Date(run.step4_executed_at), "yyyy/MM/dd HH:mm", {
+                          locale: ja,
+                        })
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {run.issue_count} / {run.item_count} 件
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4_DETAIL(run.id)}>
+                          詳細 <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>
