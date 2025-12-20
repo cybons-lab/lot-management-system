@@ -249,6 +249,7 @@ export function Step3DetailPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]">No</TableHead>
+                  <TableHead>ステータス</TableHead>
                   <TableHead>出荷先</TableHead>
                   <TableHead>層別</TableHead>
                   <TableHead>メーカー名</TableHead>
@@ -256,12 +257,16 @@ export function Step3DetailPage() {
                   <TableHead>納期</TableHead>
                   <TableHead>出荷便</TableHead>
                   <TableHead>結果</TableHead>
+                  <TableHead className="text-center">突合</TableHead>
+                  <TableHead className="text-center">SAP</TableHead>
+                  <TableHead>受注No</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredItems.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell>{item.row_no}</TableCell>
+                    <TableCell className="text-sm">{item.status || "-"}</TableCell>
                     <TableCell>{item.destination}</TableCell>
                     <TableCell>{item.layer_code}</TableCell>
                     <TableCell className="text-sm">{item.maker_name}</TableCell>
@@ -289,6 +294,17 @@ export function Step3DetailPage() {
                       )}
                       {!item.result_status && <Badge variant="outline">未開始</Badge>}
                     </TableCell>
+                    <TableCell className="text-center">
+                      {item.match_result === true && <Badge className="bg-green-600">○</Badge>}
+                      {item.match_result === false && <Badge variant="destructive">×</Badge>}
+                      {item.match_result === null && <span className="text-gray-400">-</span>}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {item.sap_registered === true && <Badge className="bg-green-600">○</Badge>}
+                      {item.sap_registered === false && <Badge variant="destructive">×</Badge>}
+                      {item.sap_registered === null && <span className="text-gray-400">-</span>}
+                    </TableCell>
+                    <TableCell className="text-sm">{item.order_no || "-"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
