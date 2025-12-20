@@ -17,10 +17,10 @@ from app.main import app
 def _truncate_all(db: Session):
     """Clean up test data."""
     # Aggressive cleanup to avoid contamination
-    from app.infrastructure.persistence.models import Allocation, StockHistory
+    from app.infrastructure.persistence.models import LotReservation, StockHistory
 
     try:
-        db.query(Allocation).delete()
+        db.query(LotReservation).delete()
         db.query(StockHistory).delete()
         db.query(Lot).delete()
         db.query(Product).delete()
