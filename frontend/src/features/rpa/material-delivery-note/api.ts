@@ -35,6 +35,9 @@ export interface RpaRun {
   step2_executed_at: string | null;
   step2_executed_by_user_id: number | null;
   step2_executed_by_username: string | null;
+  external_done_at: string | null;
+  external_done_by_username: string | null;
+  step4_executed_at: string | null;
   created_at: string;
   updated_at: string;
   item_count: number;
@@ -52,6 +55,8 @@ export interface RpaRunSummary {
   started_at: string | null;
   started_by_username: string | null;
   step2_executed_at: string | null;
+  external_done_at: string | null;
+  step4_executed_at: string | null;
   created_at: string;
   item_count: number;
   complete_count: number;
@@ -186,6 +191,35 @@ export async function executeMaterialDeliveryNote(
     "rpa/material-delivery-note/execute",
     request,
   );
+}
+
+/**
+ * 外部手順完了をマーク
+ */
+export async function markExternalDone(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/external-done`, {});
+}
+
+/**
+ * Step4: 突合チェック実行
+ */
+export async function executeStep4Check(
+  runId: number,
+  file: File,
+): Promise<{ match: number; mismatch: number }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  return http.postFormData<{ match: number; mismatch: number }>(
+    `rpa/material-delivery-note/runs/${runId}/step4-check`,
+    formData,
+  );
+}
+
+/**
+ * Step4 NGアイテムの再実行
+ */
+export async function retryFailedItems(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/retry-failed`, {});
 }
 
 // Layer Codes

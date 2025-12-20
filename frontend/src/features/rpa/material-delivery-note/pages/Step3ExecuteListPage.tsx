@@ -32,11 +32,10 @@ const STATUS_LABELS: Record<
   string,
   { label: string; variant: "secondary" | "default" | "destructive" | "outline" }
 > = {
-  downloaded: { label: "ダウンロード完了", variant: "secondary" },
-  draft: { label: "ダウンロード完了", variant: "secondary" }, // Legacy
-  ready_for_step2: { label: "実行待ち", variant: "default" },
-  step2_running: { label: "実行中", variant: "outline" },
-  done: { label: "完了", variant: "outline" },
+  step2_confirmed: { label: "実行待ち", variant: "default" }, // 旧 ready_for_step2
+  step3_running: { label: "実行中", variant: "outline" }, // 旧 step2_running
+  step3_done: { label: "完了", variant: "secondary" },
+  done: { label: "全完了", variant: "outline" },
 };
 
 // Sub component for row action to handle hook per run
@@ -54,7 +53,7 @@ function RunActionCell({ run }: { run: RpaRunSummary }) {
       await executeMutation.mutateAsync({
         // Backend will handle defaults
       });
-      navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id));
+      navigate(`/rpa/material-delivery-note/step3/${run.id}`);
     } catch {
       // Error handled in hook
     }
@@ -62,7 +61,7 @@ function RunActionCell({ run }: { run: RpaRunSummary }) {
 
   return (
     <div className="flex justify-end gap-2">
-      {run.status === "ready_for_step2" && (
+      {run.status === "step2_confirmed" && (
         <Button size="sm" onClick={handleExecute} disabled={executeMutation.isPending}>
           {executeMutation.isPending ? (
             <>
@@ -78,7 +77,7 @@ function RunActionCell({ run }: { run: RpaRunSummary }) {
         </Button>
       )}
       <Button variant="outline" size="sm" asChild>
-        <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id)}>
+        <Link to={`/rpa/material-delivery-note/step3/${run.id}`}>
           詳細 <ArrowRight className="ml-2 h-4 w-4" />
         </Link>
       </Button>
@@ -92,11 +91,14 @@ export function Step3ExecuteListPage() {
 
   const displayRuns = useMemo(() => {
     if (!data?.runs) return [];
-    // 実行待ち、実行中、および完了済みを表示（完了済みは直近のものだけに絞るなどの考慮が必要かもしれないが、一旦全て表示）
-    // ユーザー要望：Step2完了(=ready_for_step2)以降のものが見える
+    // 実行待ち(step2_confirmed)、実行中(step3_running)、および完了済み(step3_done/done)を表示
+    // ユーザー要望：Step2完了(=step2_confirmed)以降のものが見える
     return data.runs.filter(
       (run) =>
-        run.status === "ready_for_step2" || run.status === "step2_running" || run.status === "done",
+        run.status === "step2_confirmed" ||
+        run.status === "step3_running" ||
+        run.status === "step3_done" ||
+        run.status === "done",
     );
   }, [data]);
 

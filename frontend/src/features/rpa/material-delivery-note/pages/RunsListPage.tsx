@@ -29,9 +29,13 @@ const STATUS_MAP: Record<
   string,
   { label: string; variant: "default" | "secondary" | "outline" | "destructive" | "success" }
 > = {
-  draft: { label: "下書き", variant: "secondary" },
-  ready_for_step2: { label: "Step2待ち", variant: "default" },
-  step2_running: { label: "Step2実行中", variant: "outline" },
+  step1_done: { label: "Step1完了", variant: "secondary" },
+  step2_confirmed: { label: "Step2確認済", variant: "default" },
+  step3_running: { label: "PAD実行中", variant: "outline" },
+  step3_done: { label: "外部手順待ち", variant: "outline" },
+  step4_checking: { label: "突合中", variant: "default" },
+  step4_ng_retry: { label: "NG再実行中", variant: "destructive" },
+  step4_review: { label: "レビュー中", variant: "default" },
   done: { label: "完了", variant: "success" },
   cancelled: { label: "キャンセル", variant: "destructive" },
 };
@@ -138,7 +142,7 @@ export function RunsListPage() {
                         : "-"}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id)}>
+                      <Link to={`/rpa/material-delivery-note/runs/${run.id}`}>
                         <Button variant="ghost" size="sm">
                           <Eye className="mr-2 h-4 w-4" />
                           詳細

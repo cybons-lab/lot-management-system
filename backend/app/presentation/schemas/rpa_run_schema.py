@@ -35,7 +35,16 @@ class RpaRunItemUpdateRequest(BaseModel):
     complete_flag: bool | None = None
     delivery_quantity: int | None = Field(default=None, ge=0)
     result_status: str | None = None
+
     sap_registered: bool | None = None
+
+
+class RpaRunResultUpdateRequest(BaseModel):
+    """RPA Run Result update request schema (PAD)."""
+
+    result_status: str | None = None
+    sap_registered: bool | None = None
+    issue_flag: bool | None = None
 
 
 class RpaRunBatchUpdateRequest(BaseModel):
@@ -57,6 +66,9 @@ class RpaRunResponse(BaseModel):
     step2_executed_at: datetime | None = None
     step2_executed_by_user_id: int | None = None
     step2_executed_by_username: str | None = None
+    external_done_at: datetime | None = None
+    external_done_by_username: str | None = None
+    step4_executed_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
     item_count: int = 0
@@ -78,6 +90,8 @@ class RpaRunSummaryResponse(BaseModel):
     started_at: datetime | None = None
     started_by_username: str | None = None
     step2_executed_at: datetime | None = None
+    external_done_at: datetime | None = None
+    step4_executed_at: datetime | None = None
     created_at: datetime
     item_count: int = 0
     complete_count: int = 0

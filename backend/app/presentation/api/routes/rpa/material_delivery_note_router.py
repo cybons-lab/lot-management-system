@@ -29,6 +29,7 @@ from app.presentation.schemas.rpa_run_schema import (
     RpaRunItemUpdateRequest,
     RpaRunListResponse,
     RpaRunResponse,
+    RpaRunResultUpdateRequest,
     RpaRunSummaryResponse,
     Step2ExecuteRequest,
     Step2ExecuteResponse,
@@ -77,6 +78,11 @@ def _build_run_response(run, maker_map: dict[str, str] = None) -> RpaRunResponse
         complete_count=run.complete_count,
         all_items_complete=run.all_items_complete,
         items=items,
+        external_done_at=run.external_done_at,
+        external_done_by_username=run.external_done_by_user.username
+        if run.external_done_by_user
+        else None,
+        step4_executed_at=run.step4_executed_at,
     )
 
 
@@ -95,6 +101,8 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
         item_count=run.item_count,
         complete_count=run.complete_count,
         all_items_complete=run.all_items_complete,
+        external_done_at=run.external_done_at,
+        step4_executed_at=run.step4_executed_at,
     )
 
 
@@ -194,29 +202,42 @@ def update_item(
     db: Session = Depends(get_db),
 ):
     """Item更新（issue_flag / complete_flag / delivery_quantity）."""
-    service = MaterialDeliveryNoteService(db)
-    item = service.update_item(
-        run_id=run_id,
-        item_id=item_id,
-        issue_flag=request.issue_flag,
-        complete_flag=request.complete_flag,
-        delivery_quantity=request.delivery_quantity,
-        result_status=request.result_status,
-        sap_registered=request.sap_registered,
-    )
-
-    if not item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Item not found: run_id={run_id}, item_id={item_id}",
+    try:
+        service = MaterialDeliveryNoteService(db)
+        item = service.update_item(
+            run_id=run_id,
+            item_id=item_id,
+            issue_flag=request.issue_flag,
+            complete_flag=request.complete_flag,
+            delivery_quantity=request.delivery_quantity,
+            result_status=request.result_status,
+            sap_registered=request.sap_registered,
         )
 
-    resp_item = RpaRunItemResponse.model_validate(item)
-    if item.layer_code:
-        maker_map = _get_maker_map(db, [item.layer_code])
-        resp_item.maker_name = maker_map.get(item.layer_code)
+        if not item:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Item not found: run_id={run_id}, item_id={item_id}",
+            )
 
-    return resp_item
+        resp_item = RpaRunItemResponse.model_validate(item)
+        if item.layer_code:
+            maker_map = _get_maker_map(db, [item.layer_code])
+            resp_item.maker_name = maker_map.get(item.layer_code)
+
+        return resp_item
+    except ValueError as e:
+        logger.error(f"ValueError in update_item: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+    except Exception as e:
+        logger.exception("Unexpected error in update_item")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Internal server error: {e!s}",
+        )
 
 
 @router.get(
@@ -350,6 +371,91 @@ async def execute_step2(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Step2実行に失敗しました: {e!s}",
         )
+
+
+@router.post("/runs/{run_id}/external-done", response_model=RpaRunResponse)
+def mark_external_done(
+    run_id: int,
+    db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_current_user_optional),
+):
+    """外部手順完了をマークする."""
+    service = MaterialDeliveryNoteService(db)
+    try:
+        run = service.mark_external_done(run_id, current_user)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(db, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.patch(
+    "/runs/{run_id}/items/{item_id}/rpa-result",
+    response_model=RpaRunItemResponse,
+)
+def update_item_result(
+    run_id: int,
+    item_id: int,
+    request: RpaRunResultUpdateRequest,
+    db: Session = Depends(get_db),
+):
+    """PADからの結果更新."""
+    service = MaterialDeliveryNoteService(db)
+    item = service.update_item_result(
+        run_id=run_id,
+        item_id=item_id,
+        result_status=request.result_status,
+        sap_registered=request.sap_registered,
+        issue_flag=request.issue_flag,
+    )
+    if not item:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Item not found")
+
+    resp_item = RpaRunItemResponse.model_validate(item)
+    if item.layer_code:
+        maker_map = _get_maker_map(db, [item.layer_code])
+        resp_item.maker_name = maker_map.get(item.layer_code)
+    return resp_item
+
+
+@router.post("/runs/{run_id}/step4-check", response_model=dict)
+def execute_step4_check(
+    run_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """Step4: 突合チェック実行.
+
+    Returns:
+        {"match": int, "mismatch": int}
+    """
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="CSV file required")
+
+    service = MaterialDeliveryNoteService(db)
+    try:
+        content = file.file.read()
+        result = service.execute_step4_check(run_id, content)
+        return result
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/runs/{run_id}/retry-failed", response_model=RpaRunResponse)
+def retry_failed_items(
+    run_id: int,
+    db: Session = Depends(get_db),
+):
+    """Step4 NGアイテムのみStep3再実行."""
+    service = MaterialDeliveryNoteService(db)
+    try:
+        run = service.retry_step3_failed(run_id)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(db, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.post(

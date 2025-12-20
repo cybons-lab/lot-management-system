@@ -16,16 +16,41 @@ if TYPE_CHECKING:
 
 
 class RpaRunStatus:
-    """RPA Run status constants."""
+    """RPA Run status constants.
 
-    DOWNLOADED = "downloaded"  # ダウンロード完了（確認前）
-    READY_FOR_STEP2 = "ready_for_step2"  # 確認完了
-    STEP2_RUNNING = "step2_running"
+    ステータスフロー:
+    step1_done → step2_confirmed → step3_running → step3_done
+    → step4_checking → step4_review → done
+    """
+
+    # Step1完了（CSVインポート直後）
+    STEP1_DONE = "step1_done"
+    # Step2確認完了（Step3実行可能）
+    STEP2_CONFIRMED = "step2_confirmed"
+    # Step3（PAD）実行中
+    STEP3_RUNNING = "step3_running"
+    # Step3完了・外部手順待ち
+    STEP3_DONE = "step3_done"
+    # Step4突合チェック中
+    STEP4_CHECKING = "step4_checking"
+    # Step4 NG再実行中
+    STEP4_NG_RETRY = "step4_ng_retry"
+    # Step4レビュー可能
+    STEP4_REVIEW = "step4_review"
+    # 完了
     DONE = "done"
+    # キャンセル
     CANCELLED = "cancelled"
 
-    # Legacy alias for backward compatibility
-    DRAFT = "downloaded"
+    # Legacy aliases for backward compatibility
+    DOWNLOADED = "step1_done"
+    DRAFT = "step1_done"
+    READY_FOR_STEP2 = "step2_confirmed"
+    STEP2_RUNNING = "step3_running"
+    STEP3_DONE_WAITING_EXTERNAL = "step3_done"
+    READY_FOR_STEP4_CHECK = "step4_checking"
+    STEP4_CHECK_RUNNING = "step4_checking"
+    READY_FOR_STEP4_REVIEW = "step4_review"
 
 
 class RpaRun(Base):
@@ -55,6 +80,15 @@ class RpaRun(Base):
     step2_executed_by_user_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
+    # Step4 / External Done
+    external_done_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    external_done_by_user_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    step4_executed_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )  # Step4チェック開始日時
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
@@ -78,6 +112,9 @@ class RpaRun(Base):
     started_by_user: Mapped[User | None] = relationship("User", foreign_keys=[started_by_user_id])
     step2_executed_by_user: Mapped[User | None] = relationship(
         "User", foreign_keys=[step2_executed_by_user_id]
+    )
+    external_done_by_user: Mapped[User | None] = relationship(
+        "User", foreign_keys=[external_done_by_user_id]
     )
 
     @property
@@ -134,6 +171,9 @@ class RpaRunItem(Base):
 
     # 結果ステータス (pending/success/failure/error)
     result_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    processing_started_at: Mapped[datetime | None] = mapped_column(
+        DateTime, nullable=True
+    )  # 処理開始日時（タイムアウト回収用）
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False

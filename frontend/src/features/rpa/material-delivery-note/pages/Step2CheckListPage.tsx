@@ -31,9 +31,8 @@ const STATUS_LABELS: Record<
   string,
   { label: string; variant: "secondary" | "default" | "destructive" }
 > = {
-  downloaded: { label: "ダウンロード完了", variant: "secondary" },
-  draft: { label: "ダウンロード完了", variant: "secondary" }, // Legacy
-  ready_for_step2: { label: "確認完了", variant: "default" },
+  step1_done: { label: "Step2実行待ち", variant: "secondary" }, // 旧 downloaded
+  step2_confirmed: { label: "確認完了", variant: "default" },
 };
 
 export function Step2CheckListPage() {
@@ -41,9 +40,10 @@ export function Step2CheckListPage() {
 
   const checkRuns = useMemo(() => {
     if (!data?.runs) return [];
+    // Step1完了(=step1_done) または Step2確認完了(=step2_confirmed)を表示
+    // ユーザー要望：Step2完了後もStep2画面でデータ編集したい
     return data.runs.filter(
-      (run) =>
-        run.status === "downloaded" || run.status === "draft" || run.status === "ready_for_step2",
+      (run) => run.status === "step1_done" || run.status === "step2_confirmed",
     );
   }, [data]);
 

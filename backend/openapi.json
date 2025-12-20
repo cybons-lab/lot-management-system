@@ -12575,6 +12575,214 @@
         }
       }
     },
+    "/api/rpa/material-delivery-note/runs/{run_id}/external-done": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Mark External Done",
+        "description": "外部手順完了をマークする.",
+        "operationId": "mark_external_done_api_rpa_material_delivery_note_runs__run_id__external_done_post",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/rpa-result": {
+      "patch": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Update Item Result",
+        "description": "PADからの結果更新.",
+        "operationId": "update_item_result_api_rpa_material_delivery_note_runs__run_id__items__item_id__rpa_result_patch",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RpaRunResultUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunItemResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/step4-check": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Execute Step4 Check",
+        "description": "Step4: 突合チェック実行.\n\nReturns:\n    {\"match\": int, \"mismatch\": int}",
+        "operationId": "execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Execute Step4 Check Api Rpa Material Delivery Note Runs  Run Id  Step4 Check Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/retry-failed": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Retry Failed Items",
+        "description": "Step4 NGアイテムのみStep3再実行.",
+        "operationId": "retry_failed_items_api_rpa_material_delivery_note_runs__run_id__retry_failed_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/rpa/material-delivery-note/execute": {
       "post": {
         "tags": [
@@ -14219,6 +14427,20 @@
           "file"
         ],
         "title": "Body_create_run_api_rpa_material_delivery_note_runs_post"
+      },
+      "Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post"
       },
       "Body_import_from_file_api_admin_master_import_upload_post": {
         "properties": {
@@ -22346,6 +22568,41 @@
             ],
             "title": "Step2 Executed By Username"
           },
+          "external_done_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Done At"
+          },
+          "external_done_by_username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Done By Username"
+          },
+          "step4_executed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step4 Executed At"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -22390,6 +22647,46 @@
         ],
         "title": "RpaRunResponse",
         "description": "RPA Run response schema."
+      },
+      "RpaRunResultUpdateRequest": {
+        "properties": {
+          "result_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Status"
+          },
+          "sap_registered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Registered"
+          },
+          "issue_flag": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issue Flag"
+          }
+        },
+        "type": "object",
+        "title": "RpaRunResultUpdateRequest",
+        "description": "RPA Run Result update request schema (PAD)."
       },
       "RpaRunSummaryResponse": {
         "properties": {
@@ -22463,6 +22760,30 @@
               }
             ],
             "title": "Step2 Executed At"
+          },
+          "external_done_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Done At"
+          },
+          "step4_executed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step4 Executed At"
           },
           "created_at": {
             "type": "string",
