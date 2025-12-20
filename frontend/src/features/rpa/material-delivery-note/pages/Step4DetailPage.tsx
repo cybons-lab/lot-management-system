@@ -23,10 +23,10 @@ import {
 import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { retryFailedItems } from "../api";
+import { retryFailedItems, updateItem } from "../api";
 import { useRun } from "../hooks";
 
-import { Button } from "@/components/ui";
+import { Button, Input } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -82,6 +82,18 @@ export function Step4DetailPage() {
     mutationFn: () => retryFailedItems(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["rpa-run", id] }),
   });
+
+  const updateLotNoMutation = useMutation({
+    mutationFn: ({ itemId, lotNo }: { itemId: number; lotNo: string }) =>
+      updateItem(id, itemId, { lot_no: lotNo }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["rpa-run", id] }),
+  });
+
+  const handleLotNoBlur = (itemId: number, value: string) => {
+    if (value.trim()) {
+      updateLotNoMutation.mutate({ itemId, lotNo: value.trim() });
+    }
+  };
 
   // Filter Logic - Step4では突合○のアイテムのみ表示
   const filteredItems = useMemo(() => {
@@ -278,8 +290,13 @@ export function Step4DetailPage() {
               <TableBody>
                 {filteredItems.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-mono text-sm">
-                      {item.lot_no || <span className="text-red-500">未入力</span>}
+                    <TableCell className="p-1">
+                      <Input
+                        className="h-8 w-full font-mono text-sm"
+                        defaultValue={item.lot_no || ""}
+                        placeholder="ロットNo"
+                        onBlur={(e) => handleLotNoBlur(item.id, e.target.value)}
+                      />
                     </TableCell>
                     <TableCell className="text-sm">{item.item_no || "-"}</TableCell>
                     <TableCell>{item.row_no}</TableCell>

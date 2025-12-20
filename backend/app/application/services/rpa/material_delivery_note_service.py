@@ -136,23 +136,45 @@ class MaterialDeliveryNoteService:
         issue_flag: bool | None = None,
         complete_flag: bool | None = None,
         delivery_quantity: int | None = None,
+        lot_no: str | None = None,
         commit: bool = True,
     ) -> RpaRunItem | None:
         """Itemを更新する (UI用).
 
         Step3実行中 (STEP2_RUNNING以降) は、ユーザーによるデータ変更を禁止する。
-        ただし、UI上の表示制御フラグ等は要件によるが、ここでは基本禁止とする。
+        ただし、lot_noの更新はStep4で必要なため許可する。
         """
         run = self.get_run(run_id)
         if not run:
             return None
 
-        # Guard: Step3実行中以降は編集禁止
-        # ただし DRAFT / READY_FOR_STEP2 まではOK
+        # Get item to check lock status
+        item = (
+            self.db.query(RpaRunItem)
+            .filter(RpaRunItem.id == item_id, RpaRunItem.run_id == run_id)
+            .first()
+        )
+        if not item:
+            return None
+
+        # ロック済みアイテムは編集禁止（lot_noのみ例外）
+        if item.lock_flag:
+            if issue_flag is not None or complete_flag is not None or delivery_quantity is not None:
+                raise ValueError("Cannot update locked item. Only lot_no can be updated.")
+
+        # Guard: Step3実行中以降は編集禁止（lot_no更新は除く）
         editable_statuses = [RpaRunStatus.DRAFT, RpaRunStatus.READY_FOR_STEP2]
         if run.status not in editable_statuses:
-            # 許可されていないステータスでの更新
-            raise ValueError(f"Cannot update item in status {run.status}")
+            # lot_no更新のみは許可（Step4用）
+            if lot_no is None:
+                raise ValueError(f"Cannot update item in status {run.status}")
+            # lot_noのみ更新
+            return self._update_item_internal(
+                run_id=run_id,
+                item_id=item_id,
+                lot_no=lot_no,
+                commit=commit,
+            )
 
         return self._update_item_internal(
             run_id=run_id,
@@ -160,6 +182,7 @@ class MaterialDeliveryNoteService:
             issue_flag=issue_flag,
             complete_flag=complete_flag,
             delivery_quantity=delivery_quantity,
+            lot_no=lot_no,
             commit=commit,
         )
 
@@ -193,6 +216,7 @@ class MaterialDeliveryNoteService:
         delivery_quantity: int | None = None,
         result_status: str | None = None,
         sap_registered: bool | None = None,
+        lot_no: str | None = None,
         commit: bool = True,
     ) -> RpaRunItem | None:
         """内部共通更新メソッド."""
@@ -206,6 +230,7 @@ class MaterialDeliveryNoteService:
             delivery_quantity: 納入量
             result_status: 結果ステータス
             sap_registered: SAP登録済みフラグ
+            lot_no: ロットNo
             commit: コミットするかどうか
 
         Returns:
@@ -230,6 +255,8 @@ class MaterialDeliveryNoteService:
             item.result_status = result_status
         if sap_registered is not None:
             item.sap_registered = sap_registered
+        if lot_no is not None:
+            item.lot_no = lot_no
 
         item.updated_at = utcnow()
 
@@ -353,12 +380,19 @@ class MaterialDeliveryNoteService:
         actual_start_date = start_date if start_date else run.data_start_date
         actual_end_date = end_date if end_date else run.data_end_date
 
-        # Update status to running
+        # Update status to running and lock issued items
         now = utcnow()
         run.status = RpaRunStatus.STEP2_RUNNING
         run.step2_executed_at = now
         run.step2_executed_by_user_id = user.id if user else None
         run.updated_at = now
+
+        # 発行対象アイテムにロックを設定
+        self.db.query(RpaRunItem).filter(
+            RpaRunItem.run_id == run_id,
+            RpaRunItem.issue_flag.is_(True),
+        ).update({"lock_flag": True, "updated_at": now}, synchronize_session=False)
+
         self.db.commit()
 
         # Call Power Automate Flow

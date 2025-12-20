@@ -4694,7 +4694,7 @@ export interface paths {
     put?: never;
     /**
      * Complete All Items
-     * @description 全Itemsを完了にする.
+     * @description Step2完了としてステータスを更新する.
      */
     post: operations["complete_all_items_api_rpa_material_delivery_note_runs__run_id__complete_all_post"];
     delete?: never;
@@ -9092,6 +9092,15 @@ export interface components {
       result_status?: string | null;
       /** Maker Name */
       maker_name?: string | null;
+      /**
+       * Lock Flag
+       * @default false
+       */
+      lock_flag: boolean;
+      /** Item No */
+      item_no?: string | null;
+      /** Lot No */
+      lot_no?: string | null;
     };
     /**
      * RpaRunItemUpdateRequest
@@ -9108,6 +9117,8 @@ export interface components {
       result_status?: string | null;
       /** Sap Registered */
       sap_registered?: boolean | null;
+      /** Lot No */
+      lot_no?: string | null;
     };
     /**
      * RpaRunListResponse
@@ -9168,6 +9179,11 @@ export interface components {
        * @default 0
        */
       complete_count: number;
+      /**
+       * Issue Count
+       * @default 0
+       */
+      issue_count: number;
       /**
        * All Items Complete
        * @default false
@@ -9231,6 +9247,11 @@ export interface components {
        * @default 0
        */
       complete_count: number;
+      /**
+       * Issue Count
+       * @default 0
+       */
+      issue_count: number;
       /**
        * All Items Complete
        * @default false

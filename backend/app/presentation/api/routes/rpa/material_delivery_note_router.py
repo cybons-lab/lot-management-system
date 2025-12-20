@@ -212,6 +212,7 @@ def update_item(
             issue_flag=request.issue_flag,
             complete_flag=request.complete_flag,
             delivery_quantity=request.delivery_quantity,
+            lot_no=request.lot_no,
         )
 
         if not item:

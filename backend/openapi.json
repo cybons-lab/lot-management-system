@@ -12480,7 +12480,7 @@
           "rpa-material-delivery-note"
         ],
         "summary": "Complete All Items",
-        "description": "全Itemsを完了にする.",
+        "description": "Step2完了としてステータスを更新する.",
         "operationId": "complete_all_items_api_rpa_material_delivery_note_runs__run_id__complete_all_post",
         "parameters": [
           {
@@ -22391,6 +22391,33 @@
               }
             ],
             "title": "Maker Name"
+          },
+          "lock_flag": {
+            "type": "boolean",
+            "title": "Lock Flag",
+            "default": false
+          },
+          "item_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item No"
+          },
+          "lot_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No"
           }
         },
         "type": "object",
@@ -22458,6 +22485,17 @@
               }
             ],
             "title": "Sap Registered"
+          },
+          "lot_no": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot No"
           }
         },
         "type": "object",
@@ -22621,6 +22659,11 @@
           "complete_count": {
             "type": "integer",
             "title": "Complete Count",
+            "default": 0
+          },
+          "issue_count": {
+            "type": "integer",
+            "title": "Issue Count",
             "default": 0
           },
           "all_items_complete": {
@@ -22798,6 +22841,11 @@
           "complete_count": {
             "type": "integer",
             "title": "Complete Count",
+            "default": 0
+          },
+          "issue_count": {
+            "type": "integer",
+            "title": "Issue Count",
             "default": 0
           },
           "all_items_complete": {

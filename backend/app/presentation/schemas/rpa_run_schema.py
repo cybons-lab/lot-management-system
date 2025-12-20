@@ -24,6 +24,9 @@ class RpaRunItemResponse(BaseModel):
     order_no: str | None = None
     result_status: str | None = None
     maker_name: str | None = None
+    lock_flag: bool = False
+    item_no: str | None = None
+    lot_no: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -35,8 +38,8 @@ class RpaRunItemUpdateRequest(BaseModel):
     complete_flag: bool | None = None
     delivery_quantity: int | None = Field(default=None, ge=0)
     result_status: str | None = None
-
     sap_registered: bool | None = None
+    lot_no: str | None = None
 
 
 class RpaRunResultUpdateRequest(BaseModel):

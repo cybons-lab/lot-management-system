@@ -137,7 +137,7 @@ export async function getRun(runId: number): Promise<RpaRun> {
 }
 
 /**
- * Itemを更新（issue_flag / complete_flag）
+ * Itemを更新（issue_flag / complete_flag / lot_no）
  */
 export async function updateItem(
   runId: number,
@@ -146,6 +146,7 @@ export async function updateItem(
     issue_flag?: boolean;
     complete_flag?: boolean;
     delivery_quantity?: number;
+    lot_no?: string;
   },
 ): Promise<RpaRunItem> {
   return http.patch<RpaRunItem>(`rpa/material-delivery-note/runs/${runId}/items/${itemId}`, data);
