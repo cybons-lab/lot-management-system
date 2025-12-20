@@ -54,6 +54,7 @@ function RunActionCell({ run }: { run: RpaRunSummary }) {
       await executeMutation.mutateAsync({
         // Backend will handle defaults
       });
+      navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id));
     } catch {
       // Error handled in hook
     }

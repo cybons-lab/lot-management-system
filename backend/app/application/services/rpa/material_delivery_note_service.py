@@ -316,10 +316,13 @@ class MaterialDeliveryNoteService:
             )
 
             # 成功時
-            run.status = RpaRunStatus.DONE
-            run.updated_at = utcnow()
-            self.db.commit()
-            self.db.refresh(run)
+            # Runステータスは RUNNING のままにしておく。
+            # 完了判定は、個別のItemsが全て完了したか、あるいは別途APIで完了通知を受け取る形を想定。
+            # Desktop Flowが非同期で動くため、ここでDONEにすると進捗が見えない。
+            # run.status = RpaRunStatus.DONE
+            # run.updated_at = utcnow()
+            # self.db.commit()
+            # self.db.refresh(run)
 
             return {
                 "status": "success",
