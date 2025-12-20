@@ -174,10 +174,12 @@ export function RunDetailPage() {
               variant="default"
               onClick={() => {
                 if (
-                  confirm("Step3へ進みますか？\n発行チェックONのデータのみが次で処理対象になります。")
+                  confirm(
+                    "Step3へ進みますか？\n発行チェックONのデータのみが次で処理対象になります。",
+                  )
                 ) {
                   completeRunMutation.mutate();
-                  navigate("/rpa/material-delivery-note/step3-execute-list");
+                  navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3);
                 }
               }}
             >
@@ -187,7 +189,7 @@ export function RunDetailPage() {
           {!isEditable && (
             <Button
               variant="outline"
-              onClick={() => navigate("/rpa/material-delivery-note/step3-execute-list")}
+              onClick={() => navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3)}
             >
               Step3一覧へ <ArrowRight className="ml-2 h-4 w-4" />
             </Button>

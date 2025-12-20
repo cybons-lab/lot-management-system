@@ -78,9 +78,9 @@ export function MaterialDeliveryNotePage() {
         {/* Step4: レビュー・SAP登録 */}
         <MenuCard
           title="Step4: レビュー・SAP登録"
-          description="突合OKデータのレビューとSAP登録を行います。履歴一覧からアクセス可能です。"
+          description="突合OKデータのレビューとSAP登録を行います。"
           icon={<CheckSquare className="h-6 w-6" />}
-          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUNS}
+          to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4}
         />
 
         {/* 履歴一覧 */}
