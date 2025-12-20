@@ -78,10 +78,10 @@ export interface Step2ExecuteResponse {
 }
 
 export interface Step2ExecuteRequest {
-  flow_url: string;
-  json_payload: string;
-  start_date: string;
-  end_date: string;
+  flow_url?: string;
+  json_payload?: string;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface MaterialDeliveryNoteExecuteRequest {

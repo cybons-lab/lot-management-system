@@ -103,13 +103,15 @@ class RpaRunCreateResponse(BaseModel):
 class Step2ExecuteRequest(BaseModel):
     """Step2 execution request schema."""
 
-    flow_url: str = Field(..., description="Power Automate Cloud FlowのHTTP Trigger URL")
+    flow_url: str | None = Field(
+        default=None, description="Power Automate Cloud FlowのHTTP Trigger URL"
+    )
     json_payload: str = Field(
         default="{}",
         description="Flowに送信するJSONペイロード（文字列）",
     )
-    start_date: date = Field(..., description="開始日")
-    end_date: date = Field(..., description="終了日")
+    start_date: date | None = Field(default=None, description="開始日")
+    end_date: date | None = Field(default=None, description="終了日")
 
 
 class Step2ExecuteResponse(BaseModel):

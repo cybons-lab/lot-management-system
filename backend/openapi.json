@@ -12169,7 +12169,7 @@
           "rpa-material-delivery-note"
         ],
         "summary": "Create Run",
-        "description": "CSV取込でRunを作成.\n\nmultipart/form-dataでCSVファイルをアップロード。\nパース結果をDBに保存し、run_idを返す。",
+        "description": "CSVファイルからRunを作成する.\n\nArgs:\n    file: アップロードされたCSVファイル\n    import_type: インポート形式 (default: material_delivery_note)\n    db: DBセッション\n    user: 実行ユーザー",
         "operationId": "create_run_api_rpa_material_delivery_note_runs_post",
         "security": [
           {
@@ -14156,6 +14156,11 @@
             "type": "string",
             "format": "binary",
             "title": "File"
+          },
+          "import_type": {
+            "type": "string",
+            "title": "Import Type",
+            "default": "material_delivery_note"
           }
         },
         "type": "object",
@@ -22618,7 +22623,14 @@
       "Step2ExecuteRequest": {
         "properties": {
           "flow_url": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Flow Url",
             "description": "Power Automate Cloud FlowのHTTP Trigger URL"
           },
@@ -22629,24 +22641,33 @@
             "default": "{}"
           },
           "start_date": {
-            "type": "string",
-            "format": "date",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Start Date",
             "description": "開始日"
           },
           "end_date": {
-            "type": "string",
-            "format": "date",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "End Date",
             "description": "終了日"
           }
         },
         "type": "object",
-        "required": [
-          "flow_url",
-          "start_date",
-          "end_date"
-        ],
         "title": "Step2ExecuteRequest",
         "description": "Step2 execution request schema."
       },

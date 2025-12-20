@@ -4588,10 +4588,13 @@ export interface paths {
     put?: never;
     /**
      * Create Run
-     * @description CSV取込でRunを作成.
+     * @description CSVファイルからRunを作成する.
      *
-     *     multipart/form-dataでCSVファイルをアップロード。
-     *     パース結果をDBに保存し、run_idを返す。
+     *     Args:
+     *         file: アップロードされたCSVファイル
+     *         import_type: インポート形式 (default: material_delivery_note)
+     *         db: DBセッション
+     *         user: 実行ユーザー
      */
     post: operations["create_run_api_rpa_material_delivery_note_runs_post"];
     delete?: never;
@@ -5490,6 +5493,11 @@ export interface components {
        * Format: binary
        */
       file: string;
+      /**
+       * Import Type
+       * @default material_delivery_note
+       */
+      import_type: string;
     };
     /** Body_import_from_file_api_admin_master_import_upload_post */
     Body_import_from_file_api_admin_master_import_upload_post: {
@@ -9189,7 +9197,7 @@ export interface components {
        * Flow Url
        * @description Power Automate Cloud FlowのHTTP Trigger URL
        */
-      flow_url: string;
+      flow_url?: string | null;
       /**
        * Json Payload
        * @description Flowに送信するJSONペイロード（文字列）
@@ -9198,16 +9206,14 @@ export interface components {
       json_payload: string;
       /**
        * Start Date
-       * Format: date
        * @description 開始日
        */
-      start_date: string;
+      start_date?: string | null;
       /**
        * End Date
-       * Format: date
        * @description 終了日
        */
-      end_date: string;
+      end_date?: string | null;
     };
     /**
      * Step2ExecuteResponse

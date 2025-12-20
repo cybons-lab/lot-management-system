@@ -107,6 +107,12 @@ class Settings(BaseSettings):
         "cookie",
     ]
 
+    # RPA Cloud Flow Settings
+    CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE: str = os.getenv(
+        "CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE", ""
+    )
+    CLOUD_FLOW_URL_PROGRESS_DOWNLOAD: str = os.getenv("CLOUD_FLOW_URL_PROGRESS_DOWNLOAD", "")
+
 
 # グローバル設定インスタンス
 settings = Settings()

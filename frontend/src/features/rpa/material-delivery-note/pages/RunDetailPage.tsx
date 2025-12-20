@@ -118,7 +118,8 @@ export function RunDetailPage() {
   };
 
   const handleGoToStep3 = () => {
-    navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3_EXECUTE(id));
+    // Navigate to Step3 List Page
+    navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP3);
   };
 
   const isEditable = run.status === "draft" || run.status === "ready_for_step2";

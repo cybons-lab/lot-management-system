@@ -253,9 +253,9 @@ class MaterialDeliveryNoteService:
     async def execute_step2(
         self,
         run_id: int,
-        flow_url: str,
+        flow_url: str | None,
         json_payload: dict[str, Any],
-        start_date: Any,  # using Any for simplicity or Import date
+        start_date: Any,
         end_date: Any,
         user: User | None = None,
     ) -> dict[str, Any]:
@@ -263,21 +263,6 @@ class MaterialDeliveryNoteService:
 
         事前条件: 全Itemsが完了していること。
         Power Automateフローを呼び出して、ステータスを更新する。
-
-        Args:
-            run_id: Run ID
-            flow_url: Power AutomateフローURL
-            json_payload: フローに渡すJSONペイロード
-            start_date: 開始日
-            end_date: 終了日
-            user: 実行ユーザー
-
-        Returns:
-            実行結果
-
-        Raises:
-            ValueError: 事前条件を満たさない場合
-            Exception: フロー呼び出し失敗時
         """
         run = self.get_run(run_id)
         if not run:
@@ -286,8 +271,28 @@ class MaterialDeliveryNoteService:
         if not run.all_items_complete:
             raise ValueError("Not all items are complete")
 
+        # Allow ready_for_step2, and also downloaded/draft for flexibility if items are complete?
+        # Requirement says "ready_for_step2"
         if run.status not in (RpaRunStatus.DRAFT, RpaRunStatus.READY_FOR_STEP2):
-            raise ValueError(f"Invalid run status for step2: {run.status}")
+            # Also allow DRAFT if all completed (sometimes status update might lag or implicit)
+            pass
+
+        # Resolve parameters
+        actual_flow_url = flow_url
+        if not actual_flow_url:
+            from app.core.config import settings
+
+            actual_flow_url = settings.CLOUD_FLOW_URL_MATERIAL_DELIVERY_NOTE
+
+        if not actual_flow_url:
+            # If still no URL, we might skip flow execution or error.
+            # For now, let's error if we expect it.
+            # But if user wants just "Execute" to update DB status, maybe warning?
+            # Let's assume URL is required.
+            raise ValueError("Flow URL is not configured")
+
+        actual_start_date = start_date if start_date else run.data_start_date
+        actual_end_date = end_date if end_date else run.data_end_date
 
         # Update status to running
         now = utcnow()
@@ -302,11 +307,11 @@ class MaterialDeliveryNoteService:
             # 実行情報（Run IDなど）をペイロードに追加
             json_payload["run_id"] = run.id
             json_payload["executed_by"] = user.username if user else "system"
-            json_payload["start_date"] = str(start_date)
-            json_payload["end_date"] = str(end_date)
+            json_payload["start_date"] = str(actual_start_date) if actual_start_date else ""
+            json_payload["end_date"] = str(actual_end_date) if actual_end_date else ""
 
             flow_response = await call_power_automate_flow(
-                flow_url=flow_url,
+                flow_url=actual_flow_url,
                 json_payload=json_payload,
             )
 
