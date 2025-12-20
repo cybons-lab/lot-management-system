@@ -291,7 +291,7 @@ class MaterialDeliveryNoteService:
         return self.get_run(run_id)
 
     def complete_all_items(self, run_id: int) -> RpaRun | None:
-        """全Itemsを完了にする.
+        """Step2を完了としてステータスを更新する.
 
         Args:
             run_id: Run ID
@@ -304,10 +304,6 @@ class MaterialDeliveryNoteService:
             return None
 
         now = utcnow()
-        for item in run.items:
-            item.complete_flag = True
-            item.updated_at = now
-
         run.status = RpaRunStatus.READY_FOR_STEP2
         run.updated_at = now
 
@@ -333,9 +329,6 @@ class MaterialDeliveryNoteService:
         run = self.get_run(run_id)
         if not run:
             raise ValueError(f"Run not found: {run_id}")
-
-        if not run.all_items_complete:
-            raise ValueError("Not all items are complete")
 
         # Allow ready_for_step2, and also downloaded/draft for flexibility if items are complete?
         # Requirement says "ready_for_step2"

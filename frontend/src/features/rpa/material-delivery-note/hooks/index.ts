@@ -157,7 +157,7 @@ export function useCompleteAllItems(runId: number) {
   return useMutation({
     mutationFn: () => completeAllItems(runId),
     onSuccess: () => {
-      toast.success("全チェックを完了しました");
+      toast.success("Step2を完了しました");
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY, runId] });
     },
     onError: (error: Error) => {

@@ -17,14 +17,13 @@ import {
   Filter,
   Loader2,
   ExternalLink,
-  Play,
   AlertCircle,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { markExternalDone } from "../api";
-import { useRun, useExecuteStep2 } from "../hooks";
+import { useRun } from "../hooks";
 
 import { Button } from "@/components/ui";
 import { Badge } from "@/components/ui/badge";
@@ -79,7 +78,6 @@ export function Step3DetailPage() {
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
   const { data: run, isLoading, error } = useRun(id, { refetchInterval: 3000 });
-  const executeMutation = useExecuteStep2(id);
 
   const externalDoneMutation = useMutation({
     mutationFn: markExternalDone,
@@ -119,20 +117,10 @@ export function Step3DetailPage() {
   const canAccessStep3 = STEP3_ACCESSIBLE_STATUSES.includes(run.status);
 
   // ステータス別の判定
-  const canExecuteStep3 = run.status === "step2_confirmed";
   const isStep3Running = run.status === "step3_running";
   const canMarkExternalDone = run.status === "step3_done";
 
   // ハンドラー
-  const handleExecuteStep3 = async () => {
-    if (!confirm(`Step3 (PAD実行) を開始しますか？\nRun ID: ${run.id}`)) return;
-    try {
-      await executeMutation.mutateAsync({});
-    } catch {
-      // error handled by hook
-    }
-  };
-
   const handleExternalDone = () => {
     if (
       confirm("外部手順が完了したことをマークしますか？\n※ Step4の突合チェックが自動開始されます")
@@ -166,26 +154,8 @@ export function Step3DetailPage() {
         title={`Run #${run.id} - Step3 PAD実行`}
         subtitle={`取込日時: ${format(new Date(run.created_at), "yyyy/MM/dd HH:mm")}`}
         actions={
-          <div className="flex gap-2">
-            {/* Step3実行ボタン */}
-            {canExecuteStep3 && (
-              <Button onClick={handleExecuteStep3} disabled={executeMutation.isPending}>
-                {executeMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    起動中...
-                  </>
-                ) : (
-                  <>
-                    <Play className="mr-2 h-4 w-4" />
-                    PAD実行開始
-                  </>
-                )}
-              </Button>
-            )}
-
-            {/* 外部手順完了ボタン */}
-            {canMarkExternalDone && (
+          canMarkExternalDone && (
+            <div className="flex gap-2">
               <Button onClick={handleExternalDone} disabled={externalDoneMutation.isPending}>
                 {externalDoneMutation.isPending ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -194,8 +164,8 @@ export function Step3DetailPage() {
                 )}
                 外部手順完了
               </Button>
-            )}
-          </div>
+            </div>
+          )
         }
       />
 

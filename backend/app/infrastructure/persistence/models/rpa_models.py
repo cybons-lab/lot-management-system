@@ -134,6 +134,11 @@ class RpaRun(Base):
         """完了済みitems数."""
         return sum(1 for item in self.items if item.complete_flag) if self.items else 0
 
+    @property
+    def issue_count(self) -> int:
+        """発行対象items数."""
+        return sum(1 for item in self.items if item.issue_flag) if self.items else 0
+
 
 class RpaRunItem(Base):
     """RPA実行明細（子テーブル）.

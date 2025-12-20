@@ -42,6 +42,7 @@ export interface RpaRun {
   updated_at: string;
   item_count: number;
   complete_count: number;
+  issue_count: number;
   all_items_complete: boolean;
   items: RpaRunItem[];
 }
@@ -60,6 +61,7 @@ export interface RpaRunSummary {
   created_at: string;
   item_count: number;
   complete_count: number;
+  issue_count: number;
   all_items_complete: boolean;
 }
 

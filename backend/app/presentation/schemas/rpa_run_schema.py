@@ -73,6 +73,7 @@ class RpaRunResponse(BaseModel):
     updated_at: datetime
     item_count: int = 0
     complete_count: int = 0
+    issue_count: int = 0
     all_items_complete: bool = False
     items: list[RpaRunItemResponse] = []
 
@@ -95,6 +96,7 @@ class RpaRunSummaryResponse(BaseModel):
     created_at: datetime
     item_count: int = 0
     complete_count: int = 0
+    issue_count: int = 0
     all_items_complete: bool = False
 
     model_config = {"from_attributes": True}

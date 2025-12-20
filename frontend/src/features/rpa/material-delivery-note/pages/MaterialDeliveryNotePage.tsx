@@ -88,7 +88,8 @@ export function MaterialDeliveryNotePage() {
                 外部手順完了後、CSVを再取得して突合チェックを行います。
                 <br />
                 <span className="text-xs text-gray-500">
-                  ※ Step3完了後、自動的にStep4ページへ遷移します。 履歴一覧からもアクセス可能です。
+                  ※ Step3完了後は自動遷移しません。外部手順完了ボタンを押下してStep4へ進めます。
+                  履歴一覧からもアクセス可能です。
                 </span>
               </p>
             </div>

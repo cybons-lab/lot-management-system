@@ -94,6 +94,8 @@ export function RunDetailPage() {
   if (error || !run) return <div>Error detected.</div>;
 
   const statusDisplay = STATUS_DISPLAY[run.status] || { label: run.status, color: "bg-gray-400" };
+  const issueCount = run.issue_count ?? run.items.filter((item) => item.issue_flag).length;
+  const totalCount = run.item_count ?? run.items.length;
 
   // Step2編集可能: step1_doneのみ
 
@@ -158,10 +160,10 @@ export function RunDetailPage() {
           </div>
           <div className="h-8 w-px bg-gray-200" />
           <div>
-            <div className="text-sm text-gray-500">確認進捗</div>
+            <div className="text-sm text-gray-500">発行対象数</div>
             <div className="text-lg font-medium">
-              {run.complete_count} / {run.item_count}
-              <span className="ml-1 text-sm text-gray-500">件 完了</span>
+              {issueCount} / {totalCount}
+              <span className="ml-1 text-sm text-gray-500">件 発行対象</span>
             </div>
           </div>
         </div>
@@ -172,16 +174,14 @@ export function RunDetailPage() {
               variant="default"
               onClick={() => {
                 if (
-                  confirm(
-                    "全ての項目を確認済みにしてStep3へ進みますか？\n（未確認の項目も全て完了扱いになります）",
-                  )
+                  confirm("Step3へ進みますか？\n発行チェックONのデータのみが次で処理対象になります。")
                 ) {
                   completeRunMutation.mutate();
                   navigate("/rpa/material-delivery-note/step3-execute-list");
                 }
               }}
             >
-              確認完了してStep3へ <ArrowRight className="ml-2 h-4 w-4" />
+              Step3へ進む <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
           {!isEditable && (

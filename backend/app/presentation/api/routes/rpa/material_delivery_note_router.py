@@ -76,6 +76,7 @@ def _build_run_response(run, maker_map: dict[str, str] = None) -> RpaRunResponse
         updated_at=run.updated_at,
         item_count=run.item_count,
         complete_count=run.complete_count,
+        issue_count=run.issue_count,
         all_items_complete=run.all_items_complete,
         items=items,
         external_done_at=run.external_done_at,
@@ -100,6 +101,7 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
         created_at=run.created_at,
         item_count=run.item_count,
         complete_count=run.complete_count,
+        issue_count=run.issue_count,
         all_items_complete=run.all_items_complete,
         external_done_at=run.external_done_at,
         step4_executed_at=run.step4_executed_at,
@@ -302,7 +304,7 @@ def complete_all_items(
     run_id: int,
     db: Session = Depends(get_db),
 ):
-    """全Itemsを完了にする."""
+    """Step2完了としてステータスを更新する."""
     service = MaterialDeliveryNoteService(db)
     run = service.complete_all_items(run_id)
 

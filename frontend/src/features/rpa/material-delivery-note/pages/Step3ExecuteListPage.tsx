@@ -89,18 +89,20 @@ export function Step3ExecuteListPage() {
   // 5秒ごとにポーリングして進捗を更新
   const { data, isLoading, error } = useRuns(0, 100, { refetchInterval: 5000 });
 
-  const displayRuns = useMemo(() => {
-    if (!data?.runs) return [];
-    // 実行待ち(step2_confirmed)、実行中(step3_running)、および完了済み(step3_done/done)を表示
-    // ユーザー要望：Step2完了(=step2_confirmed)以降のものが見える
-    return data.runs.filter(
-      (run) =>
-        run.status === "step2_confirmed" ||
-        run.status === "step3_running" ||
-        run.status === "step3_done" ||
-        run.status === "done",
-    );
-  }, [data]);
+  const readyRuns = useMemo(
+    () => data?.runs.filter((run) => run.status === "step2_confirmed") ?? [],
+    [data],
+  );
+  const historyRuns = useMemo(
+    () =>
+      data?.runs.filter(
+        (run) =>
+          run.status === "step3_running" ||
+          run.status === "step3_done" ||
+          run.status === "done",
+      ) ?? [],
+    [data],
+  );
 
   if (isLoading) {
     return (
@@ -152,14 +154,14 @@ export function Step3ExecuteListPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayRuns.length === 0 ? (
+              {readyRuns.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="py-8 text-center text-gray-500">
                     実行待ちのデータはありません。
                   </TableCell>
                 </TableRow>
               ) : (
-                displayRuns.map((run) => {
+                readyRuns.map((run) => {
                   const statusInfo = STATUS_LABELS[run.status] || {
                     label: run.status,
                     variant: "secondary" as const,
@@ -190,6 +192,75 @@ export function Step3ExecuteListPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <RunActionCell run={run} />
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        <div className="rounded-md border bg-white shadow-sm">
+          <div className="border-b bg-gray-50 p-4">
+            <h3 className="font-medium text-gray-900">履歴</h3>
+            <p className="text-sm text-gray-500">実行中・完了済みのRunはここに表示されます。</p>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>ステータス</TableHead>
+                <TableHead>対象期間</TableHead>
+                <TableHead>取込日時</TableHead>
+                <TableHead>実行ユーザー</TableHead>
+                <TableHead>進捗</TableHead>
+                <TableHead className="text-right">アクション</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {historyRuns.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-6 text-center text-gray-500">
+                    実行中・完了済みのデータはありません。
+                  </TableCell>
+                </TableRow>
+              ) : (
+                historyRuns.map((run) => {
+                  const statusInfo = STATUS_LABELS[run.status] || {
+                    label: run.status,
+                    variant: "secondary" as const,
+                  };
+                  return (
+                    <TableRow key={run.id}>
+                      <TableCell>{run.id}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        {run.data_start_date && run.data_end_date ? (
+                          <span className="text-sm">
+                            {run.data_start_date} 〜 {run.data_end_date}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(run.created_at), "yyyy/MM/dd HH:mm", {
+                          locale: ja,
+                        })}
+                      </TableCell>
+                      <TableCell>{run.started_by_username || "-"}</TableCell>
+                      <TableCell>
+                        {run.complete_count} / {run.item_count} 件
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link to={`/rpa/material-delivery-note/step3/${run.id}`}>
+                            詳細 <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );

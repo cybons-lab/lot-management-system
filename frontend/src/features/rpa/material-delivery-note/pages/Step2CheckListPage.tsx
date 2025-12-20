@@ -89,7 +89,7 @@ export function Step2CheckListPage() {
                 <TableHead>取得期間</TableHead>
                 <TableHead>取込日時</TableHead>
                 <TableHead>実行ユーザー</TableHead>
-                <TableHead>進捗</TableHead>
+                <TableHead>発行対象</TableHead>
                 <TableHead className="text-right">アクション</TableHead>
               </TableRow>
             </TableHeader>
@@ -130,8 +130,7 @@ export function Step2CheckListPage() {
                       </TableCell>
                       <TableCell>{run.started_by_username || "-"}</TableCell>
                       <TableCell>
-                        {run.complete_count} / {run.item_count} 件
-                        {run.all_items_complete && <span className="ml-2 text-green-600">✓</span>}
+                        {run.issue_count} / {run.item_count} 件
                       </TableCell>
                       <TableCell className="text-right">
                         <Link to={ROUTES.RPA.MATERIAL_DELIVERY_NOTE.RUN_DETAIL(run.id)}>
