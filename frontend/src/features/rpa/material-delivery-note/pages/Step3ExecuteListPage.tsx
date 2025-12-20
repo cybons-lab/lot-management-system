@@ -97,9 +97,7 @@ export function Step3ExecuteListPage() {
     () =>
       data?.runs.filter(
         (run) =>
-          run.status === "step3_running" ||
-          run.status === "step3_done" ||
-          run.status === "done",
+          run.status === "step3_running" || run.status === "step3_done" || run.status === "done",
       ) ?? [],
     [data],
   );
