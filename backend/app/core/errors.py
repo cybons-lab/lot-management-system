@@ -59,6 +59,8 @@ from app.domain.order import (
     DuplicateOrderError,
     InvalidOrderStatusError,
     OrderDomainError,
+    OrderLockedError,
+    OrderLockOwnershipError,
     OrderNotFoundError,
     OrderValidationError,
     ProductNotFoundError,
@@ -80,6 +82,8 @@ logger = logging.getLogger(__name__)
 DOMAIN_EXCEPTION_MAP: dict[type[DomainError], int] = {
     # === Order Domain ===
     OrderNotFoundError: status.HTTP_404_NOT_FOUND,
+    OrderLockedError: status.HTTP_409_CONFLICT,
+    OrderLockOwnershipError: status.HTTP_403_FORBIDDEN,
     ProductNotFoundError: status.HTTP_404_NOT_FOUND,
     DuplicateOrderError: status.HTTP_409_CONFLICT,
     InvalidOrderStatusError: status.HTTP_400_BAD_REQUEST,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime, timedelta
 from typing import cast
 
 from sqlalchemy import case, exists, select
@@ -14,6 +14,8 @@ from app.application.services.common.soft_delete_utils import (
 )
 from app.domain.order import (
     InvalidOrderStatusError,
+    OrderLockedError,
+    OrderLockOwnershipError,
     OrderNotFoundError,
     OrderValidationError,
     ProductNotFoundError,
@@ -282,6 +284,72 @@ class OrderService:
 
         self.db.flush()
         self.db.flush()
+
+    def acquire_lock(self, order_id: int, user_id: int) -> dict:
+        """Acquire edit lock for an order."""
+        # Join with locked_by_user to get name for error message
+        stmt = select(Order).options(selectinload(Order.locked_by_user)).where(Order.id == order_id)
+        order = self.db.execute(stmt).scalar_one_or_none()
+        if not order:
+            raise OrderNotFoundError(order_id)
+
+        now = datetime.utcnow()
+
+        # Check existing lock
+        if order.locked_by_user_id and order.lock_expires_at:
+            if order.lock_expires_at > now:
+                # If locked by same user, extend lock
+                if order.locked_by_user_id == user_id:
+                    order.lock_expires_at = now + timedelta(minutes=10)
+                    self.db.flush()  # Let caller commit (dependency injection or UoW)
+                    return {"message": "Lock renewed"}
+                else:
+                    # Locked by another user
+                    locked_by_name = (
+                        order.locked_by_user.username if order.locked_by_user else "Unknown User"
+                    )
+                    raise OrderLockedError(
+                        order_id=order.id,
+                        locked_by_user_name=locked_by_name,
+                        locked_at=order.locked_at,
+                    )
+
+        # Acquire lock
+        order.locked_by_user_id = user_id
+        order.locked_at = now
+        order.lock_expires_at = now + timedelta(minutes=10)
+        self.db.flush()
+
+        return {
+            "message": "Lock acquired",
+            "locked_by_user_id": user_id,
+            "locked_at": now.isoformat(),
+            "lock_expires_at": order.lock_expires_at.isoformat(),
+        }
+
+    def release_lock(self, order_id: int, user_id: int) -> dict:
+        """Release edit lock for an order."""
+        order = self.db.get(Order, order_id)
+        if not order:
+            raise OrderNotFoundError(order_id)
+
+        # Only lock owner can release
+        if order.locked_by_user_id != user_id:
+            if order.locked_by_user_id is None:
+                return {"message": "Lock already released"}
+
+            raise OrderLockOwnershipError(
+                order_id=order.id,
+                current_user_id=user_id,
+                locked_by_user_id=order.locked_by_user_id,
+            )
+
+        order.locked_by_user_id = None
+        order.locked_at = None
+        order.lock_expires_at = None
+        self.db.flush()
+
+        return {"message": "Lock released"}
 
     def _populate_additional_info(self, orders: list[OrderWithLinesResponse]) -> None:
         """Populate additional display info using v_order_line_details view."""

@@ -2,9 +2,9 @@
 """受注エンドポイント（全修正版） I/O整形のみを責務とし、例外変換はグローバルハンドラに委譲."""
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -182,7 +182,6 @@ def refresh_all_order_line_statuses(uow: UnitOfWork = Depends(get_uow)):
             updated_line_count += 1
 
     # 2. 全ての Order のステータスを更新
-    from app.infrastructure.persistence.models import Order
 
     orders = db.query(Order).all()
     updated_order_count = 0
@@ -218,44 +217,10 @@ def acquire_lock(
     db: Session = Depends(get_db),
 ):
     """受注の編集ロックを取得."""
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    # Use naive datetime for DB consistency (DB stores without timezone)
-    now = datetime.utcnow()
-
-    # 既存ロックのチェック
-    if order.locked_by_user_id and order.lock_expires_at:
-        if order.lock_expires_at > now:
-            # 自分がロックしている場合は更新
-            if order.locked_by_user_id == current_user.id:
-                order.lock_expires_at = now + timedelta(minutes=10)
-                db.commit()
-                return {"message": "Lock renewed"}
-            else:
-                # 他のユーザーがロック中
-                raise HTTPException(
-                    status_code=409,
-                    detail={
-                        "error": "LOCKED_BY_ANOTHER_USER",
-                        "locked_by": order.locked_by_user_name or "Unknown User",
-                        "locked_at": order.locked_at.isoformat() if order.locked_at else None,
-                    },
-                )
-
-    # ロックを取得
-    order.locked_by_user_id = current_user.id
-    order.locked_at = now
-    order.lock_expires_at = now + timedelta(minutes=10)
+    service = OrderService(db)
+    result = service.acquire_lock(order_id, current_user.id)
     db.commit()
-
-    return {
-        "message": "Lock acquired",
-        "locked_by_user_id": current_user.id,
-        "locked_at": now.isoformat(),
-        "lock_expires_at": order.lock_expires_at.isoformat(),
-    }
+    return result
 
 
 @router.delete("/{order_id}/lock")
@@ -265,20 +230,7 @@ def release_lock(
     db: Session = Depends(get_db),
 ):
     """受注の編集ロックを解放."""
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    # 自分がロックしている場合のみ解放可能
-    if order.locked_by_user_id != current_user.id:
-        if order.locked_by_user_id is None:
-            return {"message": "Lock already released"}
-
-        raise HTTPException(status_code=403, detail="You don't own this lock")
-
-    order.locked_by_user_id = None
-    order.locked_at = None
-    order.lock_expires_at = None
+    service = OrderService(db)
+    result = service.release_lock(order_id, current_user.id)
     db.commit()
-
-    return {"message": "Lock released"}
+    return result
