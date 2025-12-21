@@ -16,11 +16,13 @@ from app.application.services.rpa import (
 )
 from app.infrastructure.persistence.models import LayerCodeMapping
 from app.infrastructure.persistence.models.auth_models import User
+from app.infrastructure.persistence.models.masters_models import Customer
 from app.presentation.api.deps import get_db
 from app.presentation.api.routes.auth.auth_router import (
     get_current_user_optional,
 )
 from app.presentation.schemas.rpa_run_schema import (
+    LotSuggestionsResponse,
     MaterialDeliveryNoteExecuteRequest,
     MaterialDeliveryNoteExecuteResponse,
     RpaRunBatchUpdateRequest,
@@ -116,6 +118,7 @@ def _build_run_summary(run) -> RpaRunSummaryResponse:
 def create_run(
     file: UploadFile = File(...),
     import_type: str = Form("material_delivery_note"),
+    customer_code: str | None = Form(None),  # 得意先コード（オプション）
     db: Session = Depends(get_db),
     user: User | None = Depends(get_current_user_optional),
 ):
@@ -124,6 +127,7 @@ def create_run(
     Args:
         file: アップロードされたCSVファイル
         import_type: インポート形式 (default: material_delivery_note)
+        customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）
         db: DBセッション
         user: 実行ユーザー
     """
@@ -134,9 +138,19 @@ def create_run(
         )
 
     try:
+        # customer_code -> customer_id 解決（疎結合: なくてもエラーにならない）
+        customer_id = None
+        if customer_code:
+            customer = db.query(Customer).filter(Customer.customer_code == customer_code).first()
+            if customer:
+                customer_id = customer.id
+            # マスタになくても継続（ログのみ）
+            else:
+                logger.warning(f"Customer not found for code: {customer_code}")
+
         content = file.file.read()
         service = MaterialDeliveryNoteService(db)
-        run = service.create_run_from_csv(content, import_type, user)
+        run = service.create_run_from_csv(content, import_type, user, customer_id)
         return RpaRunCreateResponse(
             id=run.id,
             status=run.status,
@@ -262,6 +276,29 @@ def get_next_processing_item(
         resp_item.maker_name = maker_map.get(item.layer_code)
 
     return resp_item
+
+
+@router.get(
+    "/runs/{run_id}/items/{item_id}/lot-suggestions",
+    response_model=LotSuggestionsResponse,
+)
+def get_lot_suggestions(
+    run_id: int,
+    item_id: int,
+    db: Session = Depends(get_db),
+):
+    """アイテムに対するロット候補を取得する.
+
+    疎結合対応: CustomerItemマスタやロットがなくてもエラーにならない。
+
+    Returns:
+        - lots: FEFO順のロット候補リスト
+        - auto_selected: 候補が1つの場合のロット番号
+        - source: マッピング元 (customer_item, product_only, none)
+    """
+    service = MaterialDeliveryNoteService(db)
+    result = service.get_lot_suggestions(run_id, item_id)
+    return LotSuggestionsResponse(**result)
 
 
 @router.post(

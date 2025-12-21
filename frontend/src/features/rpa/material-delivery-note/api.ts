@@ -10,9 +10,13 @@ export interface RpaRunItem {
   id: number;
   row_no: number;
   status: string | null;
-  destination: string | null;
+  // フィールド名統一: jiku_code (表示名: 出荷先)
+  jiku_code: string | null;
+  destination?: string | null; // 後方互換用alias
   layer_code: string | null;
-  material_code: string | null;
+  // フィールド名統一: external_product_code (表示名: 材質コード)
+  external_product_code: string | null;
+  material_code?: string | null; // 後方互換用alias
   delivery_date: string | null;
   delivery_quantity: number | null;
   shipping_vehicle: string | null;
@@ -105,6 +109,22 @@ export interface MaterialDeliveryNoteExecuteResponse {
   status: string;
   message: string;
   flow_response: Record<string, unknown> | null;
+}
+
+// ロット候補関連の型
+export interface LotCandidate {
+  lot_id: number;
+  lot_number: string;
+  available_qty: number;
+  expiry_date: string | null;
+  received_date: string | null;
+  supplier_name: string | null;
+}
+
+export interface LotSuggestionsResponse {
+  lots: LotCandidate[];
+  auto_selected: string | null;
+  source: "customer_item" | "product_only" | "none";
 }
 
 // API Functions
@@ -226,6 +246,19 @@ export async function executeStep4Check(
  */
 export async function retryFailedItems(runId: number): Promise<RpaRun> {
   return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/retry-failed`, {});
+}
+
+/**
+ * ロット候補を取得
+ * 疎結合対応: マスタがなくてもエラーにならない
+ */
+export async function getLotSuggestions(
+  runId: number,
+  itemId: number,
+): Promise<LotSuggestionsResponse> {
+  return http.get<LotSuggestionsResponse>(
+    `rpa/material-delivery-note/runs/${runId}/items/${itemId}/lot-suggestions`,
+  );
 }
 
 // Layer Codes

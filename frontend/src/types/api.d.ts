@@ -4593,6 +4593,7 @@ export interface paths {
      *     Args:
      *         file: アップロードされたCSVファイル
      *         import_type: インポート形式 (default: material_delivery_note)
+     *         customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）
      *         db: DBセッション
      *         user: 実行ユーザー
      */
@@ -4655,6 +4656,33 @@ export interface paths {
      * @description 次に処理すべき未完了アイテムを取得する.
      */
     get: operations["get_next_processing_item_api_rpa_material_delivery_note_runs__run_id__next_item_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/lot-suggestions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Lot Suggestions
+     * @description アイテムに対するロット候補を取得する.
+     *
+     *     疎結合対応: CustomerItemマスタやロットがなくてもエラーにならない。
+     *
+     *     Returns:
+     *         - lots: FEFO順のロット候補リスト
+     *         - auto_selected: 候補が1つの場合のロット番号
+     *         - source: マッピング元 (customer_item, product_only, none)
+     */
+    get: operations["get_lot_suggestions_api_rpa_material_delivery_note_runs__run_id__items__item_id__lot_suggestions_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -5601,6 +5629,8 @@ export interface components {
        * @default material_delivery_note
        */
       import_type: string;
+      /** Customer Code */
+      customer_code?: string | null;
     };
     /** Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post */
     Body_execute_step4_check_api_rpa_material_delivery_note_runs__run_id__step4_check_post: {
@@ -7582,6 +7612,36 @@ export interface components {
       username?: string | null;
     };
     /**
+     * LotCandidateResponse
+     * @description ロット候補のレスポンス.
+     */
+    LotCandidateResponse: {
+      /** Lot Id */
+      lot_id: number;
+      /** Lot Number */
+      lot_number: string;
+      /**
+       * Available Qty
+       * @description 利用可能数量
+       */
+      available_qty: number;
+      /**
+       * Expiry Date
+       * @description 有効期限
+       */
+      expiry_date?: string | null;
+      /**
+       * Received Date
+       * @description 入荷日
+       */
+      received_date?: string | null;
+      /**
+       * Supplier Name
+       * @description 仕入先名
+       */
+      supplier_name?: string | null;
+    };
+    /**
      * LotCreate
      * @description Payload for creating lots.
      *
@@ -7790,6 +7850,28 @@ export interface components {
      * @enum {string}
      */
     LotStatus: "active" | "depleted" | "expired" | "quarantine" | "locked";
+    /**
+     * LotSuggestionsResponse
+     * @description ロット候補一覧のレスポンス.
+     */
+    LotSuggestionsResponse: {
+      /**
+       * Lots
+       * @description ロット候補一覧
+       */
+      lots?: components["schemas"]["LotCandidateResponse"][];
+      /**
+       * Auto Selected
+       * @description 候補が1つの場合の自動選択ロット番号
+       */
+      auto_selected?: string | null;
+      /**
+       * Source
+       * @description マッピング元 (customer_item, product_only, none)
+       * @default none
+       */
+      source: string;
+    };
     /**
      * LotUpdate
      * @description Mutable fields for lot updates.
@@ -17727,6 +17809,38 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["RpaRunItemResponse"] | null;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_lot_suggestions_api_rpa_material_delivery_note_runs__run_id__items__item_id__lot_suggestions_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+        item_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LotSuggestionsResponse"];
         };
       };
       /** @description Validation Error */
