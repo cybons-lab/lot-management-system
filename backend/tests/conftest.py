@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.infrastructure.persistence.models.base_model import Base
 from app.main import application
+
 from .db_utils import (
     apply_views_sql,
     create_core_tables,

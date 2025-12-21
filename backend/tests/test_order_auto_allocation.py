@@ -8,7 +8,6 @@ stored at the order_line level.
 from datetime import date, timedelta
 from decimal import Decimal
 
-import pytest
 from sqlalchemy.orm import Session
 
 from app.infrastructure.persistence.models import Lot, Order, OrderLine, Product, Warehouse

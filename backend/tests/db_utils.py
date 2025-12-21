@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Iterable
 import warnings
+from collections.abc import Iterable
+from pathlib import Path
 
 from sqlalchemy.engine import Engine
 
 from app.infrastructure.persistence.models.base_model import Base
+
 
 # Views defined in backend/sql/views/create_views.sql
 VIEW_NAMES: list[str] = [
@@ -66,7 +67,7 @@ def apply_views_sql(engine: Engine) -> None:
         Path(__file__).resolve().parent.parent / "sql" / "views" / "create_views.sql"
     )
     if not views_sql_path.exists():
-        warnings.warn(f"Views SQL file not found: {views_sql_path}")
+        warnings.warn(f"Views SQL file not found: {views_sql_path}", stacklevel=2)
         return
 
     sql_content = views_sql_path.read_text(encoding="utf-8")
