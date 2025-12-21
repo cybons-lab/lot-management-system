@@ -49,10 +49,11 @@ def test_regenerate_for_periods(db):
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
-        expiry_date=date(2025, 12, 1),
+        expiry_date=date(2026, 12, 1),
         current_quantity=Decimal("100"),
         unit="EA",
         status="active",
+        origin_type="order",
     )
     db.add(lot1)
 
@@ -62,10 +63,11 @@ def test_regenerate_for_periods(db):
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
-        expiry_date=date(2026, 1, 1),
+        expiry_date=date(2027, 1, 1),
         current_quantity=Decimal("100"),
         unit="EA",
         status="active",
+        origin_type="order",
     )
     db.add(lot2)
     db.commit()
@@ -135,10 +137,11 @@ def test_regenerate_with_shortage(db):
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
-        expiry_date=date(2025, 12, 1),
+        expiry_date=date(2026, 12, 1),
         current_quantity=Decimal("50"),
         unit="EA",
         status="active",
+        origin_type="order",
     )
     db.add(lot1)
     db.commit()
@@ -208,10 +211,11 @@ def test_regenerate_single_lot_fit(db):
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 1, 1),
-        expiry_date=date(2025, 11, 1),
+        expiry_date=date(2026, 11, 1),
         current_quantity=Decimal("50"),
         unit="EA",
         status="active",
+        origin_type="order",
     )
     db.add(lot1)
 
@@ -221,10 +225,11 @@ def test_regenerate_single_lot_fit(db):
         product_id=product.id,
         warehouse_id=warehouse.id,
         received_date=date(2025, 2, 1),
-        expiry_date=date(2025, 12, 1),
+        expiry_date=date(2026, 12, 1),
         current_quantity=Decimal("100"),
         unit="EA",
         status="active",
+        origin_type="order",
     )
     db.add(lot2)
     db.commit()

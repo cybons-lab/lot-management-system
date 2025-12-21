@@ -1,6 +1,8 @@
 # backend/app/domain/allocation/__init__.py
 """Allocation Domain Layer."""
 
+from app.domain.lot import LotCandidate
+
 from .calculator import calculate_allocation
 from .exceptions import (
     AlreadyAllocatedError,
@@ -15,7 +17,6 @@ from .types import (
     AllocationDecision,
     AllocationRequest,
     AllocationResult,
-    LotCandidate,
 )
 
 

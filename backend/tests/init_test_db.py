@@ -139,7 +139,6 @@ def init_single_db(db_url):
                 CREATE OR REPLACE VIEW v_order_line_details AS
                 SELECT
                     o.id AS order_id,
-                    o.order_number,
                     o.order_date,
                     o.customer_id,
                     c.customer_code,
@@ -158,23 +157,23 @@ def init_single_db(db_url):
                     p.qty_per_internal_unit AS product_qty_per_internal_unit,
                     dp.delivery_place_code,
                     dp.delivery_place_name,
-                    s.supplier_name,
-                    COALESCE(SUM(a.allocated_quantity), 0) AS allocated_quantity
+                    s_ci.supplier_name,
+                    COALESCE(SUM(a.reserved_qty), 0) AS allocated_quantity
                 FROM order_lines ol
-                JOIN orders o ON ol.order_id = o.id
-                LEFT JOIN customers c ON o.customer_id = c.id
-                LEFT JOIN products p ON ol.product_id = p.id
-                LEFT JOIN delivery_places dp ON ol.delivery_place_id = dp.id
-                LEFT JOIN allocations a ON ol.id = a.order_line_id
+                JOIN orders o ON o.id = ol.order_id
+                JOIN customers c ON c.id = o.customer_id
+                JOIN products p ON p.id = ol.product_id
+                LEFT JOIN delivery_places dp ON dp.id = ol.delivery_place_id
+                LEFT JOIN lot_reservations a ON ol.id = a.source_id AND a.source_type = 'order'
                 LEFT JOIN customer_items ci ON o.customer_id = ci.customer_id AND ol.product_id = ci.product_id
-                LEFT JOIN suppliers s ON ci.supplier_id = s.id
+                LEFT JOIN suppliers s_ci ON ci.supplier_id = s_ci.id
                 GROUP BY
-                    o.id, o.order_number, o.order_date, o.customer_id,
+                    o.id, o.order_date, o.customer_id,
                     c.customer_code, c.customer_name,
                     ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status,
                     p.maker_part_code, p.product_name, p.internal_unit, p.external_unit, p.qty_per_internal_unit,
                     dp.delivery_place_code, dp.delivery_place_name,
-                    s.supplier_name
+                    s_ci.supplier_name
             """)
             )
 

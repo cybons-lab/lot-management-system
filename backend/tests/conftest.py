@@ -42,169 +42,68 @@ def db_engine():
 
     Base.metadata.create_all(bind=engine)
 
-    # Create views (since create_all doesn't create them, and might create tables instead)
-    from sqlalchemy import text
-    from sqlalchemy.exc import ProgrammingError
+    # Create views using the same SQL file as production
+    # This ensures test DB views are in sync with production
+    from pathlib import Path
 
-    with engine.connect() as connection:
-        transaction = connection.begin()
+    views_sql_path = Path(__file__).parent.parent / "sql" / "views" / "create_views.sql"
+    if views_sql_path.exists():
+        sql_content = views_sql_path.read_text(encoding="utf-8")
+        # Use raw connection for multi-statement SQL execution
+        raw_conn = engine.raw_connection()
         try:
-            # Drop table if it was created by create_all (because it's defined as a model)
-            try:
-                with connection.begin_nested():
-                    connection.execute(text("DROP TABLE IF EXISTS v_inventory_summary CASCADE"))
-            except ProgrammingError:
-                pass
+            cursor = raw_conn.cursor()
+            # Drop any tables that ORM might have created for view models
+            # The create_views.sql handles DROP VIEW, but ORM might create tables
+            view_names = [
+                "v_inventory_summary",
+                "v_lot_details",
+                "v_order_line_details",
+                "v_lot_allocations",
+                "v_lot_current_stock",
+                "v_customer_daily_products",
+                "v_order_line_context",
+                "v_customer_code_to_id",
+                "v_delivery_place_code_to_id",
+                "v_product_code_to_id",
+                "v_forecast_order_pairs",
+                "v_lot_available_qty",
+                "v_candidate_lots_by_order_line",
+                "v_supplier_code_to_id",
+                "v_warehouse_code_to_id",
+                "v_user_supplier_assignments",
+                "v_customer_item_jiku_mappings",
+            ]
+            for view_name in view_names:
+                try:
+                    cursor.execute(f"DROP TABLE IF EXISTS {view_name} CASCADE")
+                    raw_conn.commit()
+                except Exception:
+                    raw_conn.rollback()
 
-            # Drop view if exists
-            try:
-                with connection.begin_nested():
-                    connection.execute(text("DROP VIEW IF EXISTS v_inventory_summary CASCADE"))
-            except ProgrammingError:
-                pass
+                try:
+                    cursor.execute(f"DROP VIEW IF EXISTS {view_name} CASCADE")
+                    raw_conn.commit()
+                except Exception:
+                    raw_conn.rollback()
 
-            # Create view - using lot_reservations for available calculation
-            connection.execute(
-                text("""
-                CREATE OR REPLACE VIEW v_inventory_summary AS
-                SELECT
-                    l.product_id,
-                    l.warehouse_id,
-                    SUM(l.current_quantity) AS total_quantity,
-                    COALESCE(SUM(r.reserved_qty), 0) AS allocated_quantity,
-                    (SUM(l.current_quantity) - COALESCE(SUM(r.reserved_qty), 0)) AS available_quantity,
-                    COALESCE(SUM(ipl.planned_quantity), 0) AS provisional_stock,
-                    (SUM(l.current_quantity) - COALESCE(SUM(r.reserved_qty), 0) + COALESCE(SUM(ipl.planned_quantity), 0)) AS available_with_provisional,
-                    MAX(l.updated_at) AS last_updated
-                FROM lots l
-                LEFT JOIN lot_reservations r ON l.id = r.lot_id AND r.status IN ('active', 'confirmed')
-                LEFT JOIN inbound_plan_lines ipl ON l.product_id = ipl.product_id
-                LEFT JOIN inbound_plans ip ON ipl.inbound_plan_id = ip.id AND ip.status = 'planned'
-                WHERE l.status = 'active'
-                GROUP BY l.product_id, l.warehouse_id
-            """)
-            )
+            raw_conn.commit()
+            # Now execute the views SQL
+            cursor.execute(sql_content)
+            raw_conn.commit()
+        finally:
+            raw_conn.close()
+    else:
+        # Fallback: views might already exist in pre-initialized DB
+        import warnings
 
-            # Create v_lot_details view
-            try:
-                with connection.begin_nested():
-                    connection.execute(text("DROP TABLE v_lot_details CASCADE"))
-            except Exception:
-                connection.execute(text("DROP VIEW IF EXISTS v_lot_details CASCADE"))
+        warnings.warn(f"Views SQL file not found: {views_sql_path}", stacklevel=2)
 
-            connection.execute(
-                text("""
-                CREATE OR REPLACE VIEW v_lot_details AS
-                SELECT
-                    l.id AS lot_id,
-                    l.lot_number,
-                    l.product_id,
-                    COALESCE(p.maker_part_code, '') AS maker_part_code,
-                    COALESCE(p.product_name, '[削除済み製品]') AS product_name,
-                    l.warehouse_id,
-                    COALESCE(w.warehouse_code, '') AS warehouse_code,
-                    COALESCE(w.warehouse_name, '[削除済み倉庫]') AS warehouse_name,
-                    l.supplier_id,
-                    COALESCE(s.supplier_code, '') AS supplier_code,
-                    COALESCE(s.supplier_name, '[削除済み仕入先]') AS supplier_name,
-                    l.received_date,
-                    l.expiry_date,
-                    l.current_quantity,
-                    COALESCE(r.reserved_qty, 0) AS allocated_quantity,
-                    l.locked_quantity,
-                    GREATEST(l.current_quantity - COALESCE(r.reserved_qty, 0) - l.locked_quantity, 0) AS available_quantity,
-                    l.unit,
-                    l.status,
-                    l.lock_reason,
-                    CASE WHEN l.expiry_date IS NOT NULL THEN CAST((l.expiry_date - CURRENT_DATE) AS INTEGER) ELSE NULL END AS days_to_expiry,
-                    l.temporary_lot_key,
-                    usa_primary.user_id AS primary_user_id,
-                    u_primary.username AS primary_username,
-                    u_primary.display_name AS primary_user_display_name,
-                    CASE WHEN p.valid_to IS NOT NULL AND p.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS product_deleted,
-                    CASE WHEN w.valid_to IS NOT NULL AND w.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS warehouse_deleted,
-                    CASE WHEN s.valid_to IS NOT NULL AND s.valid_to <= CURRENT_DATE THEN TRUE ELSE FALSE END AS supplier_deleted,
-                    l.created_at,
-                    l.updated_at
-                FROM lots l
-                LEFT JOIN products p ON l.product_id = p.id
-                LEFT JOIN warehouses w ON l.warehouse_id = w.id
-                LEFT JOIN suppliers s ON l.supplier_id = s.id
-                LEFT JOIN user_supplier_assignments usa_primary
-                    ON usa_primary.supplier_id = l.supplier_id
-                    AND usa_primary.is_primary = TRUE
-                LEFT JOIN users u_primary
-                    ON u_primary.id = usa_primary.user_id
-                LEFT JOIN (
-                    SELECT lot_id, SUM(reserved_qty) as reserved_qty
-                    FROM lot_reservations
-                    WHERE status IN ('active', 'confirmed')
-                    GROUP BY lot_id
-                ) r ON l.id = r.lot_id
-            """)
-            )
-
-            # Create v_order_line_details view
-            try:
-                with connection.begin_nested():
-                    connection.execute(text("DROP TABLE v_order_line_details CASCADE"))
-            except Exception:
-                connection.execute(text("DROP VIEW IF EXISTS v_order_line_details CASCADE"))
-
-            connection.execute(
-                text("""
-                CREATE OR REPLACE VIEW v_order_line_details AS
-                SELECT
-                    o.id AS order_id,
-                    o.order_date,
-                    o.customer_id,
-                    c.customer_code,
-                    c.customer_name,
-                    ol.id AS line_id,
-                    ol.product_id,
-                    ol.delivery_date,
-                    ol.order_quantity,
-                    ol.unit,
-                    ol.delivery_place_id,
-                    ol.status AS line_status,
-                    ol.shipping_document_text,
-                    p.maker_part_code AS product_code,
-                    p.product_name,
-                    p.internal_unit AS product_internal_unit,
-                    p.external_unit AS product_external_unit,
-                    p.qty_per_internal_unit AS product_qty_per_internal_unit,
-                    dp.delivery_place_code,
-                    dp.delivery_place_name,
-                    dp.jiku_code,
-                    ci.external_product_code,
-                    s.supplier_name,
-                    COALESCE(SUM(a.reserved_qty), 0) AS allocated_quantity
-                FROM order_lines ol
-                JOIN orders o ON ol.order_id = o.id
-                LEFT JOIN customers c ON o.customer_id = c.id
-                LEFT JOIN products p ON ol.product_id = p.id
-                LEFT JOIN delivery_places dp ON ol.delivery_place_id = dp.id
-                LEFT JOIN lot_reservations a ON ol.id = a.source_id AND a.source_type = 'order' AND a.status IN ('active', 'confirmed')
-                LEFT JOIN customer_items ci ON o.customer_id = ci.customer_id AND ol.product_id = ci.product_id
-                LEFT JOIN suppliers s ON ci.supplier_id = s.id
-                GROUP BY
-                    o.id, o.order_date, o.customer_id,
-                    c.customer_code, c.customer_name,
-                    ol.id, ol.product_id, ol.delivery_date, ol.order_quantity, ol.unit, ol.delivery_place_id, ol.status, ol.shipping_document_text,
-                    p.maker_part_code, p.product_name, p.internal_unit, p.external_unit, p.qty_per_internal_unit,
-                    dp.delivery_place_code, dp.delivery_place_name, dp.jiku_code,
-                    ci.external_product_code,
-                    s.supplier_name
-            """)
-            )
-
-            transaction.commit()
-        except Exception:
-            transaction.rollback()
-            raise
     yield engine
 
     # Drop all views before dropping tables to avoid dependency errors
+    from sqlalchemy import text
+
     with engine.connect() as connection:
         with connection.begin():
             # Dynamically get all views from the database and drop them
@@ -270,8 +169,32 @@ def client(db) -> Generator[TestClient]:
     def override_get_db():
         yield db
 
+    def override_get_uow():
+        """Override UoW to use the test session directly.
+
+        Note: We create a fake UoW that uses the existing test session
+        and flushes on exit (without full commit) so changes are visible.
+        """
+
+        class TestUnitOfWork:
+            def __init__(self, session):
+                self.session = session
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                if exc_type is None:
+                    # Flush changes so they're visible, but don't commit
+                    # (test fixture's transaction rollback handles cleanup)
+                    self.session.flush()
+                # Don't rollback on error - let test fixture handle it
+
+        yield TestUnitOfWork(db)
+
     application.dependency_overrides[api_deps.get_db] = override_get_db
     application.dependency_overrides[core_database.get_db] = override_get_db
+    application.dependency_overrides[api_deps.get_uow] = override_get_uow
     with TestClient(application) as c:
         yield c
     application.dependency_overrides.clear()

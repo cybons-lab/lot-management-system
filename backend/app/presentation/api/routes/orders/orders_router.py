@@ -2,9 +2,9 @@
 """受注エンドポイント（全修正版） I/O整形のみを責務とし、例外変換はグローバルハンドラに委譲."""
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -101,129 +101,121 @@ class ManualAllocationSavePayload(BaseModel):
 
 @router.post("/{order_line_id}/allocations", status_code=200)
 def save_manual_allocations(
-    order_line_id: int, payload: ManualAllocationSavePayload, db: Session = Depends(get_db)
+    order_line_id: int, payload: ManualAllocationSavePayload, uow: UnitOfWork = Depends(get_uow)
 ):
     """
-    手動引当保存 (確定) - トランザクション保護版.
+    手動引当保存 (確定) - UoWによるトランザクション保護版.
 
     既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。
-    全ての操作を1つのトランザクションで実行し、エラー時はロールバックします。
+    全ての操作をUoWのトランザクションで実行し、エラー時は自動ロールバック。
     """
-    try:
-        # 1. P3: 既存の予約を全てリリース（在庫を解放、commit無し）
-        existing_reservations = (
-            db.query(LotReservation)
-            .filter(
-                LotReservation.source_type == ReservationSourceType.ORDER,
-                LotReservation.source_id == order_line_id,
-                LotReservation.status != ReservationStatus.RELEASED,
-            )
-            .all()
+    assert uow.session is not None
+    db = uow.session
+
+    # 1. P3: 既存の予約を全てリリース（在庫を解放、commit無し）
+    existing_reservations = (
+        db.query(LotReservation)
+        .filter(
+            LotReservation.source_type == ReservationSourceType.ORDER,
+            LotReservation.source_id == order_line_id,
+            LotReservation.status != ReservationStatus.RELEASED,
         )
-        for res in existing_reservations:
-            release_reservation(db, res.id, commit_db=False)
+        .all()
+    )
+    for res in existing_reservations:
+        release_reservation(db, res.id, commit_db=False)
 
-        # 2. 新しい予約を作成（在庫を引き当てる、commit無し）
-        created_ids = []
-        for item in payload.allocations:
-            if item.quantity <= 0:
-                continue
+    # 2. 新しい予約を作成（在庫を引き当てる、commit無し）
+    created_ids = []
+    for item in payload.allocations:
+        if item.quantity <= 0:
+            continue
 
+        try:
             reservation = create_manual_reservation(
                 db, order_line_id, item.lot_id, item.quantity, commit_db=False
             )
             created_ids.append(reservation.id)
+        except ValueError as e:
+            # P1: Preserve validation behavior (ValueError -> 422)
+            # This allows frontend to show field-specific errors
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=str(e),
+            )
 
-        # 3. 全て成功してから一括commit
-        db.commit()
+    # 3. UoWがスコープ終了時に自動commit（成功時）/ rollback（例外時）
+    db.flush()  # Ensure IDs are assigned
 
-        # 4. 作成された予約をrefresh
-        for res_id in created_ids:
-            refreshed_res = db.get(LotReservation, res_id)
-            if refreshed_res:
-                db.refresh(refreshed_res)
+    # 4. 作成された予約をrefresh
+    for res_id in created_ids:
+        refreshed_res = db.get(LotReservation, res_id)
+        if refreshed_res:
+            db.refresh(refreshed_res)
 
-        logger.info(f"Saved allocations for line {order_line_id}: {len(created_ids)} items")
+    logger.info(f"Saved allocations for line {order_line_id}: {len(created_ids)} items")
 
-        return {
-            "success": True,
-            "message": f"Allocations saved successfully. ({len(created_ids)} items)",
-            "allocated_ids": created_ids,
-        }
-
-    except ValueError as e:
-        logger.error(f"Validation error during allocation save: {e}")
-        db.rollback()
-        # Re-raise as DomainError for global handler
-        from app.domain.order import OrderValidationError
-
-        raise OrderValidationError(str(e)) from e
-    except Exception as e:
-        logger.exception(f"System error during allocation save: {e}")
-        db.rollback()
-        raise  # Let global handler format the response
+    return {
+        "success": True,
+        "message": f"Allocations saved successfully. ({len(created_ids)} items)",
+        "allocated_ids": created_ids,
+    }
 
 
 @router.post("/refresh-all-statuses", status_code=200)
-def refresh_all_order_line_statuses(db: Session = Depends(get_db)):
+def refresh_all_order_line_statuses(uow: UnitOfWork = Depends(get_uow)):
     """全受注明細および受注のステータスを再計算・更新.
 
     既存の allocations データに基づいて OrderLine.status と Order.status
     を正しい値に更新します。
     """
-    try:
-        from app.application.services.allocations.utils import (
-            update_order_allocation_status,
-            update_order_line_status,
-        )
+    assert uow.session is not None
+    db = uow.session
 
-        # 1. 全ての OrderLine のステータスを更新
-        lines = db.query(OrderLine).all()
-        updated_line_count = 0
+    from app.application.services.allocations.utils import (
+        update_order_allocation_status,
+        update_order_line_status,
+    )
 
-        for line in lines:
-            old_status = line.status
-            update_order_line_status(db, line.id)
-            db.flush()
+    # 1. 全ての OrderLine のステータスを更新
+    lines = db.query(OrderLine).all()
+    updated_line_count = 0
 
-            if line.status != old_status:
-                updated_line_count += 1
+    for line in lines:
+        old_status = line.status
+        update_order_line_status(db, line.id)
+        db.flush()
 
-        # 2. 全ての Order のステータスを更新
-        from app.infrastructure.persistence.models import Order
+        if line.status != old_status:
+            updated_line_count += 1
 
-        orders = db.query(Order).all()
-        updated_order_count = 0
+    # 2. 全ての Order のステータスを更新
 
-        for order in orders:
-            old_status = order.status
-            update_order_allocation_status(db, order.id)
-            db.flush()
+    orders = db.query(Order).all()
+    updated_order_count = 0
 
-            if order.status != old_status:
-                updated_order_count += 1
+    for order in orders:
+        old_status = order.status
+        update_order_allocation_status(db, order.id)
+        db.flush()
 
-        db.commit()
-        logger.info(
-            f"Refreshed {updated_line_count} order line statuses and "
-            f"{updated_order_count} order statuses"
-        )
+        if order.status != old_status:
+            updated_order_count += 1
 
-        return {
-            "success": True,
-            "message": (
-                f"Successfully refreshed {len(lines)} order lines and {len(orders)} orders"
-            ),
-            "updated_line_count": updated_line_count,
-            "updated_order_count": updated_order_count,
-            "total_line_count": len(lines),
-            "total_order_count": len(orders),
-        }
+    # UoWがスコープ終了時に自動commit
+    logger.info(
+        f"Refreshed {updated_line_count} order line statuses and "
+        f"{updated_order_count} order statuses"
+    )
 
-    except Exception as e:
-        logger.exception(f"Failed to refresh statuses: {e}")
-        db.rollback()
-        raise  # Let global handler format the response
+    return {
+        "success": True,
+        "message": (f"Successfully refreshed {len(lines)} order lines and {len(orders)} orders"),
+        "updated_line_count": updated_line_count,
+        "updated_order_count": updated_order_count,
+        "total_line_count": len(lines),
+        "total_order_count": len(orders),
+    }
 
 
 @router.post("/{order_id}/lock")
@@ -233,46 +225,10 @@ def acquire_lock(
     db: Session = Depends(get_db),
 ):
     """受注の編集ロックを取得."""
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    # Use naive datetime for DB consistency (DB stores without timezone)
-    now = datetime.utcnow()
-
-    # 既存ロックのチェック
-    if order.locked_by_user_id and order.lock_expires_at:
-        if order.lock_expires_at > now:
-            # 自分がロックしている場合は更新
-            if order.locked_by_user_id == current_user.id:
-                order.lock_expires_at = now + timedelta(minutes=10)
-                db.commit()
-                return {"message": "Lock renewed"}
-            else:
-                # 他のユーザーがロック中
-                raise HTTPException(
-                    status_code=409,
-                    detail={
-                        "error": "LOCKED_BY_ANOTHER_USER",
-                        # locked_by_user relationship might not be loaded eagerly, access carefully
-                        # But since we have lazy loading (default), accessing should trigger a query or use loaded
-                        "locked_by": order.locked_by_user_name or "Unknown User",
-                        "locked_at": order.locked_at.isoformat() if order.locked_at else None,
-                    },
-                )
-
-    # ロックを取得
-    order.locked_by_user_id = current_user.id
-    order.locked_at = now
-    order.lock_expires_at = now + timedelta(minutes=10)
+    service = OrderService(db)
+    result = service.acquire_lock(order_id, current_user.id)
     db.commit()
-
-    return {
-        "message": "Lock acquired",
-        "locked_by_user_id": current_user.id,
-        "locked_at": now.isoformat(),
-        "lock_expires_at": order.lock_expires_at.isoformat(),
-    }
+    return result
 
 
 @router.delete("/{order_id}/lock")
@@ -282,23 +238,7 @@ def release_lock(
     db: Session = Depends(get_db),
 ):
     """受注の編集ロックを解放."""
-    order = db.query(Order).filter(Order.id == order_id).first()
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    # 自分がロックしている場合のみ解放可能
-    # Note: 管理者権限で強制解除などが必要ならここに条件追加
-    if order.locked_by_user_id != current_user.id:
-        # ロックがない、または既に切れている場合は成功とみなすか？
-        # ここでは厳密にチェック
-        if order.locked_by_user_id is None:
-            return {"message": "Lock already released"}
-
-        raise HTTPException(status_code=403, detail="You don't own this lock")
-
-    order.locked_by_user_id = None
-    order.locked_at = None
-    order.lock_expires_at = None
+    service = OrderService(db)
+    result = service.release_lock(order_id, current_user.id)
     db.commit()
-
-    return {"message": "Lock released"}
+    return result

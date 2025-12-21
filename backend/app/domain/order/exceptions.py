@@ -1,6 +1,8 @@
 # backend/app/domain/order/exceptions.py
 """受注ドメインの例外定義."""
 
+from datetime import datetime
+
 from app.domain.errors import DomainError
 
 
@@ -112,4 +114,40 @@ class ProductNotFoundError(OrderDomainError):
             message,
             code="PRODUCT_NOT_FOUND",
             details={"product_code": product_code},
+        )
+
+
+class OrderLockedError(OrderDomainError):
+    """受注が別ユーザーによってロックされている場合のエラー."""
+
+    def __init__(self, order_id: int, locked_by_user_name: str, locked_at: datetime | None):
+        """初期化."""
+        formatted_locked_at = locked_at.isoformat() if locked_at else None
+
+        message = f"Order {order_id} is locked by {locked_by_user_name}"
+        super().__init__(
+            message,
+            code="LOCKED_BY_ANOTHER_USER",
+            details={
+                "order_id": order_id,
+                "locked_by": locked_by_user_name,
+                "locked_at": formatted_locked_at,
+            },
+        )
+
+
+class OrderLockOwnershipError(OrderDomainError):
+    """ロック解放権限がない場合のエラー."""
+
+    def __init__(self, order_id: int, current_user_id: int, locked_by_user_id: int | None):
+        """初期化."""
+        message = f"User {current_user_id} cannot release lock owned by {locked_by_user_id}"
+        super().__init__(
+            message,
+            code="LOCK_OWNERSHIP_ERROR",
+            details={
+                "order_id": order_id,
+                "current_user_id": current_user_id,
+                "locked_by_user_id": locked_by_user_id,
+            },
         )

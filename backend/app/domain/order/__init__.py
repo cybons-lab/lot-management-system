@@ -7,6 +7,8 @@ from .exceptions import (
     InvalidOrderStatusError,
     OrderDomainError,
     OrderLineNotFoundError,
+    OrderLockedError,
+    OrderLockOwnershipError,
     OrderNotFoundError,
     OrderValidationError,
     ProductNotFoundError,
@@ -23,6 +25,8 @@ __all__ = [
     "DuplicateOrderError",
     "OrderValidationError",
     "ProductNotFoundError",
+    "OrderLockedError",
+    "OrderLockOwnershipError",
     # State Machine
     "OrderStateMachine",
     "OrderStatus",
