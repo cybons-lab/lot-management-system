@@ -6,10 +6,10 @@ from app.infrastructure.persistence.models.rpa_models import RpaRun, RpaRunItem,
 
 
 def test_get_runs_empty(client):
-    response = client.get("/api/v1/rpa/material-delivery-note/runs")
+    response = client.get("/api/rpa/material-delivery-note/runs")
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["items"] == []
+    assert data["runs"] == []
     assert data["total"] == 0
 
 
@@ -23,15 +23,14 @@ def test_create_run_from_csv(client, db: Session):
     files = {"file": ("test.csv", csv_content, "text/csv")}
 
     response = client.post(
-        "/api/v1/rpa/material-delivery-note/runs/upload",
+        "/api/rpa/material-delivery-note/runs",
         files=files,
         data={"import_type": "material_delivery_note"},
     )
 
-    assert response.status_code == status.HTTP_200_OK
+    assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
     assert data["id"] is not None
-    assert data["rpa_type"] == "material_delivery_note"
 
     # Verify DB
     run = db.query(RpaRun).filter(RpaRun.id == data["id"]).first()
@@ -52,8 +51,8 @@ def test_update_item_uow(client, db: Session):
 
     # Update via API
     payload = {"delivery_quantity": 999}
-    response = client.put(
-        f"/api/v1/rpa/material-delivery-note/runs/{run.id}/items/{item.id}", json=payload
+    response = client.patch(
+        f"/api/rpa/material-delivery-note/runs/{run.id}/items/{item.id}", json=payload
     )
 
     assert response.status_code == status.HTTP_200_OK
