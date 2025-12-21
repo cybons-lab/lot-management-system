@@ -11,7 +11,6 @@ from .exceptions import (
     ValidationError,
 )
 from .rounding import RoundingMode, RoundingPolicy
-from .state_machine import AllocationStateMachine, AllocationStatus
 from .types import (
     AllocationDecision,
     AllocationRequest,
@@ -31,9 +30,6 @@ __all__ = [
     # Rounding
     "RoundingPolicy",
     "RoundingMode",
-    # State Machine
-    "AllocationStateMachine",
-    "AllocationStatus",
     # Allocation Calculator
     "calculate_allocation",
     "LotCandidate",

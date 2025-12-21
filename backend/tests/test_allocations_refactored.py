@@ -250,27 +250,6 @@ class TestRoundingPolicy:
         assert RoundingPolicy.round_allocation_qty(10.124) == 10.12
 
 
-class TestStateMachine:
-    """状態遷移のテスト"""
-
-    def test_valid_transitions(self):
-        """許可された状態遷移 (AllocationStateMachine - deprecated)"""
-        from app.domain.allocation import AllocationStateMachine
-
-        assert AllocationStateMachine.can_transition("active", "shipped") is True
-        assert AllocationStateMachine.can_transition("active", "cancelled") is True
-
-    def test_invalid_transitions(self):
-        """禁止された状態遷移 (AllocationStateMachine - deprecated)"""
-        from app.domain.allocation import AllocationStateMachine, InvalidTransitionError
-
-        assert AllocationStateMachine.can_transition("shipped", "active") is False
-        assert AllocationStateMachine.can_transition("cancelled", "active") is False
-
-        with pytest.raises(InvalidTransitionError):
-            AllocationStateMachine.validate_transition("shipped", "active")
-
-
 class TestReservationStateMachine:
     """ReservationStateMachine のテスト (C-03: 新しい統一ステートマシン)"""
 
