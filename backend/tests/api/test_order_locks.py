@@ -32,7 +32,8 @@ def test_acquire_lock_success(
     assert "locked_at" in data
     assert "lock_expires_at" in data
 
-    # Verify DB
+    # Verify DB - expire to force reload from DB
+    db_session.expire_all()
     db_session.refresh(order)
     assert order.locked_by_user_id == normal_user.id
 
@@ -133,6 +134,8 @@ def test_release_lock_success(
     assert response.status_code == 200
     assert response.json()["message"] == "Lock released"
 
+    # Verify DB - expire to force reload from DB
+    db_session.expire_all()
     db_session.refresh(order)
     assert order.locked_by_user_id is None
 

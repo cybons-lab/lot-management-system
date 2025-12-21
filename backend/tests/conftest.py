@@ -270,8 +270,32 @@ def client(db) -> Generator[TestClient]:
     def override_get_db():
         yield db
 
+    def override_get_uow():
+        """Override UoW to use the test session directly.
+
+        Note: We create a fake UoW that uses the existing test session
+        and flushes on exit (without full commit) so changes are visible.
+        """
+
+        class TestUnitOfWork:
+            def __init__(self, session):
+                self.session = session
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                if exc_type is None:
+                    # Flush changes so they're visible, but don't commit
+                    # (test fixture's transaction rollback handles cleanup)
+                    self.session.flush()
+                # Don't rollback on error - let test fixture handle it
+
+        yield TestUnitOfWork(db)
+
     application.dependency_overrides[api_deps.get_db] = override_get_db
     application.dependency_overrides[core_database.get_db] = override_get_db
+    application.dependency_overrides[api_deps.get_uow] = override_get_uow
     with TestClient(application) as c:
         yield c
     application.dependency_overrides.clear()
