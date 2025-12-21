@@ -136,3 +136,9 @@ coverage/
 *.rar
 backend/dumps/*.sql
 backend/dumps/
+
+# ============================================
+# Temporary reports and backups
+# ============================================
+backups/
+mypy_*.txt
