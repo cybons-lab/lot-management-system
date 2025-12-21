@@ -1,18 +1,8 @@
--- ============================================================
--- schema_latest.sql - 現在のDBスキーマダンプ
--- ============================================================
--- このファイルは開発用DBから pg_dump で自動生成されたものです。
--- 手動編集禁止: 内容を更新する場合は以下のコマンドを実行してください。
---
--- docker exec lot-db-postgres pg_dump -U admin -d lot_management \
---   --schema-only --no-owner --no-privileges --clean --if-exists \
---   > backend/sql/schema_latest.sql
---
--- 最終更新: 2025-12-12
--- ============================================================
 --
 -- PostgreSQL database dump
 --
+
+\restrict F9bxTo9xqiyPJqFJpjCj5oG0ARZoAibK66ztYfm1Lg1ocRVfB9LSePCzrBWjFKv
 
 -- Dumped from database version 15.15
 -- Dumped by pg_dump version 15.15
@@ -28,373 +18,12 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
-ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_withdrawn_by_fkey;
-ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_lot_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_delivery_place_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_customer_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.user_supplier_assignments DROP CONSTRAINT IF EXISTS user_supplier_assignments_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.user_supplier_assignments DROP CONSTRAINT IF EXISTS user_supplier_assignments_supplier_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.system_client_logs DROP CONSTRAINT IF EXISTS system_client_logs_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS product_mappings_supplier_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS product_mappings_product_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS product_mappings_customer_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS orders_locked_by_user_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS order_lines_order_group_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.order_groups DROP CONSTRAINT IF EXISTS order_groups_product_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.order_groups DROP CONSTRAINT IF EXISTS order_groups_customer_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.user_roles DROP CONSTRAINT IF EXISTS fk_user_roles_user;
-ALTER TABLE IF EXISTS ONLY public.user_roles DROP CONSTRAINT IF EXISTS fk_user_roles_role;
-ALTER TABLE IF EXISTS ONLY public.product_uom_conversions DROP CONSTRAINT IF EXISTS fk_uom_conversions_product;
-ALTER TABLE IF EXISTS ONLY public.stock_history DROP CONSTRAINT IF EXISTS fk_stock_history_lot;
-ALTER TABLE IF EXISTS ONLY public.product_suppliers DROP CONSTRAINT IF EXISTS fk_product_suppliers_supplier;
-ALTER TABLE IF EXISTS ONLY public.product_suppliers DROP CONSTRAINT IF EXISTS fk_product_suppliers_product;
-ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS fk_orders_customer;
-ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS fk_order_lines_product;
-ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS fk_order_lines_order;
-ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS fk_order_lines_delivery_place;
-ALTER TABLE IF EXISTS ONLY public.operation_logs DROP CONSTRAINT IF EXISTS fk_operation_logs_user;
-ALTER TABLE IF EXISTS ONLY public.master_change_logs DROP CONSTRAINT IF EXISTS fk_master_change_logs_user;
-ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS fk_lots_warehouse;
-ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS fk_lots_supplier;
-ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS fk_lots_product;
-ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS fk_lots_expected;
-ALTER TABLE IF EXISTS ONLY public.lot_reservations DROP CONSTRAINT IF EXISTS fk_lot_reservations_lot_id;
-ALTER TABLE IF EXISTS ONLY public.inbound_plans DROP CONSTRAINT IF EXISTS fk_inbound_plans_supplier;
-ALTER TABLE IF EXISTS ONLY public.inbound_plan_lines DROP CONSTRAINT IF EXISTS fk_inbound_plan_lines_product;
-ALTER TABLE IF EXISTS ONLY public.inbound_plan_lines DROP CONSTRAINT IF EXISTS fk_inbound_plan_lines_plan;
-ALTER TABLE IF EXISTS ONLY public.forecast_current DROP CONSTRAINT IF EXISTS fk_forecast_current_product;
-ALTER TABLE IF EXISTS ONLY public.forecast_current DROP CONSTRAINT IF EXISTS fk_forecast_current_delivery_place;
-ALTER TABLE IF EXISTS ONLY public.forecast_current DROP CONSTRAINT IF EXISTS fk_forecast_current_customer;
-ALTER TABLE IF EXISTS ONLY public.expected_lots DROP CONSTRAINT IF EXISTS fk_expected_lots_line;
-ALTER TABLE IF EXISTS ONLY public.delivery_places DROP CONSTRAINT IF EXISTS fk_delivery_places_customer;
-ALTER TABLE IF EXISTS ONLY public.customer_items DROP CONSTRAINT IF EXISTS fk_customer_items_supplier;
-ALTER TABLE IF EXISTS ONLY public.customer_items DROP CONSTRAINT IF EXISTS fk_customer_items_product;
-ALTER TABLE IF EXISTS ONLY public.customer_items DROP CONSTRAINT IF EXISTS fk_customer_items_customer;
-ALTER TABLE IF EXISTS ONLY public.customer_item_jiku_mappings DROP CONSTRAINT IF EXISTS fk_customer_item_jiku_delivery_place;
-ALTER TABLE IF EXISTS ONLY public.customer_item_jiku_mappings DROP CONSTRAINT IF EXISTS fk_customer_item_jiku_customer_item;
-ALTER TABLE IF EXISTS ONLY public.customer_item_delivery_settings DROP CONSTRAINT IF EXISTS fk_cids_delivery_place;
-ALTER TABLE IF EXISTS ONLY public.customer_item_delivery_settings DROP CONSTRAINT IF EXISTS fk_cids_customer_item;
-ALTER TABLE IF EXISTS ONLY public.allocations DROP CONSTRAINT IF EXISTS fk_allocations_order_line;
-ALTER TABLE IF EXISTS ONLY public.allocations DROP CONSTRAINT IF EXISTS fk_allocations_inbound_plan_line;
-ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS fk_allocation_suggestions_product;
-ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS fk_allocation_suggestions_lot;
-ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS fk_allocation_suggestions_delivery_place;
-ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS fk_allocation_suggestions_customer;
-ALTER TABLE IF EXISTS ONLY public.adjustments DROP CONSTRAINT IF EXISTS fk_adjustments_user;
-ALTER TABLE IF EXISTS ONLY public.adjustments DROP CONSTRAINT IF EXISTS fk_adjustments_lot;
-ALTER TABLE IF EXISTS ONLY public.allocation_traces DROP CONSTRAINT IF EXISTS allocation_traces_order_line_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.allocation_traces DROP CONSTRAINT IF EXISTS allocation_traces_lot_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS allocation_suggestions_forecast_id_fkey;
-DROP INDEX IF EXISTS public.ux_forecast_current_unique;
-DROP INDEX IF EXISTS public.uq_user_supplier_primary_per_supplier;
-DROP INDEX IF EXISTS public.uq_product_primary_supplier;
-DROP INDEX IF EXISTS public.ix_forecast_history_key;
-DROP INDEX IF EXISTS public.ix_forecast_current_key;
-DROP INDEX IF EXISTS public.idx_withdrawals_type;
-DROP INDEX IF EXISTS public.idx_withdrawals_lot;
-DROP INDEX IF EXISTS public.idx_withdrawals_date;
-DROP INDEX IF EXISTS public.idx_withdrawals_customer;
-DROP INDEX IF EXISTS public.idx_warehouses_valid_to;
-DROP INDEX IF EXISTS public.idx_warehouses_type;
-DROP INDEX IF EXISTS public.idx_warehouses_code;
-DROP INDEX IF EXISTS public.idx_users_username;
-DROP INDEX IF EXISTS public.idx_users_email;
-DROP INDEX IF EXISTS public.idx_users_azure_oid;
-DROP INDEX IF EXISTS public.idx_users_auth_provider;
-DROP INDEX IF EXISTS public.idx_users_active;
-DROP INDEX IF EXISTS public.idx_user_supplier_assignments_user;
-DROP INDEX IF EXISTS public.idx_user_supplier_assignments_supplier;
-DROP INDEX IF EXISTS public.idx_user_supplier_assignments_primary;
-DROP INDEX IF EXISTS public.idx_user_roles_user;
-DROP INDEX IF EXISTS public.idx_user_roles_role;
-DROP INDEX IF EXISTS public.idx_system_configs_key;
-DROP INDEX IF EXISTS public.idx_system_client_logs_user_id;
-DROP INDEX IF EXISTS public.idx_system_client_logs_created_at;
-DROP INDEX IF EXISTS public.idx_suppliers_valid_to;
-DROP INDEX IF EXISTS public.idx_suppliers_code;
-DROP INDEX IF EXISTS public.idx_stock_history_type;
-DROP INDEX IF EXISTS public.idx_stock_history_lot;
-DROP INDEX IF EXISTS public.idx_stock_history_date;
-DROP INDEX IF EXISTS public.idx_roles_code;
-DROP INDEX IF EXISTS public.idx_products_valid_to;
-DROP INDEX IF EXISTS public.idx_products_name;
-DROP INDEX IF EXISTS public.idx_products_code;
-DROP INDEX IF EXISTS public.idx_product_uom_conversions_valid_to;
-DROP INDEX IF EXISTS public.idx_product_suppliers_valid_to;
-DROP INDEX IF EXISTS public.idx_product_mappings_valid_to;
-DROP INDEX IF EXISTS public.idx_product_mappings_supplier;
-DROP INDEX IF EXISTS public.idx_product_mappings_product;
-DROP INDEX IF EXISTS public.idx_product_mappings_customer;
-DROP INDEX IF EXISTS public.idx_orders_locked_by;
-DROP INDEX IF EXISTS public.idx_orders_lock_expires;
-DROP INDEX IF EXISTS public.idx_orders_date;
-DROP INDEX IF EXISTS public.idx_orders_customer;
-DROP INDEX IF EXISTS public.idx_order_lines_status;
-DROP INDEX IF EXISTS public.idx_order_lines_sap_order_no;
-DROP INDEX IF EXISTS public.idx_order_lines_product;
-DROP INDEX IF EXISTS public.idx_order_lines_order_type;
-DROP INDEX IF EXISTS public.idx_order_lines_order_group;
-DROP INDEX IF EXISTS public.idx_order_lines_order;
-DROP INDEX IF EXISTS public.idx_order_lines_forecast_reference;
-DROP INDEX IF EXISTS public.idx_order_lines_delivery_place;
-DROP INDEX IF EXISTS public.idx_order_lines_date;
-DROP INDEX IF EXISTS public.idx_order_lines_customer_order_no;
-DROP INDEX IF EXISTS public.idx_order_groups_product;
-DROP INDEX IF EXISTS public.idx_order_groups_date;
-DROP INDEX IF EXISTS public.idx_order_groups_customer;
-DROP INDEX IF EXISTS public.idx_operation_logs_user;
-DROP INDEX IF EXISTS public.idx_operation_logs_type;
-DROP INDEX IF EXISTS public.idx_operation_logs_table;
-DROP INDEX IF EXISTS public.idx_operation_logs_created;
-DROP INDEX IF EXISTS public.idx_master_change_logs_user;
-DROP INDEX IF EXISTS public.idx_master_change_logs_table;
-DROP INDEX IF EXISTS public.idx_master_change_logs_record;
-DROP INDEX IF EXISTS public.idx_master_change_logs_changed;
-DROP INDEX IF EXISTS public.idx_lots_warehouse;
-DROP INDEX IF EXISTS public.idx_lots_supplier;
-DROP INDEX IF EXISTS public.idx_lots_status;
-DROP INDEX IF EXISTS public.idx_lots_product_warehouse;
-DROP INDEX IF EXISTS public.idx_lots_origin_type;
-DROP INDEX IF EXISTS public.idx_lots_number;
-DROP INDEX IF EXISTS public.idx_lots_expiry_date;
-DROP INDEX IF EXISTS public.idx_lot_reservations_status;
-DROP INDEX IF EXISTS public.idx_lot_reservations_source;
-DROP INDEX IF EXISTS public.idx_lot_reservations_lot_status;
-DROP INDEX IF EXISTS public.idx_lot_reservations_expires_at;
-DROP INDEX IF EXISTS public.idx_inbound_plans_supplier;
-DROP INDEX IF EXISTS public.idx_inbound_plans_status;
-DROP INDEX IF EXISTS public.idx_inbound_plans_date;
-DROP INDEX IF EXISTS public.idx_inbound_plan_lines_product;
-DROP INDEX IF EXISTS public.idx_inbound_plan_lines_plan;
-DROP INDEX IF EXISTS public.idx_expected_lots_number;
-DROP INDEX IF EXISTS public.idx_expected_lots_line;
-DROP INDEX IF EXISTS public.idx_delivery_places_valid_to;
-DROP INDEX IF EXISTS public.idx_delivery_places_customer;
-DROP INDEX IF EXISTS public.idx_delivery_places_code;
-DROP INDEX IF EXISTS public.idx_customers_valid_to;
-DROP INDEX IF EXISTS public.idx_customers_code;
-DROP INDEX IF EXISTS public.idx_customer_items_valid_to;
-DROP INDEX IF EXISTS public.idx_customer_items_supplier;
-DROP INDEX IF EXISTS public.idx_customer_items_product;
-DROP INDEX IF EXISTS public.idx_cids_jiku_code;
-DROP INDEX IF EXISTS public.idx_cids_delivery_place;
-DROP INDEX IF EXISTS public.idx_cids_customer_item;
-DROP INDEX IF EXISTS public.idx_business_rules_type;
-DROP INDEX IF EXISTS public.idx_business_rules_code;
-DROP INDEX IF EXISTS public.idx_business_rules_active;
-DROP INDEX IF EXISTS public.idx_batch_jobs_type;
-DROP INDEX IF EXISTS public.idx_batch_jobs_status;
-DROP INDEX IF EXISTS public.idx_batch_jobs_created;
-DROP INDEX IF EXISTS public.idx_allocations_status;
-DROP INDEX IF EXISTS public.idx_allocations_order_line;
-DROP INDEX IF EXISTS public.idx_allocations_lot_reference;
-DROP INDEX IF EXISTS public.idx_allocations_inbound_plan_line;
-DROP INDEX IF EXISTS public.idx_allocations_allocation_type;
-DROP INDEX IF EXISTS public.idx_allocation_traces_order_line;
-DROP INDEX IF EXISTS public.idx_allocation_traces_lot;
-DROP INDEX IF EXISTS public.idx_allocation_traces_created_at;
-DROP INDEX IF EXISTS public.idx_allocation_suggestions_product;
-DROP INDEX IF EXISTS public.idx_allocation_suggestions_period;
-DROP INDEX IF EXISTS public.idx_allocation_suggestions_lot;
-DROP INDEX IF EXISTS public.idx_allocation_suggestions_forecast;
-DROP INDEX IF EXISTS public.idx_allocation_suggestions_customer;
-DROP INDEX IF EXISTS public.idx_adjustments_lot;
-DROP INDEX IF EXISTS public.idx_adjustments_date;
-ALTER TABLE IF EXISTS ONLY public.withdrawals DROP CONSTRAINT IF EXISTS withdrawals_pkey;
-ALTER TABLE IF EXISTS ONLY public.warehouses DROP CONSTRAINT IF EXISTS warehouses_pkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_azure_object_id_key;
-ALTER TABLE IF EXISTS ONLY public.user_supplier_assignments DROP CONSTRAINT IF EXISTS user_supplier_assignments_pkey;
-ALTER TABLE IF EXISTS ONLY public.user_roles DROP CONSTRAINT IF EXISTS user_roles_pkey;
-ALTER TABLE IF EXISTS ONLY public.warehouses DROP CONSTRAINT IF EXISTS uq_warehouses_warehouse_code;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS uq_users_username;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS uq_users_email;
-ALTER TABLE IF EXISTS ONLY public.user_supplier_assignments DROP CONSTRAINT IF EXISTS uq_user_supplier_assignments_user_supplier;
-ALTER TABLE IF EXISTS ONLY public.product_uom_conversions DROP CONSTRAINT IF EXISTS uq_uom_conversions_product_unit;
-ALTER TABLE IF EXISTS ONLY public.system_configs DROP CONSTRAINT IF EXISTS uq_system_configs_key;
-ALTER TABLE IF EXISTS ONLY public.suppliers DROP CONSTRAINT IF EXISTS uq_suppliers_supplier_code;
-ALTER TABLE IF EXISTS ONLY public.roles DROP CONSTRAINT IF EXISTS uq_roles_role_code;
-ALTER TABLE IF EXISTS ONLY public.products DROP CONSTRAINT IF EXISTS uq_products_maker_part_code;
-ALTER TABLE IF EXISTS ONLY public.product_suppliers DROP CONSTRAINT IF EXISTS uq_product_supplier;
-ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS uq_product_mappings_cust_part_supp;
-ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS uq_order_lines_customer_key;
-ALTER TABLE IF EXISTS ONLY public.order_groups DROP CONSTRAINT IF EXISTS uq_order_groups_business_key;
-ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS uq_lots_number_product_warehouse;
-ALTER TABLE IF EXISTS ONLY public.delivery_places DROP CONSTRAINT IF EXISTS uq_delivery_places_code;
-ALTER TABLE IF EXISTS ONLY public.customers DROP CONSTRAINT IF EXISTS uq_customers_customer_code;
-ALTER TABLE IF EXISTS ONLY public.customer_item_jiku_mappings DROP CONSTRAINT IF EXISTS uq_customer_item_jiku;
-ALTER TABLE IF EXISTS ONLY public.customer_item_delivery_settings DROP CONSTRAINT IF EXISTS uq_customer_item_delivery_settings;
-ALTER TABLE IF EXISTS ONLY public.system_configs DROP CONSTRAINT IF EXISTS system_configs_pkey;
-ALTER TABLE IF EXISTS ONLY public.system_client_logs DROP CONSTRAINT IF EXISTS system_client_logs_pkey;
-ALTER TABLE IF EXISTS ONLY public.suppliers DROP CONSTRAINT IF EXISTS suppliers_pkey;
-ALTER TABLE IF EXISTS ONLY public.stock_history DROP CONSTRAINT IF EXISTS stock_history_pkey;
-ALTER TABLE IF EXISTS ONLY public.seed_snapshots DROP CONSTRAINT IF EXISTS seed_snapshots_pkey;
-ALTER TABLE IF EXISTS ONLY public.roles DROP CONSTRAINT IF EXISTS roles_pkey;
-ALTER TABLE IF EXISTS ONLY public.products DROP CONSTRAINT IF EXISTS products_pkey;
-ALTER TABLE IF EXISTS ONLY public.product_uom_conversions DROP CONSTRAINT IF EXISTS product_uom_conversions_pkey;
-ALTER TABLE IF EXISTS ONLY public.product_suppliers DROP CONSTRAINT IF EXISTS product_suppliers_pkey;
-ALTER TABLE IF EXISTS ONLY public.product_mappings DROP CONSTRAINT IF EXISTS product_mappings_pkey;
-ALTER TABLE IF EXISTS ONLY public.orders DROP CONSTRAINT IF EXISTS orders_pkey;
-ALTER TABLE IF EXISTS ONLY public.order_lines DROP CONSTRAINT IF EXISTS order_lines_pkey;
-ALTER TABLE IF EXISTS ONLY public.order_groups DROP CONSTRAINT IF EXISTS order_groups_pkey;
-ALTER TABLE IF EXISTS ONLY public.operation_logs DROP CONSTRAINT IF EXISTS operation_logs_pkey;
-ALTER TABLE IF EXISTS ONLY public.master_change_logs DROP CONSTRAINT IF EXISTS master_change_logs_pkey;
-ALTER TABLE IF EXISTS ONLY public.lots DROP CONSTRAINT IF EXISTS lots_pkey;
-ALTER TABLE IF EXISTS ONLY public.lot_reservations DROP CONSTRAINT IF EXISTS lot_reservations_pkey;
-ALTER TABLE IF EXISTS ONLY public.inbound_plans DROP CONSTRAINT IF EXISTS inbound_plans_sap_po_number_key;
-ALTER TABLE IF EXISTS ONLY public.inbound_plans DROP CONSTRAINT IF EXISTS inbound_plans_plan_number_key;
-ALTER TABLE IF EXISTS ONLY public.inbound_plans DROP CONSTRAINT IF EXISTS inbound_plans_pkey;
-ALTER TABLE IF EXISTS ONLY public.inbound_plan_lines DROP CONSTRAINT IF EXISTS inbound_plan_lines_pkey;
-ALTER TABLE IF EXISTS ONLY public.forecast_history DROP CONSTRAINT IF EXISTS forecast_history_pkey;
-ALTER TABLE IF EXISTS ONLY public.forecast_current DROP CONSTRAINT IF EXISTS forecast_current_pkey;
-ALTER TABLE IF EXISTS ONLY public.expected_lots DROP CONSTRAINT IF EXISTS expected_lots_pkey;
-ALTER TABLE IF EXISTS ONLY public.delivery_places DROP CONSTRAINT IF EXISTS delivery_places_pkey;
-ALTER TABLE IF EXISTS ONLY public.customers DROP CONSTRAINT IF EXISTS customers_pkey;
-ALTER TABLE IF EXISTS ONLY public.customer_items DROP CONSTRAINT IF EXISTS customer_items_pkey;
-ALTER TABLE IF EXISTS ONLY public.customer_item_jiku_mappings DROP CONSTRAINT IF EXISTS customer_item_jiku_mappings_pkey;
-ALTER TABLE IF EXISTS ONLY public.customer_item_delivery_settings DROP CONSTRAINT IF EXISTS customer_item_delivery_settings_pkey;
-ALTER TABLE IF EXISTS ONLY public.business_rules DROP CONSTRAINT IF EXISTS business_rules_rule_code_key;
-ALTER TABLE IF EXISTS ONLY public.business_rules DROP CONSTRAINT IF EXISTS business_rules_pkey;
-ALTER TABLE IF EXISTS ONLY public.batch_jobs DROP CONSTRAINT IF EXISTS batch_jobs_pkey;
-ALTER TABLE IF EXISTS ONLY public.allocations DROP CONSTRAINT IF EXISTS allocations_pkey;
-ALTER TABLE IF EXISTS ONLY public.allocation_traces DROP CONSTRAINT IF EXISTS allocation_traces_pkey;
-ALTER TABLE IF EXISTS ONLY public.allocation_suggestions DROP CONSTRAINT IF EXISTS allocation_suggestions_pkey;
-ALTER TABLE IF EXISTS ONLY public.alembic_version DROP CONSTRAINT IF EXISTS alembic_version_pkc;
-ALTER TABLE IF EXISTS ONLY public.adjustments DROP CONSTRAINT IF EXISTS adjustments_pkey;
-ALTER TABLE IF EXISTS public.withdrawals ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.warehouses ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.user_supplier_assignments ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.system_configs ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.system_client_logs ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.suppliers ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.stock_history ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.seed_snapshots ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.roles ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.products ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.product_uom_conversions ALTER COLUMN conversion_id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.product_suppliers ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.product_mappings ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.orders ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.order_lines ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.order_groups ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.operation_logs ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.master_change_logs ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.lots ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.lot_reservations ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.inbound_plans ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.inbound_plan_lines ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.forecast_history ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.forecast_current ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.expected_lots ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.delivery_places ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.customers ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.customer_item_jiku_mappings ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.customer_item_delivery_settings ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.business_rules ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.batch_jobs ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.allocations ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.allocation_traces ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.allocation_suggestions ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.adjustments ALTER COLUMN id DROP DEFAULT;
-DROP SEQUENCE IF EXISTS public.withdrawals_id_seq;
-DROP TABLE IF EXISTS public.withdrawals;
-DROP SEQUENCE IF EXISTS public.warehouses_id_seq;
-DROP VIEW IF EXISTS public.v_warehouse_code_to_id;
-DROP VIEW IF EXISTS public.v_user_supplier_assignments;
-DROP VIEW IF EXISTS public.v_supplier_code_to_id;
-DROP VIEW IF EXISTS public.v_product_code_to_id;
-DROP VIEW IF EXISTS public.v_order_line_details;
-DROP VIEW IF EXISTS public.v_lot_details;
-DROP TABLE IF EXISTS public.warehouses;
-DROP VIEW IF EXISTS public.v_lot_current_stock;
-DROP VIEW IF EXISTS public.v_inventory_summary;
-DROP VIEW IF EXISTS public.v_forecast_order_pairs;
-DROP VIEW IF EXISTS public.v_delivery_place_code_to_id;
-DROP VIEW IF EXISTS public.v_customer_item_jiku_mappings;
-DROP VIEW IF EXISTS public.v_customer_code_to_id;
-DROP VIEW IF EXISTS public.v_candidate_lots_by_order_line;
-DROP VIEW IF EXISTS public.v_order_line_context;
-DROP VIEW IF EXISTS public.v_lot_available_qty;
-DROP VIEW IF EXISTS public.v_lot_allocations;
-DROP VIEW IF EXISTS public.v_customer_daily_products;
-DROP SEQUENCE IF EXISTS public.users_id_seq;
-DROP TABLE IF EXISTS public.users;
-DROP SEQUENCE IF EXISTS public.user_supplier_assignments_id_seq;
-DROP TABLE IF EXISTS public.user_supplier_assignments;
-DROP TABLE IF EXISTS public.user_roles;
-DROP SEQUENCE IF EXISTS public.system_configs_id_seq;
-DROP TABLE IF EXISTS public.system_configs;
-DROP SEQUENCE IF EXISTS public.system_client_logs_id_seq;
-DROP TABLE IF EXISTS public.system_client_logs;
-DROP SEQUENCE IF EXISTS public.suppliers_id_seq;
-DROP TABLE IF EXISTS public.suppliers;
-DROP SEQUENCE IF EXISTS public.stock_history_id_seq;
-DROP TABLE IF EXISTS public.stock_history;
-DROP SEQUENCE IF EXISTS public.seed_snapshots_id_seq;
-DROP TABLE IF EXISTS public.seed_snapshots;
-DROP SEQUENCE IF EXISTS public.roles_id_seq;
-DROP TABLE IF EXISTS public.roles;
-DROP SEQUENCE IF EXISTS public.products_id_seq;
-DROP TABLE IF EXISTS public.products;
-DROP SEQUENCE IF EXISTS public.product_uom_conversions_conversion_id_seq;
-DROP TABLE IF EXISTS public.product_uom_conversions;
-DROP SEQUENCE IF EXISTS public.product_suppliers_id_seq;
-DROP TABLE IF EXISTS public.product_suppliers;
-DROP SEQUENCE IF EXISTS public.product_mappings_id_seq;
-DROP TABLE IF EXISTS public.product_mappings;
-DROP SEQUENCE IF EXISTS public.orders_id_seq;
-DROP TABLE IF EXISTS public.orders;
-DROP SEQUENCE IF EXISTS public.order_lines_id_seq;
-DROP TABLE IF EXISTS public.order_lines;
-DROP SEQUENCE IF EXISTS public.order_groups_id_seq;
-DROP TABLE IF EXISTS public.order_groups;
-DROP SEQUENCE IF EXISTS public.operation_logs_id_seq;
-DROP TABLE IF EXISTS public.operation_logs;
-DROP SEQUENCE IF EXISTS public.master_change_logs_id_seq;
-DROP TABLE IF EXISTS public.master_change_logs;
-DROP SEQUENCE IF EXISTS public.lots_id_seq;
-DROP TABLE IF EXISTS public.lots;
-DROP SEQUENCE IF EXISTS public.lot_reservations_id_seq;
-DROP TABLE IF EXISTS public.lot_reservations;
-DROP SEQUENCE IF EXISTS public.inbound_plans_id_seq;
-DROP TABLE IF EXISTS public.inbound_plans;
-DROP SEQUENCE IF EXISTS public.inbound_plan_lines_id_seq;
-DROP TABLE IF EXISTS public.inbound_plan_lines;
-DROP SEQUENCE IF EXISTS public.forecast_history_id_seq;
-DROP TABLE IF EXISTS public.forecast_history;
-DROP SEQUENCE IF EXISTS public.forecast_current_id_seq;
-DROP TABLE IF EXISTS public.forecast_current;
-DROP SEQUENCE IF EXISTS public.expected_lots_id_seq;
-DROP TABLE IF EXISTS public.expected_lots;
-DROP SEQUENCE IF EXISTS public.delivery_places_id_seq;
-DROP TABLE IF EXISTS public.delivery_places;
-DROP SEQUENCE IF EXISTS public.customers_id_seq;
-DROP TABLE IF EXISTS public.customers;
-DROP TABLE IF EXISTS public.customer_items;
-DROP SEQUENCE IF EXISTS public.customer_item_jiku_mappings_id_seq;
-DROP TABLE IF EXISTS public.customer_item_jiku_mappings;
-DROP SEQUENCE IF EXISTS public.customer_item_delivery_settings_id_seq;
-DROP TABLE IF EXISTS public.customer_item_delivery_settings;
-DROP SEQUENCE IF EXISTS public.business_rules_id_seq;
-DROP TABLE IF EXISTS public.business_rules;
-DROP SEQUENCE IF EXISTS public.batch_jobs_id_seq;
-DROP TABLE IF EXISTS public.batch_jobs;
-DROP SEQUENCE IF EXISTS public.allocations_id_seq;
-DROP TABLE IF EXISTS public.allocations;
-DROP SEQUENCE IF EXISTS public.allocation_traces_id_seq;
-DROP TABLE IF EXISTS public.allocation_traces;
-DROP SEQUENCE IF EXISTS public.allocation_suggestions_id_seq;
-DROP TABLE IF EXISTS public.allocation_suggestions;
-DROP TABLE IF EXISTS public.alembic_version;
-DROP SEQUENCE IF EXISTS public.adjustments_id_seq;
-DROP TABLE IF EXISTS public.adjustments;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: adjustments; Type: TABLE; Schema: public; Owner: -
+-- Name: adjustments; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.adjustments (
@@ -405,12 +34,14 @@ CREATE TABLE public.adjustments (
     reason text NOT NULL,
     adjusted_by bigint NOT NULL,
     adjusted_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT chk_adjustments_type CHECK (((adjustment_type)::text = ANY (ARRAY[('physical_count'::character varying)::text, ('damage'::character varying)::text, ('loss'::character varying)::text, ('found'::character varying)::text, ('other'::character varying)::text])))
+    CONSTRAINT chk_adjustments_type CHECK (((adjustment_type)::text = ANY ((ARRAY['physical_count'::character varying, 'damage'::character varying, 'loss'::character varying, 'found'::character varying, 'other'::character varying])::text[])))
 );
 
 
+ALTER TABLE public.adjustments OWNER TO admin;
+
 --
--- Name: adjustments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: adjustments_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.adjustments_id_seq
@@ -421,15 +52,17 @@ CREATE SEQUENCE public.adjustments_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.adjustments_id_seq OWNER TO admin;
+
 --
--- Name: adjustments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: adjustments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.adjustments_id_seq OWNED BY public.adjustments.id;
 
 
 --
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: -
+-- Name: alembic_version; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.alembic_version (
@@ -437,30 +70,34 @@ CREATE TABLE public.alembic_version (
 );
 
 
+ALTER TABLE public.alembic_version OWNER TO admin;
+
 --
--- Name: allocation_suggestions; Type: TABLE; Schema: public; Owner: -
+-- Name: allocation_suggestions; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.allocation_suggestions (
     id bigint NOT NULL,
     order_line_id bigint,
     forecast_period character varying(7) NOT NULL,
+    forecast_id bigint,
     customer_id bigint NOT NULL,
     delivery_place_id bigint NOT NULL,
     product_id bigint NOT NULL,
     lot_id bigint NOT NULL,
     quantity numeric(15,3) NOT NULL,
+    priority integer DEFAULT 0 NOT NULL,
     allocation_type character varying(10) NOT NULL,
     source character varying(32) NOT NULL,
-    created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    forecast_id bigint,
-    priority integer DEFAULT 0 NOT NULL
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.allocation_suggestions OWNER TO admin;
+
 --
--- Name: allocation_suggestions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: allocation_suggestions_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.allocation_suggestions_id_seq
@@ -471,15 +108,17 @@ CREATE SEQUENCE public.allocation_suggestions_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.allocation_suggestions_id_seq OWNER TO admin;
+
 --
--- Name: allocation_suggestions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: allocation_suggestions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.allocation_suggestions_id_seq OWNED BY public.allocation_suggestions.id;
 
 
 --
--- Name: allocation_traces; Type: TABLE; Schema: public; Owner: -
+-- Name: allocation_traces; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.allocation_traces (
@@ -495,8 +134,10 @@ CREATE TABLE public.allocation_traces (
 );
 
 
+ALTER TABLE public.allocation_traces OWNER TO admin;
+
 --
--- Name: allocation_traces_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: allocation_traces_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.allocation_traces_id_seq
@@ -507,83 +148,17 @@ CREATE SEQUENCE public.allocation_traces_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.allocation_traces_id_seq OWNER TO admin;
+
 --
--- Name: allocation_traces_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: allocation_traces_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.allocation_traces_id_seq OWNED BY public.allocation_traces.id;
 
 
 --
--- Name: allocations; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.allocations (
-    id bigint NOT NULL,
-    order_line_id bigint NOT NULL,
-    allocated_quantity numeric(15,3) NOT NULL,
-    status character varying(20) DEFAULT 'allocated'::character varying NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    inbound_plan_line_id bigint,
-    allocation_type character varying(10) DEFAULT 'soft'::character varying NOT NULL,
-    confirmed_at timestamp without time zone,
-    confirmed_by character varying(100),
-    lot_reference character varying(100),
-    CONSTRAINT chk_allocation_type CHECK (((allocation_type)::text = ANY ((ARRAY['soft'::character varying, 'hard'::character varying])::text[]))),
-    CONSTRAINT chk_allocations_status CHECK (((status)::text = ANY ((ARRAY['allocated'::character varying, 'provisional'::character varying, 'shipped'::character varying, 'cancelled'::character varying])::text[])))
-);
-
-
---
--- Name: COLUMN allocations.allocation_type; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.allocations.allocation_type IS 'Allocation type: soft (provisional) or hard (confirmed)';
-
-
---
--- Name: COLUMN allocations.confirmed_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.allocations.confirmed_at IS 'Hard allocation confirmation timestamp';
-
-
---
--- Name: COLUMN allocations.confirmed_by; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.allocations.confirmed_by IS 'User who confirmed the allocation';
-
-
---
--- Name: COLUMN allocations.lot_reference; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.allocations.lot_reference IS 'Lot number (business key reference, replaces lot_id FK)';
-
-
---
--- Name: allocations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.allocations_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: allocations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.allocations_id_seq OWNED BY public.allocations.id;
-
-
---
--- Name: batch_jobs; Type: TABLE; Schema: public; Owner: -
+-- Name: batch_jobs; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.batch_jobs (
@@ -596,13 +171,15 @@ CREATE TABLE public.batch_jobs (
     started_at timestamp without time zone,
     completed_at timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT chk_batch_jobs_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('running'::character varying)::text, ('completed'::character varying)::text, ('failed'::character varying)::text]))),
-    CONSTRAINT chk_batch_jobs_type CHECK (((job_type)::text = ANY (ARRAY[('allocation_suggestion'::character varying)::text, ('allocation_finalize'::character varying)::text, ('inventory_sync'::character varying)::text, ('data_import'::character varying)::text, ('report_generation'::character varying)::text])))
+    CONSTRAINT chk_batch_jobs_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying])::text[]))),
+    CONSTRAINT chk_batch_jobs_type CHECK (((job_type)::text = ANY ((ARRAY['allocation_suggestion'::character varying, 'allocation_finalize'::character varying, 'inventory_sync'::character varying, 'data_import'::character varying, 'report_generation'::character varying])::text[])))
 );
 
 
+ALTER TABLE public.batch_jobs OWNER TO admin;
+
 --
--- Name: batch_jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: batch_jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.batch_jobs_id_seq
@@ -613,15 +190,17 @@ CREATE SEQUENCE public.batch_jobs_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.batch_jobs_id_seq OWNER TO admin;
+
 --
--- Name: batch_jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: batch_jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.batch_jobs_id_seq OWNED BY public.batch_jobs.id;
 
 
 --
--- Name: business_rules; Type: TABLE; Schema: public; Owner: -
+-- Name: business_rules; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.business_rules (
@@ -637,8 +216,10 @@ CREATE TABLE public.business_rules (
 );
 
 
+ALTER TABLE public.business_rules OWNER TO admin;
+
 --
--- Name: business_rules_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: business_rules_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.business_rules_id_seq
@@ -649,15 +230,98 @@ CREATE SEQUENCE public.business_rules_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.business_rules_id_seq OWNER TO admin;
+
 --
--- Name: business_rules_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: business_rules_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.business_rules_id_seq OWNED BY public.business_rules.id;
 
 
 --
--- Name: customer_item_delivery_settings; Type: TABLE; Schema: public; Owner: -
+-- Name: cloud_flow_configs; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.cloud_flow_configs (
+    id bigint NOT NULL,
+    config_key character varying(100) NOT NULL,
+    config_value text NOT NULL,
+    description text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public.cloud_flow_configs OWNER TO admin;
+
+--
+-- Name: cloud_flow_configs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+--
+
+CREATE SEQUENCE public.cloud_flow_configs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.cloud_flow_configs_id_seq OWNER TO admin;
+
+--
+-- Name: cloud_flow_configs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+--
+
+ALTER SEQUENCE public.cloud_flow_configs_id_seq OWNED BY public.cloud_flow_configs.id;
+
+
+--
+-- Name: cloud_flow_jobs; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.cloud_flow_jobs (
+    id bigint NOT NULL,
+    job_type character varying(50) NOT NULL,
+    status character varying(30) DEFAULT 'pending'::character varying NOT NULL,
+    start_date date NOT NULL,
+    end_date date NOT NULL,
+    requested_by_user_id bigint,
+    requested_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    started_at timestamp without time zone,
+    completed_at timestamp without time zone,
+    result_message text,
+    error_message text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public.cloud_flow_jobs OWNER TO admin;
+
+--
+-- Name: cloud_flow_jobs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+--
+
+CREATE SEQUENCE public.cloud_flow_jobs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.cloud_flow_jobs_id_seq OWNER TO admin;
+
+--
+-- Name: cloud_flow_jobs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+--
+
+ALTER SEQUENCE public.cloud_flow_jobs_id_seq OWNED BY public.cloud_flow_jobs.id;
+
+
+--
+-- Name: customer_item_delivery_settings; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.customer_item_delivery_settings (
@@ -677,64 +341,66 @@ CREATE TABLE public.customer_item_delivery_settings (
 );
 
 
+ALTER TABLE public.customer_item_delivery_settings OWNER TO admin;
+
 --
--- Name: COLUMN customer_item_delivery_settings.delivery_place_id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN customer_item_delivery_settings.delivery_place_id; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.customer_item_delivery_settings.delivery_place_id IS '納入先（NULLの場合はデフォルト設定）';
 
 
 --
--- Name: COLUMN customer_item_delivery_settings.jiku_code; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN customer_item_delivery_settings.jiku_code; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.customer_item_delivery_settings.jiku_code IS '次区コード（NULLの場合は全次区共通）';
 
 
 --
--- Name: COLUMN customer_item_delivery_settings.shipment_text; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN customer_item_delivery_settings.shipment_text; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.customer_item_delivery_settings.shipment_text IS '出荷表テキスト（SAP連携用）';
 
 
 --
--- Name: COLUMN customer_item_delivery_settings.packing_note; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN customer_item_delivery_settings.packing_note; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.customer_item_delivery_settings.packing_note IS '梱包・注意書き';
 
 
 --
--- Name: COLUMN customer_item_delivery_settings.lead_time_days; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN customer_item_delivery_settings.lead_time_days; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.customer_item_delivery_settings.lead_time_days IS 'リードタイム（日）';
 
 
 --
--- Name: COLUMN customer_item_delivery_settings.is_default; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN customer_item_delivery_settings.is_default; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.customer_item_delivery_settings.is_default IS 'デフォルト設定フラグ';
 
 
 --
--- Name: COLUMN customer_item_delivery_settings.valid_from; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN customer_item_delivery_settings.valid_from; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.customer_item_delivery_settings.valid_from IS '有効開始日';
 
 
 --
--- Name: COLUMN customer_item_delivery_settings.valid_to; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN customer_item_delivery_settings.valid_to; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.customer_item_delivery_settings.valid_to IS '有効終了日';
 
 
 --
--- Name: customer_item_delivery_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: customer_item_delivery_settings_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.customer_item_delivery_settings_id_seq
@@ -745,15 +411,17 @@ CREATE SEQUENCE public.customer_item_delivery_settings_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.customer_item_delivery_settings_id_seq OWNER TO admin;
+
 --
--- Name: customer_item_delivery_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: customer_item_delivery_settings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.customer_item_delivery_settings_id_seq OWNED BY public.customer_item_delivery_settings.id;
 
 
 --
--- Name: customer_item_jiku_mappings; Type: TABLE; Schema: public; Owner: -
+-- Name: customer_item_jiku_mappings; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.customer_item_jiku_mappings (
@@ -767,8 +435,10 @@ CREATE TABLE public.customer_item_jiku_mappings (
 );
 
 
+ALTER TABLE public.customer_item_jiku_mappings OWNER TO admin;
+
 --
--- Name: customer_item_jiku_mappings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: customer_item_jiku_mappings_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.customer_item_jiku_mappings_id_seq
@@ -779,15 +449,17 @@ CREATE SEQUENCE public.customer_item_jiku_mappings_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.customer_item_jiku_mappings_id_seq OWNER TO admin;
+
 --
--- Name: customer_item_jiku_mappings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: customer_item_jiku_mappings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.customer_item_jiku_mappings_id_seq OWNED BY public.customer_item_jiku_mappings.id;
 
 
 --
--- Name: customer_items; Type: TABLE; Schema: public; Owner: -
+-- Name: customer_items; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.customer_items (
@@ -799,34 +471,38 @@ CREATE TABLE public.customer_items (
     pack_unit character varying(20),
     pack_quantity integer,
     special_instructions text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     shipping_document_template text,
     sap_notes text,
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.customer_items OWNER TO admin;
+
 --
--- Name: customers; Type: TABLE; Schema: public; Owner: -
+-- Name: customers; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.customers (
     id bigint NOT NULL,
     customer_code character varying(50) NOT NULL,
     customer_name character varying(200) NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     address character varying(500),
     contact_name character varying(100),
     phone character varying(50),
     email character varying(200),
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.customers OWNER TO admin;
+
 --
--- Name: customers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: customers_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.customers_id_seq
@@ -837,15 +513,17 @@ CREATE SEQUENCE public.customers_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.customers_id_seq OWNER TO admin;
+
 --
--- Name: customers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: customers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.customers_id_seq OWNED BY public.customers.id;
 
 
 --
--- Name: delivery_places; Type: TABLE; Schema: public; Owner: -
+-- Name: delivery_places; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.delivery_places (
@@ -854,14 +532,16 @@ CREATE TABLE public.delivery_places (
     delivery_place_code character varying(50) NOT NULL,
     delivery_place_name character varying(200) NOT NULL,
     customer_id bigint NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.delivery_places OWNER TO admin;
+
 --
--- Name: delivery_places_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: delivery_places_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.delivery_places_id_seq
@@ -872,15 +552,17 @@ CREATE SEQUENCE public.delivery_places_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.delivery_places_id_seq OWNER TO admin;
+
 --
--- Name: delivery_places_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: delivery_places_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.delivery_places_id_seq OWNED BY public.delivery_places.id;
 
 
 --
--- Name: expected_lots; Type: TABLE; Schema: public; Owner: -
+-- Name: expected_lots; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.expected_lots (
@@ -889,13 +571,15 @@ CREATE TABLE public.expected_lots (
     expected_lot_number character varying(100),
     expected_quantity numeric(15,3) NOT NULL,
     expected_expiry_date date,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
+ALTER TABLE public.expected_lots OWNER TO admin;
+
 --
--- Name: expected_lots_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: expected_lots_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.expected_lots_id_seq
@@ -906,15 +590,17 @@ CREATE SEQUENCE public.expected_lots_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.expected_lots_id_seq OWNER TO admin;
+
 --
--- Name: expected_lots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: expected_lots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.expected_lots_id_seq OWNED BY public.expected_lots.id;
 
 
 --
--- Name: forecast_current; Type: TABLE; Schema: public; Owner: -
+-- Name: forecast_current; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.forecast_current (
@@ -923,17 +609,19 @@ CREATE TABLE public.forecast_current (
     delivery_place_id bigint NOT NULL,
     product_id bigint NOT NULL,
     forecast_date date NOT NULL,
-    forecast_quantity numeric NOT NULL,
+    forecast_quantity numeric(15,3) NOT NULL,
     unit character varying,
+    forecast_period character varying(7) NOT NULL,
     snapshot_at timestamp without time zone DEFAULT now() NOT NULL,
     created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    forecast_period character varying(7) NOT NULL
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
+ALTER TABLE public.forecast_current OWNER TO admin;
+
 --
--- Name: forecast_current_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: forecast_current_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.forecast_current_id_seq
@@ -944,15 +632,17 @@ CREATE SEQUENCE public.forecast_current_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.forecast_current_id_seq OWNER TO admin;
+
 --
--- Name: forecast_current_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: forecast_current_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.forecast_current_id_seq OWNED BY public.forecast_current.id;
 
 
 --
--- Name: forecast_history; Type: TABLE; Schema: public; Owner: -
+-- Name: forecast_history; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.forecast_history (
@@ -963,16 +653,18 @@ CREATE TABLE public.forecast_history (
     forecast_date date NOT NULL,
     forecast_quantity numeric NOT NULL,
     unit character varying,
+    forecast_period character varying(7) NOT NULL,
     snapshot_at timestamp without time zone NOT NULL,
     archived_at timestamp without time zone DEFAULT now() NOT NULL,
     created_at timestamp without time zone NOT NULL,
-    updated_at timestamp without time zone NOT NULL,
-    forecast_period character varying(7) NOT NULL
+    updated_at timestamp without time zone NOT NULL
 );
 
 
+ALTER TABLE public.forecast_history OWNER TO admin;
+
 --
--- Name: forecast_history_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: forecast_history_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.forecast_history_id_seq
@@ -983,15 +675,17 @@ CREATE SEQUENCE public.forecast_history_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.forecast_history_id_seq OWNER TO admin;
+
 --
--- Name: forecast_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: forecast_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.forecast_history_id_seq OWNED BY public.forecast_history.id;
 
 
 --
--- Name: inbound_plan_lines; Type: TABLE; Schema: public; Owner: -
+-- Name: inbound_plan_lines; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.inbound_plan_lines (
@@ -1000,13 +694,15 @@ CREATE TABLE public.inbound_plan_lines (
     product_id bigint NOT NULL,
     planned_quantity numeric(15,3) NOT NULL,
     unit character varying(20) NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
 );
 
 
+ALTER TABLE public.inbound_plan_lines OWNER TO admin;
+
 --
--- Name: inbound_plan_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: inbound_plan_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.inbound_plan_lines_id_seq
@@ -1017,40 +713,44 @@ CREATE SEQUENCE public.inbound_plan_lines_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.inbound_plan_lines_id_seq OWNER TO admin;
+
 --
--- Name: inbound_plan_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: inbound_plan_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.inbound_plan_lines_id_seq OWNED BY public.inbound_plan_lines.id;
 
 
 --
--- Name: inbound_plans; Type: TABLE; Schema: public; Owner: -
+-- Name: inbound_plans; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.inbound_plans (
     id bigint NOT NULL,
     plan_number character varying(50) NOT NULL,
+    sap_po_number character varying(20),
     supplier_id bigint NOT NULL,
     planned_arrival_date date NOT NULL,
     status character varying(20) DEFAULT 'planned'::character varying NOT NULL,
     notes text,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    sap_po_number character varying(20),
-    CONSTRAINT chk_inbound_plans_status CHECK (((status)::text = ANY (ARRAY[('planned'::character varying)::text, ('partially_received'::character varying)::text, ('received'::character varying)::text, ('cancelled'::character varying)::text])))
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_inbound_plans_status CHECK (((status)::text = ANY ((ARRAY['planned'::character varying, 'partially_received'::character varying, 'received'::character varying, 'cancelled'::character varying])::text[])))
 );
 
 
+ALTER TABLE public.inbound_plans OWNER TO admin;
+
 --
--- Name: COLUMN inbound_plans.sap_po_number; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN inbound_plans.sap_po_number; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.inbound_plans.sap_po_number IS 'SAP購買発注番号（業務キー）';
 
 
 --
--- Name: inbound_plans_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: inbound_plans_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.inbound_plans_id_seq
@@ -1061,15 +761,31 @@ CREATE SEQUENCE public.inbound_plans_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.inbound_plans_id_seq OWNER TO admin;
+
 --
--- Name: inbound_plans_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: inbound_plans_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.inbound_plans_id_seq OWNED BY public.inbound_plans.id;
 
 
 --
--- Name: lot_reservations; Type: TABLE; Schema: public; Owner: -
+-- Name: layer_code_mappings; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.layer_code_mappings (
+    layer_code character varying(50) NOT NULL,
+    maker_name character varying(100) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public.layer_code_mappings OWNER TO admin;
+
+--
+-- Name: lot_reservations; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.lot_reservations (
@@ -1080,74 +796,100 @@ CREATE TABLE public.lot_reservations (
     reserved_qty numeric(15,3) NOT NULL,
     status character varying(20) DEFAULT 'active'::character varying NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone,
     expires_at timestamp without time zone,
     confirmed_at timestamp without time zone,
     released_at timestamp without time zone,
-    updated_at timestamp without time zone,
+    sap_document_no character varying(20),
+    sap_registered_at timestamp without time zone,
+    confirmed_by character varying(50),
     CONSTRAINT chk_lot_reservations_qty_positive CHECK ((reserved_qty > (0)::numeric)),
     CONSTRAINT chk_lot_reservations_source_type CHECK (((source_type)::text = ANY ((ARRAY['forecast'::character varying, 'order'::character varying, 'manual'::character varying])::text[]))),
     CONSTRAINT chk_lot_reservations_status CHECK (((status)::text = ANY ((ARRAY['temporary'::character varying, 'active'::character varying, 'confirmed'::character varying, 'released'::character varying])::text[])))
 );
 
 
+ALTER TABLE public.lot_reservations OWNER TO admin;
+
 --
--- Name: COLUMN lot_reservations.source_type; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN lot_reservations.source_type; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.lot_reservations.source_type IS 'Reservation source: ''forecast'' | ''order'' | ''manual''';
 
 
 --
--- Name: COLUMN lot_reservations.source_id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN lot_reservations.source_id; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.lot_reservations.source_id IS 'ID of the source entity (order_line_id, forecast_group_id, etc.)';
 
 
 --
--- Name: COLUMN lot_reservations.reserved_qty; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN lot_reservations.reserved_qty; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.lot_reservations.reserved_qty IS 'Reserved quantity (must be positive)';
 
 
 --
--- Name: COLUMN lot_reservations.status; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN lot_reservations.status; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.lot_reservations.status IS 'Reservation status: ''temporary'' | ''active'' | ''confirmed'' | ''released''';
 
 
 --
--- Name: COLUMN lot_reservations.expires_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.lot_reservations.expires_at IS 'Expiration time for temporary reservations';
-
-
---
--- Name: COLUMN lot_reservations.confirmed_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.lot_reservations.confirmed_at IS 'Timestamp when reservation was confirmed';
-
-
---
--- Name: COLUMN lot_reservations.released_at; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.lot_reservations.released_at IS 'Timestamp when reservation was released';
-
-
---
--- Name: COLUMN lot_reservations.updated_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN lot_reservations.updated_at; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.lot_reservations.updated_at IS 'Timestamp of last update';
 
 
 --
--- Name: lot_reservations_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: COLUMN lot_reservations.expires_at; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.lot_reservations.expires_at IS 'Expiration time for temporary reservations';
+
+
+--
+-- Name: COLUMN lot_reservations.confirmed_at; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.lot_reservations.confirmed_at IS 'Timestamp when reservation was confirmed';
+
+
+--
+-- Name: COLUMN lot_reservations.released_at; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.lot_reservations.released_at IS 'Timestamp when reservation was released';
+
+
+--
+-- Name: COLUMN lot_reservations.sap_document_no; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.lot_reservations.sap_document_no IS 'SAP document number (set on successful SAP registration)';
+
+
+--
+-- Name: COLUMN lot_reservations.sap_registered_at; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.lot_reservations.sap_registered_at IS 'Timestamp when reservation was registered in SAP';
+
+
+--
+-- Name: COLUMN lot_reservations.confirmed_by; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.lot_reservations.confirmed_by IS 'User who confirmed the reservation';
+
+
+--
+-- Name: lot_reservations_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.lot_reservations_id_seq
@@ -1158,15 +900,17 @@ CREATE SEQUENCE public.lot_reservations_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.lot_reservations_id_seq OWNER TO admin;
+
 --
--- Name: lot_reservations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: lot_reservations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.lot_reservations_id_seq OWNED BY public.lot_reservations.id;
 
 
 --
--- Name: lots; Type: TABLE; Schema: public; Owner: -
+-- Name: lots; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.lots (
@@ -1181,16 +925,17 @@ CREATE TABLE public.lots (
     current_quantity numeric(15,3) DEFAULT 0 NOT NULL,
     unit character varying(20) NOT NULL,
     status character varying(20) DEFAULT 'active'::character varying NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    version integer DEFAULT 1 NOT NULL,
     lock_reason text,
+    locked_quantity numeric(15,3) DEFAULT 0 NOT NULL,
     inspection_status character varying(20) DEFAULT 'not_required'::character varying NOT NULL,
     inspection_date date,
     inspection_cert_number character varying(100),
-    locked_quantity numeric(15,3) DEFAULT '0'::numeric NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     origin_type character varying(20) DEFAULT 'adhoc'::character varying NOT NULL,
     origin_reference character varying(255),
+    temporary_lot_key uuid,
     CONSTRAINT chk_lots_current_quantity CHECK ((current_quantity >= (0)::numeric)),
     CONSTRAINT chk_lots_inspection_status CHECK (((inspection_status)::text = ANY ((ARRAY['not_required'::character varying, 'pending'::character varying, 'passed'::character varying, 'failed'::character varying])::text[]))),
     CONSTRAINT chk_lots_locked_quantity CHECK ((locked_quantity >= (0)::numeric)),
@@ -1199,8 +944,17 @@ CREATE TABLE public.lots (
 );
 
 
+ALTER TABLE public.lots OWNER TO admin;
+
 --
--- Name: lots_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: COLUMN lots.temporary_lot_key; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.lots.temporary_lot_key IS '仮入庫時の一意識別キー（UUID）';
+
+
+--
+-- Name: lots_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.lots_id_seq
@@ -1211,15 +965,17 @@ CREATE SEQUENCE public.lots_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.lots_id_seq OWNER TO admin;
+
 --
--- Name: lots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: lots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.lots_id_seq OWNED BY public.lots.id;
 
 
 --
--- Name: master_change_logs; Type: TABLE; Schema: public; Owner: -
+-- Name: master_change_logs; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.master_change_logs (
@@ -1231,12 +987,14 @@ CREATE TABLE public.master_change_logs (
     new_values jsonb,
     changed_by bigint NOT NULL,
     changed_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT chk_master_change_logs_type CHECK (((change_type)::text = ANY (ARRAY[('insert'::character varying)::text, ('update'::character varying)::text, ('delete'::character varying)::text])))
+    CONSTRAINT chk_master_change_logs_type CHECK (((change_type)::text = ANY ((ARRAY['insert'::character varying, 'update'::character varying, 'delete'::character varying])::text[])))
 );
 
 
+ALTER TABLE public.master_change_logs OWNER TO admin;
+
 --
--- Name: master_change_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: master_change_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.master_change_logs_id_seq
@@ -1247,15 +1005,17 @@ CREATE SEQUENCE public.master_change_logs_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.master_change_logs_id_seq OWNER TO admin;
+
 --
--- Name: master_change_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: master_change_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.master_change_logs_id_seq OWNED BY public.master_change_logs.id;
 
 
 --
--- Name: operation_logs; Type: TABLE; Schema: public; Owner: -
+-- Name: operation_logs; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.operation_logs (
@@ -1267,12 +1027,14 @@ CREATE TABLE public.operation_logs (
     changes jsonb,
     ip_address character varying(50),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT chk_operation_logs_type CHECK (((operation_type)::text = ANY (ARRAY[('create'::character varying)::text, ('update'::character varying)::text, ('delete'::character varying)::text, ('login'::character varying)::text, ('logout'::character varying)::text, ('export'::character varying)::text])))
+    CONSTRAINT chk_operation_logs_type CHECK (((operation_type)::text = ANY ((ARRAY['create'::character varying, 'update'::character varying, 'delete'::character varying, 'login'::character varying, 'logout'::character varying, 'export'::character varying])::text[])))
 );
 
 
+ALTER TABLE public.operation_logs OWNER TO admin;
+
 --
--- Name: operation_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: operation_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.operation_logs_id_seq
@@ -1283,15 +1045,17 @@ CREATE SEQUENCE public.operation_logs_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.operation_logs_id_seq OWNER TO admin;
+
 --
--- Name: operation_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: operation_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.operation_logs_id_seq OWNED BY public.operation_logs.id;
 
 
 --
--- Name: order_groups; Type: TABLE; Schema: public; Owner: -
+-- Name: order_groups; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.order_groups (
@@ -1305,15 +1069,17 @@ CREATE TABLE public.order_groups (
 );
 
 
+ALTER TABLE public.order_groups OWNER TO admin;
+
 --
--- Name: COLUMN order_groups.source_file_name; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN order_groups.source_file_name; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.order_groups.source_file_name IS '取り込み元ファイル名';
 
 
 --
--- Name: order_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: order_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.order_groups_id_seq
@@ -1324,101 +1090,105 @@ CREATE SEQUENCE public.order_groups_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.order_groups_id_seq OWNER TO admin;
+
 --
--- Name: order_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: order_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.order_groups_id_seq OWNED BY public.order_groups.id;
 
 
 --
--- Name: order_lines; Type: TABLE; Schema: public; Owner: -
+-- Name: order_lines; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.order_lines (
     id bigint NOT NULL,
     order_id bigint NOT NULL,
+    order_group_id bigint,
     product_id bigint NOT NULL,
     delivery_date date NOT NULL,
     order_quantity numeric(15,3) NOT NULL,
     unit character varying(20) NOT NULL,
+    converted_quantity numeric(15,3),
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     delivery_place_id bigint NOT NULL,
-    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
-    version integer DEFAULT 1 NOT NULL,
-    converted_quantity numeric(15,3),
-    sap_order_no character varying(20),
-    shipping_document_text text,
-    order_type character varying(20) DEFAULT 'ORDER'::character varying NOT NULL,
-    order_group_id bigint,
     customer_order_no character varying(6),
     customer_order_line_no character varying(10),
+    sap_order_no character varying(20),
     sap_order_item_no character varying(6),
+    shipping_document_text text,
+    order_type character varying(20) DEFAULT 'ORDER'::character varying NOT NULL,
     forecast_reference character varying(100),
+    status character varying(20) DEFAULT 'pending'::character varying NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
     CONSTRAINT chk_order_lines_order_type CHECK (((order_type)::text = ANY ((ARRAY['FORECAST_LINKED'::character varying, 'KANBAN'::character varying, 'SPOT'::character varying, 'ORDER'::character varying])::text[]))),
-    CONSTRAINT chk_order_lines_status CHECK (((status)::text = ANY (ARRAY[('pending'::character varying)::text, ('allocated'::character varying)::text, ('shipped'::character varying)::text, ('completed'::character varying)::text, ('cancelled'::character varying)::text])))
+    CONSTRAINT chk_order_lines_status CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'allocated'::character varying, 'shipped'::character varying, 'completed'::character varying, 'cancelled'::character varying])::text[])))
 );
 
 
---
--- Name: COLUMN order_lines.sap_order_no; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.order_lines.sap_order_no IS 'SAP受注番号（業務キー）';
-
+ALTER TABLE public.order_lines OWNER TO admin;
 
 --
--- Name: COLUMN order_lines.shipping_document_text; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.order_lines.shipping_document_text IS '出荷表テキスト';
-
-
---
--- Name: COLUMN order_lines.order_type; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.order_lines.order_type IS '需要種別: FORECAST_LINKED / KANBAN / SPOT / ORDER';
-
-
---
--- Name: COLUMN order_lines.order_group_id; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN order_lines.order_group_id; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.order_lines.order_group_id IS '受注グループへの参照（得意先×製品×受注日）';
 
 
 --
--- Name: COLUMN order_lines.customer_order_no; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN order_lines.customer_order_no; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.order_lines.customer_order_no IS '得意先6桁受注番号（業務キー）';
 
 
 --
--- Name: COLUMN order_lines.customer_order_line_no; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN order_lines.customer_order_line_no; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.order_lines.customer_order_line_no IS '得意先側行番号';
 
 
 --
--- Name: COLUMN order_lines.sap_order_item_no; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN order_lines.sap_order_no; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.order_lines.sap_order_no IS 'SAP受注番号（業務キー）';
+
+
+--
+-- Name: COLUMN order_lines.sap_order_item_no; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.order_lines.sap_order_item_no IS 'SAP明細番号（業務キー）';
 
 
 --
--- Name: COLUMN order_lines.forecast_reference; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN order_lines.shipping_document_text; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.order_lines.shipping_document_text IS '出荷表テキスト';
+
+
+--
+-- Name: COLUMN order_lines.order_type; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.order_lines.order_type IS '需要種別: FORECAST_LINKED / KANBAN / SPOT / ORDER';
+
+
+--
+-- Name: COLUMN order_lines.forecast_reference; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.order_lines.forecast_reference IS 'Forecast business key reference (replaces forecast_id FK)';
 
 
 --
--- Name: order_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: order_lines_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.order_lines_id_seq
@@ -1429,32 +1199,36 @@ CREATE SEQUENCE public.order_lines_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.order_lines_id_seq OWNER TO admin;
+
 --
--- Name: order_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: order_lines_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.order_lines_id_seq OWNED BY public.order_lines.id;
 
 
 --
--- Name: orders; Type: TABLE; Schema: public; Owner: -
+-- Name: orders; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.orders (
     id bigint NOT NULL,
     customer_id bigint NOT NULL,
     order_date date NOT NULL,
+    status character varying(20) DEFAULT 'open'::character varying NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    status character varying(20) DEFAULT 'open'::character varying NOT NULL,
     locked_by_user_id integer,
     locked_at timestamp without time zone,
     lock_expires_at timestamp without time zone
 );
 
 
+ALTER TABLE public.orders OWNER TO admin;
+
 --
--- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: orders_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.orders_id_seq
@@ -1465,15 +1239,17 @@ CREATE SEQUENCE public.orders_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.orders_id_seq OWNER TO admin;
+
 --
--- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: orders_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.orders_id_seq OWNED BY public.orders.id;
 
 
 --
--- Name: product_mappings; Type: TABLE; Schema: public; Owner: -
+-- Name: product_mappings; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.product_mappings (
@@ -1486,14 +1262,16 @@ CREATE TABLE public.product_mappings (
     pack_unit character varying(20),
     pack_quantity integer,
     special_instructions text,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.product_mappings OWNER TO admin;
+
 --
--- Name: product_mappings_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: product_mappings_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.product_mappings_id_seq
@@ -1504,31 +1282,35 @@ CREATE SEQUENCE public.product_mappings_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.product_mappings_id_seq OWNER TO admin;
+
 --
--- Name: product_mappings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: product_mappings_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.product_mappings_id_seq OWNED BY public.product_mappings.id;
 
 
 --
--- Name: product_suppliers; Type: TABLE; Schema: public; Owner: -
+-- Name: product_suppliers; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.product_suppliers (
     id bigint NOT NULL,
     product_id bigint NOT NULL,
     supplier_id bigint NOT NULL,
-    is_primary boolean DEFAULT false NOT NULL,
+    is_primary boolean NOT NULL,
     lead_time_days integer,
-    created_at timestamp without time zone DEFAULT now() NOT NULL,
-    updated_at timestamp without time zone DEFAULT now() NOT NULL,
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
+    created_at timestamp without time zone NOT NULL,
+    updated_at timestamp without time zone NOT NULL
 );
 
 
+ALTER TABLE public.product_suppliers OWNER TO admin;
+
 --
--- Name: product_suppliers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: product_suppliers_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.product_suppliers_id_seq
@@ -1539,15 +1321,17 @@ CREATE SEQUENCE public.product_suppliers_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.product_suppliers_id_seq OWNER TO admin;
+
 --
--- Name: product_suppliers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: product_suppliers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.product_suppliers_id_seq OWNED BY public.product_suppliers.id;
 
 
 --
--- Name: product_uom_conversions; Type: TABLE; Schema: public; Owner: -
+-- Name: product_uom_conversions; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.product_uom_conversions (
@@ -1555,14 +1339,16 @@ CREATE TABLE public.product_uom_conversions (
     product_id bigint NOT NULL,
     external_unit character varying(20) NOT NULL,
     factor numeric(15,3) NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.product_uom_conversions OWNER TO admin;
+
 --
--- Name: product_uom_conversions_conversion_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: product_uom_conversions_conversion_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.product_uom_conversions_conversion_id_seq
@@ -1573,15 +1359,17 @@ CREATE SEQUENCE public.product_uom_conversions_conversion_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.product_uom_conversions_conversion_id_seq OWNER TO admin;
+
 --
--- Name: product_uom_conversions_conversion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: product_uom_conversions_conversion_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.product_uom_conversions_conversion_id_seq OWNED BY public.product_uom_conversions.conversion_id;
 
 
 --
--- Name: products; Type: TABLE; Schema: public; Owner: -
+-- Name: products; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.products (
@@ -1590,17 +1378,35 @@ CREATE TABLE public.products (
     product_name character varying(200) NOT NULL,
     base_unit character varying(20) NOT NULL,
     consumption_limit_days integer,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     internal_unit character varying(20) DEFAULT 'CAN'::character varying NOT NULL,
     external_unit character varying(20) DEFAULT 'KG'::character varying NOT NULL,
     qty_per_internal_unit numeric(10,4) DEFAULT 1.0 NOT NULL,
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+    customer_part_no character varying(100),
+    maker_item_code character varying(100)
 );
 
 
+ALTER TABLE public.products OWNER TO admin;
+
 --
--- Name: products_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: COLUMN products.customer_part_no; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.products.customer_part_no IS '先方品番（得意先の品番）';
+
+
+--
+-- Name: COLUMN products.maker_item_code; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON COLUMN public.products.maker_item_code IS 'メーカー品番（仕入先の品番）';
+
+
+--
+-- Name: products_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.products_id_seq
@@ -1611,15 +1417,17 @@ CREATE SEQUENCE public.products_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.products_id_seq OWNER TO admin;
+
 --
--- Name: products_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: products_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.products_id_seq OWNED BY public.products.id;
 
 
 --
--- Name: roles; Type: TABLE; Schema: public; Owner: -
+-- Name: roles; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.roles (
@@ -1632,8 +1440,10 @@ CREATE TABLE public.roles (
 );
 
 
+ALTER TABLE public.roles OWNER TO admin;
+
 --
--- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.roles_id_seq
@@ -1644,15 +1454,117 @@ CREATE SEQUENCE public.roles_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.roles_id_seq OWNER TO admin;
+
 --
--- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: roles_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
 
 
 --
--- Name: seed_snapshots; Type: TABLE; Schema: public; Owner: -
+-- Name: rpa_run_items; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.rpa_run_items (
+    id bigint NOT NULL,
+    run_id bigint NOT NULL,
+    row_no integer NOT NULL,
+    status character varying(50),
+    jiku_code character varying(50),
+    layer_code character varying(50),
+    external_product_code character varying(50),
+    delivery_date date,
+    delivery_quantity integer,
+    shipping_vehicle character varying(50),
+    issue_flag boolean DEFAULT true NOT NULL,
+    complete_flag boolean DEFAULT false NOT NULL,
+    match_result boolean,
+    sap_registered boolean,
+    order_no character varying(100),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    result_status character varying(20),
+    processing_started_at timestamp without time zone,
+    lock_flag boolean DEFAULT false NOT NULL,
+    item_no character varying(100),
+    lot_no character varying(100)
+);
+
+
+ALTER TABLE public.rpa_run_items OWNER TO admin;
+
+--
+-- Name: rpa_run_items_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+--
+
+CREATE SEQUENCE public.rpa_run_items_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.rpa_run_items_id_seq OWNER TO admin;
+
+--
+-- Name: rpa_run_items_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+--
+
+ALTER SEQUENCE public.rpa_run_items_id_seq OWNED BY public.rpa_run_items.id;
+
+
+--
+-- Name: rpa_runs; Type: TABLE; Schema: public; Owner: admin
+--
+
+CREATE TABLE public.rpa_runs (
+    id bigint NOT NULL,
+    rpa_type character varying(50) DEFAULT 'material_delivery_note'::character varying NOT NULL,
+    status character varying(30) DEFAULT 'step1_done'::character varying NOT NULL,
+    started_at timestamp without time zone,
+    started_by_user_id bigint,
+    step2_executed_at timestamp without time zone,
+    step2_executed_by_user_id bigint,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    data_start_date date,
+    data_end_date date,
+    external_done_at timestamp without time zone,
+    external_done_by_user_id bigint,
+    step4_executed_at timestamp without time zone,
+    customer_id bigint,
+    CONSTRAINT chk_rpa_runs_status CHECK (((status)::text = ANY ((ARRAY['step1_done'::character varying, 'step2_confirmed'::character varying, 'step3_running'::character varying, 'step3_done'::character varying, 'step4_checking'::character varying, 'step4_ng_retry'::character varying, 'step4_review'::character varying, 'done'::character varying, 'cancelled'::character varying])::text[])))
+);
+
+
+ALTER TABLE public.rpa_runs OWNER TO admin;
+
+--
+-- Name: rpa_runs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+--
+
+CREATE SEQUENCE public.rpa_runs_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.rpa_runs_id_seq OWNER TO admin;
+
+--
+-- Name: rpa_runs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+--
+
+ALTER SEQUENCE public.rpa_runs_id_seq OWNED BY public.rpa_runs.id;
+
+
+--
+-- Name: seed_snapshots; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.seed_snapshots (
@@ -1666,50 +1578,52 @@ CREATE TABLE public.seed_snapshots (
 );
 
 
+ALTER TABLE public.seed_snapshots OWNER TO admin;
+
 --
--- Name: COLUMN seed_snapshots.name; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN seed_snapshots.name; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.seed_snapshots.name IS 'スナップショット名';
 
 
 --
--- Name: COLUMN seed_snapshots.created_at; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN seed_snapshots.created_at; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.seed_snapshots.created_at IS '作成日時';
 
 
 --
--- Name: COLUMN seed_snapshots.params_json; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN seed_snapshots.params_json; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.seed_snapshots.params_json IS '展開後の最終パラメータ（profile解決後）';
 
 
 --
--- Name: COLUMN seed_snapshots.profile_json; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN seed_snapshots.profile_json; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.seed_snapshots.profile_json IS '使用したプロファイル設定';
 
 
 --
--- Name: COLUMN seed_snapshots.csv_dir; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN seed_snapshots.csv_dir; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.seed_snapshots.csv_dir IS 'CSVエクスポートディレクトリ（オプション）';
 
 
 --
--- Name: COLUMN seed_snapshots.summary_json; Type: COMMENT; Schema: public; Owner: -
+-- Name: COLUMN seed_snapshots.summary_json; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON COLUMN public.seed_snapshots.summary_json IS '生成結果のサマリ（件数、検証結果など）';
 
 
 --
--- Name: seed_snapshots_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: seed_snapshots_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.seed_snapshots_id_seq
@@ -1721,15 +1635,17 @@ CREATE SEQUENCE public.seed_snapshots_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.seed_snapshots_id_seq OWNER TO admin;
+
 --
--- Name: seed_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: seed_snapshots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.seed_snapshots_id_seq OWNED BY public.seed_snapshots.id;
 
 
 --
--- Name: stock_history; Type: TABLE; Schema: public; Owner: -
+-- Name: stock_history; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.stock_history (
@@ -1741,12 +1657,14 @@ CREATE TABLE public.stock_history (
     reference_type character varying(50),
     reference_id bigint,
     transaction_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT chk_stock_history_type CHECK (((transaction_type)::text = ANY ((ARRAY['inbound'::character varying, 'allocation'::character varying, 'shipment'::character varying, 'adjustment'::character varying, 'return'::character varying, 'withdrawal'::character varying])::text[])))
+    CONSTRAINT chk_stock_history_type CHECK (((transaction_type)::text = ANY ((ARRAY['inbound'::character varying, 'allocation'::character varying, 'shipment'::character varying, 'adjustment'::character varying, 'return'::character varying, 'allocation_hold'::character varying, 'allocation_release'::character varying, 'withdrawal'::character varying])::text[])))
 );
 
 
+ALTER TABLE public.stock_history OWNER TO admin;
+
 --
--- Name: stock_history_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: stock_history_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.stock_history_id_seq
@@ -1757,29 +1675,33 @@ CREATE SEQUENCE public.stock_history_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.stock_history_id_seq OWNER TO admin;
+
 --
--- Name: stock_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: stock_history_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.stock_history_id_seq OWNED BY public.stock_history.id;
 
 
 --
--- Name: suppliers; Type: TABLE; Schema: public; Owner: -
+-- Name: suppliers; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.suppliers (
     id bigint NOT NULL,
     supplier_code character varying(50) NOT NULL,
     supplier_name character varying(200) NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.suppliers OWNER TO admin;
+
 --
--- Name: suppliers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: suppliers_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.suppliers_id_seq
@@ -1790,15 +1712,17 @@ CREATE SEQUENCE public.suppliers_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.suppliers_id_seq OWNER TO admin;
+
 --
--- Name: suppliers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: suppliers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.suppliers_id_seq OWNED BY public.suppliers.id;
 
 
 --
--- Name: system_client_logs; Type: TABLE; Schema: public; Owner: -
+-- Name: system_client_logs; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.system_client_logs (
@@ -1806,13 +1730,15 @@ CREATE TABLE public.system_client_logs (
     user_id bigint,
     level character varying(20) DEFAULT 'info'::character varying NOT NULL,
     message text NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    user_agent character varying(255)
+    user_agent character varying(255),
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.system_client_logs OWNER TO admin;
+
 --
--- Name: system_client_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: system_client_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.system_client_logs_id_seq
@@ -1823,15 +1749,17 @@ CREATE SEQUENCE public.system_client_logs_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.system_client_logs_id_seq OWNER TO admin;
+
 --
--- Name: system_client_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: system_client_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.system_client_logs_id_seq OWNED BY public.system_client_logs.id;
 
 
 --
--- Name: system_configs; Type: TABLE; Schema: public; Owner: -
+-- Name: system_configs; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.system_configs (
@@ -1844,8 +1772,10 @@ CREATE TABLE public.system_configs (
 );
 
 
+ALTER TABLE public.system_configs OWNER TO admin;
+
 --
--- Name: system_configs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: system_configs_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.system_configs_id_seq
@@ -1856,15 +1786,17 @@ CREATE SEQUENCE public.system_configs_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.system_configs_id_seq OWNER TO admin;
+
 --
--- Name: system_configs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: system_configs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.system_configs_id_seq OWNED BY public.system_configs.id;
 
 
 --
--- Name: user_roles; Type: TABLE; Schema: public; Owner: -
+-- Name: user_roles; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.user_roles (
@@ -1874,8 +1806,10 @@ CREATE TABLE public.user_roles (
 );
 
 
+ALTER TABLE public.user_roles OWNER TO admin;
+
 --
--- Name: user_supplier_assignments; Type: TABLE; Schema: public; Owner: -
+-- Name: user_supplier_assignments; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.user_supplier_assignments (
@@ -1889,8 +1823,10 @@ CREATE TABLE public.user_supplier_assignments (
 );
 
 
+ALTER TABLE public.user_supplier_assignments OWNER TO admin;
+
 --
--- Name: user_supplier_assignments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: user_supplier_assignments_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.user_supplier_assignments_id_seq
@@ -1901,34 +1837,38 @@ CREATE SEQUENCE public.user_supplier_assignments_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.user_supplier_assignments_id_seq OWNER TO admin;
+
 --
--- Name: user_supplier_assignments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: user_supplier_assignments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.user_supplier_assignments_id_seq OWNED BY public.user_supplier_assignments.id;
 
 
 --
--- Name: users; Type: TABLE; Schema: public; Owner: -
+-- Name: users; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.users (
     id bigint NOT NULL,
     username character varying(50) NOT NULL,
     email character varying(255) NOT NULL,
+    auth_provider character varying(50) DEFAULT 'local'::character varying NOT NULL,
+    azure_object_id character varying(100),
     password_hash character varying(255),
     display_name character varying(100) NOT NULL,
     is_active boolean DEFAULT true NOT NULL,
     last_login_at timestamp without time zone,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    auth_provider character varying(50) DEFAULT 'local'::character varying NOT NULL,
-    azure_object_id character varying(100)
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
 
+ALTER TABLE public.users OWNER TO admin;
+
 --
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.users_id_seq
@@ -1939,15 +1879,17 @@ CREATE SEQUENCE public.users_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.users_id_seq OWNER TO admin;
+
 --
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: v_customer_daily_products; Type: VIEW; Schema: public; Owner: -
+-- Name: v_customer_daily_products; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_customer_daily_products AS
@@ -1957,20 +1899,24 @@ CREATE VIEW public.v_customer_daily_products AS
   WHERE (f.forecast_period IS NOT NULL);
 
 
+ALTER TABLE public.v_customer_daily_products OWNER TO admin;
+
 --
--- Name: v_lot_allocations; Type: VIEW; Schema: public; Owner: -
+-- Name: v_lot_allocations; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_lot_allocations AS
  SELECT lot_reservations.lot_id,
     sum(lot_reservations.reserved_qty) AS allocated_quantity
    FROM public.lot_reservations
-  WHERE ((lot_reservations.status)::text = 'active'::text)
+  WHERE ((lot_reservations.status)::text = ANY ((ARRAY['active'::character varying, 'confirmed'::character varying])::text[]))
   GROUP BY lot_reservations.lot_id;
 
 
+ALTER TABLE public.v_lot_allocations OWNER TO admin;
+
 --
--- Name: v_lot_available_qty; Type: VIEW; Schema: public; Owner: -
+-- Name: v_lot_available_qty; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_lot_available_qty AS
@@ -1986,8 +1932,10 @@ CREATE VIEW public.v_lot_available_qty AS
   WHERE (((l.status)::text = 'active'::text) AND ((l.expiry_date IS NULL) OR (l.expiry_date >= CURRENT_DATE)) AND (((l.current_quantity - COALESCE(la.allocated_quantity, (0)::numeric)) - l.locked_quantity) > (0)::numeric));
 
 
+ALTER TABLE public.v_lot_available_qty OWNER TO admin;
+
 --
--- Name: v_order_line_context; Type: VIEW; Schema: public; Owner: -
+-- Name: v_order_line_context; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_order_line_context AS
@@ -2001,8 +1949,10 @@ CREATE VIEW public.v_order_line_context AS
      JOIN public.orders o ON ((o.id = ol.order_id)));
 
 
+ALTER TABLE public.v_order_line_context OWNER TO admin;
+
 --
--- Name: v_candidate_lots_by_order_line; Type: VIEW; Schema: public; Owner: -
+-- Name: v_candidate_lots_by_order_line; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_candidate_lots_by_order_line AS
@@ -2019,8 +1969,10 @@ CREATE VIEW public.v_candidate_lots_by_order_line AS
   ORDER BY c.order_line_id, l.expiry_date, l.receipt_date, l.lot_id;
 
 
+ALTER TABLE public.v_candidate_lots_by_order_line OWNER TO admin;
+
 --
--- Name: v_customer_code_to_id; Type: VIEW; Schema: public; Owner: -
+-- Name: v_customer_code_to_id; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_customer_code_to_id AS
@@ -2034,8 +1986,10 @@ CREATE VIEW public.v_customer_code_to_id AS
    FROM public.customers c;
 
 
+ALTER TABLE public.v_customer_code_to_id OWNER TO admin;
+
 --
--- Name: v_customer_item_jiku_mappings; Type: VIEW; Schema: public; Owner: -
+-- Name: v_customer_item_jiku_mappings; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_customer_item_jiku_mappings AS
@@ -2063,15 +2017,17 @@ CREATE VIEW public.v_customer_item_jiku_mappings AS
      LEFT JOIN public.delivery_places dp ON ((cijm.delivery_place_id = dp.id)));
 
 
+ALTER TABLE public.v_customer_item_jiku_mappings OWNER TO admin;
+
 --
--- Name: VIEW v_customer_item_jiku_mappings; Type: COMMENT; Schema: public; Owner: -
+-- Name: VIEW v_customer_item_jiku_mappings; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON VIEW public.v_customer_item_jiku_mappings IS '顧客商品-次区マッピングビュー（soft-delete対応）';
 
 
 --
--- Name: v_delivery_place_code_to_id; Type: VIEW; Schema: public; Owner: -
+-- Name: v_delivery_place_code_to_id; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_delivery_place_code_to_id AS
@@ -2085,8 +2041,10 @@ CREATE VIEW public.v_delivery_place_code_to_id AS
    FROM public.delivery_places d;
 
 
+ALTER TABLE public.v_delivery_place_code_to_id OWNER TO admin;
+
 --
--- Name: v_forecast_order_pairs; Type: VIEW; Schema: public; Owner: -
+-- Name: v_forecast_order_pairs; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_forecast_order_pairs AS
@@ -2100,8 +2058,10 @@ CREATE VIEW public.v_forecast_order_pairs AS
      JOIN public.order_lines ol ON (((ol.order_id = o.id) AND (ol.product_id = f.product_id))));
 
 
+ALTER TABLE public.v_forecast_order_pairs OWNER TO admin;
+
 --
--- Name: v_inventory_summary; Type: VIEW; Schema: public; Owner: -
+-- Name: v_inventory_summary; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_inventory_summary AS
@@ -2122,15 +2082,17 @@ CREATE VIEW public.v_inventory_summary AS
   GROUP BY l.product_id, l.warehouse_id;
 
 
+ALTER TABLE public.v_inventory_summary OWNER TO admin;
+
 --
--- Name: VIEW v_inventory_summary; Type: COMMENT; Schema: public; Owner: -
+-- Name: VIEW v_inventory_summary; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON VIEW public.v_inventory_summary IS '在庫集計ビュー（仮在庫含む）';
 
 
 --
--- Name: v_lot_current_stock; Type: VIEW; Schema: public; Owner: -
+-- Name: v_lot_current_stock; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_lot_current_stock AS
@@ -2143,8 +2105,10 @@ CREATE VIEW public.v_lot_current_stock AS
   WHERE (l.current_quantity > (0)::numeric);
 
 
+ALTER TABLE public.v_lot_current_stock OWNER TO admin;
+
 --
--- Name: warehouses; Type: TABLE; Schema: public; Owner: -
+-- Name: warehouses; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.warehouses (
@@ -2152,15 +2116,17 @@ CREATE TABLE public.warehouses (
     warehouse_code character varying(50) NOT NULL,
     warehouse_name character varying(200) NOT NULL,
     warehouse_type character varying(20) NOT NULL,
+    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    valid_to date DEFAULT '9999-12-31'::date NOT NULL,
-    CONSTRAINT chk_warehouse_type CHECK (((warehouse_type)::text = ANY (ARRAY[('internal'::character varying)::text, ('external'::character varying)::text, ('supplier'::character varying)::text])))
+    CONSTRAINT chk_warehouse_type CHECK (((warehouse_type)::text = ANY ((ARRAY['internal'::character varying, 'external'::character varying, 'supplier'::character varying])::text[])))
 );
 
 
+ALTER TABLE public.warehouses OWNER TO admin;
+
 --
--- Name: v_lot_details; Type: VIEW; Schema: public; Owner: -
+-- Name: v_lot_details; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_lot_details AS
@@ -2188,6 +2154,7 @@ CREATE VIEW public.v_lot_details AS
             WHEN (l.expiry_date IS NOT NULL) THEN (l.expiry_date - CURRENT_DATE)
             ELSE NULL::integer
         END AS days_to_expiry,
+    l.temporary_lot_key,
     usa_primary.user_id AS primary_user_id,
     u_primary.username AS primary_username,
     u_primary.display_name AS primary_user_display_name,
@@ -2214,15 +2181,17 @@ CREATE VIEW public.v_lot_details AS
      LEFT JOIN public.users u_primary ON ((u_primary.id = usa_primary.user_id)));
 
 
---
--- Name: VIEW v_lot_details; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応）';
-
+ALTER TABLE public.v_lot_details OWNER TO admin;
 
 --
--- Name: v_order_line_details; Type: VIEW; Schema: public; Owner: -
+-- Name: VIEW v_lot_details; Type: COMMENT; Schema: public; Owner: admin
+--
+
+COMMENT ON VIEW public.v_lot_details IS 'ロット詳細ビュー（担当者情報含む、soft-delete対応、仮入庫対応）';
+
+
+--
+-- Name: v_order_line_details; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_order_line_details AS
@@ -2249,7 +2218,7 @@ CREATE VIEW public.v_order_line_details AS
     dp.jiku_code,
     ci.external_product_code,
     COALESCE(s.supplier_name, '[削除済み仕入先]'::character varying) AS supplier_name,
-    COALESCE(alloc_sum.allocated_qty, (0)::numeric) AS allocated_quantity,
+    COALESCE(res_sum.allocated_qty, (0)::numeric) AS allocated_quantity,
         CASE
             WHEN ((c.valid_to IS NOT NULL) AND (c.valid_to <= CURRENT_DATE)) THEN true
             ELSE false
@@ -2269,21 +2238,24 @@ CREATE VIEW public.v_order_line_details AS
      LEFT JOIN public.delivery_places dp ON ((ol.delivery_place_id = dp.id)))
      LEFT JOIN public.customer_items ci ON (((ci.customer_id = o.customer_id) AND (ci.product_id = ol.product_id))))
      LEFT JOIN public.suppliers s ON ((ci.supplier_id = s.id)))
-     LEFT JOIN ( SELECT allocations.order_line_id,
-            sum(allocations.allocated_quantity) AS allocated_qty
-           FROM public.allocations
-          GROUP BY allocations.order_line_id) alloc_sum ON ((alloc_sum.order_line_id = ol.id)));
+     LEFT JOIN ( SELECT lot_reservations.source_id,
+            sum(lot_reservations.reserved_qty) AS allocated_qty
+           FROM public.lot_reservations
+          WHERE (((lot_reservations.source_type)::text = 'ORDER'::text) AND ((lot_reservations.status)::text = ANY ((ARRAY['active'::character varying, 'confirmed'::character varying])::text[])))
+          GROUP BY lot_reservations.source_id) res_sum ON ((res_sum.source_id = ol.id)));
 
+
+ALTER TABLE public.v_order_line_details OWNER TO admin;
 
 --
--- Name: VIEW v_order_line_details; Type: COMMENT; Schema: public; Owner: -
+-- Name: VIEW v_order_line_details; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON VIEW public.v_order_line_details IS '受注明細の詳細情報ビュー（soft-delete対応）';
 
 
 --
--- Name: v_product_code_to_id; Type: VIEW; Schema: public; Owner: -
+-- Name: v_product_code_to_id; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_product_code_to_id AS
@@ -2297,8 +2269,10 @@ CREATE VIEW public.v_product_code_to_id AS
    FROM public.products p;
 
 
+ALTER TABLE public.v_product_code_to_id OWNER TO admin;
+
 --
--- Name: v_supplier_code_to_id; Type: VIEW; Schema: public; Owner: -
+-- Name: v_supplier_code_to_id; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_supplier_code_to_id AS
@@ -2312,15 +2286,17 @@ CREATE VIEW public.v_supplier_code_to_id AS
    FROM public.suppliers s;
 
 
+ALTER TABLE public.v_supplier_code_to_id OWNER TO admin;
+
 --
--- Name: VIEW v_supplier_code_to_id; Type: COMMENT; Schema: public; Owner: -
+-- Name: VIEW v_supplier_code_to_id; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON VIEW public.v_supplier_code_to_id IS '仕入先コード→IDマッピング（soft-delete対応）';
 
 
 --
--- Name: v_user_supplier_assignments; Type: VIEW; Schema: public; Owner: -
+-- Name: v_user_supplier_assignments; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_user_supplier_assignments AS
@@ -2344,15 +2320,17 @@ CREATE VIEW public.v_user_supplier_assignments AS
      LEFT JOIN public.suppliers s ON ((usa.supplier_id = s.id)));
 
 
+ALTER TABLE public.v_user_supplier_assignments OWNER TO admin;
+
 --
--- Name: VIEW v_user_supplier_assignments; Type: COMMENT; Schema: public; Owner: -
+-- Name: VIEW v_user_supplier_assignments; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON VIEW public.v_user_supplier_assignments IS 'ユーザー-仕入先担当割り当てビュー（soft-delete対応）';
 
 
 --
--- Name: v_warehouse_code_to_id; Type: VIEW; Schema: public; Owner: -
+-- Name: v_warehouse_code_to_id; Type: VIEW; Schema: public; Owner: admin
 --
 
 CREATE VIEW public.v_warehouse_code_to_id AS
@@ -2367,15 +2345,17 @@ CREATE VIEW public.v_warehouse_code_to_id AS
    FROM public.warehouses w;
 
 
+ALTER TABLE public.v_warehouse_code_to_id OWNER TO admin;
+
 --
--- Name: VIEW v_warehouse_code_to_id; Type: COMMENT; Schema: public; Owner: -
+-- Name: VIEW v_warehouse_code_to_id; Type: COMMENT; Schema: public; Owner: admin
 --
 
 COMMENT ON VIEW public.v_warehouse_code_to_id IS '倉庫コード→IDマッピング（soft-delete対応）';
 
 
 --
--- Name: warehouses_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: warehouses_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.warehouses_id_seq
@@ -2386,15 +2366,17 @@ CREATE SEQUENCE public.warehouses_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.warehouses_id_seq OWNER TO admin;
+
 --
--- Name: warehouses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: warehouses_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.warehouses_id_seq OWNED BY public.warehouses.id;
 
 
 --
--- Name: withdrawals; Type: TABLE; Schema: public; Owner: -
+-- Name: withdrawals; Type: TABLE; Schema: public; Owner: admin
 --
 
 CREATE TABLE public.withdrawals (
@@ -2415,8 +2397,10 @@ CREATE TABLE public.withdrawals (
 );
 
 
+ALTER TABLE public.withdrawals OWNER TO admin;
+
 --
--- Name: withdrawals_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: withdrawals_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
 --
 
 CREATE SEQUENCE public.withdrawals_id_seq
@@ -2427,267 +2411,290 @@ CREATE SEQUENCE public.withdrawals_id_seq
     CACHE 1;
 
 
+ALTER TABLE public.withdrawals_id_seq OWNER TO admin;
+
 --
--- Name: withdrawals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: withdrawals_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
 --
 
 ALTER SEQUENCE public.withdrawals_id_seq OWNED BY public.withdrawals.id;
 
 
 --
--- Name: adjustments id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: adjustments id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.adjustments ALTER COLUMN id SET DEFAULT nextval('public.adjustments_id_seq'::regclass);
 
 
 --
--- Name: allocation_suggestions id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: allocation_suggestions id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.allocation_suggestions ALTER COLUMN id SET DEFAULT nextval('public.allocation_suggestions_id_seq'::regclass);
 
 
 --
--- Name: allocation_traces id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: allocation_traces id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.allocation_traces ALTER COLUMN id SET DEFAULT nextval('public.allocation_traces_id_seq'::regclass);
 
 
 --
--- Name: allocations id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocations ALTER COLUMN id SET DEFAULT nextval('public.allocations_id_seq'::regclass);
-
-
---
--- Name: batch_jobs id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: batch_jobs id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.batch_jobs ALTER COLUMN id SET DEFAULT nextval('public.batch_jobs_id_seq'::regclass);
 
 
 --
--- Name: business_rules id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: business_rules id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.business_rules ALTER COLUMN id SET DEFAULT nextval('public.business_rules_id_seq'::regclass);
 
 
 --
--- Name: customer_item_delivery_settings id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: cloud_flow_configs id; Type: DEFAULT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.cloud_flow_configs ALTER COLUMN id SET DEFAULT nextval('public.cloud_flow_configs_id_seq'::regclass);
+
+
+--
+-- Name: cloud_flow_jobs id; Type: DEFAULT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.cloud_flow_jobs ALTER COLUMN id SET DEFAULT nextval('public.cloud_flow_jobs_id_seq'::regclass);
+
+
+--
+-- Name: customer_item_delivery_settings id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_item_delivery_settings ALTER COLUMN id SET DEFAULT nextval('public.customer_item_delivery_settings_id_seq'::regclass);
 
 
 --
--- Name: customer_item_jiku_mappings id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: customer_item_jiku_mappings id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_item_jiku_mappings ALTER COLUMN id SET DEFAULT nextval('public.customer_item_jiku_mappings_id_seq'::regclass);
 
 
 --
--- Name: customers id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: customers id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customers ALTER COLUMN id SET DEFAULT nextval('public.customers_id_seq'::regclass);
 
 
 --
--- Name: delivery_places id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: delivery_places id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.delivery_places ALTER COLUMN id SET DEFAULT nextval('public.delivery_places_id_seq'::regclass);
 
 
 --
--- Name: expected_lots id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: expected_lots id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.expected_lots ALTER COLUMN id SET DEFAULT nextval('public.expected_lots_id_seq'::regclass);
 
 
 --
--- Name: forecast_current id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: forecast_current id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.forecast_current ALTER COLUMN id SET DEFAULT nextval('public.forecast_current_id_seq'::regclass);
 
 
 --
--- Name: forecast_history id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: forecast_history id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.forecast_history ALTER COLUMN id SET DEFAULT nextval('public.forecast_history_id_seq'::regclass);
 
 
 --
--- Name: inbound_plan_lines id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: inbound_plan_lines id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.inbound_plan_lines ALTER COLUMN id SET DEFAULT nextval('public.inbound_plan_lines_id_seq'::regclass);
 
 
 --
--- Name: inbound_plans id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: inbound_plans id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.inbound_plans ALTER COLUMN id SET DEFAULT nextval('public.inbound_plans_id_seq'::regclass);
 
 
 --
--- Name: lot_reservations id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: lot_reservations id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.lot_reservations ALTER COLUMN id SET DEFAULT nextval('public.lot_reservations_id_seq'::regclass);
 
 
 --
--- Name: lots id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: lots id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.lots ALTER COLUMN id SET DEFAULT nextval('public.lots_id_seq'::regclass);
 
 
 --
--- Name: master_change_logs id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: master_change_logs id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.master_change_logs ALTER COLUMN id SET DEFAULT nextval('public.master_change_logs_id_seq'::regclass);
 
 
 --
--- Name: operation_logs id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: operation_logs id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.operation_logs ALTER COLUMN id SET DEFAULT nextval('public.operation_logs_id_seq'::regclass);
 
 
 --
--- Name: order_groups id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: order_groups id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_groups ALTER COLUMN id SET DEFAULT nextval('public.order_groups_id_seq'::regclass);
 
 
 --
--- Name: order_lines id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: order_lines id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_lines ALTER COLUMN id SET DEFAULT nextval('public.order_lines_id_seq'::regclass);
 
 
 --
--- Name: orders id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: orders id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.orders ALTER COLUMN id SET DEFAULT nextval('public.orders_id_seq'::regclass);
 
 
 --
--- Name: product_mappings id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: product_mappings id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_mappings ALTER COLUMN id SET DEFAULT nextval('public.product_mappings_id_seq'::regclass);
 
 
 --
--- Name: product_suppliers id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: product_suppliers id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_suppliers ALTER COLUMN id SET DEFAULT nextval('public.product_suppliers_id_seq'::regclass);
 
 
 --
--- Name: product_uom_conversions conversion_id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: product_uom_conversions conversion_id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_uom_conversions ALTER COLUMN conversion_id SET DEFAULT nextval('public.product_uom_conversions_conversion_id_seq'::regclass);
 
 
 --
--- Name: products id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: products id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.products ALTER COLUMN id SET DEFAULT nextval('public.products_id_seq'::regclass);
 
 
 --
--- Name: roles id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: roles id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
 
 
 --
--- Name: seed_snapshots id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: rpa_run_items id; Type: DEFAULT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_run_items ALTER COLUMN id SET DEFAULT nextval('public.rpa_run_items_id_seq'::regclass);
+
+
+--
+-- Name: rpa_runs id; Type: DEFAULT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_runs ALTER COLUMN id SET DEFAULT nextval('public.rpa_runs_id_seq'::regclass);
+
+
+--
+-- Name: seed_snapshots id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.seed_snapshots ALTER COLUMN id SET DEFAULT nextval('public.seed_snapshots_id_seq'::regclass);
 
 
 --
--- Name: stock_history id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: stock_history id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.stock_history ALTER COLUMN id SET DEFAULT nextval('public.stock_history_id_seq'::regclass);
 
 
 --
--- Name: suppliers id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: suppliers id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.suppliers ALTER COLUMN id SET DEFAULT nextval('public.suppliers_id_seq'::regclass);
 
 
 --
--- Name: system_client_logs id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: system_client_logs id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.system_client_logs ALTER COLUMN id SET DEFAULT nextval('public.system_client_logs_id_seq'::regclass);
 
 
 --
--- Name: system_configs id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: system_configs id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.system_configs ALTER COLUMN id SET DEFAULT nextval('public.system_configs_id_seq'::regclass);
 
 
 --
--- Name: user_supplier_assignments id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: user_supplier_assignments id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.user_supplier_assignments ALTER COLUMN id SET DEFAULT nextval('public.user_supplier_assignments_id_seq'::regclass);
 
 
 --
--- Name: users id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
 
 
 --
--- Name: warehouses id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: warehouses id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.warehouses ALTER COLUMN id SET DEFAULT nextval('public.warehouses_id_seq'::regclass);
 
 
 --
--- Name: withdrawals id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: withdrawals id; Type: DEFAULT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.withdrawals ALTER COLUMN id SET DEFAULT nextval('public.withdrawals_id_seq'::regclass);
 
 
 --
--- Name: adjustments adjustments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: adjustments adjustments_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.adjustments
@@ -2695,7 +2702,7 @@ ALTER TABLE ONLY public.adjustments
 
 
 --
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.alembic_version
@@ -2703,7 +2710,7 @@ ALTER TABLE ONLY public.alembic_version
 
 
 --
--- Name: allocation_suggestions allocation_suggestions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: allocation_suggestions allocation_suggestions_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.allocation_suggestions
@@ -2711,7 +2718,7 @@ ALTER TABLE ONLY public.allocation_suggestions
 
 
 --
--- Name: allocation_traces allocation_traces_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: allocation_traces allocation_traces_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.allocation_traces
@@ -2719,15 +2726,7 @@ ALTER TABLE ONLY public.allocation_traces
 
 
 --
--- Name: allocations allocations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocations
-    ADD CONSTRAINT allocations_pkey PRIMARY KEY (id);
-
-
---
--- Name: batch_jobs batch_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: batch_jobs batch_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.batch_jobs
@@ -2735,7 +2734,7 @@ ALTER TABLE ONLY public.batch_jobs
 
 
 --
--- Name: business_rules business_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: business_rules business_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.business_rules
@@ -2743,15 +2742,31 @@ ALTER TABLE ONLY public.business_rules
 
 
 --
--- Name: business_rules business_rules_rule_code_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cloud_flow_configs cloud_flow_configs_config_key_key; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.business_rules
-    ADD CONSTRAINT business_rules_rule_code_key UNIQUE (rule_code);
+ALTER TABLE ONLY public.cloud_flow_configs
+    ADD CONSTRAINT cloud_flow_configs_config_key_key UNIQUE (config_key);
 
 
 --
--- Name: customer_item_delivery_settings customer_item_delivery_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cloud_flow_configs cloud_flow_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.cloud_flow_configs
+    ADD CONSTRAINT cloud_flow_configs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: cloud_flow_jobs cloud_flow_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.cloud_flow_jobs
+    ADD CONSTRAINT cloud_flow_jobs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: customer_item_delivery_settings customer_item_delivery_settings_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_item_delivery_settings
@@ -2759,7 +2774,7 @@ ALTER TABLE ONLY public.customer_item_delivery_settings
 
 
 --
--- Name: customer_item_jiku_mappings customer_item_jiku_mappings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_item_jiku_mappings customer_item_jiku_mappings_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_item_jiku_mappings
@@ -2767,7 +2782,7 @@ ALTER TABLE ONLY public.customer_item_jiku_mappings
 
 
 --
--- Name: customer_items customer_items_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_items customer_items_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_items
@@ -2775,7 +2790,7 @@ ALTER TABLE ONLY public.customer_items
 
 
 --
--- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: customers customers_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customers
@@ -2783,7 +2798,7 @@ ALTER TABLE ONLY public.customers
 
 
 --
--- Name: delivery_places delivery_places_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: delivery_places delivery_places_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.delivery_places
@@ -2791,7 +2806,7 @@ ALTER TABLE ONLY public.delivery_places
 
 
 --
--- Name: expected_lots expected_lots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: expected_lots expected_lots_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.expected_lots
@@ -2799,7 +2814,7 @@ ALTER TABLE ONLY public.expected_lots
 
 
 --
--- Name: forecast_current forecast_current_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: forecast_current forecast_current_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.forecast_current
@@ -2807,7 +2822,7 @@ ALTER TABLE ONLY public.forecast_current
 
 
 --
--- Name: forecast_history forecast_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: forecast_history forecast_history_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.forecast_history
@@ -2815,7 +2830,7 @@ ALTER TABLE ONLY public.forecast_history
 
 
 --
--- Name: inbound_plan_lines inbound_plan_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: inbound_plan_lines inbound_plan_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.inbound_plan_lines
@@ -2823,7 +2838,7 @@ ALTER TABLE ONLY public.inbound_plan_lines
 
 
 --
--- Name: inbound_plans inbound_plans_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: inbound_plans inbound_plans_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.inbound_plans
@@ -2831,23 +2846,15 @@ ALTER TABLE ONLY public.inbound_plans
 
 
 --
--- Name: inbound_plans inbound_plans_plan_number_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: layer_code_mappings layer_code_mappings_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.inbound_plans
-    ADD CONSTRAINT inbound_plans_plan_number_key UNIQUE (plan_number);
-
-
---
--- Name: inbound_plans inbound_plans_sap_po_number_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.inbound_plans
-    ADD CONSTRAINT inbound_plans_sap_po_number_key UNIQUE (sap_po_number);
+ALTER TABLE ONLY public.layer_code_mappings
+    ADD CONSTRAINT layer_code_mappings_pkey PRIMARY KEY (layer_code);
 
 
 --
--- Name: lot_reservations lot_reservations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: lot_reservations lot_reservations_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.lot_reservations
@@ -2855,7 +2862,7 @@ ALTER TABLE ONLY public.lot_reservations
 
 
 --
--- Name: lots lots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: lots lots_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.lots
@@ -2863,7 +2870,7 @@ ALTER TABLE ONLY public.lots
 
 
 --
--- Name: master_change_logs master_change_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: master_change_logs master_change_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.master_change_logs
@@ -2871,7 +2878,7 @@ ALTER TABLE ONLY public.master_change_logs
 
 
 --
--- Name: operation_logs operation_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: operation_logs operation_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.operation_logs
@@ -2879,7 +2886,7 @@ ALTER TABLE ONLY public.operation_logs
 
 
 --
--- Name: order_groups order_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: order_groups order_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_groups
@@ -2887,7 +2894,7 @@ ALTER TABLE ONLY public.order_groups
 
 
 --
--- Name: order_lines order_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: order_lines order_lines_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_lines
@@ -2895,7 +2902,7 @@ ALTER TABLE ONLY public.order_lines
 
 
 --
--- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.orders
@@ -2903,7 +2910,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: product_mappings product_mappings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: product_mappings product_mappings_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_mappings
@@ -2911,7 +2918,7 @@ ALTER TABLE ONLY public.product_mappings
 
 
 --
--- Name: product_suppliers product_suppliers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: product_suppliers product_suppliers_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_suppliers
@@ -2919,7 +2926,7 @@ ALTER TABLE ONLY public.product_suppliers
 
 
 --
--- Name: product_uom_conversions product_uom_conversions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: product_uom_conversions product_uom_conversions_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_uom_conversions
@@ -2927,7 +2934,7 @@ ALTER TABLE ONLY public.product_uom_conversions
 
 
 --
--- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.products
@@ -2935,7 +2942,7 @@ ALTER TABLE ONLY public.products
 
 
 --
--- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.roles
@@ -2943,7 +2950,23 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: seed_snapshots seed_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: rpa_run_items rpa_run_items_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_run_items
+    ADD CONSTRAINT rpa_run_items_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: rpa_runs rpa_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_runs
+    ADD CONSTRAINT rpa_runs_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: seed_snapshots seed_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.seed_snapshots
@@ -2951,7 +2974,7 @@ ALTER TABLE ONLY public.seed_snapshots
 
 
 --
--- Name: stock_history stock_history_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: stock_history stock_history_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.stock_history
@@ -2959,7 +2982,7 @@ ALTER TABLE ONLY public.stock_history
 
 
 --
--- Name: suppliers suppliers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: suppliers suppliers_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.suppliers
@@ -2967,7 +2990,7 @@ ALTER TABLE ONLY public.suppliers
 
 
 --
--- Name: system_client_logs system_client_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: system_client_logs system_client_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.system_client_logs
@@ -2975,7 +2998,7 @@ ALTER TABLE ONLY public.system_client_logs
 
 
 --
--- Name: system_configs system_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: system_configs system_configs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.system_configs
@@ -2983,7 +3006,15 @@ ALTER TABLE ONLY public.system_configs
 
 
 --
--- Name: customer_item_delivery_settings uq_customer_item_delivery_settings; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: business_rules uq_business_rules_rule_code; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.business_rules
+    ADD CONSTRAINT uq_business_rules_rule_code UNIQUE (rule_code);
+
+
+--
+-- Name: customer_item_delivery_settings uq_customer_item_delivery_settings; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_item_delivery_settings
@@ -2991,7 +3022,7 @@ ALTER TABLE ONLY public.customer_item_delivery_settings
 
 
 --
--- Name: customer_item_jiku_mappings uq_customer_item_jiku; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_item_jiku_mappings uq_customer_item_jiku; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_item_jiku_mappings
@@ -2999,7 +3030,7 @@ ALTER TABLE ONLY public.customer_item_jiku_mappings
 
 
 --
--- Name: customers uq_customers_customer_code; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: customers uq_customers_customer_code; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customers
@@ -3007,7 +3038,7 @@ ALTER TABLE ONLY public.customers
 
 
 --
--- Name: delivery_places uq_delivery_places_code; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: delivery_places uq_delivery_places_code; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.delivery_places
@@ -3015,7 +3046,23 @@ ALTER TABLE ONLY public.delivery_places
 
 
 --
--- Name: lots uq_lots_number_product_warehouse; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: inbound_plans uq_inbound_plans_plan_number; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.inbound_plans
+    ADD CONSTRAINT uq_inbound_plans_plan_number UNIQUE (plan_number);
+
+
+--
+-- Name: inbound_plans uq_inbound_plans_sap_po_number; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.inbound_plans
+    ADD CONSTRAINT uq_inbound_plans_sap_po_number UNIQUE (sap_po_number);
+
+
+--
+-- Name: lots uq_lots_number_product_warehouse; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.lots
@@ -3023,7 +3070,15 @@ ALTER TABLE ONLY public.lots
 
 
 --
--- Name: order_groups uq_order_groups_business_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: lots uq_lots_temporary_lot_key; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.lots
+    ADD CONSTRAINT uq_lots_temporary_lot_key UNIQUE (temporary_lot_key);
+
+
+--
+-- Name: order_groups uq_order_groups_business_key; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_groups
@@ -3031,7 +3086,7 @@ ALTER TABLE ONLY public.order_groups
 
 
 --
--- Name: order_lines uq_order_lines_customer_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: order_lines uq_order_lines_customer_key; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_lines
@@ -3039,7 +3094,7 @@ ALTER TABLE ONLY public.order_lines
 
 
 --
--- Name: product_mappings uq_product_mappings_cust_part_supp; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: product_mappings uq_product_mappings_cust_part_supp; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_mappings
@@ -3047,7 +3102,7 @@ ALTER TABLE ONLY public.product_mappings
 
 
 --
--- Name: product_suppliers uq_product_supplier; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: product_suppliers uq_product_supplier; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_suppliers
@@ -3055,7 +3110,7 @@ ALTER TABLE ONLY public.product_suppliers
 
 
 --
--- Name: products uq_products_maker_part_code; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: products uq_products_maker_part_code; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.products
@@ -3063,7 +3118,7 @@ ALTER TABLE ONLY public.products
 
 
 --
--- Name: roles uq_roles_role_code; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: roles uq_roles_role_code; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.roles
@@ -3071,7 +3126,7 @@ ALTER TABLE ONLY public.roles
 
 
 --
--- Name: suppliers uq_suppliers_supplier_code; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: suppliers uq_suppliers_supplier_code; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.suppliers
@@ -3079,7 +3134,7 @@ ALTER TABLE ONLY public.suppliers
 
 
 --
--- Name: system_configs uq_system_configs_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: system_configs uq_system_configs_key; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.system_configs
@@ -3087,7 +3142,7 @@ ALTER TABLE ONLY public.system_configs
 
 
 --
--- Name: product_uom_conversions uq_uom_conversions_product_unit; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: product_uom_conversions uq_uom_conversions_product_unit; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_uom_conversions
@@ -3095,7 +3150,7 @@ ALTER TABLE ONLY public.product_uom_conversions
 
 
 --
--- Name: user_supplier_assignments uq_user_supplier_assignments_user_supplier; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_supplier_assignments uq_user_supplier_assignments_user_supplier; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.user_supplier_assignments
@@ -3103,7 +3158,15 @@ ALTER TABLE ONLY public.user_supplier_assignments
 
 
 --
--- Name: users uq_users_email; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users uq_users_azure_object_id; Type: CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT uq_users_azure_object_id UNIQUE (azure_object_id);
+
+
+--
+-- Name: users uq_users_email; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.users
@@ -3111,7 +3174,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users uq_users_username; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users uq_users_username; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.users
@@ -3119,7 +3182,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: warehouses uq_warehouses_warehouse_code; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: warehouses uq_warehouses_warehouse_code; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.warehouses
@@ -3127,7 +3190,7 @@ ALTER TABLE ONLY public.warehouses
 
 
 --
--- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_roles user_roles_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.user_roles
@@ -3135,7 +3198,7 @@ ALTER TABLE ONLY public.user_roles
 
 
 --
--- Name: user_supplier_assignments user_supplier_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: user_supplier_assignments user_supplier_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.user_supplier_assignments
@@ -3143,15 +3206,7 @@ ALTER TABLE ONLY public.user_supplier_assignments
 
 
 --
--- Name: users users_azure_object_id_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_azure_object_id_key UNIQUE (azure_object_id);
-
-
---
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.users
@@ -3159,7 +3214,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: warehouses warehouses_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: warehouses warehouses_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.warehouses
@@ -3167,7 +3222,7 @@ ALTER TABLE ONLY public.warehouses
 
 
 --
--- Name: withdrawals withdrawals_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: withdrawals withdrawals_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.withdrawals
@@ -3175,812 +3230,830 @@ ALTER TABLE ONLY public.withdrawals
 
 
 --
--- Name: idx_adjustments_date; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_adjustments_date; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_adjustments_date ON public.adjustments USING btree (adjusted_at);
 
 
 --
--- Name: idx_adjustments_lot; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_adjustments_lot; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_adjustments_lot ON public.adjustments USING btree (lot_id);
 
 
 --
--- Name: idx_allocation_suggestions_customer; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocation_suggestions_customer; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_allocation_suggestions_customer ON public.allocation_suggestions USING btree (customer_id);
 
 
 --
--- Name: idx_allocation_suggestions_forecast; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocation_suggestions_forecast; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_allocation_suggestions_forecast ON public.allocation_suggestions USING btree (forecast_id);
 
 
 --
--- Name: idx_allocation_suggestions_lot; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocation_suggestions_lot; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_allocation_suggestions_lot ON public.allocation_suggestions USING btree (lot_id);
 
 
 --
--- Name: idx_allocation_suggestions_period; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocation_suggestions_period; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_allocation_suggestions_period ON public.allocation_suggestions USING btree (forecast_period);
 
 
 --
--- Name: idx_allocation_suggestions_product; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocation_suggestions_product; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_allocation_suggestions_product ON public.allocation_suggestions USING btree (product_id);
 
 
 --
--- Name: idx_allocation_traces_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocation_traces_created_at; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_allocation_traces_created_at ON public.allocation_traces USING btree (created_at);
 
 
 --
--- Name: idx_allocation_traces_lot; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocation_traces_lot; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_allocation_traces_lot ON public.allocation_traces USING btree (lot_id);
 
 
 --
--- Name: idx_allocation_traces_order_line; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_allocation_traces_order_line; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_allocation_traces_order_line ON public.allocation_traces USING btree (order_line_id);
 
 
 --
--- Name: idx_allocations_allocation_type; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_allocations_allocation_type ON public.allocations USING btree (allocation_type);
-
-
---
--- Name: idx_allocations_inbound_plan_line; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_allocations_inbound_plan_line ON public.allocations USING btree (inbound_plan_line_id);
-
-
---
--- Name: idx_allocations_lot_reference; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_allocations_lot_reference ON public.allocations USING btree (lot_reference);
-
-
---
--- Name: idx_allocations_order_line; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_allocations_order_line ON public.allocations USING btree (order_line_id);
-
-
---
--- Name: idx_allocations_status; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_allocations_status ON public.allocations USING btree (status);
-
-
---
--- Name: idx_batch_jobs_created; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_batch_jobs_created; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_batch_jobs_created ON public.batch_jobs USING btree (created_at);
 
 
 --
--- Name: idx_batch_jobs_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_batch_jobs_status; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_batch_jobs_status ON public.batch_jobs USING btree (status);
 
 
 --
--- Name: idx_batch_jobs_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_batch_jobs_type; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_batch_jobs_type ON public.batch_jobs USING btree (job_type);
 
 
 --
--- Name: idx_business_rules_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_business_rules_active; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_business_rules_active ON public.business_rules USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_business_rules_code; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_business_rules_code ON public.business_rules USING btree (rule_code);
-
-
---
--- Name: idx_business_rules_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_business_rules_type; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_business_rules_type ON public.business_rules USING btree (rule_type);
 
 
 --
--- Name: idx_cids_customer_item; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cids_customer_item; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_cids_customer_item ON public.customer_item_delivery_settings USING btree (customer_id, external_product_code);
 
 
 --
--- Name: idx_cids_delivery_place; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cids_delivery_place; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_cids_delivery_place ON public.customer_item_delivery_settings USING btree (delivery_place_id);
 
 
 --
--- Name: idx_cids_jiku_code; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cids_jiku_code; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_cids_jiku_code ON public.customer_item_delivery_settings USING btree (jiku_code);
 
 
 --
--- Name: idx_customer_items_product; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cloud_flow_jobs_requested_at; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_cloud_flow_jobs_requested_at ON public.cloud_flow_jobs USING btree (requested_at);
+
+
+--
+-- Name: idx_cloud_flow_jobs_status; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_cloud_flow_jobs_status ON public.cloud_flow_jobs USING btree (status);
+
+
+--
+-- Name: idx_cloud_flow_jobs_type; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_cloud_flow_jobs_type ON public.cloud_flow_jobs USING btree (job_type);
+
+
+--
+-- Name: idx_customer_items_product; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_customer_items_product ON public.customer_items USING btree (product_id);
 
 
 --
--- Name: idx_customer_items_supplier; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_customer_items_supplier; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_customer_items_supplier ON public.customer_items USING btree (supplier_id);
 
 
 --
--- Name: idx_customer_items_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_customer_items_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_customer_items_valid_to ON public.customer_items USING btree (valid_to);
 
 
 --
--- Name: idx_customers_code; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_customers_code ON public.customers USING btree (customer_code);
-
-
---
--- Name: idx_customers_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_customers_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_customers_valid_to ON public.customers USING btree (valid_to);
 
 
 --
--- Name: idx_delivery_places_code; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_delivery_places_code ON public.delivery_places USING btree (delivery_place_code);
-
-
---
--- Name: idx_delivery_places_customer; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_delivery_places_customer; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_delivery_places_customer ON public.delivery_places USING btree (customer_id);
 
 
 --
--- Name: idx_delivery_places_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_delivery_places_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_delivery_places_valid_to ON public.delivery_places USING btree (valid_to);
 
 
 --
--- Name: idx_expected_lots_line; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_expected_lots_line; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_expected_lots_line ON public.expected_lots USING btree (inbound_plan_line_id);
 
 
 --
--- Name: idx_expected_lots_number; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_expected_lots_number; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_expected_lots_number ON public.expected_lots USING btree (expected_lot_number);
 
 
 --
--- Name: idx_inbound_plan_lines_plan; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_forecast_current_unique; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_forecast_current_unique ON public.forecast_current USING btree (customer_id, delivery_place_id, product_id);
+
+
+--
+-- Name: idx_inbound_plan_lines_plan; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_inbound_plan_lines_plan ON public.inbound_plan_lines USING btree (inbound_plan_id);
 
 
 --
--- Name: idx_inbound_plan_lines_product; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_inbound_plan_lines_product; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_inbound_plan_lines_product ON public.inbound_plan_lines USING btree (product_id);
 
 
 --
--- Name: idx_inbound_plans_date; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_inbound_plans_date; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_inbound_plans_date ON public.inbound_plans USING btree (planned_arrival_date);
 
 
 --
--- Name: idx_inbound_plans_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_inbound_plans_status; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_inbound_plans_status ON public.inbound_plans USING btree (status);
 
 
 --
--- Name: idx_inbound_plans_supplier; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_inbound_plans_supplier; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_inbound_plans_supplier ON public.inbound_plans USING btree (supplier_id);
 
 
 --
--- Name: idx_lot_reservations_expires_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_layer_code_mappings_maker; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_layer_code_mappings_maker ON public.layer_code_mappings USING btree (maker_name);
+
+
+--
+-- Name: idx_lot_reservations_expires_at; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lot_reservations_expires_at ON public.lot_reservations USING btree (expires_at) WHERE (expires_at IS NOT NULL);
 
 
 --
--- Name: idx_lot_reservations_lot_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lot_reservations_lot_status; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lot_reservations_lot_status ON public.lot_reservations USING btree (lot_id, status);
 
 
 --
--- Name: idx_lot_reservations_source; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lot_reservations_source; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lot_reservations_source ON public.lot_reservations USING btree (source_type, source_id);
 
 
 --
--- Name: idx_lot_reservations_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lot_reservations_status; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lot_reservations_status ON public.lot_reservations USING btree (status);
 
 
 --
--- Name: idx_lots_expiry_date; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lots_expiry_date; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lots_expiry_date ON public.lots USING btree (expiry_date) WHERE (expiry_date IS NOT NULL);
 
 
 --
--- Name: idx_lots_number; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lots_number; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lots_number ON public.lots USING btree (lot_number);
 
 
 --
--- Name: idx_lots_origin_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lots_origin_type; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lots_origin_type ON public.lots USING btree (origin_type);
 
 
 --
--- Name: idx_lots_product_warehouse; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lots_product_warehouse; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lots_product_warehouse ON public.lots USING btree (product_id, warehouse_id);
 
 
 --
--- Name: idx_lots_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lots_status; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lots_status ON public.lots USING btree (status);
 
 
 --
--- Name: idx_lots_supplier; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lots_supplier; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lots_supplier ON public.lots USING btree (supplier_id);
 
 
 --
--- Name: idx_lots_warehouse; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lots_temporary_lot_key; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_lots_temporary_lot_key ON public.lots USING btree (temporary_lot_key) WHERE (temporary_lot_key IS NOT NULL);
+
+
+--
+-- Name: idx_lots_warehouse; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_lots_warehouse ON public.lots USING btree (warehouse_id);
 
 
 --
--- Name: idx_master_change_logs_changed; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_master_change_logs_changed; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_master_change_logs_changed ON public.master_change_logs USING btree (changed_at);
 
 
 --
--- Name: idx_master_change_logs_record; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_master_change_logs_record; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_master_change_logs_record ON public.master_change_logs USING btree (record_id);
 
 
 --
--- Name: idx_master_change_logs_table; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_master_change_logs_table; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_master_change_logs_table ON public.master_change_logs USING btree (table_name);
 
 
 --
--- Name: idx_master_change_logs_user; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_master_change_logs_user; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_master_change_logs_user ON public.master_change_logs USING btree (changed_by);
 
 
 --
--- Name: idx_operation_logs_created; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_operation_logs_created; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_operation_logs_created ON public.operation_logs USING btree (created_at);
 
 
 --
--- Name: idx_operation_logs_table; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_operation_logs_table; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_operation_logs_table ON public.operation_logs USING btree (target_table);
 
 
 --
--- Name: idx_operation_logs_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_operation_logs_type; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_operation_logs_type ON public.operation_logs USING btree (operation_type);
 
 
 --
--- Name: idx_operation_logs_user; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_operation_logs_user; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_operation_logs_user ON public.operation_logs USING btree (user_id);
 
 
 --
--- Name: idx_order_groups_customer; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_groups_customer; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_groups_customer ON public.order_groups USING btree (customer_id);
 
 
 --
--- Name: idx_order_groups_date; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_groups_date; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_groups_date ON public.order_groups USING btree (order_date);
 
 
 --
--- Name: idx_order_groups_product; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_groups_product; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_groups_product ON public.order_groups USING btree (product_id);
 
 
 --
--- Name: idx_order_lines_customer_order_no; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_customer_order_no; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_customer_order_no ON public.order_lines USING btree (customer_order_no) WHERE (customer_order_no IS NOT NULL);
 
 
 --
--- Name: idx_order_lines_date; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_date; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_date ON public.order_lines USING btree (delivery_date);
 
 
 --
--- Name: idx_order_lines_delivery_place; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_delivery_place; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_delivery_place ON public.order_lines USING btree (delivery_place_id);
 
 
 --
--- Name: idx_order_lines_forecast_reference; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_forecast_reference; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_forecast_reference ON public.order_lines USING btree (forecast_reference) WHERE (forecast_reference IS NOT NULL);
 
 
 --
--- Name: idx_order_lines_order; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_order; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_order ON public.order_lines USING btree (order_id);
 
 
 --
--- Name: idx_order_lines_order_group; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_order_group; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_order_group ON public.order_lines USING btree (order_group_id);
 
 
 --
--- Name: idx_order_lines_order_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_order_type; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_order_type ON public.order_lines USING btree (order_type);
 
 
 --
--- Name: idx_order_lines_product; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_product; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_product ON public.order_lines USING btree (product_id);
 
 
 --
--- Name: idx_order_lines_sap_order_no; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_sap_order_no; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_sap_order_no ON public.order_lines USING btree (sap_order_no) WHERE (sap_order_no IS NOT NULL);
 
 
 --
--- Name: idx_order_lines_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_order_lines_status; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_order_lines_status ON public.order_lines USING btree (status);
 
 
 --
--- Name: idx_orders_customer; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_orders_customer; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_orders_customer ON public.orders USING btree (customer_id);
 
 
 --
--- Name: idx_orders_date; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_orders_date; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_orders_date ON public.orders USING btree (order_date);
 
 
 --
--- Name: idx_orders_lock_expires; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_orders_lock_expires; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_orders_lock_expires ON public.orders USING btree (lock_expires_at) WHERE (lock_expires_at IS NOT NULL);
 
 
 --
--- Name: idx_orders_locked_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_orders_locked_by; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_orders_locked_by ON public.orders USING btree (locked_by_user_id);
 
 
 --
--- Name: idx_product_mappings_customer; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_product_mappings_customer; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_product_mappings_customer ON public.product_mappings USING btree (customer_id);
 
 
 --
--- Name: idx_product_mappings_product; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_product_mappings_product; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_product_mappings_product ON public.product_mappings USING btree (product_id);
 
 
 --
--- Name: idx_product_mappings_supplier; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_product_mappings_supplier; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_product_mappings_supplier ON public.product_mappings USING btree (supplier_id);
 
 
 --
--- Name: idx_product_mappings_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_product_mappings_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_product_mappings_valid_to ON public.product_mappings USING btree (valid_to);
 
 
 --
--- Name: idx_product_suppliers_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_product_suppliers_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_product_suppliers_valid_to ON public.product_suppliers USING btree (valid_to);
 
 
 --
--- Name: idx_product_uom_conversions_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_product_uom_conversions_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_product_uom_conversions_valid_to ON public.product_uom_conversions USING btree (valid_to);
 
 
 --
--- Name: idx_products_code; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_products_code ON public.products USING btree (maker_part_code);
-
-
---
--- Name: idx_products_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_products_name; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_products_name ON public.products USING btree (product_name);
 
 
 --
--- Name: idx_products_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_products_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_products_valid_to ON public.products USING btree (valid_to);
 
 
 --
--- Name: idx_roles_code; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_rpa_run_items_run_id; Type: INDEX; Schema: public; Owner: admin
 --
 
-CREATE INDEX idx_roles_code ON public.roles USING btree (role_code);
+CREATE INDEX idx_rpa_run_items_run_id ON public.rpa_run_items USING btree (run_id);
 
 
 --
--- Name: idx_stock_history_date; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_rpa_run_items_run_row; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE UNIQUE INDEX idx_rpa_run_items_run_row ON public.rpa_run_items USING btree (run_id, row_no);
+
+
+--
+-- Name: idx_rpa_runs_created_at; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_rpa_runs_created_at ON public.rpa_runs USING btree (created_at);
+
+
+--
+-- Name: idx_rpa_runs_customer_id; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_rpa_runs_customer_id ON public.rpa_runs USING btree (customer_id);
+
+
+--
+-- Name: idx_rpa_runs_status; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_rpa_runs_status ON public.rpa_runs USING btree (status);
+
+
+--
+-- Name: idx_rpa_runs_type; Type: INDEX; Schema: public; Owner: admin
+--
+
+CREATE INDEX idx_rpa_runs_type ON public.rpa_runs USING btree (rpa_type);
+
+
+--
+-- Name: idx_stock_history_date; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_stock_history_date ON public.stock_history USING btree (transaction_date);
 
 
 --
--- Name: idx_stock_history_lot; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_stock_history_lot; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_stock_history_lot ON public.stock_history USING btree (lot_id);
 
 
 --
--- Name: idx_stock_history_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_stock_history_type; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_stock_history_type ON public.stock_history USING btree (transaction_type);
 
 
 --
--- Name: idx_suppliers_code; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_suppliers_code ON public.suppliers USING btree (supplier_code);
-
-
---
--- Name: idx_suppliers_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_suppliers_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_suppliers_valid_to ON public.suppliers USING btree (valid_to);
 
 
 --
--- Name: idx_system_client_logs_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_system_client_logs_created_at; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_system_client_logs_created_at ON public.system_client_logs USING btree (created_at);
 
 
 --
--- Name: idx_system_client_logs_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_system_client_logs_user_id; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_system_client_logs_user_id ON public.system_client_logs USING btree (user_id);
 
 
 --
--- Name: idx_system_configs_key; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_system_configs_key; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_system_configs_key ON public.system_configs USING btree (config_key);
 
 
 --
--- Name: idx_user_roles_role; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_user_roles_role; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_user_roles_role ON public.user_roles USING btree (role_id);
 
 
 --
--- Name: idx_user_roles_user; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_user_roles_user; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_user_roles_user ON public.user_roles USING btree (user_id);
 
 
 --
--- Name: idx_user_supplier_assignments_primary; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_user_supplier_assignments_primary; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_user_supplier_assignments_primary ON public.user_supplier_assignments USING btree (is_primary) WHERE (is_primary = true);
 
 
 --
--- Name: idx_user_supplier_assignments_supplier; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_user_supplier_assignments_supplier; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_user_supplier_assignments_supplier ON public.user_supplier_assignments USING btree (supplier_id);
 
 
 --
--- Name: idx_user_supplier_assignments_user; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_user_supplier_assignments_user; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_user_supplier_assignments_user ON public.user_supplier_assignments USING btree (user_id);
 
 
 --
--- Name: idx_users_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_users_active; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_users_active ON public.users USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_users_auth_provider; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_users_auth_provider; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_users_auth_provider ON public.users USING btree (auth_provider);
 
 
 --
--- Name: idx_users_azure_oid; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_users_azure_oid ON public.users USING btree (azure_object_id);
-
-
---
--- Name: idx_users_email; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_users_email; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_users_email ON public.users USING btree (email);
 
 
 --
--- Name: idx_users_username; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_users_username; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_users_username ON public.users USING btree (username);
 
 
 --
--- Name: idx_warehouses_code; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_warehouses_code ON public.warehouses USING btree (warehouse_code);
-
-
---
--- Name: idx_warehouses_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_warehouses_type; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_warehouses_type ON public.warehouses USING btree (warehouse_type);
 
 
 --
--- Name: idx_warehouses_valid_to; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_warehouses_valid_to; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_warehouses_valid_to ON public.warehouses USING btree (valid_to);
 
 
 --
--- Name: idx_withdrawals_customer; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_withdrawals_customer; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_withdrawals_customer ON public.withdrawals USING btree (customer_id);
 
 
 --
--- Name: idx_withdrawals_date; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_withdrawals_date; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_withdrawals_date ON public.withdrawals USING btree (ship_date);
 
 
 --
--- Name: idx_withdrawals_lot; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_withdrawals_lot; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_withdrawals_lot ON public.withdrawals USING btree (lot_id);
 
 
 --
--- Name: idx_withdrawals_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_withdrawals_type; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX idx_withdrawals_type ON public.withdrawals USING btree (withdrawal_type);
 
 
 --
--- Name: ix_forecast_current_key; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX ix_forecast_current_key ON public.forecast_current USING btree (customer_id, delivery_place_id, product_id);
-
-
---
--- Name: ix_forecast_history_key; Type: INDEX; Schema: public; Owner: -
+-- Name: ix_forecast_history_key; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE INDEX ix_forecast_history_key ON public.forecast_history USING btree (customer_id, delivery_place_id, product_id);
 
 
 --
--- Name: uq_product_primary_supplier; Type: INDEX; Schema: public; Owner: -
+-- Name: uq_product_primary_supplier; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE UNIQUE INDEX uq_product_primary_supplier ON public.product_suppliers USING btree (product_id) WHERE (is_primary = true);
 
 
 --
--- Name: uq_user_supplier_primary_per_supplier; Type: INDEX; Schema: public; Owner: -
+-- Name: uq_user_supplier_primary_per_supplier; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE UNIQUE INDEX uq_user_supplier_primary_per_supplier ON public.user_supplier_assignments USING btree (supplier_id) WHERE (is_primary = true);
 
 
 --
--- Name: ux_forecast_current_unique; Type: INDEX; Schema: public; Owner: -
+-- Name: ux_forecast_current_unique; Type: INDEX; Schema: public; Owner: admin
 --
 
 CREATE UNIQUE INDEX ux_forecast_current_unique ON public.forecast_current USING btree (customer_id, delivery_place_id, product_id, forecast_date, forecast_period);
 
 
 --
--- Name: allocation_suggestions allocation_suggestions_forecast_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: adjustments adjustments_adjusted_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.adjustments
+    ADD CONSTRAINT adjustments_adjusted_by_fkey FOREIGN KEY (adjusted_by) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: adjustments adjustments_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.adjustments
+    ADD CONSTRAINT adjustments_lot_id_fkey FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: allocation_suggestions allocation_suggestions_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.allocation_suggestions
+    ADD CONSTRAINT allocation_suggestions_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
+
+
+--
+-- Name: allocation_suggestions allocation_suggestions_delivery_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.allocation_suggestions
+    ADD CONSTRAINT allocation_suggestions_delivery_place_id_fkey FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE CASCADE;
+
+
+--
+-- Name: allocation_suggestions allocation_suggestions_forecast_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.allocation_suggestions
@@ -3988,7 +4061,23 @@ ALTER TABLE ONLY public.allocation_suggestions
 
 
 --
--- Name: allocation_traces allocation_traces_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: allocation_suggestions allocation_suggestions_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.allocation_suggestions
+    ADD CONSTRAINT allocation_suggestions_lot_id_fkey FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE CASCADE;
+
+
+--
+-- Name: allocation_suggestions allocation_suggestions_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.allocation_suggestions
+    ADD CONSTRAINT allocation_suggestions_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+
+
+--
+-- Name: allocation_traces allocation_traces_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.allocation_traces
@@ -3996,7 +4085,7 @@ ALTER TABLE ONLY public.allocation_traces
 
 
 --
--- Name: allocation_traces allocation_traces_order_line_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: allocation_traces allocation_traces_order_line_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.allocation_traces
@@ -4004,327 +4093,199 @@ ALTER TABLE ONLY public.allocation_traces
 
 
 --
--- Name: adjustments fk_adjustments_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cloud_flow_jobs cloud_flow_jobs_requested_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
-ALTER TABLE ONLY public.adjustments
-    ADD CONSTRAINT fk_adjustments_lot FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE RESTRICT;
-
-
---
--- Name: adjustments fk_adjustments_user; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.adjustments
-    ADD CONSTRAINT fk_adjustments_user FOREIGN KEY (adjusted_by) REFERENCES public.users(id) ON DELETE RESTRICT;
+ALTER TABLE ONLY public.cloud_flow_jobs
+    ADD CONSTRAINT cloud_flow_jobs_requested_by_user_id_fkey FOREIGN KEY (requested_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
--- Name: allocation_suggestions fk_allocation_suggestions_customer; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocation_suggestions
-    ADD CONSTRAINT fk_allocation_suggestions_customer FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
-
-
---
--- Name: allocation_suggestions fk_allocation_suggestions_delivery_place; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocation_suggestions
-    ADD CONSTRAINT fk_allocation_suggestions_delivery_place FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE CASCADE;
-
-
---
--- Name: allocation_suggestions fk_allocation_suggestions_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocation_suggestions
-    ADD CONSTRAINT fk_allocation_suggestions_lot FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE CASCADE;
-
-
---
--- Name: allocation_suggestions fk_allocation_suggestions_product; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocation_suggestions
-    ADD CONSTRAINT fk_allocation_suggestions_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
-
-
---
--- Name: allocations fk_allocations_inbound_plan_line; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocations
-    ADD CONSTRAINT fk_allocations_inbound_plan_line FOREIGN KEY (inbound_plan_line_id) REFERENCES public.inbound_plan_lines(id) ON DELETE CASCADE;
-
-
---
--- Name: allocations fk_allocations_order_line; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.allocations
-    ADD CONSTRAINT fk_allocations_order_line FOREIGN KEY (order_line_id) REFERENCES public.order_lines(id) ON DELETE CASCADE;
-
-
---
--- Name: customer_item_delivery_settings fk_cids_customer_item; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_item_delivery_settings customer_item_delivery_settings_delivery_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_item_delivery_settings
-    ADD CONSTRAINT fk_cids_customer_item FOREIGN KEY (customer_id, external_product_code) REFERENCES public.customer_items(customer_id, external_product_code) ON DELETE CASCADE;
+    ADD CONSTRAINT customer_item_delivery_settings_delivery_place_id_fkey FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE SET NULL;
 
 
 --
--- Name: customer_item_delivery_settings fk_cids_delivery_place; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.customer_item_delivery_settings
-    ADD CONSTRAINT fk_cids_delivery_place FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE SET NULL;
-
-
---
--- Name: customer_item_jiku_mappings fk_customer_item_jiku_customer_item; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_item_jiku_mappings customer_item_jiku_mappings_delivery_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_item_jiku_mappings
-    ADD CONSTRAINT fk_customer_item_jiku_customer_item FOREIGN KEY (customer_id, external_product_code) REFERENCES public.customer_items(customer_id, external_product_code) ON DELETE CASCADE;
+    ADD CONSTRAINT customer_item_jiku_mappings_delivery_place_id_fkey FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE CASCADE;
 
 
 --
--- Name: customer_item_jiku_mappings fk_customer_item_jiku_delivery_place; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.customer_item_jiku_mappings
-    ADD CONSTRAINT fk_customer_item_jiku_delivery_place FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE CASCADE;
-
-
---
--- Name: customer_items fk_customer_items_customer; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_items customer_items_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_items
-    ADD CONSTRAINT fk_customer_items_customer FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
+    ADD CONSTRAINT customer_items_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE CASCADE;
 
 
 --
--- Name: customer_items fk_customer_items_product; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.customer_items
-    ADD CONSTRAINT fk_customer_items_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
-
-
---
--- Name: customer_items fk_customer_items_supplier; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_items customer_items_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.customer_items
-    ADD CONSTRAINT fk_customer_items_supplier FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE SET NULL;
+    ADD CONSTRAINT customer_items_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
 
 
 --
--- Name: delivery_places fk_delivery_places_customer; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_items customer_items_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.customer_items
+    ADD CONSTRAINT customer_items_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE SET NULL;
+
+
+--
+-- Name: delivery_places delivery_places_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.delivery_places
-    ADD CONSTRAINT fk_delivery_places_customer FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT delivery_places_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE RESTRICT;
 
 
 --
--- Name: expected_lots fk_expected_lots_line; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: expected_lots expected_lots_inbound_plan_line_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.expected_lots
-    ADD CONSTRAINT fk_expected_lots_line FOREIGN KEY (inbound_plan_line_id) REFERENCES public.inbound_plan_lines(id) ON DELETE CASCADE;
+    ADD CONSTRAINT expected_lots_inbound_plan_line_id_fkey FOREIGN KEY (inbound_plan_line_id) REFERENCES public.inbound_plan_lines(id) ON DELETE CASCADE;
 
 
 --
--- Name: forecast_current fk_forecast_current_customer; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: customer_item_delivery_settings fk_customer_item_delivery_settings_customer_item; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.customer_item_delivery_settings
+    ADD CONSTRAINT fk_customer_item_delivery_settings_customer_item FOREIGN KEY (customer_id, external_product_code) REFERENCES public.customer_items(customer_id, external_product_code) ON DELETE CASCADE;
+
+
+--
+-- Name: customer_item_jiku_mappings fk_customer_item_jiku_mappings_customer_item; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.customer_item_jiku_mappings
+    ADD CONSTRAINT fk_customer_item_jiku_mappings_customer_item FOREIGN KEY (customer_id, external_product_code) REFERENCES public.customer_items(customer_id, external_product_code) ON DELETE CASCADE;
+
+
+--
+-- Name: rpa_runs fk_rpa_runs_customer_id; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_runs
+    ADD CONSTRAINT fk_rpa_runs_customer_id FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE SET NULL;
+
+
+--
+-- Name: forecast_current forecast_current_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.forecast_current
-    ADD CONSTRAINT fk_forecast_current_customer FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT forecast_current_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE RESTRICT;
 
 
 --
--- Name: forecast_current fk_forecast_current_delivery_place; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.forecast_current
-    ADD CONSTRAINT fk_forecast_current_delivery_place FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE RESTRICT;
-
-
---
--- Name: forecast_current fk_forecast_current_product; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: forecast_current forecast_current_delivery_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.forecast_current
-    ADD CONSTRAINT fk_forecast_current_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT forecast_current_delivery_place_id_fkey FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE RESTRICT;
 
 
 --
--- Name: inbound_plan_lines fk_inbound_plan_lines_plan; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: forecast_current forecast_current_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.forecast_current
+    ADD CONSTRAINT forecast_current_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: inbound_plan_lines inbound_plan_lines_inbound_plan_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.inbound_plan_lines
-    ADD CONSTRAINT fk_inbound_plan_lines_plan FOREIGN KEY (inbound_plan_id) REFERENCES public.inbound_plans(id) ON DELETE CASCADE;
+    ADD CONSTRAINT inbound_plan_lines_inbound_plan_id_fkey FOREIGN KEY (inbound_plan_id) REFERENCES public.inbound_plans(id) ON DELETE CASCADE;
 
 
 --
--- Name: inbound_plan_lines fk_inbound_plan_lines_product; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: inbound_plan_lines inbound_plan_lines_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.inbound_plan_lines
-    ADD CONSTRAINT fk_inbound_plan_lines_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT inbound_plan_lines_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
 
 
 --
--- Name: inbound_plans fk_inbound_plans_supplier; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: inbound_plans inbound_plans_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.inbound_plans
-    ADD CONSTRAINT fk_inbound_plans_supplier FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT inbound_plans_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE RESTRICT;
 
 
 --
--- Name: lot_reservations fk_lot_reservations_lot_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: lot_reservations lot_reservations_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.lot_reservations
-    ADD CONSTRAINT fk_lot_reservations_lot_id FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT lot_reservations_lot_id_fkey FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE RESTRICT;
 
 
 --
--- Name: lots fk_lots_expected; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lots
-    ADD CONSTRAINT fk_lots_expected FOREIGN KEY (expected_lot_id) REFERENCES public.expected_lots(id) ON DELETE SET NULL;
-
-
---
--- Name: lots fk_lots_product; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: lots lots_expected_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.lots
-    ADD CONSTRAINT fk_lots_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT lots_expected_lot_id_fkey FOREIGN KEY (expected_lot_id) REFERENCES public.expected_lots(id) ON DELETE SET NULL;
 
 
 --
--- Name: lots fk_lots_supplier; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.lots
-    ADD CONSTRAINT fk_lots_supplier FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE SET NULL;
-
-
---
--- Name: lots fk_lots_warehouse; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: lots lots_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.lots
-    ADD CONSTRAINT fk_lots_warehouse FOREIGN KEY (warehouse_id) REFERENCES public.warehouses(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT lots_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
 
 
 --
--- Name: master_change_logs fk_master_change_logs_user; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: lots lots_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.lots
+    ADD CONSTRAINT lots_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id) ON DELETE SET NULL;
+
+
+--
+-- Name: lots lots_warehouse_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.lots
+    ADD CONSTRAINT lots_warehouse_id_fkey FOREIGN KEY (warehouse_id) REFERENCES public.warehouses(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: master_change_logs master_change_logs_changed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.master_change_logs
-    ADD CONSTRAINT fk_master_change_logs_user FOREIGN KEY (changed_by) REFERENCES public.users(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT master_change_logs_changed_by_fkey FOREIGN KEY (changed_by) REFERENCES public.users(id) ON DELETE RESTRICT;
 
 
 --
--- Name: operation_logs fk_operation_logs_user; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: operation_logs operation_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.operation_logs
-    ADD CONSTRAINT fk_operation_logs_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT operation_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
--- Name: order_lines fk_order_lines_delivery_place; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.order_lines
-    ADD CONSTRAINT fk_order_lines_delivery_place FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE RESTRICT;
-
-
---
--- Name: order_lines fk_order_lines_order; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.order_lines
-    ADD CONSTRAINT fk_order_lines_order FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
-
-
---
--- Name: order_lines fk_order_lines_product; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.order_lines
-    ADD CONSTRAINT fk_order_lines_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
-
-
---
--- Name: orders fk_orders_customer; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.orders
-    ADD CONSTRAINT fk_orders_customer FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE RESTRICT;
-
-
---
--- Name: product_suppliers fk_product_suppliers_product; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.product_suppliers
-    ADD CONSTRAINT fk_product_suppliers_product FOREIGN KEY (product_id) REFERENCES public.products(id);
-
-
---
--- Name: product_suppliers fk_product_suppliers_supplier; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.product_suppliers
-    ADD CONSTRAINT fk_product_suppliers_supplier FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id);
-
-
---
--- Name: stock_history fk_stock_history_lot; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.stock_history
-    ADD CONSTRAINT fk_stock_history_lot FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE CASCADE;
-
-
---
--- Name: product_uom_conversions fk_uom_conversions_product; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.product_uom_conversions
-    ADD CONSTRAINT fk_uom_conversions_product FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
-
-
---
--- Name: user_roles fk_user_roles_role; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE CASCADE;
-
-
---
--- Name: user_roles fk_user_roles_user; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT fk_user_roles_user FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
-
-
---
--- Name: order_groups order_groups_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: order_groups order_groups_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_groups
@@ -4332,7 +4293,7 @@ ALTER TABLE ONLY public.order_groups
 
 
 --
--- Name: order_groups order_groups_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: order_groups order_groups_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_groups
@@ -4340,7 +4301,15 @@ ALTER TABLE ONLY public.order_groups
 
 
 --
--- Name: order_lines order_lines_order_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: order_lines order_lines_delivery_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.order_lines
+    ADD CONSTRAINT order_lines_delivery_place_id_fkey FOREIGN KEY (delivery_place_id) REFERENCES public.delivery_places(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: order_lines order_lines_order_group_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.order_lines
@@ -4348,7 +4317,31 @@ ALTER TABLE ONLY public.order_lines
 
 
 --
--- Name: orders orders_locked_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: order_lines order_lines_order_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.order_lines
+    ADD CONSTRAINT order_lines_order_id_fkey FOREIGN KEY (order_id) REFERENCES public.orders(id) ON DELETE CASCADE;
+
+
+--
+-- Name: order_lines order_lines_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.order_lines
+    ADD CONSTRAINT order_lines_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: orders orders_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_customer_id_fkey FOREIGN KEY (customer_id) REFERENCES public.customers(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: orders orders_locked_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.orders
@@ -4356,7 +4349,7 @@ ALTER TABLE ONLY public.orders
 
 
 --
--- Name: product_mappings product_mappings_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: product_mappings product_mappings_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_mappings
@@ -4364,7 +4357,7 @@ ALTER TABLE ONLY public.product_mappings
 
 
 --
--- Name: product_mappings product_mappings_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: product_mappings product_mappings_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_mappings
@@ -4372,7 +4365,7 @@ ALTER TABLE ONLY public.product_mappings
 
 
 --
--- Name: product_mappings product_mappings_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: product_mappings product_mappings_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.product_mappings
@@ -4380,7 +4373,71 @@ ALTER TABLE ONLY public.product_mappings
 
 
 --
--- Name: system_client_logs system_client_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: product_suppliers product_suppliers_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.product_suppliers
+    ADD CONSTRAINT product_suppliers_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id);
+
+
+--
+-- Name: product_suppliers product_suppliers_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.product_suppliers
+    ADD CONSTRAINT product_suppliers_supplier_id_fkey FOREIGN KEY (supplier_id) REFERENCES public.suppliers(id);
+
+
+--
+-- Name: product_uom_conversions product_uom_conversions_product_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.product_uom_conversions
+    ADD CONSTRAINT product_uom_conversions_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(id) ON DELETE CASCADE;
+
+
+--
+-- Name: rpa_run_items rpa_run_items_run_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_run_items
+    ADD CONSTRAINT rpa_run_items_run_id_fkey FOREIGN KEY (run_id) REFERENCES public.rpa_runs(id) ON DELETE CASCADE;
+
+
+--
+-- Name: rpa_runs rpa_runs_external_done_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_runs
+    ADD CONSTRAINT rpa_runs_external_done_by_user_id_fkey FOREIGN KEY (external_done_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: rpa_runs rpa_runs_started_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_runs
+    ADD CONSTRAINT rpa_runs_started_by_user_id_fkey FOREIGN KEY (started_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: rpa_runs rpa_runs_step2_executed_by_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.rpa_runs
+    ADD CONSTRAINT rpa_runs_step2_executed_by_user_id_fkey FOREIGN KEY (step2_executed_by_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: stock_history stock_history_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.stock_history
+    ADD CONSTRAINT stock_history_lot_id_fkey FOREIGN KEY (lot_id) REFERENCES public.lots(id) ON DELETE CASCADE;
+
+
+--
+-- Name: system_client_logs system_client_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.system_client_logs
@@ -4388,7 +4445,23 @@ ALTER TABLE ONLY public.system_client_logs
 
 
 --
--- Name: user_supplier_assignments user_supplier_assignments_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_roles user_roles_role_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.user_roles
+    ADD CONSTRAINT user_roles_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_roles user_roles_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
+--
+
+ALTER TABLE ONLY public.user_roles
+    ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: user_supplier_assignments user_supplier_assignments_supplier_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.user_supplier_assignments
@@ -4396,7 +4469,7 @@ ALTER TABLE ONLY public.user_supplier_assignments
 
 
 --
--- Name: user_supplier_assignments user_supplier_assignments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: user_supplier_assignments user_supplier_assignments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.user_supplier_assignments
@@ -4404,7 +4477,7 @@ ALTER TABLE ONLY public.user_supplier_assignments
 
 
 --
--- Name: withdrawals withdrawals_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: withdrawals withdrawals_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.withdrawals
@@ -4412,7 +4485,7 @@ ALTER TABLE ONLY public.withdrawals
 
 
 --
--- Name: withdrawals withdrawals_delivery_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: withdrawals withdrawals_delivery_place_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.withdrawals
@@ -4420,7 +4493,7 @@ ALTER TABLE ONLY public.withdrawals
 
 
 --
--- Name: withdrawals withdrawals_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: withdrawals withdrawals_lot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.withdrawals
@@ -4428,7 +4501,7 @@ ALTER TABLE ONLY public.withdrawals
 
 
 --
--- Name: withdrawals withdrawals_withdrawn_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: withdrawals withdrawals_withdrawn_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: admin
 --
 
 ALTER TABLE ONLY public.withdrawals
@@ -4439,5 +4512,5 @@ ALTER TABLE ONLY public.withdrawals
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 1dAhq8oFRSz3E0J38brLnyzGW09zmj3VCemCG6N4z783Fqhg6zQ2iSb6kaOaQht
+\unrestrict F9bxTo9xqiyPJqFJpjCj5oG0ARZoAibK66ztYfm1Lg1ocRVfB9LSePCzrBWjFKv
 
