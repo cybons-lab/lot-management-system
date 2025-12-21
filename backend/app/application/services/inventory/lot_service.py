@@ -17,7 +17,6 @@ from app.application.services.inventory.stock_calculation import (
 )
 from app.core.time_utils import utcnow
 from app.domain.lot import (
-    FefoPolicy,
     InsufficientLotStockError,
     LotCandidate,
     LotDatabaseError,
@@ -74,6 +73,7 @@ class LotService:
 
         v2.2: Uses Lot.current_quantity - Lot.allocated_quantity for available quantity.
         v2.3: Filters out sample/adhoc origin types by default.
+        v3.0: Delegates to AllocationCandidateService (SSOT).
 
         Args:
             product_code: Product code to filter by
@@ -82,38 +82,39 @@ class LotService:
             include_sample: Whether to include sample origin lots (default: False)
             include_adhoc: Whether to include adhoc origin lots (default: False)
         """
-        # Build excluded origin types list
-        excluded_origins: list[str] = []
-        if not include_sample:
-            excluded_origins.append("sample")
-        if not include_adhoc:
-            excluded_origins.append("adhoc")
-
-        lots = self.repository.find_available_lots(
-            product_code=product_code,
-            warehouse_code=warehouse_code,
-            min_quantity=0.0,
-            excluded_origin_types=excluded_origins if excluded_origins else None,
+        from app.application.services.allocations.candidate_service import (
+            AllocationCandidateService,
         )
+        from app.domain.allocation_policy import AllocationPolicy, LockMode
 
-        candidates = [
-            LotCandidate(
-                lot_id=lot.id,
-                lot_code=lot.lot_number,
-                lot_number=lot.lot_number,
-                product_code=lot.product.maker_part_code if lot.product else product_code,
-                warehouse_code=lot.warehouse.warehouse_code if lot.warehouse else "",
-                available_qty=float(get_available_quantity(self.db, lot)),
-                expiry_date=lot.expiry_date,
-                receipt_date=lot.received_date,
+        # Resolve product_code to product_id
+        product = self.db.query(Product).filter(Product.maker_part_code == product_code).first()
+        if not product:
+            return []
+
+        # Resolve warehouse_code to warehouse_id if provided
+        warehouse_id: int | None = None
+        if warehouse_code:
+            warehouse = (
+                self.db.query(Warehouse).filter(Warehouse.warehouse_code == warehouse_code).first()
             )
-            for lot in lots
-        ]
+            if warehouse:
+                warehouse_id = warehouse.id
+            else:
+                return []
 
-        if exclude_expired:
-            candidates, _ = FefoPolicy.filter_expired_lots(candidates)
-
-        return FefoPolicy.sort_lots_by_fefo(candidates)
+        # Delegate to SSOT
+        candidate_service = AllocationCandidateService(self.db)
+        return candidate_service.get_candidates(
+            product_id=product.id,
+            policy=AllocationPolicy.FEFO,
+            lock_mode=LockMode.NONE,
+            warehouse_id=warehouse_id,
+            exclude_expired=exclude_expired,
+            exclude_locked=False,  # Maintain backward compatibility
+            include_sample=include_sample,
+            include_adhoc=include_adhoc,
+        )
 
     def validate_lot_availability(self, lot_id: int, required_qty: float) -> None:
         """Validate lot availability.

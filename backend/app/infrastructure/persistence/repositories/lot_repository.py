@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, cast
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session, joinedload
 
-from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.infrastructure.persistence.models import (
     Lot,
     Product,
@@ -80,6 +79,10 @@ class LotRepository:
         lots = list(self.db.execute(stmt).scalars().all())
 
         # Filter by available quantity using lot_reservations
+        from app.application.services.inventory.stock_calculation import (
+            get_available_quantity,
+        )
+
         available_lots = [
             lot for lot in lots if float(get_available_quantity(self.db, lot)) > min_quantity
         ]
@@ -213,6 +216,10 @@ class LotRepository:
         lots = list(self.db.execute(stmt).scalars().all())
 
         # Filter by available quantity and convert to LotCandidate
+        from app.application.services.inventory.stock_calculation import (
+            get_available_quantity,
+        )
+
         candidates: list[LotCandidate] = []
         for lot in lots:
             available = float(get_available_quantity(self.db, lot))

@@ -5,23 +5,56 @@ Handles FEFO-based automatic allocation:
 - Bulk auto-reservation with filtering
 
 P3: Uses LotReservation exclusively.
+v3.0: Delegates to AllocationCandidateService (SSOT).
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.orm import Session
 
+from app.application.services.allocations.candidate_service import (
+    AllocationCandidateService,
+)
 from app.application.services.allocations.manual import create_manual_reservation
-from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.infrastructure.persistence.models import Lot, Order, OrderLine
+from app.domain.allocation_policy import AllocationPolicy, LockMode
+from app.infrastructure.persistence.models import Order, OrderLine
 from app.infrastructure.persistence.models.lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
     ReservationStatus,
 )
+
+
+if TYPE_CHECKING:
+    from app.domain.lot import LotCandidate
+
+
+def _get_fefo_candidates_for_line(
+    db: Session,
+    product_id: int,
+    lock: bool = True,
+) -> list[LotCandidate]:
+    """Fetch FEFO candidates for a product using SSOT.
+
+    Args:
+        db: Database session
+        product_id: Product ID
+        lock: Whether to lock rows for update
+
+    Returns:
+        List of LotCandidate sorted by FEFO
+    """
+    candidate_service = AllocationCandidateService(db)
+    return candidate_service.get_candidates(
+        product_id=product_id,
+        policy=AllocationPolicy.FEFO,
+        lock_mode=LockMode.FOR_UPDATE if lock else LockMode.NONE,
+        exclude_expired=True,
+        exclude_locked=False,
+    )
 
 
 def auto_reserve_line(
@@ -59,25 +92,17 @@ def auto_reserve_line(
     if required_qty <= 0:
         return []
 
-    candidate_lots = (
-        db.query(Lot)
-        .filter(
-            Lot.product_id == line.product_id,
-            Lot.status == "active",
-        )
-        .order_by(Lot.expiry_date.asc().nulls_last(), Lot.received_date.asc())
-        .with_for_update()
-        .all()
-    )
+    # Use SSOT for candidate fetching
+    candidates = _get_fefo_candidates_for_line(db, line.product_id, lock=True)
 
     created_reservations: list[LotReservation] = []
     remaining_qty = required_qty
 
-    for lot in candidate_lots:
+    for candidate in candidates:
         if remaining_qty <= 0:
             break
 
-        available = get_available_quantity(db, lot)
+        available = Decimal(str(candidate.available_qty))
         if available <= 0:
             continue
 
@@ -86,7 +111,7 @@ def auto_reserve_line(
         reservation = create_manual_reservation(
             db,
             order_line_id=order_line_id,
-            lot_id=lot.id,
+            lot_id=candidate.lot_id,
             quantity=reserve_qty,
             commit_db=False,
         )
@@ -123,25 +148,17 @@ def _auto_reserve_line_no_commit(
     if not line:
         return []
 
-    candidate_lots = (
-        db.query(Lot)
-        .filter(
-            Lot.product_id == line.product_id,
-            Lot.status == "active",
-        )
-        .order_by(Lot.expiry_date.asc().nulls_last(), Lot.received_date.asc())
-        .with_for_update()
-        .all()
-    )
+    # Use SSOT for candidate fetching
+    candidates = _get_fefo_candidates_for_line(db, line.product_id, lock=True)
 
     created_reservations: list[LotReservation] = []
     remaining_qty = required_qty
 
-    for lot in candidate_lots:
+    for candidate in candidates:
         if remaining_qty <= 0:
             break
 
-        available = get_available_quantity(db, lot)
+        available = Decimal(str(candidate.available_qty))
         if available <= 0:
             continue
 
@@ -150,7 +167,7 @@ def _auto_reserve_line_no_commit(
         reservation = create_manual_reservation(
             db,
             order_line_id=order_line_id,
-            lot_id=lot.id,
+            lot_id=candidate.lot_id,
             quantity=reserve_qty,
             commit_db=False,
         )
