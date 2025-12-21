@@ -9,6 +9,13 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.infrastructure.persistence.models.base_model import Base
 from app.main import application
 
+from .db_utils import (
+    apply_views_sql,
+    create_core_tables,
+    drop_known_view_relations,
+    get_non_view_tables,
+)
+
 
 # Load Hypothesis settings
 try:
@@ -40,100 +47,17 @@ def db_engine():
         yield engine
         return
 
-    Base.metadata.create_all(bind=engine)
+    create_core_tables(engine)
 
     # Create views using the same SQL file as production
     # This ensures test DB views are in sync with production
-    from pathlib import Path
-
-    views_sql_path = Path(__file__).parent.parent / "sql" / "views" / "create_views.sql"
-    if views_sql_path.exists():
-        sql_content = views_sql_path.read_text(encoding="utf-8")
-        # Use raw connection for multi-statement SQL execution
-        raw_conn = engine.raw_connection()
-        try:
-            cursor = raw_conn.cursor()
-            # Drop any tables that ORM might have created for view models
-            # The create_views.sql handles DROP VIEW, but ORM might create tables
-            view_names = [
-                "v_inventory_summary",
-                "v_lot_details",
-                "v_order_line_details",
-                "v_lot_allocations",
-                "v_lot_current_stock",
-                "v_customer_daily_products",
-                "v_order_line_context",
-                "v_customer_code_to_id",
-                "v_delivery_place_code_to_id",
-                "v_product_code_to_id",
-                "v_forecast_order_pairs",
-                "v_lot_available_qty",
-                "v_candidate_lots_by_order_line",
-                "v_supplier_code_to_id",
-                "v_warehouse_code_to_id",
-                "v_user_supplier_assignments",
-                "v_customer_item_jiku_mappings",
-            ]
-            for view_name in view_names:
-                try:
-                    cursor.execute(f"DROP TABLE IF EXISTS {view_name} CASCADE")
-                    raw_conn.commit()
-                except Exception:
-                    raw_conn.rollback()
-
-                try:
-                    cursor.execute(f"DROP VIEW IF EXISTS {view_name} CASCADE")
-                    raw_conn.commit()
-                except Exception:
-                    raw_conn.rollback()
-
-            raw_conn.commit()
-            # Now execute the views SQL
-            cursor.execute(sql_content)
-            raw_conn.commit()
-        finally:
-            raw_conn.close()
-    else:
-        # Fallback: views might already exist in pre-initialized DB
-        import warnings
-
-        warnings.warn(f"Views SQL file not found: {views_sql_path}", stacklevel=2)
+    apply_views_sql(engine)
 
     yield engine
 
     # Drop all views before dropping tables to avoid dependency errors
-    from sqlalchemy import text
-
-    with engine.connect() as connection:
-        with connection.begin():
-            # Dynamically get all views from the database and drop them
-            result = connection.execute(
-                text("""
-                    SELECT table_name FROM information_schema.views
-                    WHERE table_schema = 'public'
-                """)
-            )
-            views = [row[0] for row in result]
-            for view_name in views:
-                try:
-                    with connection.begin_nested():
-                        connection.execute(text(f'DROP VIEW IF EXISTS "{view_name}" CASCADE'))
-                except Exception:
-                    pass
-
-            # Also drop any tables that might have been created by ORM for views
-            for obj_name in [
-                "v_inventory_summary",
-                "v_lot_details",
-                "v_order_line_details",
-            ]:
-                try:
-                    with connection.begin_nested():
-                        connection.execute(text(f"DROP TABLE IF EXISTS {obj_name} CASCADE"))
-                except Exception:
-                    pass
-
-    Base.metadata.drop_all(bind=engine)
+    drop_known_view_relations(engine)
+    Base.metadata.drop_all(bind=engine, tables=get_non_view_tables())
 
 
 @pytest.fixture(scope="function")
