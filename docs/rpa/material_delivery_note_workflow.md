@@ -125,6 +125,35 @@ sequenceDiagram
 5. **受注No更新**: SAPからの戻り値（受注No）でデータを更新
 6. **ロック✔**: SAP登録完了後にロックをON
 
+### ロットNo自動引当機能
+
+**エンドポイント**: `GET /runs/{run_id}/items/{item_id}/lot-suggestions`
+
+**ロジック**:
+1. `RpaRun.customer_id` + `RpaRunItem.external_product_code` → `CustomerItem` 検索
+2. `CustomerItem` から `product_id` + `supplier_id` 取得
+3. `Lot` 検索（FEFO順、在庫あり、supplier_idでフィルタ）
+4. 候補1つ → `auto_selected` 返却
+
+**レスポンス例**:
+```json
+{
+  "lots": [
+    {
+      "lot_id": 1,
+      "lot_number": "LOT-001",
+      "available_qty": 100.0,
+      "expiry_date": "2025-06-30",
+      "supplier_name": "仕入先A"
+    }
+  ],
+  "auto_selected": "LOT-001",
+  "source": "customer_item"  // or "product_only" or "none"
+}
+```
+
+**疎結合設計**: マスタ未登録でもエラーにならず空リストを返す
+
 ### テーブル列
 | ロットNo | アイテムNo | No | ステータス | 出荷先 | 層別 | メーカー名 | 材質コード | 納期 | 出荷便 | 突合 | SAP | 受注No |
 
@@ -163,14 +192,19 @@ Power Automate Cloud Flow URLはDBの`system_configs`テーブルで管理。
 ## DBスキーマ
 
 ### rpa_run_items
-| 列名 | 型 | 説明 | 状態 |
-|------|-----|------|------|
-| `lock_flag` | boolean | 編集ロック | ✅ 実装済み |
-| `item_no` | string | アイテムNo (CSVから取得) | ✅ 実装済み |
-| `lot_no` | string | ロットNo (Step4入力) | ✅ 実装済み |
+| 列名 | 型 | 説明 | 表示名 | 備考 |
+|------|-----|------|------|------|
+| `jiku_code` | string | 次区コード | 出荷先 | 旧: destination |
+| `external_product_code` | string | 先方品番 | 材質コード | 旧: material_code |
+| `lock_flag` | boolean | 編集ロック | - | ✅ 実装済み |
+| `item_no` | string | アイテムNo (CSVから取得) | - | ✅ 実装済み |
+| `lot_no` | string | ロットNo (Step4入力) | - | ✅ 実装済み |
 
 ### rpa_runs
-- `data_start_date`, `data_end_date`: Step1の日付（突合用） ✅ 既存
+| 列名 | 型 | 説明 | 備考 |
+|------|-----|------|------|
+| `customer_id` | bigint | 得意先ID | ロット引当用 |
+| `data_start_date`, `data_end_date` | date | Step1の日付 | 突合用 |
 
 ### system_configs
 - Cloud Flow URL等のシステム設定 ✅ 実装済み
@@ -183,6 +217,9 @@ Power Automate Cloud Flow URLはDBの`system_configs`テーブルで管理。
 |------|------|
 | ワークフロー仕様書 | ✅ 完了 |
 | DBスキーマ変更（lock_flag, item_no, lot_no列追加） | ✅ 完了 |
+| フィールド名統一（jiku_code, external_product_code） | ✅ 完了 |
+| customer_id追加（rpa_runs） | ✅ 完了 |
+| ロット候補取得エンドポイント | ✅ 完了 |
 | Step4ページをリンク化（routes.ts + メニュー） | ✅ 完了 |
 | Step4テーブル列更新（突合○のみ、ロットNo・アイテムNo・SAP・受注No） | ✅ 完了 |
 | Step3実行開始時にロックON機能 | ✅ 完了 |
@@ -190,4 +227,6 @@ Power Automate Cloud Flow URLはDBの`system_configs`テーブルで管理。
 | Step4でロットNo入力UI | ✅ 完了 |
 | ナビゲーション導線改善 | ✅ 完了 |
 | システム設定テーブル（Cloud Flow URL） | ✅ 完了 |
+| ハイブリッドUI（候補数に応じた自動入力/ドロップダウン/手動） | 📌 保留 |
+| 仮引当（SOFT）lot_reservations登録 | 📌 保留 |
 | SAP登録エンドポイント | 📌 保留（仕様確定後） |
