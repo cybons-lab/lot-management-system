@@ -77,8 +77,16 @@ def db_engine():
             for view_name in view_names:
                 try:
                     cursor.execute(f"DROP TABLE IF EXISTS {view_name} CASCADE")
+                    raw_conn.commit()
                 except Exception:
-                    pass  # Might be a VIEW, not a TABLE - create_views.sql handles it
+                    raw_conn.rollback()
+
+                try:
+                    cursor.execute(f"DROP VIEW IF EXISTS {view_name} CASCADE")
+                    raw_conn.commit()
+                except Exception:
+                    raw_conn.rollback()
+
             raw_conn.commit()
             # Now execute the views SQL
             cursor.execute(sql_content)
