@@ -4,7 +4,7 @@
 import logging
 from datetime import date
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -131,10 +131,18 @@ def save_manual_allocations(
         if item.quantity <= 0:
             continue
 
-        reservation = create_manual_reservation(
-            db, order_line_id, item.lot_id, item.quantity, commit_db=False
-        )
-        created_ids.append(reservation.id)
+        try:
+            reservation = create_manual_reservation(
+                db, order_line_id, item.lot_id, item.quantity, commit_db=False
+            )
+            created_ids.append(reservation.id)
+        except ValueError as e:
+            # P1: Preserve validation behavior (ValueError -> 422)
+            # This allows frontend to show field-specific errors
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=str(e),
+            )
 
     # 3. UoWがスコープ終了時に自動commit（成功時）/ rollback（例外時）
     db.flush()  # Ensure IDs are assigned

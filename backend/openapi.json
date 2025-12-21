@@ -2989,7 +2989,7 @@
           "orders"
         ],
         "summary": "Save Manual Allocations",
-        "description": "手動引当保存 (確定) - トランザクション保護版.\n\n既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。\n全ての操作を1つのトランザクションで実行し、エラー時はロールバックします。",
+        "description": "手動引当保存 (確定) - UoWによるトランザクション保護版.\n\n既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。\n全ての操作をUoWのトランザクションで実行し、エラー時は自動ロールバック。",
         "operationId": "save_manual_allocations_api_orders__order_line_id__allocations_post",
         "parameters": [
           {
@@ -12169,7 +12169,7 @@
           "rpa-material-delivery-note"
         ],
         "summary": "Create Run",
-        "description": "CSVファイルからRunを作成する.\n\nArgs:\n    file: アップロードされたCSVファイル\n    import_type: インポート形式 (default: material_delivery_note)\n    customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）\n    db: DBセッション\n    user: 実行ユーザー",
+        "description": "CSVファイルからRunを作成する.\n\nArgs:\n    file: アップロードされたCSVファイル\n    import_type: インポート形式 (default: material_delivery_note)\n    customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）\n    uow: UnitOfWork\n    user: 実行ユーザー",
         "operationId": "create_run_api_rpa_material_delivery_note_runs_post",
         "security": [
           {

@@ -5,7 +5,9 @@
 
 from decimal import Decimal
 
-from .types import AllocationDecision, AllocationRequest, AllocationResult, LotCandidate
+from app.domain.lot import LotCandidate
+
+from .types import AllocationDecision, AllocationRequest, AllocationResult
 
 
 def calculate_allocation(
