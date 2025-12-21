@@ -204,20 +204,35 @@ def db_engine():
             raise
     yield engine
 
-    # Drop view before dropping tables to avoid dependency errors
+    # Drop all views before dropping tables to avoid dependency errors
     with engine.connect() as connection:
         with connection.begin():
-            connection.execute(text("DROP VIEW IF EXISTS v_inventory_summary CASCADE"))
-            try:
-                with connection.begin_nested():
-                    connection.execute(text("DROP TABLE v_lot_details CASCADE"))
-            except Exception:
-                connection.execute(text("DROP VIEW IF EXISTS v_lot_details CASCADE"))
-            try:
-                with connection.begin_nested():
-                    connection.execute(text("DROP TABLE v_order_line_details CASCADE"))
-            except Exception:
-                connection.execute(text("DROP VIEW IF EXISTS v_order_line_details CASCADE"))
+            # Dynamically get all views from the database and drop them
+            result = connection.execute(
+                text("""
+                    SELECT table_name FROM information_schema.views
+                    WHERE table_schema = 'public'
+                """)
+            )
+            views = [row[0] for row in result]
+            for view_name in views:
+                try:
+                    with connection.begin_nested():
+                        connection.execute(text(f'DROP VIEW IF EXISTS "{view_name}" CASCADE'))
+                except Exception:
+                    pass
+
+            # Also drop any tables that might have been created by ORM for views
+            for obj_name in [
+                "v_inventory_summary",
+                "v_lot_details",
+                "v_order_line_details",
+            ]:
+                try:
+                    with connection.begin_nested():
+                        connection.execute(text(f"DROP TABLE IF EXISTS {obj_name} CASCADE"))
+                except Exception:
+                    pass
 
     Base.metadata.drop_all(bind=engine)
 
