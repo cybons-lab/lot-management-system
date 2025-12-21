@@ -5,8 +5,6 @@
 
 from decimal import Decimal
 
-from app.presentation.schemas.inventory.inventory_schema import LotStatus
-
 from .types import AllocationDecision, AllocationRequest, AllocationResult, LotCandidate
 
 
@@ -34,13 +32,14 @@ def calculate_allocation(
 
     # FEFO: 有効期限でソート（期限なしは最後）
     sorted_candidates = _sort_by_fefo(candidates)
+    valid_candidates: list[LotCandidate] = []
 
+    # 1. フィルタリング (期限切れ、在庫ゼロ等のチェック)
     for lot in sorted_candidates:
-        # 期限切れチェック
-        if lot.expiry_date and lot.expiry_date < request.reference_date:
+        if lot.is_expired(request.reference_date):
             decision = AllocationDecision(
                 lot_id=lot.lot_id,
-                lot_number=lot.lot_number,
+                lot_number=lot.lot_number or "",
                 score=None,
                 decision="rejected",
                 reason="期限切れ",
@@ -49,21 +48,8 @@ def calculate_allocation(
             trace_logs.append(decision)
             continue
 
-        # ステータスチェック（active以外は引当不可）
-        if lot.status != LotStatus.ACTIVE.value:
-            decision = AllocationDecision(
-                lot_id=lot.lot_id,
-                lot_number=lot.lot_number,
-                score=None,
-                decision="rejected",
-                reason=f"ステータス不適切: {lot.status}",
-                allocated_qty=Decimal("0"),
-            )
-            trace_logs.append(decision)
-            continue
-
         # 在庫がない場合
-        if lot.available_quantity <= 0:
+        if lot.available_qty <= 0:
             decision = AllocationDecision(
                 lot_id=lot.lot_id,
                 lot_number=lot.lot_number,
@@ -75,11 +61,46 @@ def calculate_allocation(
             trace_logs.append(decision)
             continue
 
-        # スコア計算（期限までの日数、期限なしの場合は999999）
+        valid_candidates.append(lot)
+
+    # 2. 戦略: Single Lot Fit (単一ロットで満たせるならそれを優先)
+    # v3.0: FEFOよりも「分割回避」を優先する戦略
+    if request.strategy == "single_lot_fit" and valid_candidates:
+        single_fit_lot = next(
+            (lot for lot in valid_candidates if Decimal(str(lot.available_qty)) >= remaining_qty),
+            None,
+        )
+        if single_fit_lot:
+            # 単一ロットで全量引当
+            score = _calculate_score(single_fit_lot, request.reference_date)
+            decision = AllocationDecision(
+                lot_id=single_fit_lot.lot_id,
+                lot_number=single_fit_lot.lot_number,
+                score=score,
+                decision="adopted",
+                reason="Single Lot Fit (完全充足)",
+                allocated_qty=remaining_qty,
+            )
+            allocated_lots.append(decision)
+            trace_logs.append(decision)
+            return AllocationResult(
+                allocated_lots=allocated_lots,
+                trace_logs=trace_logs,
+                total_allocated=remaining_qty,
+                shortage=Decimal("0"),
+            )
+
+    # 3. 戦略: FEFO Split (標準)
+    # フィルタ済みの候補から順番に引当
+    for lot in valid_candidates:
+        if remaining_qty <= 0:
+            break
+
+        # スコア計算
         score = _calculate_score(lot, request.reference_date)
 
         # 引き当て可能な数量を計算
-        allocatable_qty = min(remaining_qty, lot.available_quantity)
+        allocatable_qty = min(remaining_qty, Decimal(str(lot.available_qty)))
 
         if allocatable_qty >= remaining_qty:
             # 完全に引き当て可能
@@ -102,7 +123,7 @@ def calculate_allocation(
                     lot_id=lot.lot_id,
                     lot_number=lot.lot_number,
                     score=score,
-                    decision="partial",
+                    decision="adopted",
                     reason="FEFO採用（部分充足）",
                     allocated_qty=allocatable_qty,
                 )
@@ -110,12 +131,13 @@ def calculate_allocation(
                 trace_logs.append(decision)
                 remaining_qty -= allocatable_qty
             else:
+                # 分納不可ならスキップ（ただし通常はallow_partial=True）
                 decision = AllocationDecision(
                     lot_id=lot.lot_id,
                     lot_number=lot.lot_number,
                     score=score,
                     decision="rejected",
-                    reason="在庫不足（分納不可）",
+                    reason="在庫不足かつ分納不可",
                     allocated_qty=Decimal("0"),
                 )
                 trace_logs.append(decision)

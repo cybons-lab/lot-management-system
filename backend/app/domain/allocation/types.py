@@ -6,29 +6,6 @@ from decimal import Decimal
 
 
 @dataclass
-class LotCandidate:
-    """引当候補ロット情報.
-
-    Attributes:
-        lot_id: ロットID
-        lot_number: ロット番号
-        expiry_date: 有効期限（None = 期限なし）
-        available_quantity: 利用可能数量（current_quantity - allocated_quantity）
-        current_quantity: 現在数量
-        allocated_quantity: 既に引き当て済みの数量
-        status: ロットステータス
-    """
-
-    lot_id: int
-    lot_number: str
-    expiry_date: date | None
-    available_quantity: Decimal
-    current_quantity: Decimal
-    allocated_quantity: Decimal
-    status: str
-
-
-@dataclass
 class AllocationRequest:
     """引当リクエスト.
 
@@ -43,6 +20,7 @@ class AllocationRequest:
     required_quantity: Decimal
     reference_date: date
     allow_partial: bool = True
+    strategy: str = "fefo"  # "fefo" or "single_lot_fit"
 
 
 @dataclass

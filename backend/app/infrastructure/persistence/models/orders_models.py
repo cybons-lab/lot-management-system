@@ -273,4 +273,4 @@ class OrderLine(Base):
 
 # NOTE: Allocation class removed in P3.
 # All allocation data is now in lot_reservations table.
-# Use AllocationCompatAdapter for backward-compatible API responses.
+# All allocation data is now in lot_reservations table.
