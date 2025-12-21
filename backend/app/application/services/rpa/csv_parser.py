@@ -12,11 +12,12 @@ from typing import Any
 
 # CSV Header mapping: CSVヘッダー名 → DBカラム名
 # 必須7カラムのみ。CSV内に他のカラムがあっても無視される。
+# フィールド名はメインDBと統一（表示名はCSVヘッダー名のまま）
 CSV_HEADER_MAPPING = {
     "ステータス": "status",
-    "出荷先": "destination",
+    "出荷先": "jiku_code",  # 次区コード（メインDB: CustomerItemJikuMapping.jiku_code）
     "層別": "layer_code",
-    "材質コード": "material_code",
+    "材質コード": "external_product_code",  # 先方品番（メインDB: CustomerItem.external_product_code）
     "納期": "delivery_date",
     "納入量": "delivery_quantity",
     "出荷便": "shipping_vehicle",

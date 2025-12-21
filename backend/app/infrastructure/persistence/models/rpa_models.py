@@ -89,6 +89,11 @@ class RpaRun(Base):
         DateTime, nullable=True
     )  # Step4チェック開始日時
 
+    # 得意先（CSVインポート時に設定）
+    customer_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("customers.id", ondelete="SET NULL"), nullable=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
@@ -100,6 +105,7 @@ class RpaRun(Base):
         Index("idx_rpa_runs_type", "rpa_type"),
         Index("idx_rpa_runs_status", "status"),
         Index("idx_rpa_runs_created_at", "created_at"),
+        Index("idx_rpa_runs_customer_id", "customer_id"),
     )
 
     # Relationships
@@ -154,11 +160,15 @@ class RpaRunItem(Base):
     )
     row_no: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    # CSV columns
+    # CSV columns (field names aligned with main DB)
     status: Mapped[str | None] = mapped_column(String(50), nullable=True)  # ステータス
-    destination: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 出荷先
+    jiku_code: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )  # 次区コード（表示名: 出荷先）
     layer_code: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 層別
-    material_code: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 材質コード
+    external_product_code: Mapped[str | None] = mapped_column(
+        String(100), nullable=True
+    )  # 先方品番（表示名: 材質コード）
     delivery_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # 納期
     delivery_quantity: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 納入量
     shipping_vehicle: Mapped[str | None] = mapped_column(String(50), nullable=True)  # 出荷便

@@ -33,6 +33,7 @@ class MaterialDeliveryNoteService:
         file_content: bytes,
         import_type: str = "material_delivery_note",
         user: User | None = None,
+        customer_id: int | None = None,
     ) -> RpaRun:
         """CSVファイルからRunを作成する.
 
@@ -40,6 +41,7 @@ class MaterialDeliveryNoteService:
             file_content: CSVファイルのバイト列
             import_type: インポート形式
             user: 実行ユーザー
+            customer_id: 得意先ID（オプション）
 
         Returns:
             作成されたRpaRun
@@ -66,19 +68,20 @@ class MaterialDeliveryNoteService:
             status=RpaRunStatus.DRAFT,
             started_at=utcnow(),
             started_by_user_id=user.id if user else None,
+            customer_id=customer_id,  # 得意先IDを設定
         )
         self.db.add(run)
         self.db.flush()  # Get run.id
 
-        # Create Items
+        # Create Items (フィールド名はメインDBと統一)
         for row_data in parsed_rows:
             item = RpaRunItem(
                 run_id=run.id,
                 row_no=row_data["row_no"],
                 status=row_data.get("status"),
-                destination=row_data.get("destination"),
+                jiku_code=row_data.get("jiku_code"),  # 旧: destination
                 layer_code=row_data.get("layer_code"),
-                material_code=row_data.get("material_code"),
+                external_product_code=row_data.get("external_product_code"),  # 旧: material_code
                 delivery_date=row_data.get("delivery_date"),
                 delivery_quantity=row_data.get("delivery_quantity"),
                 shipping_vehicle=row_data.get("shipping_vehicle"),
@@ -670,6 +673,116 @@ class MaterialDeliveryNoteService:
         self.db.refresh(target_item)
 
         return target_item
+
+    def get_lot_suggestions(self, run_id: int, item_id: int) -> dict:
+        """アイテムに対するロット候補を取得する（疎結合対応）.
+
+        Args:
+            run_id: Run ID
+            item_id: Item ID
+
+        Returns:
+            {
+                "lots": [...],        # FEFO順のロット候補リスト
+                "auto_selected": str | None,  # 候補が1つの場合のロット番号
+                "source": str,        # マッピング元 (customer_item, product_only, none)
+            }
+        """
+        from app.infrastructure.persistence.models.inventory_models import Lot
+        from app.infrastructure.persistence.models.masters_models import CustomerItem, Product
+
+        # Get run and item
+        run = self.get_run(run_id)
+        if not run:
+            return {"lots": [], "auto_selected": None, "source": "none"}
+
+        item = (
+            self.db.query(RpaRunItem)
+            .filter(RpaRunItem.id == item_id, RpaRunItem.run_id == run_id)
+            .first()
+        )
+        if not item:
+            return {"lots": [], "auto_selected": None, "source": "none"}
+
+        customer_id = run.customer_id
+        external_product_code = item.external_product_code
+
+        # 疎結合: customer_idまたはexternal_product_codeがない場合は空
+        if not external_product_code:
+            return {"lots": [], "auto_selected": None, "source": "none"}
+
+        product_id = None
+        supplier_id = None
+        source = "none"
+
+        # Step 1: CustomerItemからproduct_idとsupplier_idを取得
+        if customer_id:
+            customer_item = (
+                self.db.query(CustomerItem)
+                .filter(
+                    CustomerItem.customer_id == customer_id,
+                    CustomerItem.external_product_code == external_product_code,
+                )
+                .first()
+            )
+            if customer_item:
+                product_id = customer_item.product_id
+                supplier_id = customer_item.supplier_id
+                source = "customer_item"
+
+        # Step 2: CustomerItemがない場合、Productから直接検索（フォールバック）
+        if not product_id:
+            product = (
+                self.db.query(Product)
+                .filter(Product.maker_part_code == external_product_code)
+                .first()
+            )
+            if product:
+                product_id = product.id
+                source = "product_only"
+
+        if not product_id:
+            return {"lots": [], "auto_selected": None, "source": "none"}
+
+        # Step 3: ロット検索（FEFO順、在庫あり）
+        query = self.db.query(Lot).filter(
+            Lot.product_id == product_id,
+            Lot.status == "active",
+            Lot.current_quantity > 0,
+        )
+
+        # supplier_idでさらに絞り込み（取得できた場合のみ）
+        if supplier_id:
+            query = query.filter(Lot.supplier_id == supplier_id)
+
+        # FEFO順: 期限が近い順 → 入荷日が古い順
+        lots = query.order_by(
+            Lot.expiry_date.asc().nullslast(),
+            Lot.received_date.asc(),
+        ).all()
+
+        lot_candidates = []
+        for lot in lots:
+            lot_candidates.append(
+                {
+                    "lot_id": lot.id,
+                    "lot_number": lot.lot_number,
+                    "available_qty": float(lot.current_quantity),
+                    "expiry_date": lot.expiry_date,
+                    "received_date": lot.received_date,
+                    "supplier_name": lot.supplier.supplier_name if lot.supplier else None,
+                }
+            )
+
+        auto_selected = None
+        if len(lot_candidates) == 1:
+            auto_selected = lot_candidates[0]["lot_number"]
+
+        return {
+            "lots": lot_candidates,
+            "auto_selected": auto_selected,
+            "source": source,
+        }
 
 
 async def call_power_automate_flow(

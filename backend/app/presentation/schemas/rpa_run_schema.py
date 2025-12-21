@@ -11,9 +11,11 @@ class RpaRunItemResponse(BaseModel):
     id: int
     row_no: int
     status: str | None = None
-    destination: str | None = None
+    # フィールド名統一: jiku_code (表示名: 出荷先)
+    jiku_code: str | None = Field(default=None, alias="destination")
     layer_code: str | None = None
-    material_code: str | None = None
+    # フィールド名統一: external_product_code (表示名: 材質コード)
+    external_product_code: str | None = Field(default=None, alias="material_code")
     delivery_date: date | None = None
     delivery_quantity: int | None = None
     shipping_vehicle: str | None = None
@@ -28,7 +30,7 @@ class RpaRunItemResponse(BaseModel):
     item_no: str | None = None
     lot_no: str | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = {"from_attributes": True, "populate_by_name": True}
 
 
 class RpaRunItemUpdateRequest(BaseModel):
@@ -162,3 +164,29 @@ class MaterialDeliveryNoteExecuteResponse(BaseModel):
     status: str = Field(..., description="実行ステータス (success, error, locked)")
     message: str = Field(..., description="メッセージ")
     flow_response: dict | None = Field(default=None, description="Flow応答")
+
+
+# ロット候補関連スキーマ
+class LotCandidateResponse(BaseModel):
+    """ロット候補のレスポンス."""
+
+    lot_id: int
+    lot_number: str
+    available_qty: float = Field(..., description="利用可能数量")
+    expiry_date: date | None = Field(default=None, description="有効期限")
+    received_date: date | None = Field(default=None, description="入荷日")
+    supplier_name: str | None = Field(default=None, description="仕入先名")
+
+
+class LotSuggestionsResponse(BaseModel):
+    """ロット候補一覧のレスポンス."""
+
+    lots: list[LotCandidateResponse] = Field(default_factory=list, description="ロット候補一覧")
+    auto_selected: str | None = Field(
+        default=None,
+        description="候補が1つの場合の自動選択ロット番号",
+    )
+    source: str = Field(
+        default="none",
+        description="マッピング元 (customer_item, product_only, none)",
+    )

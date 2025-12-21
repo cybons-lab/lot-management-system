@@ -12169,7 +12169,7 @@
           "rpa-material-delivery-note"
         ],
         "summary": "Create Run",
-        "description": "CSVファイルからRunを作成する.\n\nArgs:\n    file: アップロードされたCSVファイル\n    import_type: インポート形式 (default: material_delivery_note)\n    db: DBセッション\n    user: 実行ユーザー",
+        "description": "CSVファイルからRunを作成する.\n\nArgs:\n    file: アップロードされたCSVファイル\n    import_type: インポート形式 (default: material_delivery_note)\n    customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）\n    db: DBセッション\n    user: 実行ユーザー",
         "operationId": "create_run_api_rpa_material_delivery_note_runs_post",
         "security": [
           {
@@ -12404,6 +12404,58 @@
                     }
                   ],
                   "title": "Response Get Next Processing Item Api Rpa Material Delivery Note Runs  Run Id  Next Item Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/items/{item_id}/lot-suggestions": {
+      "get": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Get Lot Suggestions",
+        "description": "アイテムに対するロット候補を取得する.\n\n疎結合対応: CustomerItemマスタやロットがなくてもエラーにならない。\n\nReturns:\n    - lots: FEFO順のロット候補リスト\n    - auto_selected: 候補が1つの場合のロット番号\n    - source: マッピング元 (customer_item, product_only, none)",
+        "operationId": "get_lot_suggestions_api_rpa_material_delivery_note_runs__run_id__items__item_id__lot_suggestions_get",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LotSuggestionsResponse"
                 }
               }
             }
@@ -14420,6 +14472,17 @@
             "type": "string",
             "title": "Import Type",
             "default": "material_delivery_note"
+          },
+          "customer_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Code"
           }
         },
         "type": "object",
@@ -18875,6 +18938,69 @@
         "title": "LoginRequest",
         "description": "Login request (Simplified for dev)."
       },
+      "LotCandidateResponse": {
+        "properties": {
+          "lot_id": {
+            "type": "integer",
+            "title": "Lot Id"
+          },
+          "lot_number": {
+            "type": "string",
+            "title": "Lot Number"
+          },
+          "available_qty": {
+            "type": "number",
+            "title": "Available Qty",
+            "description": "利用可能数量"
+          },
+          "expiry_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiry Date",
+            "description": "有効期限"
+          },
+          "received_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received Date",
+            "description": "入荷日"
+          },
+          "supplier_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Name",
+            "description": "仕入先名"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lot_id",
+          "lot_number",
+          "available_qty"
+        ],
+        "title": "LotCandidateResponse",
+        "description": "ロット候補のレスポンス."
+      },
       "LotCreate": {
         "properties": {
           "lot_number": {
@@ -19433,6 +19559,39 @@
         ],
         "title": "LotStatus",
         "description": "Valid lot lifecycle statuses."
+      },
+      "LotSuggestionsResponse": {
+        "properties": {
+          "lots": {
+            "items": {
+              "$ref": "#/components/schemas/LotCandidateResponse"
+            },
+            "type": "array",
+            "title": "Lots",
+            "description": "ロット候補一覧"
+          },
+          "auto_selected": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Auto Selected",
+            "description": "候補が1つの場合の自動選択ロット番号"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "マッピング元 (customer_item, product_only, none)",
+            "default": "none"
+          }
+        },
+        "type": "object",
+        "title": "LotSuggestionsResponse",
+        "description": "ロット候補一覧のレスポンス."
       },
       "LotUpdate": {
         "properties": {
