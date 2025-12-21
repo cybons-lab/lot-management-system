@@ -24,6 +24,7 @@ from .inventory_models import (
 )
 from .layer_code_models import LayerCodeMapping
 from .logs_models import BatchJob, BusinessRule, MasterChangeLog, OperationLog
+from .lot_reservation_history_model import HistoryOperation, LotReservationHistory
 from .lot_reservations_model import (
     LotReservation,
     ReservationSourceType,
@@ -99,6 +100,9 @@ __all__ = [
     "ReservationSourceType",
     "ReservationStateMachine",
     "ReservationStatus",
+    # Reservation History (Audit)
+    "LotReservationHistory",
+    "HistoryOperation",
     # Orders
     "Order",
     "OrderLine",

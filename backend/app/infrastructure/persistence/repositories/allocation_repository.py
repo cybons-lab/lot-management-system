@@ -21,8 +21,21 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 class ReservationRepository:
     """予約リポジトリ（P3: LotReservation ベース）."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, enable_history: bool = True):
         self.db = db
+        self._enable_history = enable_history
+        self._history_service = None
+
+    @property
+    def history_service(self):
+        """Lazy load history service."""
+        if self._history_service is None and self._enable_history:
+            from app.application.services.inventory.lot_reservation_history_service import (
+                LotReservationHistoryService,
+            )
+
+            self._history_service = LotReservationHistoryService(self.db)
+        return self._history_service
 
     def find_by_id(self, reservation_id: int) -> LotReservation | None:
         """IDで予約を取得.
@@ -123,15 +136,33 @@ class ReservationRepository:
             created_at=utcnow(),
         )
         self.db.add(reservation)
+        self.db.flush()  # Get ID for history record
+
+        # Record history
+        if self.history_service:
+            self.history_service.record_insert(
+                reservation=reservation,
+                change_reason=f"Created via {source_type.value}",
+            )
+
         return reservation
 
-    def update_status(self, reservation: LotReservation, new_status: ReservationStatus) -> None:
+    def update_status(
+        self,
+        reservation: LotReservation,
+        new_status: ReservationStatus,
+        changed_by: str | None = None,
+        change_reason: str | None = None,
+    ) -> None:
         """予約ステータスを更新.
 
         Args:
             reservation: 予約エンティティ
             new_status: 新しいステータス
+            changed_by: 変更者（任意）
+            change_reason: 変更理由（任意）
         """
+        old_status = reservation.status
         reservation.status = new_status
         reservation.updated_at = utcnow()
 
@@ -139,6 +170,15 @@ class ReservationRepository:
             reservation.confirmed_at = utcnow()
         elif new_status == ReservationStatus.RELEASED:
             reservation.released_at = utcnow()
+
+        # Record history
+        if self.history_service:
+            self.history_service.record_status_change(
+                reservation=reservation,
+                old_status=old_status,
+                changed_by=changed_by,
+                change_reason=change_reason,
+            )
 
     def release(self, reservation: LotReservation) -> None:
         """予約を解放（論理削除）.
