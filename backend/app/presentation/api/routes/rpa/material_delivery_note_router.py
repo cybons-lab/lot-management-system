@@ -9,15 +9,16 @@ import logging
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.application.services.common.uow_service import UnitOfWork
 from app.application.services.rpa import (
-    MaterialDeliveryNoteService,
+    MaterialDeliveryNoteOrchestrator,
     call_power_automate_flow,
     get_lock_manager,
 )
 from app.infrastructure.persistence.models import LayerCodeMapping
 from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import Customer
-from app.presentation.api.deps import get_db
+from app.presentation.api.deps import get_uow
 from app.presentation.api.routes.auth.auth_router import (
     get_current_user_optional,
 )
@@ -119,7 +120,7 @@ def create_run(
     file: UploadFile = File(...),
     import_type: str = Form("material_delivery_note"),
     customer_code: str | None = Form(None),  # 得意先コード（オプション）
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
     user: User | None = Depends(get_current_user_optional),
 ):
     """CSVファイルからRunを作成する.
@@ -128,7 +129,7 @@ def create_run(
         file: アップロードされたCSVファイル
         import_type: インポート形式 (default: material_delivery_note)
         customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）
-        db: DBセッション
+        uow: UnitOfWork
         user: 実行ユーザー
     """
     if not file.filename.endswith(".csv"):
@@ -139,9 +140,12 @@ def create_run(
 
     try:
         # customer_code -> customer_id 解決（疎結合: なくてもエラーにならない）
+        # customer_code -> customer_id 解決（疎結合: なくてもエラーにならない）
         customer_id = None
         if customer_code:
-            customer = db.query(Customer).filter(Customer.customer_code == customer_code).first()
+            customer = (
+                uow.session.query(Customer).filter(Customer.customer_code == customer_code).first()
+            )
             if customer:
                 customer_id = customer.id
             # マスタになくても継続（ログのみ）
@@ -149,7 +153,7 @@ def create_run(
                 logger.warning(f"Customer not found for code: {customer_code}")
 
         content = file.file.read()
-        service = MaterialDeliveryNoteService(db)
+        service = MaterialDeliveryNoteOrchestrator(uow)
         run = service.create_run_from_csv(content, import_type, user, customer_id)
         return RpaRunCreateResponse(
             id=run.id,
@@ -174,10 +178,10 @@ def create_run(
 def list_runs(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, ge=1, le=1000),
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """Run一覧取得."""
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     runs, total = service.get_runs(skip=skip, limit=limit)
 
     return RpaRunListResponse(
@@ -189,10 +193,10 @@ def list_runs(
 @router.get("/runs/{run_id}", response_model=RpaRunResponse)
 def get_run(
     run_id: int,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """Run詳細取得（items含む）."""
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     run = service.get_run(run_id)
 
     if not run:
@@ -202,7 +206,7 @@ def get_run(
         )
 
     layer_codes = [item.layer_code for item in run.items if item.layer_code]
-    maker_map = _get_maker_map(db, layer_codes)
+    maker_map = _get_maker_map(uow.session, layer_codes)
 
     return _build_run_response(run, maker_map)
 
@@ -215,11 +219,11 @@ def update_item(
     run_id: int,
     item_id: int,
     request: RpaRunItemUpdateRequest,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """Item更新（issue_flag / complete_flag / delivery_quantity）."""
     try:
-        service = MaterialDeliveryNoteService(db)
+        service = MaterialDeliveryNoteOrchestrator(uow)
         item = service.update_item(
             run_id=run_id,
             item_id=item_id,
@@ -237,7 +241,7 @@ def update_item(
 
         resp_item = RpaRunItemResponse.model_validate(item)
         if item.layer_code:
-            maker_map = _get_maker_map(db, [item.layer_code])
+            maker_map = _get_maker_map(uow.session, [item.layer_code])
             resp_item.maker_name = maker_map.get(item.layer_code)
 
         return resp_item
@@ -261,10 +265,10 @@ def update_item(
 )
 def get_next_processing_item(
     run_id: int,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """次に処理すべき未完了アイテムを取得する."""
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     item = service.get_next_processing_item(run_id)
 
     if not item:
@@ -272,7 +276,7 @@ def get_next_processing_item(
 
     resp_item = RpaRunItemResponse.model_validate(item)
     if item.layer_code:
-        maker_map = _get_maker_map(db, [item.layer_code])
+        maker_map = _get_maker_map(uow.session, [item.layer_code])
         resp_item.maker_name = maker_map.get(item.layer_code)
 
     return resp_item
@@ -285,7 +289,7 @@ def get_next_processing_item(
 def get_lot_suggestions(
     run_id: int,
     item_id: int,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """アイテムに対するロット候補を取得する.
 
@@ -296,7 +300,7 @@ def get_lot_suggestions(
         - auto_selected: 候補が1つの場合のロット番号
         - source: マッピング元 (customer_item, product_only, none)
     """
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     result = service.get_lot_suggestions(run_id, item_id)
     return LotSuggestionsResponse(**result)
 
@@ -308,10 +312,10 @@ def get_lot_suggestions(
 def batch_update_items(
     run_id: int,
     request: RpaRunBatchUpdateRequest,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """指定したItemsを一括更新する."""
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     run = service.batch_update_items(
         run_id=run_id,
         item_ids=request.item_ids,
@@ -327,7 +331,7 @@ def batch_update_items(
         )
 
     layer_codes = [item.layer_code for item in run.items if item.layer_code]
-    maker_map = _get_maker_map(db, layer_codes)
+    maker_map = _get_maker_map(uow.session, layer_codes)
 
     return _build_run_response(run, maker_map)
 
@@ -338,10 +342,10 @@ def batch_update_items(
 )
 def complete_all_items(
     run_id: int,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """Step2完了としてステータスを更新する."""
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     run = service.complete_all_items(run_id)
 
     if not run:
@@ -351,7 +355,7 @@ def complete_all_items(
         )
 
     layer_codes = [item.layer_code for item in run.items if item.layer_code]
-    maker_map = _get_maker_map(db, layer_codes)
+    maker_map = _get_maker_map(uow.session, layer_codes)
 
     return _build_run_response(run, maker_map)
 
@@ -363,7 +367,7 @@ def complete_all_items(
 async def execute_step2(
     run_id: int,
     request: Step2ExecuteRequest,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
     current_user: User | None = Depends(get_current_user_optional),
 ):
     """Step2実行.
@@ -371,7 +375,7 @@ async def execute_step2(
     事前条件: 全Itemsが完了していること。
     Power Automate Flowを呼び出してStep2を実行します。
     """
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
 
     try:
         # JSON Payload parse
@@ -414,15 +418,15 @@ async def execute_step2(
 @router.post("/runs/{run_id}/external-done", response_model=RpaRunResponse)
 def mark_external_done(
     run_id: int,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
     current_user: User | None = Depends(get_current_user_optional),
 ):
     """外部手順完了をマークする."""
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     try:
         run = service.mark_external_done(run_id, current_user)
         layer_codes = [item.layer_code for item in run.items if item.layer_code]
-        maker_map = _get_maker_map(db, layer_codes)
+        maker_map = _get_maker_map(uow.session, layer_codes)
         return _build_run_response(run, maker_map)
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -436,10 +440,10 @@ def update_item_result(
     run_id: int,
     item_id: int,
     request: RpaRunResultUpdateRequest,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """PADからの結果更新."""
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     item = service.update_item_result(
         run_id=run_id,
         item_id=item_id,
@@ -452,7 +456,7 @@ def update_item_result(
 
     resp_item = RpaRunItemResponse.model_validate(item)
     if item.layer_code:
-        maker_map = _get_maker_map(db, [item.layer_code])
+        maker_map = _get_maker_map(uow.session, [item.layer_code])
         resp_item.maker_name = maker_map.get(item.layer_code)
     return resp_item
 
@@ -461,7 +465,7 @@ def update_item_result(
 def execute_step4_check(
     run_id: int,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """Step4: 突合チェック実行.
 
@@ -471,7 +475,7 @@ def execute_step4_check(
     if not file.filename.endswith(".csv"):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="CSV file required")
 
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     try:
         content = file.file.read()
         result = service.execute_step4_check(run_id, content)
@@ -483,14 +487,14 @@ def execute_step4_check(
 @router.post("/runs/{run_id}/retry-failed", response_model=RpaRunResponse)
 def retry_failed_items(
     run_id: int,
-    db: Session = Depends(get_db),
+    uow: UnitOfWork = Depends(get_uow),
 ):
     """Step4 NGアイテムのみStep3再実行."""
-    service = MaterialDeliveryNoteService(db)
+    service = MaterialDeliveryNoteOrchestrator(uow)
     try:
         run = service.retry_step3_failed(run_id)
         layer_codes = [item.layer_code for item in run.items if item.layer_code]
-        maker_map = _get_maker_map(db, layer_codes)
+        maker_map = _get_maker_map(uow.session, layer_codes)
         return _build_run_response(run, maker_map)
     except ValueError as e:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
