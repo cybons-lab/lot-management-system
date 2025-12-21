@@ -83,83 +83,27 @@ class GroupAllocationSuggestionService(AllocationSuggestionBase):
                 gaps=[],
             )
 
-        new_suggestions: list[AllocationSuggestion] = []
-        stats_agg: dict[tuple, dict] = {}
-
-        total_forecast = Decimal("0")
-        total_allocated = Decimal("0")
-        total_shortage = Decimal("0")
-
-        # Cache lots for the product
         lots_by_product = self._fetch_available_lots([product_id])
-        temp_allocations: dict[int, Decimal] = {}
 
-        # 3. Process each forecast row
-        for f in forecasts:
-            needed = f.forecast_quantity
-            total_forecast += needed
+        # 3. Process forecasts using shared method
+        result = self._process_forecasts(forecasts, lots_by_product, source="group_regenerate")
 
-            allocated_for_row: Decimal = Decimal("0")
-            lots = lots_by_product.get(f.product_id, [])
+        # 4. Finalize stats & gaps
+        stats_per_key, gaps = finalize_stats_and_gaps(result.stats_agg)
 
-            from app.application.services.allocations.allocator import allocate_soft_for_forecast
-
-            alloc_results = allocate_soft_for_forecast(needed, lots, temp_allocations)
-
-            for res in alloc_results:
-                allocated_lot = next(l for l in lots if l.id == res.lot_id)
-
-                suggestion = AllocationSuggestion(
-                    forecast_period=f.forecast_period,
-                    forecast_id=f.id,
-                    customer_id=f.customer_id,
-                    delivery_place_id=f.delivery_place_id,
-                    product_id=f.product_id,
-                    lot_id=res.lot_id,
-                    quantity=res.quantity,
-                    priority=res.priority,
-                    allocation_type="soft",
-                    source="group_regenerate",
-                )
-                new_suggestions.append(suggestion)
-
-                needed -= res.quantity
-                allocated_for_row += res.quantity
-
-                current_temp = temp_allocations.get(allocated_lot.id, Decimal("0"))
-                temp_allocations[allocated_lot.id] = current_temp + res.quantity
-
-            shortage = max(Decimal("0"), needed)
-            total_shortage += shortage
-            total_allocated += allocated_for_row
-
-            key = (f.customer_id, f.delivery_place_id, f.product_id, f.forecast_period)
-            if key not in stats_agg:
-                stats_agg[key] = {
-                    "forecast_quantity": Decimal("0"),
-                    "allocated_quantity": Decimal("0"),
-                    "shortage_quantity": Decimal("0"),
-                }
-            stats_agg[key]["forecast_quantity"] += f.forecast_quantity
-            stats_agg[key]["allocated_quantity"] += allocated_for_row
-            stats_agg[key]["shortage_quantity"] += shortage
-
-        # 4. Finalize Stats & Gaps
-        stats_per_key, gaps = finalize_stats_and_gaps(stats_agg)
-
-        # 5. Bulk Insert
-        if new_suggestions:
-            self.db.add_all(new_suggestions)
+        # 5. Bulk insert
+        if result.suggestions:
+            self.db.add_all(result.suggestions)
             self.db.commit()
 
         stats_summary = create_stats_summary(
-            total_forecast, total_allocated, total_shortage, stats_per_key
+            result.total_forecast, result.total_allocated, result.total_shortage, stats_per_key
         )
 
         return AllocationSuggestionPreviewResponse(
             suggestions=[
                 AllocationSuggestionResponse.model_validate(s, from_attributes=True)
-                for s in new_suggestions
+                for s in result.suggestions
             ],
             stats=stats_summary,
             gaps=gaps,

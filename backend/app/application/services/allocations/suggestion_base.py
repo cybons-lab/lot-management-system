@@ -1,16 +1,33 @@
 """Base class and shared utilities for allocation suggestion services."""
 
+from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Session, joinedload
 
 from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.infrastructure.persistence.models.inventory_models import Lot
+from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion, Lot
 from app.presentation.schemas.allocations.allocation_suggestions_schema import (
     AllocationGap,
     AllocationStatsPerKey,
     AllocationStatsSummary,
 )
+
+
+if TYPE_CHECKING:
+    from app.infrastructure.persistence.models.forecast_models import ForecastCurrent
+
+
+@dataclass
+class ProcessingResult:
+    """Result of processing forecasts for allocation suggestions."""
+
+    suggestions: list[AllocationSuggestion] = field(default_factory=list)
+    stats_agg: dict[tuple, dict] = field(default_factory=dict)
+    total_forecast: Decimal = field(default_factory=lambda: Decimal("0"))
+    total_allocated: Decimal = field(default_factory=lambda: Decimal("0"))
+    total_shortage: Decimal = field(default_factory=lambda: Decimal("0"))
 
 
 class AllocationSuggestionBase:
@@ -45,6 +62,77 @@ class AllocationSuggestionBase:
             if lot.product_id not in result:
                 result[lot.product_id] = []
             result[lot.product_id].append(lot)
+
+        return result
+
+    def _process_forecasts(
+        self,
+        forecasts: list["ForecastCurrent"],
+        lots_by_product: dict[int, list[Lot]],
+        source: str,
+    ) -> ProcessingResult:
+        """Process forecasts and generate allocation suggestions using FEFO.
+
+        Args:
+            forecasts: List of forecast records to process
+            lots_by_product: Available lots grouped by product_id
+            source: Source identifier for suggestions (e.g., "forecast_import", "group_regenerate")
+
+        Returns:
+            ProcessingResult with suggestions, stats aggregation, and totals
+        """
+        from app.application.services.allocations.allocator import allocate_soft_for_forecast
+
+        result = ProcessingResult()
+        temp_allocations: dict[int, Decimal] = {}
+
+        for f in forecasts:
+            needed = f.forecast_quantity
+            result.total_forecast += needed
+
+            allocated_for_row: Decimal = Decimal("0")
+            lots = lots_by_product.get(f.product_id, [])
+
+            alloc_results = allocate_soft_for_forecast(needed, lots, temp_allocations)
+
+            for res in alloc_results:
+                allocated_lot = next(l for l in lots if l.id == res.lot_id)
+
+                suggestion = AllocationSuggestion(
+                    forecast_period=f.forecast_period,
+                    forecast_id=f.id,
+                    customer_id=f.customer_id,
+                    delivery_place_id=f.delivery_place_id,
+                    product_id=f.product_id,
+                    lot_id=res.lot_id,
+                    quantity=res.quantity,
+                    priority=res.priority,
+                    allocation_type="soft",
+                    source=source,
+                )
+                result.suggestions.append(suggestion)
+
+                needed -= res.quantity
+                allocated_for_row += res.quantity
+
+                current_temp = temp_allocations.get(allocated_lot.id, Decimal("0"))
+                temp_allocations[allocated_lot.id] = current_temp + res.quantity
+
+            shortage = max(Decimal("0"), needed)
+            result.total_shortage += shortage
+            result.total_allocated += allocated_for_row
+
+            # Aggregate stats
+            key = (f.customer_id, f.delivery_place_id, f.product_id, f.forecast_period)
+            if key not in result.stats_agg:
+                result.stats_agg[key] = {
+                    "forecast_quantity": Decimal("0"),
+                    "allocated_quantity": Decimal("0"),
+                    "shortage_quantity": Decimal("0"),
+                }
+            result.stats_agg[key]["forecast_quantity"] += f.forecast_quantity
+            result.stats_agg[key]["allocated_quantity"] += allocated_for_row
+            result.stats_agg[key]["shortage_quantity"] += shortage
 
         return result
 
