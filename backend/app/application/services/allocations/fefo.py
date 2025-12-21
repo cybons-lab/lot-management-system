@@ -4,14 +4,12 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
-from app.application.services.inventory.stock_calculation import get_available_quantity
 from app.infrastructure.persistence.models import Order, OrderLine, Product
 
 from .schemas import FefoLinePlan, FefoLotPlan, FefoPreviewResult
 from .utils import (
     _existing_allocated_qty,
     _load_order,
-    _lot_candidates,
     _resolve_next_div,
 )
 
@@ -124,51 +122,72 @@ def calculate_line_allocations(
     # Allocate lots using unified allocator (Single Lot Fit + FEFO)
     if remaining > 0:
         from app.application.services.allocations.allocator import allocate_soft_for_forecast
+        from app.application.services.allocations.candidate_service import (
+            AllocationCandidateService,
+        )
+        from app.domain.allocation_policy import AllocationPolicy
 
         # Prepare candidates with correct availability context
-        candidates = []
+        service = AllocationCandidateService(db)
+        candidates = service.get_candidates(
+            product_id=product_id,
+            policy=AllocationPolicy.FEFO,
+            warehouse_id=warehouse_id,
+            min_available_qty=0.001,  # Filter out 0 qty candidates
+        )
+
+        valid_candidates = []
         temp_allocations: dict[int, Decimal] = {}
-        for lot, real_available_qty in _lot_candidates(db, product_id):
+
+        for candidate in candidates:
+            # Check availability tracking
             current_tracked_available = available_per_lot.get(
-                lot.id, float(real_available_qty or 0.0)
+                candidate.lot_id, float(candidate.available_qty)
             )
+
             if current_tracked_available <= 0:
                 continue
 
             # Calculate temporary allocated quantity to pass to allocator
-            # allocator sees: available = current - allocated - temp_allocations[lot_id]
-            # We want allocator to see: available = current_tracked_available
-            # => temp_allocations[lot_id] = current - allocated - target_available
-            real_avail_db = get_available_quantity(db, lot)  # Using lot_reservations
+            # allocator sees: effective_available = initial_available - temp_allocations[lot_id]
+            # We want allocator to see: effective_available = current_tracked_available
+            # => temp_allocations[lot_id] = initial_available - current_tracked_available
+            initial_avail = Decimal(str(candidate.available_qty))
             target_avail = Decimal(str(current_tracked_available))
-            temp_allocations[lot.id] = real_avail_db - target_avail
-            candidates.append(lot)
+
+            # Ensure we don't pass negative temp allocations (should not happen if tracking is correct)
+            used_elsewhere = max(Decimal("0"), initial_avail - target_avail)
+
+            temp_allocations[candidate.lot_id] = used_elsewhere
+            valid_candidates.append(candidate)
 
         # Execute allocation with temp_allocations dict
-        results = allocate_soft_for_forecast(Decimal(str(remaining)), candidates, temp_allocations)
+        results = allocate_soft_for_forecast(
+            Decimal(str(remaining)), valid_candidates, temp_allocations
+        )
 
         for res in results:
             # Map back to FefoLotPlan
             # Find the lot object (candidates has it)
-            allocated_lot = next(l for l in candidates if l.id == res.lot_id)
+            allocated_lot = next(l for l in candidates if l.lot_id == res.lot_id)
             allocated_qty_float = float(res.quantity)
 
             line_plan.allocations.append(
                 FefoLotPlan(
-                    lot_id=allocated_lot.id,
+                    lot_id=allocated_lot.lot_id,
                     allocate_qty=allocated_qty_float,
                     expiry_date=allocated_lot.expiry_date,
-                    receipt_date=allocated_lot.received_date,
+                    receipt_date=allocated_lot.receipt_date,
                     lot_number=allocated_lot.lot_number,
                 )
             )
 
             # Update availability tracker
             current_avail = available_per_lot.get(
-                allocated_lot.id,
-                float(get_available_quantity(db, allocated_lot)),
+                allocated_lot.lot_id,
+                float(allocated_lot.available_qty),
             )
-            available_per_lot[allocated_lot.id] = current_avail - allocated_qty_float
+            available_per_lot[allocated_lot.lot_id] = current_avail - allocated_qty_float
             remaining -= allocated_qty_float
 
     if remaining > 0:

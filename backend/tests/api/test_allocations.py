@@ -133,6 +133,7 @@ def master_data(test_db: Session):
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=90),
+        origin_type="order",
     )
     test_db.add(lot)
     test_db.commit()

@@ -154,22 +154,24 @@ class LotRepository:
         Returns:
             List of LotCandidate sorted by policy
         """
+        # Build base query using db.query() for session compatibility
+        from sqlalchemy import nulls_last
+
         from app.domain.allocation_policy import AllocationPolicy, LockMode
         from app.domain.lot import LotCandidate
 
-        # Build base query
-        stmt: Select[tuple[Lot]] = (
-            select(Lot)
-            .options(joinedload(Lot.product), joinedload(Lot.warehouse))
-            .where(
+        query = (
+            self.db.query(Lot)
+            .filter(
                 Lot.product_id == product_id,
                 Lot.status == "active",
             )
+            .options(joinedload(Lot.product), joinedload(Lot.warehouse))
         )
 
         # Warehouse filter
         if warehouse_id is not None:
-            stmt = stmt.where(Lot.warehouse_id == warehouse_id)
+            query = query.filter(Lot.warehouse_id == warehouse_id)
 
         # Origin type filters
         excluded_origins: list[str] = []
@@ -178,42 +180,43 @@ class LotRepository:
         if not include_adhoc:
             excluded_origins.append("adhoc")
         if excluded_origins:
-            stmt = stmt.where(Lot.origin_type.not_in(excluded_origins))
+            from sqlalchemy import func
+
+            # Use COALESCE to treat NULL as 'normal' which won't be excluded
+            query = query.filter(func.coalesce(Lot.origin_type, "normal").notin_(excluded_origins))
 
         # Expiry filter
         if exclude_expired:
             from sqlalchemy import or_
 
-            stmt = stmt.where(or_(Lot.expiry_date.is_(None), Lot.expiry_date >= date.today()))
+            query = query.filter(or_(Lot.expiry_date.is_(None), Lot.expiry_date >= date.today()))
 
         # Locked filter
         if exclude_locked:
             from sqlalchemy import or_
 
-            stmt = stmt.where(or_(Lot.locked_quantity.is_(None), Lot.locked_quantity == 0))
+            query = query.filter(or_(Lot.locked_quantity.is_(None), Lot.locked_quantity == 0))
 
         # Ordering by policy
         if policy == AllocationPolicy.FEFO:
-            from sqlalchemy import nulls_last
-
-            stmt = stmt.order_by(
+            query = query.order_by(
                 nulls_last(Lot.expiry_date.asc()),
                 Lot.received_date.asc(),
                 Lot.id.asc(),
             )
         else:  # FIFO
-            stmt = stmt.order_by(
+            query = query.order_by(
                 Lot.received_date.asc(),
                 Lot.id.asc(),
             )
 
         # Locking
         if lock_mode == LockMode.FOR_UPDATE:
-            stmt = stmt.with_for_update(of=Lot)
+            query = query.with_for_update(of=Lot)
         elif lock_mode == LockMode.FOR_UPDATE_SKIP_LOCKED:
-            stmt = stmt.with_for_update(skip_locked=True, of=Lot)
+            query = query.with_for_update(skip_locked=True, of=Lot)
 
-        lots = list(self.db.execute(stmt).scalars().all())
+        lots = query.all()
 
         # Filter by available quantity and convert to LotCandidate
         from app.application.services.inventory.stock_calculation import (

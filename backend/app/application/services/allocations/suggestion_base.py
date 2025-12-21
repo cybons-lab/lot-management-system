@@ -1,13 +1,20 @@
-"""Base class and shared utilities for allocation suggestion services."""
+"""Base class and shared utilities for allocation suggestion services.
+
+v3.0: Uses AllocationCandidateService (SSOT) for candidate fetching.
+"""
 
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
-from app.application.services.inventory.stock_calculation import get_available_quantity
-from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion, Lot
+from app.application.services.allocations.candidate_service import (
+    AllocationCandidateService,
+)
+from app.domain.allocation_policy import AllocationPolicy, LockMode
+from app.domain.lot import LotCandidate
+from app.infrastructure.persistence.models.inventory_models import AllocationSuggestion
 from app.presentation.schemas.allocations.allocation_suggestions_schema import (
     AllocationGap,
     AllocationStatsPerKey,
@@ -36,46 +43,32 @@ class AllocationSuggestionBase:
     def __init__(self, db: Session):
         """Initialize with database session."""
         self.db = db
+        self._candidate_service = AllocationCandidateService(db)
 
-    def _fetch_available_lots(self, product_ids: list[int]) -> dict[int, list[Lot]]:
-        """Fetch available lots for given products, sorted by FEFO."""
-        if not product_ids:
-            return {}
+    def _fetch_available_lots(self, product_ids: list[int]) -> dict[int, list[LotCandidate]]:
+        """Fetch available lots for given products, sorted by FEFO.
 
-        lots = (
-            self.db.query(Lot)
-            .filter(
-                Lot.product_id.in_(product_ids),
-                Lot.status == "active",
-            )
-            .order_by(Lot.product_id, Lot.expiry_date.asc().nullslast(), Lot.received_date.asc())
-            .options(joinedload(Lot.warehouse))
-            .all()
+        v3.0: Delegates to AllocationCandidateService (SSOT).
+        """
+        return self._candidate_service.get_candidates_for_products(
+            product_ids=product_ids,
+            policy=AllocationPolicy.FEFO,
+            lock_mode=LockMode.NONE,
+            exclude_expired=True,
+            exclude_locked=False,
         )
-
-        # Filter lots with available quantity > 0
-        lots = [lot for lot in lots if get_available_quantity(self.db, lot) > 0]
-
-        # Group by product_id
-        result: dict[int, list[Lot]] = {}
-        for lot in lots:
-            if lot.product_id not in result:
-                result[lot.product_id] = []
-            result[lot.product_id].append(lot)
-
-        return result
 
     def _process_forecasts(
         self,
         forecasts: list["ForecastCurrent"],
-        lots_by_product: dict[int, list[Lot]],
+        lots_by_product: dict[int, list[LotCandidate]],
         source: str,
     ) -> ProcessingResult:
         """Process forecasts and generate allocation suggestions using FEFO.
 
         Args:
             forecasts: List of forecast records to process
-            lots_by_product: Available lots grouped by product_id
+            lots_by_product: Available lots grouped by product_id (LotCandidate)
             source: Source identifier for suggestions (e.g., "forecast_import", "group_regenerate")
 
         Returns:
@@ -96,8 +89,6 @@ class AllocationSuggestionBase:
             alloc_results = allocate_soft_for_forecast(needed, lots, temp_allocations)
 
             for res in alloc_results:
-                allocated_lot = next(l for l in lots if l.id == res.lot_id)
-
                 suggestion = AllocationSuggestion(
                     forecast_period=f.forecast_period,
                     forecast_id=f.id,
@@ -115,8 +106,8 @@ class AllocationSuggestionBase:
                 needed -= res.quantity
                 allocated_for_row += res.quantity
 
-                current_temp = temp_allocations.get(allocated_lot.id, Decimal("0"))
-                temp_allocations[allocated_lot.id] = current_temp + res.quantity
+                current_temp = temp_allocations.get(res.lot_id, Decimal("0"))
+                temp_allocations[res.lot_id] = current_temp + res.quantity
 
             shortage = max(Decimal("0"), needed)
             result.total_shortage += shortage
@@ -143,51 +134,51 @@ def finalize_stats_and_gaps(
     """Finalize stats and gaps from aggregated data.
 
     Args:
-        stats_agg: Dictionary keyed by (customer_id, delivery_place_id, product_id, forecast_period)
+        stats_agg: Aggregated stats by key
 
     Returns:
-        Tuple of (stats_per_key, gaps)
+        Tuple of (stats_list, gaps_list)
     """
-    stats_per_key: list[AllocationStatsPerKey] = []
-    gaps: list[AllocationGap] = []
+    stats_list: list[AllocationStatsPerKey] = []
+    gaps_list: list[AllocationGap] = []
 
-    for key, vals in stats_agg.items():
-        cid, did, pid, period = key
-        stats_per_key.append(
+    for key, data in stats_agg.items():
+        customer_id, delivery_place_id, product_id, forecast_period = key
+        stats_list.append(
             AllocationStatsPerKey(
-                customer_id=cid,
-                delivery_place_id=did,
-                product_id=pid,
-                forecast_period=period,
-                forecast_quantity=vals["forecast_quantity"],
-                allocated_quantity=vals["allocated_quantity"],
-                shortage_quantity=vals["shortage_quantity"],
+                customer_id=customer_id,
+                delivery_place_id=delivery_place_id,
+                product_id=product_id,
+                forecast_period=forecast_period,
+                forecast_quantity=data["forecast_quantity"],
+                allocated_quantity=data["allocated_quantity"],
+                shortage_quantity=data["shortage_quantity"],
             )
         )
-        if vals["shortage_quantity"] > 0:
-            gaps.append(
+        if data["shortage_quantity"] > 0:
+            gaps_list.append(
                 AllocationGap(
-                    customer_id=cid,
-                    delivery_place_id=did,
-                    product_id=pid,
-                    forecast_period=period,
-                    shortage_quantity=vals["shortage_quantity"],
+                    customer_id=customer_id,
+                    delivery_place_id=delivery_place_id,
+                    product_id=product_id,
+                    forecast_period=forecast_period,
+                    shortage_quantity=data["shortage_quantity"],
                 )
             )
 
-    return stats_per_key, gaps
+    return stats_list, gaps_list
 
 
 def create_stats_summary(
     total_forecast: Decimal,
     total_allocated: Decimal,
     total_shortage: Decimal,
-    per_key: list[AllocationStatsPerKey],
+    stats_per_key: list[AllocationStatsPerKey],
 ) -> AllocationStatsSummary:
-    """Create AllocationStatsSummary from totals and per-key stats."""
+    """Build allocation stats summary from totals."""
     return AllocationStatsSummary(
         total_forecast_quantity=total_forecast,
         total_allocated_quantity=total_allocated,
         total_shortage_quantity=total_shortage,
-        per_key=per_key,
+        per_key=stats_per_key,
     )

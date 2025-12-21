@@ -110,6 +110,7 @@ def test_multi_lot_soft_allocation(test_db: Session, master_data):
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=30),
+        origin_type="order",
     )
     # Lot B: Expires later, Qty 60
     lot_b = Lot(
@@ -120,6 +121,7 @@ def test_multi_lot_soft_allocation(test_db: Session, master_data):
         unit="EA",
         received_date=date.today(),
         expiry_date=date.today() + timedelta(days=60),
+        origin_type="order",
     )
     test_db.add_all([lot_a, lot_b])
     test_db.commit()

@@ -3,11 +3,10 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import cast
 
-from sqlalchemy import func, nulls_last, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.infrastructure.persistence.models import (
-    Lot,
     Order,
     OrderLine,
     Product,
@@ -17,7 +16,6 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
     ReservationSourceType,
     ReservationStatus,
 )
-from app.presentation.schemas.inventory.inventory_schema import LotStatus
 
 
 def _load_order(db: Session, order_id: int) -> Order:
@@ -80,57 +78,6 @@ def _resolve_next_div(db: Session, order: Order, line: OrderLine) -> tuple[str |
         product_code = product.maker_part_code
     warning = f"次区が未設定: customer_id={order.customer_id}, product={product_code or 'unknown'}"
     return None, warning
-
-
-def _lot_candidates(db: Session, product_id: int) -> list[tuple[Lot, float]]:
-    """FEFO候補ロットを取得.
-
-    v2.4: lot_reservationsを使って利用可能数量を計算。
-
-    フィルタ条件:
-    - 製品IDが一致
-    - 利用可能数量（現在数量 - 予約済み - ロック済み）> 0
-    - ステータスが active
-    - 検査ステータスが not_required または passed
-
-    Returns:
-        List of (Lot, available_quantity) tuples sorted by FEFO order
-    """
-    # Subquery for reserved quantity per lot
-    # Per §1.2 invariant: Available = Current - Locked - ConfirmedReserved
-    # Only CONFIRMED reservations affect Available Qty (ACTIVE/provisional do not)
-    reserved_subq = (
-        select(
-            LotReservation.lot_id,
-            func.coalesce(func.sum(LotReservation.reserved_qty), 0).label("reserved"),
-        )
-        .where(LotReservation.status == ReservationStatus.CONFIRMED.value)
-        .group_by(LotReservation.lot_id)
-        .subquery()
-    )
-
-    # 利用可能数量 = 現在数量 - 予約済み数量 - ロック数量
-    available_qty_expr = (
-        Lot.current_quantity - func.coalesce(reserved_subq.c.reserved, 0) - Lot.locked_quantity
-    )
-
-    stmt = (  # type: ignore[assignment]
-        select(Lot, available_qty_expr.label("available_qty"))
-        .outerjoin(reserved_subq, Lot.id == reserved_subq.c.lot_id)
-        .where(
-            Lot.product_id == product_id,
-            available_qty_expr > 0,
-            Lot.status == LotStatus.ACTIVE.value,
-            # 検査が必要ないか、検査合格のロットのみ対象
-            Lot.inspection_status.in_(["not_required", "passed"]),
-        )
-        .order_by(
-            nulls_last(Lot.expiry_date.asc()),
-            Lot.received_date.asc(),
-            Lot.id.asc(),
-        )
-    )
-    return cast(list[tuple[Lot, float]], db.execute(stmt).all())
 
 
 def update_order_line_status(db: Session, order_line_id: int) -> None:

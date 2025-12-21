@@ -1,12 +1,23 @@
+"""Soft allocation calculator for forecasts.
+
+v3.0: Updated to accept LotCandidate (SSOT) instead of Lot model.
+"""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import NamedTuple
-
-from app.infrastructure.persistence.models.inventory_models import Lot
+from typing import TYPE_CHECKING
 
 
-class SoftAllocationResult(NamedTuple):
+if TYPE_CHECKING:
+    from app.domain.lot import LotCandidate
+
+
+@dataclass
+class SoftAllocationResult:
+    """Result of a soft allocation to a lot."""
+
     lot_id: int
     quantity: Decimal
     priority: int
@@ -14,13 +25,13 @@ class SoftAllocationResult(NamedTuple):
 
 def allocate_soft_for_forecast(
     required_qty: Decimal,
-    candidate_lots: list[Lot],
+    candidate_lots: list[LotCandidate],
     temp_allocations: dict[int, Decimal] | None = None,
 ) -> list[SoftAllocationResult]:
     """Allocate lots for a forecast line using the "v0" algorithm.
 
     Algorithm:
-    1. Sort lots by Expiry (ASC), Received (ASC), ID (ASC).
+    1. Candidates are assumed to be pre-sorted by FEFO (from AllocationCandidateService).
     2. Single Lot Fit: If any single lot has available_qty >= required_qty,
        pick the *first* such lot (respecting sort order) and allocate fully.
        (Priority: minimize splitting over strict FEFO).
@@ -29,10 +40,9 @@ def allocate_soft_for_forecast(
 
     Args:
         required_qty: The quantity required by the forecast line.
-        candidate_lots: List of available Lot objects.
+        candidate_lots: List of LotCandidate objects (pre-sorted by FEFO).
         temp_allocations: Optional dict mapping lot_id -> temporary allocated quantity.
-                         Used to track allocations within a calculation session
-                         without modifying the Lot objects.
+                         Used to track allocations within a calculation session.
 
     Returns:
         List of SoftAllocationResult.
@@ -43,68 +53,48 @@ def allocate_soft_for_forecast(
     if required_qty <= 0:
         return []
 
-    # 1. Sort Candidates
-    # Priorities: Expiry (None last? usually FEFO implies None is infinity or invalid. Postgres sorts asc nulls last usually)
-    # Python sort: None comparison fails. We must handle None.
-    # We assume valid dates or treat None as "far future".
-    def sort_key(l: Lot):
-        # (expiry_date, received_date, id)
-        # Handle None expiry -> max date
-        from datetime import date
-
-        expiry = l.expiry_date or date.max
-        received = l.received_date or date.max
-        return (expiry, received, l.id)
-
-    sorted_lots = sorted(candidate_lots, key=sort_key)
-
-    # Calculate real availability for each lot once
-    # We map lot_id -> available_qty
-    # Note: temp_allocations already contains the reserved quantity offset
-    # calculated by the caller (fefo.py), so we don't access lot.allocated_quantity
+    # Calculate real availability for each lot
+    # LotCandidate.available_qty is the base availability
+    # temp_allocations contains offsets from previous allocations in this session
     lot_availability: dict[int, Decimal] = {}
-    for lot in sorted_lots:
-        # temp_allocations contains the offset needed to achieve desired availability
-        temp_offset = temp_allocations.get(lot.id, Decimal("0"))
-        # available = current_quantity - temp_offset (which includes reserved qty)
-        available = lot.current_quantity - temp_offset
-        lot_availability[lot.id] = max(Decimal("0"), available)
+    for lot in candidate_lots:
+        temp_offset = temp_allocations.get(lot.lot_id, Decimal("0"))
+        available = Decimal(str(lot.available_qty)) - temp_offset
+        lot_availability[lot.lot_id] = max(Decimal("0"), available)
 
-    # Filter out empty lots for logic
-    valid_lots = [l for l in sorted_lots if lot_availability[l.id] > 0]
+    # Filter out empty lots
+    valid_lots = [lot for lot in candidate_lots if lot_availability[lot.lot_id] > 0]
 
     if not valid_lots:
         return []
 
     allocations: list[SoftAllocationResult] = []
 
-    # 2. Single Lot Fit Strategy
+    # Single Lot Fit Strategy
     # Find the *first* lot in sorted order that can cover the WHOLE required_qty
     single_fit_lot = None
     for lot in valid_lots:
-        if lot_availability[lot.id] >= required_qty:
+        if lot_availability[lot.lot_id] >= required_qty:
             single_fit_lot = lot
-            break  # Pick the first one we find
+            break
 
     if single_fit_lot:
         # Strategy A: Use this single lot
         allocations.append(
             SoftAllocationResult(
-                lot_id=single_fit_lot.id,
+                lot_id=single_fit_lot.lot_id,
                 quantity=required_qty,
                 priority=1,
             )
         )
         return allocations
 
-    # 3. FEFO Split Strategy (Fallback)
-    # If we are here, no single lot could cover the demand.
-    # We must split across multiple lots in sorted order.
+    # FEFO Split Strategy (Fallback)
     remaining_needed = required_qty
     priority_counter = 1
 
     for lot in valid_lots:
-        available = lot_availability[lot.id]
+        available = lot_availability[lot.lot_id]
         if available <= 0:
             continue
 
@@ -112,7 +102,7 @@ def allocate_soft_for_forecast(
 
         allocations.append(
             SoftAllocationResult(
-                lot_id=lot.id,
+                lot_id=lot.lot_id,
                 quantity=allocate_qty,
                 priority=priority_counter,
             )
