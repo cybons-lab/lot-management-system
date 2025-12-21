@@ -75,7 +75,10 @@ def db_engine():
                 "v_customer_item_jiku_mappings",
             ]
             for view_name in view_names:
-                cursor.execute(f"DROP TABLE IF EXISTS {view_name} CASCADE")
+                try:
+                    cursor.execute(f"DROP TABLE IF EXISTS {view_name} CASCADE")
+                except Exception:
+                    pass  # Might be a VIEW, not a TABLE - create_views.sql handles it
             raw_conn.commit()
             # Now execute the views SQL
             cursor.execute(sql_content)
