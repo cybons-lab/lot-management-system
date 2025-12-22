@@ -821,10 +821,10 @@ export interface paths {
     put?: never;
     /**
      * Save Manual Allocations
-     * @description 手動引当保存 (確定) - トランザクション保護版.
+     * @description 手動引当保存 (確定) - UoWによるトランザクション保護版.
      *
      *     既存の引当を一度クリアし、リクエストされた内容で再作成する（上書き保存）。
-     *     全ての操作を1つのトランザクションで実行し、エラー時はロールバックします。
+     *     全ての操作をUoWのトランザクションで実行し、エラー時は自動ロールバック。
      */
     post: operations["save_manual_allocations_api_orders__order_line_id__allocations_post"];
     delete?: never;
@@ -3072,6 +3072,84 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/masters/warehouse-delivery-routes": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Routes
+     * @description List warehouse delivery routes with optional filters.
+     */
+    get: operations["list_routes_api_masters_warehouse_delivery_routes_get"];
+    put?: never;
+    /**
+     * Create Route
+     * @description Create warehouse delivery route.
+     */
+    post: operations["create_route_api_masters_warehouse_delivery_routes_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouse-delivery-routes/lookup": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Lookup Lead Time
+     * @description Lookup transport lead time with fallback logic.
+     *
+     *     Priority:
+     *     1. Route with matching warehouse + delivery_place + product
+     *     2. Route default (warehouse + delivery_place + product_id=NULL)
+     *     3. Warehouse default (default_transport_lead_time_days)
+     *     4. Not found
+     */
+    get: operations["lookup_lead_time_api_masters_warehouse_delivery_routes_lookup_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/masters/warehouse-delivery-routes/{route_id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get Route
+     * @description Get warehouse delivery route by ID.
+     */
+    get: operations["get_route_api_masters_warehouse_delivery_routes__route_id__get"];
+    /**
+     * Update Route
+     * @description Update warehouse delivery route.
+     */
+    put: operations["update_route_api_masters_warehouse_delivery_routes__route_id__put"];
+    post?: never;
+    /**
+     * Delete Route
+     * @description Delete warehouse delivery route.
+     */
+    delete: operations["delete_route_api_masters_warehouse_delivery_routes__route_id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/auth/login": {
     parameters: {
       query?: never;
@@ -4594,7 +4672,7 @@ export interface paths {
      *         file: アップロードされたCSVファイル
      *         import_type: インポート形式 (default: material_delivery_note)
      *         customer_code: 得意先コード（オプション、マスタになくてもエラーにならない）
-     *         db: DBセッション
+     *         uow: UnitOfWork
      *         user: 実行ユーザー
      */
     post: operations["create_run_api_rpa_material_delivery_note_runs_post"];
@@ -9708,6 +9786,22 @@ export interface components {
       user: components["schemas"]["app__presentation__schemas__auth__auth_schemas__UserResponse"];
     };
     /**
+     * TransportLeadTimeResponse
+     * @description Transport lead time lookup response.
+     */
+    TransportLeadTimeResponse: {
+      /**
+       * Transport Lead Time Days
+       * @description 輸送リードタイム（日）。該当なしの場合はNone
+       */
+      transport_lead_time_days?: number | null;
+      /**
+       * Source
+       * @description LT取得元: 'route_product', 'route_default', 'warehouse_default', 'not_found'
+       */
+      source: string;
+    };
+    /**
      * UomConversionBulkRow
      * @description Single row for UOM conversion bulk upsert.
      *
@@ -10050,6 +10144,125 @@ export interface components {
        * @description internal/external/supplier
        */
       warehouse_type: string;
+    };
+    /**
+     * WarehouseDeliveryRouteCreate
+     * @description Create warehouse delivery route request.
+     */
+    WarehouseDeliveryRouteCreate: {
+      /**
+       * Warehouse Id
+       * @description 出荷元倉庫ID
+       */
+      warehouse_id: number;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID
+       */
+      delivery_place_id: number;
+      /**
+       * Product Id
+       * @description 品番ID（NULLの場合は経路デフォルト）
+       */
+      product_id?: number | null;
+      /**
+       * Transport Lead Time Days
+       * @description 輸送リードタイム（日）
+       */
+      transport_lead_time_days: number;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /**
+       * Notes
+       * @description 備考
+       */
+      notes?: string | null;
+    };
+    /**
+     * WarehouseDeliveryRouteResponse
+     * @description Warehouse delivery route response.
+     */
+    WarehouseDeliveryRouteResponse: {
+      /**
+       * Warehouse Id
+       * @description 出荷元倉庫ID
+       */
+      warehouse_id: number;
+      /**
+       * Delivery Place Id
+       * @description 納入先ID
+       */
+      delivery_place_id: number;
+      /**
+       * Product Id
+       * @description 品番ID（NULLの場合は経路デフォルト）
+       */
+      product_id?: number | null;
+      /**
+       * Transport Lead Time Days
+       * @description 輸送リードタイム（日）
+       */
+      transport_lead_time_days: number;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       * @default true
+       */
+      is_active: boolean;
+      /**
+       * Notes
+       * @description 備考
+       */
+      notes?: string | null;
+      /** Id */
+      id: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Warehouse Code */
+      warehouse_code?: string | null;
+      /** Warehouse Name */
+      warehouse_name?: string | null;
+      /** Delivery Place Code */
+      delivery_place_code?: string | null;
+      /** Delivery Place Name */
+      delivery_place_name?: string | null;
+      /** Product Name */
+      product_name?: string | null;
+      /** Maker Part Code */
+      maker_part_code?: string | null;
+    };
+    /**
+     * WarehouseDeliveryRouteUpdate
+     * @description Update warehouse delivery route request.
+     */
+    WarehouseDeliveryRouteUpdate: {
+      /**
+       * Transport Lead Time Days
+       * @description 輸送リードタイム（日）
+       */
+      transport_lead_time_days?: number | null;
+      /**
+       * Is Active
+       * @description 有効フラグ
+       */
+      is_active?: boolean | null;
+      /**
+       * Notes
+       * @description 備考
+       */
+      notes?: string | null;
     };
     /**
      * WarehouseResponse
@@ -15693,6 +15906,208 @@ export interface operations {
       header?: never;
       path: {
         mapping_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_routes_api_masters_warehouse_delivery_routes_get: {
+    parameters: {
+      query?: {
+        /** @description Filter by warehouse ID */
+        warehouse_id?: number | null;
+        /** @description Filter by delivery place ID */
+        delivery_place_id?: number | null;
+        /** @description Filter by active status */
+        is_active?: boolean | null;
+        skip?: number;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseDeliveryRouteResponse"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_route_api_masters_warehouse_delivery_routes_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WarehouseDeliveryRouteCreate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseDeliveryRouteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  lookup_lead_time_api_masters_warehouse_delivery_routes_lookup_get: {
+    parameters: {
+      query: {
+        /** @description Warehouse ID */
+        warehouse_id: number;
+        /** @description Delivery place ID */
+        delivery_place_id: number;
+        /** @description Product ID (optional) */
+        product_id?: number | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TransportLeadTimeResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_route_api_masters_warehouse_delivery_routes__route_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        route_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseDeliveryRouteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  update_route_api_masters_warehouse_delivery_routes__route_id__put: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        route_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["WarehouseDeliveryRouteUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["WarehouseDeliveryRouteResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_route_api_masters_warehouse_delivery_routes__route_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        route_id: number;
       };
       cookie?: never;
     };
