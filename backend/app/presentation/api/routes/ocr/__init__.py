@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.application.services.ocr.ocr_import_service import OcrImportService
-from app.infrastructure.database import get_db
+from app.core.database import get_db
 from app.presentation.schemas.ocr_import_schema import (
     OcrImportRequest,
     OcrImportResponse,
