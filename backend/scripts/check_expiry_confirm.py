@@ -1,12 +1,11 @@
 import os
 import sys
-import threading
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock
 
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -17,12 +16,12 @@ from app.infrastructure.persistence.models import Lot, LotReservation, Product, 
 from app.infrastructure.persistence.models.base_model import Base
 
 
-engine = create_engine("sqlite:///race_test.db", connect_args={"check_same_thread": False})
-if os.path.exists("race_test.db"):
-    os.remove("race_test.db")
+engine = create_engine("sqlite:///:memory:")
 Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(bind=engine)
-db_main = SessionLocal()
+db = SessionLocal()
+
+today = date.today()
 
 warehouse = Warehouse(
     id=1, warehouse_code="WH1", warehouse_name="Test WH", warehouse_type="internal"
@@ -34,48 +33,29 @@ lot = Lot(
     product=product,
     warehouse=warehouse,
     current_quantity=Decimal("100"),
-    received_date=date.today(),
+    received_date=today,
     unit="EA",
     status="active",
+    expiry_date=today,  # Boundary Condition
 )
 reservation = LotReservation(
     id=1, lot=lot, reserved_qty=Decimal("10"), status="active", source_type="manual", source_id=1
 )
-db_main.add(warehouse)
-db_main.add(product)
-db_main.add(lot)
-db_main.add(reservation)
-db_main.commit()
+db.add(warehouse)
+db.add(product)
+db.add(lot)
+db.add(reservation)
+db.commit()
 res_id = reservation.id
-db_main.close()
 
 mock_sap = MagicMock()
 mock_sap.register_allocation.return_value = SapRegistrationResult(
     success=True, document_no="SAP123"
 )
 
-
-def run_confirm():
-    db = SessionLocal()
-    try:
-        confirm_reservation(db, res_id, sap_gateway=mock_sap)
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        db.close()
-
-
-print("[Test] Starting Concurrent Confirm Race...")
-t1 = threading.Thread(target=run_confirm)
-t2 = threading.Thread(target=run_confirm)
-
-t1.start()
-t2.start()
-t1.join()
-t2.join()
-
-print(f"[Result] Total SAP Calls: {mock_sap.register_allocation.call_count}")
-if mock_sap.register_allocation.call_count > 1:
-    print("VULNERABILITY CONFIRMED: Double SAP Registration in race condition!")
-else:
-    print("SAFE: Single SAP Call.")
+print(f"[Test] Confirming reservation for Lot expiring TODAY ({today})...")
+try:
+    confirm_reservation(db, res_id, sap_gateway=mock_sap)
+    print("VULNERABILITY CONFIRMED: Expired (or Boundary) Lot was successfully confirmed!")
+except Exception as e:
+    print(f"SAFE: Confirmation blocked: {e}")

@@ -1,26 +1,28 @@
 import os
 import sys
+import threading
 from datetime import date
 from decimal import Decimal
 from unittest.mock import MagicMock
 
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.application.services.allocations.confirm import confirm_reservation
-from app.application.services.inventory.lot_reservation_service import LotReservationService
 from app.infrastructure.external.sap_gateway import SapRegistrationResult
 from app.infrastructure.persistence.models import Lot, LotReservation, Product, Warehouse
 from app.infrastructure.persistence.models.base_model import Base
 
 
-engine = create_engine("sqlite:///:memory:")
+engine = create_engine("sqlite:///race_test.db", connect_args={"check_same_thread": False})
+if os.path.exists("race_test.db"):
+    os.remove("race_test.db")
 Base.metadata.create_all(engine)
 SessionLocal = sessionmaker(bind=engine)
-db = SessionLocal()
+db_main = SessionLocal()
 
 warehouse = Warehouse(
     id=1, warehouse_code="WH1", warehouse_name="Test WH", warehouse_type="internal"
@@ -39,37 +41,41 @@ lot = Lot(
 reservation = LotReservation(
     id=1, lot=lot, reserved_qty=Decimal("10"), status="active", source_type="manual", source_id=1
 )
-db.add(warehouse)
-db.add(product)
-db.add(lot)
-db.add(reservation)
-db.commit()
+db_main.add(warehouse)
+db_main.add(product)
+db_main.add(lot)
+db_main.add(reservation)
+db_main.commit()
 res_id = reservation.id
+db_main.close()
 
 mock_sap = MagicMock()
 mock_sap.register_allocation.return_value = SapRegistrationResult(
     success=True, document_no="SAP123"
 )
 
-print("[Test] Confirming reservation...")
-confirm_reservation(db, res_id, sap_gateway=mock_sap)
-db.commit()
 
-print("[Test] Releasing reservation...")
-service = LotReservationService(db)
-service.release(res_id)
-db.commit()
+def run_confirm():
+    db = SessionLocal()
+    try:
+        confirm_reservation(db, res_id, sap_gateway=mock_sap)
+    except Exception as e:
+        print(f"Error: {e}")
+    finally:
+        db.close()
 
-res = db.get(LotReservation, res_id)
-print(f"[State] Status is now: {res.status}")
-if res.status == "released":
-    print("WARNING: Confirmed reservation was RELEASED directly (V-03 Confirmed?)")
+
+print("[Test] Starting Concurrent Confirm Race...")
+t1 = threading.Thread(target=run_confirm)
+t2 = threading.Thread(target=run_confirm)
+
+t1.start()
+t2.start()
+t1.join()
+t2.join()
+
+print(f"[Result] Total SAP Calls: {mock_sap.register_allocation.call_count}")
+if mock_sap.register_allocation.call_count > 1:
+    print("VULNERABILITY CONFIRMED: Double SAP Registration in race condition!")
 else:
-    print(f"SAFE: Status is {res.status}")
-
-print("[Test] Attempting to re-confirm RELEASED reservation...")
-try:
-    confirm_reservation(db, res_id, sap_gateway=mock_sap)
-    print("VULNERABILITY: Re-confirmed Released Reservation!")
-except Exception as e:
-    print(f"SAFE: Re-confirm failed with: {e}")
+    print("SAFE: Single SAP Call.")

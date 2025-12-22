@@ -1,11 +1,3 @@
-"""Material Delivery Note RPA Orchestrator.
-
-Coordinators business logic by leveraging:
-- RpaStateManager: For status transition rules
-- RpaFlowClient: For external API calls
-- CsvParser: For data ingestion
-"""
-
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -19,13 +11,12 @@ from app.core.config import settings
 from app.core.time_utils import utcnow
 from app.domain.rpa.state_manager import RpaStateManager
 from app.infrastructure.persistence.models.auth_models import User
-from app.infrastructure.persistence.models.inventory_models import Lot
-from app.infrastructure.persistence.models.masters_models import CustomerItem, Product
 from app.infrastructure.persistence.models.rpa_models import (
     RpaRun,
     RpaRunItem,
     RpaRunStatus,
 )
+from app.infrastructure.persistence.repositories.rpa_repository import RpaRepository
 from app.infrastructure.rpa.flow_client import RpaFlowClient
 
 
@@ -37,6 +28,7 @@ class MaterialDeliveryNoteOrchestrator:
         self.uow = uow
         # Alias for easier access, assuming uow has .session
         self.db: Session = uow.session
+        self.repo = RpaRepository(self.db)
         self.flow_client = RpaFlowClient()
 
     def create_run_from_csv(
@@ -61,7 +53,7 @@ class MaterialDeliveryNoteOrchestrator:
             started_by_user_id=user.id if user else None,
             customer_id=customer_id,
         )
-        self.db.add(run)
+        self.repo.add(run)
         self.db.flush()
 
         for row_data in parsed_rows:
@@ -81,12 +73,12 @@ class MaterialDeliveryNoteOrchestrator:
                 sap_registered=row_data.get("sap_registered"),
                 order_no=row_data.get("order_no"),
             )
-            self.db.add(item)
+            self.repo.add(item)
 
         # Remove explicit commit (handled by UoW)
         self.db.flush()
         # Note: self.db.refresh(run) requires flush or commit. Flush is enough for ID.
-        self.db.refresh(run)
+        self.repo.refresh(run)
 
         # ステータス自動更新チェック (作成直後に完了状態かもしれないため)
         self._update_run_status_if_needed(run.id)
@@ -95,7 +87,7 @@ class MaterialDeliveryNoteOrchestrator:
 
     def get_run(self, run_id: int) -> RpaRun | None:
         """Run取得."""
-        return self.db.query(RpaRun).filter(RpaRun.id == run_id).first()
+        return self.repo.get_run(run_id)
 
     def get_runs(
         self,
@@ -104,10 +96,7 @@ class MaterialDeliveryNoteOrchestrator:
         limit: int = 100,
     ) -> tuple[list[RpaRun], int]:
         """Run一覧取得."""
-        query = self.db.query(RpaRun).filter(RpaRun.rpa_type == rpa_type)
-        total = query.count()
-        runs = query.order_by(RpaRun.created_at.desc()).offset(skip).limit(limit).all()
-        return runs, total
+        return self.repo.get_runs(rpa_type, skip, limit)
 
     def update_item(
         self,
@@ -124,11 +113,7 @@ class MaterialDeliveryNoteOrchestrator:
         if not run:
             return None
 
-        item = (
-            self.db.query(RpaRunItem)
-            .filter(RpaRunItem.id == item_id, RpaRunItem.run_id == run_id)
-            .first()
-        )
+        item = self.repo.get_item(run_id, item_id)
         if not item:
             return None
 
@@ -155,7 +140,7 @@ class MaterialDeliveryNoteOrchestrator:
 
         # Remove explicit commit
         self.db.flush()
-        self.db.refresh(item)
+        self.repo.refresh(item)
         self._update_run_status_if_needed(run_id)
 
         return item
@@ -169,11 +154,7 @@ class MaterialDeliveryNoteOrchestrator:
         issue_flag: bool | None = None,
     ) -> RpaRunItem | None:
         """Item結果更新 (PAD連携). 常に許可."""
-        item = (
-            self.db.query(RpaRunItem)
-            .filter(RpaRunItem.id == item_id, RpaRunItem.run_id == run_id)
-            .first()
-        )
+        item = self.repo.get_item(run_id, item_id)
         if not item:
             return None
 
@@ -188,7 +169,7 @@ class MaterialDeliveryNoteOrchestrator:
 
         # Remove explicit commit
         self.db.flush()
-        self.db.refresh(item)
+        self.repo.refresh(item)
         self._update_run_status_if_needed(run_id)
         return item
 
@@ -224,9 +205,9 @@ class MaterialDeliveryNoteOrchestrator:
             update_values["delivery_quantity"] = delivery_quantity
 
         if len(update_values) > 1:
-            self.db.query(RpaRunItem).filter(
-                RpaRunItem.run_id == run_id, RpaRunItem.id.in_(item_ids)
-            ).update(update_values, synchronize_session=False)
+            self.repo.get_items_by_ids(run_id, item_ids).update(
+                update_values, synchronize_session=False
+            )
 
             # Remove explicit commit
             self.db.flush()
@@ -272,12 +253,13 @@ class MaterialDeliveryNoteOrchestrator:
         run.step2_executed_by_user_id = user.id if user else None
         run.updated_at = now
 
-        self.db.query(RpaRunItem).filter(
-            RpaRunItem.run_id == run_id,
-            RpaRunItem.issue_flag.is_(True),
-        ).update({"lock_flag": True, "updated_at": now}, synchronize_session=False)
+        self.repo.lock_issue_items(run_id, now)
 
         # Checkpoint commit: 外部API呼び出し前にステータスを確定させる
+        # NOTE: This explicit commit is required because the external Flow execution takes time.
+        # Without this, the 'STEP2_RUNNING' status would not be visible to other transactions/requests
+        # until the Flow returns, potentially causing double-execution or confusing UI states.
+        # Ideally, this should be handled by an asynchronous job queue (e.g., Celery).
         self.db.commit()
 
         # Call Flow
@@ -329,11 +311,6 @@ class MaterialDeliveryNoteOrchestrator:
 
         run.status = RpaRunStatus.STEP4_CHECK_RUNNING
         run.step4_executed_at = utcnow()
-        # Explicit commit for checkpoint? Or let UoW handle?
-        # Ideally parsing is fast. But if we want to show 'Running' status during parsing...
-        # Parsing is sync here, so commit doesn't help much unless parsing is very slow.
-        # Let's remove commit to adhere to UoW.
-        # self.db.commit()
         self.db.flush()
 
         try:
@@ -361,11 +338,7 @@ class MaterialDeliveryNoteOrchestrator:
 
         except Exception as e:
             run.status = RpaRunStatus.READY_FOR_STEP4_CHECK
-            # If we error, we probably want to save the revert state?
-            # But if we raise, UoW rolls back entire transaction including the start status update.
-            # So status remains READY_FOR_STEP4_CHECK (initial state).
-            # This is fine. No need to commit revert.
-            # self.db.commit()
+            # No commit here; UoW rollback will handle it.
             raise e
 
     def retry_step3_failed(self, run_id: int) -> RpaRun:
@@ -400,11 +373,7 @@ class MaterialDeliveryNoteOrchestrator:
         if not run:
             return {"lots": [], "auto_selected": None, "source": "none"}
 
-        item = (
-            self.db.query(RpaRunItem)
-            .filter(RpaRunItem.id == item_id, RpaRunItem.run_id == run_id)
-            .first()
-        )
+        item = self.repo.get_item(run_id, item_id)
         if not item or not item.external_product_code:
             return {"lots": [], "auto_selected": None, "source": "none"}
 
@@ -418,14 +387,7 @@ class MaterialDeliveryNoteOrchestrator:
 
         # 1. CustomerItem
         if customer_id:
-            customer_item = (
-                self.db.query(CustomerItem)
-                .filter(
-                    CustomerItem.customer_id == customer_id,
-                    CustomerItem.external_product_code == external_product_code,
-                )
-                .first()
-            )
+            customer_item = self.repo.find_customer_item(customer_id, external_product_code)
             if customer_item:
                 product_id = customer_item.product_id
                 supplier_id = customer_item.supplier_id
@@ -433,11 +395,7 @@ class MaterialDeliveryNoteOrchestrator:
 
         # 2. Product fallback
         if not product_id:
-            product = (
-                self.db.query(Product)
-                .filter(Product.maker_part_code == external_product_code)
-                .first()
-            )
+            product = self.repo.find_product_by_maker_part_code(external_product_code)
             if product:
                 product_id = product.id
                 source = "product_only"
@@ -446,18 +404,7 @@ class MaterialDeliveryNoteOrchestrator:
             return {"lots": [], "auto_selected": None, "source": "none"}
 
         # 3. Lot fetch
-        query = self.db.query(Lot).filter(
-            Lot.product_id == product_id,
-            Lot.status == "active",
-            Lot.current_quantity > 0,
-        )
-        if supplier_id:
-            query = query.filter(Lot.supplier_id == supplier_id)
-
-        lots = query.order_by(
-            Lot.expiry_date.asc().nullslast(),
-            Lot.received_date.asc(),
-        ).all()
+        lots = self.repo.find_active_lots(product_id, supplier_id)
 
         lot_candidates = [
             {
@@ -496,21 +443,7 @@ class MaterialDeliveryNoteOrchestrator:
             return
 
         # STEP2_RUNNING -> STEP3_DONE_WAITING_EXTERNAL
-        from sqlalchemy import or_
-
-        unprocessed_count = (
-            self.db.query(RpaRunItem)
-            .filter(
-                RpaRunItem.run_id == run_id,
-                RpaRunItem.issue_flag.is_(True),
-                or_(
-                    RpaRunItem.result_status.is_(None),
-                    RpaRunItem.result_status == "pending",
-                    RpaRunItem.result_status == "processing",
-                ),
-            )
-            .count()
-        )
+        unprocessed_count = self.repo.get_unprocessed_items_count(run_id)
 
         if RpaStateManager.is_step3_complete(run, unprocessed_count):
             run.status = RpaRunStatus.STEP3_DONE_WAITING_EXTERNAL
