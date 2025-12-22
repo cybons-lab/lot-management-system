@@ -52,6 +52,7 @@ from app.presentation.api.routes.masters import (
     warehouse_delivery_routes_router,
     warehouses_router,
 )
+from app.presentation.api.routes.ocr import router as ocr_router
 from app.presentation.api.routes.orders import (
     confirmed_lines_router,
     order_lines_router,
@@ -142,6 +143,9 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(material_delivery_note_router, prefix=prefix)
     app.include_router(cloud_flow_router, prefix=prefix)
     app.include_router(layer_code_router, prefix=prefix)
+
+    # OCR endpoints
+    app.include_router(ocr_router, prefix=prefix)
 
 
 __all__ = [

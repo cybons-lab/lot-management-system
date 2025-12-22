@@ -1,5 +1,6 @@
 """OCR processing services."""
 
+from .ocr_import_service import OcrImportService
 from .ocr_sap_complement_service import (
     ComplementResult,
     MatchType,
@@ -10,5 +11,6 @@ from .ocr_sap_complement_service import (
 __all__ = [
     "ComplementResult",
     "MatchType",
+    "OcrImportService",
     "OcrSapComplementService",
 ]
