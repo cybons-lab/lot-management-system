@@ -195,6 +195,17 @@ class RpaRunItem(Base):
         DateTime, nullable=True
     )  # 処理開始日時（タイムアウト回収用）
 
+    # === OCR→SAP変換マスタ参照ログ ===
+    complement_customer_id: Mapped[int | None] = mapped_column(
+        BigInteger, nullable=True, comment="参照したマスタのcustomer_id"
+    )
+    complement_external_product_code: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="参照したマスタのexternal_product_code"
+    )
+    complement_match_type: Mapped[str | None] = mapped_column(
+        String(10), nullable=True, comment="検索種別（exact: 完全一致, prefix: 前方一致）"
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False
     )
@@ -205,6 +216,11 @@ class RpaRunItem(Base):
     __table_args__ = (
         Index("idx_rpa_run_items_run_id", "run_id"),
         Index("idx_rpa_run_items_run_row", "run_id", "row_no", unique=True),
+        Index(
+            "idx_rri_complement_master",
+            "complement_customer_id",
+            "complement_external_product_code",
+        ),
     )
 
     # Relationships

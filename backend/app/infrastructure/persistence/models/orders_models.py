@@ -80,6 +80,11 @@ class Order(Base):
     locked_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     lock_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
+    # OCR取込情報
+    ocr_source_filename: Mapped[str | None] = mapped_column(
+        String(255), nullable=True, comment="OCR取込元ファイル名"
+    )
+
     __table_args__ = (
         Index("idx_orders_customer", "customer_id"),
         Index("idx_orders_date", "order_date"),
@@ -126,10 +131,16 @@ class OrderLine(Base):
         nullable=True,
         comment="受注グループへの参照（得意先×製品×受注日）",
     )
-    product_id: Mapped[int] = mapped_column(
+    product_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("products.id", ondelete="RESTRICT"),
-        nullable=False,
+        nullable=True,
+        comment="製品ID（OCR取込時はNULL可、変換後に設定）",
+    )
+
+    # OCR取込時の元データ
+    external_product_code: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, comment="OCR元の先方品番（変換前の生データ）"
     )
     delivery_date: Mapped[date] = mapped_column(Date, nullable=False)
     order_quantity: Mapped[Decimal] = mapped_column(Numeric(15, 3), nullable=False)
