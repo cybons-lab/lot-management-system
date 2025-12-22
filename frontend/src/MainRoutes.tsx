@@ -60,6 +60,7 @@ import { SuppliersListPage, SupplierDetailPage } from "@/features/suppliers";
 import { UomConversionsPage } from "@/features/uom-conversions/pages/UomConversionsPage";
 import { UserDetailPage } from "@/features/users/pages/UserDetailPage";
 import { UsersListPage } from "@/features/users/pages/UsersListPage";
+import { WarehouseDeliveryRoutesListPage } from "@/features/warehouse-delivery-routes";
 import { WarehousesListPage, WarehouseDetailPage } from "@/features/warehouses";
 import { WithdrawalCreatePage, WithdrawalsListPage } from "@/features/withdrawals/pages";
 
@@ -111,6 +112,7 @@ function MasterRoutes() {
       <Route path="/masters/primary-assignments" element={<PrimaryAssignmentsPage />} />
       <Route path="/delivery-places" element={<DeliveryPlacesListPage />} />
       <Route path="/product-mappings" element={<ProductMappingsListPage />} />
+      <Route path="/warehouse-delivery-routes" element={<WarehouseDeliveryRoutesListPage />} />
 
       {/* Settings - Phase G-2 (Admin Only) */}
       <Route
