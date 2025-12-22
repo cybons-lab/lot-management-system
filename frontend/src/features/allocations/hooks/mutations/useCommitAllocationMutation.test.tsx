@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import * as allocationsApi from "../../api";
+import type { AllocationCommitResponse } from "../../api";
 
 import { useCommitAllocationMutation } from "./useCommitAllocationMutation";
 
@@ -24,11 +25,14 @@ describe("useCommitAllocationMutation", () => {
   let queryClient: QueryClient;
   let invalidateQueriesSpy: ReturnType<typeof vi.spyOn>;
 
+  // Use type assertion for mock response since actual API response type may differ
   const mockCommitResponse = {
+    order_id: 101,
+    status: "confirmed",
     success: true,
     confirmed_count: 2,
     message: "Allocations committed successfully",
-  };
+  } as unknown as AllocationCommitResponse;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -51,7 +55,7 @@ describe("useCommitAllocationMutation", () => {
     const { result } = renderHook(() => useCommitAllocationMutation(), { wrapper });
 
     const commitRequest = {
-      order_line_id: 101,
+      order_id: 101,
       allocation_ids: [1, 2, 3],
     };
 
@@ -68,7 +72,7 @@ describe("useCommitAllocationMutation", () => {
     const { result } = renderHook(() => useCommitAllocationMutation(), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ order_line_id: 101 });
+      result.current.mutate({ order_id: 101 });
     });
 
     await waitFor(() => {
@@ -80,7 +84,7 @@ describe("useCommitAllocationMutation", () => {
     const { result } = renderHook(() => useCommitAllocationMutation(), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ order_line_id: 101 });
+      result.current.mutate({ order_id: 101 });
     });
 
     await waitFor(() => {
@@ -92,7 +96,7 @@ describe("useCommitAllocationMutation", () => {
     const { result } = renderHook(() => useCommitAllocationMutation(), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ order_line_id: 101 });
+      result.current.mutate({ order_id: 101 });
     });
 
     await waitFor(() => {
@@ -114,7 +118,7 @@ describe("useCommitAllocationMutation", () => {
     expect(result.current.isPending).toBe(false);
 
     act(() => {
-      result.current.mutate({ order_line_id: 101 });
+      result.current.mutate({ order_id: 101 });
     });
 
     await waitFor(() => {
@@ -137,7 +141,7 @@ describe("useCommitAllocationMutation", () => {
     const { result } = renderHook(() => useCommitAllocationMutation(), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ order_line_id: 101 });
+      result.current.mutate({ order_id: 101 });
     });
 
     await waitFor(() => {
@@ -150,7 +154,7 @@ describe("useCommitAllocationMutation", () => {
     const { result } = renderHook(() => useCommitAllocationMutation(), { wrapper });
 
     await act(async () => {
-      result.current.mutate({ order_line_id: 101 });
+      result.current.mutate({ order_id: 101 });
     });
 
     await waitFor(() => {

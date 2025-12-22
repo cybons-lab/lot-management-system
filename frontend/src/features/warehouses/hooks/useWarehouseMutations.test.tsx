@@ -14,6 +14,8 @@ import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import * as warehouseApi from "../api";
+import type { Warehouse } from "../api";
+import type { BulkUpsertResponse, WarehouseBulkRow } from "../types/bulk-operation";
 
 import {
   useCreateWarehouse,
@@ -30,6 +32,18 @@ vi.mock("../api", () => ({
   bulkUpsertWarehouses: vi.fn(),
 }));
 
+// Helper to create a full Warehouse mock
+const createWarehouseMock = (overrides: Partial<Warehouse> = {}): Warehouse => ({
+  id: 1,
+  warehouse_code: "WH-001",
+  warehouse_name: "東京倉庫",
+  warehouse_type: "internal",
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z",
+  valid_to: "9999-12-31T23:59:59Z",
+  ...overrides,
+});
+
 describe("useWarehouseMutations", () => {
   let queryClient: QueryClient;
 
@@ -44,7 +58,7 @@ describe("useWarehouseMutations", () => {
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}> {children} </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
   describe("useCreateWarehouse", () => {
@@ -55,11 +69,7 @@ describe("useWarehouseMutations", () => {
     };
 
     it("calls createWarehouse API with correct data", async () => {
-      vi.mocked(warehouseApi.createWarehouse).mockResolvedValue({
-        warehouse_code: "WH-001",
-        warehouse_name: "東京倉庫",
-        warehouse_type: "internal",
-      });
+      vi.mocked(warehouseApi.createWarehouse).mockResolvedValue(createWarehouseMock());
 
       const { result } = renderHook(() => useCreateWarehouse(), { wrapper });
 
@@ -73,11 +83,7 @@ describe("useWarehouseMutations", () => {
     });
 
     it("invalidates warehouses query on success", async () => {
-      vi.mocked(warehouseApi.createWarehouse).mockResolvedValue({
-        warehouse_code: "WH-001",
-        warehouse_name: "東京倉庫",
-        warehouse_type: "internal",
-      });
+      vi.mocked(warehouseApi.createWarehouse).mockResolvedValue(createWarehouseMock());
 
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
@@ -103,11 +109,9 @@ describe("useWarehouseMutations", () => {
     };
 
     it("calls updateWarehouse API with correct parameters", async () => {
-      vi.mocked(warehouseApi.updateWarehouse).mockResolvedValue({
-        warehouse_code: "WH-001",
-        warehouse_name: "東京第一倉庫",
-        warehouse_type: "internal",
-      });
+      vi.mocked(warehouseApi.updateWarehouse).mockResolvedValue(
+        createWarehouseMock({ warehouse_name: "東京第一倉庫" }),
+      );
 
       const { result } = renderHook(() => useUpdateWarehouse(), { wrapper });
 
@@ -121,11 +125,9 @@ describe("useWarehouseMutations", () => {
     });
 
     it("invalidates warehouses query on success", async () => {
-      vi.mocked(warehouseApi.updateWarehouse).mockResolvedValue({
-        warehouse_code: "WH-001",
-        warehouse_name: "東京第一倉庫",
-        warehouse_type: "internal",
-      });
+      vi.mocked(warehouseApi.updateWarehouse).mockResolvedValue(
+        createWarehouseMock({ warehouse_name: "東京第一倉庫" }),
+      );
 
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 
@@ -174,25 +176,34 @@ describe("useWarehouseMutations", () => {
   });
 
   describe("useBulkUpsertWarehouses", () => {
-    const mockRows = [
+    const mockRows: WarehouseBulkRow[] = [
       {
+        OPERATION: "ADD",
         warehouse_code: "WH-001",
         warehouse_name: "東京倉庫",
-        warehouse_type: "internal" as const,
+        warehouse_type: "internal",
       },
       {
+        OPERATION: "ADD",
         warehouse_code: "WH-002",
         warehouse_name: "大阪倉庫",
-        warehouse_type: "external" as const,
+        warehouse_type: "external",
       },
     ];
 
-    it("calls bulkUpsertWarehouses API with row data", async () => {
-      vi.mocked(warehouseApi.bulkUpsertWarehouses).mockResolvedValue({
+    const mockResponse: BulkUpsertResponse = {
+      status: "success",
+      summary: {
+        total: 2,
         created: 2,
         updated: 0,
-        errors: [],
-      });
+        failed: 0,
+      },
+      errors: [],
+    };
+
+    it("calls bulkUpsertWarehouses API with row data", async () => {
+      vi.mocked(warehouseApi.bulkUpsertWarehouses).mockResolvedValue(mockResponse);
 
       const { result } = renderHook(() => useBulkUpsertWarehouses(), { wrapper });
 
@@ -206,11 +217,7 @@ describe("useWarehouseMutations", () => {
     });
 
     it("invalidates warehouses query on success", async () => {
-      vi.mocked(warehouseApi.bulkUpsertWarehouses).mockResolvedValue({
-        created: 2,
-        updated: 0,
-        errors: [],
-      });
+      vi.mocked(warehouseApi.bulkUpsertWarehouses).mockResolvedValue(mockResponse);
 
       const invalidateSpy = vi.spyOn(queryClient, "invalidateQueries");
 

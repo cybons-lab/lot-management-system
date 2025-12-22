@@ -29,12 +29,12 @@ describe("useSimulationForm", () => {
     act(() => {
       result.current.setForm((prev) => ({
         ...prev,
-        order_count: 100,
+        orders: 100,
       }));
     });
 
     // Verify change
-    expect(result.current.form.order_count).toBe(100);
+    expect(result.current.form.orders).toBe(100);
 
     // Reset form
     act(() => {
@@ -102,12 +102,12 @@ describe("useSimulationForm", () => {
     act(() => {
       result.current.setForm((prev) => ({
         ...prev,
-        order_count: 50,
-        product_count: 20,
+        orders: 50,
+        products: 20,
       }));
     });
 
-    expect(result.current.form.order_count).toBe(50);
-    expect(result.current.form.product_count).toBe(20);
+    expect(result.current.form.orders).toBe(50);
+    expect(result.current.form.products).toBe(20);
   });
 });

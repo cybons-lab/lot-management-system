@@ -123,12 +123,15 @@ describe("ErrorBoundary", () => {
   });
 
   it("reload button triggers page reload", () => {
-    // Mock window.location.reload
+    // Mock window.location.reload using delete + reassign pattern for jsdom
     const reloadMock = vi.fn();
-    Object.defineProperty(window, "location", {
-      value: { reload: reloadMock },
-      writable: true,
-    });
+    const originalLocation = window.location;
+
+    // Delete location to make it configurable in jsdom
+    // @ts-expect-error - Deleting location for test mocking
+    delete window.location;
+    // @ts-expect-error - Reassigning location for test mocking
+    window.location = { ...originalLocation, reload: reloadMock };
 
     render(
       <ErrorBoundary>
@@ -140,6 +143,10 @@ describe("ErrorBoundary", () => {
     fireEvent.click(reloadButton);
 
     expect(reloadMock).toHaveBeenCalledTimes(1);
+
+    // Restore original location
+    // @ts-expect-error - Restoring location after test
+    window.location = originalLocation;
   });
 
   it("does not show error details in production mode", () => {

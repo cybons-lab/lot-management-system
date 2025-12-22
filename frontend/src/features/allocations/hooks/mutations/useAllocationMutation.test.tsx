@@ -14,6 +14,7 @@ import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import * as allocationsApi from "../../api";
+import type { OrderLine } from "../../types";
 
 import { useAllocationMutation } from "./useAllocationMutation";
 
@@ -27,12 +28,13 @@ describe("useAllocationMutation", () => {
   const onSuccess = vi.fn();
   const onError = vi.fn();
 
+  // Minimal mock - use type assertion since we only need id, product_code for test logic
   const mockSelectedLine = {
     id: 101,
     product_code: "PROD-001",
     order_quantity: 10,
     allocated_quantity: 0,
-  };
+  } as unknown as OrderLine;
 
   const mockAllocationList = [
     { lotId: 1, quantity: 5 },
@@ -192,14 +194,17 @@ describe("useAllocationMutation", () => {
   });
 
   it("does not save when selectedLine has no product_code", () => {
-    const lineWithoutProductCode = { ...mockSelectedLine, product_code: undefined };
+    const lineWithoutProductCode = {
+      ...mockSelectedLine,
+      product_code: undefined,
+    } as unknown as OrderLine;
 
     const { result } = renderHook(
       () =>
         useAllocationMutation(
           1,
           101,
-          lineWithoutProductCode as typeof mockSelectedLine,
+          lineWithoutProductCode,
           mockAllocationList,
           onSuccess,
           onError,
