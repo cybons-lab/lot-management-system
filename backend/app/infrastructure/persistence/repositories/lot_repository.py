@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from datetime import date
+from datetime import date, timedelta
 from typing import TYPE_CHECKING, cast
 
 from sqlalchemy import Select, select
@@ -130,6 +130,7 @@ class LotRepository:
         lock_mode: LockMode,
         warehouse_id: int | None = None,
         exclude_expired: bool = True,
+        safety_days: int = 0,
         exclude_locked: bool = True,
         include_sample: bool = False,
         include_adhoc: bool = False,
@@ -146,6 +147,7 @@ class LotRepository:
             lock_mode: Database locking mode
             warehouse_id: Optional warehouse filter
             exclude_expired: Exclude lots past expiry date
+            safety_days: Safety margin in days before expiry (default: 0)
             exclude_locked: Exclude lots with locked_quantity > 0
             include_sample: Include sample origin lots
             include_adhoc: Include adhoc origin lots
@@ -185,11 +187,12 @@ class LotRepository:
             # Use COALESCE to treat NULL as 'normal' which won't be excluded
             query = query.filter(func.coalesce(Lot.origin_type, "normal").notin_(excluded_origins))
 
-        # Expiry filter
+        # Expiry filter with safety margin
         if exclude_expired:
             from sqlalchemy import or_
 
-            query = query.filter(or_(Lot.expiry_date.is_(None), Lot.expiry_date >= date.today()))
+            min_expiry_date = date.today() + timedelta(days=safety_days)
+            query = query.filter(or_(Lot.expiry_date.is_(None), Lot.expiry_date >= min_expiry_date))
 
         # Locked filter
         if exclude_locked:
