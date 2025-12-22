@@ -12,6 +12,7 @@ import { AdjustmentForm } from "../components/AdjustmentForm";
 import { useCreateAdjustment } from "../hooks";
 
 import { ROUTES } from "@/constants/routes";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function AdjustmentCreatePage() {
   const navigate = useNavigate();
@@ -38,12 +39,8 @@ export function AdjustmentCreatePage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">在庫調整登録</h2>
-        <p className="mt-1 text-gray-600">新しい在庫調整を登録します</p>
-      </div>
+    <PageContainer>
+      <PageHeader title="在庫調整登録" subtitle="新しい在庫調整を登録します" className="pb-0" />
 
       {/* Error display */}
       {error && (
@@ -58,6 +55,6 @@ export function AdjustmentCreatePage() {
           isSubmitting={createMutation.isPending}
         />
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -1,7 +1,5 @@
 import { cva } from "class-variance-authority";
 
-export const root = "space-y-6 p-6";
-
 export const header = {
   root: "",
   title: "text-3xl font-bold tracking-tight",

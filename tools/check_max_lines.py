@@ -87,7 +87,12 @@ def should_exclude(path: Path) -> bool:
 
 def main():
     """メイン処理."""
-    app_dir = Path(__file__).parent.parent / "app"
+    # tools/ is at repo root, so backend/app is at ../backend/app
+    repo_root = Path(__file__).parent.parent
+    app_dir = repo_root / "backend" / "app"
+    if not app_dir.exists():
+        # Fallback: try parent/app for backward compatibility
+        app_dir = Path(__file__).parent.parent / "app"
     if not app_dir.exists():
         print(f"❌ Directory not found: {app_dir}", file=sys.stderr)
         sys.exit(1)

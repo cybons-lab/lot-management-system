@@ -8,6 +8,12 @@
  */
 
 export * from "./layout";
-export { DataTable, type SortConfig, type TablePaginationProps, type SelectOption } from "./data";
+export {
+  DataTable,
+  TanstackTable,
+  type SortConfig,
+  type TablePaginationProps,
+  type SelectOption,
+} from "./data";
 export { ExportButton } from "./ExportButton";
 export { QueryErrorFallback } from "./feedback";

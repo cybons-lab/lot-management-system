@@ -17,6 +17,7 @@ import {
 import * as styles from "./BatchJobsPage.styles";
 
 import { Button } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 // eslint-disable-next-line max-lines-per-function -- Page component with multiple sections (SAP sync + batch jobs list)
 export function BatchJobsPage() {
@@ -89,11 +90,13 @@ export function BatchJobsPage() {
   };
 
   return (
-    <div className={styles.root}>
-      {/* Header */}
+    <PageContainer>
       <div className={styles.header.root}>
-        <h2 className={styles.header.title}>バッチジョブ管理</h2>
-        <p className={styles.header.description}>SAP在庫同期とバッチジョブの管理・実行</p>
+        <PageHeader
+          title="バッチジョブ管理"
+          subtitle="SAP在庫同期とバッチジョブの管理・実行"
+          className="pb-0"
+        />
       </div>
 
       {/* ===== SAP Inventory Sync Section ===== */}
@@ -311,6 +314,6 @@ export function BatchJobsPage() {
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -248,7 +248,7 @@ export function SuppliersListPage() {
         subtitle="仕入先の作成・編集・削除、一括インポート/エクスポート"
         actions={
           <MasterPageActions
-            exportApiPath="/masters/suppliers/export/download"
+            exportApiPath="masters/suppliers/export/download"
             exportFilePrefix="suppliers"
             onImportClick={openImport}
             onCreateClick={openCreate}

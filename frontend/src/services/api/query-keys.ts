@@ -88,3 +88,38 @@ export const allQueryKeys = [
   ...masterKeys.warehouses.all,
   ...masterKeys.customers.all,
 ] as const;
+
+/**
+ * Helper function to invalidate all inventory-related queries
+ */
+export const getInventoryQueryKeys = () => [
+  lotKeys.all,
+  ["inventory-items"] as const,
+  ["inventory-by-supplier"] as const,
+  ["inventory-by-warehouse"] as const,
+  ["inventory-by-product"] as const,
+];
+
+/**
+ * Helper function to invalidate all allocation-related queries
+ */
+export const getAllocationQueryKeys = () => [
+  ["allocations"] as const,
+  ["allocationCandidates"] as const,
+  orderKeys.all,
+  ["order-lines"] as const,
+  ["planning-allocation-summary"] as const,
+  ...getInventoryQueryKeys(),
+  ["dashboard"] as const,
+  ["dashboard", "stats"] as const,
+];
+
+/**
+ * Helper function to invalidate all forecast-related queries
+ */
+export const getForecastQueryKeys = () => [
+  ["forecasts"] as const,
+  ["forecasts", "list"] as const,
+  ["forecasts", "history"] as const,
+  ["planning-allocation-summary"] as const,
+];

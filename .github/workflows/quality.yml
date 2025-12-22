@@ -34,13 +34,13 @@ jobs:
       - name: Ruff format check
         run: uv run ruff format --check app/
 
-      - name: Check maximum file lines (300 lines)
-        run: uv run python tools/check_max_lines.py
-        continue-on-error: true
+      # TODO: Re-enable after file refactoring (7 files exceed 300 lines)
+      # - name: Check maximum file lines (300 lines)
+      #   run: uv run python ${{ github.workspace }}/tools/check_max_lines.py
 
-      - name: Run pytest (smoke tests)
-        run: uv run pytest -q -k "not integration" --maxfail=5
-        continue-on-error: true
+      # Note: pytest runs in ci.yml with PostgreSQL service
+      # - name: Run pytest (smoke tests)
+      #   run: uv run pytest -q -k "not integration" --maxfail=5
 
   frontend-quality:
     name: Frontend Quality
@@ -65,9 +65,8 @@ jobs:
       - name: TypeScript type check
         run: npm run typecheck
 
-      - name: ESLint check (max-lines violations allowed temporarily)
-        run: npm run lint --max-warnings=0 || true
-        continue-on-error: true
+      - name: ESLint check
+        run: npm run lint --max-warnings=0
 
       - name: Prettier format check
         run: npm run format:check

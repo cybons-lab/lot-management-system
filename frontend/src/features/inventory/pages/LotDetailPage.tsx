@@ -7,6 +7,7 @@ import { ArrowUpFromLine } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function LotDetailPage() {
   const { lotId } = useParams<{ lotId: string }>();
@@ -17,22 +18,22 @@ export function LotDetailPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">ロット詳細</h2>
-          <p className="mt-1 text-gray-600">ロットID: {lotId}</p>
-        </div>
-        <div className="space-x-2">
-          <Button variant="outline" onClick={handleWithdraw}>
-            <ArrowUpFromLine className="mr-2 h-4 w-4" />
-            出庫
-          </Button>
-          <Button variant="outline">編集</Button>
-          <Button variant="destructive">削除</Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="ロット詳細"
+        subtitle={`ロットID: ${lotId}`}
+        actions={
+          <div className="space-x-2">
+            <Button variant="outline" onClick={handleWithdraw}>
+              <ArrowUpFromLine className="mr-2 h-4 w-4" />
+              出庫
+            </Button>
+            <Button variant="outline">編集</Button>
+            <Button variant="destructive">削除</Button>
+          </div>
+        }
+        className="pb-0"
+      />
 
       {/* Coming Soon */}
       <div className="rounded-lg border bg-white p-8 text-center">
@@ -41,6 +42,6 @@ export function LotDetailPage() {
           ロット基本情報、在庫変動履歴、引当状況を実装予定
         </p>
       </div>
-    </div>
+    </PageContainer>
   );
 }

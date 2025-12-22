@@ -47,6 +47,7 @@ class AllocationCandidateService:
         lock_mode: LockMode = LockMode.NONE,
         warehouse_id: int | None = None,
         exclude_expired: bool = True,
+        safety_days: int = 0,
         exclude_locked: bool = True,
         include_sample: bool = False,
         include_adhoc: bool = False,
@@ -60,6 +61,7 @@ class AllocationCandidateService:
             lock_mode: Database locking mode (default: NONE)
             warehouse_id: Optional warehouse filter
             exclude_expired: Exclude lots past expiry date (default: True)
+            safety_days: Safety margin in days before expiry (default: 0)
             exclude_locked: Exclude lots with locked_quantity > 0 (default: True)
             include_sample: Include sample origin lots (default: False)
             include_adhoc: Include adhoc origin lots (default: False)
@@ -74,6 +76,7 @@ class AllocationCandidateService:
             lock_mode=lock_mode,
             warehouse_id=warehouse_id,
             exclude_expired=exclude_expired,
+            safety_days=safety_days,
             exclude_locked=exclude_locked,
             include_sample=include_sample,
             include_adhoc=include_adhoc,
@@ -87,6 +90,7 @@ class AllocationCandidateService:
         policy: AllocationPolicy,
         lock_mode: LockMode = LockMode.NONE,
         exclude_expired: bool = True,
+        safety_days: int = 0,
         exclude_locked: bool = True,
         include_sample: bool = False,
         include_adhoc: bool = False,
@@ -101,6 +105,7 @@ class AllocationCandidateService:
             policy: Sorting policy (FEFO or FIFO) - REQUIRED
             lock_mode: Database locking mode (default: NONE)
             exclude_expired: Exclude lots past expiry date (default: True)
+            safety_days: Safety margin in days before expiry (default: 0)
             exclude_locked: Exclude lots with locked_quantity > 0 (default: True)
             include_sample: Include sample origin lots (default: False)
             include_adhoc: Include adhoc origin lots (default: False)
@@ -116,6 +121,7 @@ class AllocationCandidateService:
                 policy=policy,
                 lock_mode=lock_mode,
                 exclude_expired=exclude_expired,
+                safety_days=safety_days,
                 exclude_locked=exclude_locked,
                 include_sample=include_sample,
                 include_adhoc=include_adhoc,

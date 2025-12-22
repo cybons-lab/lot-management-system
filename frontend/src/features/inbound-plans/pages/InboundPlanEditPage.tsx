@@ -6,23 +6,24 @@
 import { useParams } from "react-router-dom";
 
 import { Button } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function InboundPlanEditPage() {
   const { planId } = useParams<{ planId: string }>();
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">入荷予定編集</h2>
-          <p className="mt-1 text-gray-600">ID: {planId}</p>
-        </div>
-        <div className="space-x-2">
-          <Button variant="outline">キャンセル</Button>
-          <Button>保存</Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="入荷予定編集"
+        subtitle={`ID: ${planId}`}
+        actions={
+          <div className="space-x-2">
+            <Button variant="outline">キャンセル</Button>
+            <Button>保存</Button>
+          </div>
+        }
+        className="pb-0"
+      />
 
       {/* Coming Soon */}
       <div className="rounded-lg border bg-white p-8 text-center">
@@ -31,6 +32,6 @@ export function InboundPlanEditPage() {
           入荷予定編集フォーム、明細編集テーブルを実装予定
         </p>
       </div>
-    </div>
+    </PageContainer>
   );
 }

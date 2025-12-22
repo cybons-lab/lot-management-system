@@ -87,6 +87,22 @@ def persist_reservation_entities(
                 f"Invalid allocation quantity: {alloc_plan.allocate_qty}. Must be positive."
             )
 
+        # Idempotency check: Skip if reservation already exists for this (lot_id, source_id)
+        existing_reservation = (
+            db.query(LotReservation)
+            .filter(
+                LotReservation.lot_id == alloc_plan.lot_id,
+                LotReservation.source_type == ReservationSourceType.ORDER,
+                LotReservation.source_id == line.id,
+                LotReservation.status != ReservationStatus.RELEASED,
+            )
+            .first()
+        )
+        if existing_reservation:
+            # Already reserved - skip to ensure idempotency
+            created.append(existing_reservation)
+            continue
+
         lot_stmt = select(Lot).where(Lot.id == alloc_plan.lot_id).with_for_update()
         lot = db.execute(lot_stmt).scalar_one_or_none()
         if not lot:

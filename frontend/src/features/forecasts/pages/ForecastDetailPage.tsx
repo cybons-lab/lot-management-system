@@ -10,6 +10,7 @@ import { useForecast } from "../hooks";
 import { Button } from "@/components/ui";
 import { Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { formatDate, formatDateTime } from "@/shared/utils/date";
 
 export function ForecastDetailPage() {
@@ -25,39 +26,39 @@ export function ForecastDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
+      <PageContainer>
         <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
           読み込み中...
         </div>
-      </div>
+      </PageContainer>
     );
   }
 
   if (isError || !forecast) {
     return (
-      <div className="p-6">
+      <PageContainer>
         <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-600">
           フォーキャストの取得に失敗しました
         </div>
         <Button onClick={handleBack} className="mt-4">
           一覧に戻る
         </Button>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">フォーキャスト詳細</h2>
-          <p className="mt-1 text-gray-600">ID: {forecast.id}</p>
-        </div>
-        <Button variant="outline" onClick={handleBack}>
-          一覧に戻る
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="フォーキャスト詳細"
+        subtitle={`ID: ${forecast.id}`}
+        actions={
+          <Button variant="outline" onClick={handleBack}>
+            一覧に戻る
+          </Button>
+        }
+        className="pb-0"
+      />
 
       {/* Forecast Detail */}
       <Card>
@@ -106,6 +107,6 @@ export function ForecastDetailPage() {
       <div className="text-sm text-gray-500">
         更新日: {forecast.updated_at ? formatDateTime(forecast.updated_at) : "-"}
       </div>
-    </div>
+    </PageContainer>
   );
 }

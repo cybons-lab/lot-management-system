@@ -4,18 +4,17 @@
  */
 
 import { Button } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function SeedSnapshotsPage() {
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">スナップショット管理</h2>
-          <p className="mt-1 text-gray-600">データベーススナップショットの作成・復元</p>
-        </div>
-        <Button>新規スナップショット作成</Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="スナップショット管理"
+        subtitle="データベーススナップショットの作成・復元"
+        actions={<Button>新規スナップショット作成</Button>}
+        className="pb-0"
+      />
 
       {/* Coming Soon */}
       <div className="rounded-lg border bg-white p-8 text-center">
@@ -24,6 +23,6 @@ export function SeedSnapshotsPage() {
           スナップショット一覧、作成、復元、削除機能を実装予定
         </p>
       </div>
-    </div>
+    </PageContainer>
   );
 }

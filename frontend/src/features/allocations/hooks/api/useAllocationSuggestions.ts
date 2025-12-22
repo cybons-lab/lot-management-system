@@ -15,7 +15,7 @@ import {
   type AllocationCommitRequest,
 } from "../../api";
 
-import { getAllocationQueryKeys } from "@/shared/constants/query-keys";
+import { getAllocationQueryKeys } from "@/services/api/query-keys";
 
 /**
  * Create manual allocation suggestion (preview only)

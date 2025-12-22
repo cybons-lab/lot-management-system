@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useBusinessRules, useToggleBusinessRuleActive, useDeleteBusinessRule } from "../hooks";
 
 import { Button } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function BusinessRulesPage() {
   const [isActiveFilter, setIsActiveFilter] = useState<boolean | undefined>(undefined);
@@ -55,12 +56,8 @@ export function BusinessRulesPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">業務ルール</h2>
-        <p className="mt-1 text-gray-600">システムの業務ルールを管理</p>
-      </div>
+    <PageContainer>
+      <PageHeader title="業務ルール" subtitle="システムの業務ルールを管理" className="pb-0" />
 
       {/* Filter */}
       <div className="rounded-lg border bg-white p-4">
@@ -189,6 +186,6 @@ export function BusinessRulesPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

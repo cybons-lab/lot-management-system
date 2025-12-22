@@ -11,11 +11,12 @@ import type { CreateUserRequest } from "../api";
 import { UserForm } from "../components/UserForm";
 import { useUsers, useCreateUser, useDeleteUser } from "../hooks";
 
-import * as styles from "./styles";
+import { createUserColumns } from "./columns";
 
-import { Button } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
 import { MasterImportDialog } from "@/features/masters/components/MasterImportDialog";
+import { TanstackTable } from "@/shared/components";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 
 // eslint-disable-next-line max-lines-per-function
@@ -73,24 +74,30 @@ export function UsersListPage() {
     navigate(ROUTES.SETTINGS.USERS + `/${userId}`);
   };
 
+  const columns = createUserColumns({
+    onViewDetail: handleViewDetail,
+    onDelete: handleDelete,
+    isDeleting: deleteMutation.isPending,
+  });
+
   return (
-    <div className={styles.root}>
-      {/* Header */}
-      <div className={styles.header.root}>
-        <div className={styles.header.titleGroup}>
-          <h2 className={styles.header.title}>ユーザー管理</h2>
-          <p className={styles.header.description}>ユーザーの作成・編集・削除</p>
-        </div>
-        {!showForm && (
-          <MasterPageActions
-            exportApiPath="/users/export/download"
-            exportFilePrefix="users"
-            onImportClick={() => setIsImportDialogOpen(true)}
-            onCreateClick={handleCreateNew}
-            createLabel="新規ユーザー作成"
-          />
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="ユーザー管理"
+        subtitle="ユーザーの作成・編集・削除"
+        actions={
+          !showForm && (
+            <MasterPageActions
+              exportApiPath="users/export/download"
+              exportFilePrefix="users"
+              onImportClick={() => setIsImportDialogOpen(true)}
+              onCreateClick={handleCreateNew}
+              createLabel="新規ユーザー作成"
+            />
+          )
+        }
+        className="pb-0"
+      />
 
       {/* インポートダイアログ */}
       <MasterImportDialog
@@ -102,8 +109,8 @@ export function UsersListPage() {
 
       {/* Create Form */}
       {showForm && (
-        <div className={styles.card.root}>
-          <h3 className={styles.card.title}>ユーザー作成</h3>
+        <div className="rounded-lg border bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold">ユーザー作成</h3>
           <UserForm
             onSubmit={handleSubmitCreate}
             onCancel={handleCancelCreate}
@@ -113,9 +120,9 @@ export function UsersListPage() {
       )}
 
       {/* Filter */}
-      <div className={styles.filter.root}>
-        <div className={styles.filter.container}>
-          <label className={styles.filter.label} htmlFor="status-filter">
+      <div className="rounded-lg border bg-white p-4">
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium" htmlFor="status-filter">
             状態フィルタ:
           </label>
           <select
@@ -126,7 +133,7 @@ export function UsersListPage() {
               else if (e.target.value === "active") setIsActiveFilter(true);
               else setIsActiveFilter(false);
             }}
-            className={styles.filter.select}
+            className="rounded-md border px-3 py-2 text-sm"
           >
             <option value="all">すべて</option>
             <option value="active">有効のみ</option>
@@ -137,77 +144,27 @@ export function UsersListPage() {
 
       {/* Data display area */}
       {isLoading ? (
-        <div className={styles.loadingState}>読み込み中...</div>
-      ) : isError ? (
-        <div className={styles.errorState}>データの取得に失敗しました</div>
-      ) : !users || users.length === 0 ? (
-        <div className={styles.emptyState}>ユーザーが登録されていません</div>
-      ) : (
-        <div className="space-y-4">
-          <div className="text-sm text-gray-600">{users.length} 人のユーザー</div>
-
-          {/* Table */}
-          <div className={styles.table.container}>
-            <table className={styles.table.root}>
-              <thead className={styles.table.thead}>
-                <tr key="header">
-                  <th className={styles.table.th}>ユーザーID</th>
-                  <th className={styles.table.th}>ユーザー名</th>
-                  <th className={styles.table.th}>メールアドレス</th>
-                  <th className={styles.table.th}>表示名</th>
-                  <th className={styles.table.th}>状態</th>
-                  <th className={styles.table.th}>操作</th>
-                </tr>
-              </thead>
-              <tbody className={styles.table.tbody}>
-                {users.map((user) => (
-                  <tr key={user.user_id} className={styles.table.tr}>
-                    <td className={styles.table.td}>{user.user_id}</td>
-                    <td className={styles.table.tdMedium}>{user.username}</td>
-                    <td className={styles.table.td}>
-                      <span className="block max-w-[200px] truncate" title={user.email}>
-                        {user.email}
-                      </span>
-                    </td>
-                    <td className={styles.table.td}>
-                      <span
-                        className="block max-w-[150px] truncate"
-                        title={user.display_name || ""}
-                      >
-                        {user.display_name}
-                      </span>
-                    </td>
-                    <td className={styles.table.td}>
-                      <span className={styles.statusBadge({ isActive: user.is_active })}>
-                        {user.is_active ? "有効" : "無効"}
-                      </span>
-                    </td>
-                    <td className={styles.table.td}>
-                      <div className={styles.actionButtons}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewDetail(user.user_id)}
-                        >
-                          詳細
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(user.user_id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          削除
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+          読み込み中...
         </div>
+      ) : isError ? (
+        <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-600">
+          データの取得に失敗しました
+        </div>
+      ) : !users || users.length === 0 ? (
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+          ユーザーが登録されていません
+        </div>
+      ) : (
+        <TanstackTable
+          data={users}
+          columns={columns}
+          initialPageSize={25}
+          isLoading={isLoading}
+          pageSizeOptions={[10, 25, 50, 100]}
+          className="overflow-hidden"
+        />
       )}
-    </div>
+    </PageContainer>
   );
 }

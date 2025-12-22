@@ -35,6 +35,7 @@ if TYPE_CHECKING:
 def _get_fefo_candidates_for_line(
     db: Session,
     product_id: int,
+    warehouse_id: int | None = None,
     lock: bool = True,
 ) -> list[LotCandidate]:
     """Fetch FEFO candidates for a product using SSOT.
@@ -42,6 +43,7 @@ def _get_fefo_candidates_for_line(
     Args:
         db: Database session
         product_id: Product ID
+        warehouse_id: Optional warehouse ID to filter by
         lock: Whether to lock rows for update
 
     Returns:
@@ -52,6 +54,7 @@ def _get_fefo_candidates_for_line(
         product_id=product_id,
         policy=AllocationPolicy.FEFO,
         lock_mode=LockMode.FOR_UPDATE if lock else LockMode.NONE,
+        warehouse_id=warehouse_id,
         exclude_expired=True,
         exclude_locked=False,
     )
@@ -92,8 +95,11 @@ def auto_reserve_line(
     if required_qty <= 0:
         return []
 
-    # Use SSOT for candidate fetching
-    candidates = _get_fefo_candidates_for_line(db, line.product_id, lock=True)
+    # Use SSOT for candidate fetching with warehouse filter
+    warehouse_id = getattr(line, "warehouse_id", None)
+    candidates = _get_fefo_candidates_for_line(
+        db, line.product_id, warehouse_id=warehouse_id, lock=True
+    )
 
     created_reservations: list[LotReservation] = []
     remaining_qty = required_qty
@@ -148,8 +154,11 @@ def _auto_reserve_line_no_commit(
     if not line:
         return []
 
-    # Use SSOT for candidate fetching
-    candidates = _get_fefo_candidates_for_line(db, line.product_id, lock=True)
+    # Use SSOT for candidate fetching with warehouse filter
+    warehouse_id = getattr(line, "warehouse_id", None)
+    candidates = _get_fefo_candidates_for_line(
+        db, line.product_id, warehouse_id=warehouse_id, lock=True
+    )
 
     created_reservations: list[LotReservation] = []
     remaining_qty = required_qty
