@@ -5,7 +5,7 @@ from decimal import Decimal
 from unittest.mock import MagicMock
 
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
