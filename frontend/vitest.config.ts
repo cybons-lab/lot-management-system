@@ -9,6 +9,7 @@ export default mergeConfig(
       environment: "jsdom",
       setupFiles: "./src/test/setup.ts",
       css: true,
+      exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**", "**/.{idea,git,cache,output,temp}/**"],
     },
   }),
 );
