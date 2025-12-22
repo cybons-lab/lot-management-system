@@ -263,7 +263,16 @@ def update_route(
             detail=f"Route with id {route_id} not found",
         )
 
+    # exclude_unset=True: フィールドが送信されなかった場合は除外
+    # さらに、NOT NULLカラム (transport_lead_time_days, is_active) に
+    # null が明示的に送られた場合も除外し、500エラーを防止
     update_data = data.model_dump(exclude_unset=True)
+
+    # transport_lead_time_days と is_active は NOT NULL カラムなのでNoneをスキップ
+    if update_data.get("transport_lead_time_days") is None:
+        update_data.pop("transport_lead_time_days", None)
+    if update_data.get("is_active") is None:
+        update_data.pop("is_active", None)
 
     for field, value in update_data.items():
         setattr(route, field, value)
