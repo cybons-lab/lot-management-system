@@ -278,6 +278,10 @@ class MaterialDeliveryNoteOrchestrator:
         ).update({"lock_flag": True, "updated_at": now}, synchronize_session=False)
 
         # Checkpoint commit: 外部API呼び出し前にステータスを確定させる
+        # NOTE: This explicit commit is required because the external Flow execution takes time.
+        # Without this, the 'STEP2_RUNNING' status would not be visible to other transactions/requests
+        # until the Flow returns, potentially causing double-execution or confusing UI states.
+        # Ideally, this should be handled by an asynchronous job queue (e.g., Celery).
         self.db.commit()
 
         # Call Flow
@@ -329,11 +333,6 @@ class MaterialDeliveryNoteOrchestrator:
 
         run.status = RpaRunStatus.STEP4_CHECK_RUNNING
         run.step4_executed_at = utcnow()
-        # Explicit commit for checkpoint? Or let UoW handle?
-        # Ideally parsing is fast. But if we want to show 'Running' status during parsing...
-        # Parsing is sync here, so commit doesn't help much unless parsing is very slow.
-        # Let's remove commit to adhere to UoW.
-        # self.db.commit()
         self.db.flush()
 
         try:
@@ -361,11 +360,7 @@ class MaterialDeliveryNoteOrchestrator:
 
         except Exception as e:
             run.status = RpaRunStatus.READY_FOR_STEP4_CHECK
-            # If we error, we probably want to save the revert state?
-            # But if we raise, UoW rolls back entire transaction including the start status update.
-            # So status remains READY_FOR_STEP4_CHECK (initial state).
-            # This is fine. No need to commit revert.
-            # self.db.commit()
+            # No commit here; UoW rollback will handle it.
             raise e
 
     def retry_step3_failed(self, run_id: int) -> RpaRun:
