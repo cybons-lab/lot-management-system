@@ -104,6 +104,7 @@ export function TanstackTable<TData>({
   pageSizeOptions = [10, 25, 50, 100],
 }: TanstackTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(initialPageSize);
 
   const table = useReactTable({
@@ -111,9 +112,14 @@ export function TanstackTable<TData>({
     columns,
     state: {
       sorting,
-      pagination: { pageIndex: 0, pageSize },
+      pagination: { pageIndex, pageSize },
     },
     onSortingChange: setSorting,
+    onPaginationChange: (updater) => {
+      const newState = typeof updater === "function" ? updater({ pageIndex, pageSize }) : updater;
+      setPageIndex(newState.pageIndex);
+      setPageSize(newState.pageSize);
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

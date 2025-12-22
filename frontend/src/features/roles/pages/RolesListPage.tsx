@@ -6,7 +6,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-
 import type { CreateRoleRequest } from "../api";
 import { RoleForm } from "../components/RoleForm";
 import { useRoles, useCreateRole, useDeleteRole } from "../hooks";
@@ -62,7 +61,10 @@ export function RolesListPage() {
     }
   };
 
-  const columns = createRoleColumns({ onDelete: handleDelete, isDeleting: deleteMutation.isPending });
+  const columns = createRoleColumns({
+    onDelete: handleDelete,
+    isDeleting: deleteMutation.isPending,
+  });
 
   return (
     <PageContainer>

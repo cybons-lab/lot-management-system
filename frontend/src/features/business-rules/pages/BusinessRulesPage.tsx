@@ -57,11 +57,7 @@ export function BusinessRulesPage() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="業務ルール"
-        subtitle="システムの業務ルールを管理"
-        className="pb-0"
-      />
+      <PageHeader title="業務ルール" subtitle="システムの業務ルールを管理" className="pb-0" />
 
       {/* Filter */}
       <div className="rounded-lg border bg-white p-4">

@@ -35,7 +35,7 @@ jobs:
         run: uv run ruff format --check app/
 
       - name: Check maximum file lines (300 lines)
-        run: uv run python ../tools/check_max_lines.py
+        run: uv run python ${{ github.workspace }}/tools/check_max_lines.py
 
       - name: Run pytest (smoke tests)
         run: uv run pytest -q -k "not integration" --maxfail=5

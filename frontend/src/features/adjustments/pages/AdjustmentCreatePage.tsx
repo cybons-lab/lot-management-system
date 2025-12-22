@@ -40,11 +40,7 @@ export function AdjustmentCreatePage() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title="在庫調整登録"
-        subtitle="新しい在庫調整を登録します"
-        className="pb-0"
-      />
+      <PageHeader title="在庫調整登録" subtitle="新しい在庫調整を登録します" className="pb-0" />
 
       {/* Error display */}
       {error && (
