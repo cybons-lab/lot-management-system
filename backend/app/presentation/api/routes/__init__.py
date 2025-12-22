@@ -49,6 +49,7 @@ from app.presentation.api.routes.masters import (
     supplier_products_router,
     suppliers_router,
     uom_conversions_router,
+    warehouse_delivery_routes_router,
     warehouses_router,
 )
 from app.presentation.api.routes.orders import (
@@ -114,6 +115,7 @@ def register_all_routers(app: FastAPI) -> None:
     app.include_router(customer_items_router, prefix=masters_prefix)
     app.include_router(customer_item_delivery_settings_router, prefix=masters_prefix)
     app.include_router(product_mappings_router, prefix=masters_prefix)
+    app.include_router(warehouse_delivery_routes_router, prefix=masters_prefix)
 
     # Auth & User management
     app.include_router(auth_router, prefix=f"{prefix}/auth")
@@ -152,6 +154,7 @@ __all__ = [
     "supplier_products_router",
     "suppliers_router",
     "uom_conversions_router",
+    "warehouse_delivery_routes_router",
     "warehouses_router",
     # Orders (2 - validate router disabled)
     "orders_router",

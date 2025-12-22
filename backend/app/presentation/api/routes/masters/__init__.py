@@ -21,6 +21,9 @@ from app.presentation.api.routes.masters.suppliers_router import router as suppl
 from app.presentation.api.routes.masters.uom_conversions_router import (
     router as uom_conversions_router,
 )
+from app.presentation.api.routes.masters.warehouse_delivery_routes_router import (
+    router as warehouse_delivery_routes_router,
+)
 from app.presentation.api.routes.masters.warehouses_router import router as warehouses_router
 
 
@@ -34,5 +37,6 @@ __all__ = [
     "supplier_products_router",
     "suppliers_router",
     "uom_conversions_router",
+    "warehouse_delivery_routes_router",
     "warehouses_router",
 ]

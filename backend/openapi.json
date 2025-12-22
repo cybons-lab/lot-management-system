@@ -9114,6 +9114,360 @@
         }
       }
     },
+    "/api/masters/warehouse-delivery-routes": {
+      "get": {
+        "tags": [
+          "warehouse-delivery-routes"
+        ],
+        "summary": "List Routes",
+        "description": "List warehouse delivery routes with optional filters.",
+        "operationId": "list_routes_api_masters_warehouse_delivery_routes_get",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Filter by warehouse ID"
+          },
+          {
+            "name": "delivery_place_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by delivery place ID",
+              "title": "Delivery Place Id"
+            },
+            "description": "Filter by delivery place ID"
+          },
+          {
+            "name": "is_active",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by active status",
+              "title": "Is Active"
+            },
+            "description": "Filter by active status"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Skip"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WarehouseDeliveryRouteResponse"
+                  },
+                  "title": "Response List Routes Api Masters Warehouse Delivery Routes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "warehouse-delivery-routes"
+        ],
+        "summary": "Create Route",
+        "description": "Create warehouse delivery route.",
+        "operationId": "create_route_api_masters_warehouse_delivery_routes_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WarehouseDeliveryRouteCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseDeliveryRouteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/warehouse-delivery-routes/lookup": {
+      "get": {
+        "tags": [
+          "warehouse-delivery-routes"
+        ],
+        "summary": "Lookup Lead Time",
+        "description": "Lookup transport lead time with fallback logic.\n\nPriority:\n1. Route with matching warehouse + delivery_place + product\n2. Route default (warehouse + delivery_place + product_id=NULL)\n3. Warehouse default (default_transport_lead_time_days)\n4. Not found",
+        "operationId": "lookup_lead_time_api_masters_warehouse_delivery_routes_lookup_get",
+        "parameters": [
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Warehouse ID",
+              "title": "Warehouse Id"
+            },
+            "description": "Warehouse ID"
+          },
+          {
+            "name": "delivery_place_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Delivery place ID",
+              "title": "Delivery Place Id"
+            },
+            "description": "Delivery place ID"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Product ID (optional)",
+              "title": "Product Id"
+            },
+            "description": "Product ID (optional)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransportLeadTimeResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/masters/warehouse-delivery-routes/{route_id}": {
+      "get": {
+        "tags": [
+          "warehouse-delivery-routes"
+        ],
+        "summary": "Get Route",
+        "description": "Get warehouse delivery route by ID.",
+        "operationId": "get_route_api_masters_warehouse_delivery_routes__route_id__get",
+        "parameters": [
+          {
+            "name": "route_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Route Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseDeliveryRouteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "warehouse-delivery-routes"
+        ],
+        "summary": "Update Route",
+        "description": "Update warehouse delivery route.",
+        "operationId": "update_route_api_masters_warehouse_delivery_routes__route_id__put",
+        "parameters": [
+          {
+            "name": "route_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Route Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WarehouseDeliveryRouteUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WarehouseDeliveryRouteResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "warehouse-delivery-routes"
+        ],
+        "summary": "Delete Route",
+        "description": "Delete warehouse delivery route.",
+        "operationId": "delete_route_api_masters_warehouse_delivery_routes__route_id__delete",
+        "parameters": [
+          {
+            "name": "route_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Route Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "summary": "Login",
@@ -23810,6 +24164,33 @@
         "title": "TokenResponse",
         "description": "Token response schema."
       },
+      "TransportLeadTimeResponse": {
+        "properties": {
+          "transport_lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lead Time Days",
+            "description": "輸送リードタイム（日）。該当なしの場合はNone"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "LT取得元: 'route_product', 'route_default', 'warehouse_default', 'not_found'"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source"
+        ],
+        "title": "TransportLeadTimeResponse",
+        "description": "Transport lead time lookup response."
+      },
       "UomConversionBulkRow": {
         "properties": {
           "product_code": {
@@ -24439,6 +24820,258 @@
         ],
         "title": "WarehouseCreate",
         "description": "Create warehouse request."
+      },
+      "WarehouseDeliveryRouteCreate": {
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Warehouse Id",
+            "description": "出荷元倉庫ID"
+          },
+          "delivery_place_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Delivery Place Id",
+            "description": "納入先ID"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id",
+            "description": "品番ID（NULLの場合は経路デフォルト）"
+          },
+          "transport_lead_time_days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Transport Lead Time Days",
+            "description": "輸送リードタイム（日）"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "有効フラグ",
+            "default": true
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "備考"
+          }
+        },
+        "type": "object",
+        "required": [
+          "warehouse_id",
+          "delivery_place_id",
+          "transport_lead_time_days"
+        ],
+        "title": "WarehouseDeliveryRouteCreate",
+        "description": "Create warehouse delivery route request."
+      },
+      "WarehouseDeliveryRouteResponse": {
+        "properties": {
+          "warehouse_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Warehouse Id",
+            "description": "出荷元倉庫ID"
+          },
+          "delivery_place_id": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Delivery Place Id",
+            "description": "納入先ID"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id",
+            "description": "品番ID（NULLの場合は経路デフォルト）"
+          },
+          "transport_lead_time_days": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Transport Lead Time Days",
+            "description": "輸送リードタイム（日）"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "有効フラグ",
+            "default": true
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "備考"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          },
+          "warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Code"
+          },
+          "warehouse_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warehouse Name"
+          },
+          "delivery_place_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Code"
+          },
+          "delivery_place_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delivery Place Name"
+          },
+          "product_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Name"
+          },
+          "maker_part_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "warehouse_id",
+          "delivery_place_id",
+          "transport_lead_time_days",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WarehouseDeliveryRouteResponse",
+        "description": "Warehouse delivery route response."
+      },
+      "WarehouseDeliveryRouteUpdate": {
+        "properties": {
+          "transport_lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Transport Lead Time Days",
+            "description": "輸送リードタイム（日）"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active",
+            "description": "有効フラグ"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes",
+            "description": "備考"
+          }
+        },
+        "type": "object",
+        "title": "WarehouseDeliveryRouteUpdate",
+        "description": "Update warehouse delivery route request."
       },
       "WarehouseResponse": {
         "properties": {

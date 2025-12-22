@@ -62,6 +62,9 @@ class Warehouse(SoftDeleteMixin, Base):
     warehouse_code: Mapped[str] = mapped_column(String(50), nullable=False)
     warehouse_name: Mapped[str] = mapped_column(String(200), nullable=False)
     warehouse_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    default_transport_lead_time_days: Mapped[int | None] = mapped_column(
+        Integer, nullable=True, comment="デフォルト輸送リードタイム（日）"
+    )
     valid_to: Mapped[date] = mapped_column(
         Date, nullable=False, server_default=text("'9999-12-31'")
     )
@@ -84,6 +87,9 @@ class Warehouse(SoftDeleteMixin, Base):
 
     # Relationships
     lots: Mapped[list[Lot]] = relationship("Lot", back_populates="warehouse")
+    delivery_routes: Mapped[list[WarehouseDeliveryRoute]] = relationship(
+        "WarehouseDeliveryRoute", back_populates="warehouse", cascade="all, delete-orphan"
+    )
 
 
 class Supplier(SoftDeleteMixin, Base):
@@ -570,3 +576,58 @@ class CustomerItemDeliverySetting(Base):
 
     # Relationships
     delivery_place: Mapped[DeliveryPlace | None] = relationship("DeliveryPlace")
+
+
+class WarehouseDeliveryRoute(Base):
+    """Warehouse delivery routes table (輸送経路マスタ).
+
+    倉庫から納入先への輸送リードタイムを管理。
+    品番別のLT設定も可能（product_id指定）。
+
+    直送（supplier warehouse_type）は対象外。
+    """
+
+    __tablename__ = "warehouse_delivery_routes"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    warehouse_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("warehouses.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    delivery_place_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("delivery_places.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    product_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("products.id", ondelete="CASCADE"),
+        nullable=True,
+        comment="品番（NULLの場合は経路デフォルト）",
+    )
+    transport_lead_time_days: Mapped[int] = mapped_column(
+        Integer, nullable=False, comment="輸送リードタイム（日）"
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("true"), nullable=False, comment="有効フラグ"
+    )
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True, comment="備考")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, server_default=func.current_timestamp()
+    )
+
+    __table_args__ = (
+        Index("idx_wdr_warehouse", "warehouse_id"),
+        Index("idx_wdr_delivery_place", "delivery_place_id"),
+        Index("idx_wdr_product", "product_id"),
+        Index("idx_wdr_active", "is_active"),
+    )
+
+    # Relationships
+    warehouse: Mapped[Warehouse] = relationship("Warehouse", back_populates="delivery_routes")
+    delivery_place: Mapped[DeliveryPlace] = relationship("DeliveryPlace")
+    product: Mapped[Product | None] = relationship("Product")
