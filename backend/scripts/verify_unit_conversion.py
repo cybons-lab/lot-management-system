@@ -122,9 +122,9 @@ def verify_unit_conversion():
         print(f"Order Line: {line.order_quantity} {line.unit}")
         print(f"Converted Qty: {line.converted_quantity} (Expected: 2.0)")
 
-        assert line.converted_quantity == Decimal("2.000"), (
-            f"Conversion failed: {line.converted_quantity} != 2.0"
-        )
+        assert line.converted_quantity == Decimal(
+            "2.000"
+        ), f"Conversion failed: {line.converted_quantity} != 2.0"
         print("✅ Conversion Logic Verified")
 
         # 5. Setup Lot (Internal Unit)
@@ -158,9 +158,9 @@ def verify_unit_conversion():
         line_plan = preview.lines[0]
 
         print(f"Allocation Plan Required Qty: {line_plan.required_qty}")
-        assert line_plan.required_qty == 2.0, (
-            f"Allocation required qty mismatch: {line_plan.required_qty} != 2.0"
-        )
+        assert (
+            line_plan.required_qty == 2.0
+        ), f"Allocation required qty mismatch: {line_plan.required_qty} != 2.0"
 
         allocated_qty = sum(a.allocate_qty for a in line_plan.allocations)
         print(f"Allocated Qty: {allocated_qty}")

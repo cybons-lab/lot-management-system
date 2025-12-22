@@ -5061,6 +5061,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/ocr/import": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * OCRデータ取込
+     * @description PADから送信されたOCRデータを受け取り、受注として登録。マスタから不足情報を補完。
+     */
+    post: operations["import_ocr_data_api_ocr_import_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/": {
     parameters: {
       query?: never;
@@ -8256,6 +8276,131 @@ export interface components {
       primary_supplier_ids: number[];
       /** All Supplier Ids */
       all_supplier_ids: number[];
+    };
+    /**
+     * OcrImportLineRequest
+     * @description OCR取込明細行.
+     */
+    OcrImportLineRequest: {
+      /**
+       * External Product Code
+       * @description 先方品番（OCR読取値）
+       */
+      external_product_code: string;
+      /**
+       * Jiku Code
+       * @description 次区コード
+       */
+      jiku_code: string;
+      /**
+       * Quantity
+       * @description 数量
+       */
+      quantity: number;
+      /**
+       * Delivery Date
+       * Format: date
+       * @description 納期
+       */
+      delivery_date: string;
+    };
+    /**
+     * OcrImportLineResult
+     * @description OCR取込明細行の処理結果.
+     */
+    OcrImportLineResult: {
+      /**
+       * Row No
+       * @description 行番号
+       */
+      row_no: number;
+      /**
+       * External Product Code
+       * @description 先方品番
+       */
+      external_product_code: string;
+      /**
+       * Product Id
+       * @description 解決された製品ID
+       */
+      product_id?: number | null;
+      /**
+       * Match Type
+       * @description マッチ種別（exact/prefix/not_found/multiple）
+       */
+      match_type: string;
+      /**
+       * Status
+       * @description 処理状態（resolved/unresolved）
+       */
+      status: string;
+      /**
+       * Message
+       * @description メッセージ
+       */
+      message?: string | null;
+    };
+    /**
+     * OcrImportRequest
+     * @description OCR取込リクエスト.
+     */
+    OcrImportRequest: {
+      /**
+       * Customer Code
+       * @description 得意先コード
+       */
+      customer_code: string;
+      /**
+       * Source Filename
+       * @description OCR元ファイル名
+       */
+      source_filename: string;
+      /**
+       * Lines
+       * @description 明細行リスト
+       */
+      lines: components["schemas"]["OcrImportLineRequest"][];
+    };
+    /**
+     * OcrImportResponse
+     * @description OCR取込レスポンス.
+     */
+    OcrImportResponse: {
+      /**
+       * Order Id
+       * @description 作成された受注ID
+       */
+      order_id: number;
+      /**
+       * Customer Code
+       * @description 得意先コード
+       */
+      customer_code: string;
+      /**
+       * Source Filename
+       * @description OCR元ファイル名
+       */
+      source_filename: string;
+      /**
+       * Total Lines
+       * @description 総明細数
+       */
+      total_lines: number;
+      /**
+       * Resolved Count
+       * @description 解決済み件数
+       */
+      resolved_count: number;
+      /**
+       * Unresolved Count
+       * @description 未解決件数
+       */
+      unresolved_count: number;
+      /**
+       * Lines
+       * @description 明細処理結果
+       */
+      lines: components["schemas"]["OcrImportLineResult"][];
     };
     /**
      * OperationLogListResponse
@@ -18806,6 +18951,39 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  import_ocr_data_api_ocr_import_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OcrImportRequest"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OcrImportResponse"];
+        };
       };
       /** @description Validation Error */
       422: {

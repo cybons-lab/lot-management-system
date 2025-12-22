@@ -13660,6 +13660,48 @@
         }
       }
     },
+    "/api/ocr/import": {
+      "post": {
+        "tags": [
+          "OCR"
+        ],
+        "summary": "OCRデータ取込",
+        "description": "PADから送信されたOCRデータを受け取り、受注として登録。マスタから不足情報を補完。",
+        "operationId": "import_ocr_data_api_ocr_import_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OcrImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OcrImportResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -20599,6 +20641,181 @@
         ],
         "title": "MySuppliersResponse",
         "description": "現在のユーザーの担当仕入先ID一覧."
+      },
+      "OcrImportLineRequest": {
+        "properties": {
+          "external_product_code": {
+            "type": "string",
+            "title": "External Product Code",
+            "description": "先方品番（OCR読取値）"
+          },
+          "jiku_code": {
+            "type": "string",
+            "title": "Jiku Code",
+            "description": "次区コード"
+          },
+          "quantity": {
+            "type": "number",
+            "title": "Quantity",
+            "description": "数量"
+          },
+          "delivery_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Delivery Date",
+            "description": "納期"
+          }
+        },
+        "type": "object",
+        "required": [
+          "external_product_code",
+          "jiku_code",
+          "quantity",
+          "delivery_date"
+        ],
+        "title": "OcrImportLineRequest",
+        "description": "OCR取込明細行."
+      },
+      "OcrImportLineResult": {
+        "properties": {
+          "row_no": {
+            "type": "integer",
+            "title": "Row No",
+            "description": "行番号"
+          },
+          "external_product_code": {
+            "type": "string",
+            "title": "External Product Code",
+            "description": "先方品番"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id",
+            "description": "解決された製品ID"
+          },
+          "match_type": {
+            "type": "string",
+            "title": "Match Type",
+            "description": "マッチ種別（exact/prefix/not_found/multiple）"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "処理状態（resolved/unresolved）"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "メッセージ"
+          }
+        },
+        "type": "object",
+        "required": [
+          "row_no",
+          "external_product_code",
+          "match_type",
+          "status"
+        ],
+        "title": "OcrImportLineResult",
+        "description": "OCR取込明細行の処理結果."
+      },
+      "OcrImportRequest": {
+        "properties": {
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code",
+            "description": "得意先コード"
+          },
+          "source_filename": {
+            "type": "string",
+            "title": "Source Filename",
+            "description": "OCR元ファイル名"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/OcrImportLineRequest"
+            },
+            "type": "array",
+            "title": "Lines",
+            "description": "明細行リスト"
+          }
+        },
+        "type": "object",
+        "required": [
+          "customer_code",
+          "source_filename",
+          "lines"
+        ],
+        "title": "OcrImportRequest",
+        "description": "OCR取込リクエスト."
+      },
+      "OcrImportResponse": {
+        "properties": {
+          "order_id": {
+            "type": "integer",
+            "title": "Order Id",
+            "description": "作成された受注ID"
+          },
+          "customer_code": {
+            "type": "string",
+            "title": "Customer Code",
+            "description": "得意先コード"
+          },
+          "source_filename": {
+            "type": "string",
+            "title": "Source Filename",
+            "description": "OCR元ファイル名"
+          },
+          "total_lines": {
+            "type": "integer",
+            "title": "Total Lines",
+            "description": "総明細数"
+          },
+          "resolved_count": {
+            "type": "integer",
+            "title": "Resolved Count",
+            "description": "解決済み件数"
+          },
+          "unresolved_count": {
+            "type": "integer",
+            "title": "Unresolved Count",
+            "description": "未解決件数"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/OcrImportLineResult"
+            },
+            "type": "array",
+            "title": "Lines",
+            "description": "明細処理結果"
+          }
+        },
+        "type": "object",
+        "required": [
+          "order_id",
+          "customer_code",
+          "source_filename",
+          "total_lines",
+          "resolved_count",
+          "unresolved_count",
+          "lines"
+        ],
+        "title": "OcrImportResponse",
+        "description": "OCR取込レスポンス."
       },
       "OperationLogListResponse": {
         "properties": {
