@@ -63,9 +63,7 @@ def drop_known_view_relations(engine: Engine) -> None:
 def apply_views_sql(engine: Engine) -> None:
     """Apply the canonical view definitions from create_views.sql."""
 
-    views_sql_path = (
-        Path(__file__).resolve().parent.parent / "sql" / "views" / "create_views.sql"
-    )
+    views_sql_path = Path(__file__).resolve().parent.parent / "sql" / "views" / "create_views.sql"
     if not views_sql_path.exists():
         warnings.warn(f"Views SQL file not found: {views_sql_path}", stacklevel=2)
         return
