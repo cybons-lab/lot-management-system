@@ -38,8 +38,9 @@ jobs:
       # - name: Check maximum file lines (300 lines)
       #   run: uv run python ${{ github.workspace }}/tools/check_max_lines.py
 
-      - name: Run pytest (smoke tests)
-        run: uv run pytest -q -k "not integration" --maxfail=5
+      # Note: pytest runs in ci.yml with PostgreSQL service
+      # - name: Run pytest (smoke tests)
+      #   run: uv run pytest -q -k "not integration" --maxfail=5
 
   frontend-quality:
     name: Frontend Quality
