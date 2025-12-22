@@ -19,8 +19,6 @@ import { TanstackTable } from "@/shared/components";
 import { PageContainer, PageHeader } from "@/shared/components/layout";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 
-
-
 // eslint-disable-next-line max-lines-per-function
 export function UsersListPage() {
   const navigate = useNavigate();
@@ -90,7 +88,7 @@ export function UsersListPage() {
         actions={
           !showForm && (
             <MasterPageActions
-              exportApiPath="/users/export/download"
+              exportApiPath="users/export/download"
               exportFilePrefix="users"
               onImportClick={() => setIsImportDialogOpen(true)}
               onCreateClick={handleCreateNew}
@@ -146,7 +144,9 @@ export function UsersListPage() {
 
       {/* Data display area */}
       {isLoading ? (
-        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">読み込み中...</div>
+        <div className="rounded-lg border bg-white p-8 text-center text-gray-500">
+          読み込み中...
+        </div>
       ) : isError ? (
         <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-red-600">
           データの取得に失敗しました

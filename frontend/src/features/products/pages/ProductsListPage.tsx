@@ -272,7 +272,7 @@ export function ProductsListPage() {
         subtitle="商品の作成・編集・削除、一括インポート/エクスポート"
         actions={
           <MasterPageActions
-            exportApiPath="/masters/products/export/download"
+            exportApiPath="masters/products/export/download"
             exportFilePrefix="products"
             onImportClick={openImport}
             onCreateClick={openCreate}

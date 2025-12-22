@@ -1,4 +1,4 @@
-import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
+import { createColumnHelper } from "@tanstack/react-table";
 
 import type { Role } from "../api";
 
@@ -11,10 +11,7 @@ interface RoleColumnsOptions {
   isDeleting?: boolean;
 }
 
-export function createRoleColumns({
-  onDelete,
-  isDeleting = false,
-}: RoleColumnsOptions): ColumnDef<Role>[] {
+export function createRoleColumns({ onDelete, isDeleting = false }: RoleColumnsOptions) {
   return [
     columnHelper.accessor("id", {
       header: "ロールID",
@@ -50,9 +47,7 @@ export function createRoleColumns({
     columnHelper.accessor("created_at", {
       header: "作成日時",
       cell: (info) => (
-        <span className="text-slate-600">
-          {new Date(info.getValue()).toLocaleString("ja-JP")}
-        </span>
+        <span className="text-slate-600">{new Date(info.getValue()).toLocaleString("ja-JP")}</span>
       ),
       enableSorting: true,
     }),

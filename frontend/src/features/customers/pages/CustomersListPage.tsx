@@ -275,7 +275,7 @@ export function CustomersListPage() {
         subtitle="得意先の作成・編集・削除、一括インポート/エクスポート"
         actions={
           <MasterPageActions
-            exportApiPath="/masters/customers/export/download"
+            exportApiPath="masters/customers/export/download"
             exportFilePrefix="customers"
             onImportClick={openImport}
             onCreateClick={openCreate}

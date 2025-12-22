@@ -1,4 +1,4 @@
-import { createColumnHelper, type ColumnDef } from "@tanstack/react-table";
+import { createColumnHelper } from "@tanstack/react-table";
 
 import type { User } from "../api";
 
@@ -16,7 +16,7 @@ export function createUserColumns({
   onViewDetail,
   onDelete,
   isDeleting = false,
-}: UserColumnsOptions): ColumnDef<User>[] {
+}: UserColumnsOptions) {
   return [
     columnHelper.accessor("user_id", {
       header: "ユーザーID",

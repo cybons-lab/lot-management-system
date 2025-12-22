@@ -88,7 +88,7 @@ export function DeliveryPlacesListPage() {
         subtitle="納入先の作成・編集・削除"
         actions={
           <MasterPageActions
-            exportApiPath="/masters/delivery-places/export/download"
+            exportApiPath="masters/delivery-places/export/download"
             exportFilePrefix="delivery_places"
             onImportClick={() => setIsImportDialogOpen(true)}
             onCreateClick={openCreateDialog}

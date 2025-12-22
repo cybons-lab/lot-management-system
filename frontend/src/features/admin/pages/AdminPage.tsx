@@ -31,7 +31,9 @@ interface InventorySyncResult {
 
 export function AdminPage() {
   const [showGenerateConfirm, setShowGenerateConfirm] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [isInventorySyncing, setIsInventorySyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<InventorySyncResult | null>(null);
 
@@ -46,6 +48,20 @@ export function AdminPage() {
     } finally {
       setIsGenerating(false);
       setShowGenerateConfirm(false);
+    }
+  };
+
+  const handleResetDatabase = async () => {
+    setIsResetting(true);
+    try {
+      await http.post("admin/reset-database");
+      toast.success("データベースをリセットしました");
+    } catch (e) {
+      toast.error("データベースリセットに失敗しました");
+      console.error(e);
+    } finally {
+      setIsResetting(false);
+      setShowResetConfirm(false);
     }
   };
 
@@ -119,7 +135,7 @@ export function AdminPage() {
             <Button
               variant="destructive"
               className="w-full justify-start"
-              onClick={() => toast.info("この機能はまだ実装されていません")}
+              onClick={() => setShowResetConfirm(true)}
             >
               データベースリセット（開発用）
             </Button>
@@ -186,6 +202,30 @@ export function AdminPage() {
               disabled={isGenerating}
             >
               {isGenerating ? "生成中..." : "実行する"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Reset Confirm Dialog */}
+      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>データベースをリセットしますか？</AlertDialogTitle>
+            <AlertDialogDescription>
+              テーブル構造は維持したまま、全てのデータが削除されます。 この操作は取り消せません。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isResetting}>キャンセル</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e: React.MouseEvent) => {
+                e.preventDefault();
+                handleResetDatabase();
+              }}
+              disabled={isResetting}
+            >
+              {isResetting ? "リセット中..." : "実行する"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

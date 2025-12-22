@@ -267,7 +267,7 @@ export function WarehousesListPage() {
         subtitle="倉庫の作成・編集・削除、一括インポート/エクスポート"
         actions={
           <MasterPageActions
-            exportApiPath="/masters/warehouses/export/download"
+            exportApiPath="masters/warehouses/export/download"
             exportFilePrefix="warehouses"
             onImportClick={openImport}
             onCreateClick={openCreate}

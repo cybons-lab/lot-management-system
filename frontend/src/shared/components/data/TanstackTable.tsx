@@ -9,14 +9,15 @@ import {
   type Table,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 
 import { TablePagination } from "@/shared/components/data/TablePagination";
 import { cn } from "@/shared/libs/utils";
 
 interface TanstackTableProps<TData> {
   data: TData[];
-  columns: ColumnDef<TData, unknown>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  columns: ColumnDef<TData, any>[];
   className?: string;
   isLoading?: boolean;
   emptyMessage?: string;
@@ -26,7 +27,11 @@ interface TanstackTableProps<TData> {
 
 const SortIcon = ({ isSorted }: { isSorted: false | "asc" | "desc" }) => {
   if (!isSorted) return <ArrowUpDown className="ml-1 h-4 w-4 opacity-40" />;
-  return isSorted === "asc" ? <ArrowUp className="ml-1 h-4 w-4" /> : <ArrowDown className="ml-1 h-4 w-4" />;
+  return isSorted === "asc" ? (
+    <ArrowUp className="ml-1 h-4 w-4" />
+  ) : (
+    <ArrowDown className="ml-1 h-4 w-4" />
+  );
 };
 
 const LoadingState = () => (
@@ -59,7 +64,9 @@ function TableContent<TData>({ table }: { table: Table<TData> }) {
                 >
                   <div className="flex items-center gap-1">
                     {flexRender(header.column.columnDef.header, header.getContext())}
-                    {header.column.getCanSort() && <SortIcon isSorted={header.column.getIsSorted()} />}
+                    {header.column.getCanSort() && (
+                      <SortIcon isSorted={header.column.getIsSorted()} />
+                    )}
                   </div>
                 </th>
               ))}
@@ -117,7 +124,13 @@ export function TanstackTable<TData>({
 
   return (
     <div className={cn("rounded-lg border bg-white shadow-sm", className)}>
-      {isLoading ? <LoadingState /> : data.length === 0 ? <EmptyState message={emptyMessage} /> : <TableContent table={table} />}
+      {isLoading ? (
+        <LoadingState />
+      ) : data.length === 0 ? (
+        <EmptyState message={emptyMessage} />
+      ) : (
+        <TableContent table={table} />
+      )}
       <TablePagination
         className="rounded-b-lg"
         currentPage={currentPage}
