@@ -8,6 +8,7 @@ import { Button } from "@/components/ui";
 import { OrderCard } from "@/features/orders/components/display/OrderCard";
 import { OrderFilters } from "@/features/orders/components/filters/OrderFilters";
 import { useOrdersList } from "@/features/orders/hooks/useOrders";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 import type { OrderWithLinesResponse, OrdersListParams } from "@/shared/types/aliases";
 
 function normaliseOrders(data: unknown): OrderWithLinesResponse[] {
@@ -61,21 +62,24 @@ export function OrdersPage() {
   }, [ordersQuery.error]);
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">受注一覧</h1>
-          <p className="text-muted-foreground text-sm">受注と引当状況を確認します</p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => ordersQuery.refetch()}
-          disabled={ordersQuery.isFetching}
-        >
-          <RefreshCcw className={`mr-2 h-4 w-4 ${ordersQuery.isFetching ? "animate-spin" : ""}`} />
-          最新の状態を取得
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="受注一覧"
+        subtitle="受注と引当状況を確認します"
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => ordersQuery.refetch()}
+            disabled={ordersQuery.isFetching}
+          >
+            <RefreshCcw
+              className={`mr-2 h-4 w-4 ${ordersQuery.isFetching ? "animate-spin" : ""}`}
+            />
+            最新の状態を取得
+          </Button>
+        }
+        className="pb-0"
+      />
 
       <OrderFilters
         value={filters}
@@ -103,6 +107,6 @@ export function OrdersPage() {
           ))}
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

@@ -4,21 +4,22 @@
  */
 
 import { Button } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function InboundPlanCreatePage() {
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">入荷予定作成</h2>
-          <p className="mt-1 text-gray-600">新規入荷予定の登録</p>
-        </div>
-        <div className="space-x-2">
-          <Button variant="outline">キャンセル</Button>
-          <Button>保存</Button>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="入荷予定作成"
+        subtitle="新規入荷予定の登録"
+        actions={
+          <div className="space-x-2">
+            <Button variant="outline">キャンセル</Button>
+            <Button>保存</Button>
+          </div>
+        }
+        className="pb-0"
+      />
 
       {/* Coming Soon */}
       <div className="rounded-lg border bg-white p-8 text-center">
@@ -27,6 +28,6 @@ export function InboundPlanCreatePage() {
           仕入先選択、入荷予定日入力、明細入力テーブルを実装予定
         </p>
       </div>
-    </div>
+    </PageContainer>
   );
 }

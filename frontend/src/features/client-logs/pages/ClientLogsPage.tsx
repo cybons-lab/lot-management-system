@@ -8,6 +8,7 @@ import { RefreshCw, AlertCircle } from "lucide-react";
 import { useClientLogs } from "../hooks";
 
 import { Button, Badge } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 type LogLevel = "error" | "warning" | string;
 type BadgeVariant = "destructive" | "secondary" | "outline";
@@ -82,18 +83,18 @@ export function ClientLogsPage() {
   } = useClientLogs({ limit: 100 });
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">クライアントログ</h2>
-          <p className="mt-1 text-gray-600">フロントエンドエラーログを確認</p>
-        </div>
-        <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-          更新
-        </Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="クライアントログ"
+        subtitle="フロントエンドエラーログを確認"
+        actions={
+          <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+            更新
+          </Button>
+        }
+        className="pb-0"
+      />
 
       {/* Data display area */}
       {isLoading ? (
@@ -117,6 +118,6 @@ export function ClientLogsPage() {
           <LogsTable logs={logs} />
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

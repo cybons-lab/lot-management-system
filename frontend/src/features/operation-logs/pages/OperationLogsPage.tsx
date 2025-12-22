@@ -9,6 +9,7 @@ import { useOperationLogs } from "../hooks";
 
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function OperationLogsPage() {
   const [filters, setFilters] = useState({
@@ -28,12 +29,8 @@ export function OperationLogsPage() {
   const { data: response, isLoading, isError } = useOperationLogs(queryParams);
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">操作ログ</h2>
-        <p className="mt-1 text-gray-600">システムの操作履歴を確認</p>
-      </div>
+    <PageContainer>
+      <PageHeader title="操作ログ" subtitle="システムの操作履歴を確認" className="pb-0" />
 
       {/* Filters */}
       <div className="rounded-lg border bg-white p-4">
@@ -133,6 +130,6 @@ export function OperationLogsPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

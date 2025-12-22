@@ -11,6 +11,7 @@ import { UploadCard } from "../components/UploadCard";
 import { useMasterImport } from "../hooks/useMasterImport";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function MastersBulkLoadPage() {
   const {
@@ -27,13 +28,12 @@ export function MastersBulkLoadPage() {
   } = useMasterImport();
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">マスタ一括インポート・初期化</h2>
-        <p className="mt-1 text-gray-600">
-          マスタデータの一括登録およびデータベースの初期化を行います
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="マスタ一括インポート・初期化"
+        subtitle="マスタデータの一括登録およびデータベースの初期化を行います"
+        className="pb-0"
+      />
 
       <Tabs defaultValue="import" className="space-y-6">
         <TabsList>
@@ -64,6 +64,6 @@ export function MastersBulkLoadPage() {
           <ResetCard />
         </TabsContent>
       </Tabs>
-    </div>
+    </PageContainer>
   );
 }

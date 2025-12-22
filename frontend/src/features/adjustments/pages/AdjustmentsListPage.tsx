@@ -13,6 +13,7 @@ import { Button } from "@/components/ui";
 import { Input } from "@/components/ui";
 import { Label } from "@/components/ui";
 import { ROUTES } from "@/constants/routes";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function AdjustmentsListPage() {
   const navigate = useNavigate();
@@ -46,15 +47,13 @@ export function AdjustmentsListPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">在庫調整履歴</h2>
-          <p className="mt-1 text-gray-600">在庫調整の登録と履歴確認</p>
-        </div>
-        <Button onClick={handleCreateNew}>在庫調整を登録</Button>
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="在庫調整履歴"
+        subtitle="在庫調整の登録と履歴確認"
+        actions={<Button onClick={handleCreateNew}>在庫調整を登録</Button>}
+        className="pb-0"
+      />
 
       {/* Filters */}
       <div className="rounded-lg border bg-white p-4">
@@ -164,6 +163,6 @@ export function AdjustmentsListPage() {
           </div>
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }

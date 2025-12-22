@@ -6,11 +6,16 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
+
 import type { CreateRoleRequest } from "../api";
 import { RoleForm } from "../components/RoleForm";
 import { useRoles, useCreateRole, useDeleteRole } from "../hooks";
 
+import { createRoleColumns } from "./columns";
+
 import { Button } from "@/components/ui";
+import { TanstackTable } from "@/shared/components";
+import { PageContainer, PageHeader } from "@/shared/components/layout";
 
 export function RolesListPage() {
   const [showForm, setShowForm] = useState(false);
@@ -57,16 +62,16 @@ export function RolesListPage() {
     }
   };
 
+  const columns = createRoleColumns({ onDelete: handleDelete, isDeleting: deleteMutation.isPending });
+
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">ロール管理</h2>
-          <p className="mt-1 text-gray-600">ロールの作成・削除</p>
-        </div>
-        {!showForm && <Button onClick={handleCreateNew}>新規ロール作成</Button>}
-      </div>
+    <PageContainer>
+      <PageHeader
+        title="ロール管理"
+        subtitle="ロールの作成・削除"
+        actions={!showForm && <Button onClick={handleCreateNew}>新規ロール作成</Button>}
+        className="pb-0"
+      />
 
       {/* Create Form */}
       {showForm && (
@@ -94,73 +99,15 @@ export function RolesListPage() {
           ロールが登録されていません
         </div>
       ) : (
-        <div className="space-y-4">
-          <div className="text-sm text-gray-600">{roles.length} 個のロール</div>
-
-          {/* Table */}
-          <div className="overflow-x-auto rounded-lg border bg-white">
-            <table className="w-full">
-              <thead className="border-b bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ロールID
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ロールコード
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    ロール名
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">説明</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    作成日時
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">操作</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {roles.map((role) => (
-                  <tr key={role.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm">{role.id}</td>
-                    <td className="px-4 py-3 text-sm font-medium">
-                      <span className="inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-800">
-                        {role.role_code}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <span className="block max-w-[150px] truncate" title={role.role_name}>
-                        {role.role_name}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {role.description ? (
-                        <span className="line-clamp-2" title={role.description}>
-                          {role.description}
-                        </span>
-                      ) : (
-                        "-"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {new Date(role.created_at).toLocaleString("ja-JP")}
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(role.id)}
-                        disabled={deleteMutation.isPending}
-                      >
-                        削除
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <TanstackTable
+          data={roles}
+          columns={columns}
+          initialPageSize={25}
+          isLoading={isLoading}
+          pageSizeOptions={[10, 25, 50, 100]}
+          className="overflow-hidden"
+        />
       )}
-    </div>
+    </PageContainer>
   );
 }
