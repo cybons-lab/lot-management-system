@@ -111,6 +111,43 @@ export function ProductForm({
       </div>
 
       <div className={formStyles.field}>
+        <Label htmlFor="maker_part_code" className={formStyles.label}>
+          メーカー品番
+        </Label>
+        <Input
+          id="maker_part_code"
+          {...register("maker_part_code")}
+          placeholder="例: MK-12345"
+          className={formStyles.input}
+        />
+      </div>
+
+      <div className={formStyles.field}>
+        <Label htmlFor="base_unit" className={formStyles.label}>
+          基本単位
+        </Label>
+        <Input
+          id="base_unit"
+          {...register("base_unit")}
+          placeholder="例: EA"
+          className={formStyles.input}
+        />
+      </div>
+
+      <div className={formStyles.field}>
+        <Label htmlFor="consumption_limit_days" className={formStyles.label}>
+          消費期限日数
+        </Label>
+        <Input
+          id="consumption_limit_days"
+          type="number"
+          {...register("consumption_limit_days")}
+          placeholder="例: 90"
+          className={formStyles.input}
+        />
+      </div>
+
+      <div className={formStyles.field}>
         <Label htmlFor="internal_unit" className={formStyles.label}>
           社内単位 <span className="text-red-500">*</span>
         </Label>
