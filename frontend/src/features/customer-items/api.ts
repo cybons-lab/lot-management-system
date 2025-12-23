@@ -26,6 +26,18 @@ export interface CustomerItem {
   pack_unit: string | null;
   pack_quantity: number | null;
   special_instructions: string | null;
+  // OCR→SAP変換用フィールド
+  maker_part_no: string | null;
+  order_category: string | null;
+  is_procurement_required: boolean;
+  shipping_slip_text: string | null;
+  ocr_conversion_notes: string | null;
+  // SAPキャッシュフィールド
+  sap_supplier_code: string | null;
+  sap_warehouse_code: string | null;
+  sap_shipping_warehouse: string | null;
+  sap_uom: string | null;
+  // メタデータ
   created_at: string;
   updated_at: string;
   valid_to?: string;
@@ -43,6 +55,17 @@ export interface CreateCustomerItemRequest {
   pack_unit?: string | null;
   pack_quantity?: number | null;
   special_instructions?: string | null;
+  // OCR→SAP変換用フィールド
+  maker_part_no?: string | null;
+  order_category?: string | null;
+  is_procurement_required?: boolean;
+  shipping_slip_text?: string | null;
+  ocr_conversion_notes?: string | null;
+  // SAPキャッシュフィールド
+  sap_supplier_code?: string | null;
+  sap_warehouse_code?: string | null;
+  sap_shipping_warehouse?: string | null;
+  sap_uom?: string | null;
 }
 
 export interface UpdateCustomerItemRequest {
@@ -52,6 +75,17 @@ export interface UpdateCustomerItemRequest {
   pack_unit?: string | null;
   pack_quantity?: number | null;
   special_instructions?: string | null;
+  // OCR→SAP変換用フィールド
+  maker_part_no?: string | null;
+  order_category?: string | null;
+  is_procurement_required?: boolean | null;
+  shipping_slip_text?: string | null;
+  ocr_conversion_notes?: string | null;
+  // SAPキャッシュフィールド
+  sap_supplier_code?: string | null;
+  sap_warehouse_code?: string | null;
+  sap_shipping_warehouse?: string | null;
+  sap_uom?: string | null;
 }
 
 export interface CustomerItemsListParams {
