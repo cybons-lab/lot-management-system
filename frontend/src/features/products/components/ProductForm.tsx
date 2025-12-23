@@ -207,7 +207,7 @@ export function ProductForm({
 
       <div className={formStyles.field}>
         <Label htmlFor="maker_item_code" className={formStyles.label}>
-          メーカー品番
+          メーカー品目コード
         </Label>
         <Input
           id="maker_item_code"
