@@ -204,8 +204,8 @@ export function CustomerItemsTable({
           得意先品番マッピングが登録されていません
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="max-h-[600px] overflow-auto">
+          <table className="min-w-max divide-y divide-gray-200">
             <TableHeader />
             <tbody className="divide-y divide-gray-200 bg-white">
               {items.map((item) => (
