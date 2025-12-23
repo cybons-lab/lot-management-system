@@ -1,4 +1,4 @@
-import { Package, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { Package } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -7,154 +7,21 @@ import { ProductBulkImportDialog } from "../components/ProductBulkImportDialog";
 import { ProductForm, type ProductFormOutput } from "../components/ProductForm";
 import { useProducts } from "../hooks/useProducts";
 
+import { createProductColumns } from "./columns";
 import * as styles from "./styles";
 
 import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/components/common";
-import { Button, Input, Checkbox } from "@/components/ui";
+import { Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useListPageDialogs } from "@/hooks/ui";
-import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
+import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import { formatDate } from "@/shared/utils/date";
-
-const isInactive = (validTo?: string | null) => {
-  if (!validTo) return false;
-  const today = new Date().toISOString().split("T")[0];
-  return validTo <= today;
-};
 
 // Extend Product type locally if needed
 type ProductWithValidTo = Product & { valid_to?: string };
-
-function createColumns(
-  onRestore: (row: ProductWithValidTo) => void,
-  onPermanentDelete: (row: ProductWithValidTo) => void,
-  onEdit: (row: ProductWithValidTo) => void,
-  onSoftDelete: (row: ProductWithValidTo) => void,
-): Column<ProductWithValidTo>[] {
-  return [
-    {
-      id: "product_code",
-      header: "先方品番",
-      cell: (row) => (
-        <div className="flex items-center">
-          <span className="font-mono text-sm font-medium text-gray-900">{row.product_code}</span>
-          {isInactive(row.valid_to) && (
-            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-              削除済
-            </span>
-          )}
-        </div>
-      ),
-      sortable: true,
-      width: "200px",
-    },
-    {
-      id: "product_name",
-      header: "商品名",
-      cell: (row) => (
-        <span
-          className={`block max-w-[300px] truncate ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-gray-900"}`}
-          title={row.product_name}
-        >
-          {row.product_name}
-        </span>
-      ),
-      sortable: true,
-      width: "300px",
-    },
-    {
-      id: "internal_unit",
-      header: "社内単位",
-      cell: (row) => <span className="text-sm text-gray-700">{row.internal_unit}</span>,
-      sortable: true,
-      width: "100px",
-    },
-    {
-      id: "external_unit",
-      header: "外部単位",
-      cell: (row) => <span className="text-sm text-gray-700">{row.external_unit}</span>,
-      sortable: true,
-      width: "120px",
-    },
-    {
-      id: "qty_per_internal_unit",
-      header: "数量/内部単位",
-      cell: (row) => <span className="text-sm text-gray-700">{row.qty_per_internal_unit}</span>,
-      sortable: true,
-      width: "150px",
-    },
-    {
-      id: "updated_at",
-      header: "更新日時",
-      cell: (row) => <div className="text-center font-medium">{formatDate(row.updated_at)}</div>,
-      sortable: true,
-      width: "150px",
-    },
-    {
-      id: "actions",
-      header: "操作",
-      cell: (row) => {
-        const inactive = isInactive(row.valid_to);
-        if (inactive) {
-          return (
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRestore(row);
-                }}
-                title="復元"
-              >
-                <RotateCcw className="h-4 w-4 text-green-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPermanentDelete(row);
-                }}
-                title="完全に削除"
-              >
-                <Trash2 className="h-4 w-4 text-red-600" />
-              </Button>
-            </div>
-          );
-        }
-        return (
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(row);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSoftDelete(row);
-              }}
-            >
-              <Trash2 className="text-destructive h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
-}
 
 export function ProductsListPage() {
   const navigate = useNavigate();
@@ -219,12 +86,12 @@ export function ProductsListPage() {
 
   const columns = useMemo(
     () =>
-      createColumns(
-        (row) => openRestore(row),
-        (row) => openPermanentDelete(row),
-        (row) => navigate(`/products/${row.product_code}`),
-        (row) => openSoftDelete(row),
-      ),
+      createProductColumns({
+        onRestore: (row) => openRestore(row),
+        onPermanentDelete: (row) => openPermanentDelete(row),
+        onEdit: (row) => navigate(`/products/${row.product_code}`),
+        onSoftDelete: (row) => openSoftDelete(row),
+      }),
     [navigate, openRestore, openPermanentDelete, openSoftDelete],
   );
 

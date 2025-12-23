@@ -181,6 +181,38 @@ export function createOrderLineColumns(
       width: "100px",
     },
     {
+      id: "shipping_document_text",
+      header: "出荷表テキスト",
+      cell: (row: OrderLineRow) => (
+        <div className="max-w-[120px]">
+          {row.shipping_document_text ? (
+            <span className="truncate text-sm text-slate-700" title={row.shipping_document_text}>
+              {row.shipping_document_text}
+            </span>
+          ) : (
+            <span className="text-slate-400">-</span>
+          )}
+        </div>
+      ),
+      width: "120px",
+    },
+    {
+      id: "forecast_reference",
+      header: "予測参照",
+      cell: (row: OrderLineRow) => (
+        <div className="max-w-[100px]">
+          {row.forecast_reference ? (
+            <span className="truncate text-sm text-slate-700" title={row.forecast_reference}>
+              {row.forecast_reference}
+            </span>
+          ) : (
+            <span className="text-slate-400">-</span>
+          )}
+        </div>
+      ),
+      width: "100px",
+    },
+    {
       id: "actions",
       header: "",
       cell: (row: OrderLineRow) => (

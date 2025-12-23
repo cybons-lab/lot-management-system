@@ -18,6 +18,19 @@ class CustomerItemBase(BaseSchema):
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
     special_instructions: str | None = Field(None, description="特記事項")
+    shipping_document_template: str | None = Field(None, description="出荷表テンプレート")
+    sap_notes: str | None = Field(None, description="SAP備考")
+    # OCR→SAP変換用フィールド
+    maker_part_no: str | None = Field(None, max_length=100, description="メーカー品番")
+    order_category: str | None = Field(None, max_length=50, description="発注区分")
+    is_procurement_required: bool = Field(True, description="発注の有無")
+    shipping_slip_text: str | None = Field(None, description="出荷票テキスト")
+    ocr_conversion_notes: str | None = Field(None, description="OCR変換用備考")
+    # SAPキャッシュフィールド
+    sap_supplier_code: str | None = Field(None, max_length=50, description="SAP仕入先コード")
+    sap_warehouse_code: str | None = Field(None, max_length=50, description="SAP倉庫コード")
+    sap_shipping_warehouse: str | None = Field(None, max_length=50, description="SAP出荷倉庫")
+    sap_uom: str | None = Field(None, max_length=20, description="SAP単位")
 
 
 class CustomerItemCreate(CustomerItemBase):
@@ -35,6 +48,19 @@ class CustomerItemUpdate(BaseSchema):
     pack_unit: str | None = Field(None, max_length=20, description="梱包単位")
     pack_quantity: int | None = Field(None, description="梱包数量")
     special_instructions: str | None = Field(None, description="特記事項")
+    shipping_document_template: str | None = Field(None, description="出荷表テンプレート")
+    sap_notes: str | None = Field(None, description="SAP備考")
+    # OCR→SAP変換用フィールド
+    maker_part_no: str | None = Field(None, max_length=100, description="メーカー品番")
+    order_category: str | None = Field(None, max_length=50, description="発注区分")
+    is_procurement_required: bool | None = Field(None, description="発注の有無")
+    shipping_slip_text: str | None = Field(None, description="出荷票テキスト")
+    ocr_conversion_notes: str | None = Field(None, description="OCR変換用備考")
+    # SAPキャッシュフィールド
+    sap_supplier_code: str | None = Field(None, max_length=50, description="SAP仕入先コード")
+    sap_warehouse_code: str | None = Field(None, max_length=50, description="SAP倉庫コード")
+    sap_shipping_warehouse: str | None = Field(None, max_length=50, description="SAP出荷倉庫")
+    sap_uom: str | None = Field(None, max_length=20, description="SAP単位")
 
 
 class CustomerItemResponse(CustomerItemBase):

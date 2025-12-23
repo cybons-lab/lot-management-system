@@ -21,6 +21,7 @@ const warehouseFormSchema = z.object({
   warehouse_code: z.string().min(1, "倉庫コードは必須です").max(50),
   warehouse_name: z.string().min(1, "倉庫名は必須です").max(200),
   warehouse_type: z.enum(["internal", "external", "supplier"]),
+  default_transport_lead_time_days: z.coerce.number().min(0).optional(),
 });
 
 type WarehouseFormData = z.infer<typeof warehouseFormSchema>;
@@ -52,6 +53,7 @@ export function WarehouseForm({
       warehouse_name: warehouse?.warehouse_name ?? "",
       warehouse_type:
         (warehouse?.warehouse_type as "internal" | "external" | "supplier") ?? "internal",
+      default_transport_lead_time_days: warehouse?.default_transport_lead_time_days ?? undefined,
     },
   });
 
@@ -109,6 +111,20 @@ export function WarehouseForm({
             <SelectItem value="supplier">仕入先</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className={formStyles.field}>
+        <Label htmlFor="default_transport_lead_time_days" className={formStyles.label}>
+          デフォルト輸送リードタイム（日）
+        </Label>
+        <Input
+          id="default_transport_lead_time_days"
+          type="number"
+          min="0"
+          {...register("default_transport_lead_time_days")}
+          placeholder="例: 3"
+          className={formStyles.input}
+        />
       </div>
 
       <div className="flex justify-end gap-2 pt-4">

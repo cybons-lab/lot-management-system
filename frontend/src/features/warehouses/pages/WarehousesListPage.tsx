@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Warehouse as WarehouseIcon, RotateCcw } from "lucide-react";
+import { Warehouse as WarehouseIcon } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -7,150 +7,21 @@ import { WarehouseBulkImportDialog } from "../components/WarehouseBulkImportDial
 import { WarehouseForm } from "../components/WarehouseForm";
 import { useWarehouses } from "../hooks";
 
+import { createWarehouseColumns } from "./columns";
 import * as styles from "./styles";
 
 import { SoftDeleteDialog, PermanentDeleteDialog, RestoreDialog } from "@/components/common";
-import { Button, Input, Checkbox } from "@/components/ui";
+import { Input, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
 import { useListPageDialogs } from "@/hooks/ui";
-import { DataTable, type Column, type SortConfig } from "@/shared/components/data/DataTable";
+import { DataTable, type SortConfig } from "@/shared/components/data/DataTable";
 import { QueryErrorFallback } from "@/shared/components/feedback/QueryErrorFallback";
 import { MasterPageActions } from "@/shared/components/layout/MasterPageActions";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
-import { formatDate } from "@/shared/utils/date";
-
-const isInactive = (validTo?: string | null) => {
-  if (!validTo) return false;
-  const today = new Date().toISOString().split("T")[0];
-  return validTo <= today;
-};
-
-const warehouseTypeLabels: Record<string, string> = {
-  internal: "社内",
-  external: "外部",
-  supplier: "仕入先",
-};
 
 // Extend Warehouse type locally if needed
 type WarehouseWithValidTo = Warehouse & { valid_to?: string };
-
-function createColumns(
-  onRestore: (row: WarehouseWithValidTo) => void,
-  onPermanentDelete: (row: WarehouseWithValidTo) => void,
-  onEdit: (row: WarehouseWithValidTo) => void,
-  onSoftDelete: (row: WarehouseWithValidTo) => void,
-): Column<WarehouseWithValidTo>[] {
-  return [
-    {
-      id: "warehouse_code",
-      header: "倉庫コード",
-      cell: (row) => (
-        <div className="flex items-center">
-          <span className="font-mono text-sm font-medium text-gray-900">{row.warehouse_code}</span>
-          {isInactive(row.valid_to) && (
-            <span className="ml-2 rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
-              削除済
-            </span>
-          )}
-        </div>
-      ),
-      sortable: true,
-      width: "150px",
-    },
-    {
-      id: "warehouse_name",
-      header: "倉庫名",
-      cell: (row) => (
-        <span
-          className={`block max-w-[250px] truncate ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-gray-900"}`}
-          title={row.warehouse_name}
-        >
-          {row.warehouse_name}
-        </span>
-      ),
-      sortable: true,
-      width: "250px",
-    },
-    {
-      id: "warehouse_type",
-      header: "タイプ",
-      cell: (row) => (
-        <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
-          {warehouseTypeLabels[row.warehouse_type] ?? row.warehouse_type}
-        </span>
-      ),
-      sortable: true,
-      width: "100px",
-    },
-    {
-      id: "updated_at",
-      header: "更新日時",
-      cell: (row) => <span className="text-sm text-gray-500">{formatDate(row.updated_at)}</span>,
-      sortable: true,
-      width: "120px",
-    },
-    {
-      id: "actions",
-      header: "操作",
-      cell: (row) => {
-        const inactive = isInactive(row.valid_to);
-        if (inactive) {
-          return (
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRestore(row);
-                }}
-                title="復元"
-              >
-                <RotateCcw className="h-4 w-4 text-green-600" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPermanentDelete(row);
-                }}
-                title="完全に削除"
-              >
-                <Trash2 className="h-4 w-4 text-red-600" />
-              </Button>
-            </div>
-          );
-        }
-        return (
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(row);
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSoftDelete(row);
-              }}
-            >
-              <Trash2 className="text-destructive h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
-    },
-  ];
-}
 
 export function WarehousesListPage() {
   const navigate = useNavigate();
@@ -214,12 +85,12 @@ export function WarehousesListPage() {
 
   const columns = useMemo(
     () =>
-      createColumns(
-        (row) => openRestore(row),
-        (row) => openPermanentDelete(row),
-        (row) => navigate(`/warehouses/${row.warehouse_code}`),
-        (row) => openSoftDelete(row),
-      ),
+      createWarehouseColumns({
+        onRestore: (row) => openRestore(row),
+        onPermanentDelete: (row) => openPermanentDelete(row),
+        onEdit: (row) => navigate(`/warehouses/${row.warehouse_code}`),
+        onSoftDelete: (row) => openSoftDelete(row),
+      }),
     [navigate, openRestore, openPermanentDelete, openSoftDelete],
   );
 

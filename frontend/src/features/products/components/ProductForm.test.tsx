@@ -17,6 +17,7 @@ describe("ProductForm", () => {
     expect(screen.getByLabelText(/内部単位あたりの数量/)).toBeInTheDocument();
     expect(screen.getByLabelText(/先方品番/)).toBeInTheDocument();
     expect(screen.getByLabelText(/メーカー品番/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/メーカー品目コード/)).toBeInTheDocument();
     expect(screen.getByLabelText(/有効/)).toBeInTheDocument();
   });
 
@@ -104,8 +105,11 @@ describe("ProductForm", () => {
       updated_at: "2023-01-01",
       supplier_ids: [],
       customer_part_no: "CP-123",
+      maker_part_code: "PART-789",
       maker_item_code: "MK-456",
       valid_to: "9999-12-31",
+      base_unit: "EA",
+      consumption_limit_days: 90,
     };
 
     render(<ProductForm product={product} onSubmit={mockOnSubmit} onCancel={mockOnCancel} />);
@@ -116,7 +120,8 @@ describe("ProductForm", () => {
     expect(screen.getByLabelText(/外部単位/)).toHaveValue("CS");
     expect(screen.getByLabelText(/内部単位あたりの数量/)).toHaveValue(12);
     expect(screen.getByLabelText(/先方品番/)).toHaveValue("CP-123");
-    expect(screen.getByLabelText(/メーカー品番/)).toHaveValue("MK-456");
+    expect(screen.getByLabelText(/メーカー品番/)).toHaveValue("PART-789");
+    expect(screen.getByLabelText(/メーカー品目コード/)).toHaveValue("MK-456");
     expect(screen.getByLabelText(/有効/)).not.toBeChecked();
 
     expect(screen.getByRole("button", { name: /更新/ })).toBeInTheDocument();

@@ -9,6 +9,7 @@ class RpaRunItemResponse(BaseModel):
     """RPA Run Item response schema."""
 
     id: int
+    run_id: int = Field(..., description="所属するRPA RunのID")
     row_no: int
     status: str | None = None
     # フィールド名統一: jiku_code (表示名: 出荷先)
@@ -29,6 +30,15 @@ class RpaRunItemResponse(BaseModel):
     lock_flag: bool = False
     item_no: str | None = None
     lot_no: str | None = None
+    # マスタ参照ログ
+    complement_customer_id: int | None = Field(None, description="参照したマスタのcustomer_id")
+    complement_external_product_code: str | None = Field(
+        None, description="参照したマスタのexternal_product_code"
+    )
+    complement_match_type: str | None = Field(
+        None, description="検索種別（exact: 完全一致, prefix: 前方一致）"
+    )
+    processing_started_at: datetime | None = Field(None, description="処理開始日時")
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 
@@ -65,6 +75,9 @@ class RpaRunResponse(BaseModel):
     id: int
     rpa_type: str
     status: str
+    customer_id: int | None = Field(None, description="処理対象得意先ID")
+    data_start_date: date | None = Field(None, description="データ期間開始日")
+    data_end_date: date | None = Field(None, description="データ期間終了日")
     started_at: datetime | None = None
     started_by_user_id: int | None = None
     started_by_username: str | None = None
@@ -72,6 +85,7 @@ class RpaRunResponse(BaseModel):
     step2_executed_by_user_id: int | None = None
     step2_executed_by_username: str | None = None
     external_done_at: datetime | None = None
+    external_done_by_user_id: int | None = Field(None, description="外部処理完了ユーザーID")
     external_done_by_username: str | None = None
     step4_executed_at: datetime | None = None
     created_at: datetime

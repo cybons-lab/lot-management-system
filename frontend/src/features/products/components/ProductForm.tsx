@@ -13,6 +13,9 @@ import { Button, Input, Label } from "@/components/ui";
 const productFormSchema = z.object({
   product_code: z.string().min(1, "製品コードは必須です").max(50),
   product_name: z.string().min(1, "商品名は必須です").max(200),
+  maker_part_code: z.string().max(100).default(""),
+  base_unit: z.string().max(20).default("EA"),
+  consumption_limit_days: z.coerce.number().optional(),
   internal_unit: z.string().min(1, "社内単位は必須です").max(20),
   external_unit: z.string().min(1, "外部単位は必須です").max(20),
   qty_per_internal_unit: z.coerce.number().positive("数量は1以上で入力してください"),
@@ -49,6 +52,9 @@ export function ProductForm({
     defaultValues: {
       product_code: product?.product_code ?? "",
       product_name: product?.product_name ?? "",
+      maker_part_code: product?.maker_part_code ?? "",
+      base_unit: product?.base_unit ?? "EA",
+      consumption_limit_days: product?.consumption_limit_days ?? undefined,
       internal_unit: product?.internal_unit ?? "CAN",
       external_unit: product?.external_unit ?? "KG",
       qty_per_internal_unit: product?.qty_per_internal_unit ?? 1,
@@ -62,6 +68,9 @@ export function ProductForm({
     const output: ProductFormOutput = {
       product_code: data.product_code,
       product_name: data.product_name,
+      maker_part_code: data.maker_part_code || "",
+      base_unit: data.base_unit || "EA",
+      consumption_limit_days: data.consumption_limit_days ?? null,
       internal_unit: data.internal_unit,
       external_unit: data.external_unit,
       qty_per_internal_unit: data.qty_per_internal_unit,
@@ -99,6 +108,43 @@ export function ProductForm({
           className={formStyles.input}
         />
         {errors.product_name && <p className={formStyles.error}>{errors.product_name.message}</p>}
+      </div>
+
+      <div className={formStyles.field}>
+        <Label htmlFor="maker_part_code" className={formStyles.label}>
+          メーカー品番
+        </Label>
+        <Input
+          id="maker_part_code"
+          {...register("maker_part_code")}
+          placeholder="例: MK-12345"
+          className={formStyles.input}
+        />
+      </div>
+
+      <div className={formStyles.field}>
+        <Label htmlFor="base_unit" className={formStyles.label}>
+          基本単位
+        </Label>
+        <Input
+          id="base_unit"
+          {...register("base_unit")}
+          placeholder="例: EA"
+          className={formStyles.input}
+        />
+      </div>
+
+      <div className={formStyles.field}>
+        <Label htmlFor="consumption_limit_days" className={formStyles.label}>
+          消費期限日数
+        </Label>
+        <Input
+          id="consumption_limit_days"
+          type="number"
+          {...register("consumption_limit_days")}
+          placeholder="例: 90"
+          className={formStyles.input}
+        />
       </div>
 
       <div className={formStyles.field}>
@@ -161,7 +207,7 @@ export function ProductForm({
 
       <div className={formStyles.field}>
         <Label htmlFor="maker_item_code" className={formStyles.label}>
-          メーカー品番
+          メーカー品目コード
         </Label>
         <Input
           id="maker_item_code"

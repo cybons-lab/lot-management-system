@@ -100,6 +100,7 @@ export function createOrderLine(
   return {
     id: overrides?.id ?? faker.number.int({ min: 1, max: 10000 }),
     order_id: overrides?.order_id ?? faker.number.int({ min: 1, max: 10000 }), // DDL v2.2
+    version: overrides?.version ?? 1, // 楽観的ロック用バージョン
     product_id: overrides?.product_id ?? faker.number.int({ min: 1, max: 100 }), // DDL v2.2
     delivery_place_id:
       (overrides as { delivery_place_id?: number })?.delivery_place_id ??

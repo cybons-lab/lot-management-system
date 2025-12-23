@@ -1,14 +1,18 @@
 /**
- * CustomerItemForm (v2.4 - react-hook-form + Zod)
+ * CustomerItemForm (v2.5 - react-hook-form + Zod)
  * Form component for creating customer item mappings
+ * OCR-SAP変換フィールド対応版
  */
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 import type { CreateCustomerItemRequest } from "../api";
 
+import { CustomerItemFormBasicSection } from "./CustomerItemFormBasicSection";
+import { CustomerItemFormOcrSapSection } from "./CustomerItemFormOcrSapSection";
+import { CustomerItemFormSapCacheSection } from "./CustomerItemFormSapCacheSection";
 import {
   customerItemFormSchema,
   type CustomerItemFormData,
@@ -16,9 +20,6 @@ import {
 } from "./customerItemFormSchema";
 
 import { Button } from "@/components/ui";
-import { Input } from "@/components/ui";
-import { Label } from "@/components/ui";
-import { SearchableSelect } from "@/components/ui/form/SearchableSelect";
 import { useCustomersQuery, useProductsQuery } from "@/hooks/api/useMastersQuery";
 
 interface CustomerItemFormProps {
@@ -83,144 +84,21 @@ export function CustomerItemForm({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      {/* Customer Selection */}
-      <div>
-        <Label htmlFor="customer_id" className="mb-2 block text-sm font-medium">
-          得意先 <span className="text-red-500">*</span>
-        </Label>
-        <Controller
-          name="customer_id"
-          control={control}
-          render={({ field }) => (
-            <SearchableSelect
-              options={customerOptions}
-              value={field.value ? String(field.value) : ""}
-              onChange={(value) => field.onChange(value ? Number(value) : 0)}
-              placeholder={isLoadingCustomers ? "読込中..." : "得意先を検索..."}
-              disabled={isSubmitting || isLoading}
-            />
-          )}
-        />
-        {errors.customer_id && (
-          <p className="mt-1 text-sm text-red-600">{errors.customer_id.message}</p>
-        )}
-      </div>
+      <CustomerItemFormBasicSection
+        control={control}
+        errors={errors}
+        isSubmitting={isSubmitting}
+        isLoading={isLoading}
+        customerOptions={customerOptions}
+        productOptions={productOptions}
+        isLoadingCustomers={isLoadingCustomers}
+        isLoadingProducts={isLoadingProducts}
+        onProductSelect={handleProductSelect}
+      />
 
-      {/* 先方品番（製品）選択 */}
-      <div>
-        <Label htmlFor="product_id" className="mb-2 block text-sm font-medium">
-          先方品番 <span className="text-red-500">*</span>
-        </Label>
-        <Controller
-          name="product_id"
-          control={control}
-          render={({ field }) => (
-            <SearchableSelect
-              options={productOptions}
-              value={field.value ? String(field.value) : ""}
-              onChange={(value) => {
-                handleProductSelect(value);
-              }}
-              placeholder={isLoadingProducts ? "読込中..." : "先方品番を検索..."}
-              disabled={isSubmitting || isLoading}
-            />
-          )}
-        />
-        {errors.product_id && (
-          <p className="mt-1 text-sm text-red-600">{errors.product_id.message}</p>
-        )}
-      </div>
+      <CustomerItemFormOcrSapSection control={control} isSubmitting={isSubmitting} />
 
-      {/* Base Unit */}
-      <div>
-        <Label htmlFor="base_unit" className="mb-2 block text-sm font-medium">
-          基本単位 <span className="text-red-500">*</span>
-        </Label>
-        <Controller
-          name="base_unit"
-          control={control}
-          render={({ field }) => (
-            <Input
-              {...field}
-              id="base_unit"
-              type="text"
-              placeholder="基本単位を入力（例: EA, KG, CS）"
-              disabled={isSubmitting}
-              maxLength={20}
-            />
-          )}
-        />
-        {errors.base_unit && (
-          <p className="mt-1 text-sm text-red-600">{errors.base_unit.message}</p>
-        )}
-        <p className="mt-1 text-xs text-gray-500">例: EA（個）, KG（キログラム）, CS（ケース）</p>
-      </div>
-
-      {/* Pack Unit */}
-      <div>
-        <Label htmlFor="pack_unit" className="mb-2 block text-sm font-medium">
-          梱包単位
-        </Label>
-        <Controller
-          name="pack_unit"
-          control={control}
-          render={({ field }) => (
-            <Input
-              {...field}
-              value={field.value ?? ""}
-              onChange={(e) => field.onChange(e.target.value || null)}
-              id="pack_unit"
-              type="text"
-              placeholder="梱包単位を入力（オプション）"
-              disabled={isSubmitting}
-              maxLength={20}
-            />
-          )}
-        />
-      </div>
-
-      {/* Pack Quantity */}
-      <div>
-        <Label htmlFor="pack_quantity" className="mb-2 block text-sm font-medium">
-          梱包数量
-        </Label>
-        <Controller
-          name="pack_quantity"
-          control={control}
-          render={({ field }) => (
-            <Input
-              id="pack_quantity"
-              type="number"
-              value={field.value ?? ""}
-              onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
-              placeholder="梱包数量を入力（オプション）"
-              disabled={isSubmitting}
-            />
-          )}
-        />
-      </div>
-
-      {/* Special Instructions */}
-      <div>
-        <Label htmlFor="special_instructions" className="mb-2 block text-sm font-medium">
-          特記事項
-        </Label>
-        <Controller
-          name="special_instructions"
-          control={control}
-          render={({ field }) => (
-            <textarea
-              id="special_instructions"
-              value={field.value ?? ""}
-              onChange={(e) => field.onChange(e.target.value || null)}
-              placeholder="特記事項を入力（オプション）"
-              rows={3}
-              className="w-full rounded-md border px-3 py-2 text-sm"
-              disabled={isSubmitting}
-            />
-          )}
-        />
-      </div>
+      <CustomerItemFormSapCacheSection control={control} isSubmitting={isSubmitting} />
 
       {/* Submit Buttons */}
       <div className="flex justify-end gap-3">
