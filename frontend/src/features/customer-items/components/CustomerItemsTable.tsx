@@ -20,30 +20,36 @@ interface CustomerItemsTableProps {
 
 function TableHeader() {
   return (
-    <thead className="bg-gray-50">
+    <thead className="sticky top-0 z-10 bg-gray-50">
       <tr>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           得意先
         </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           得意先品番
         </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           製品
         </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           仕入先
         </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           基本単位
         </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
+          包装
+        </th>
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           発注
         </th>
-        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-700 uppercase">
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           出荷票テキスト
         </th>
-        <th className="px-4 py-3 text-right text-xs font-medium tracking-wider text-gray-700 uppercase">
+        <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
+          特記事項
+        </th>
+        <th className="px-4 py-3 text-right text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           操作
         </th>
       </tr>
@@ -73,7 +79,7 @@ function TableRow({ item, onSoftDelete, onPermanentDelete, onRestore, onRowClick
       <td className="px-4 py-4 text-sm text-gray-900">
         <div className="flex items-center gap-2">
           <Building2 className="h-4 w-4 shrink-0 text-orange-600" />
-          <div className="max-w-[160px]">
+          <div className="min-w-[120px]">
             <div className="font-medium">{item.customer_code}</div>
             <div className="truncate text-xs text-gray-500" title={item.customer_name}>
               {item.customer_name}
@@ -92,7 +98,7 @@ function TableRow({ item, onSoftDelete, onPermanentDelete, onRestore, onRowClick
       <td className="px-4 py-4 text-sm text-gray-900">
         <div className="flex items-center gap-2">
           <Package className="h-4 w-4 shrink-0 text-green-600" />
-          <div className="max-w-[160px]">
+          <div className="min-w-[120px]">
             <div className="truncate font-medium" title={item.product_name}>
               {item.product_name}
             </div>
@@ -102,7 +108,7 @@ function TableRow({ item, onSoftDelete, onPermanentDelete, onRestore, onRowClick
       </td>
       <td className="px-4 py-4 text-sm text-gray-600">
         {item.supplier_name ? (
-          <div className="max-w-[120px]">
+          <div className="min-w-[100px]">
             <div className="font-medium">{item.supplier_code}</div>
             <div className="truncate text-xs text-gray-500" title={item.supplier_name}>
               {item.supplier_name}
@@ -113,6 +119,15 @@ function TableRow({ item, onSoftDelete, onPermanentDelete, onRestore, onRowClick
         )}
       </td>
       <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-900">{item.base_unit}</td>
+      <td className="px-4 py-4 text-sm whitespace-nowrap text-gray-600">
+        {item.pack_unit && item.pack_quantity ? (
+          <span>
+            {item.pack_unit} / {item.pack_quantity}
+          </span>
+        ) : (
+          "-"
+        )}
+      </td>
       <td className="px-4 py-4 text-sm whitespace-nowrap">
         {item.is_procurement_required ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
@@ -129,6 +144,15 @@ function TableRow({ item, onSoftDelete, onPermanentDelete, onRestore, onRowClick
         {item.shipping_slip_text ? (
           <div className="truncate" title={item.shipping_slip_text}>
             {item.shipping_slip_text}
+          </div>
+        ) : (
+          <span className="text-gray-400">-</span>
+        )}
+      </td>
+      <td className="max-w-[150px] px-4 py-4 text-sm text-gray-600">
+        {item.special_instructions ? (
+          <div className="truncate" title={item.special_instructions}>
+            {item.special_instructions}
           </div>
         ) : (
           <span className="text-gray-400">-</span>
@@ -205,7 +229,7 @@ export function CustomerItemsTable({
         </div>
       ) : (
         <div className="max-h-[600px] overflow-auto">
-          <table className="min-w-max divide-y divide-gray-200">
+          <table className="w-full min-w-[1200px] divide-y divide-gray-200">
             <TableHeader />
             <tbody className="divide-y divide-gray-200 bg-white">
               {items.map((item) => (

@@ -26,6 +26,8 @@ export interface CustomerItem {
   pack_unit: string | null;
   pack_quantity: number | null;
   special_instructions: string | null;
+  shipping_document_template: string | null;
+  sap_notes: string | null;
   // OCR→SAP変換用フィールド
   maker_part_no: string | null;
   order_category: string | null;

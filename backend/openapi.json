@@ -16302,6 +16302,30 @@
             "title": "Special Instructions",
             "description": "特記事項"
           },
+          "shipping_document_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Document Template",
+            "description": "出荷表テンプレート"
+          },
+          "sap_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Notes",
+            "description": "SAP備考"
+          },
           "maker_part_no": {
             "anyOf": [
               {
@@ -16912,6 +16936,30 @@
             "title": "Special Instructions",
             "description": "特記事項"
           },
+          "shipping_document_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Document Template",
+            "description": "出荷表テンプレート"
+          },
+          "sap_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Notes",
+            "description": "SAP備考"
+          },
           "maker_part_no": {
             "anyOf": [
               {
@@ -17166,6 +17214,30 @@
             ],
             "title": "Special Instructions",
             "description": "特記事項"
+          },
+          "shipping_document_template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Document Template",
+            "description": "出荷表テンプレート"
+          },
+          "sap_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Notes",
+            "description": "SAP備考"
           },
           "maker_part_no": {
             "anyOf": [

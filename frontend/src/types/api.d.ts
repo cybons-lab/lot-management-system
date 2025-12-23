@@ -6423,6 +6423,16 @@ export interface components {
        */
       special_instructions?: string | null;
       /**
+       * Shipping Document Template
+       * @description 出荷表テンプレート
+       */
+      shipping_document_template?: string | null;
+      /**
+       * Sap Notes
+       * @description SAP備考
+       */
+      sap_notes?: string | null;
+      /**
        * Maker Part No
        * @description メーカー品番
        */
@@ -6692,6 +6702,16 @@ export interface components {
        */
       special_instructions?: string | null;
       /**
+       * Shipping Document Template
+       * @description 出荷表テンプレート
+       */
+      shipping_document_template?: string | null;
+      /**
+       * Sap Notes
+       * @description SAP備考
+       */
+      sap_notes?: string | null;
+      /**
        * Maker Part No
        * @description メーカー品番
        */
@@ -6813,6 +6833,16 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
+      /**
+       * Shipping Document Template
+       * @description 出荷表テンプレート
+       */
+      shipping_document_template?: string | null;
+      /**
+       * Sap Notes
+       * @description SAP備考
+       */
+      sap_notes?: string | null;
       /**
        * Maker Part No
        * @description メーカー品番
