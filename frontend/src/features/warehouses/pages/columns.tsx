@@ -45,6 +45,19 @@ export const warehouseColumns: Column<Warehouse>[] = [
     width: "100px",
   },
   {
+    id: "default_transport_lead_time_days",
+    header: "輸送LT(日)",
+    cell: (row) => (
+      <span className="text-sm text-gray-900">
+        {row.default_transport_lead_time_days != null
+          ? `${row.default_transport_lead_time_days}日`
+          : "-"}
+      </span>
+    ),
+    sortable: true,
+    width: "100px",
+  },
+  {
     id: "updated_at",
     header: "更新日時",
     cell: (row) => <span className="text-sm text-gray-500">{formatDate(row.updated_at)}</span>,
