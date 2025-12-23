@@ -50,6 +50,9 @@ class OrderResponse(OrderBase):
     created_at: datetime
     updated_at: datetime
 
+    # OCR取込情報
+    ocr_source_filename: str | None = Field(None, description="OCR取込元ファイル名")
+
     # Optimistic Locking
     locked_by_user_id: int | None = Field(None, description="編集中のユーザーID")
     locked_by_user_name: str | None = Field(None, description="編集中のユーザー名")
@@ -97,7 +100,7 @@ class ReservationDetail(BaseSchema):
 class OrderLineBase(BaseSchema):
     """Base order line schema (DDL: order_lines)."""
 
-    product_id: int = Field(..., gt=0)
+    product_id: int | None = Field(None, gt=0, description="製品ID（OCR取込時はNULL可）")
     delivery_date: date
     order_quantity: Decimal = Field(..., gt=0, decimal_places=3, description="受注数量")
     unit: str = Field(..., min_length=1, max_length=20)
@@ -114,6 +117,11 @@ class OrderLineBase(BaseSchema):
     status: str = Field(
         default="pending",
         pattern="^(pending|allocated|shipped|completed|cancelled)$",
+    )
+
+    # OCR取込情報
+    external_product_code: str | None = Field(
+        None, max_length=100, description="OCR元の先方品番（変換前の生データ）"
     )
 
     # 業務キー列

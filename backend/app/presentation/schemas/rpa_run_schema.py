@@ -29,6 +29,14 @@ class RpaRunItemResponse(BaseModel):
     lock_flag: bool = False
     item_no: str | None = None
     lot_no: str | None = None
+    # マスタ参照ログ
+    complement_customer_id: int | None = Field(None, description="参照したマスタのcustomer_id")
+    complement_external_product_code: str | None = Field(
+        None, description="参照したマスタのexternal_product_code"
+    )
+    complement_match_type: str | None = Field(
+        None, description="検索種別（exact: 完全一致, prefix: 前方一致）"
+    )
 
     model_config = {"from_attributes": True, "populate_by_name": True}
 

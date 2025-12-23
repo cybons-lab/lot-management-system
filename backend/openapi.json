@@ -16301,6 +16301,114 @@
             ],
             "title": "Special Instructions",
             "description": "特記事項"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
+          "order_category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Category",
+            "description": "発注区分"
+          },
+          "is_procurement_required": {
+            "type": "boolean",
+            "title": "Is Procurement Required",
+            "description": "発注の有無",
+            "default": true
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text",
+            "description": "出荷票テキスト"
+          },
+          "ocr_conversion_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Conversion Notes",
+            "description": "OCR変換用備考"
+          },
+          "sap_supplier_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Supplier Code",
+            "description": "SAP仕入先コード"
+          },
+          "sap_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Warehouse Code",
+            "description": "SAP倉庫コード"
+          },
+          "sap_shipping_warehouse": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Shipping Warehouse",
+            "description": "SAP出荷倉庫"
+          },
+          "sap_uom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Uom",
+            "description": "SAP単位"
           }
         },
         "type": "object",
@@ -16804,6 +16912,114 @@
             "title": "Special Instructions",
             "description": "特記事項"
           },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
+          "order_category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Category",
+            "description": "発注区分"
+          },
+          "is_procurement_required": {
+            "type": "boolean",
+            "title": "Is Procurement Required",
+            "description": "発注の有無",
+            "default": true
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text",
+            "description": "出荷票テキスト"
+          },
+          "ocr_conversion_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Conversion Notes",
+            "description": "OCR変換用備考"
+          },
+          "sap_supplier_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Supplier Code",
+            "description": "SAP仕入先コード"
+          },
+          "sap_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Warehouse Code",
+            "description": "SAP倉庫コード"
+          },
+          "sap_shipping_warehouse": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Shipping Warehouse",
+            "description": "SAP出荷倉庫"
+          },
+          "sap_uom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Uom",
+            "description": "SAP単位"
+          },
           "customer_code": {
             "type": "string",
             "title": "Customer Code",
@@ -16950,6 +17166,120 @@
             ],
             "title": "Special Instructions",
             "description": "特記事項"
+          },
+          "maker_part_no": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part No",
+            "description": "メーカー品番"
+          },
+          "order_category": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Category",
+            "description": "発注区分"
+          },
+          "is_procurement_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Procurement Required",
+            "description": "発注の有無"
+          },
+          "shipping_slip_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Slip Text",
+            "description": "出荷票テキスト"
+          },
+          "ocr_conversion_notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Conversion Notes",
+            "description": "OCR変換用備考"
+          },
+          "sap_supplier_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Supplier Code",
+            "description": "SAP仕入先コード"
+          },
+          "sap_warehouse_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Warehouse Code",
+            "description": "SAP倉庫コード"
+          },
+          "sap_shipping_warehouse": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Shipping Warehouse",
+            "description": "SAP出荷倉庫"
+          },
+          "sap_uom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 20
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sap Uom",
+            "description": "SAP単位"
           }
         },
         "type": "object",
@@ -21142,9 +21472,17 @@
       "OrderLineCreate": {
         "properties": {
           "product_id": {
-            "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Product Id"
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id",
+            "description": "製品ID（OCR取込時はNULL可）"
           },
           "delivery_date": {
             "type": "string",
@@ -21218,6 +21556,19 @@
             "title": "Status",
             "default": "pending"
           },
+          "external_product_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Product Code",
+            "description": "OCR元の先方品番（変換前の生データ）"
+          },
           "order_group_id": {
             "anyOf": [
               {
@@ -21286,7 +21637,6 @@
         },
         "type": "object",
         "required": [
-          "product_id",
           "delivery_date",
           "order_quantity",
           "unit",
@@ -21408,9 +21758,17 @@
       "OrderLineResponse": {
         "properties": {
           "product_id": {
-            "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Product Id"
+            "anyOf": [
+              {
+                "type": "integer",
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id",
+            "description": "製品ID（OCR取込時はNULL可）"
           },
           "delivery_date": {
             "type": "string",
@@ -21472,6 +21830,19 @@
             "pattern": "^(pending|allocated|shipped|completed|cancelled)$",
             "title": "Status",
             "default": "pending"
+          },
+          "external_product_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Product Code",
+            "description": "OCR元の先方品番（変換前の生データ）"
           },
           "order_group_id": {
             "anyOf": [
@@ -21707,7 +22078,6 @@
         },
         "type": "object",
         "required": [
-          "product_id",
           "delivery_date",
           "order_quantity",
           "unit",
@@ -21749,6 +22119,18 @@
             "type": "string",
             "format": "date-time",
             "title": "Updated At"
+          },
+          "ocr_source_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ocr Source Filename",
+            "description": "OCR取込元ファイル名"
           },
           "locked_by_user_id": {
             "anyOf": [
@@ -23148,6 +23530,42 @@
               }
             ],
             "title": "Lot No"
+          },
+          "complement_customer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Complement Customer Id",
+            "description": "参照したマスタのcustomer_id"
+          },
+          "complement_external_product_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Complement External Product Code",
+            "description": "参照したマスタのexternal_product_code"
+          },
+          "complement_match_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Complement Match Type",
+            "description": "検索種別（exact: 完全一致, prefix: 前方一致）"
           }
         },
         "type": "object",

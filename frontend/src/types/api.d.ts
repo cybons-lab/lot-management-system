@@ -6422,6 +6422,52 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
+      /**
+       * Maker Part No
+       * @description メーカー品番
+       */
+      maker_part_no?: string | null;
+      /**
+       * Order Category
+       * @description 発注区分
+       */
+      order_category?: string | null;
+      /**
+       * Is Procurement Required
+       * @description 発注の有無
+       * @default true
+       */
+      is_procurement_required: boolean;
+      /**
+       * Shipping Slip Text
+       * @description 出荷票テキスト
+       */
+      shipping_slip_text?: string | null;
+      /**
+       * Ocr Conversion Notes
+       * @description OCR変換用備考
+       */
+      ocr_conversion_notes?: string | null;
+      /**
+       * Sap Supplier Code
+       * @description SAP仕入先コード
+       */
+      sap_supplier_code?: string | null;
+      /**
+       * Sap Warehouse Code
+       * @description SAP倉庫コード
+       */
+      sap_warehouse_code?: string | null;
+      /**
+       * Sap Shipping Warehouse
+       * @description SAP出荷倉庫
+       */
+      sap_shipping_warehouse?: string | null;
+      /**
+       * Sap Uom
+       * @description SAP単位
+       */
+      sap_uom?: string | null;
     };
     /**
      * CustomerItemDeliverySettingCreate
@@ -6646,6 +6692,52 @@ export interface components {
        */
       special_instructions?: string | null;
       /**
+       * Maker Part No
+       * @description メーカー品番
+       */
+      maker_part_no?: string | null;
+      /**
+       * Order Category
+       * @description 発注区分
+       */
+      order_category?: string | null;
+      /**
+       * Is Procurement Required
+       * @description 発注の有無
+       * @default true
+       */
+      is_procurement_required: boolean;
+      /**
+       * Shipping Slip Text
+       * @description 出荷票テキスト
+       */
+      shipping_slip_text?: string | null;
+      /**
+       * Ocr Conversion Notes
+       * @description OCR変換用備考
+       */
+      ocr_conversion_notes?: string | null;
+      /**
+       * Sap Supplier Code
+       * @description SAP仕入先コード
+       */
+      sap_supplier_code?: string | null;
+      /**
+       * Sap Warehouse Code
+       * @description SAP倉庫コード
+       */
+      sap_warehouse_code?: string | null;
+      /**
+       * Sap Shipping Warehouse
+       * @description SAP出荷倉庫
+       */
+      sap_shipping_warehouse?: string | null;
+      /**
+       * Sap Uom
+       * @description SAP単位
+       */
+      sap_uom?: string | null;
+      /**
        * Customer Code
        * @description 得意先コード
        */
@@ -6721,6 +6813,51 @@ export interface components {
        * @description 特記事項
        */
       special_instructions?: string | null;
+      /**
+       * Maker Part No
+       * @description メーカー品番
+       */
+      maker_part_no?: string | null;
+      /**
+       * Order Category
+       * @description 発注区分
+       */
+      order_category?: string | null;
+      /**
+       * Is Procurement Required
+       * @description 発注の有無
+       */
+      is_procurement_required?: boolean | null;
+      /**
+       * Shipping Slip Text
+       * @description 出荷票テキスト
+       */
+      shipping_slip_text?: string | null;
+      /**
+       * Ocr Conversion Notes
+       * @description OCR変換用備考
+       */
+      ocr_conversion_notes?: string | null;
+      /**
+       * Sap Supplier Code
+       * @description SAP仕入先コード
+       */
+      sap_supplier_code?: string | null;
+      /**
+       * Sap Warehouse Code
+       * @description SAP倉庫コード
+       */
+      sap_warehouse_code?: string | null;
+      /**
+       * Sap Shipping Warehouse
+       * @description SAP出荷倉庫
+       */
+      sap_shipping_warehouse?: string | null;
+      /**
+       * Sap Uom
+       * @description SAP単位
+       */
+      sap_uom?: string | null;
     };
     /**
      * CustomerResponse
@@ -8541,8 +8678,11 @@ export interface components {
      * @description Create order line request.
      */
     OrderLineCreate: {
-      /** Product Id */
-      product_id: number;
+      /**
+       * Product Id
+       * @description 製品ID（OCR取込時はNULL可）
+       */
+      product_id?: number | null;
       /**
        * Delivery Date
        * Format: date
@@ -8578,6 +8718,11 @@ export interface components {
        * @default pending
        */
       status: string;
+      /**
+       * External Product Code
+       * @description OCR元の先方品番（変換前の生データ）
+       */
+      external_product_code?: string | null;
       /**
        * Order Group Id
        * @description 受注グループID
@@ -8670,8 +8815,11 @@ export interface components {
      * @description Order line response (DDL: order_lines).
      */
     OrderLineResponse: {
-      /** Product Id */
-      product_id: number;
+      /**
+       * Product Id
+       * @description 製品ID（OCR取込時はNULL可）
+       */
+      product_id?: number | null;
       /**
        * Delivery Date
        * Format: date
@@ -8707,6 +8855,11 @@ export interface components {
        * @default pending
        */
       status: string;
+      /**
+       * External Product Code
+       * @description OCR元の先方品番（変換前の生データ）
+       */
+      external_product_code?: string | null;
       /**
        * Order Group Id
        * @description 受注グループID
@@ -8808,6 +8961,11 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /**
+       * Ocr Source Filename
+       * @description OCR取込元ファイル名
+       */
+      ocr_source_filename?: string | null;
       /**
        * Locked By User Id
        * @description 編集中のユーザーID
@@ -9406,6 +9564,21 @@ export interface components {
       item_no?: string | null;
       /** Lot No */
       lot_no?: string | null;
+      /**
+       * Complement Customer Id
+       * @description 参照したマスタのcustomer_id
+       */
+      complement_customer_id?: number | null;
+      /**
+       * Complement External Product Code
+       * @description 参照したマスタのexternal_product_code
+       */
+      complement_external_product_code?: string | null;
+      /**
+       * Complement Match Type
+       * @description 検索種別（exact: 完全一致, prefix: 前方一致）
+       */
+      complement_match_type?: string | null;
     };
     /**
      * RpaRunItemUpdateRequest
