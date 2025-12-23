@@ -57,14 +57,41 @@ function createColumns(
       header: "商品名",
       cell: (row) => (
         <span
-          className={`block max-w-[300px] truncate ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-gray-900"}`}
+          className={`block max-w-[200px] truncate ${isInactive(row.valid_to) ? "text-muted-foreground" : "text-gray-900"}`}
           title={row.product_name}
         >
           {row.product_name}
         </span>
       ),
       sortable: true,
-      width: "300px",
+      width: "200px",
+    },
+    {
+      id: "maker_part_code",
+      header: "メーカー品番",
+      cell: (row) => (
+        <span className="font-mono text-sm text-gray-700">{row.maker_part_code || "-"}</span>
+      ),
+      sortable: true,
+      width: "120px",
+    },
+    {
+      id: "base_unit",
+      header: "基本単位",
+      cell: (row) => <span className="text-sm text-gray-700">{row.base_unit || "-"}</span>,
+      sortable: true,
+      width: "80px",
+    },
+    {
+      id: "consumption_limit_days",
+      header: "消費期限",
+      cell: (row) => (
+        <span className="text-sm text-gray-700">
+          {row.consumption_limit_days != null ? `${row.consumption_limit_days}日` : "-"}
+        </span>
+      ),
+      sortable: true,
+      width: "90px",
     },
     {
       id: "internal_unit",
@@ -78,21 +105,21 @@ function createColumns(
       header: "外部単位",
       cell: (row) => <span className="text-sm text-gray-700">{row.external_unit}</span>,
       sortable: true,
-      width: "120px",
+      width: "100px",
     },
     {
       id: "qty_per_internal_unit",
-      header: "数量/内部単位",
+      header: "数量/単位",
       cell: (row) => <span className="text-sm text-gray-700">{row.qty_per_internal_unit}</span>,
       sortable: true,
-      width: "150px",
+      width: "100px",
     },
     {
       id: "updated_at",
       header: "更新日時",
       cell: (row) => <div className="text-center font-medium">{formatDate(row.updated_at)}</div>,
       sortable: true,
-      width: "150px",
+      width: "120px",
     },
     {
       id: "actions",
