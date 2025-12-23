@@ -28,6 +28,9 @@ class WarehouseBase(BaseSchema):
     warehouse_type: str = Field(
         ..., pattern="^(internal|external|supplier)$", description="internal/external/supplier"
     )
+    default_transport_lead_time_days: int | None = Field(
+        None, ge=0, description="デフォルト輸送リードタイム（日）"
+    )
 
 
 class WarehouseCreate(WarehouseBase):
@@ -42,6 +45,9 @@ class WarehouseUpdate(BaseSchema):
     warehouse_name: str | None = Field(None, min_length=1, max_length=200)
     warehouse_type: str | None = Field(
         None, pattern="^(internal|external|supplier)$", description="internal/external/supplier"
+    )
+    default_transport_lead_time_days: int | None = Field(
+        None, ge=0, description="デフォルト輸送リードタイム（日）"
     )
 
 

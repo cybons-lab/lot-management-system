@@ -21641,6 +21641,31 @@
             "title": "External Product Code",
             "description": "OCR元の先方品番（変換前の生データ）"
           },
+          "shipping_document_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Document Text",
+            "description": "出荷表用テキスト"
+          },
+          "forecast_reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Reference",
+            "description": "予測参照情報"
+          },
           "order_group_id": {
             "anyOf": [
               {
@@ -21916,6 +21941,31 @@
             "title": "External Product Code",
             "description": "OCR元の先方品番（変換前の生データ）"
           },
+          "shipping_document_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shipping Document Text",
+            "description": "出荷表用テキスト"
+          },
+          "forecast_reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forecast Reference",
+            "description": "予測参照情報"
+          },
           "order_group_id": {
             "anyOf": [
               {
@@ -21988,6 +22038,12 @@
           "order_id": {
             "type": "integer",
             "title": "Order Id"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version",
+            "description": "楽観的ロック用バージョン",
+            "default": 1
           },
           "created_at": {
             "type": "string",
@@ -22286,6 +22342,32 @@
             "minLength": 1,
             "title": "Product Name"
           },
+          "maker_part_code": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Maker Part Code",
+            "description": "メーカー品番",
+            "default": ""
+          },
+          "base_unit": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Base Unit",
+            "description": "基本単位",
+            "default": "EA"
+          },
+          "consumption_limit_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumption Limit Days",
+            "description": "消費期限日数"
+          },
           "internal_unit": {
             "type": "string",
             "minLength": 1,
@@ -22343,6 +22425,32 @@
             "type": "string",
             "minLength": 1,
             "title": "Product Name"
+          },
+          "maker_part_code": {
+            "type": "string",
+            "maxLength": 100,
+            "title": "Maker Part Code",
+            "description": "メーカー品番",
+            "default": ""
+          },
+          "base_unit": {
+            "type": "string",
+            "maxLength": 20,
+            "title": "Base Unit",
+            "description": "基本単位",
+            "default": "EA"
+          },
+          "consumption_limit_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumption Limit Days",
+            "description": "消費期限日数"
           },
           "internal_unit": {
             "type": "string",
@@ -22806,6 +22914,39 @@
             "type": "string",
             "title": "Product Name"
           },
+          "maker_part_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part Code"
+          },
+          "base_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Unit"
+          },
+          "consumption_limit_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumption Limit Days"
+          },
           "internal_unit": {
             "type": "string",
             "title": "Internal Unit"
@@ -22967,6 +23108,39 @@
               }
             ],
             "title": "Product Name"
+          },
+          "maker_part_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maker Part Code"
+          },
+          "base_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Unit"
+          },
+          "consumption_limit_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consumption Limit Days"
           },
           "internal_unit": {
             "anyOf": [
@@ -23429,6 +23603,11 @@
             "type": "integer",
             "title": "Id"
           },
+          "run_id": {
+            "type": "integer",
+            "title": "Run Id",
+            "description": "所属するRPA RunのID"
+          },
           "row_no": {
             "type": "integer",
             "title": "Row No"
@@ -23638,11 +23817,25 @@
             ],
             "title": "Complement Match Type",
             "description": "検索種別（exact: 完全一致, prefix: 前方一致）"
+          },
+          "processing_started_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Processing Started At",
+            "description": "処理開始日時"
           }
         },
         "type": "object",
         "required": [
           "id",
+          "run_id",
           "row_no"
         ],
         "title": "RpaRunItemResponse",
@@ -23758,6 +23951,44 @@
             "type": "string",
             "title": "Status"
           },
+          "customer_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Customer Id",
+            "description": "処理対象得意先ID"
+          },
+          "data_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Start Date",
+            "description": "データ期間開始日"
+          },
+          "data_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data End Date",
+            "description": "データ期間終了日"
+          },
           "started_at": {
             "anyOf": [
               {
@@ -23837,6 +24068,18 @@
               }
             ],
             "title": "External Done At"
+          },
+          "external_done_by_user_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Done By User Id",
+            "description": "外部処理完了ユーザーID"
           },
           "external_done_by_username": {
             "anyOf": [
@@ -25468,6 +25711,19 @@
             "pattern": "^(internal|external|supplier)$",
             "title": "Warehouse Type",
             "description": "internal/external/supplier"
+          },
+          "default_transport_lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Transport Lead Time Days",
+            "description": "デフォルト輸送リードタイム（日）"
           }
         },
         "type": "object",
@@ -25517,6 +25773,19 @@
             "pattern": "^(internal|external|supplier)$",
             "title": "Warehouse Type",
             "description": "internal/external/supplier"
+          },
+          "default_transport_lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Transport Lead Time Days",
+            "description": "デフォルト輸送リードタイム（日）"
           }
         },
         "type": "object",
@@ -25800,6 +26069,19 @@
             "title": "Warehouse Type",
             "description": "internal/external/supplier"
           },
+          "default_transport_lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Transport Lead Time Days",
+            "description": "デフォルト輸送リードタイム（日）"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -25860,6 +26142,19 @@
             ],
             "title": "Warehouse Type",
             "description": "internal/external/supplier"
+          },
+          "default_transport_lead_time_days": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Transport Lead Time Days",
+            "description": "デフォルト輸送リードタイム（日）"
           }
         },
         "type": "object",

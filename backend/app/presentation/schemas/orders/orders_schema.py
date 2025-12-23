@@ -124,6 +124,10 @@ class OrderLineBase(BaseSchema):
         None, max_length=100, description="OCR元の先方品番（変換前の生データ）"
     )
 
+    # 出荷表テキスト
+    shipping_document_text: str | None = Field(None, description="出荷表用テキスト")
+    forecast_reference: str | None = Field(None, max_length=100, description="予測参照情報")
+
     # 業務キー列
     order_group_id: int | None = Field(None, gt=0, description="受注グループID")
     customer_order_no: str | None = Field(
@@ -157,6 +161,7 @@ class OrderLineResponse(OrderLineBase):
 
     id: int
     order_id: int
+    version: int = Field(1, description="楽観的ロック用バージョン")
     created_at: datetime
     updated_at: datetime
 

@@ -3,13 +3,12 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui";
 import { OrderStatusBadge } from "@/shared/components/data/StatusBadge";
-import type { OrderUI } from "@/shared/libs/normalize";
-import type { OrderLine } from "@/shared/types/aliases";
+import type { OrderLineUI, OrderUI } from "@/shared/libs/normalize";
 import { formatDate } from "@/shared/utils/date";
 
 interface OrderInfoColumnsProps {
   order: OrderUI;
-  lines: OrderLine[];
+  lines: OrderLineUI[];
   allocationRate: number;
 }
 

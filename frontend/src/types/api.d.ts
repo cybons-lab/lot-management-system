@@ -8754,6 +8754,16 @@ export interface components {
        */
       external_product_code?: string | null;
       /**
+       * Shipping Document Text
+       * @description 出荷表用テキスト
+       */
+      shipping_document_text?: string | null;
+      /**
+       * Forecast Reference
+       * @description 予測参照情報
+       */
+      forecast_reference?: string | null;
+      /**
        * Order Group Id
        * @description 受注グループID
        */
@@ -8891,6 +8901,16 @@ export interface components {
        */
       external_product_code?: string | null;
       /**
+       * Shipping Document Text
+       * @description 出荷表用テキスト
+       */
+      shipping_document_text?: string | null;
+      /**
+       * Forecast Reference
+       * @description 予測参照情報
+       */
+      forecast_reference?: string | null;
+      /**
        * Order Group Id
        * @description 受注グループID
        */
@@ -8919,6 +8939,12 @@ export interface components {
       id: number;
       /** Order Id */
       order_id: number;
+      /**
+       * Version
+       * @description 楽観的ロック用バージョン
+       * @default 1
+       */
+      version: number;
       /**
        * Created At
        * Format: date-time
@@ -9029,6 +9055,23 @@ export interface components {
       /** Product Name */
       product_name: string;
       /**
+       * Maker Part Code
+       * @description メーカー品番
+       * @default
+       */
+      maker_part_code: string;
+      /**
+       * Base Unit
+       * @description 基本単位
+       * @default EA
+       */
+      base_unit: string;
+      /**
+       * Consumption Limit Days
+       * @description 消費期限日数
+       */
+      consumption_limit_days?: number | null;
+      /**
        * Internal Unit
        * @default CAN
        */
@@ -9064,6 +9107,23 @@ export interface components {
       product_code: string;
       /** Product Name */
       product_name: string;
+      /**
+       * Maker Part Code
+       * @description メーカー品番
+       * @default
+       */
+      maker_part_code: string;
+      /**
+       * Base Unit
+       * @description 基本単位
+       * @default EA
+       */
+      base_unit: string;
+      /**
+       * Consumption Limit Days
+       * @description 消費期限日数
+       */
+      consumption_limit_days?: number | null;
       /**
        * Internal Unit
        * @default CAN
@@ -9292,6 +9352,12 @@ export interface components {
       product_code: string;
       /** Product Name */
       product_name: string;
+      /** Maker Part Code */
+      maker_part_code?: string | null;
+      /** Base Unit */
+      base_unit?: string | null;
+      /** Consumption Limit Days */
+      consumption_limit_days?: number | null;
       /** Internal Unit */
       internal_unit: string;
       /** External Unit */
@@ -9366,6 +9432,12 @@ export interface components {
       product_code?: string | null;
       /** Product Name */
       product_name?: string | null;
+      /** Maker Part Code */
+      maker_part_code?: string | null;
+      /** Base Unit */
+      base_unit?: string | null;
+      /** Consumption Limit Days */
+      consumption_limit_days?: number | null;
       /** Internal Unit */
       internal_unit?: string | null;
       /** External Unit */
@@ -9549,6 +9621,11 @@ export interface components {
     RpaRunItemResponse: {
       /** Id */
       id: number;
+      /**
+       * Run Id
+       * @description 所属するRPA RunのID
+       */
+      run_id: number;
       /** Row No */
       row_no: number;
       /** Status */
@@ -9609,6 +9686,11 @@ export interface components {
        * @description 検索種別（exact: 完全一致, prefix: 前方一致）
        */
       complement_match_type?: string | null;
+      /**
+       * Processing Started At
+       * @description 処理開始日時
+       */
+      processing_started_at?: string | null;
     };
     /**
      * RpaRunItemUpdateRequest
@@ -9649,6 +9731,21 @@ export interface components {
       rpa_type: string;
       /** Status */
       status: string;
+      /**
+       * Customer Id
+       * @description 処理対象得意先ID
+       */
+      customer_id?: number | null;
+      /**
+       * Data Start Date
+       * @description データ期間開始日
+       */
+      data_start_date?: string | null;
+      /**
+       * Data End Date
+       * @description データ期間終了日
+       */
+      data_end_date?: string | null;
       /** Started At */
       started_at?: string | null;
       /** Started By User Id */
@@ -9663,6 +9760,11 @@ export interface components {
       step2_executed_by_username?: string | null;
       /** External Done At */
       external_done_at?: string | null;
+      /**
+       * External Done By User Id
+       * @description 外部処理完了ユーザーID
+       */
+      external_done_by_user_id?: number | null;
       /** External Done By Username */
       external_done_by_username?: string | null;
       /** Step4 Executed At */
@@ -10466,6 +10568,11 @@ export interface components {
        * @description internal/external/supplier
        */
       warehouse_type: string;
+      /**
+       * Default Transport Lead Time Days
+       * @description デフォルト輸送リードタイム（日）
+       */
+      default_transport_lead_time_days?: number | null;
     };
     /**
      * WarehouseBulkUpsertRequest
@@ -10492,6 +10599,11 @@ export interface components {
        * @description internal/external/supplier
        */
       warehouse_type: string;
+      /**
+       * Default Transport Lead Time Days
+       * @description デフォルト輸送リードタイム（日）
+       */
+      default_transport_lead_time_days?: number | null;
     };
     /**
      * WarehouseDeliveryRouteCreate
@@ -10626,6 +10738,11 @@ export interface components {
        * @description internal/external/supplier
        */
       warehouse_type: string;
+      /**
+       * Default Transport Lead Time Days
+       * @description デフォルト輸送リードタイム（日）
+       */
+      default_transport_lead_time_days?: number | null;
       /** Id */
       id: number;
       /**
@@ -10656,6 +10773,11 @@ export interface components {
        * @description internal/external/supplier
        */
       warehouse_type?: string | null;
+      /**
+       * Default Transport Lead Time Days
+       * @description デフォルト輸送リードタイム（日）
+       */
+      default_transport_lead_time_days?: number | null;
     };
     /**
      * WithdrawalCreate

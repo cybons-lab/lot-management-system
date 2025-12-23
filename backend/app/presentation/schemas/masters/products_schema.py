@@ -12,6 +12,9 @@ class ProductBase(BaseModel):
 
     product_code: str = Field(..., min_length=1)
     product_name: str = Field(..., min_length=1)
+    maker_part_code: str = Field("", max_length=100, description="メーカー品番")
+    base_unit: str = Field("EA", max_length=20, description="基本単位")
+    consumption_limit_days: int | None = Field(None, description="消費期限日数")
     internal_unit: str = Field(default="CAN", min_length=1)
     external_unit: str = Field(default="KG", min_length=1)
     qty_per_internal_unit: float = Field(default=1.0, gt=0)
@@ -30,6 +33,9 @@ class ProductUpdate(BaseModel):
 
     product_code: str | None = None
     product_name: str | None = None
+    maker_part_code: str | None = None
+    base_unit: str | None = None
+    consumption_limit_days: int | None = None
     internal_unit: str | None = None
     external_unit: str | None = None
     qty_per_internal_unit: float | None = None
@@ -44,6 +50,9 @@ class ProductOut(ORMModel):
     id: int
     product_code: str
     product_name: str
+    maker_part_code: str | None = None  # 既存データ互換性のためオプショナル
+    base_unit: str | None = None  # 既存データ互換性のためオプショナル
+    consumption_limit_days: int | None = None
     internal_unit: str
     external_unit: str
     qty_per_internal_unit: float
