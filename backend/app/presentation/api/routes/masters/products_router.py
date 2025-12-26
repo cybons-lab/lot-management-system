@@ -54,7 +54,21 @@ def list_products(
     include_inactive: bool = Query(False, description="Include soft-deleted products"),
     db: Session = Depends(get_db),
 ):
-    """Return a paginated list of products."""
+    """製品一覧を取得.
+
+    デフォルトでは有効な製品のみを返します。
+    論理削除された製品も含める場合はinclude_inactive=trueを指定してください。
+
+    Args:
+        skip: スキップ件数（ページネーション用）
+        limit: 取得件数（最大100件）
+        search: 検索キーワード（製品コード、製品名で部分一致）
+        include_inactive: 論理削除済み製品を含めるか（デフォルト: False）
+        db: データベースセッション
+
+    Returns:
+        list[ProductOut]: 製品情報のリスト
+    """
     service = ProductService(db)
     products = service.list_items(
         skip=skip, limit=limit, search=search, include_inactive=include_inactive
@@ -78,7 +92,15 @@ def download_products_template(format: str = "csv", include_sample: bool = True)
 
 @router.get("/export/download")
 def export_products(format: str = "csv", db: Session = Depends(get_db)):
-    """Export products to CSV or Excel."""
+    """製品データをCSVまたはExcelでエクスポート.
+
+    Args:
+        format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）
+        db: データベースセッション
+
+    Returns:
+        StreamingResponse: エクスポートファイル
+    """
     service = ProductService(db)
     products = service.get_all()
     data = [_to_product_out(p) for p in products]
@@ -90,7 +112,18 @@ def export_products(format: str = "csv", db: Session = Depends(get_db)):
 
 @router.get("/{product_code}", response_model=ProductOut)
 def get_product(product_code: str, db: Session = Depends(get_db)):
-    """Fetch a product by its code (maker_part_code)."""
+    """製品コードで製品を取得.
+
+    Args:
+        product_code: 製品コード（maker_part_code）
+        db: データベースセッション
+
+    Returns:
+        ProductOut: 製品詳細情報
+
+    Raises:
+        HTTPException: 製品が存在しない場合（404）
+    """
     service = ProductService(db)
     product = service.get_by_code(product_code)
     assert product is not None  # raise_404=True ensures this

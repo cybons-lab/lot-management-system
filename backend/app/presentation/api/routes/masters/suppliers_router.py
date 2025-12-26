@@ -30,10 +30,19 @@ def list_suppliers(
     include_inactive: bool = Query(False, description="Include soft-deleted (inactive) suppliers"),
     db: Session = Depends(get_db),
 ):
-    """List suppliers.
+    """サプライヤー一覧を取得.
 
-    By default, only active suppliers (valid_to >= today) are returned.
-    Set include_inactive=true to include soft-deleted suppliers.
+    デフォルトでは有効なサプライヤー（valid_to >= 今日）のみを返します。
+    論理削除されたサプライヤーも含める場合はinclude_inactive=trueを指定してください。
+
+    Args:
+        skip: スキップ件数（ページネーション用）
+        limit: 取得件数（最大100件）
+        include_inactive: 論理削除済みサプライヤーを含めるか（デフォルト: False）
+        db: データベースセッション
+
+    Returns:
+        list[SupplierResponse]: サプライヤー情報のリスト
     """
     service = SupplierService(db)
     return service.get_all(skip=skip, limit=limit, include_inactive=include_inactive)
@@ -67,14 +76,36 @@ def export_suppliers(format: str = "csv", db: Session = Depends(get_db)):
 
 @router.get("/{supplier_code}", response_model=SupplierResponse)
 def get_supplier(supplier_code: str, db: Session = Depends(get_db)):
-    """Get supplier by code."""
+    """サプライヤーコードでサプライヤーを取得.
+
+    Args:
+        supplier_code: サプライヤーコード
+        db: データベースセッション
+
+    Returns:
+        SupplierResponse: サプライヤー詳細情報
+
+    Raises:
+        HTTPException: サプライヤーが存在しない場合（404）
+    """
     service = SupplierService(db)
     return service.get_by_code(supplier_code)
 
 
 @router.post("", response_model=SupplierResponse, status_code=201)
 def create_supplier(supplier: SupplierCreate, db: Session = Depends(get_db)):
-    """Create supplier."""
+    """サプライヤーを新規作成.
+
+    Args:
+        supplier: サプライヤー作成リクエストデータ
+        db: データベースセッション
+
+    Returns:
+        SupplierResponse: 作成されたサプライヤー情報
+
+    Raises:
+        HTTPException: サプライヤーコードが既に存在する場合（409）
+    """
     service = SupplierService(db)
     # Check if exists
     existing = service.get_by_code(supplier.supplier_code, raise_404=False)

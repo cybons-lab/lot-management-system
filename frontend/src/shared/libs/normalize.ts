@@ -2,7 +2,7 @@
  * normalize.ts
  *
  * API型からUI型への変換ユーティリティ
- * null/undefinedを安全な値に変換
+ * null/undefinedを安全な値に変換し、UIで扱いやすい形式に正規化します。
  */
 
 import type { AllocatedLot } from "@/shared/types/aliases";
@@ -13,9 +13,28 @@ import type {
 import { formatOrderCode } from "@/shared/utils/order";
 import type { components } from "@/types/api";
 
-// ヘルパー関数
+/**
+ * 文字列のnull/undefinedを安全な値に変換
+ * @param v - 変換対象の値
+ * @param fallback - デフォルト値（デフォルト: "-"）
+ * @returns 変換後の文字列
+ */
 export const S = (v: string | null | undefined, fallback = "-"): string => v ?? fallback;
+
+/**
+ * 数値のnull/undefinedを安全な値に変換
+ * @param v - 変換対象の値
+ * @param fallback - デフォルト値（デフォルト: 0）
+ * @returns 変換後の数値
+ */
 export const N = (v: number | null | undefined, fallback = 0): number => v ?? fallback;
+
+/**
+ * 日付文字列のnull/undefinedを安全な値に変換
+ * @param v - 変換対象の値
+ * @param fallback - デフォルト値（デフォルト: ""）
+ * @returns 変換後の日付文字列
+ */
 export const D = (v: string | null | undefined, fallback = ""): string => v ?? fallback;
 
 // API型のエイリアス
