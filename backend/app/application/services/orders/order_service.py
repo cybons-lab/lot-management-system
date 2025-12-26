@@ -35,9 +35,18 @@ from app.presentation.schemas.orders.orders_schema import (
 
 
 class OrderService:
-    """Encapsulates order-related business logic."""
+    """受注関連のビジネスロジックをカプセル化.
+
+    受注の作成・更新・削除、明細管理、ステータス遷移など、
+    受注管理の中核となるビジネスロジックを提供します。
+    """
 
     def __init__(self, db: Session):
+        """サービスの初期化.
+
+        Args:
+            db: データベースセッション
+        """
         self.db = db
 
     def get_orders(
@@ -51,6 +60,23 @@ class OrderService:
         order_type: str | None = None,
         primary_supplier_ids: list[int] | None = None,
     ) -> list[OrderWithLinesResponse]:
+        """受注一覧を取得（明細含む）.
+
+        主担当サプライヤーの製品を含む受注を優先的にソートします。
+
+        Args:
+            skip: スキップ件数（ページネーション用）
+            limit: 取得件数（最大100件）
+            status: ステータスフィルタ
+            customer_code: 顧客コードフィルタ
+            date_from: 受注日開始日フィルタ
+            date_to: 受注日終了日フィルタ
+            order_type: 受注種別フィルタ
+            primary_supplier_ids: 主担当サプライヤーIDリスト（優先ソート用）
+
+        Returns:
+            list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
+        """
         stmt = select(Order).options(  # type: ignore[assignment]
             selectinload(Order.order_lines).selectinload(OrderLine.product)
         )

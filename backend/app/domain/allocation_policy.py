@@ -1,22 +1,28 @@
-"""Allocation policy definitions.
+"""引当ポリシー定義.
 
-Defines policies for lot selection (FEFO/FIFO) and database locking modes.
-These are used by AllocationCandidateService as the SSOT for allocation candidates.
+ロット選択のためのポリシー（FEFO/FIFO）とデータベースロックモードを定義します。
+これらはAllocationCandidateServiceによって引当候補のSSoT（信頼できる唯一の情報源）として使用されます。
 """
 
 from enum import Enum
 
 
 class AllocationPolicy(str, Enum):
-    """Policy for ordering lots during allocation."""
+    """引当時のロット並び順を決定するポリシー.
 
-    FEFO = "fefo"  # First Expired, First Out (default for perishables)
-    FIFO = "fifo"  # First In, First Out (by received date)
+    在庫引当時にどのロットを優先的に使用するかを制御します。
+    """
+
+    FEFO = "fefo"  # 先入先出（有効期限優先）- 生鮮品・期限管理品のデフォルト
+    FIFO = "fifo"  # 先入先出（入荷日優先）- 製造番号管理品等で使用
 
 
 class LockMode(str, Enum):
-    """Database locking mode for candidate queries."""
+    """引当候補クエリ時のデータベースロックモード.
 
-    NONE = "none"  # No locking (for read-only/preview)
-    FOR_UPDATE = "for_update"  # Lock rows for update
-    FOR_UPDATE_SKIP_LOCKED = "for_update_skip_locked"  # Skip already-locked rows
+    並行処理時の在庫の整合性を保つためのロック制御戦略を定義します。
+    """
+
+    NONE = "none"  # ロックなし（読み取り専用/プレビュー用）
+    FOR_UPDATE = "for_update"  # 行ロック取得（更新用、ロック待ち発生）
+    FOR_UPDATE_SKIP_LOCKED = "for_update_skip_locked"  # ロック済み行をスキップ（競合回避）

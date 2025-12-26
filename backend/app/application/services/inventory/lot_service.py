@@ -49,13 +49,33 @@ from app.presentation.schemas.inventory.inventory_schema import (
 
 
 class LotService:
-    """Business logic for lot operations and FEFO candidate retrieval."""
+    """ロット操作とFEFO候補取得のビジネスロジック.
+
+    ロットの作成・更新・削除、在庫変動記録、引当候補の取得など、
+    ロット在庫管理の中核となるビジネスロジックを提供します。
+    """
 
     def __init__(self, db: Session):
+        """サービスの初期化.
+
+        Args:
+            db: データベースセッション
+        """
         self.db = db
         self.repository = LotRepository(db)
 
     def get_lot(self, lot_id: int) -> Lot:
+        """ロットを取得.
+
+        Args:
+            lot_id: ロットID
+
+        Returns:
+            Lot: ロットエンティティ
+
+        Raises:
+            LotNotFoundError: ロットが存在しない場合
+        """
         lot = self.repository.find_by_id(lot_id)
         if not lot:
             raise LotNotFoundError(lot_id)
@@ -69,18 +89,22 @@ class LotService:
         include_sample: bool = False,
         include_adhoc: bool = False,
     ) -> list[LotCandidate]:
-        """Get FEFO candidate lots.
+        """FEFO引当候補ロットを取得.
 
-        v2.2: Uses Lot.current_quantity - Lot.allocated_quantity for available quantity.
-        v2.3: Filters out sample/adhoc origin types by default.
-        v3.0: Delegates to AllocationCandidateService (SSOT).
+        有効期限の早い順（FEFO: First Expiry First Out）に並べた引当候補ロットを返します。
+        v2.2: Lot.current_quantity - Lot.allocated_quantityで利用可能数量を計算
+        v2.3: デフォルトでサンプル/アドホック起源ロットを除外
+        v3.0: AllocationCandidateService（SSOT）に処理を委譲
 
         Args:
-            product_code: Product code to filter by
-            warehouse_code: Optional warehouse code filter
-            exclude_expired: Whether to exclude expired lots
-            include_sample: Whether to include sample origin lots (default: False)
-            include_adhoc: Whether to include adhoc origin lots (default: False)
+            product_code: フィルタ対象の製品コード
+            warehouse_code: 倉庫コードフィルタ（省略可）
+            exclude_expired: 期限切れロットを除外するか（デフォルト: True）
+            include_sample: サンプル起源ロットを含めるか（デフォルト: False）
+            include_adhoc: アドホック起源ロットを含めるか（デフォルト: False）
+
+        Returns:
+            list[LotCandidate]: FEFO順に並んだ引当候補ロットのリスト
         """
         from app.application.services.allocations.candidate_service import (
             AllocationCandidateService,
