@@ -1,4 +1,7 @@
-"""Inventory adjustment service layer."""
+"""在庫調整サービス層.
+
+在庫調整の作成・取得・履歴管理のビジネスロジックを提供します。
+"""
 
 from decimal import Decimal
 
@@ -20,22 +23,22 @@ from app.presentation.schemas.inventory.inventory_schema import (
 
 
 class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResponse, int]):
-    """Business logic for inventory adjustments.
+    """在庫調整のビジネスロジック.
 
-    Note: This service uses AdjustmentResponse instead of a separate UpdateSchema
-    since adjustments are typically immutable after creation.
+    調整レコードは作成後は不変（immutable）であるため、
+    AdjustmentResponseを更新スキーマとしても使用します。
 
-    Inherits basic operations from BaseService:
-    - get_by_id(adjustment_id) -> Adjustment (overridden to return AdjustmentResponse)
+    BaseServiceから基本操作を継承:
+    - get_by_id(adjustment_id) -> Adjustment (AdjustmentResponseを返すようオーバーライド)
 
-    Custom business logic with complex inventory updates is implemented below.
+    在庫更新を伴う複雑なビジネスロジックを実装しています。
     """
 
     def __init__(self, db: Session):
-        """Initialize adjustment service.
+        """在庫調整サービスを初期化.
 
         Args:
-            db: Database session
+            db: データベースセッション
         """
         super().__init__(db=db, model=Adjustment)
 
@@ -46,16 +49,16 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         lot_id: int | None = None,
         adjustment_type: str | None = None,
     ) -> list[AdjustmentResponse]:
-        """Get adjustment records with optional filtering.
+        """在庫調整履歴を取得（オプションでフィルタリング）.
 
         Args:
-            skip: Number of records to skip (pagination)
-            limit: Maximum number of records to return
-            lot_id: Filter by lot ID
-            adjustment_type: Filter by adjustment type
+            skip: スキップ件数（ページネーション用）
+            limit: 取得件数上限
+            lot_id: ロットIDでフィルタ
+            adjustment_type: 調整タイプでフィルタ
 
         Returns:
-            List of adjustment records
+            在庫調整レコードのリスト
         """
         query = self.db.query(Adjustment)
 
@@ -83,13 +86,13 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         ]
 
     def get_adjustment_by_id(self, adjustment_id: int) -> AdjustmentResponse | None:
-        """Get adjustment by ID.
+        """在庫調整をIDで取得.
 
         Args:
-            adjustment_id: Adjustment ID
+            adjustment_id: 在庫調整ID
 
         Returns:
-            Adjustment record, or None if not found
+            在庫調整レコード、見つからない場合はNone
         """
         adjustment = self.db.query(Adjustment).filter(Adjustment.id == adjustment_id).first()
 
@@ -107,20 +110,20 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         )
 
     def create_adjustment(self, adjustment: AdjustmentCreate) -> AdjustmentResponse:
-        """Create inventory adjustment.
+        """在庫調整を作成.
 
         Args:
-            adjustment: Adjustment creation data
+            adjustment: 在庫調整作成データ
 
         Returns:
-            Created adjustment record
+            作成された在庫調整レコード
 
         Raises:
-            ValueError: If lot not found or adjustment would result in negative quantity
+            ValueError: ロットが見つからない場合、または調整後の数量がマイナスになる場合
 
         Note:
-            - Updates lot's current_quantity
-            - Creates stock_history record
+            - ロットのcurrent_quantityを更新
+            - stock_historyレコードを作成
         """
         # Get lot
         lot = self.db.query(Lot).filter(Lot.id == adjustment.lot_id).first()
