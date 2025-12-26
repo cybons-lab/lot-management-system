@@ -1,10 +1,33 @@
+/**
+ * グローバルエラーハンドラーフック
+ *
+ * アプリケーション全体の未キャッチエラーとPromise拒否をハンドリングし、
+ * エラーログサービスに記録します。
+ */
+
 import { useEffect } from "react";
 
 import { logError } from "@/services/error-logger";
 
+/**
+ * グローバルエラーハンドラーをセットアップするフック
+ *
+ * このフックはアプリケーションのルートコンポーネントで使用し、
+ * 以下のエラーを捕捉します：
+ * - window.onerrorで捕捉される未キャッチエラー
+ * - window.onunhandledrejectionで捕捉されるPromise拒否
+ *
+ * @example
+ * ```tsx
+ * function App() {
+ *   useGlobalErrorHandlers();
+ *   return <Router />;
+ * }
+ * ```
+ */
 export function useGlobalErrorHandlers() {
   useEffect(() => {
-    // Handle uncaught errors
+    // 未キャッチエラーをハンドリング
     const handleError = (event: ErrorEvent) => {
       logError("Global", event.error || event.message, {
         filename: event.filename,
@@ -13,7 +36,7 @@ export function useGlobalErrorHandlers() {
       });
     };
 
-    // Handle unhandled promise rejections
+    // 未処理のPromise拒否をハンドリング
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       logError("UnhandledRejection", event.reason);
     };

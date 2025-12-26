@@ -40,24 +40,26 @@ def list_lots(
 ):
     """ロット一覧取得.
 
+    v_lots_with_master ビューを使用してロット一覧を取得します。
+    製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、
+    FEFO (First Expiry First Out) 順に並べて返します。
+
     Args:
-        skip: スキップ件数
-        limit: 取得件数
-        product_id: 製品ID
-        product_code: 製品コード
-        supplier_code: 仕入先コード
-        warehouse_code: 倉庫コード
-        expiry_from: 有効期限開始日
-        expiry_to: 有効期限終了日
-        with_stock: 在庫ありのみ取得するかどうか
+        skip: スキップ件数（ページネーション用）
+        limit: 取得件数（最大100件）
+        product_id: 製品ID（フィルタ）
+        product_code: 製品コード（フィルタ）
+        supplier_code: 仕入先コード（フィルタ）
+        warehouse_code: 倉庫コード（フィルタ）
+        expiry_from: 有効期限開始日（フィルタ）
+        expiry_to: 有効期限終了日（フィルタ）
+        with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
-        current_user: 現在のログインユーザー（主担当仕入先取得に使用）
+        current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
         db: データベースセッション
 
-    ロット一覧取得（v_lots_with_master ビュー使用）.
-
-    製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.
-    FEFO (先入先出) 順に並べて返す.
+    Returns:
+        list[LotResponse]: ロット情報のリスト
     """
     # 主担当の仕入先IDを取得
     primary_supplier_ids: list[int] | None = None
@@ -85,8 +87,17 @@ def list_lots(
 def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
     """ロット新規登録.
 
-    - ロットマスタ登録
-    - 現在在庫テーブル初期化
+    ロットマスタへの登録と現在在庫テーブルの初期化を行います。
+
+    Args:
+        lot: ロット作成リクエストデータ
+        db: データベースセッション
+
+    Returns:
+        LotResponse: 作成されたロット情報
+
+    Raises:
+        HTTPException: ロット作成に失敗した場合
     """
     service = LotService(db)
     return service.create_lot(lot)
@@ -94,7 +105,20 @@ def create_lot(lot: LotCreate, db: Session = Depends(get_db)):
 
 @router.get("/{lot_id}", response_model=LotResponse)
 def get_lot(lot_id: int, db: Session = Depends(get_db)):
-    """ロット詳細取得（v2.2: Lot モデルから直接取得）."""
+    """ロット詳細取得.
+
+    指定されたIDのロット情報を取得します（v2.2: Lot モデルから直接取得）。
+
+    Args:
+        lot_id: ロットID
+        db: データベースセッション
+
+    Returns:
+        LotResponse: ロット詳細情報
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）
+    """
     # Note: Service.get_lot returns Lot model, but for Response we need to build it with joined fields.
     # The service now has a internal _build_lot_response method used by create/update,
     # but strictly get_lot in service currently returns the ORM model without explicit joined load in the same way (it uses repository).
@@ -151,7 +175,19 @@ def get_lot(lot_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{lot_id}", response_model=LotResponse)
 def update_lot(lot_id: int, lot: LotUpdate, db: Session = Depends(get_db)):
-    """ロット更新."""
+    """ロット更新.
+
+    Args:
+        lot_id: ロットID
+        lot: ロット更新リクエストデータ
+        db: データベースセッション
+
+    Returns:
+        LotResponse: 更新されたロット情報
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）または更新に失敗した場合
+    """
     service = LotService(db)
     return service.update_lot(lot_id, lot)
 
@@ -186,14 +222,38 @@ def delete_lot(
 
 @router.post("/{lot_id}/lock", response_model=LotResponse)
 def lock_lot(lot_id: int, lock_data: LotLock, db: Session = Depends(get_db)):
-    """ロットをロックする（数量指定可）."""
+    """ロットをロックする（数量指定可）.
+
+    Args:
+        lot_id: ロットID
+        lock_data: ロックデータ（数量、理由等）
+        db: データベースセッション
+
+    Returns:
+        LotResponse: ロック後のロット情報
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）またはロックに失敗した場合
+    """
     service = LotService(db)
     return service.lock_lot(lot_id, lock_data)
 
 
 @router.post("/{lot_id}/unlock", response_model=LotResponse)
 def unlock_lot(lot_id: int, unlock_data: LotLock | None = None, db: Session = Depends(get_db)):
-    """ロットのロックを解除する（数量指定可）."""
+    """ロットのロックを解除する（数量指定可）.
+
+    Args:
+        lot_id: ロットID
+        unlock_data: ロック解除データ（数量指定等、省略可）
+        db: データベースセッション
+
+    Returns:
+        LotResponse: ロック解除後のロット情報
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）またはロック解除に失敗した場合
+    """
     service = LotService(db)
     return service.unlock_lot(lot_id, unlock_data)
 
@@ -201,7 +261,18 @@ def unlock_lot(lot_id: int, unlock_data: LotLock | None = None, db: Session = De
 # ===== Stock Movements =====
 @router.get("/{lot_id}/movements", response_model=list[StockMovementResponse])
 def list_lot_movements(lot_id: int, db: Session = Depends(get_db)):
-    """ロットの在庫変動履歴取得."""
+    """ロットの在庫変動履歴取得.
+
+    Args:
+        lot_id: ロットID
+        db: データベースセッション
+
+    Returns:
+        list[StockMovementResponse]: 在庫変動履歴のリスト
+
+    Raises:
+        HTTPException: ロットが存在しない場合（404）
+    """
     service = LotService(db)
     return service.list_lot_movements(lot_id)
 
@@ -210,8 +281,17 @@ def list_lot_movements(lot_id: int, db: Session = Depends(get_db)):
 def create_stock_movement(movement: StockMovementCreate, db: Session = Depends(get_db)):
     """在庫変動記録.
 
-    - 在庫変動履歴追加
-    - 現在在庫更新
+    在庫変動履歴の追加と現在在庫の更新を行います。
+
+    Args:
+        movement: 在庫変動データ
+        db: データベースセッション
+
+    Returns:
+        StockMovementResponse: 記録された在庫変動情報
+
+    Raises:
+        HTTPException: 在庫変動記録に失敗した場合
     """
     service = LotService(db)
     return service.create_stock_movement(movement)

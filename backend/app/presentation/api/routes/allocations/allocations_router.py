@@ -71,7 +71,22 @@ def preview_allocation(
     db: Session = Depends(get_db),
     current_user: User = Depends(AuthService.get_current_user),
 ) -> FefoPreviewResponse:
-    """FEFO allocation preview."""
+    """FEFO引当プレビュー.
+
+    指定された受注に対してFEFO（先入先出）アルゴリズムで
+    自動引当をシミュレーションし、結果をプレビュー表示します。
+
+    Args:
+        request: プレビューリクエスト（受注ID含む）
+        db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
+
+    Returns:
+        FefoPreviewResponse: 引当プレビュー結果（各明細の引当候補ロット情報）
+
+    Raises:
+        HTTPException: 受注が見つからない場合（404）またはバリデーションエラー（400）
+    """
     try:
         result = fefo.preview_fefo_allocation(db, request.order_id)
         return _map_fefo_preview(result)
@@ -89,7 +104,21 @@ def commit_allocation(
     db: Session = Depends(get_db),
     current_user: User = Depends(AuthService.get_current_user),
 ) -> AllocationCommitResponse:
-    """Commit FEFO allocation."""
+    """FEFO引当確定.
+
+    プレビューした引当結果を確定し、ロット予約を作成します。
+
+    Args:
+        request: 引当確定リクエスト（受注ID含む）
+        db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
+
+    Returns:
+        AllocationCommitResponse: 引当確定結果（作成された予約ID等）
+
+    Raises:
+        HTTPException: 受注が見つからない、在庫不足、または確定に失敗した場合
+    """
     try:
         result = actions.commit_fefo_reservation(db, request.order_id)
 

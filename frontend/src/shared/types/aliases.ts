@@ -2,36 +2,87 @@ import type { OrderLineLegacy } from "./legacy/order-line-legacy";
 
 import type { components } from "@/types/api";
 
+/**
+ * 型エイリアス定義
+ *
+ * このファイルは共通型定義とバックエンドAPIレスポンスの型エイリアスを提供します。
+ */
+
 // src/types/aliases.ts
 // ---- Core masters ----
+
+/**
+ * 製品マスタ
+ *
+ * システムで管理される製品の基本情報を表現します。
+ */
 export type Product = {
+  /** 製品コード */
   product_code: string;
+  /** 製品名 */
   product_name: string;
+  /** 梱包数量 */
   packaging_qty?: number | string | null;
+  /** 梱包単位 */
   packaging_unit?: string | null;
+  /** 社内単位 */
   internal_unit?: string | null;
+  /** 得意先品番 */
   customer_part_no?: string | null;
+  /** メーカー品番 */
   maker_part_no?: string | null;
+  /** ロット番号必須フラグ */
   requires_lot_number?: boolean | null;
 };
+
+/**
+ * サプライヤーマスタ
+ *
+ * 仕入先・供給元の情報を表現します。
+ */
 export type Supplier = {
+  /** サプライヤーコード */
   supplier_code: string;
+  /** サプライヤー名 */
   supplier_name: string;
+  /** 住所 */
   address?: string | null;
-  contact_name?: string | null; // factoryで使う
+  /** 担当者名（工場等で使用） */
+  contact_name?: string | null;
 };
+
+/**
+ * 顧客マスタ
+ *
+ * 得意先・顧客の情報を表現します。
+ */
 export type Customer = {
+  /** 顧客コード */
   customer_code: string;
+  /** 顧客名 */
   customer_name?: string | null;
+  /** 住所 */
   address?: string | null;
 };
+
+/**
+ * 倉庫マスタ
+ *
+ * 在庫保管場所としての倉庫情報を表現します。
+ */
 export type Warehouse = {
+  /** 倉庫コード */
   warehouse_code: string;
+  /** 倉庫名 */
   warehouse_name: string;
+  /** 住所 */
   address?: string | null;
+  /** 有効フラグ */
   is_active?: boolean | null;
 };
-export type OldWarehouse = Warehouse; // 旧名の受け皿
+
+/** 旧Warehouse型名の後方互換性エイリアス */
+export type OldWarehouse = Warehouse;
 
 type ApiLotResponse = components["schemas"]["LotResponse"];
 

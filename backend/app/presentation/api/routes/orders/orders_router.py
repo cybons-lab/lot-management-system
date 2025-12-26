@@ -46,7 +46,23 @@ def list_orders(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_current_user_optional),
 ):
-    """受注一覧取得（読み取り専用）."""
+    """受注一覧取得（読み取り専用）.
+
+    Args:
+        skip: スキップ件数（ページネーション用）
+        limit: 取得件数（最大100件）
+        status: ステータスフィルタ
+        customer_code: 顧客コードフィルタ
+        date_from: 受注日開始日フィルタ
+        date_to: 受注日終了日フィルタ
+        order_type: 受注種別フィルタ
+        prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+        db: データベースセッション
+        current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
+
+    Returns:
+        list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
+    """
     # Get primary supplier IDs for sorting
     primary_supplier_ids: list[int] | None = None
     if prioritize_primary and current_user:
@@ -68,14 +84,36 @@ def list_orders(
 
 @router.get("/{order_id}", response_model=OrderWithLinesResponse)
 def get_order(order_id: int, db: Session = Depends(get_db)):
-    """受注詳細取得（読み取り専用、明細含む）."""
+    """受注詳細取得（読み取り専用、明細含む）.
+
+    Args:
+        order_id: 受注ID
+        db: データベースセッション
+
+    Returns:
+        OrderWithLinesResponse: 受注詳細情報（明細含む）
+
+    Raises:
+        HTTPException: 受注が存在しない場合（404）
+    """
     service = OrderService(db)
     return service.get_order_detail(order_id)
 
 
 @router.post("", response_model=OrderWithLinesResponse, status_code=201)
 def create_order(order: OrderCreate, uow: UnitOfWork = Depends(get_uow)):
-    """受注作成."""
+    """受注作成.
+
+    Args:
+        order: 受注作成リクエストデータ
+        uow: Unit of Work（トランザクション管理）
+
+    Returns:
+        OrderWithLinesResponse: 作成された受注情報（明細含む）
+
+    Raises:
+        HTTPException: 受注作成に失敗した場合
+    """
     assert uow.session is not None
     service = OrderService(uow.session)
     return service.create_order(order)
