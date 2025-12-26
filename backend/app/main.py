@@ -7,14 +7,18 @@
 - ミドルウェアの登録
 - ルーターの登録（register_all_routers経由）
 - ドメインイベントハンドラの登録
+- 本番環境でのフロントエンド静的ファイル配信
 """
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 # ドメインイベントハンドラを登録（インポート時に自動登録）
@@ -91,15 +95,53 @@ application.add_middleware(RequestIdMiddleware)
 # ========================================
 register_all_routers(application)
 
+# ========================================
+# フロントエンド静的ファイル配信（本番環境用）
+# ========================================
+# frontend/dist が存在する場合、静的ファイルを配信
+# 開発環境では Vite dev server を使用するため、この設定は無効
+FRONTEND_DIST = Path(__file__).parent.parent.parent / "frontend" / "dist"
 
-@application.get("/")
-def root():
-    """ルートエンドポイント."""
-    return {
-        "message": "Lot Management API",
-        "version": settings.APP_VERSION,
-        "docs": "/api/docs",
-    }
+if FRONTEND_DIST.exists() and FRONTEND_DIST.is_dir():
+    logger.info(f"📂 フロントエンド静的ファイルを配信: {FRONTEND_DIST}")
+
+    # アセットファイル（JS, CSS, images）を配信
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        application.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
+    # index.html 以外の静的ファイル
+    application.mount("/static", StaticFiles(directory=str(FRONTEND_DIST)), name="static")
+
+    @application.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """SPA フォールバック: 未知のパスは index.html を返す."""
+        # API パスは除外（既にルーター登録済み）
+        if full_path.startswith("api/"):
+            return {"detail": "Not Found"}
+
+        # ファイルが存在すればそのまま返す
+        file_path = FRONTEND_DIST / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(file_path)
+
+        # それ以外は index.html を返す（SPA ルーティング対応）
+        index_path = FRONTEND_DIST / "index.html"
+        if index_path.exists():
+            return FileResponse(index_path)
+
+        return {"detail": "Not Found"}
+
+else:
+    # 開発環境: シンプルなルートエンドポイント
+    @application.get("/")
+    def root():
+        """ルートエンドポイント（開発環境用）."""
+        return {
+            "message": "Lot Management API",
+            "version": settings.APP_VERSION,
+            "docs": "/api/docs",
+        }
 
 
 # For backward compatibility and testing

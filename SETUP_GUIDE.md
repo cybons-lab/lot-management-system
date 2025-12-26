@@ -46,7 +46,7 @@
 
 ### 必須環境
 
-- **Python**: 3.12 以上
+- **Python**: 3.13 以上
 - **pip**: 最新版
 - **OS**: Windows, macOS, Linux
 
@@ -120,22 +120,17 @@ source .venv/bin/activate
 ### Step 3: 依存関係のインストール
 
 ```bash
+# uv を使用（推奨）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync
+
+# または pip を使用する場合
 pip install --upgrade pip
-pip install -r requirements.txt
+pip install -r requirements.txt  # パッケージングスクリプトで生成
 ```
 
-**requirements.txt の内容:**
-
-```
-fastapi==0.115.5
-uvicorn[standard]==0.32.0
-sqlalchemy==2.0.36
-alembic==1.14.0
-pydantic==2.10.1
-pydantic-settings==2.6.1
-python-multipart==0.0.17
-python-dateutil==2.9.0
-```
+> **Note**: このプロジェクトは `pyproject.toml` + `uv` で依存関係を管理しています。
+> `requirements.txt` は `scripts/build_deploy_package.py` で自動生成されます。
 
 ### Step 4: 環境変数の設定
 

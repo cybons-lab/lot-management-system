@@ -20,7 +20,7 @@ grep -A 20 "Traceback" /path/to/log
 **よくある原因**:
 - DB接続エラー → `DATABASE_URL` 環境変数を確認
 - マイグレーション未適用 → `alembic upgrade head` を実行
-- 依存パッケージ不足 → `pip install -r requirements.txt` を実行
+- 依存パッケージ不足 → `uv sync` または `pip install -r requirements.txt` を実行
 
 ### 1.2. 404 Not Found
 
