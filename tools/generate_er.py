@@ -1,5 +1,5 @@
 # tools/generate_er.py
-# Python 3.12 / SQLAlchemy 2.x
+# Python 3.13 / SQLAlchemy 2.x
 import argparse
 from pathlib import Path
 from typing import List, Set, Tuple

@@ -1,5 +1,5 @@
 # tools/export_schema_to_excel.py
-# Python 3.12 / 依存: pandas, SQLAlchemy, openpyxl
+# Python 3.13 / 依存: pandas, SQLAlchemy, openpyxl
 import argparse
 import re
 from pathlib import Path

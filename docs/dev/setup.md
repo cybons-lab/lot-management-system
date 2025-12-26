@@ -5,7 +5,7 @@
 - Docker Desktop (Mac/Windows) または Docker Engine (Linux)
 - Git
 - Node.js 20.x 以上（ローカル開発時）
-- Python 3.11 以上（ローカル開発時）
+- Python 3.13 以上（ローカル開発時）
 
 ## 1. クイックスタート（Docker推奨）
 
@@ -86,12 +86,14 @@ docker compose exec backend alembic upgrade head
 ```bash
 cd backend
 
-# 仮想環境作成
+# uv を使用（推奨）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv sync
+
+# または従来の方法
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-
-# 依存関係インストール
-pip install -r requirements.txt
+pip install -r requirements.txt  # パッケージングスクリプトで生成
 
 # 環境変数設定
 export DATABASE_URL="postgresql://admin:dev_password@localhost:5432/lot_management"
