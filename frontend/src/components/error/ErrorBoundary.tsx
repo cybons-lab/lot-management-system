@@ -1,22 +1,34 @@
 /**
- * Error Boundary Component
+ * エラーバウンダリーコンポーネント
  *
- * Catches React component errors and displays fallback UI.
- * Logs errors using the error logger service.
+ * Reactコンポーネントのエラーを捕捉し、フォールバックUIを表示します。
+ * エラーはエラーロガーサービスを使用して記録されます。
+ * 開発モードではエラー詳細を表示します。
  */
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
 import { logError } from "@/services/error-logger";
 
+/**
+ * ErrorBoundaryのProps
+ */
 interface Props {
+  /** ラップする子コンポーネント */
   children: ReactNode;
+  /** カスタムフォールバックUI */
   fallback?: ReactNode;
+  /** エラー発生時のカスタムハンドラ */
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
 
+/**
+ * ErrorBoundaryの状態
+ */
 interface State {
+  /** エラー発生フラグ */
   hasError: boolean;
+  /** エラーオブジェクト */
   error: Error | null;
 }
 

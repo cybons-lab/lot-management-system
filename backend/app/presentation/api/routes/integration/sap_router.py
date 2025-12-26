@@ -19,10 +19,20 @@ router = APIRouter(prefix="/integration/sap", tags=["integration"])
 async def register_sales_orders(
     request: SAPOrderRegistrationRequest,
 ) -> SAPOrderRegistrationResponse:
-    """Register sales orders to SAP (Mock implementation).
+    """受注をSAPに登録（モック実装）.
 
-    This endpoint simulates the registration of sales orders to SAP ERP.
-    It returns dummy SAP order numbers for the provided order IDs.
+    SAPシステムへの受注登録をシミュレートします。
+    提供された受注IDに対してダミーのSAP受注番号を返します。
+
+    Args:
+        request: SAP受注登録リクエスト（受注IDリスト）
+
+    Returns:
+        SAPOrderRegistrationResponse: 登録結果（受注ID、SAP受注番号、ステータス）
+
+    Note:
+        現在はモック実装です。本番環境では実際のSAP APIに接続します。
+        1秒のネットワーク遅延をシミュレートしています。
     """
     # Simulate network latency
     time.sleep(1)

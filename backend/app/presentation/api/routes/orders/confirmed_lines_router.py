@@ -42,12 +42,19 @@ class ConfirmedOrderLineResponse(BaseModel):
 
 @router.get("/confirmed-order-lines", response_model=list[ConfirmedOrderLineResponse])
 def get_confirmed_order_lines(db: Session = Depends(get_db)):
-    """Get all order lines that are fully reserved and not yet registered in
-    SAP.
+    """引当確定済み受注明細を取得（SAP登録用）.
 
-    Returns lines where reserved_quantity >= converted_quantity and sap_order_no is NULL.
+    ロット引当が完了し、まだSAPに登録されていない受注明細を取得します。
+    reserved_quantity >= converted_quantity かつ sap_order_no が NULL の明細を返します。
 
-    P3: Uses LotReservation instead of Allocation.
+    Args:
+        db: データベースセッション
+
+    Returns:
+        list[ConfirmedOrderLineResponse]: 引当確定済み受注明細のリスト
+
+    Note:
+        P3: Allocation廃止、LotReservationを使用
     """
     # Subquery to calculate reserved quantity per line
     res_subq = (
