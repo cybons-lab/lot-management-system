@@ -208,7 +208,15 @@ def restore_customer_item(
 
 @router.get("/export/download")
 def export_customer_items(format: str = "csv", db: Session = Depends(get_db)):
-    """Export customer items to CSV or Excel."""
+    """得意先品番マッピングをエクスポート.
+
+    Args:
+        format: エクスポート形式（'csv' または 'xlsx'）
+        db: データベースセッション
+
+    Returns:
+        Excel形式またはCSV形式のファイルレスポンス
+    """
     service = CustomerItemsService(db)
     items = service.get_all()
 
@@ -221,13 +229,17 @@ def export_customer_items(format: str = "csv", db: Session = Depends(get_db)):
 def bulk_upsert_customer_items(
     request: CustomerItemBulkUpsertRequest, db: Session = Depends(get_db)
 ):
-    """Bulk upsert customer items by composite key (customer_id,
-    external_product_code).
+    """得意先品番マッピング一括登録/更新.
 
-    - If a customer item with the same composite key exists, it will be updated
-    - If not, a new customer item will be created
+    複合キー（customer_id, external_product_code）で判定し、
+    既存レコードがあれば更新、なければ新規作成します。
 
-    Returns summary with counts of created/updated/failed records.
+    Args:
+        request: 一括登録/更新リクエスト
+        db: データベースセッション
+
+    Returns:
+        BulkUpsertResponse: 作成/更新/失敗件数のサマリー
     """
     service = CustomerItemsService(db)
     return service.bulk_upsert(request.rows)
