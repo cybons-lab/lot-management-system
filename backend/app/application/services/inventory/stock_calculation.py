@@ -56,6 +56,27 @@ def get_reserved_quantity(db: Session, lot_id: int) -> Decimal:
     Used for Reservation Validation (Loose availability).
     Calculates `current - confirmed - locked`.
 
+    【重要な設計判断】なぜProvisional（ACTIVE）を除外するのか:
+
+    理由1: 柔軟な受注対応を可能にする
+    - ACTIVE状態は「社内では確定だが、SAP未登録」の仮予約
+    - 物理在庫が不足していても、緊急受注を仮押さえしたいケースがある
+    - 例: 「納期調整が必要だが、とりあえず受注だけ受け付ける」
+
+    理由2: 過剰予約（オーバーブッキング）の許容
+    - ビジネス要件: 在庫不足でも受注を受け付け、後で調達・調整する運用
+    - 航空業界のオーバーブッキングと同様の考え方
+    - 実際の出荷時までに在庫が補充される見込みがあれば問題ない
+
+    理由3: システム運用の安定性
+    - SAP登録は外部システムとの連携のため、即座に完了しない
+    - ACTIVE状態の予約が大量にあっても、利用可能数量計算に影響させない
+    - → 新規受注の可否判定がSAP連携の遅延に左右されない
+
+    トレードオフ:
+    - 実在庫を超える予約が可能 → 出荷時に在庫不足が判明するリスク
+    - → 運用でカバー: 定期的な在庫確認、発注点管理、緊急調達体制
+
     Note: Active (Provisional) reservations are EXCLUDED to allow overbooking/provisional
     reservations even if stock is insufficient, per business requirement.
     """
