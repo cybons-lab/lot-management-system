@@ -20,6 +20,30 @@ from app.presentation.schemas.inventory.inbound_schema import InboundPlanDetailR
 class SAPService:
     """Service for SAP integration (purchase and sales orders).
 
+    【設計意図】なぜモック実装から始めるのか:
+
+    1. フェーズド開発アプローチ
+       現状: Phase 1 - システム内部のロット管理基盤を構築
+       将来: Phase 2 - SAP連携を本格実装
+       理由: SAP連携は複雑（RFC設定、VPN、認証等）
+       → まずはシステム単独で動作する状態を作り、後から連携を追加
+       → 段階的リスク軽減
+
+    2. 本番SAP環境への影響回避
+       理由: 開発中に誤って本番SAPにデータを送信するリスクを避ける
+       → モック実装で十分にテスト・検証してから、本番接続を有効化
+       → 安全な開発サイクル
+
+    3. インターフェース設計の先行確定
+       メリット: モック実装を通じて、どのようなデータ構造が必要かを明確化
+       → 実際のSAP API仕様が確定する前に、システム側のI/Fを固められる
+       → SAP側の準備待ちで開発がブロックされない
+
+    4. テスト容易性
+       理由: モック実装なら、任意のテストデータを自由に生成可能
+       → SAP環境なしでCIテストが実行できる
+       → 開発者のローカル環境でも動作確認可能
+
     Current implementation (Phase 1):
     - Purchase Order (PO) fetching from SAP (mock)
     - Sync PO data to InboundPlans
@@ -111,6 +135,24 @@ class SAPService:
         Fetches purchase orders from SAP (mock) and creates corresponding InboundPlans.
         Skips POs that already exist (based on plan_number).
 
+        【設計意図】なぜflush()とcommit()を分けて使うのか:
+
+        1. flush() - InboundPlan作成後（行153）
+           理由: InboundPlanLineを作成する際に、inbound_plan_idが必要
+           → flush()でSQLを発行してIDを取得するが、まだコミットしない
+           → 明細行の作成に失敗したら、ヘッダーも含めてロールバック可能
+
+        2. commit() - 1件のPO全体の登録完了後（行159）
+           理由: ヘッダー + 複数明細を1トランザクションで確定
+           → 部分的なコミット（ヘッダーだけ登録されて明細が未登録）を防ぐ
+           → データ整合性の保証
+
+        3. なぜループ全体をまとめてコミットしないのか
+           理由: PO単位でコミットすることで、1件のPOで失敗しても他のPOは登録される
+           例: PO1成功、PO2失敗（product_idが存在しない）、PO3成功
+           → PO1とPO3は登録され、PO2のみスキップ
+           トレードオフ: トランザクション数が増えるが、部分的な成功が可能
+
         Returns:
             Tuple of (list of created inbound plans, number of skipped POs)
         """
@@ -142,7 +184,7 @@ class SAPService:
             )
 
             self.db.add(db_plan)
-            self.db.flush()  # Get plan ID
+            self.db.flush()  # Get plan ID (but don't commit yet)
 
             # Create InboundPlanLines
             created_lines = []
@@ -156,7 +198,7 @@ class SAPService:
                 self.db.add(db_line)
                 created_lines.append(db_line)
 
-            self.db.commit()
+            self.db.commit()  # Commit the entire PO (header + lines)
             self.db.refresh(db_plan)
 
             # Refresh lines to get IDs
