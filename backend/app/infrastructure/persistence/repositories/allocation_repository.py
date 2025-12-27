@@ -28,7 +28,24 @@ class ReservationRepository:
 
     @property
     def history_service(self):
-        """Lazy load history service."""
+        """Lazy load history service.
+
+        【設計意図】なぜ遅延ロード（Lazy Loading）なのか:
+
+        1. 循環import の回避
+           理由: LotReservationHistoryServiceがこのリポジトリを使う可能性がある
+           → __init__時にimportすると循環参照エラー
+           → 実際に使用するタイミングでimportすることで回避
+
+        2. パフォーマンス最適化
+           理由: 履歴記録が不要なケース（enable_history=False）では、
+           　　　サービスのインスタンス化コストが無駄
+           → 必要になった時点で初めて生成
+
+        3. テスト容易性
+           理由: 履歴機能なしでのテストが簡単になる
+           → enable_history=Falseで初期化すれば、履歴サービスは一切ロードされない
+        """
         if self._history_service is None and self._enable_history:
             from app.application.services.inventory.lot_reservation_history_service import (
                 LotReservationHistoryService,
@@ -115,6 +132,22 @@ class ReservationRepository:
     ) -> LotReservation:
         """予約を作成.
 
+        【設計意図】なぜflush()してから履歴記録なのか:
+
+        1. 履歴レコードに予約IDが必要
+           理由: lot_reservation_historyテーブルはreservation_idを外部キーとして持つ
+           → flush()しないとreservation.idがNoneのままで履歴レコードを作れない
+
+        2. トランザクション一貫性
+           理由: 予約レコードと履歴レコードを同一トランザクションで作成
+           → 片方だけコミットされて、もう片方が失敗する状態を防ぐ
+           → flush()は中間コミットではなく、単にSQLを発行してIDを取得するだけ
+
+        3. 監査要件への対応
+           理由: すべての予約操作を履歴として記録することで、
+           　　　「いつ誰がどの在庫を引き当てたか」を完全にトレース可能
+           → 問い合わせ対応やトラブルシューティングに必須
+
         Args:
             lot_id: ロットID
             source_type: ソースタイプ (ORDER, FORECAST, MANUAL)
@@ -155,6 +188,30 @@ class ReservationRepository:
         change_reason: str | None = None,
     ) -> None:
         """予約ステータスを更新.
+
+        【設計意図】なぜステータス変更時に履歴記録が必要なのか:
+
+        1. ビジネス上の重要性
+           理由: 予約のステータス遷移は在庫の可用性に直接影響
+           例:
+           - ACTIVE → CONFIRMED: SAP登録完了、正式な在庫確保
+           - CONFIRMED → RELEASED: 出荷完了または受注キャンセル
+           → これらの変更履歴がないと、「なぜこの時点で在庫が不足したのか」が追跡できない
+
+        2. 問題発生時の原因究明
+           用途: 在庫不足や二重引当などのトラブル発生時
+           → 履歴を遡ることで「誰がいつどの予約を確定・解放したか」を特定
+           → 人的ミスかシステムバグかを切り分けられる
+
+        3. 監査証跡としての要件
+           理由: 在庫管理は会計・財務と直結（棚卸資産評価）
+           → 監査時に「在庫の動きが説明可能」であることが求められる
+           → 変更者（changed_by）と変更理由（change_reason）を記録
+
+        4. SAP連携の追跡
+           用途: SAP登録成功/失敗の履歴を残す
+           → ACTIVE → CONFIRMED の変更履歴にSAP連携情報を付加
+           → 連携エラー時のリトライや手動対応の判断材料
 
         Args:
             reservation: 予約エンティティ
