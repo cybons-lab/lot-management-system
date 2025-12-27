@@ -1,5 +1,45 @@
 # backend/app/repositories/order_repository.py
-"""受注リポジトリ DBアクセスのみを責務とする."""
+"""受注リポジトリ DBアクセスのみを責務とする.
+
+【設計意図】リポジトリパターンの設計判断:
+
+1. リポジトリの責務範囲
+   責務: データベースアクセスのみ（CRUD操作）
+   → ビジネスロジックは含めない（Service層が担当）
+   → トランザクション制御（commit/rollback）も含めない（Service層が担当）
+   理由:
+   - 単一責任の原則（SRP）: リポジトリはデータ永続化のみ
+   - テスタビリティ: リポジトリをモック化しやすい
+
+2. selectinload vs joinedload の使い分け（L33）
+   使い分け基準:
+   - selectinload: 1対多リレーション（Order → OrderLines）
+     → 複数明細がある場合、JOINだとOrderが重複する
+     → 別クエリで明細を取得し、Pythonでマージ
+   - joinedload: 1対1または多対1リレーション（OrderLine → Order/Product）
+     → 1行ずつのデータなので、JOINでも重複しない
+   パフォーマンス: selectinloadは2回のクエリ（Order取得 + Lines取得）
+
+3. with_lines パラメータ
+   理由: 明細が不要な場合はロードしない
+   例:
+   - 受注一覧表示: 受注ヘッダのみ（明細不要）
+   - 受注詳細表示: 受注 + 明細（明細必要）
+   → 不要なデータ取得を避け、パフォーマンス向上
+
+4. commit はサービス層で実行（L108, L119, L128）
+   理由: トランザクション境界はビジネスロジック単位
+   例:
+   - 受注作成 + 明細作成 + 在庫引当 → 一括でcommit
+   → リポジトリ内でcommitすると、部分的なコミットが発生
+   → データの整合性が保てない
+   メリット: トランザクションスコープをサービス層で制御
+
+5. cast() の使用（L35）
+   理由: SQLAlchemy 2.0 の scalar_one_or_none() は Any 型を返す
+   → 型ヒントで Order | None を明示するため cast() を使用
+   → mypy等の型チェッカーでエラーを防ぐ
+"""
 
 from datetime import date
 from typing import cast
@@ -29,6 +69,7 @@ class OrderRepository:
         """
         stmt = select(Order).where(Order.id == order_id)
 
+        # 【設計】selectinloadで明細を別クエリで取得（N+1回避）
         if with_lines:
             stmt = stmt.options(selectinload(Order.order_lines))
 
