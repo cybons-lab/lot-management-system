@@ -3,6 +3,21 @@
  *
  * Replaces axios with a lighter, more modern alternative.
  * Ky is built on fetch API with TypeScript-first design.
+ *
+ * 【設計判断】なぜaxiosからkyに移行したのか:
+ * 1. バンドルサイズの削減
+ *    - axios: ~13KB (minified + gzipped)
+ *    - ky: ~3KB (minified + gzipped)
+ *    → 初期ロード時間の短縮
+ *
+ * 2. TypeScript ファーストの設計
+ *    - kyは最初からTypeScriptで書かれている
+ *    - 型推論がより正確、型定義のメンテナンス不要
+ *
+ * 3. モダンなAPI
+ *    - fetch APIベース（ブラウザ標準）
+ *    - Promise/async-awaitに最適化
+ *    - より直感的なエラーハンドリング
  */
 
 import ky, { type KyInstance, type Options, type HTTPError } from "ky";
@@ -12,6 +27,12 @@ import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
 
 /**
  * Base API configuration
+ *
+ * 【設計根拠】
+ * - API_TIMEOUT: 30秒
+ *   理由: 自動車部品の在庫検索など、大量データの処理に時間がかかる可能性
+ *   　　　→ 通常のAPI呼び出しは5秒以内だが、複雑なレポート生成等を考慮
+ *   　　　→ ただし、30秒を超える処理は非同期バッチ処理に移行すべき
  */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 const API_TIMEOUT = 30000; // 30 seconds
@@ -19,6 +40,21 @@ const API_TIMEOUT = 30000; // 30 seconds
 /**
  * Custom event for authentication errors (401)
  * Components can listen for this event to handle session expiration
+ *
+ * 【設計意図】なぜカスタムイベントを使うのか:
+ * 1. グローバルな認証エラーハンドリング
+ *    - どのコンポーネントからAPIを呼んでも、401エラーを一元的に処理
+ *    - 例: 営業が在庫照会中にセッション切れ → ログイン画面に自動遷移
+ *
+ * 2. コンポーネント間の疎結合
+ *    - HTTP clientが直接ルーティングライブラリに依存しない
+ *    - イベントリスナーを持つコンポーネント（App.tsx等）が自由に対応を決定
+ *
+ * 3. 複数箇所での同時対応
+ *    - ログイン画面へのリダイレクト
+ *    - トースト通知表示
+ *    - ローカルストレージのクリア
+ *    → 各コンポーネントが独立してイベントを購読・処理
  */
 export const AUTH_ERROR_EVENT = "auth:unauthorized";
 
@@ -138,12 +174,40 @@ async function handleApiError(
 /**
  * Default ky instance with common configuration
  */
+/**
+ * 【リトライ設定の設計意図】
+ *
+ * limit: 2回まで
+ * - 理由: ネットワーク一時的な不安定性に対応（瞬断等）
+ * - トレードオフ: リトライ回数が多すぎるとレスポンス遅延
+ *   → 2回（初回 + リトライ2回 = 最大3回試行）で十分
+ *
+ * methods: POSTを除外
+ * - 【重要な判断】なぜPOSTをリトライしないのか:
+ *   1. 冪等性の問題
+ *      - GET/PUT/DELETE: 何度実行しても結果が同じ（冪等）
+ *      - POST: 実行するたびに新しいリソースが作成される（非冪等）
+ *   2. 二重登録のリスク
+ *      - 受注登録APIでリトライすると、同じ受注が2重登録される
+ *      - → 在庫引当の重複、顧客への二重請求などの深刻な問題
+ *   3. 運用判断
+ *      - ネットワークエラー時は、ユーザーに明示的にエラー表示
+ *      - → ユーザーが画面を確認してから手動で再実行
+ *      - → 「登録済みかどうか不明」な状態を避ける
+ *
+ * statusCodes: 一時的なエラーのみリトライ
+ * - 408 Request Timeout: タイムアウト → リトライ可能
+ * - 413 Payload Too Large: データ量が多すぎる → リトライしても無駄だが、一時的な制限の可能性
+ * - 429 Too Many Requests: レート制限 → 時間をおいてリトライすれば成功する可能性
+ * - 5xx Server Error: サーバー側の一時的な障害 → リトライで回復する可能性
+ * - 4xx Client Error（400, 401, 403, 404等）: クライアントのミス → リトライしても無駄なので除外
+ */
 export const apiClient: KyInstance = ky.create({
   prefixUrl: API_BASE_URL,
   timeout: API_TIMEOUT,
   retry: {
     limit: 2,
-    methods: ["get", "put", "head", "delete", "options", "trace"],
+    methods: ["get", "put", "head", "delete", "options", "trace"], // POST除外: 冪等性
     statusCodes: [408, 413, 429, 500, 502, 503, 504],
   },
   hooks: {
