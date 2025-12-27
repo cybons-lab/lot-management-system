@@ -2,6 +2,95 @@
 
 Parses database exceptions (IntegrityError, etc.) and converts them into
 user-friendly Japanese messages.
+
+【設計意図】データベースエラーパーサーの設計判断:
+
+1. なぜデータベースエラーを日本語に変換するのか
+   理由: エンドユーザーは技術的なエラーメッセージを理解できない
+   技術的エラー例:
+   - "UNIQUE constraint failed: products.product_code"
+   → ユーザーにとって意味不明、対処方法が分からない
+   ユーザーフレンドリーなメッセージ:
+   - "製品コード 'P-001' は既に登録されています"
+   → 何が問題か明確、別のコードを入力すれば良いと理解できる
+
+2. CONSTRAINT_MESSAGES 辞書の設計（L17-45）
+   理由: 制約名からエラーメッセージへの静的マッピング
+   メリット:
+   - 制約名が変わっても、辞書を更新するだけ
+   - 新しい制約追加時に、ここに登録するだけでエラーメッセージが表示される
+   - 多言語化も容易（辞書を切り替えるだけ）
+   設計:
+   - キー: データベースの制約名（uq_*, fk_*）
+   - 値: 日本語のエラーメッセージテンプレート
+
+3. なぜ正規表現で制約名を抽出するのか（L63）
+   理由: データベースごとにエラーメッセージ形式が異なる
+   PostgreSQL:
+   - 'constraint "uq_products_maker_part_code" violated'
+   SQLite:
+   - 'UNIQUE constraint failed: products.maker_part_code'
+   → re.search(r'constraint ["\']?(\w+)["\']?') で両方に対応
+   メリット: データベース移行時もコード変更不要
+
+4. _extract_value() の二段階抽出戦略（L83-106）
+   理由: 重複値をユーザーに表示して対処を支援
+   第1段階: エラーメッセージから抽出（L94-97）
+   - PostgreSQL: "Key (product_code)=(P-001) already exists."
+   → 正規表現で "(P-001)" を抽出
+   第2段階: context から抽出（L100-104）
+   - エラーメッセージに値がない場合（SQLite等）
+   → API リクエストの入力データ（context）から推測
+   メリット: どのデータベースでも、できる限り具体的な値を表示
+
+5. _get_generic_message() のフォールバック設計（L109-129）
+   理由: 未知の制約エラーでも最低限のガイダンスを提供
+   方針:
+   - 制約名が辞書に登録されていない場合
+   → エラーメッセージの文字列から種類を推測
+   判定ロジック:
+   - "unique" or "duplicate" → 重複エラー
+   - "foreign key" → 参照先データが存在しない
+   - "not null" → 必須項目未入力
+   - "check constraint" → 条件違反
+   メリット: 新しい制約を追加しても、最低限のエラーメッセージは表示される
+
+6. parse_db_error() の利便性関数設計（L132-150）
+   理由: エラーハンドラーでの使用を簡潔にする
+   使用例:
+   ```python
+   try:
+       db.commit()
+   except IntegrityError as e:
+       # 簡潔に日本語エラーメッセージを取得
+       user_message = parse_db_error(e, context={"product_code": "P-001"})
+       raise HTTPException(status_code=409, detail=user_message)
+   ```
+   メリット:
+   - クラスメソッドを直接呼ばなくて良い
+   - 将来的に他のエラー型（DataError等）にも対応可能
+
+7. context パラメータの用途（L49）
+   理由: エラーメッセージに具体的な値を埋め込む
+   例:
+   ```python
+   context = {"product_code": "P-001", "product_name": "ブレーキパッド"}
+   parse_db_error(exc, context)
+   # → "製品コード 'P-001' は既に登録されています"
+   ```
+   メリット:
+   - ユーザーが「どの値が重複しているか」を即座に理解
+   - 別の値を試すという対処方法が明確になる
+
+8. なぜ日本語メッセージなのか
+   理由: ターゲットユーザーは日本の自動車部品商社
+   業務背景:
+   - 営業担当者、倉庫作業員が主要ユーザー
+   - 英語の技術用語は理解困難
+   → 母国語（日本語）でのエラーメッセージが必須
+   多言語化:
+   - 将来的に海外展開する場合は、CONSTRAINT_MESSAGES を多言語対応
+   → 辞書を言語ごとに分離し、設定で切り替え可能にする
 """
 
 import re
