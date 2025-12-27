@@ -64,6 +64,29 @@ class OrderService:
 
         主担当サプライヤーの製品を含む受注を優先的にソートします。
 
+        【設計意図】なぜ主担当サプライヤー優先ソートが必要なのか:
+
+        1. ユーザーの業務効率化
+           用途: 自動車部品商社では、営業担当者は自分の担当サプライヤーの製品を優先的に処理
+           理由: 各営業が複数のサプライヤーを担当し、受注が混在している状態
+           → 自分の担当製品を含む受注を上位に表示することで、処理すべき受注を素早く発見
+
+        2. priority_scoreロジック
+           仕組み: SQLのCASE式を使い、主担当製品を含む受注にスコア0、それ以外に1を付与
+           → スコア0が優先（ORDER BY priority_score ASC相当）
+           → 同じスコア内では受注日降順（最新が上）
+
+        3. EXISTS サブクエリの理由
+           なぜJOINではなくEXISTSか:
+           - 1つの受注に複数の明細行があり、複数のサプライヤーが混在する可能性
+           - EXISTS: 「1つでも該当製品があればtrue」= 重複なし
+           - JOIN: 該当製品の数だけ受注レコードが重複 → DISTINCT必要、パフォーマンス劣化
+           → EXISTSの方が効率的かつシンプル
+
+        4. デフォルトソート（primary_supplier_ids未指定時）
+           理由: 全受注を見る場合は、新しい受注を優先表示
+           → 通常の業務フロー（新規受注から処理）に沿った設計
+
         Args:
             skip: スキップ件数（ページネーション用）
             limit: 取得件数（最大100件）
@@ -98,6 +121,7 @@ class OrderService:
             stmt = stmt.where(Order.order_lines.any(OrderLine.order_type == order_type))
 
         # Primary supplier priority sort
+        # 【設計】主担当製品を含む受注を優先表示（スコア0 = 高優先度）
         if primary_supplier_ids:
             # Create a subquery to check if any order line's product is associated
             # with the user's primary suppliers
@@ -110,7 +134,7 @@ class OrderService:
                 )
             )
             priority_score = case(
-                (has_primary_product, 0),
+                (has_primary_product, 0),  # Priority 0 = highest priority
                 else_=1,
             )
             stmt = stmt.order_by(priority_score, Order.order_date.desc())

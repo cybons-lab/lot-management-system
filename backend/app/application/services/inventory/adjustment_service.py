@@ -28,6 +28,29 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
     調整レコードは作成後は不変（immutable）であるため、
     AdjustmentResponseを更新スキーマとしても使用します。
 
+    【設計意図】なぜ調整レコードは不変（immutable）なのか:
+
+    1. 監査証跡の完全性
+       理由: 在庫調整は会計・監査上の重要な記録
+       → 一度記録したら変更・削除できないようにすることで、改ざんを防止
+       例: 「過去の調整を修正」ではなく「新しい調整を追加」で対応
+       → 履歴が完全に残る
+
+    2. トラブルシューティングの容易性
+       用途: 在庫不一致が発生した際の原因追跡
+       → すべての調整記録が残っているため、「いつ誰がどのような調整をしたか」を遡れる
+       → 人的ミスかシステムバグかを判別可能
+
+    3. stock_historyとの整合性
+       理由: 調整実行時に自動的にstock_historyレコードを作成
+       → adjustmentを変更すると、stock_historyとの整合性が取れなくなる
+       → どちらも不変にすることで、データの一貫性を保証
+
+    4. 誤操作の訂正方法
+       運用: 誤った調整を記録してしまった場合
+       → 逆の調整レコードを追加（例: +10の誤記録なら-10を追加）
+       → 元のレコードは残り、訂正の履歴も明確
+
     BaseServiceから基本操作を継承:
     - get_by_id(adjustment_id) -> Adjustment (AdjustmentResponseを返すようオーバーライド)
 
@@ -112,6 +135,39 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
     def create_adjustment(self, adjustment: AdjustmentCreate) -> AdjustmentResponse:
         """在庫調整を作成.
 
+        【設計意図】なぜこの順序で処理するのか:
+
+        1. flush() - 調整レコード作成後（行153）
+           理由: stock_historyのreference_idにadjustment.idが必要
+           → flush()でSQLを発行してIDを取得するが、まだコミットしない
+           → 後続処理（lot更新、history作成）と同一トランザクションで処理
+
+        2. lot.current_quantity更新（行156）
+           理由: 調整の本質は「ロットの現在数量を変更すること」
+           タイミング: 調整レコード作成後、コミット前
+           → 調整レコードとロット更新がアトミックに実行される
+           → 片方だけコミットされる状態を防ぐ
+
+        3. status = "depleted" 判定（行160-161）
+           理由: 在庫0のロットを明示的にマークすることで、引当対象から除外
+           トレードオフ: 調整で在庫が増えた場合のステータス復元は自動化されていない
+           → 運用でカバー: 管理者が手動でステータスを戻す
+
+        4. stock_history作成（行164-172）
+           目的: すべての在庫変動を不変の履歴として記録
+           理由:
+           - 監査要件: 「いつ誰がどのような調整をしたか」を完全に追跡
+           - トラブルシューティング: 在庫不一致の原因を特定
+           - データ整合性: ロット残高を再計算できる（sum(stock_history.quantity_change)）
+           フィールド設計:
+           - reference_type="adjustment", reference_id=adjustment.id
+             → 調整レコードへの参照を保持（調整理由等の詳細を追跡可能）
+
+        5. commit() - 最後に全体を確定（行176）
+           理由: 調整レコード + ロット更新 + 履歴レコードを1トランザクションで確定
+           → 途中でエラーが発生したら、すべてロールバック
+           → データの一貫性を保証
+
         Args:
             adjustment: 在庫調整作成データ
 
@@ -150,7 +206,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         )
 
         self.db.add(db_adjustment)
-        self.db.flush()
+        self.db.flush()  # Get ID for stock_history reference (but don't commit yet)
 
         # Update lot quantity
         lot.current_quantity = new_quantity
@@ -160,7 +216,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
         if new_quantity == Decimal("0"):
             lot.status = "depleted"
 
-        # Create stock history record
+        # Create stock history record (immutable audit trail)
         stock_history = StockHistory(
             lot_id=lot.id,
             transaction_type=StockTransactionType.ADJUSTMENT,
@@ -173,7 +229,7 @@ class AdjustmentService(BaseService[Adjustment, AdjustmentCreate, AdjustmentResp
 
         self.db.add(stock_history)
 
-        self.db.commit()
+        self.db.commit()  # Commit entire transaction (adjustment + lot update + history)
         self.db.refresh(db_adjustment)
 
         return AdjustmentResponse(
