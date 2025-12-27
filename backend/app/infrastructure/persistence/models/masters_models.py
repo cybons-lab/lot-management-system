@@ -8,6 +8,127 @@ Soft Delete Support:
     Master models support soft delete via the `valid_to` column.
     Records with valid_to >= today are considered active.
     Use SoftDeleteMixin for common soft delete operations.
+
+【設計意図】マスタデータモデルの設計判断:
+
+1. なぜ Soft Delete パターンを採用するのか
+   理由: マスタデータの削除は論理削除（Soft Delete）にすべき
+   業務的背景:
+   - 自動車部品商社: 過去の取引データ（受注、入荷）を保持
+   - 例: 顧客Aとの取引が終了（削除）→ 過去の受注データも削除されると困る
+   → 過去データを参照できなくなる
+   解決:
+   - valid_to カラムで論理削除（デフォルト: '9999-12-31'）
+   - 削除時: valid_to を現在日付に更新
+   → 過去データは保持され、参照可能
+
+2. なぜ SoftDeleteMixin を使うのか
+   理由: Soft Delete ロジックの共通化
+   背景:
+   - 全てのマスタテーブルで同じ Soft Delete ロジックが必要
+   → 各モデルで実装すると、重複コードが発生
+   解決:
+   - SoftDeleteMixin: is_active() メソッドを提供
+   → query.filter(Customer.valid_to >= today) を簡潔に記述
+   メリット:
+   - コードの再利用
+   - テストの容易性
+
+3. なぜ UniqueConstraint を使うのか
+   理由: ビジネスキーの一意性を保証
+   例:
+   - Warehouse: warehouse_code（倉庫コード）がユニーク
+   - Supplier: supplier_code（仕入先コード）がユニーク
+   - Customer: customer_code（顧客コード）がユニーク
+   → 業務上、同じコードで複数のマスタは存在しない
+   実装:
+   - UniqueConstraint("warehouse_code", name="uq_warehouses_warehouse_code")
+   → データベースレベルで一意性を保証
+
+4. なぜ valid_to にインデックスを作成するのか
+   理由: 有効なマスタのみを高速に検索
+   背景:
+   - アクティブなマスタのみを表示するクエリが頻繁
+   → WHERE valid_to >= today
+   実装:
+   - Index("idx_warehouses_valid_to", "valid_to")
+   → valid_to での検索が高速化
+   パフォーマンス:
+   - インデックスなし: テーブル全件スキャン（O(n)）
+   - インデックスあり: B-Tree検索（O(log n)）
+
+5. なぜ Product に internal_unit と external_unit があるのか
+   理由: 内部管理単位と外部表示単位の分離
+   業務的背景:
+   - 内部管理: 缶（CAN）単位で在庫管理
+   - 外部表示: キログラム（KG）単位で受注・出荷
+   → 単位の変換が必要
+   実装:
+   - internal_unit: "CAN"（引当単位）
+   - external_unit: "KG"（表示単位）
+   - qty_per_internal_unit: 20.0（1 CAN = 20 KG）
+   用途:
+   - 受注数量（KG）→ 引当数量（CAN）への変換
+
+6. なぜ CustomerItem と ProductMapping の2テーブルがあるのか
+   理由: 責務の分離
+   CustomerItem（受注・出荷ドメイン）:
+   - 顧客が使用する品番コードの変換
+   - 出荷表テキスト、梱包注意書き、SAP連携
+   ProductMapping（調達・発注ドメイン）:
+   - 顧客+先方品番+製品+仕入先の4者マッピング
+   - 将来: 仕入先別単価、リードタイム管理
+   → 異なる業務ドメインで異なるマスタを使用
+
+7. なぜ CustomerItem に SAP関連カラムがあるのか（L360-372）
+   理由: SAP ERPとの連携データをキャッシュ
+   業務的背景:
+   - SAP ERP: 仕入先コード、倉庫コード、単位などを管理
+   → SAP APIへの問い合わせは遅い（1件あたり数秒）
+   解決:
+   - sap_supplier_code, sap_warehouse_code 等をキャッシュ
+   → SAP APIへの問い合わせ回数を削減
+   用途:
+   - 受注処理時に SAP データを参照（キャッシュから取得）
+
+8. なぜ ProductUomConversion テーブルがあるのか
+   理由: 製品ごとの単位変換係数を管理
+   業務的背景:
+   - 製品A: 1缶 = 20kg
+   - 製品B: 1缶 = 15kg
+   → 製品ごとに変換係数が異なる
+   実装:
+   - product_id: 製品ID
+   - external_unit: 外部単位（例: "KG"）
+   - factor: 変換係数（例: 20.0）
+   用途:
+   - quantity_service.py で単位変換時に使用
+
+9. なぜ WarehouseDeliveryRoute テーブルがあるのか
+   理由: 倉庫から納入先への輸送リードタイムを管理
+   業務的背景:
+   - 倉庫A → 納入先X: 2日
+   - 倉庫A → 納入先Y: 5日
+   → 納入先ごとにリードタイムが異なる
+   実装:
+   - warehouse_id: 倉庫ID
+   - delivery_place_id: 納入先ID
+   - transport_lead_time_days: 輸送リードタイム（日）
+   用途:
+   - 出荷日の計算: 納入日 - リードタイム = 出荷日
+
+10. なぜ CustomerItemJikuMapping テーブルがあるのか
+    理由: 顧客商品と納入先（次区コード）のマッピング
+    業務的背景:
+    - 自動車業界: 「次区（じく）」という納入先の分類が存在
+    - 例: 顧客品番 P-001 → 次区A（工場A）、次区B（工場B）
+    → 同じ品番でも、納入先によって配送先が異なる
+    実装:
+    - jiku_code: 次区コード
+    - delivery_place_id: 納入先ID
+    - is_default: デフォルト次区フラグ
+    用途:
+    - OCR読取結果から納入先を自動特定
 """
 
 from __future__ import annotations
