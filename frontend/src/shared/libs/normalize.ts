@@ -3,6 +3,42 @@
  *
  * API型からUI型への変換ユーティリティ
  * null/undefinedを安全な値に変換し、UIで扱いやすい形式に正規化します。
+ *
+ * 【設計意図】正規化レイヤーの設計判断:
+ *
+ * 1. なぜAPI型とUI型を分離するのか
+ *    理由: バックエンドとフロントエンドで型の扱いが異なる
+ *    - バックエンド: null/undefined を許容（データベースのNULL）
+ *    - フロントエンド: UIでは必ず表示する値が必要
+ *    例:
+ *    - API: customer_name: string | null
+ *    - UI: customer_name: string（nullは "-" に変換）
+ *
+ * 2. S/N/D ヘルパー関数の役割
+ *    S (String): 文字列のnull安全化
+ *    - fallback="-": UIで「未設定」を明示的に表示
+ *    N (Number): 数値のnull安全化
+ *    - fallback=0: 計算に使う場合、0として扱う
+ *    D (Date): 日付文字列のnull安全化
+ *    - fallback="": 空文字として扱う（表示時にハイフンに変換）
+ *
+ * 3. ??（Nullish Coalescing）の使用
+ *    理由: null/undefined のみをfallbackに置き換え
+ *    → 0, false, "" は有効な値として扱う
+ *    代替案: || を使うと、0や""もfallbackになってしまう
+ *    例: S(0) → "0" (正しい), S(0) with || → "-" (誤り)
+ *
+ * 4. UI型の non-nullable 設計
+ *    理由: React コンポーネントでnullチェック不要
+ *    メリット:
+ *    - {order.customer_name} と直接表示可能
+ *    - order.customer_name?.trim() 等のオプショナルチェーン不要
+ *    → コードがシンプルになる
+ *
+ * 5. Record<string, unknown> の継承
+ *    理由: 将来的にフィールドが追加されても柔軟に対応
+ *    → インデックスシグネチャで未知のプロパティも受け入れる
+ *    例: UI側で独自に追加したプロパティ（computed values等）
  */
 
 import type { AllocatedLot } from "@/shared/types/aliases";
