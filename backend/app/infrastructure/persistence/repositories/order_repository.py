@@ -10,35 +10,138 @@
    理由:
    - 単一責任の原則（SRP）: リポジトリはデータ永続化のみ
    - テスタビリティ: リポジトリをモック化しやすい
+   設計パターン:
+   - Repository Pattern: データアクセス層の抽象化
+   → 将来的にDBを変更（PostgreSQL → MySQL）しても、リポジトリのみ修正
 
-2. selectinload vs joinedload の使い分け（L33）
+2. selectinload vs joinedload の使い分け（L74）
    使い分け基準:
    - selectinload: 1対多リレーション（Order → OrderLines）
      → 複数明細がある場合、JOINだとOrderが重複する
      → 別クエリで明細を取得し、Pythonでマージ
    - joinedload: 1対1または多対1リレーション（OrderLine → Order/Product）
      → 1行ずつのデータなので、JOINでも重複しない
-   パフォーマンス: selectinloadは2回のクエリ（Order取得 + Lines取得）
+   パフォーマンス:
+   - selectinload: 2回のクエリ（Order取得 + Lines取得）
+   → N+1問題を回避（Orderが100件でも、クエリは2回のみ）
+   SQL例:
+   ```sql
+   -- 1回目: Orderを取得
+   SELECT * FROM orders WHERE id = 1;
+   -- 2回目: OrderLinesを一括取得
+   SELECT * FROM order_lines WHERE order_id IN (1);
+   ```
 
-3. with_lines パラメータ
-   理由: 明細が不要な場合はロードしない
+3. with_lines パラメータの設計（L60）
+   理由: 明細が不要な場合はロードしない（選択的イーガーローディング）
    例:
-   - 受注一覧表示: 受注ヘッダのみ（明細不要）
-   - 受注詳細表示: 受注 + 明細（明細必要）
-   → 不要なデータ取得を避け、パフォーマンス向上
+   - 受注一覧表示: 受注ヘッダのみ（明細不要）→ with_lines=False
+   - 受注詳細表示: 受注 + 明細（明細必要）→ with_lines=True
+   メリット:
+   - 不要なデータ取得を避け、パフォーマンス向上
+   - メモリ使用量削減（100件の受注に各10明細なら、1000行のデータ）
+   業務的意義:
+   - 受注一覧画面: 数百件の受注を表示 → 明細不要、高速表示
+   - 受注編集画面: 1件の受注を詳細表示 → 明細必要、全データロード
 
-4. commit はサービス層で実行（L108, L119, L128）
+4. commit はサービス層で実行（L149, L160, L169）
    理由: トランザクション境界はビジネスロジック単位
    例:
    - 受注作成 + 明細作成 + 在庫引当 → 一括でcommit
    → リポジトリ内でcommitすると、部分的なコミットが発生
    → データの整合性が保てない
-   メリット: トランザクションスコープをサービス層で制御
+   メリット:
+   - トランザクションスコープをサービス層で制御
+   - 複数リポジトリ操作をアトミックに実行
+   使用例:
+   ```python
+   # Service層
+   async def create_order_with_lines(order_data, lines_data):
+       order = order_repo.create(order_data)
+       for line_data in lines_data:
+           line_repo.create(order.id, line_data)
+       db.commit()  # 全て成功したらコミット
+   ```
 
-5. cast() の使用（L35）
+5. cast() の使用理由（L76, L88）
    理由: SQLAlchemy 2.0 の scalar_one_or_none() は Any 型を返す
    → 型ヒントで Order | None を明示するため cast() を使用
    → mypy等の型チェッカーでエラーを防ぐ
+   型安全性:
+   ```python
+   # cast なし
+   order = self.db.execute(stmt).scalar_one_or_none()  # type: Any
+   order.order_no  # mypy エラーなし（実際は None の可能性）
+
+   # cast あり
+   order = cast(Order | None, self.db.execute(stmt).scalar_one_or_none())
+   if order:
+       order.order_no  # 型チェック OK
+   ```
+
+6. find_by_order_no() の必要性（L78-88）
+   理由: 業務キーでの検索
+   業務背景:
+   - 受注番号: 得意先から提供される業務的な識別子
+   - 例: 営業担当者「受注番号 ORD-2024-001 を確認したい」
+   → ID（システム内部の番号）では検索できない
+   → order_no で検索する必要がある
+   パフォーマンス:
+   - order_no にインデックスが必要（UNIQUE制約で自動作成）
+
+7. find_all() のフィルタリング設計（L90-129）
+   理由: 柔軟な検索条件の提供
+   フィルタ:
+   - status: 「open」「allocated」等でフィルタ
+   - customer_code: 得意先ごとの受注一覧
+   - date_from/date_to: 日付範囲検索
+   業務シナリオ:
+   - 営業担当者: 「今月の得意先Aの受注を確認」
+   → customer_code="A", date_from=2024-12-01, date_to=2024-12-31
+   SQL例:
+   ```sql
+   SELECT * FROM orders
+   WHERE customer_code = 'A'
+     AND order_date >= '2024-12-01'
+     AND order_date <= '2024-12-31'
+   ORDER BY order_date DESC
+   LIMIT 100;
+   ```
+
+8. customer_code フィルタの JOIN（L119-121）
+   理由: DDL v2.2 で Order テーブルに customer_code カラムがない
+   設計:
+   - Order → Customer の外部キー（customer_id）のみ存在
+   → customer_code でフィルタするには Customer テーブルを JOIN
+   SQL:
+   ```sql
+   SELECT orders.*
+   FROM orders
+   JOIN customers ON orders.customer_id = customers.id
+   WHERE customers.customer_code = 'A';
+   ```
+
+9. OrderLineRepository の find_by_customer_order_key（L223-241）
+   理由: 得意先側の業務キーで検索
+   業務背景:
+   - OCR取り込み時: 得意先の注文書には「受注グループID + 得意先6桁番号」
+   → この組み合わせで既存データを検索（重複チェック）
+   複合キー:
+   - order_group_id + customer_order_no → ユニーク
+   用途:
+   - OCR取り込み時の重複チェック
+   - 既存データ更新時の検索
+
+10. find_by_sap_order_key の設計（L243-261）
+    理由: SAP連携時の業務キー検索
+    業務背景:
+    - SAP登録後: SAP受注番号 + SAP明細番号が付与される
+    → SAP側からの問い合わせ時にこのキーで検索
+    例:
+    - SAP「受注番号 4500012345、明細 000010 の状態は？」
+    → find_by_sap_order_key("4500012345", "000010")
+    複合キー:
+    - sap_order_no + sap_order_item_no → ユニーク
 """
 
 from datetime import date
