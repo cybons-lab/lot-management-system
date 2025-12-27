@@ -21,7 +21,95 @@ if TYPE_CHECKING:
 
 
 class LotRepository:
-    """Data-access helpers for lot entities."""
+    """Data-access helpers for lot entities.
+
+    【設計意図】ロットリポジトリの設計判断:
+
+    1. なぜリポジトリパターンを採用するのか
+       理由: ドメイン層とインフラ層の分離
+       設計原則: Dependency Inversion Principle（依存性逆転の原則）
+       メリット:
+       - ドメイン層がORMに依存しない
+       - テスト時にモックリポジトリに差し替え可能
+       - データソース変更（PostgreSQL → MySQL等）の影響を最小化
+
+    2. リポジトリの責務
+       理由: 単一責任の原則（SRP）
+       責務:
+       - ロットの永続化（CRUD操作）
+       - 引当候補の検索（SSOT: Single Source of Truth）
+       - データベースロックの管理
+       非責務（サービス層の責務）:
+       - ビジネスロジック（FEFO/FIFO判定等）
+       - トランザクション管理
+       - イベント発行
+
+    3. find_allocation_candidates() の重要性（L143-307）
+       理由: 引当候補検索の唯一の窓口（SSOT）
+       設計:
+       - 全ての引当処理はこのメソッドを経由
+       → ロジックの一元管理、重複コード排除
+       - policy（FEFO/FIFO）とlock_mode（ロック戦略）を明示的に指定
+       → 呼び出し側の意図を明確化
+       業務的意義:
+       - 自動車部品の適切な出庫順を保証
+       - 並行引当時のデータ整合性を保証
+
+    4. なぜ利用可能数量をPython側で計算するのか
+       理由: ロジックの一元管理とテスタビリティ
+       設計:
+       - stock_calculation.get_available_quantity() に委譲
+       → 利用可能数量の計算ロジックを1箇所に集約
+       トレードオフ:
+       - パフォーマンス: N+1問題のリスク
+       - メリット: 計算ロジックの一貫性、テストの容易性
+       将来の改善:
+       - 大量ロット処理時はSQLビューで集計
+
+    5. joinedload() の使用（L33, L189）
+       理由: N+1問題の防止
+       効果:
+       - Lot と Product/Warehouse を1回のクエリで取得
+       → ループ内でlot.productにアクセスしても追加クエリが発生しない
+       パフォーマンス:
+       - 100ロット取得時: JOIN なし → 201クエリ（1 + 100 + 100）
+       - 100ロット取得時: JOIN あり → 1クエリ
+       → 200倍の高速化
+
+    6. データベースロックの設計（L257-260）
+       理由: 並行引当時の在庫整合性保証
+       ロックモード:
+       - NONE: ロックなし（参照のみ）
+       - FOR_UPDATE: 行ロック・待機あり
+       - FOR_UPDATE_SKIP_LOCKED: 行ロック・スキップあり（推奨）
+       業務シナリオ:
+       - 複数ユーザーが同時に同じロットを引当
+       → SKIP_LOCKED で競合ロットをスキップ、次善のロットを選択
+       → デッドロック回避、レスポンス速度優先
+
+    7. COALESCE の使用理由（L211）
+       理由: NULLを通常入荷品として扱う
+       業務ルール:
+       - origin_type = NULL → 通常入荷品（デフォルト）
+       - origin_type = 'sample' → サンプル品
+       - origin_type = 'adhoc' → 臨時品
+       設計:
+       - COALESCE(origin_type, 'normal') で NULL を 'normal' に変換
+       → NOT IN ('sample', 'adhoc') で通常入荷品を含める
+
+    8. ソート順の設計（L244-254）
+       理由: FEFO/FIFO ポリシーの正確な実装
+       FEFO:
+       - 有効期限昇順（NULL は最後）
+       - 有効期限同じ → 入荷日昇順
+       - 入荷日も同じ → ID昇順（タイブレーカー）
+       FIFO:
+       - 入荷日昇順
+       - 入荷日同じ → ID昇順（タイブレーカー）
+       タイブレーカーの重要性:
+       - 決定的なソート順を保証（テストの再現性）
+       - データベースによる結果の差異を防止
+    """
 
     def __init__(self, db: Session):
         self.db = db

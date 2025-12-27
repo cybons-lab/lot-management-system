@@ -19,7 +19,105 @@ from app.infrastructure.persistence.models.lot_reservations_model import (
 
 
 class ReservationRepository:
-    """予約リポジトリ（P3: LotReservation ベース）."""
+    """予約リポジトリ（P3: LotReservation ベース）.
+
+    【設計意図】予約リポジトリの設計判断:
+
+    1. なぜ Allocation から LotReservation に移行したのか（v3.0）
+       理由: 予約の概念を拡張し、将来の機能拡張に対応
+       背景:
+       - v2.x: Allocation（受注に対する引当のみ）
+       - v3.x: LotReservation（受注、フォーキャスト、手動予約等に対応）
+       → 予約のソースタイプ（ORDER, FORECAST, MANUAL）を明示
+       業務的意義:
+       - 受注以外の理由でロットを予約可能（例: 納期確約、見込み生産）
+       - 複数の予約ソースを統一的に管理
+
+    2. enable_history の設計（L24, L26）
+       理由: 履歴記録の有効/無効を制御
+       用途:
+       - 本番環境: enable_history=True（全操作を記録）
+       - テスト環境: enable_history=False（履歴記録をスキップ）
+       メリット:
+       - テスト実行速度の向上
+       - 循環依存のデバッグが容易
+
+    3. 遅延ロード（Lazy Loading）の採用（L29-55）
+       理由: 循環importの回避とパフォーマンス最適化
+       設計:
+       - history_service を @property で実装
+       → 初回アクセス時にLotReservationHistoryServiceをインスタンス化
+       メリット:
+       - 循環参照エラー防止
+       - 履歴機能不要時のオーバーヘッド削減
+
+    4. find_by_order_line_id() の設計（L73-90）
+       理由: 受注明細に紐付く全予約を取得
+       業務シナリオ:
+       - 受注100個に対して、複数ロットから引当（50個+50個）
+       → order_line_id で検索すると2件の予約が返る
+       用途:
+       - 引当状況の確認
+       - 引当キャンセル時の一括解放
+
+    5. find_active_by_lot_id() の設計（L92-109）
+       理由: ロット別の予約状況を把握
+       フィルタ条件:
+       - status IN (ACTIVE, CONFIRMED)
+       → 解放済み（RELEASED）は除外
+       業務的意義:
+       - ロットの利用可能数量計算
+       → current_quantity - sum(active予約の reserved_qty)
+
+    6. flush() の使用理由（L172）
+       理由: 履歴レコードに予約IDが必要
+       動作:
+       - db.add(reservation) → メモリ上のオブジェクト追加
+       - db.flush() → INSERT発行、IDを取得（コミットはしない）
+       - history_service.record_insert() → 履歴レコード作成（IDを使用）
+       - db.commit() → 一括コミット（サービス層で実行）
+       メリット:
+       - 予約と履歴を同一トランザクションで作成
+       → 整合性保証
+
+    7. Decimal 型への変換（L167）
+       理由: 数量計算の精度保証
+       変換:
+       - Decimal(str(reserved_qty))
+       → float → str → Decimal で精度誤差を防止
+       業務影響:
+       - 在庫数量の計算誤差防止
+       → 0.1 + 0.2 = 0.30000000000000004 のようなバグを回避
+
+    8. ステータス遷移時の日時記録（L226-229）
+       理由: 各ステータスの確定日時を記録
+       記録項目:
+       - CONFIRMED → confirmed_at: SAP登録完了日時
+       - RELEASED → released_at: 解放日時
+       業務的意義:
+       - 引当から確定までのリードタイム分析
+       - SAP連携のパフォーマンス測定
+
+    9. update_status() での履歴記録（L232-238）
+       理由: ステータス変更の完全な追跡
+       記録内容:
+       - old_status → new_status（遷移履歴）
+       - changed_by（変更者）
+       - change_reason（変更理由）
+       業務的意義:
+       - 監査証跡
+       - トラブルシューティング
+       - SAP連携エラーの追跡
+
+    10. 後方互換性エイリアス（L262）
+        理由: v2.x からの移行を円滑にする
+        設計:
+        - AllocationRepository = ReservationRepository
+        → 既存コードが動作し続ける
+        将来的な削除計画:
+        - v3.1: 非推奨警告を追加
+        - v4.0: エイリアスを削除
+    """
 
     def __init__(self, db: Session, enable_history: bool = True):
         self.db = db
