@@ -1,3 +1,27 @@
+/**
+ * Main orchestrator hook for lot allocation page
+ *
+ * 【設計意図】なぜこのフックが必要なのか:
+ *
+ * 1. ロジックとアクションの統合
+ *    理由: useLotAllocationLogicとuseLotAllocationActionsを組み合わせる
+ *    → useLotAllocationLogic: 状態管理とデータフェッチング
+ *    → useLotAllocationActions: ユーザーアクション（保存、自動引当等）
+ *    → このフックで統合し、1つのインターフェースをコンポーネントに提供
+ *
+ * 2. 自動引当の制御（現在はコメントアウト）
+ *    背景: 初期実装では画面表示時に全明細を自動引当する予定だった
+ *    問題: 「values buried」issue - DBに保存済みの引当が画面に表示されない
+ *    → 自動引当を実行すると、既存の引当を上書きしてしまう可能性
+ *    対応: 自動引当ループを無効化（L73-90）
+ *    → ユーザーが明示的に「自動引当」ボタンを押した時のみ実行
+ *
+ * 3. useRefによる二重実行防止
+ *    理由: React Strict Modeでは、useEffectが2回実行される
+ *    → hasAutoAllocatedRef.currentで、既に実行済みかを判定
+ *    → 自動引当が複数回実行されることを防ぐ
+ */
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 
