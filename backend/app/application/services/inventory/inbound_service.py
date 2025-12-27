@@ -1,4 +1,35 @@
-"""Inbound plan service layer."""
+"""Inbound plan service layer.
+
+【設計意図】入荷計画サービスの設計判断:
+
+1. 主担当仕入先の優先表示（L86-93）
+   理由: ユーザーの業務フローに合わせた表示順
+   → 営業担当者は、自分が主担当の仕入先を優先的に確認したい
+   実装:
+   - primary_supplier_ids が指定された場合、SQL の CASE式で優先度をつける
+   - case((supplier_id IN (...), 0), else_=1) → 主担当は0、それ以外は1
+   - ORDER BY priority_case ASC → 0が先に表示される
+   → その後、入荷予定日の降順でソート
+
+2. distinct() の使用（L68-69）
+   理由: lines テーブルとJOINすると、1つのInboundPlanが複数行返される
+   例:
+   - InboundPlan (id=1) に lines が3行ある場合
+   - JOINすると、InboundPlan (id=1) が3回返される
+   → distinct() で重複を除外し、1行のみ返す
+
+3. count_query の分離（L71-83）
+   理由: total件数取得時に joinedload を使わない
+   → joinedload はEager Loading（関連データを事前取得）
+   → count()では関連データ不要 → 無駄なJOINを避ける
+   パフォーマンス: count_query は軽量、データ取得は別クエリで実行
+
+4. joinedload(InboundPlan.lines) の使用
+   理由: N+1問題を回避
+   → 各InboundPlanに対してlinesを取得する場合、N回のクエリが発生
+   → joinedloadで1回のクエリで取得（LEFT OUTER JOIN）
+   メリット: 100件のInboundPlanがあっても、SQLは2回のみ（count + select）
+"""
 
 from sqlalchemy.orm import Session, joinedload
 
@@ -65,10 +96,12 @@ class InboundService:
             query = query.filter(InboundPlan.status == status)
 
         # Distinct is needed if joining with lines to avoid duplicates
+        # 【設計】linesとJOINすると重複行が発生 → distinct()で除外
         if product_id is not None:
             query = query.distinct()
 
         # Count total before applying pagination (using subquery without joinedload)
+        # 【設計】count用クエリはjoinedloadを使わず、軽量に実行
         count_query = self.db.query(InboundPlan)
         if supplier_id is not None:
             count_query = count_query.filter(InboundPlan.supplier_id == supplier_id)
@@ -83,6 +116,7 @@ class InboundService:
         total = count_query.count()
 
         # ソート: 主担当優先 → 入荷予定日
+        # 【設計】CASE式で主担当仕入先を優先表示（priority_case=0が先頭）
         if primary_supplier_ids:
             priority_case = case(
                 (InboundPlan.supplier_id.in_(primary_supplier_ids), 0),
