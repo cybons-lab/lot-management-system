@@ -1,4 +1,65 @@
-"""データベース接続設定 / SQLAlchemyセッション管理."""
+"""データベース接続設定 / SQLAlchemyセッション管理.
+
+【設計意図】データベースセッション管理の設計判断:
+
+1. autocommit=False, autoflush=False の理由（L21）
+   autocommit=False:
+   - 理由: トランザクション境界を明示的に制御
+   - デフォルト動作: db.commit() を呼ぶまでDBに反映されない
+   - メリット: サービス層で複数操作をまとめてcommit → 整合性保証
+   例: 受注作成 + 明細作成 + 在庫引当 → 一括commit
+
+   autoflush=False:
+   - 理由: SQLAlchemy が自動的に flush() するタイミングを制御
+   - デフォルト動作: query実行前に自動flush → 予期しないSQL発行
+   - メリット: flush() のタイミングを明示的に制御 → パフォーマンス向上
+   トレードオフ: flush() 忘れると、IDが取得できない（order.id等）
+
+2. get_db() ジェネレータパターン（L24-30）
+   理由: FastAPI の Depends() で使用するジェネレータ
+   動作:
+   - try: リクエスト開始時に db セッション作成
+   - yield: ルート関数にセッションを注入
+   - finally: リクエスト終了時に db.close() 実行
+   メリット:
+   - リソースリークを防ぐ（必ず close() される）
+   - 例外が発生してもセッションがクローズされる
+
+3. echo=True in development（L16-18）
+   理由: 開発時にSQL文をログ出力
+   用途:
+   - N+1問題の検出（大量のSELECT文が発行されていないか）
+   - クエリパフォーマンスの確認
+   - デバッグ時のSQL確認
+   本番環境: echo=False → ログが肥大化しない
+
+4. truncate_all_tables() の設計（L62-98）
+   RESTART IDENTITY:
+   - 理由: シーケンス（id等の自動採番）をリセット
+   - 動作: id=1 から再開
+   - 用途: テストデータ投入時、常に同じIDから始まる
+
+   CASCADE:
+   - 理由: 外部キー制約を無視してTRUNCATE
+   - 動作: 参照元テーブルも一緒にTRUNCATEされる
+   - 例: orders を TRUNCATE すると order_lines も削除
+
+   alembic_version を除外:
+   - 理由: マイグレーション履歴を保持
+   - 動作: Alembic が「どのマイグレーションまで適用済みか」を記録
+   - メリット: データ削除後も、スキーマバージョンが保たれる
+
+5. drop_db() と truncate_all_tables() の使い分け（L101-122）
+   drop_db():
+   - 用途: スキーマ定義も含めて完全リセット
+   - 動作: テーブル構造自体を削除
+   - リスク: Alembicマイグレーションを再実行する必要あり
+
+   truncate_all_tables():
+   - 用途: データのみリセット（推奨）
+   - 動作: テーブル構造は保持
+   - メリット: マイグレーション不要、高速
+"""
 
 import logging
 from collections.abc import Generator
@@ -18,6 +79,7 @@ engine = create_engine(
 )
 
 # --- Session --------------------------------------------------------------
+# 【設計】autocommit=False, autoflush=False でトランザクション境界を明示的に制御
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
