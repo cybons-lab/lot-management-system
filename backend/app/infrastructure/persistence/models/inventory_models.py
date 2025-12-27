@@ -2,6 +2,143 @@
 
 All models strictly follow the DDL as the single source of truth. Legacy
 models (ExpiryRule) have been removed.
+
+【設計意図】在庫モデルの設計判断:
+
+1. なぜ Lot モデルが中心なのか
+   理由: ロットベースの在庫管理
+   業務的背景:
+   - 自動車部品商社: 同じ製品でも、ロットごとに有効期限が異なる
+   → ロット単位で在庫を管理する必要がある
+   設計:
+   - Lot: 物理的な在庫の単位（lot_number で識別）
+   - product_id: どの製品のロットか
+   - warehouse_id: どの倉庫に保管されているか
+   - expiry_date: 有効期限（FEFO管理の基準）
+   メリット:
+   - トレーサビリティ: 「このロットはいつ入庫したか」を追跡
+   - 有効期限管理: 期限の近いロットから優先的に出荷
+
+2. current_quantity の設計（L99-101）
+   理由: ロットの現在在庫数
+   型: Numeric(15, 3)
+   - 15桁: 整数部（最大999,999,999,999個）
+   - 3桁: 小数部（0.001単位まで記録可能）
+   用途:
+   - 入庫: current_quantity += 入庫数
+   - 出庫: current_quantity -= 出庫数
+   - 引当: current_quantity は変化しない（reserved_quantity が増える）
+   制約:
+   - current_quantity >= 0 (L144)
+   → 負数は許容しない（物理的にあり得ない）
+
+3. なぜ reserved_quantity カラムがないのか
+   理由: v3.0 で LotReservation テーブルに移行
+   背景:
+   - v2.x: Lot.allocated_quantity カラムで引当数を管理
+   - v3.0: LotReservation テーブルで個別の予約を管理
+   メリット:
+   - 予約の履歴を保持（誰が、いつ、何個予約したか）
+   - 予約の状態管理（TEMPORARY, ACTIVE, CONFIRMED, RELEASED）
+   計算:
+   - reserved_quantity = SUM(LotReservation.reserved_qty WHERE status IN ('ACTIVE', 'CONFIRMED'))
+   → stock_calculation.py で動的に計算
+
+4. status フィールドの設計（L103, L147-149）
+   理由: ロットの状態管理
+   値:
+   - active: 通常在庫（引当可能）
+   - depleted: 在庫ゼロ（引当不可）
+   - expired: 有効期限切れ（引当不可）
+   - quarantine: 隔離中（品質問題等）
+   - locked: ロック中（手動ロック）
+   業務的意義:
+   - active 以外のロットは、FEFO自動引当から除外
+   → 引当可能なロットのみを候補として扱う
+
+5. locked_quantity の設計（L105-107）
+   理由: 手動ロックによる引当制限
+   用途:
+   - 品質検査中: locked_quantity = 全量
+   → 検査完了まで引当不可
+   - 特定顧客専用: locked_quantity = 一部
+   → 残りは通常引当可能
+   計算:
+   - available_quantity = current_quantity - reserved_quantity - locked_quantity
+   業務シナリオ:
+   - 品質問題が疑われるロット
+   → locked_quantity を設定し、引当を一時停止
+
+6. origin_type の設計（L128-131）
+   理由: ロットの起源を追跡
+   値:
+   - ORDER: 受注に基づく入庫
+   - FORECAST: フォーキャストに基づく入庫
+   - SAMPLE: サンプル品
+   - SAFETY_STOCK: 安全在庫
+   - ADHOC: 臨時入庫（デフォルト）
+   用途:
+   - 受注ロットと安全在庫を区別
+   → 受注ロットは対応する受注に優先的に引当
+   業務的意義:
+   - 「このロットはどの受注のために入庫したか」を追跡
+   → 顧客ごとの専用在庫として管理可能
+
+7. temporary_lot_key の設計（L136-141）
+   理由: 仮入庫時のロット番号未確定対応
+   背景:
+   - 入庫時点ではロット番号が未確定
+   → 後日、正式なロット番号が判明
+   設計:
+   - temporary_lot_key: UUID（一意識別キー）
+   → 仮入庫時に発行
+   - lot_number: 正式ロット番号確定後に更新
+   用途:
+   - 仮入庫 → 正式入庫の紐付け
+   → 「UUID xxx の仮ロットが、正式ロット番号 ABC-123 になった」
+   業務シナリオ:
+   - 入庫当日は仮ロット番号で処理
+   → 翌日、サプライヤーから正式ロット番号を受領
+
+8. inspection_status の設計（L110-114）
+   理由: 品質検査の管理
+   値:
+   - not_required: 検査不要
+   - pending: 検査待ち
+   - passed: 検査合格
+   - failed: 検査不合格
+   関連フィールド:
+   - inspection_date: 検査日
+   - inspection_cert_number: 検査証明書番号
+   業務フロー:
+   - 入庫 → inspection_status=pending
+   → 検査実施 → passed/failed に更新
+   → passed の場合のみ、引当可能
+
+9. version フィールドの設計（L116）
+   理由: 楽観的ロック（Optimistic Locking）
+   用途:
+   - 同時更新の競合検出
+   → ユーザーAとBが同じロットを同時に更新
+   → 片方の更新時に version が変わっていれば、エラー
+   実装:
+   - UPDATE lots SET ... WHERE id = ? AND version = ?
+   → version が変わっていれば、UPDATE 0件 = 競合検出
+   業務シナリオ:
+   - 在庫調整を複数ユーザーが同時に実行
+   → データロスを防止
+
+10. expiry_date: Nullable の理由（L98）
+    理由: 一部の製品は有効期限がない
+    背景:
+    - 金属部品: 有効期限なし（NULL）
+    - 樹脂部品: 有効期限あり（YYYY-MM-DD）
+    設計:
+    - expiry_date IS NULL の場合
+    → FEFOソートで最後尾（期限なし = 無限）
+    業務的意義:
+    - 有効期限なしの製品は、FEFOで最後に選ばれる
+    → 有効期限ありの製品を優先的に消費
 """
 
 from __future__ import annotations
