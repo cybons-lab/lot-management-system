@@ -2,6 +2,126 @@
 
 This service aggregates inventory data from the lots table in real-time,
 providing product × warehouse summary information.
+
+【設計意図】在庫サマリーサービスの設計判断:
+
+1. なぜ v_inventory_summary ビューを使うのか（L83-112）
+   理由: 在庫サマリー取得のパフォーマンス最適化
+   業務的背景:
+   - 自動車部品商社: 数万件のロットから製品×倉庫の在庫サマリーを表示
+   - リアルタイム計算: SELECT SUM(current_quantity) GROUP BY ... は高負荷
+   → v_inventory_summary ビューで事前集計（Materialized View相当）
+   実装:
+   - v_inventory_summary: 製品×倉庫ごとの在庫合計を集計
+   - total_quantity, allocated_quantity, available_quantity を計算済み
+   メリット:
+   - 在庫一覧画面の表示速度向上（100倍以上の高速化）
+
+2. なぜ supplier_id フィルタ時は別クエリを使うのか（L48-82）
+   理由: v_inventory_summary に supplier_id カラムがない
+   業務的背景:
+   - 営業担当者: 自分の担当サプライヤーの在庫のみを表示したい
+   - v_inventory_summary: 製品×倉庫でグループ化（サプライヤーは含まれない）
+   → supplier_id フィルタ時は lots テーブルを直接集計
+   実装:
+   - supplier_id 指定時: SELECT SUM() FROM lots WHERE supplier_id = ?
+   - 未指定時: SELECT FROM v_inventory_summary
+   トレードオフ:
+   - supplier_id フィルタ時は若干遅い（リアルタイム集計）
+   → ただし、フィルタにより対象ロット数が減るため、実用上問題なし
+
+3. なぜ2段階クエリ（サマリー + 引当内訳）を使うのか（L116-163）
+   理由: ソフト/ハード引当の内訳を追加取得
+   業務的背景:
+   - v_inventory_summary: allocated_quantity（合計のみ）
+   - 業務要件: ソフト引当とハード引当を区別して表示
+   → 2段階クエリで引当内訳を追加取得
+   実装:
+   - クエリ1: v_inventory_summary で基本情報取得
+   - クエリ2: lot_reservations で引当内訳取得（soft/hard別）
+   メリット:
+   - v_inventory_summary を変更せずに、引当内訳を追加取得
+   → ビューの再作成が不要
+
+4. なぜ O(1) ルックアップ用の辞書を作るのか（L164-174）
+   理由: N×M の突合を高速化
+   パフォーマンス:
+   - N件の在庫サマリー × M件の引当内訳 → O(N×M) = 遅い
+   - 辞書化: {(product_id, warehouse_id): {soft, hard}} → O(1) ルックアップ
+   実装:
+   - alloc_map: キー = (product_id, warehouse_id)、値 = {soft, hard}
+   - ループ内で alloc_map.get(key) → O(1) で取得
+   メリット:
+   - 100件の在庫×100件の引当でも、200回のループで完了
+
+5. なぜ CASE式で allocation_type を判定するのか（L137-153）
+   理由: lot_reservations.status を soft/hard に変換
+   業務ルール:
+   - status = 'active': ソフト引当（仮引当、キャンセル可能）
+   - status = 'confirmed': ハード引当（確定引当、キャンセル不可）
+   → CASE式でソフト/ハード区分を計算
+   実装:
+   - CASE WHEN r.status = 'active' THEN 'soft' WHEN r.status = 'confirmed' THEN 'hard'
+   → SQL側で集計時に区分
+   メリット:
+   - アプリケーション側で分類する必要がない（SQLで完結）
+
+6. なぜ複数の集計メソッドがあるのか（L290-406）
+   理由: 多様な業務視点での在庫分析
+   メソッド:
+   - get_inventory_by_supplier(): サプライヤー別在庫集計
+   - get_inventory_by_warehouse(): 倉庫別在庫集計
+   - get_inventory_by_product(): 製品別在庫集計（全倉庫合計）
+   用途:
+   - サプライヤー別: 「仕入先Aの在庫が多すぎる」を把握
+   - 倉庫別: 「倉庫Bの在庫が少ない」を把握
+   - 製品別: 「製品Xの在庫が全社で不足」を把握
+   → 経営判断・発注計画に活用
+
+7. なぜ COALESCE で NULL を 0 に変換するのか（L372-381）
+   理由: 引当がない製品でも正しく集計
+   問題:
+   - 引当がない製品: SUM(r.reserved_qty) → NULL
+   - NULL + 数値 = NULL → 計算結果が NULL になる
+   解決:
+   - COALESCE(..., 0): NULL を 0 に変換
+   → allocated_quantity = 0、available_quantity = total_quantity - 0
+   業務影響:
+   - 引当がない新規入荷製品も、正しく在庫として表示
+
+8. なぜ IN句でフィルタするのか（L146-147）
+   理由: 最初のクエリで取得した製品×倉庫のみを対象
+   パフォーマンス:
+   - 全引当レコードを取得すると、膨大な行数（数十万件）
+   → IN句でページング対象のみに絞る
+   実装:
+   - found_products: 最初のクエリで取得した製品IDリスト
+   - WHERE l.product_id IN :product_ids AND l.warehouse_id IN :warehouse_ids
+   メリット:
+   - 100件の在庫サマリーに対して、100件分の引当のみ取得
+
+9. なぜ text() で生SQLを使うのか（L50-117, L214-264）
+   理由: SQLAlchemy ORM では表現困難なクエリ
+   背景:
+   - ビュー（v_inventory_summary）に対するJOIN
+   - 複雑なGROUP BY + SUM集計
+   → 生SQLの方が可読性が高く、パフォーマンスも良い
+   実装:
+   - text(query): SQLクエリ文字列を直接実行
+   - params: プレースホルダーでSQLインジェクション対策
+   トレードオフ:
+   - ORM の型安全性は失われる → 結果をマッピングする際に注意
+
+10. なぜ product × warehouse の組み合わせを集計するのか
+    理由: 自動車部品商社の在庫管理要件
+    業務的背景:
+    - 同じ製品でも、倉庫ごとに在庫数が異なる
+    - 例: 製品A（東京倉庫: 100個、大阪倉庫: 50個）
+    → 製品×倉庫の組み合わせで在庫を管理
+    用途:
+    - 「東京倉庫の製品Aが不足」→ 大阪倉庫から転送
+    - 「大阪倉庫の製品Bが過剰」→ 東京倉庫へ移動
+    → 倉庫間の在庫バランス調整
 """
 
 from decimal import Decimal

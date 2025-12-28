@@ -1,4 +1,135 @@
-"""Order service layer aligned with SQLAlchemy 2.0 models."""
+"""Order service layer aligned with SQLAlchemy 2.0 models.
+
+【設計意図】受注サービスの設計判断:
+
+1. なぜ Order と OrderLine に分けるのか
+   理由: ヘッダ・明細パターンによる正規化
+   業務的背景:
+   - 自動車部品商社: 1つの受注に複数の製品明細が含まれる
+   - 例: 受注#123（顧客A、受注日2024-01-10）
+     → 明細1: 製品X 100個（納期2024-01-20）
+     → 明細2: 製品Y 50個（納期2024-01-25）
+   実装:
+   - Order: ヘッダ情報（顧客、受注日、ステータス）
+   - OrderLine: 明細情報（製品、数量、納期、引当ステータス）
+   メリット:
+   - データ重複を避ける（顧客情報を明細ごとに保持しない）
+   - 明細ごとに引当・出荷を管理可能
+
+2. なぜ selectinload で関連データを取得するのか（L103-105）
+   理由: N+1問題を回避
+   問題:
+   - 100件の受注を取得 → 100回のクエリで明細を取得 → 遅い
+   解決:
+   - selectinload(Order.order_lines): 1回のクエリで全明細を取得
+   → 合計2回のクエリで完了（受注取得 + 明細一括取得）
+   実装:
+   - selectinload: IN句を使った一括取得（SELECT * FROM order_lines WHERE order_id IN (...)）
+   メリット:
+   - 100件の受注でも、2回のクエリで全データ取得
+
+3. なぜ v_order_line_details ビューを使うのか（L414-445）
+   理由: 表示用の情報を事前にJOIN
+   業務的背景:
+   - 受注明細表示時: 製品名、サプライヤー名、納入先名が必要
+   - 通常のORM: 5つのテーブルをJOIN → 遅い
+   → v_order_line_details ビューで事前にJOIN
+   実装:
+   - v_order_line_details: order_line × product × supplier × delivery_place をJOIN
+   - _populate_additional_info(): ビューから表示情報を取得
+   メリット:
+   - フロントエンドで必要な情報を1回のクエリで取得
+
+4. なぜ converted_quantity を計算するのか（L262-275）
+   理由: 単位変換による数量統一
+   業務的背景:
+   - 顧客発注: 外部単位（KG）
+   - 社内管理: 内部単位（CAN）
+   - 例: 製品A（1 CAN = 20 KG）
+     → 顧客発注: 40 KG → converted_quantity = 2 CAN
+   実装:
+   - qty_per_internal_unit: 1内部単位あたりの外部単位数
+   - converted_qty = order_quantity / qty_per_internal_unit
+   用途:
+   - 引当処理: converted_quantity を使って在庫を確保
+   - 在庫管理: 内部単位で統一管理
+
+5. なぜ KANBAN/SPOT は自動引当するのか（L296-316）
+   理由: 受注種別による業務フロー分離
+   業務ルール:
+   - KANBAN: かんばん方式 → 受注即引当（自動）
+   - SPOT: スポット受注 → 受注即引当（自動）
+   - FORECAST_LINKED: 予測連動受注 → 手動引当
+   実装:
+   - order_type in ("KANBAN", "SPOT"): auto_reserve_line() を実行
+   → ソフト引当を自動作成
+   業務影響:
+   - かんばん受注: 登録と同時に在庫確保 → 迅速な出荷
+
+6. なぜロック機能（acquire_lock/release_lock）があるのか（L338-402）
+   理由: 複数ユーザーの同時編集を防止
+   問題:
+   - ユーザーA: 受注#123 の明細を編集中
+   - ユーザーB: 同時に受注#123 の明細を編集
+   → 片方の変更が上書きされる（データ喪失）
+   解決:
+   - acquire_lock(): 受注をロック（10分間）
+   - 他のユーザーは編集不可（OrderLockedError）
+   - release_lock(): ロック解除
+   実装:
+   - locked_by_user_id: ロック取得ユーザー
+   - lock_expires_at: ロック有効期限
+   メリット:
+   - 同時編集による競合を防止
+
+7. なぜロックを自動延長するのか（L350-355）
+   理由: 長時間の編集作業を許容
+   業務的背景:
+   - 営業担当者: 受注を編集中に電話がかかってきた → 10分経過
+   → ロックが切れて、他のユーザーが編集開始 → 競合
+   解決:
+   - 同じユーザーがロック取得を再度実行 → 自動延長（10分追加）
+   実装:
+   - if order.locked_by_user_id == user_id: 延長
+   業務影響:
+   - 編集中のユーザーは、ロックを失わない
+
+8. なぜ cancel_order() で全明細をキャンセルするのか（L327-336）
+   理由: 受注全体のキャンセル = 全明細のキャンセル
+   業務ルール:
+   - 受注キャンセル: 全明細を一括でキャンセル
+   → 一部明細のみキャンセルは別の機能（明細単位キャンセル）
+   実装:
+   - for line in order.order_lines: line.status = "cancelled"
+   - order.status = "cancelled"
+   バリデーション:
+   - shipped/completed の明細はキャンセル不可 → InvalidOrderStatusError
+   業務影響:
+   - 出荷済み受注の誤キャンセルを防止
+
+9. なぜ forecast_reference を持つのか（L287, L409）
+   理由: 予測データと受注の紐付け
+   業務フロー:
+   - Step1: 予測データ登録（例: 2024年2月に100個必要）
+   - Step2: 自動的に仮受注作成（FORECAST_LINKED）
+   - Step3: 実際の受注が入ったら、仮受注を実受注に変換
+   実装:
+   - forecast_reference: "FC-{customer_id}-{delivery_place_id}-{product_id}-{forecast_date}"
+   → 予測データとの紐付けキー
+   用途:
+   - 予測削除時: 関連する仮受注も削除
+   - 予測更新時: 仮受注の数量も更新
+
+10. なぜ duplicate status filter があるのか（L112-115）
+    理由: コードの安全性のための二重チェック
+    実装:
+    - L112-113: if status: stmt = stmt.where(Order.status == status)
+    - L114-115: if status: stmt = stmt.where(Order.status == status) （重複）
+    → これはバグの可能性が高いが、実害はない（同じ条件を2回適用）
+    注意:
+    - 重複した条件は SQL的には問題ないが、コードの可読性は低下
+    - リファクタリング時に削除推奨
+"""
 
 from __future__ import annotations
 
