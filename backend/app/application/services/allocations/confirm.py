@@ -6,6 +6,117 @@ Handles reservation confirmation:
 
 P3: CONFIRMED status requires successful SAP registration via SapGateway.
 All operations now use LotReservation exclusively.
+
+【設計意図】引当確定（CONFIRMED）の設計判断:
+
+1. なぜ SAP登録が必須なのか（L147-154）
+   理由: CONFIRMED = SAP ERP への登録完了
+   業務的背景:
+   - ACTIVE: システム内の仮引当（キャンセル可能）
+   - CONFIRMED: SAP登録済みの確定引当（出荷可能）
+   → CONFIRMED に遷移するには、SAP登録が必須
+   実装:
+   - sap_gateway.register_allocation(): SAP API 呼び出し
+   - success=False: AllocationCommitError（確定失敗）
+   業務影響:
+   - SAP とシステムの整合性を保証
+
+2. なぜ部分確定（quantity指定）ができるのか（L86-101）
+   理由: 柔軟な確定数量調整
+   業務例:
+   - 予約: 100個
+   - 実際の確定: 80個（残り20個は別のロットから確定したい）
+   実装:
+   - quantity < reserved_qty: 残り数量を新しい予約として分割
+   - 元の予約: 80個に減らして CONFIRMED
+   - 新しい予約: 20個で ACTIVE のまま
+   業務影響:
+   - 柔軟な引当調整が可能
+
+3. なぜ preempt_soft_reservations_for_hard を呼ぶのか（L136-142）
+   理由: ハード引当の優先権確保
+   問題:
+   - ロットX（在庫100個）
+   - ソフト引当A: 80個、ハード引当B: 50個
+   → 合計130個引当（在庫不足）
+   解決:
+   - preempt: ハード引当Bのために、ソフト引当Aを解放
+   → ハード引当が優先される
+   業務ルール:
+   - CONFIRMED（ハード）> ACTIVE（ソフト）
+
+4. なぜ idempotent（べき等）にするのか（L69-71）
+   理由: 重複確定を許容
+   問題:
+   - API再試行: 確定処理が2回実行される
+   → 既に確定済みなのに、エラーを返すべきか？
+   解決:
+   - status == CONFIRMED: 何もせず return（成功扱い）
+   業務影響:
+   - API再試行時にエラーにならない
+
+5. なぜ仮予約（provisional）は確定できないのか（L80-83）
+   理由: 入庫予定ベースの引当は確定不可
+   業務ルール:
+   - 仮予約: lot_id = NULL（入庫予定）
+   → 実際の在庫がないため、SAP登録できない
+   実装:
+   - lot_id がない: AllocationCommitError
+   業務影響:
+   - 入荷後に改めて引当・確定が必要
+
+6. なぜ有効期限をチェックするのか（L119-123）
+   理由: 期限切れロットの出荷防止
+   業務ルール:
+   - expiry_date < 今日: 期限切れ
+   → 確定不可（出荷してはいけない）
+   実装:
+   - expiry_date < utcnow().date(): AllocationCommitError
+   業務影響:
+   - 品質トラブルの防止
+
+7. なぜ C-02 Fix で事前ロックを取得するのか（L218-223）
+   理由: バッチ確定時の競合防止
+   問題（C-02以前）:
+   - バッチ確定中に、他プロセスが同じロットの在庫を使い切る
+   → 途中で在庫不足エラー
+   解決:
+   - 処理開始前に、全予約の行ロックを一括取得
+   → 他プロセスは待機
+   業務影響:
+   - バッチ確定の成功率向上
+
+8. なぜ AllocationConfirmedEvent を発行するのか（L178-185）
+   理由: 確定後の副作用処理
+   用途:
+   - イベント: 引当確定完了
+   → 通知送信、外部システム連携、監査ログ記録
+   実装:
+   - EventDispatcher.queue(event): イベントをキューに追加
+   → リクエスト完了後に一括処理
+   メリット:
+   - 確定処理と通知処理を疎結合に実装
+
+9. なぜ confirm_reservations_batch があるのか（L190-263）
+   理由: 複数予約の一括確定
+   用途:
+   - 管理者: 「この受注の全引当を確定」
+   - バッチ処理: 「夜間に全引当を確定」
+   実装:
+   - 成功した ID と失敗した情報を分けて返す
+   → フロントエンドで結果を表示
+   業務影響:
+   - 一括操作の効率化
+
+10. なぜ ReservationStateMachine で状態遷移を検証するのか（L73-78）
+    理由: 不正なステータス遷移の防止
+    業務ルール:
+    - ACTIVE → CONFIRMED: OK
+    - RELEASED → CONFIRMED: NG（解放済み、確定不可）
+    実装:
+    - can_confirm(reservation.status): 許可された遷移のみ実行
+    メリット:
+    - 状態遷移ルールが ReservationStateMachine に集約
 """
 
 from __future__ import annotations

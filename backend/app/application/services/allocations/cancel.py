@@ -6,6 +6,111 @@ Handles cancellation of reservations:
 - Order line-level cancellation
 
 P3: Uses LotReservation exclusively.
+
+【設計意図】引当キャンセルの設計判断:
+
+1. なぜ idempotent（べき等）にするのか（L49-51）
+   理由: 重複キャンセルを許容
+   問題:
+   - API再試行: キャンセル処理が2回実行される
+   → 既にキャンセル済みなのに、エラーを返すべきか？
+   解決:
+   - status == RELEASED: 何もせずreturn（成功扱い）
+   業務影響:
+   - API再試行時にエラーにならない → UX向上
+
+2. なぜ ReservationStateMachine で状態遷移を検証するのか（L54-58）
+   理由: 不正なステータス遷移の防止
+   業務ルール:
+   - ACTIVE → RELEASED: OK
+   - CONFIRMED → RELEASED: NG（SAP登録済み、キャンセル不可）
+   実装:
+   - can_release(reservation.status): 許可された遷移のみ実行
+   メリット:
+   - 状態遷移ルールが ReservationStateMachine に集約
+
+3. なぜ CONFIRMED はキャンセル不可なのか（L61-65）
+   理由: SAP登録済みの引当は解除できない
+   業務的背景:
+   - CONFIRMED: SAP ERP に登録済み（確定引当）
+   → SAP側でキャンセル処理が必要（未実装）
+   実装:
+   - status == CONFIRMED: AllocationCommitError
+   業務影響:
+   - SAP連携の整合性を保つ
+
+4. なぜ with_for_update でロックするのか（L71-72）
+   理由: 並行処理での競合防止
+   問題:
+   - ユーザーA: 予約をキャンセル中
+   - ユーザーB: 同じ予約を確定（CONFIRMED）に変更中
+   → 競合して不整合
+   解決:
+   - with_for_update(): ロット行をロック
+   → 片方が完了するまで、もう片方は待機
+   メリット:
+   - 予約の状態が不整合にならない
+
+5. なぜ update_order_allocation_status を呼ぶのか（L83-87）
+   理由: 受注ステータスの自動更新
+   業務フロー:
+   - 引当キャンセル → 受注明細の引当数量が減少
+   → 受注ステータスを「一部引当」or「未引当」に更新
+   実装:
+   - update_order_allocation_status(): 引当数量を集計してステータス更新
+   メリット:
+   - 受注ステータスが自動的に最新状態に
+
+6. なぜ bulk_release_reservations があるのか（L93-118）
+   理由: 複数予約の一括キャンセル
+   用途:
+   - 管理者: 「この受注の全引当をキャンセル」
+   - バッチ処理: 「期限切れ引当を一括キャンセル」
+   実装:
+   - 成功した ID と失敗した ID を分けて返す
+   業務影響:
+   - 一括操作の効率化
+
+7. なぜ個別エラーをキャッチするのか（L109-113）
+   理由: 一部失敗でも継続処理
+   問題:
+   - 10件のキャンセル中、5件目でエラー → 全件失敗？
+   解決:
+   - try-except で個別エラーをキャッチ
+   → failed_ids に追加して、残り5件を処理継続
+   業務影響:
+   - 一部失敗しても、成功したキャンセルは有効化
+
+8. なぜ release_reservations_for_order_line があるのか（L121-162）
+   理由: 受注明細単位での一括キャンセル
+   用途:
+   - 「この受注明細の全引当をキャンセル」
+   実装:
+   - 受注明細に紐づく全予約を検索 → 一括キャンセル
+   業務影響:
+   - 明細単位での引当リセットが容易
+
+9. なぜ H-03 Fix でダブルコミットを解消したのか（L132-160）
+   理由: トランザクション最適化
+   問題（H-03以前）:
+   - release_reservation(): 1回目のコミット
+   - update_order_line_status(): 2回目のコミット
+   → 2回のコミットは無駄
+   解決:
+   - commit_db=False: 予約解放時はコミットしない
+   - L160: 最後に1回だけコミット
+   メリット:
+   - パフォーマンス向上
+
+10. なぜ commit_db パラメータがあるのか（L39, L46）
+    理由: 一括処理でのトランザクション制御
+    用途:
+    - commit_db=True: 単体キャンセル（即コミット）
+    - commit_db=False: バッチキャンセル（後でコミット）
+    実装:
+    - 呼び出し側がトランザクション境界を制御
+    メリット:
+    - 柔軟なトランザクション管理
 """
 
 from __future__ import annotations
