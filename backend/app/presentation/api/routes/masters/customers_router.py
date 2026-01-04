@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.application.services.masters.customer_service import CustomerService
 from app.core.database import get_db
+from app.infrastructure.persistence.models.auth_models import User
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertResponse,
     CustomerBulkUpsertRequest,
@@ -154,9 +156,12 @@ def delete_customer(
 
 
 @router.delete("/{customer_code}/permanent", status_code=204)
-def permanent_delete_customer(customer_code: str, db: Session = Depends(get_db)):
+def permanent_delete_customer(
+    customer_code: str,
+    current_user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
     """Permanently delete customer (admin only)."""
-    # TODO: Add admin role check
     service = CustomerService(db)
     service.hard_delete_by_code(customer_code)
     return None

@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
 from app.infrastructure.persistence.models import Customer, DeliveryPlace
+from app.infrastructure.persistence.models.auth_models import User
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import (
     DeliveryPlaceCreate,
     DeliveryPlaceResponse,
@@ -224,6 +226,7 @@ def delete_delivery_place(
 @router.delete("/{delivery_place_id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
 def permanent_delete_delivery_place(
     delivery_place_id: int,
+    current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """納入先を物理削除（管理者のみ）.
@@ -232,6 +235,7 @@ def permanent_delete_delivery_place(
 
     Args:
         delivery_place_id: 納入先ID
+        current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
     Returns:
@@ -241,11 +245,7 @@ def permanent_delete_delivery_place(
         HTTPException: 納入先が見つからない場合は404
         HTTPException: 他のデータから参照されている場合は409
 
-    Note:
-        TODO: 管理者ロールチェックを追加
     """
-    # TODO: Add admin role check
-
     place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
     if not place:
         raise HTTPException(status_code=404, detail="Delivery place not found")

@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.application.services.masters.supplier_service import SupplierService
 from app.core.database import get_db
+from app.infrastructure.persistence.models.auth_models import User
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import (
     BulkUpsertResponse,
     SupplierBulkUpsertRequest,
@@ -151,7 +153,11 @@ def delete_supplier(
 
 
 @router.delete("/{supplier_code}/permanent", status_code=204)
-def permanent_delete_supplier(supplier_code: str, db: Session = Depends(get_db)):
+def permanent_delete_supplier(
+    supplier_code: str,
+    current_user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
     """Permanently delete supplier (admin only).
 
     WARNING: This completely removes the supplier from the database.
@@ -160,7 +166,6 @@ def permanent_delete_supplier(supplier_code: str, db: Session = Depends(get_db))
     Use this only for incorrectly created records.
     Will fail if the supplier is referenced by other records.
     """
-    # TODO: Add admin role check here
     service = SupplierService(db)
     service.hard_delete_by_code(supplier_code)
     return None

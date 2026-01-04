@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.application.services.masters.uom_conversion_service import UomConversionService
 from app.core.database import get_db
+from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import Product, ProductUomConversion
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import BulkUpsertResponse
 from app.presentation.schemas.masters.uom_conversions_schema import (
     UomConversionBulkUpsertRequest,
@@ -202,12 +204,14 @@ def delete_uom_conversion(
 @router.delete("/{conversion_id}/permanent", status_code=204)
 def permanent_delete_uom_conversion(
     conversion_id: int,
+    current_user: User = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
     """Permanently delete a UOM conversion by ID.
 
     Args:
         conversion_id: ID of the conversion to delete
+        current_user: Authenticated admin user
         db: Database session
     """
     service = UomConversionService(db)

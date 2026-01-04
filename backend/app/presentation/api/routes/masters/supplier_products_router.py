@@ -11,8 +11,10 @@ from sqlalchemy.orm import Session
 
 from app.application.services.common.export_service import ExportService
 from app.core.database import get_db
+from app.infrastructure.persistence.models.auth_models import User
 from app.infrastructure.persistence.models.masters_models import Product, Supplier
 from app.infrastructure.persistence.models.product_supplier_models import ProductSupplier
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.masters_schema import (
     SupplierProductCreate,
     SupplierProductResponse,
@@ -318,11 +320,16 @@ def delete_supplier_product(
 
 
 @router.delete("/{id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
-def permanent_delete_supplier_product(id: int, db: Session = Depends(get_db)):
+def permanent_delete_supplier_product(
+    id: int,
+    current_user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
     """仕入先商品を物理削除.
 
     Args:
         id: 仕入先商品ID
+        current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
     Returns:
