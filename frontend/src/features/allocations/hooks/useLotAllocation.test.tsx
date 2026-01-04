@@ -54,7 +54,7 @@ describe("useLotAllocation", () => {
         allocated_quantity: 0,
         product_code: "P001",
         warehouse_code: "WH01",
-        expiry_date: "2025-12-31",
+        expiry_date: "2027-12-31",
         warehouse_name: "Main Warehouse",
         status: "clean",
         lock_reason: null,
@@ -71,7 +71,7 @@ describe("useLotAllocation", () => {
         allocated_quantity: 0,
         product_code: "P001",
         warehouse_code: "WH01",
-        expiry_date: "2026-01-01",
+        expiry_date: "2028-01-01",
         warehouse_name: "Main Warehouse",
         status: "clean",
         lock_reason: null,
@@ -147,8 +147,18 @@ describe("useLotAllocation", () => {
       expect(result.current.isCandidatesLoading).toBe(false);
     });
 
+    // Wait for orders to be loaded
+    await waitFor(() => {
+      expect(result.current.orders.length).toBeGreaterThan(0);
+    });
+
     await act(async () => {
-      await result.current.autoAllocate(101);
+      result.current.autoAllocate(101);
+    });
+
+    // Wait for state update
+    await waitFor(() => {
+      expect(result.current.allocationsByLine[101]).toBeDefined();
     });
 
     expect(result.current.allocationsByLine[101]).toEqual({ 1: 10 });
