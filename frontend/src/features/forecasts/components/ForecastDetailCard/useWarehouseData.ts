@@ -69,8 +69,6 @@ export function useWarehouseData(productId: number) {
     warehouse.inventory.lotCount += 1;
   });
 
-
-
   // 直近の入荷予定を取得（未来の日付のみ）
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -109,9 +107,7 @@ export function useWarehouseData(productId: number) {
       warehouse.upcomingInbounds.push({
         date: plan.planned_arrival_date ?? "",
         quantity: Number(
-          "planned_quantity" in line
-            ? line.planned_quantity ?? 0
-            : plan.total_quantity ?? 0,
+          "planned_quantity" in line ? (line.planned_quantity ?? 0) : (plan.total_quantity ?? 0),
         ),
       });
     });
