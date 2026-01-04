@@ -121,9 +121,7 @@ def generate_lots(
         print("\n[SUCCESS] All products have ≤3 lots")
 
 
-def get_any_lot_id(
-    db: Session, product_id: int, required_qty: Decimal | None = None
-) -> int | None:
+def get_any_lot_id(db: Session, product_id: int, required_qty: Decimal | None = None) -> int | None:
     query = db.query(Lot).filter(Lot.product_id == product_id, Lot.status == "active")
 
     if required_qty is not None:
