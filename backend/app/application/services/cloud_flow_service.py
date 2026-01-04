@@ -3,10 +3,11 @@
 from typing import Any
 
 import httpx
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.database import SessionLocal
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
     CloudFlowConfig,
@@ -23,9 +24,10 @@ class CloudFlowService:
     同時実行を防止し、待ち順番を表示。
     """
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, background_tasks: BackgroundTasks | None = None):
         """Initialize with database session."""
         self.db = db
+        self.background_tasks = background_tasks
 
     def create_job(
         self,
@@ -203,13 +205,28 @@ class CloudFlowService:
             self._execute_flow_async(next_job)
 
     def _execute_flow_async(self, job: CloudFlowJob) -> None:
-        """フローを非同期実行（簡易実装）.
+        """フローを非同期実行.
 
-        TODO: 実際の運用では Celery や BackgroundTasks を使用すべき
+        BackgroundTasks でジョブ実行をバックグラウンドに回す。
         """
-        # 現時点ではモック実装
-        # 実際のPower Automate呼び出しはここで行う
-        pass
+        if self.background_tasks:
+            self.background_tasks.add_task(self._run_flow_job, job.id)
+            return
+
+        self._run_flow_job(job.id)
+
+    @staticmethod
+    def _run_flow_job(job_id: int) -> None:
+        """バックグラウンドでフロー実行を行う."""
+        db = SessionLocal()
+        try:
+            service = CloudFlowService(db)
+            job = db.get(CloudFlowJob, job_id)
+            if not job:
+                return
+            service.execute_flow(job)
+        finally:
+            db.close()
 
     def execute_flow(self, job: CloudFlowJob) -> dict[str, Any]:
         """フローを同期実行.
@@ -247,12 +264,17 @@ class CloudFlowService:
             return {"success": False, "error": error_msg}
 
     def _build_payload(self, job: CloudFlowJob, step: int) -> dict:
-        """各ステップ用のペイロードを構築.
-
-        TODO: 実際のペイロード形式に合わせて調整
-        """
+        """各ステップ用のペイロードを構築."""
         return {
+            "job_id": job.id,
+            "job_type": job.job_type,
             "step": step + 1,
             "start_date": str(job.start_date),
             "end_date": str(job.end_date),
+            "requested_by_user_id": job.requested_by_user_id,
+            "requested_by": job.requested_by_user.username
+            if job.requested_by_user
+            else None,
+            "requested_at": job.requested_at.isoformat() if job.requested_at else None,
+            "triggered_at": utcnow().isoformat(),
         }
