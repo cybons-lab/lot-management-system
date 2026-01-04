@@ -341,6 +341,20 @@ class MaterialDeliveryNoteOrchestrator:
             # No commit here; UoW rollback will handle it.
             raise e
 
+    def complete_step4(self, run_id: int) -> RpaRun:
+        """Step4完了."""
+        run = self.get_run(run_id)
+        if not run:
+            raise ValueError(f"Run not found: {run_id}")
+
+        if run.status != RpaRunStatus.DONE:
+            RpaStateManager.can_complete_step4(run)
+            run.status = RpaRunStatus.DONE
+            run.updated_at = utcnow()
+            self.db.flush()
+
+        return run
+
     def retry_step3_failed(self, run_id: int) -> RpaRun:
         """Step3再試行."""
         run = self.get_run(run_id)

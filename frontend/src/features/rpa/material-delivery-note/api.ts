@@ -249,6 +249,13 @@ export async function retryFailedItems(runId: number): Promise<RpaRun> {
 }
 
 /**
+ * Step4完了
+ */
+export async function completeStep4(runId: number): Promise<RpaRun> {
+  return http.post<RpaRun>(`rpa/material-delivery-note/runs/${runId}/step4-complete`, {});
+}
+
+/**
  * ロット候補を取得
  * 疎結合対応: マスタがなくてもエラーにならない
  */
