@@ -143,13 +143,21 @@ def generate_reservations(db: Session):
     forecasts = db.query(ForecastCurrent).all()
 
     for fc in forecasts:
+        if not fc.forecast_quantity or fc.forecast_quantity <= 0:
+            continue
+
+        forecast_period = fc.forecast_period
+        if not forecast_period and fc.forecast_date:
+            forecast_period = fc.forecast_date.strftime("%Y-%m")
+
         # Find a suitable lot for this product
-        lot_id = get_any_lot_id(db, fc.product_id)
+        lot_id = get_any_lot_id(db, fc.product_id, fc.forecast_quantity)
         if not lot_id:
             continue
 
         # Create reservation (100% copy of forecast)
         res = AllocationSuggestion(
+            forecast_id=fc.id,
             customer_id=fc.customer_id,
             delivery_place_id=fc.delivery_place_id,
             product_id=fc.product_id,
@@ -157,7 +165,7 @@ def generate_reservations(db: Session):
             quantity=fc.forecast_quantity,
             allocation_type="soft",
             source="forecast_copy",
-            forecast_period=fc.forecast_period,
+            forecast_period=forecast_period,
         )
         db.add(res)
 
