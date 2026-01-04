@@ -29,6 +29,7 @@ type InboundPlanLineLike = WarehouseSource & {
 type InboundPlanLike = WarehouseSource & {
   planned_arrival_date?: string;
   total_quantity?: number | string;
+  unit?: string;
   lines?: InboundPlanLineLike[];
 };
 
@@ -68,7 +69,7 @@ export function useWarehouseData(productId: number) {
     warehouse.inventory.lotCount += 1;
   });
 
-  const warehouseData: WarehouseData[] = Array.from(warehouseMap.values());
+
 
   // 直近の入荷予定を取得（未来の日付のみ）
   const today = new Date();
