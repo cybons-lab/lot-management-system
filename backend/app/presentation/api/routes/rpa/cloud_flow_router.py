@@ -1,6 +1,6 @@
 """Cloud Flow router - ジョブキュー管理API."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.application.services.cloud_flow_service import CloudFlowService
@@ -40,6 +40,7 @@ def _job_to_response(job, position: int | None = None) -> CloudFlowJobResponse:
 @router.post("/jobs", response_model=CloudFlowJobResponse, status_code=status.HTTP_201_CREATED)
 def create_job(
     request: CloudFlowJobCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CloudFlowJobResponse:
@@ -48,7 +49,7 @@ def create_job(
     ゲストユーザーは実行不可。
     他ユーザーが実行中の場合は待機状態で追加。
     """
-    service = CloudFlowService(db)
+    service = CloudFlowService(db, background_tasks=background_tasks)
     job = service.create_job(
         job_type=request.job_type,
         start_date=str(request.start_date),

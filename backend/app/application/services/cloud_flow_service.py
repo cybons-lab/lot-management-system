@@ -3,10 +3,11 @@
 from typing import Any
 
 import httpx
-from fastapi import HTTPException
+from fastapi import BackgroundTasks, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.database import SessionLocal
 from app.core.time_utils import utcnow
 from app.infrastructure.persistence.models import (
     CloudFlowConfig,
@@ -23,9 +24,10 @@ class CloudFlowService:
     同時実行を防止し、待ち順番を表示。
     """
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, background_tasks: BackgroundTasks | None = None):
         """Initialize with database session."""
         self.db = db
+        self.background_tasks = background_tasks
 
     def create_job(
         self,
@@ -192,24 +194,59 @@ class CloudFlowService:
         return job
 
     def _start_next_pending_job(self, job_type: str) -> None:
-        """次の待機ジョブを開始."""
+        """次の待機ジョブを開始.
+
+        Note: このメソッドはジョブのステータスを RUNNING に更新するのみ。
+        実際のフロー実行は _run_flow_job 内のループで行う。
+        これにより再帰呼び出しを防ぎ、DBコネクション枯渇を回避する。
+        """
         pending_jobs = self.get_pending_jobs(job_type)
         if pending_jobs:
             next_job = pending_jobs[0]
             next_job.status = CloudFlowJobStatus.RUNNING
             next_job.started_at = utcnow()
             self.db.commit()
-            # フローを実行
-            self._execute_flow_async(next_job)
 
     def _execute_flow_async(self, job: CloudFlowJob) -> None:
-        """フローを非同期実行（簡易実装）.
+        """フローを非同期実行.
 
-        TODO: 実際の運用では Celery や BackgroundTasks を使用すべき
+        BackgroundTasks でジョブ実行をバックグラウンドに回す。
         """
-        # 現時点ではモック実装
-        # 実際のPower Automate呼び出しはここで行う
-        pass
+        if self.background_tasks:
+            self.background_tasks.add_task(self._run_flow_job, job.id)
+            return
+
+        self._run_flow_job(job.id)
+
+    @staticmethod
+    def _run_flow_job(job_id: int) -> None:
+        """バックグラウンドでフロー実行を行う.
+
+        このメソッドでは単一DBセッションを使い、キュー内のジョブを
+        ループで順次処理する。再帰呼び出しを避けることで、
+        コネクション枯渇やスタックオーバーフローを防止する。
+        """
+        db = SessionLocal()
+        try:
+            service = CloudFlowService(db)
+            job = db.get(CloudFlowJob, job_id)
+            if not job:
+                return
+
+            # ジョブを実行し、完了後に次の待機ジョブを同じセッション内で処理
+            while job:
+                service.execute_flow(job)
+                # 次の待機ジョブを取得（ループ内で再帰を回避）
+                pending_jobs = service.get_pending_jobs(job.job_type)
+                if not pending_jobs:
+                    break
+                next_job = pending_jobs[0]
+                next_job.status = CloudFlowJobStatus.RUNNING
+                next_job.started_at = utcnow()
+                db.commit()
+                job = next_job
+        finally:
+            db.close()
 
     def execute_flow(self, job: CloudFlowJob) -> dict[str, Any]:
         """フローを同期実行.
@@ -247,12 +284,15 @@ class CloudFlowService:
             return {"success": False, "error": error_msg}
 
     def _build_payload(self, job: CloudFlowJob, step: int) -> dict:
-        """各ステップ用のペイロードを構築.
-
-        TODO: 実際のペイロード形式に合わせて調整
-        """
+        """各ステップ用のペイロードを構築."""
         return {
+            "job_id": job.id,
+            "job_type": job.job_type,
             "step": step + 1,
             "start_date": str(job.start_date),
             "end_date": str(job.end_date),
+            "requested_by_user_id": job.requested_by_user_id,
+            "requested_by": job.requested_by_user.display_name if job.requested_by_user else None,
+            "requested_at": job.requested_at.isoformat() if job.requested_at else None,
+            "triggered_at": utcnow().isoformat(),
         }
