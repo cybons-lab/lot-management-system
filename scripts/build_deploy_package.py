@@ -178,28 +178,71 @@ def generate_requirements(backend_dir: Path, output_path: Path) -> bool:
     return False
 
 
-def build_frontend(frontend_dir: Path) -> bool:
-    """フロントエンドをビルド."""
-    print_step("フロントエンドをビルド中...")
+def build_frontend_with_docker(frontend_dir: Path) -> bool:
+    """Docker経由でフロントエンドをビルド."""
+    print("Docker経由でビルドを試みます...")
 
-    dist_dir = frontend_dir / "dist"
+    # docker compose が使えるか確認
+    try:
+        # まず docker compose version を確認
+        result = subprocess.run(
+            ["docker", "compose", "version"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            print("docker compose が利用できません")
+            return False
+    except FileNotFoundError:
+        print("docker コマンドが見つかりません")
+        return False
 
-    # 既存の dist があればスキップするかどうか確認
-    if dist_dir.exists() and any(dist_dir.iterdir()):
-        print("既存のビルドが見つかりました。再ビルドします...")
-        shutil.rmtree(dist_dir)
+    # npm install を Docker 経由で実行
+    print("Docker: npm install を実行中...")
+    result = subprocess.run(
+        ["docker", "compose", "run", "--rm", "frontend", "npm", "install"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(f"Docker npm install に失敗: {result.stderr}")
+        return False
+
+    # npm run build を Docker 経由で実行
+    print("Docker: npm run build を実行中...")
+    result = subprocess.run(
+        ["docker", "compose", "run", "--rm", "frontend", "npm", "run", "build"],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        print(f"Docker npm run build に失敗: {result.stderr}")
+        return False
+
+    return True
+
+
+def build_frontend_with_npm(frontend_dir: Path) -> bool:
+    """ローカルnpm経由でフロントエンドをビルド."""
+    print("ローカルnpm経由でビルドを試みます...")
 
     # npm install
     print("npm install を実行中...")
-    result = subprocess.run(
-        ["npm", "install"],
-        cwd=frontend_dir,
-        capture_output=True,
-        text=True,
-        shell=(os.name == "nt"),  # Windows では shell=True が必要
-    )
-    if result.returncode != 0:
-        print_error(f"npm install に失敗: {result.stderr}")
+    try:
+        result = subprocess.run(
+            ["npm", "install"],
+            cwd=frontend_dir,
+            capture_output=True,
+            text=True,
+            shell=(os.name == "nt"),  # Windows では shell=True が必要
+        )
+        if result.returncode != 0:
+            print(f"npm install に失敗: {result.stderr}")
+            return False
+    except FileNotFoundError:
+        print("npm コマンドが見つかりません")
         return False
 
     # npm run build
@@ -212,15 +255,47 @@ def build_frontend(frontend_dir: Path) -> bool:
         shell=(os.name == "nt"),
     )
     if result.returncode != 0:
-        print_error(f"npm run build に失敗: {result.stderr}")
+        print(f"npm run build に失敗: {result.stderr}")
         return False
 
-    if not dist_dir.exists():
-        print_error("dist ディレクトリが生成されませんでした")
-        return False
-
-    print_success("フロントエンドのビルドが完了しました")
     return True
+
+
+def build_frontend(frontend_dir: Path) -> bool:
+    """フロントエンドをビルド（Docker優先、npmにフォールバック）."""
+    print_step("フロントエンドをビルド中...")
+
+    dist_dir = frontend_dir / "dist"
+
+    # 既存の dist があれば削除して再ビルド
+    if dist_dir.exists() and any(dist_dir.iterdir()):
+        print("既存のビルドが見つかりました。再ビルドします...")
+        shutil.rmtree(dist_dir)
+
+    # 1. Docker経由でビルドを試みる
+    if build_frontend_with_docker(frontend_dir):
+        if dist_dir.exists():
+            print_success("Docker経由でフロントエンドのビルドが完了しました")
+            return True
+        else:
+            print("Docker経由でビルドしましたが、distが見つかりません")
+
+    # 2. ローカルnpm経由でビルドを試みる
+    print("\nDocker経由でのビルドに失敗。ローカルnpmを試みます...")
+    if build_frontend_with_npm(frontend_dir):
+        if dist_dir.exists():
+            print_success("ローカルnpm経由でフロントエンドのビルドが完了しました")
+            return True
+        else:
+            print_error("ビルドは成功しましたが、distディレクトリが生成されませんでした")
+            return False
+
+    # 両方失敗
+    print_error("フロントエンドのビルドに失敗しました")
+    print_error("以下のいずれかが必要です:")
+    print_error("  - Docker Desktop が起動していること")
+    print_error("  - または npm がインストールされていること")
+    return False
 
 
 def copy_backend(temp_dir: Path) -> bool:
