@@ -40,8 +40,8 @@ def _job_to_response(job, position: int | None = None) -> CloudFlowJobResponse:
 @router.post("/jobs", response_model=CloudFlowJobResponse, status_code=status.HTTP_201_CREATED)
 def create_job(
     request: CloudFlowJobCreate,
-    db: Session = Depends(get_db),
     background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> CloudFlowJobResponse:
     """ジョブを作成（キューに追加）.

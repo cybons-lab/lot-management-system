@@ -3,7 +3,6 @@
 from datetime import date
 
 import httpx
-import pytest
 from sqlalchemy.orm import Session
 
 from app.application.services.cloud_flow_service import CloudFlowService
