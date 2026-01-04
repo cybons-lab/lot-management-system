@@ -211,6 +211,7 @@ def permanent_delete_uom_conversion(
 
     Args:
         conversion_id: ID of the conversion to delete
+        current_user: Authenticated admin user
         db: Database session
     """
     service = UomConversionService(db)

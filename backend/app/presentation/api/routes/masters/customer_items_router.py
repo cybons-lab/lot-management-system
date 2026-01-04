@@ -169,6 +169,7 @@ def permanent_delete_customer_item(
     Args:
         customer_id: 得意先ID
         external_product_code: 得意先品番
+        current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
     Raises:

@@ -329,6 +329,7 @@ def permanent_delete_supplier_product(
 
     Args:
         id: 仕入先商品ID
+        current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
     Returns:

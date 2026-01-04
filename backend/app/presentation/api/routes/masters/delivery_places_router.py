@@ -235,6 +235,7 @@ def permanent_delete_delivery_place(
 
     Args:
         delivery_place_id: 納入先ID
+        current_user: 認証済み管理者ユーザー
         db: データベースセッション
 
     Returns:
