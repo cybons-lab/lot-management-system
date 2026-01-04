@@ -21,9 +21,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useState, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
-import { retryFailedItems, updateItem } from "../api";
+import { completeStep4, retryFailedItems, updateItem } from "../api";
 import { useRun } from "../hooks";
 
 import { Button, Input } from "@/components/ui";
@@ -73,6 +74,7 @@ export function Step4DetailPage() {
   const { runId } = useParams();
   const id = parseInt(runId || "0", 10);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [layerFilter, setLayerFilter] = useState<string>("all");
 
@@ -87,6 +89,19 @@ export function Step4DetailPage() {
     mutationFn: ({ itemId, lotNo }: { itemId: number; lotNo: string }) =>
       updateItem(id, itemId, { lot_no: lotNo }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["rpa-run", id] }),
+  });
+
+  const completeMutation = useMutation({
+    mutationFn: () => completeStep4(id),
+    onSuccess: () => {
+      toast.success("Step4を完了しました");
+      queryClient.invalidateQueries({ queryKey: ["rpa-run", id] });
+      queryClient.invalidateQueries({ queryKey: ["material-delivery-note-runs"] });
+      navigate(ROUTES.RPA.MATERIAL_DELIVERY_NOTE.STEP4);
+    },
+    onError: (error: Error) => {
+      toast.error(`完了処理に失敗しました: ${error.message}`);
+    },
   });
 
   const handleLotNoBlur = (itemId: number, value: string) => {
@@ -146,8 +161,10 @@ export function Step4DetailPage() {
   };
 
   const handleComplete = () => {
-    // TODO: Implement complete action
-    alert("完了処理は未実装です");
+    if (completeMutation.isPending) return;
+    if (confirm("Step4を完了しますか？")) {
+      completeMutation.mutate();
+    }
   };
 
   return (
@@ -186,8 +203,12 @@ export function Step4DetailPage() {
                     NG再実行 ({mismatchCount}件)
                   </Button>
                 )}
-                <Button onClick={handleComplete}>
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                <Button onClick={handleComplete} disabled={completeMutation.isPending}>
+                  {completeMutation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                  )}
                   完了
                 </Button>
               </>
@@ -223,6 +244,14 @@ export function Step4DetailPage() {
       {/* Step4にアクセス可能な場合のみ表示 */}
       {canAccessStep4 && (
         <>
+          {completeMutation.isError && (
+            <div className="mb-4 flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              <span className="text-sm text-red-700">
+                完了処理に失敗しました。再度お試しください。
+              </span>
+            </div>
+          )}
           {/* ステータスバナー */}
           <div className="mb-6 flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm">
             <div className="flex items-center gap-4">

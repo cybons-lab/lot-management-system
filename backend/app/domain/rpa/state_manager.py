@@ -155,6 +155,12 @@ class RpaStateManager:
             raise ValueError("Can only retry from Step4 Review")
 
     @staticmethod
+    def can_complete_step4(run: RpaRun) -> None:
+        """Step4完了が可能か検証する."""
+        if run.status != RpaRunStatus.READY_FOR_STEP4_REVIEW:
+            raise ValueError(f"Invalid status for Step4 completion: {run.status}")
+
+    @staticmethod
     def should_transition_to_ready_for_step2(run: RpaRun) -> bool:
         """DRAFT -> READY_FOR_STEP2 への自動遷移判定."""
         if run.status == RpaRunStatus.DRAFT:

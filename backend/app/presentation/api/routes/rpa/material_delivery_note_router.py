@@ -484,6 +484,22 @@ def execute_step4_check(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
+@router.post("/runs/{run_id}/step4-complete", response_model=RpaRunResponse)
+def complete_step4(
+    run_id: int,
+    uow: UnitOfWork = Depends(get_uow),
+):
+    """Step4完了としてステータスを更新する."""
+    service = MaterialDeliveryNoteOrchestrator(uow)
+    try:
+        run = service.complete_step4(run_id)
+        layer_codes = [item.layer_code for item in run.items if item.layer_code]
+        maker_map = _get_maker_map(uow.session, layer_codes)
+        return _build_run_response(run, maker_map)
+    except ValueError as e:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
 @router.post("/runs/{run_id}/retry-failed", response_model=RpaRunResponse)
 def retry_failed_items(
     run_id: int,
