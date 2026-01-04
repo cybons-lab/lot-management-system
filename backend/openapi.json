@@ -1988,7 +1988,7 @@
           "lots"
         ],
         "summary": "List Lots",
-        "description": "ロット一覧取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数\n    product_id: 製品ID\n    product_code: 製品コード\n    supplier_code: 仕入先コード\n    warehouse_code: 倉庫コード\n    expiry_from: 有効期限開始日\n    expiry_to: 有効期限終了日\n    with_stock: 在庫ありのみ取得するかどうか\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用）\n    db: データベースセッション\n\nロット一覧取得（v_lots_with_master ビュー使用）.\n\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.\nFEFO (先入先出) 順に並べて返す.",
+        "description": "ロット一覧取得.\n\nv_lots_with_master ビューを使用してロット一覧を取得します。\n製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、\nFEFO (First Expiry First Out) 順に並べて返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    product_id: 製品ID（フィルタ）\n    product_code: 製品コード（フィルタ）\n    supplier_code: 仕入先コード（フィルタ）\n    warehouse_code: 倉庫コード（フィルタ）\n    expiry_from: 有効期限開始日（フィルタ）\n    expiry_to: 有効期限終了日（フィルタ）\n    with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）\n    db: データベースセッション\n\nReturns:\n    list[LotResponse]: ロット情報のリスト",
         "operationId": "list_lots_api_lots_get",
         "security": [
           {
@@ -2167,7 +2167,7 @@
           "lots"
         ],
         "summary": "Create Lot",
-        "description": "ロット新規登録.\n\n- ロットマスタ登録\n- 現在在庫テーブル初期化",
+        "description": "ロット新規登録.\n\nロットマスタへの登録と現在在庫テーブルの初期化を行います。\n\nArgs:\n    lot: ロット作成リクエストデータ\n    db: データベースセッション\n\nReturns:\n    LotResponse: 作成されたロット情報\n\nRaises:\n    HTTPException: ロット作成に失敗した場合",
         "operationId": "create_lot_api_lots_post",
         "requestBody": {
           "required": true,
@@ -2209,7 +2209,7 @@
           "lots"
         ],
         "summary": "Get Lot",
-        "description": "ロット詳細取得（v2.2: Lot モデルから直接取得）.",
+        "description": "ロット詳細取得.\n\n指定されたIDのロット情報を取得します（v2.2: Lot モデルから直接取得）。\n\nArgs:\n    lot_id: ロットID\n    db: データベースセッション\n\nReturns:\n    LotResponse: ロット詳細情報\n\nRaises:\n    HTTPException: ロットが存在しない場合（404）",
         "operationId": "get_lot_api_lots__lot_id__get",
         "parameters": [
           {
@@ -2250,7 +2250,7 @@
           "lots"
         ],
         "summary": "Update Lot",
-        "description": "ロット更新.",
+        "description": "ロット更新.\n\nArgs:\n    lot_id: ロットID\n    lot: ロット更新リクエストデータ\n    db: データベースセッション\n\nReturns:\n    LotResponse: 更新されたロット情報\n\nRaises:\n    HTTPException: ロットが存在しない場合（404）または更新に失敗した場合",
         "operationId": "update_lot_api_lots__lot_id__put",
         "parameters": [
           {
@@ -2347,7 +2347,7 @@
           "lots"
         ],
         "summary": "Lock Lot",
-        "description": "ロットをロックする（数量指定可）.",
+        "description": "ロットをロックする（数量指定可）.\n\nArgs:\n    lot_id: ロットID\n    lock_data: ロックデータ（数量、理由等）\n    db: データベースセッション\n\nReturns:\n    LotResponse: ロック後のロット情報\n\nRaises:\n    HTTPException: ロットが存在しない場合（404）またはロックに失敗した場合",
         "operationId": "lock_lot_api_lots__lot_id__lock_post",
         "parameters": [
           {
@@ -2400,7 +2400,7 @@
           "lots"
         ],
         "summary": "Unlock Lot",
-        "description": "ロットのロックを解除する（数量指定可）.",
+        "description": "ロットのロックを解除する（数量指定可）.\n\nArgs:\n    lot_id: ロットID\n    unlock_data: ロック解除データ（数量指定等、省略可）\n    db: データベースセッション\n\nReturns:\n    LotResponse: ロック解除後のロット情報\n\nRaises:\n    HTTPException: ロットが存在しない場合（404）またはロック解除に失敗した場合",
         "operationId": "unlock_lot_api_lots__lot_id__unlock_post",
         "parameters": [
           {
@@ -2460,7 +2460,7 @@
           "lots"
         ],
         "summary": "List Lot Movements",
-        "description": "ロットの在庫変動履歴取得.",
+        "description": "ロットの在庫変動履歴取得.\n\nArgs:\n    lot_id: ロットID\n    db: データベースセッション\n\nReturns:\n    list[StockMovementResponse]: 在庫変動履歴のリスト\n\nRaises:\n    HTTPException: ロットが存在しない場合（404）",
         "operationId": "list_lot_movements_api_lots__lot_id__movements_get",
         "parameters": [
           {
@@ -2507,7 +2507,7 @@
           "lots"
         ],
         "summary": "Create Stock Movement",
-        "description": "在庫変動記録.\n\n- 在庫変動履歴追加\n- 現在在庫更新",
+        "description": "在庫変動記録.\n\n在庫変動履歴の追加と現在在庫の更新を行います。\n\nArgs:\n    movement: 在庫変動データ\n    db: データベースセッション\n\nReturns:\n    StockMovementResponse: 記録された在庫変動情報\n\nRaises:\n    HTTPException: 在庫変動記録に失敗した場合",
         "operationId": "create_stock_movement_api_lots_movements_post",
         "requestBody": {
           "content": {
@@ -2549,7 +2549,7 @@
           "orders"
         ],
         "summary": "Get Confirmed Order Lines",
-        "description": "Get all order lines that are fully reserved and not yet registered in\nSAP.\n\nReturns lines where reserved_quantity >= converted_quantity and sap_order_no is NULL.\n\nP3: Uses LotReservation instead of Allocation.",
+        "description": "引当確定済み受注明細を取得（SAP登録用）.\n\nロット引当が完了し、まだSAPに登録されていない受注明細を取得します。\nreserved_quantity >= converted_quantity かつ sap_order_no が NULL の明細を返します。\n\nArgs:\n    db: データベースセッション\n\nReturns:\n    list[ConfirmedOrderLineResponse]: 引当確定済み受注明細のリスト\n\nNote:\n    P3: Allocation廃止、LotReservationを使用",
         "operationId": "get_confirmed_order_lines_api_orders_confirmed_order_lines_get",
         "responses": {
           "200": {
@@ -2715,7 +2715,7 @@
           "orders"
         ],
         "summary": "List Orders",
-        "description": "受注一覧取得（読み取り専用）.",
+        "description": "受注一覧取得（読み取り専用）.\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    status: ステータスフィルタ\n    customer_code: 顧客コードフィルタ\n    date_from: 受注日開始日フィルタ\n    date_to: 受注日終了日フィルタ\n    order_type: 受注種別フィルタ\n    prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）\n    db: データベースセッション\n    current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）\n\nReturns:\n    list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）",
         "operationId": "list_orders_api_orders_get",
         "security": [
           {
@@ -2868,7 +2868,7 @@
           "orders"
         ],
         "summary": "Create Order",
-        "description": "受注作成.",
+        "description": "受注作成.\n\nArgs:\n    order: 受注作成リクエストデータ\n    uow: Unit of Work（トランザクション管理）\n\nReturns:\n    OrderWithLinesResponse: 作成された受注情報（明細含む）\n\nRaises:\n    HTTPException: 受注作成に失敗した場合",
         "operationId": "create_order_api_orders_post",
         "requestBody": {
           "required": true,
@@ -2910,7 +2910,7 @@
           "orders"
         ],
         "summary": "Get Order",
-        "description": "受注詳細取得（読み取り専用、明細含む）.",
+        "description": "受注詳細取得（読み取り専用、明細含む）.\n\nArgs:\n    order_id: 受注ID\n    db: データベースセッション\n\nReturns:\n    OrderWithLinesResponse: 受注詳細情報（明細含む）\n\nRaises:\n    HTTPException: 受注が存在しない場合（404）",
         "operationId": "get_order_api_orders__order_id__get",
         "parameters": [
           {
@@ -3574,7 +3574,7 @@
           "alerts"
         ],
         "summary": "List Alerts",
-        "description": "Get list of current alerts.\n\nQuery parameters:\n- severity: Filter by severity (comma-separated: critical,warning,info)\n- category: Filter by category (comma-separated: order,inventory,lot,forecast)\n- limit: Max alerts to return (default: 50, max: 500)\n- only_open: Only show open alerts (default: true)\n\nReturns:\n    List of alert items sorted by severity and time",
+        "description": "現在のアラート一覧を取得.\n\nArgs:\n    severity: 重要度でフィルタ（カンマ区切り: critical,warning,info）\n    category: カテゴリでフィルタ（カンマ区切り: order,inventory,lot,forecast）\n    limit: 取得件数上限（デフォルト: 50、最大: 500）\n    only_open: オープンなアラートのみ表示（デフォルト: true）\n    db: データベースセッション\n\nReturns:\n    重要度と時間でソートされたアラートアイテムのリスト",
         "operationId": "list_alerts_api_alerts_get",
         "parameters": [
           {
@@ -3674,7 +3674,7 @@
           "alerts"
         ],
         "summary": "Get Alert Summary",
-        "description": "Get summary of all current alerts.\n\nReturns:\n    Alert counts grouped by severity and category",
+        "description": "現在のアラートサマリーを取得.\n\nArgs:\n    db: データベースセッション\n\nReturns:\n    重要度とカテゴリ別にグループ化されたアラート件数",
         "operationId": "get_alert_summary_api_alerts_summary_get",
         "responses": {
           "200": {
@@ -3696,7 +3696,7 @@
           "allocations"
         ],
         "summary": "Preview Allocation",
-        "description": "FEFO allocation preview.",
+        "description": "FEFO引当プレビュー.\n\n指定された受注に対してFEFO（先入先出）アルゴリズムで\n自動引当をシミュレーションし、結果をプレビュー表示します。\n\nArgs:\n    request: プレビューリクエスト（受注ID含む）\n    db: データベースセッション\n    current_user: 現在のログインユーザー（認証必須）\n\nReturns:\n    FefoPreviewResponse: 引当プレビュー結果（各明細の引当候補ロット情報）\n\nRaises:\n    HTTPException: 受注が見つからない場合（404）またはバリデーションエラー（400）",
         "operationId": "preview_allocation_api_allocations_preview_post",
         "requestBody": {
           "content": {
@@ -3743,7 +3743,7 @@
           "allocations"
         ],
         "summary": "Commit Allocation",
-        "description": "Commit FEFO allocation.",
+        "description": "FEFO引当確定.\n\nプレビューした引当結果を確定し、ロット予約を作成します。\n\nArgs:\n    request: 引当確定リクエスト（受注ID含む）\n    db: データベースセッション\n    current_user: 現在のログインユーザー（認証必須）\n\nReturns:\n    AllocationCommitResponse: 引当確定結果（作成された予約ID等）\n\nRaises:\n    HTTPException: 受注が見つからない、在庫不足、または確定に失敗した場合",
         "operationId": "commit_allocation_api_allocations_commit_post",
         "requestBody": {
           "content": {
@@ -4932,7 +4932,7 @@
           "customers"
         ],
         "summary": "List Customers",
-        "description": "Return customers.\n\nBy default, only active customers (valid_to >= today) are returned.\nSet include_inactive=true to include soft-deleted customers.",
+        "description": "顧客一覧を取得.\n\nデフォルトでは有効な顧客（valid_to >= 今日）のみを返します。\n論理削除された顧客も含める場合はinclude_inactive=trueを指定してください。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    include_inactive: 論理削除済み顧客を含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    list[CustomerResponse]: 顧客情報のリスト",
         "operationId": "list_customers_api_masters_customers_get",
         "parameters": [
           {
@@ -5000,7 +5000,7 @@
           "customers"
         ],
         "summary": "Create Customer",
-        "description": "Create a new customer.",
+        "description": "顧客を新規作成.\n\nArgs:\n    customer: 顧客作成リクエストデータ\n    db: データベースセッション\n\nReturns:\n    CustomerResponse: 作成された顧客情報\n\nRaises:\n    HTTPException: 顧客コードが既に存在する場合（409）",
         "operationId": "create_customer_api_masters_customers_post",
         "requestBody": {
           "required": true,
@@ -5042,7 +5042,7 @@
           "customers"
         ],
         "summary": "Download Customers Template",
-        "description": "Download customer import template.",
+        "description": "顧客インポートテンプレートをダウンロード.\n\nArgs:\n    format: ファイル形式（'csv' または 'xlsx'、デフォルト: csv）\n    include_sample: サンプル行を含めるか（デフォルト: True）\n\nReturns:\n    顧客インポート用テンプレートファイル",
         "operationId": "download_customers_template_api_masters_customers_template_download_get",
         "parameters": [
           {
@@ -5094,7 +5094,7 @@
           "customers"
         ],
         "summary": "Export Customers",
-        "description": "Export customers to CSV or Excel.",
+        "description": "顧客データをCSVまたはExcelでエクスポート.\n\nArgs:\n    format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: エクスポートファイル",
         "operationId": "export_customers_api_masters_customers_export_download_get",
         "parameters": [
           {
@@ -5136,7 +5136,7 @@
           "customers"
         ],
         "summary": "Get Customer",
-        "description": "Fetch a customer by code.",
+        "description": "顧客コードで顧客を取得.\n\nArgs:\n    customer_code: 顧客コード\n    db: データベースセッション\n\nReturns:\n    CustomerResponse: 顧客詳細情報\n\nRaises:\n    HTTPException: 顧客が存在しない場合（404）",
         "operationId": "get_customer_api_masters_customers__customer_code__get",
         "parameters": [
           {
@@ -5404,7 +5404,7 @@
           "delivery-places"
         ],
         "summary": "Download Delivery Places Template",
-        "description": "Download delivery place import template.\n\nArgs:\n    format: 'csv' or 'xlsx' (default: xlsx)\n    include_sample: Whether to include a sample row (default: True)\n\nReturns:\n    Template file for delivery place import",
+        "description": "納入先インポートテンプレートをダウンロード.\n\nArgs:\n    format: ファイル形式（'csv' または 'xlsx'、デフォルト: xlsx）\n    include_sample: サンプル行を含めるか（デフォルト: True）\n\nReturns:\n    納入先インポート用のテンプレートファイル",
         "operationId": "download_delivery_places_template_api_masters_delivery_places_template_download_get",
         "parameters": [
           {
@@ -5456,7 +5456,7 @@
           "delivery-places"
         ],
         "summary": "Export Delivery Places",
-        "description": "Export delivery places to CSV or Excel.",
+        "description": "納入先をエクスポート.\n\nArgs:\n    format: エクスポート形式（'csv' または 'xlsx'）\n    db: データベースセッション\n\nReturns:\n    Excel形式またはCSV形式のファイルレスポンス",
         "operationId": "export_delivery_places_api_masters_delivery_places_export_download_get",
         "parameters": [
           {
@@ -5498,7 +5498,7 @@
           "delivery-places"
         ],
         "summary": "List Delivery Places",
-        "description": "Return delivery places, optionally filtered by customer_id.",
+        "description": "納入先一覧を取得.\n\nデフォルトでは有効な納入先のみを返します。\nオプションで得意先IDによるフィルタリングが可能です。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限\n    customer_id: 得意先IDでフィルタ\n    include_inactive: 論理削除済み納入先を含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    納入先のリスト",
         "operationId": "list_delivery_places_api_masters_delivery_places_get",
         "parameters": [
           {
@@ -5584,7 +5584,7 @@
           "delivery-places"
         ],
         "summary": "Create Delivery Place",
-        "description": "Create a new delivery place.",
+        "description": "納入先を新規作成.\n\n得意先の存在確認と納入先コードの重複チェックを行います。\n\nArgs:\n    data: 納入先作成データ\n    db: データベースセッション\n\nReturns:\n    DeliveryPlaceResponse: 作成された納入先情報\n\nRaises:\n    HTTPException: 得意先が見つからない場合は400\n    HTTPException: 納入先コードが既に存在する場合は400",
         "operationId": "create_delivery_place_api_masters_delivery_places_post",
         "requestBody": {
           "required": true,
@@ -5626,7 +5626,7 @@
           "delivery-places"
         ],
         "summary": "Get Delivery Place",
-        "description": "Get a delivery place by ID.",
+        "description": "納入先詳細を取得.\n\nArgs:\n    delivery_place_id: 納入先ID\n    db: データベースセッション\n\nReturns:\n    DeliveryPlaceResponse: 納入先詳細\n\nRaises:\n    HTTPException: 納入先が見つからない場合は404",
         "operationId": "get_delivery_place_api_masters_delivery_places__delivery_place_id__get",
         "parameters": [
           {
@@ -5667,7 +5667,7 @@
           "delivery-places"
         ],
         "summary": "Update Delivery Place",
-        "description": "Update a delivery place.",
+        "description": "納入先を更新.\n\n得意先IDを変更する場合は、得意先の存在確認を行います。\n\nArgs:\n    delivery_place_id: 納入先ID\n    data: 更新データ\n    db: データベースセッション\n\nReturns:\n    DeliveryPlaceResponse: 更新後の納入先情報\n\nRaises:\n    HTTPException: 納入先が見つからない場合は404\n    HTTPException: 得意先が見つからない場合は400",
         "operationId": "update_delivery_place_api_masters_delivery_places__delivery_place_id__put",
         "parameters": [
           {
@@ -5718,7 +5718,7 @@
           "delivery-places"
         ],
         "summary": "Delete Delivery Place",
-        "description": "Soft delete a delivery place by setting valid_to date.",
+        "description": "納入先を論理削除（valid_toを設定して無効化）.\n\nArgs:\n    delivery_place_id: 納入先ID\n    end_date: 有効終了日（省略時は昨日）\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: 納入先が見つからない場合は404",
         "operationId": "delete_delivery_place_api_masters_delivery_places__delivery_place_id__delete",
         "parameters": [
           {
@@ -5773,7 +5773,7 @@
           "delivery-places"
         ],
         "summary": "Permanent Delete Delivery Place",
-        "description": "Permanently delete a delivery place (admin only).\n\nOnly allowed if the place has no references in other tables.",
+        "description": "納入先を物理削除（管理者のみ）.\n\n他のテーブルから参照されていない場合のみ削除可能です。\n\nArgs:\n    delivery_place_id: 納入先ID\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: 納入先が見つからない場合は404\n    HTTPException: 他のデータから参照されている場合は409\n\nNote:\n    TODO: 管理者ロールチェックを追加",
         "operationId": "permanent_delete_delivery_place_api_masters_delivery_places__delivery_place_id__permanent_delete",
         "parameters": [
           {
@@ -5809,7 +5809,7 @@
           "delivery-places"
         ],
         "summary": "Restore Delivery Place",
-        "description": "Restore a soft-deleted delivery place.",
+        "description": "論理削除された納入先を復元.\n\nArgs:\n    delivery_place_id: 納入先ID\n    db: データベースセッション\n\nReturns:\n    DeliveryPlaceResponse: 復元された納入先情報\n\nRaises:\n    HTTPException: 納入先が見つからない場合は404",
         "operationId": "restore_delivery_place_api_masters_delivery_places__delivery_place_id__restore_post",
         "parameters": [
           {
@@ -5852,7 +5852,7 @@
           "products"
         ],
         "summary": "List Products",
-        "description": "Return a paginated list of products.",
+        "description": "製品一覧を取得.\n\nデフォルトでは有効な製品のみを返します。\n論理削除された製品も含める場合はinclude_inactive=trueを指定してください。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    search: 検索キーワード（製品コード、製品名で部分一致）\n    include_inactive: 論理削除済み製品を含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    list[ProductOut]: 製品情報のリスト",
         "operationId": "list_products_api_masters_products_get",
         "parameters": [
           {
@@ -6030,7 +6030,7 @@
           "products"
         ],
         "summary": "Export Products",
-        "description": "Export products to CSV or Excel.",
+        "description": "製品データをCSVまたはExcelでエクスポート.\n\nArgs:\n    format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: エクスポートファイル",
         "operationId": "export_products_api_masters_products_export_download_get",
         "parameters": [
           {
@@ -6072,7 +6072,7 @@
           "products"
         ],
         "summary": "Get Product",
-        "description": "Fetch a product by its code (maker_part_code).",
+        "description": "製品コードで製品を取得.\n\nArgs:\n    product_code: 製品コード（maker_part_code）\n    db: データベースセッション\n\nReturns:\n    ProductOut: 製品詳細情報\n\nRaises:\n    HTTPException: 製品が存在しない場合（404）",
         "operationId": "get_product_api_masters_products__product_code__get",
         "parameters": [
           {
@@ -6381,7 +6381,7 @@
           "suppliers"
         ],
         "summary": "List Suppliers",
-        "description": "List suppliers.\n\nBy default, only active suppliers (valid_to >= today) are returned.\nSet include_inactive=true to include soft-deleted suppliers.",
+        "description": "サプライヤー一覧を取得.\n\nデフォルトでは有効なサプライヤー（valid_to >= 今日）のみを返します。\n論理削除されたサプライヤーも含める場合はinclude_inactive=trueを指定してください。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    include_inactive: 論理削除済みサプライヤーを含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    list[SupplierResponse]: サプライヤー情報のリスト",
         "operationId": "list_suppliers_api_masters_suppliers_get",
         "parameters": [
           {
@@ -6449,7 +6449,7 @@
           "suppliers"
         ],
         "summary": "Create Supplier",
-        "description": "Create supplier.",
+        "description": "サプライヤーを新規作成.\n\nArgs:\n    supplier: サプライヤー作成リクエストデータ\n    db: データベースセッション\n\nReturns:\n    SupplierResponse: 作成されたサプライヤー情報\n\nRaises:\n    HTTPException: サプライヤーコードが既に存在する場合（409）",
         "operationId": "create_supplier_api_masters_suppliers_post",
         "requestBody": {
           "required": true,
@@ -6585,7 +6585,7 @@
           "suppliers"
         ],
         "summary": "Get Supplier",
-        "description": "Get supplier by code.",
+        "description": "サプライヤーコードでサプライヤーを取得.\n\nArgs:\n    supplier_code: サプライヤーコード\n    db: データベースセッション\n\nReturns:\n    SupplierResponse: サプライヤー詳細情報\n\nRaises:\n    HTTPException: サプライヤーが存在しない場合（404）",
         "operationId": "get_supplier_api_masters_suppliers__supplier_code__get",
         "parameters": [
           {
@@ -6853,7 +6853,7 @@
           "masters"
         ],
         "summary": "List Supplier Products",
-        "description": "Get supplier products (仕入先商品一覧).\n\nproduct_suppliers テーブルから製品-仕入先の関連を取得。",
+        "description": "仕入先商品一覧を取得.\n\nproduct_suppliersテーブルから製品-仕入先の関連情報を取得します。\nデフォルトでは有効なレコードのみを返します。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数上限（最大1000件）\n    supplier_id: 仕入先IDでフィルタ\n    include_inactive: 論理削除済みレコードを含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    仕入先商品のリスト（製品情報と仕入先情報を含む）",
         "operationId": "list_supplier_products_api_masters_supplier_products_get",
         "parameters": [
           {
@@ -6932,7 +6932,7 @@
           "masters"
         ],
         "summary": "Create Supplier Product",
-        "description": "Create a new supplier product.",
+        "description": "仕入先商品を新規作成.\n\n製品と仕入先の関連を登録します。\nis_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。\n\nArgs:\n    data: 仕入先商品作成データ\n    db: データベースセッション\n\nReturns:\n    SupplierProductResponse: 作成された仕入先商品情報\n\nRaises:\n    HTTPException: 製品-仕入先のペアが既に存在する場合は400",
         "operationId": "create_supplier_product_api_masters_supplier_products_post",
         "requestBody": {
           "required": true,
@@ -6974,7 +6974,7 @@
           "masters"
         ],
         "summary": "Export Supplier Products",
-        "description": "Export supplier products.",
+        "description": "仕入先商品をエクスポート.\n\nArgs:\n    format: エクスポート形式（\"csv\" または \"xlsx\"）\n    db: データベースセッション\n\nReturns:\n    Excel形式またはCSV形式のファイルレスポンス",
         "operationId": "export_supplier_products_api_masters_supplier_products_export_download_get",
         "parameters": [
           {
@@ -7016,7 +7016,7 @@
           "masters"
         ],
         "summary": "Get Supplier Product",
-        "description": "Get a supplier product by ID.",
+        "description": "仕入先商品詳細を取得.\n\nArgs:\n    id: 仕入先商品ID\n    db: データベースセッション\n\nReturns:\n    SupplierProductResponse: 仕入先商品詳細（製品情報と仕入先情報を含む）\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
         "operationId": "get_supplier_product_api_masters_supplier_products__id__get",
         "parameters": [
           {
@@ -7057,7 +7057,7 @@
           "masters"
         ],
         "summary": "Update Supplier Product",
-        "description": "Update a supplier product.",
+        "description": "仕入先商品を更新.\n\nis_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。\n\nArgs:\n    id: 仕入先商品ID\n    data: 更新データ\n    db: データベースセッション\n\nReturns:\n    SupplierProductResponse: 更新後の仕入先商品情報\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
         "operationId": "update_supplier_product_api_masters_supplier_products__id__put",
         "parameters": [
           {
@@ -7108,7 +7108,7 @@
           "masters"
         ],
         "summary": "Delete Supplier Product",
-        "description": "Soft delete a supplier product (mark as inactive).",
+        "description": "仕入先商品を論理削除（無効化）.\n\nArgs:\n    id: 仕入先商品ID\n    end_date: 終了日（省略時は今日の日付）\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
         "operationId": "delete_supplier_product_api_masters_supplier_products__id__delete",
         "parameters": [
           {
@@ -7161,7 +7161,7 @@
           "masters"
         ],
         "summary": "Permanent Delete Supplier Product",
-        "description": "Permanently delete a supplier product.",
+        "description": "仕入先商品を物理削除.\n\nArgs:\n    id: 仕入先商品ID\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
         "operationId": "permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete",
         "parameters": [
           {
@@ -7197,7 +7197,7 @@
           "masters"
         ],
         "summary": "Restore Supplier Product",
-        "description": "Restore a soft-deleted supplier product.",
+        "description": "論理削除された仕入先商品を復元.\n\nArgs:\n    id: 仕入先商品ID\n    db: データベースセッション\n\nReturns:\n    SupplierProductResponse: 復元された仕入先商品情報\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
         "operationId": "restore_supplier_product_api_masters_supplier_products__id__restore_post",
         "parameters": [
           {
@@ -7626,7 +7626,7 @@
           "warehouses"
         ],
         "summary": "List Warehouses",
-        "description": "List warehouses.",
+        "description": "倉庫一覧を取得.\n\nデフォルトでは有効な倉庫のみを返します。\n論理削除された倉庫も含める場合はinclude_inactive=trueを指定してください。\n\nArgs:\n    skip: スキップ件数（ページネーション用）\n    limit: 取得件数（最大100件）\n    include_inactive: 論理削除済み倉庫を含めるか（デフォルト: False）\n    db: データベースセッション\n\nReturns:\n    list[WarehouseResponse]: 倉庫情報のリスト",
         "operationId": "list_warehouses_api_masters_warehouses_get",
         "parameters": [
           {
@@ -7694,7 +7694,7 @@
           "warehouses"
         ],
         "summary": "Create Warehouse",
-        "description": "Create warehouse.",
+        "description": "倉庫を新規作成.\n\nArgs:\n    warehouse: 倉庫作成リクエストデータ\n    db: データベースセッション\n\nReturns:\n    WarehouseResponse: 作成された倉庫情報\n\nRaises:\n    HTTPException: 倉庫コードが既に存在する場合（409）",
         "operationId": "create_warehouse_api_masters_warehouses_post",
         "requestBody": {
           "required": true,
@@ -7788,7 +7788,7 @@
           "warehouses"
         ],
         "summary": "Export Warehouses",
-        "description": "Export warehouses to CSV or Excel.",
+        "description": "倉庫データをCSVまたはExcelでエクスポート.\n\nArgs:\n    format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）\n    db: データベースセッション\n\nReturns:\n    StreamingResponse: エクスポートファイル",
         "operationId": "export_warehouses_api_masters_warehouses_export_download_get",
         "parameters": [
           {
@@ -7830,7 +7830,7 @@
           "warehouses"
         ],
         "summary": "Get Warehouse",
-        "description": "Get warehouse by code.",
+        "description": "倉庫コードで倉庫を取得.\n\nArgs:\n    warehouse_code: 倉庫コード\n    db: データベースセッション\n\nReturns:\n    WarehouseResponse: 倉庫詳細情報\n\nRaises:\n    HTTPException: 倉庫が存在しない場合（404）",
         "operationId": "get_warehouse_api_masters_warehouses__warehouse_code__get",
         "parameters": [
           {
@@ -8513,7 +8513,7 @@
           "customer-items"
         ],
         "summary": "Export Customer Items",
-        "description": "Export customer items to CSV or Excel.",
+        "description": "得意先品番マッピングをエクスポート.\n\nArgs:\n    format: エクスポート形式（'csv' または 'xlsx'）\n    db: データベースセッション\n\nReturns:\n    Excel形式またはCSV形式のファイルレスポンス",
         "operationId": "export_customer_items_api_masters_customer_items_export_download_get",
         "parameters": [
           {
@@ -8555,7 +8555,7 @@
           "customer-items"
         ],
         "summary": "Bulk Upsert Customer Items",
-        "description": "Bulk upsert customer items by composite key (customer_id,\nexternal_product_code).\n\n- If a customer item with the same composite key exists, it will be updated\n- If not, a new customer item will be created\n\nReturns summary with counts of created/updated/failed records.",
+        "description": "得意先品番マッピング一括登録/更新.\n\n複合キー（customer_id, external_product_code）で判定し、\n既存レコードがあれば更新、なければ新規作成します。\n\nArgs:\n    request: 一括登録/更新リクエスト\n    db: データベースセッション\n\nReturns:\n    BulkUpsertResponse: 作成/更新/失敗件数のサマリー",
         "operationId": "bulk_upsert_customer_items_api_masters_customer_items_bulk_upsert_post",
         "requestBody": {
           "content": {
@@ -12434,7 +12434,7 @@
           "integration"
         ],
         "summary": "Register Sales Orders",
-        "description": "Register sales orders to SAP (Mock implementation).\n\nThis endpoint simulates the registration of sales orders to SAP ERP.\nIt returns dummy SAP order numbers for the provided order IDs.",
+        "description": "受注をSAPに登録（モック実装）.\n\nSAPシステムへの受注登録をシミュレートします。\n提供された受注IDに対してダミーのSAP受注番号を返します。\n\nArgs:\n    request: SAP受注登録リクエスト（受注IDリスト）\n\nReturns:\n    SAPOrderRegistrationResponse: 登録結果（受注ID、SAP受注番号、ステータス）\n\nNote:\n    現在はモック実装です。本番環境では実際のSAP APIに接続します。\n    1秒のネットワーク遅延をシミュレートしています。",
         "operationId": "register_sales_orders_api_integration_sap_sales_orders_post",
         "requestBody": {
           "content": {
@@ -13702,17 +13702,38 @@
         }
       }
     },
-    "/": {
+    "/{full_path}": {
       "get": {
-        "summary": "Root",
-        "description": "ルートエンドポイント.",
-        "operationId": "root__get",
+        "summary": "Serve Spa",
+        "description": "SPA フォールバック: 未知のパスは index.html を返す.",
+        "operationId": "serve_spa__full_path__get",
+        "parameters": [
+          {
+            "name": "full_path",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Full Path"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }

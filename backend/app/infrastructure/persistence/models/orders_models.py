@@ -1,4 +1,4 @@
-"""Order management models aligned with DDL v2.2
+r"""Order management models aligned with DDL v2.2
 (lot_management_ddl_v2_2_id.sql).
 
 All models strictly follow the DDL as the single source of truth.

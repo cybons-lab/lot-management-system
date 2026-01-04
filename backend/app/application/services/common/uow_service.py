@@ -1,4 +1,4 @@
-"""Unit of Work (UoW) パターンの実装
+r"""Unit of Work (UoW) パターンの実装.
 
 【設計意図】Unit of Work パターンの設計判断:
 

@@ -1,4 +1,4 @@
-"""Database error parser for user-friendly messages.
+r"""Database error parser for user-friendly messages.
 
 Parses database exceptions (IntegrityError, etc.) and converts them into
 user-friendly Japanese messages.

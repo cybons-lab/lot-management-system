@@ -85,7 +85,7 @@
    - React Router等のクライアントサイドルーティングに対応
    - 例: /allocations へのアクセス
    → バックエンドに /allocations エンドポイントがなくても、
-   　　index.html を返し、React Router が処理
+   index.html を返し、React Router が処理
 
    APIパスの除外（L120-121）:
    - /api/* はSPAフォールバックから除外

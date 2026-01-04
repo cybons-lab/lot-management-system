@@ -31,8 +31,8 @@ import { createApiError, NetworkError } from "@/utils/errors/custom-errors";
  * 【設計根拠】
  * - API_TIMEOUT: 30秒
  *   理由: 自動車部品の在庫検索など、大量データの処理に時間がかかる可能性
- *   　　　→ 通常のAPI呼び出しは5秒以内だが、複雑なレポート生成等を考慮
- *   　　　→ ただし、30秒を超える処理は非同期バッチ処理に移行すべき
+ *   -> 通常のAPI呼び出しは5秒以内だが、複雑なレポート生成等を考慮
+ *   -> ただし、30秒を超える処理は非同期バッチ処理に移行すべき
  */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 const API_TIMEOUT = 30000; // 30 seconds
