@@ -194,15 +194,18 @@ class CloudFlowService:
         return job
 
     def _start_next_pending_job(self, job_type: str) -> None:
-        """次の待機ジョブを開始."""
+        """次の待機ジョブを開始.
+
+        Note: このメソッドはジョブのステータスを RUNNING に更新するのみ。
+        実際のフロー実行は _run_flow_job 内のループで行う。
+        これにより再帰呼び出しを防ぎ、DBコネクション枯渇を回避する。
+        """
         pending_jobs = self.get_pending_jobs(job_type)
         if pending_jobs:
             next_job = pending_jobs[0]
             next_job.status = CloudFlowJobStatus.RUNNING
             next_job.started_at = utcnow()
             self.db.commit()
-            # フローを実行
-            self._execute_flow_async(next_job)
 
     def _execute_flow_async(self, job: CloudFlowJob) -> None:
         """フローを非同期実行.
@@ -217,14 +220,31 @@ class CloudFlowService:
 
     @staticmethod
     def _run_flow_job(job_id: int) -> None:
-        """バックグラウンドでフロー実行を行う."""
+        """バックグラウンドでフロー実行を行う.
+
+        このメソッドでは単一DBセッションを使い、キュー内のジョブを
+        ループで順次処理する。再帰呼び出しを避けることで、
+        コネクション枯渇やスタックオーバーフローを防止する。
+        """
         db = SessionLocal()
         try:
             service = CloudFlowService(db)
             job = db.get(CloudFlowJob, job_id)
             if not job:
                 return
-            service.execute_flow(job)
+
+            # ジョブを実行し、完了後に次の待機ジョブを同じセッション内で処理
+            while job:
+                service.execute_flow(job)
+                # 次の待機ジョブを取得（ループ内で再帰を回避）
+                pending_jobs = service.get_pending_jobs(job.job_type)
+                if not pending_jobs:
+                    break
+                next_job = pending_jobs[0]
+                next_job.status = CloudFlowJobStatus.RUNNING
+                next_job.started_at = utcnow()
+                db.commit()
+                job = next_job
         finally:
             db.close()
 
@@ -272,9 +292,7 @@ class CloudFlowService:
             "start_date": str(job.start_date),
             "end_date": str(job.end_date),
             "requested_by_user_id": job.requested_by_user_id,
-            "requested_by": job.requested_by_user.username
-            if job.requested_by_user
-            else None,
+            "requested_by": job.requested_by_user.display_name if job.requested_by_user else None,
             "requested_at": job.requested_at.isoformat() if job.requested_at else None,
             "triggered_at": utcnow().isoformat(),
         }
