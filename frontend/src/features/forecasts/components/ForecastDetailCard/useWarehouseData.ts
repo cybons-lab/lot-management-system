@@ -14,6 +14,32 @@ export interface WarehouseData {
   }>;
 }
 
+type WarehouseSource = {
+  warehouse_name?: string;
+  warehouse_code?: string;
+  warehouse_id?: number;
+};
+
+type InboundPlanLineLike = WarehouseSource & {
+  product_id?: number;
+  planned_quantity?: number | string;
+  unit?: string;
+};
+
+type InboundPlanLike = WarehouseSource & {
+  planned_arrival_date?: string;
+  total_quantity?: number | string;
+  unit?: string;
+  lines?: InboundPlanLineLike[];
+};
+
+const getWarehouseKey = (source: WarehouseSource) =>
+  String(
+    source.warehouse_name ??
+      source.warehouse_code ??
+      (source.warehouse_id ? `ID:${source.warehouse_id}` : "未指定"),
+  );
+
 export function useWarehouseData(productId: number) {
   const { data: inboundPlans, isLoading: isLoadingInbound } = useInboundPlans({
     product_id: productId,
@@ -43,22 +69,57 @@ export function useWarehouseData(productId: number) {
     warehouse.inventory.lotCount += 1;
   });
 
-  const warehouseData: WarehouseData[] = Array.from(warehouseMap.values());
-
   // 直近の入荷予定を取得（未来の日付のみ）
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const upcomingPlans = Array.isArray(inboundPlans)
-    ? inboundPlans.filter((plan) => new Date(plan.planned_arrival_date) >= today)
+    ? inboundPlans.filter((plan) => {
+        const plannedDate = new Date(plan.planned_arrival_date);
+        return !Number.isNaN(plannedDate.getTime()) && plannedDate >= today;
+      })
     : [];
 
-  // 入荷予定を最初の倉庫に表示（倉庫情報がないため）
-  // TODO P2-23: 入荷予定を倉庫別に集約する処理を実装
-  if (upcomingPlans.length > 0 && warehouseData.length > 0) {
-    warehouseData[0].upcomingInbounds = upcomingPlans.slice(0, 3).map((plan) => ({
-      date: plan.planned_arrival_date,
-      quantity: Number(plan.total_quantity ?? 0),
-    }));
-  }
+  const inboundPlansByWarehouse = upcomingPlans as InboundPlanLike[];
 
-  return { warehouseData, isLoading };
+  inboundPlansByWarehouse.forEach((plan) => {
+    const lines = Array.isArray(plan.lines) ? plan.lines : [];
+    const relevantLines =
+      lines.length > 0
+        ? lines.filter((line) => !line.product_id || line.product_id === productId)
+        : [plan];
+
+    relevantLines.forEach((line) => {
+      const warehouseName = getWarehouseKey(line);
+      const unit = String(line.unit || "EA");
+
+      if (!warehouseMap.has(warehouseName)) {
+        warehouseMap.set(warehouseName, {
+          name: warehouseName,
+          inventory: { total: 0, lotCount: 0, unit },
+          upcomingInbounds: [],
+        });
+      }
+
+      const warehouse = warehouseMap.get(warehouseName)!;
+      if (warehouse.inventory.unit === "EA" && unit) {
+        warehouse.inventory.unit = unit;
+      }
+      warehouse.upcomingInbounds.push({
+        date: plan.planned_arrival_date ?? "",
+        quantity: Number(
+          "planned_quantity" in line ? (line.planned_quantity ?? 0) : (plan.total_quantity ?? 0),
+        ),
+      });
+    });
+  });
+
+  const inboundLimit = 3;
+  warehouseMap.forEach((warehouse) => {
+    warehouse.upcomingInbounds = warehouse.upcomingInbounds
+      .filter((inbound) => inbound.date)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, inboundLimit);
+  });
+
+  return { warehouseData: Array.from(warehouseMap.values()), isLoading };
 }

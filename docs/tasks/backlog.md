@@ -1,6 +1,6 @@
 # 未完了タスク一覧
 
-**最終更新:** 2025-12-21
+**最終更新:** 2026-01-04
 
 ---
 
@@ -27,6 +27,22 @@
 **対応案:**
 - ForecastDetailCard内に「このグループの引当推奨を生成」ボタンを追加
 - `/api/v2/forecast/suggestions/preview` にフィルタリングパラメータを追加
+
+### P2-5: 入荷予定の倉庫データ取得改善
+
+**概要:**
+- `useWarehouseData`フックで入荷予定を倉庫別に集約する際、`InboundPlan`型にはヘッダーレベルで`warehouse_*`フィールドがない
+- `lines`がない場合に`[plan]`にフォールバックすると、`getWarehouseKey(plan)`が常に"未指定"を返す
+- 入荷予定が実際の倉庫ではなく合成的な"未指定"倉庫にグループ化されてしまう
+
+**対応案:**
+1. `lines`がない場合は入荷予定をスキップする
+2. `InboundPlanWithLines`を使用して明細データを取得する
+3. バックエンドを変更してヘッダーにも代表倉庫情報を含める
+
+**関連ファイル:**
+- `frontend/src/features/forecasts/components/ForecastDetailCard/useWarehouseData.ts`
+- `frontend/src/features/inbound-plans/api.ts`
 
 ---
 
