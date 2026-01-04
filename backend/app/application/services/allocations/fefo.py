@@ -1,3 +1,150 @@
+r"""FEFO引当プレビュー機能.
+
+【設計意図】FEFO引当プレビューの設計判断:
+
+1. なぜ「プレビュー」が必要なのか
+   理由: 引当実行前に結果を確認
+   業務的背景:
+   - 自動車部品商社: 受注100件を一括引当する前に、
+     「どのロットがどの受注に割り当てられるか」を確認したい
+   → 期限切れリスクのあるロットが優先的に使われるか検証
+   問題:
+   - いきなり引当実行: 意図しない結果
+   → 「期限の長いロットが先に使われてしまった」
+   解決:
+   - プレビュー機能: 実際の引当を作成せず、計画のみを返す
+   → 確認後にコミット実行
+   メリット:
+   - 引当結果の事前確認
+   - 誤った引当の防止
+
+2. preview_fefo_allocation() の設計（L220-254）
+   理由: 受注全体のFEFO引当計画を生成
+   処理フロー:
+   1. 受注の検証（L233）
+      → validate_preview_eligibility() で状態チェック
+   2. 明細ごとの引当計画生成（L238-252）
+      → calculate_line_allocations() を呼び出し
+   3. プレビュー結果の構築（L254）
+      → build_preview_result() でサマリー作成
+   重要な設計:
+   - available_per_lot: 共有の在庫追跡辞書（L235）
+   → 複数明細で同じロットを使う場合の在庫調整
+   業務的意義:
+   - 受注1件に対する完全なFEFO引当計画
+   → 「この受注をFEFO引当したらどうなるか」
+
+3. available_per_lot の共有設計（L235, L186-190）
+   理由: 複数明細での在庫消費を正確に追跡
+   問題:
+   - 明細1: 製品A 50個
+   - 明細2: 製品A 30個
+   - ロットX: 製品A 60個
+   → 明細1でロットXから50個引当
+   → 明細2はロットXから10個のみ引当可能（60-50=10）
+   解決:
+   - available_per_lot 辞書で在庫を追跡
+   → available_per_lot[lot_id] = 初期60個
+   → 明細1処理後: available_per_lot[lot_id] = 10個
+   → 明細2は10個のみ引当
+   実装（L186-190）:
+   - current_avail - allocated_qty_float
+   → 引当後の残数を更新
+
+4. validate_preview_eligibility() の設計（L17-30）
+   理由: プレビュー可能な受注状態の検証
+   許可される状態:
+   - draft: 下書き
+   - open: 未引当
+   - part_allocated: 一部引当済み
+   - allocated: 全量引当済み
+   不許可の状態:
+   - shipped: 出荷済み（引当変更不可）
+   - closed: クローズ済み
+   業務ルール:
+   - 引当済みの受注でも再プレビュー可能
+   → 「現在の引当を解除して、再度FEFOで引当したらどうなるか」
+   → 最適化の検討
+
+5. calculate_line_allocations() の設計（L51-197）
+   理由: 1明細に対するFEFO引当計画の生成
+   処理ステップ:
+   1. 必要数量の計算（L68-74）
+      → required_qty - already_allocated = remaining
+   2. next_div の解決（L107）
+      → 丸め処理の最小単位（梱包単位等）
+   3. FEFO候補の取得（L131-137）
+      → AllocationCandidateService 経由
+   4. 候補の有効性検証（L143-162）
+      → available_per_lot で実際の利用可能数量をチェック
+   5. 引当実行（L165-167）
+      → allocate_soft_for_forecast() で引当計算
+   6. 結果のマッピング（L169-191）
+      → AllocationResult → FefoLotPlan 変換
+
+6. temp_allocations の設計（L140, L154-161）
+   理由: allocate_soft_for_forecast() への入力調整
+   背景:
+   - allocate_soft_for_forecast(): 内部で temp_allocations を差し引く
+   → effective_available = initial_available - temp_allocations[lot_id]
+   問題:
+   - available_per_lot で既に他明細の引当を考慮済み
+   → allocator には current_tracked_available を見せたい
+   解決:
+   - temp_allocations[lot_id] = initial_avail - target_avail
+   → allocator が見る値 = current_tracked_available
+   実装（L158-160）:
+   - used_elsewhere = max(Decimal(\"0\"), initial_avail - target_avail)
+   → 他の明細で使用済みの数量
+
+7. allocate_soft_for_forecast() の使用理由（L165-167）
+   理由: Single Lot Fit + FEFO の統合アルゴリズム
+   背景:
+   - v2.x: シンプルなFEFOループ
+   - v3.0: Single Lot Fit 優先
+   → 1ロットで全量引当可能な場合は優先
+   → 複数ロット分割は最小化
+   メリット:
+   - 出荷効率向上（ロット混載を削減）
+   - 在庫管理の簡素化
+
+8. warnings の設計（L96, L104, L120, L193-195）
+   理由: プレビュー結果での問題点の明示
+   警告例:
+   - \"製品ID未設定\"（L96）
+   - next_div 関連の警告（L120）
+   - \"在庫不足: 製品 XXX に対して YY 足りません\"（L194）
+   用途:
+   - フロントエンドでの警告表示
+   → ユーザーに問題を通知
+   業務的意義:
+   - 引当実行前に在庫不足を検出
+   → 発注提案の生成
+
+9. sorted_lines のソート（L238）
+   理由: 明細IDの昇順で処理
+   目的:
+   - 処理順序の一貫性
+   → テスト結果が安定
+   - デバッグの容易性
+   → 常に同じ順序で処理
+   業務影響:
+   - available_per_lot の更新順序が安定
+   → 同じ受注に対するプレビュー結果が常に同じ
+
+10. build_preview_result() の設計（L200-217）
+    理由: プレビュー結果のサマリー生成
+    集約内容:
+    - order_id: 対象受注
+    - lines: 明細ごとの引当計画
+    - warnings: 全明細の警告を集約
+    用途:
+    - フロントエンドでの結果表示
+    → 「この受注をFEFO引当すると、ロットXから50個、ロットYから30個」
+    - 警告の一覧表示
+    → 「在庫不足: 製品A 10個、製品B 20個」
+"""
+
 from __future__ import annotations
 
 from decimal import Decimal

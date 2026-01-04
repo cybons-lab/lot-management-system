@@ -1,7 +1,151 @@
 # backend/app/core/logging.py
-"""構造化ロギング設定.
+r"""構造化ロギング設定.
 
 JSON形式でのログ出力、リクエストコンテキスト管理、センシティブ情報のマスキングを提供。
+
+【設計意図】構造化ロギングの設計判断:
+
+1. なぜJSON形式のログが必要なのか
+   理由: ログ分析ツールとの統合
+   背景:
+   - 自動車部品商社: 大量のAPIリクエストログ
+   → 「在庫不足エラーが何件発生したか」等の集計が必要
+   問題:
+   - テキスト形式ログ: 解析が困難
+   → \"ERROR: Stock insufficient for product ABC\" を正規表現で抽出
+   → エラーコード、製品ID等の構造化データが取り出しにくい
+   解決:
+   - JSON形式ログ
+   → {\"level\": \"ERROR\", \"error_code\": \"INSUFFICIENT_STOCK\", \"product_id\": 123}
+   → ログ分析ツール（Elasticsearch, CloudWatch Insights等）で簡単に集計
+   メリット:
+   - エラー率の計測
+   - 特定エラーコードの検索
+   - ユーザーごとの操作履歴分析
+
+2. ContextVar の使用理由（L17-20）
+   理由: 非同期処理でのコンテキスト情報の保持
+   問題:
+   - FastAPI: 非同期処理で複数リクエストを並行実行
+   → グローバル変数: 複数リクエストで値が混ざる
+   解決:
+   - ContextVar: リクエストごとに独立した変数領域
+   → リクエストA: request_id=\"abc-123\"
+   → リクエストB: request_id=\"def-456\"
+   → 互いに影響しない
+   実装:
+   - request_id_var = ContextVar(\"request_id\")
+   - request_id_var.set(\"abc-123\")
+   - request_id_var.get() → \"abc-123\"
+
+3. CustomJsonFormatter の設計（L23-113）
+   理由: ログレコードに自動的にコンテキスト情報を付与
+   add_fields() の処理（L45-87）:
+   1. タイムスタンプ（L56）
+      → ISO 8601形式（UTC）
+   2. ログレベル（L59）
+      → INFO, WARNING, ERROR等
+   3. ファイル情報（L65-66）
+      → ログ出力箇所の特定
+   4. コンテキスト情報（L69-79）
+      → request_id, user_id, username
+   5. 環境変数（L84）
+      → production, staging, development
+   6. センシティブ情報マスキング（L87）
+      → password, token等を \"***MASKED***\" に置換
+   メリット:
+   - 全ログに自動的にコンテキスト付与
+   → logger.info(\"Order created\") だけで、request_id, user_id等が記録される
+
+4. set_request_context() と clear_request_context() の分離
+   理由: ミドルウェアでのコンテキスト管理
+   使用例（RequestLoggingMiddleware）:
+   ```python
+   set_request_context(request_id=\"abc-123\", user_id=456)
+   try:
+       # リクエスト処理
+       logger.info(\"Processing order\")  # request_id, user_id が自動付与
+   finally:
+       clear_request_context()  # リーク防止
+   ```
+   重要性:
+   - clear しないと、次のリクエストに古い値が残る
+   → ログが不正確
+
+5. センシティブ情報マスキングの設計（L89-113）
+   理由: 機密情報のログ漏洩防止
+   マスキング対象（L43）:
+   - password, token, api_key, secret, authorization等
+   実装:
+   - _mask_sensitive_fields(): トップレベルのマスキング
+   - _mask_dict_fields(): ネストされた辞書の再帰的マスキング
+   例:
+   ```python
+   logger.info(\"User login\", extra={\"username\": \"alice\", \"password\": \"secret\"})
+   # 出力: {\"username\": \"alice\", \"password\": \"***MASKED***\"}
+   ```
+   業務的意義:
+   - GDPR/個人情報保護法への準拠
+   - セキュリティ監査での指摘回避
+
+6. ColoredConsoleFormatter の用途（L116-120）
+   理由: 開発環境での視認性向上
+   用途:
+   - 開発環境: カラー付きテキストログ
+   → ERROR は赤、WARNING は黄色等
+   - 本番環境: JSON形式ログ
+   → ログ分析ツールで集計
+   設計:
+   - setup_logging() で環境に応じて切り替え
+   → settings.ENVIRONMENT == \"development\" → ColoredConsoleFormatter
+   → それ以外 → CustomJsonFormatter
+
+7. request_id の自動付与の重要性（L69-71）
+   理由: 分散ログの追跡
+   業務シナリオ:
+   - 営業担当: \"受注登録でエラーが出た\"
+   → リクエストIDを提供
+   - システム管理者: request_id でログ検索
+   → 該当リクエストの全ログを時系列で確認
+   → エラーの根本原因を特定
+   実装:
+   - RequestIdMiddleware で request_id を生成
+   - set_request_context(request_id=...) で設定
+   - 全ログに自動的に request_id が付与される
+
+8. user_id と username の記録（L73-79）
+   理由: 監査証跡とトラブルシューティング
+   用途:
+   - \"誰が\" という情報を全ログに記録
+   → 在庫調整ログ: {\"user_id\": 123, \"username\": \"alice\", \"action\": \"adjust_stock\"}
+   業務的意義:
+   - 不正操作の検出
+   → \"誰が大量の在庫を削除したか\" を特定
+   - 顧客対応
+   → \"営業担当Aが受注を登録した\" ログを確認
+
+9. environment フィールドの記録（L82-84）
+   理由: ログの環境識別
+   用途:
+   - 本番環境とステージング環境のログが混在
+   → environment フィールドで区別
+   - ログ分析時のフィルタリング
+   → \"本番環境でのERRORログのみ検索\"
+   設計:
+   - settings.ENVIRONMENT から取得
+   → \"production\", \"staging\", \"development\"
+
+10. file と function フィールドの重要性（L65-66）
+    理由: ログ出力箇所の特定
+    出力例:
+    - file: \"app/services/order_service.py:123\"
+    - function: \"create_order\"
+    用途:
+    - エラー発生時に該当コード行を即座に特定
+    → ログからソースコードの該当箇所にジャンプ
+    業務的意義:
+    - トラブルシューティングの高速化
+    - \"どこでエラーが発生したか\" が一目瞭然
 """
 
 import logging

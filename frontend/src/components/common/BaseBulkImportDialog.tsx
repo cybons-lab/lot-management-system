@@ -1,3 +1,11 @@
+/**
+ * 一括インポートダイアログベースコンポーネント
+ *
+ * Excelファイルからのマスタデータ一括登録機能を提供します。
+ * テンプレートダウンロード、ファイル選択、パース、インポート実行の
+ * 一連の操作を管理します。
+ */
+
 import { Upload, Download, AlertCircle, CheckCircle } from "lucide-react";
 
 import { Button } from "@/components/ui";
@@ -10,28 +18,56 @@ import {
 } from "@/components/ui/layout/dialog";
 import type { BulkUpsertResponse } from "@/shared/types/bulk-operations";
 
+/**
+ * 一括操作の件数集計
+ */
 export interface BulkCounts {
+  /** 追加件数 */
   add: number;
+  /** 更新件数 */
   upd: number;
+  /** 削除件数 */
   del: number;
 }
 
+/**
+ * BaseBulkImportDialogコンポーネントのProps
+ */
 interface BaseBulkImportDialogProps {
+  /** ダイアログの開閉状態 */
   open: boolean;
+  /** ダイアログを閉じる処理 */
   onClose: () => void;
+  /** ダイアログタイトル */
   title: string;
+  /** ダイアログ説明文 */
   description: string;
+  /** テンプレートダウンロード処理 */
   onDownloadTemplate: () => void;
+  /** ファイル選択時の処理 */
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  /** 選択されたファイル */
   file: File | null;
+  /** パースエラーメッセージリスト */
   parseErrors: string[];
+  /** パース済みデータの件数集計 */
   parsedCounts: BulkCounts;
-  hasparsedRows: boolean; // to check if parsedRows.length > 0
+  /** パース済み行が存在するかどうか */
+  hasparsedRows: boolean;
+  /** インポート実行結果 */
   result: BulkUpsertResponse | null;
+  /** インポート実行処理 */
   onImport: () => void;
+  /** インポート処理中かどうか */
   isPending: boolean;
 }
 
+/**
+ * 一括インポートダイアログ
+ *
+ * @param props - コンポーネントプロパティ
+ * @returns 一括インポートダイアログコンポーネント
+ */
 export function BaseBulkImportDialog({
   open,
   onClose,

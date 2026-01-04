@@ -30,7 +30,20 @@ def list_warehouses(
     include_inactive: bool = Query(False, description="Include soft-deleted warehouses"),
     db: Session = Depends(get_db),
 ):
-    """List warehouses."""
+    """倉庫一覧を取得.
+
+    デフォルトでは有効な倉庫のみを返します。
+    論理削除された倉庫も含める場合はinclude_inactive=trueを指定してください。
+
+    Args:
+        skip: スキップ件数（ページネーション用）
+        limit: 取得件数（最大100件）
+        include_inactive: 論理削除済み倉庫を含めるか（デフォルト: False）
+        db: データベースセッション
+
+    Returns:
+        list[WarehouseResponse]: 倉庫情報のリスト
+    """
     service = WarehouseService(db)
     return service.get_all(skip=skip, limit=limit, include_inactive=include_inactive)
 
@@ -51,7 +64,15 @@ def download_warehouses_template(format: str = "csv", include_sample: bool = Tru
 
 @router.get("/export/download")
 def export_warehouses(format: str = "csv", db: Session = Depends(get_db)):
-    """Export warehouses to CSV or Excel."""
+    """倉庫データをCSVまたはExcelでエクスポート.
+
+    Args:
+        format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）
+        db: データベースセッション
+
+    Returns:
+        StreamingResponse: エクスポートファイル
+    """
     service = WarehouseService(db)
     warehouses = service.get_all()
     data = [WarehouseResponse.model_validate(w).model_dump() for w in warehouses]
@@ -63,14 +84,36 @@ def export_warehouses(format: str = "csv", db: Session = Depends(get_db)):
 
 @router.get("/{warehouse_code}", response_model=WarehouseResponse)
 def get_warehouse(warehouse_code: str, db: Session = Depends(get_db)):
-    """Get warehouse by code."""
+    """倉庫コードで倉庫を取得.
+
+    Args:
+        warehouse_code: 倉庫コード
+        db: データベースセッション
+
+    Returns:
+        WarehouseResponse: 倉庫詳細情報
+
+    Raises:
+        HTTPException: 倉庫が存在しない場合（404）
+    """
     service = WarehouseService(db)
     return service.get_by_code(warehouse_code)
 
 
 @router.post("", response_model=WarehouseResponse, status_code=201)
 def create_warehouse(warehouse: WarehouseCreate, db: Session = Depends(get_db)):
-    """Create warehouse."""
+    """倉庫を新規作成.
+
+    Args:
+        warehouse: 倉庫作成リクエストデータ
+        db: データベースセッション
+
+    Returns:
+        WarehouseResponse: 作成された倉庫情報
+
+    Raises:
+        HTTPException: 倉庫コードが既に存在する場合（409）
+    """
     service = WarehouseService(db)
     existing = service.get_by_code(warehouse.warehouse_code, raise_404=False)
     if existing:

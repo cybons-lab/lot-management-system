@@ -1,3 +1,124 @@
+"""Allocation utility functions.
+
+Shared utilities for allocation operations:
+- Order loading with eager loading
+- Status synchronization (Order/OrderLine ↔ LotReservation)
+- Next division resolution
+
+【設計意図】引当ユーティリティの設計判断:
+
+1. なぜ専用のユーティリティモジュールを作るのか
+   理由: 引当関連の共通ロジックを一元管理
+   背景:
+   - 複数の引当サービス（auto, manual, confirm等）で共通処理が発生
+   → コードの重複を防ぐため、ユーティリティ関数として分離
+   メリット:
+   - ロジックの一貫性が保証される
+   - バグ修正時の影響範囲が明確
+
+2. _load_order() の設計（L21-46）
+   理由: 受注データの効率的な取得
+   実装:
+   - selectinload(Order.order_lines): 明細を別クエリで一括取得
+   - joinedload(OrderLine.product): 製品情報をJOINで取得
+   業務的意義:
+   - N+1問題を回避
+   → 100件の明細があっても、クエリは3回のみ
+   使用例:
+   - FEFO引当プレビュー、確定処理で使用
+
+3. selectinload と joinedload の使い分け（L37-38）
+   理由: リレーションタイプに応じた最適化
+   selectinload（別クエリ）:
+   - 1対多: Order → OrderLines
+   → JOIN だと Order が重複
+   joinedload（JOIN）:
+   - 多対1: OrderLine → Product
+   → JOIN でも重複しない、1回のクエリで取得
+   パフォーマンス:
+   - selectinload: 2クエリ（Order + Lines一括）
+   - joinedload: 1クエリ（JOIN）
+
+4. _existing_allocated_qty() の設計（L49-58）
+   理由: 既存引当数量の計算
+   実装:
+   - _lot_reservations から RELEASED 以外の予約を集計
+   → sum(reserved_qty for res if res.status != RELEASED)
+   業務的意義:
+   - 自動引当時の重複引当防止
+   → required_qty - already_allocated = 残り必要数量
+   注意:
+   - getattr で安全に取得（属性がない場合は []）
+
+5. _resolve_next_div() の設計（L61-80）
+   理由: 製品の「次区」（梱包単位）の解決
+   業務的背景:
+   - 自動車部品: 製品ごとに梱包単位が異なる
+   → 「次区」マスタで管理（例: 100個入り、50個入り）
+   処理フロー:
+   - line.product から取得 → なければ product_id で検索
+   → それでも見つからなければ warning 返却
+   用途:
+   - 引当数量の丸め処理（100個単位で引当等）
+
+6. update_order_line_status() の設計（L83-121）
+   理由: 受注明細ステータスの自動同期
+   ステータスルール:
+   - reserved_qty >= required_qty → "allocated"（全量引当済み）
+   - reserved_qty > 0 → "pending"（一部引当 or 未引当）
+   EPSILON の使用（L92, L113, L115）:
+   - 浮動小数点数の精度問題を回避
+   → reserved_qty + EPSILON >= required_qty
+   業務的意義:
+   - 引当状況を明細単位で可視化
+
+7. update_order_allocation_status() の設計（L123-189）
+   理由: 受注全体のステータス自動同期
+   ステータスルール（H-06 Fix）:
+   - 全明細が全量引当 → "allocated"
+   - 一部の明細が引当済み → "part_allocated"
+   - 全明細が未引当 → "open"
+   実装:
+   - 全明細の引当数量を集計（L140-159）
+   - 判定ロジック（L176-183）
+   業務的意義:
+   - 受注の進捗状況を一目で把握
+
+8. H-06 Fix: ステータス巻き戻しの正しい処理（L181-183）
+   理由: 引当解放時のステータス更新
+   問題（H-06以前）:
+   - 引当を全解放しても、ステータスが "allocated" のまま
+   → 「引当済み」と表示されるが、実際は未引当
+   解決:
+   - 全解放時: allocated/part_allocated → "open" に戻す
+   → ステータスが実態を正しく反映
+   業務影響:
+   - 引当状況の可視化が正確に
+
+9. なぜ SQL の update() を直接使うのか（L118-120, L186-188）
+   理由: パフォーマンス最適化
+   実装:
+   - db.execute(update(OrderLine).where(...).values(...))
+   → SQLAlchemy の ORM ではなく、SQL 直接実行
+   メリット:
+   - 1回のUPDATE文で完了（ORM よりも高速）
+   - flush() や refresh() が不要
+   使用場面:
+   - ステータス更新のみの単純な処理
+
+10. EPSILON の使用理由（L92, L137, L166-169）
+    理由: 浮動小数点数の比較での精度問題回避
+    問題:
+    - 10.0 == 9.9999999999999 → False（誤差）
+    → 実質的に同じ値でも、厳密な比較では不一致
+    解決:
+    - EPSILON = 1e-6（0.000001）の許容誤差
+    - reserved_qty + EPSILON >= required_qty
+    → 微小な誤差を許容
+    業務影響:
+    - 丸め誤差による引当判定ミスを防止
+"""
+
 from __future__ import annotations
 
 from decimal import Decimal

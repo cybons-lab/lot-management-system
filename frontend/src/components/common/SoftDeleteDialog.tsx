@@ -1,8 +1,9 @@
 /**
- * Soft Delete Confirmation Dialog
+ * 論理削除確認ダイアログコンポーネント
  *
- * Used for logical deletion of master data.
- * Sets valid_to to a specified date (defaults to today).
+ * マスタデータの論理削除に使用します。
+ * valid_toを指定された日付（デフォルト: 今日）に設定して無効化します。
+ * オプションで完全削除への切り替えも可能です。
  */
 
 import { Calendar } from "lucide-react";
@@ -21,13 +22,23 @@ import {
 import { Input } from "@/components/ui/form/input";
 import { Label } from "@/components/ui/form/label";
 
+/**
+ * 論理削除ダイアログのProps
+ */
 export interface SoftDeleteDialogProps {
+  /** ダイアログの開閉状態 */
   open: boolean;
+  /** ダイアログの開閉状態変更ハンドラ */
   onOpenChange: (open: boolean) => void;
+  /** ダイアログタイトル */
   title: string;
+  /** 説明文 */
   description: string;
+  /** 確認時のコールバック（終了日を渡す） */
   onConfirm: (endDate: string | null) => void;
+  /** 処理中フラグ */
   isPending?: boolean;
+  /** 完全削除への切り替えハンドラ（管理者向け） */
   onSwitchToPermanent?: () => void;
 }
 

@@ -4,6 +4,28 @@
  * Business rules:
  * - Countable units (PCS, BOX, CAN, EA): Integer only (no decimals)
  * - Measurable units (L, ML, KG, G): Decimal allowed (max 2 decimals)
+ *
+ * 【設計意図】なぜ単位によってフォーマットを変えるのか:
+ *
+ * 1. ビジネスルールへの準拠
+ *    理由: 自動車部品業界では、単位の種類によって扱い方が異なる
+ *    - 個数単位（PCS、BOX等）: 「1.5個」という概念はない → 整数のみ
+ *    - 重量・容量単位（KG、L等）: 「10.5kg」のように小数点以下が存在 → 小数許容
+ *
+ * 2. ユーザビリティの向上
+ *    理由: 単位に応じた適切な表示で、ユーザーの混乱を防ぐ
+ *    例: 「10.0 PCS」ではなく「10 PCS」と表示
+ *    → 不要な小数点を省くことで、画面が見やすくなる
+ *
+ * 3. データ入力時のバリデーション
+ *    用途: このフォーマットルールは、入力フォームのバリデーションでも使用
+ *    → 個数単位で小数入力を防ぐ
+ *    → 重量単位では小数2桁まで許容
+ *
+ * 4. 小数2桁までの制限
+ *    理由: 在庫管理で必要な精度は小数2桁で十分
+ *    例: 10.123kg → 10.12kg に丸める
+ *    → システムのデータ精度と表示精度の統一
  */
 
 const COUNTABLE_UNITS = new Set(["PCS", "BOX", "CAN", "EA", "CARTON", "PACK"]);
@@ -51,6 +73,7 @@ export function formatQuantity(
 
   if (isCountableUnit(unit)) {
     // Countable units: no decimals
+    // 【設計】Math.round()で四捨五入し、整数のみ表示
     formatted = Math.round(numValue).toLocaleString("ja-JP", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
@@ -63,6 +86,7 @@ export function formatQuantity(
     });
   } else {
     // Unknown unit: default to 2 decimals
+    // 【設計】未知の単位は安全側に倒して小数2桁まで許容（計量単位と仮定）
     formatted = numValue.toLocaleString("ja-JP", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,

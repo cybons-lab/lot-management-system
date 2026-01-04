@@ -100,6 +100,25 @@ class LotReservationService:
         creating the reservation. The available quantity is calculated
         dynamically based on current reservations.
 
+        【設計意図】なぜこの順序で処理するのか:
+
+        1. with_for_update()によるロック取得
+           理由: 複数ユーザーの同時引当で在庫が重複割当されるのを防ぐ
+           例: 営業A・営業Bが同時に最後の在庫を引当しようとした場合
+           → 片方は待機し、もう片方の引当が完了してから利用可能数を再計算
+           トレードオフ: ロック待機による遅延（通常は数ミリ秒程度）
+
+        2. 在庫チェックをロック内で実行
+           理由: ロック取得後に最新の利用可能数量を計算することで、
+           TOCTOU（Time Of Check, Time Of Use）脆弱性を回避
+           → チェック時点と予約作成時点で在庫状況が変わらないことを保証
+
+        3. flush()のみでcommitしない
+           理由: この処理は大きなトランザクションの一部として呼ばれることが多い
+           例: 受注登録で「受注ヘッダ作成 → 明細作成 → 在庫引当」を1トランザクションで処理
+           → 途中でcommitすると、後続処理でエラーが出ても引当だけ残ってしまう
+           → 呼び出し側がcommit責任を持つ設計
+
         Args:
             lot_id: ID of the lot to reserve from
             source_type: Source of the reservation ('forecast', 'order', 'manual')
@@ -128,11 +147,13 @@ class LotReservationService:
             status = status.value
 
         # Lock the lot row for update to prevent race conditions
+        # 【重要】このロックにより在庫の重複割当を防ぐ
         lot = self.db.query(Lot).filter(Lot.id == lot_id).with_for_update().first()
         if not lot:
             raise ReservationLotNotFoundError(lot_id)
 
         # Calculate available quantity (dynamic calculation per invariants)
+        # ロック取得後に計算することで、チェック時点と予約作成時点で在庫状況が同じであることを保証
         available = self._calculate_available_qty(lot_id)
 
         if available < quantity:
@@ -152,7 +173,7 @@ class LotReservationService:
             reservation.confirmed_at = utcnow()
 
         self.db.add(reservation)
-        self.db.flush()  # Get the ID without committing
+        self.db.flush()  # Get the ID without committing (caller manages transaction)
 
         return reservation
 
@@ -161,6 +182,26 @@ class LotReservationService:
 
         This marks the reservation as 'released' and records the release
         timestamp. The reservation is not deleted for audit purposes.
+
+        【設計意図】なぜ削除せずにステータス変更のみなのか:
+
+        1. 監査証跡の保持
+           理由: 在庫予約の履歴を完全に保持することで、問題発生時の原因追跡が可能
+           例: 「なぜあの時点で在庫不足だったのか？」という問い合わせに対応
+           → 過去の予約・解放の履歴から、在庫の動きを完全に再現できる
+
+        2. 在庫計算の正確性
+           理由: RELEASEDステータスは利用可能数量の計算から除外される
+           → 論理削除でも物理削除でも、在庫計算の結果は同じ
+           → であれば、履歴を残せる論理削除の方が有益
+
+        3. 誤操作からの保護
+           理由: 物理削除だと、誤って解放した予約を復元できない
+           → 論理削除なら、緊急時にステータスを戻すことも可能（運用判断）
+
+        4. パフォーマンスへの影響
+           検討事項: RELEASEDレコードが大量に蓄積するとクエリが遅くなる可能性
+           対策: 定期的なアーカイブ処理（例: 1年以上前のRELEASEDを別テーブルへ移動）
 
         Args:
             reservation_id: ID of the reservation to release
@@ -215,6 +256,30 @@ class LotReservationService:
         new_status: ReservationStatus | None = None,
     ) -> LotReservation:
         """予約を別のソースに振り替える（例: Forecast -> Order）.
+
+        【設計意図】なぜ予約の振替機能が必要なのか:
+
+        1. 予測需要から実受注への転換
+           用途: 予測需要で仮押さえした在庫を、実受注確定時に正式な受注予約に切り替える
+           理由: 予測で既に引き当てたロットをそのまま使うことで、
+           顧客に一貫した納期を提示できる
+           例:
+           - 1月: 予測需要で「3月に100個必要」としてロットAを仮押さえ（FORECAST, id=1）
+           - 2月: 実受注確定「3月に80個」→ 予約を振替（ORDER, id=456）
+           → 改めてロット選定をやり直すより、既存予約を引き継ぐ方が効率的
+
+        2. 受注間の予約振替
+           用途: 顧客Aの受注を顧客Bに振り替える（稀なケース）
+           理由: 優先度の高い顧客からの緊急依頼に対応
+           → 既に引き当てたロットを別の受注に付け替える
+
+        3. 在庫の二重引当を防ぐ
+           理由: 新規予約を作成すると、同じ在庫を2回引き当ててしまう
+           → 既存予約のsource情報だけを書き換えることで、在庫数量は変わらない
+
+        トレードオフ:
+        - 振替履歴が追いにくくなる可能性
+           → lot_reservation_historyで変更履歴を記録することで対応
 
         Args:
             reservation_id: 予約ID

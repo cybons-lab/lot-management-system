@@ -12,7 +12,120 @@ from app.infrastructure.persistence.models.rpa_models import (
 
 
 class RpaRepository:
-    """RPA関連のデータアクセスを責務とするRepository."""
+    """RPA関連のデータアクセスを責務とするRepository.
+
+    【設計意図】RPAリポジトリの設計判断:
+
+    1. なぜRPA専用のリポジトリを作るのか
+       理由: RPAワークフロー特化のデータアクセス層
+       背景:
+       - RPAサービス: Power Automate Desktop（PAD）の実行管理
+       - RpaRun: 実行単位（1回のOCR処理、1回のSAP登録等）
+       - RpaRunItem: 処理明細（受注1件ごとの処理状態）
+       設計:
+       - 汎用リポジトリとは分離し、RPA特有の操作に特化
+       メリット:
+       - RPAワークフロー変更時の影響範囲を限定
+
+    2. get_runs() の設計（L32-42）
+       理由: RPAタイプ別の実行履歴取得
+       RPAタイプ:
+       - "ocr_intake": OCR取り込み
+       - "sap_registration": SAP登録
+       - "inventory_check": 在庫確認
+       用途:
+       - フロントエンド: 実行履歴一覧を表示
+       - 最新順（created_at DESC）でソート
+       ページネーション:
+       - skip, limit でページング対応
+
+    3. get_unprocessed_items_count() の設計（L58-72）
+       理由: Step3未完了アイテム数の集計
+       業務フロー:
+       - Step1: OCRでデータ抽出
+       - Step2: バリデーション・発行フラグ設定
+       - Step3: SAP登録実行
+       カウント条件:
+       - issue_flag=True: 発行対象（バリデーション合格）
+       - result_status IN (None, 'pending', 'processing'): 未処理
+       用途:
+       - 「残り10件の処理が未完了」と表示
+       - Step3の完了判定（count=0 → 全て完了）
+
+    4. lock_issue_items() の設計（L74-83）
+       理由: Step2開始時の楽観的ロック
+       実装:
+       - issue_flag=True のアイテムに対して lock_flag=True を一括更新
+       - synchronize_session=False: セッション同期を無効化（バルク更新）
+       業務的意義:
+       - Step2実行中に、他プロセスが同じアイテムを処理しないよう保護
+       戻り値:
+       - 更新件数（ロックしたアイテム数）
+
+    5. find_customer_item() の設計（L87-98）
+       理由: OCR取り込み時のマスタ検索
+       業務フロー:
+       - OCRで「得意先コード: C001, 外部品番: EXT-123」を抽出
+       → CustomerItem マスタで検索
+       → 内部品番（maker_part_code）を取得
+       複合キー検索:
+       - customer_id + external_product_code
+       用途:
+       - 得意先固有の品番を社内品番に変換
+
+    6. find_product_by_maker_part_code() の設計（L100-102）
+       理由: メーカー品番での製品検索
+       用途:
+       - OCR取り込み時の製品特定
+       - SAP登録時の製品マスタ参照
+       検索キー:
+       - maker_part_code（メーカー品番）
+
+    7. find_active_lots() の設計（L104-122）
+       理由: RPAオーケストレーター用のロット検索
+       業務背景:
+       - SAP登録時: 在庫が存在するかを確認
+       → active で current_quantity > 0 のロットのみ対象
+       フィルタ条件:
+       - product_id: 必須（製品指定）
+       - supplier_id: オプション（仕入先指定）
+       ソート順:
+       - FEFO順（有効期限が近い順）
+       → expiry_date ASC NULLS LAST, received_date ASC
+
+    8. なぜ add() と refresh() があるのか（L20-26）
+       理由: 汎用的なエンティティ操作
+       add():
+       - db.add(entity) のラッパー
+       → リポジトリ経由で統一的に操作
+       refresh():
+       - db.refresh(entity) のラッパー
+       → DB反映後の最新状態を取得
+       用途:
+       - サービス層で「エンティティ追加 → 即座に最新状態取得」
+
+    9. なぜ synchronize_session=False なのか（L82）
+       理由: バルク更新のパフォーマンス最適化
+       背景:
+       - 通常のupdate: SQLAlchemy がセッション内のオブジェクトを同期
+       → 更新対象が多いとオーバーヘッド
+       - synchronize_session=False: 同期をスキップ
+       → バルク更新が高速化
+       注意:
+       - 更新後にオブジェクトをrefresh()する必要がある
+
+    10. なぜマスタ検索メソッドがあるのか（L85-122）
+        理由: RPAオーケストレーター内でのマスタ参照
+        業務的背景:
+        - RPAサービスは外部システム（PAD）とのやり取りが主体
+        → OCRデータのバリデーション時にマスタ情報が必要
+        設計:
+        - リポジトリに検索メソッドを集約
+        → サービス層がシンプルに保たれる
+        トレードオフ:
+        - リポジトリの責務が広がる
+        → ただし、RPAワークフロー特有の操作として許容
+    """
 
     def __init__(self, db: Session):
         self.db = db

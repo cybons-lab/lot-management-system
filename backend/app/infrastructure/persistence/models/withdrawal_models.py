@@ -1,6 +1,123 @@
 """Withdrawal models for manual lot withdrawal.
 
 出庫（受注外出庫）の記録用モデル。
+
+【設計意図】出庫モデルの設計判断:
+
+1. なぜ Withdrawal テーブルが必要なのか
+   理由: 受注以外の出庫を記録
+   業務的背景:
+   - 受注出庫: 顧客への正式な出荷（OrderLine → Allocation で管理）
+   - 受注外出庫: 社内使用、廃棄、サンプル等（Withdrawal で管理）
+   → 受注と無関係な在庫減少を記録
+   実装:
+   - Withdrawal: 受注外出庫の記録
+   → lot_id + quantity で在庫を減らす
+   業務影響:
+   - 在庫の正確な追跡（受注外でも在庫が減る）
+
+2. なぜ WithdrawalType が6種類あるのか（L36-44）
+   理由: 出庫理由の分類
+   業務的背景:
+   - ORDER_MANUAL: 受注（手動）→ システム外で管理された受注
+   - INTERNAL_USE: 社内使用 → 検査、試作、社内消費
+   - DISPOSAL: 廃棄処理 → 期限切れ、不良品
+   - RETURN: 返品対応 → 顧客からの返品
+   - SAMPLE: サンプル出荷 → 見本品の提供
+   - OTHER: その他 → 上記以外
+   用途:
+   - 在庫減少理由の分析
+   → 「廃棄が多い製品」を特定
+
+3. なぜ customer_id と delivery_place_id が Nullable なのか（L65-73）
+   理由: 出庫タイプによっては不要
+   業務ルール:
+   - ORDER_MANUAL, SAMPLE: 顧客・納入先あり
+   - INTERNAL_USE, DISPOSAL: 顧客・納入先なし
+   → 出庫タイプによって必須/任意が変わる
+   実装:
+   - customer_id: Nullable（顧客がいない場合は NULL）
+   - delivery_place_id: Nullable（納入先がない場合は NULL）
+   業務影響:
+   - 廃棄処理時に顧客情報を入力不要
+
+4. なぜ CheckConstraint で数量を検証するのか（L91）
+   理由: 業務ルール違反の検出
+   業務ルール:
+   - 出庫数量は必ず正数（0以下は無効）
+   実装:
+   - CheckConstraint("quantity > 0", name="chk_withdrawals_quantity")
+   → データベースレベルで検証
+   メリット:
+   - アプリケーション以外からの登録でも検証
+
+5. なぜ CheckConstraint で withdrawal_type を検証するのか（L92-95）
+   理由: 不正な出庫タイプの防止
+   業務ルール:
+   - withdrawal_type は6種類のみ有効
+   実装:
+   - CheckConstraint(..., name="chk_withdrawals_type")
+   → データベースレベルで検証
+   メリット:
+   - Enum以外の値が登録されるのを防ぐ
+
+6. なぜ ship_date があるのか（L75）
+   理由: 実際の出庫日を記録
+   業務的背景:
+   - withdrawn_at: システム登録日時
+   - ship_date: 実際の出庫日
+   → 後日、出庫日をバックデート登録するケースがある
+   例:
+   - 1月10日に廃棄処理を実施
+   - 1月15日にシステム登録（ship_date = 1月10日）
+   用途:
+   - 在庫推移の正確な分析
+
+7. なぜ reason と reference_number があるのか（L76-77）
+   理由: 出庫理由と参照番号の記録
+   業務的背景:
+   - reason: 出庫理由の詳細（例: 「期限切れのため廃棄」）
+   - reference_number: 参照番号（例: 「廃棄承認書 No.123」）
+   用途:
+   - 監査証跡: なぜ出庫したかを記録
+   - 外部文書との紐付け
+
+8. なぜ withdrawn_by があるのか（L78-82）
+   理由: 出庫実施者の記録
+   監査要件:
+   - 誰が出庫処理を行ったか
+   → 責任の所在を明確化
+   実装:
+   - withdrawn_by: User の外部キー（Nullable）
+   → 退職者削除時も記録を保持（ondelete="RESTRICT"）
+   業務影響:
+   - 不正な出庫の検出
+
+9. なぜ lot_id に RESTRICT があるのか（L60）
+   理由: ロット削除の防止
+   業務ルール:
+   - 出庫記録があるロットは削除不可
+   → 過去の出庫履歴を保持
+   実装:
+   - ondelete="RESTRICT"
+   → ロット削除時にエラー
+   業務影響:
+   - 出庫履歴の保全（監査証跡）
+
+10. なぜ複数のインデックスがあるのか（L96-99）
+    理由: 頻繁な検索クエリの最適化
+    検索パターン:
+    - lot_id: 「このロットの出庫履歴を表示」
+    - customer_id: 「顧客Aへの出庫を一覧表示」
+    - ship_date: 「今月の出庫を集計」
+    - withdrawal_type: 「廃棄処理の一覧を表示」
+    実装:
+    - Index("idx_withdrawals_lot", "lot_id")
+    - Index("idx_withdrawals_customer", "customer_id")
+    - Index("idx_withdrawals_date", "ship_date")
+    - Index("idx_withdrawals_type", "withdrawal_type")
+    メリット:
+    - 検索パフォーマンスの向上
 """
 
 from __future__ import annotations

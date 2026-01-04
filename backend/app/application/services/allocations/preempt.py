@@ -3,6 +3,123 @@
 Handles automatic release of soft reservations when hard allocation is requested.
 
 P3: Uses LotReservation exclusively.
+
+【設計意図】ソフト予約プリエンプション（先取り）の設計判断:
+
+1. なぜプリエンプション機能が必要なのか
+   理由: ハード確定（CONFIRMED）の優先権を保証
+   業務的背景:
+   - 自動車部品商社: KANBAN（かんばん発注）は納期確約が必要
+   - 問題: ソフト予約（ACTIVE）が先に在庫を確保
+   → ハード確定時に在庫不足
+   解決:
+   - プリエンプション: 優先度の低い予約を自動解放
+   → ハード確定に在庫を譲る
+
+2. 優先度順の設計（L80-86）
+   理由: ビジネスルールに基づく優先順位
+   優先度（高→低）:
+   - KANBAN（4）: かんばん発注（最優先）
+   - ORDER（3）: 通常受注
+   - SPOT（2）: スポット受注
+   - FORECAST_LINKED（1）: 予測ベース仮受注（最低優先）
+   業務ルール:
+   - KANBAN は確定納期、絶対に守る必要がある
+   - FORECAST は見込みなので調整可能
+   実装:
+   - sa_case() でorder_typeを数値化
+   → 数値が小さいほど優先度が低い
+   → 優先度が低い順（asc）に解放
+
+3. なぜ ACTIVE のみを対象とするのか（L76）
+   理由: CONFIRMED（確定予約）は解放不可
+   業務ルール:
+   - ACTIVE: システム内の仮予約（SAP未登録）
+   → 柔軟に調整可能
+   - CONFIRMED: SAP登録済みの確定予約
+   → SAP側の処理が必要、自動解放不可
+   実装:
+   - status == ACTIVE のみ対象
+   → CONFIRMED は解放されない
+
+4. 在庫不足チェックの設計（L60-64）
+   理由: 必要な場合のみプリエンプション実行
+   処理フロー:
+   - available = 利用可能数量
+   - available >= required_qty: 十分な在庫あり
+   → プリエンプション不要、空リスト返却
+   - available < required_qty: 在庫不足
+   → shortage（不足数量）を計算して解放開始
+   メリット:
+   - 不要な解放を防止
+   - パフォーマンス向上
+
+5. 部分解放の設計（L108-120）
+   理由: 必要最小限の解放
+   問題:
+   - 予約A: 100個、不足: 30個
+   → 100個全て解放すると、70個分が無駄に解放される
+   解決:
+   - release_qty = min(reserved_qty, shortage)
+   → 最大30個のみ解放
+   - 残り70個は予約として維持
+   実装（L110-111）:
+   - reservation.reserved_qty -= release_qty
+   → 予約数量を減らす（一部解放）
+
+6. 全量解放の設計（L121-134）
+   理由: 予約が完全に不要になった場合
+   条件:
+   - release_qty >= reservation.reserved_qty
+   → 予約全量を解放
+   実装:
+   - status = RELEASED
+   - released_at = 現在時刻
+   業務的意義:
+   - 解放済み予約として履歴に残す
+   → 「いつ、なぜ解放されたか」を追跡可能
+
+7. なぜ with_for_update() でロックするのか（L55）
+   理由: 並行処理での競合防止
+   問題:
+   - プロセスA: ハード確定処理中
+   - プロセスB: 同時に別のハード確定処理
+   → 両方が同じソフト予約を解放しようとする
+   解決:
+   - with_for_update(): ロット行をロック
+   → 片方が完了するまで、もう片方は待機
+   メリット:
+   - 二重解放の防止
+
+8. 解放情報の返却設計（L93, L113-120, L127-134）
+   理由: 解放結果の可視化
+   返却内容:
+   - reservation_id: 解放された予約ID
+   - source_id: 元の受注明細ID
+   - released_qty: 解放数量
+   - order_type: 受注タイプ（KANBAN, ORDER等）
+   用途:
+   - フロントエンド: 「どの予約が解放されたか」を表示
+   - ログ: 解放履歴を記録
+
+9. update_order_allocation_status() の呼び出し（L140-141）
+   理由: 受注ステータスの自動更新
+   業務フロー:
+   - ソフト予約解放 → 受注明細の引当数量が減少
+   → 受注ステータスを「一部引当」or「未引当」に更新
+   実装:
+   - update_order_allocation_status(): 引当数量を集計してステータス更新
+   メリット:
+   - 受注ステータスが自動的に最新状態に
+
+10. created_at によるタイブレーカー（L87）
+    理由: 同じ優先度の場合は古い予約から解放
+    実装:
+    - order_by(..., created_at ASC)
+    → 同じ order_type なら、作成日時が古い順
+    業務的意義:
+    - FIFO（First In First Out）原則
+    → 古い予約から解放することで公平性を保つ
 """
 
 from __future__ import annotations

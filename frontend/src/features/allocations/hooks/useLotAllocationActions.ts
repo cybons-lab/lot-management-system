@@ -1,6 +1,37 @@
 /**
  * Lot allocation action hooks
  * Main orchestration hook that combines all allocation-related functionality
+ *
+ * 【設計意図】なぜオーケストレーターフックが必要なのか:
+ *
+ * 1. 関心の分離（Separation of Concerns）
+ *    理由: 各アクション（変更、自動引当、保存等）を独立したフックに分割
+ *    メリット:
+ *    - 各フックが単一責任を持つ（SRP: Single Responsibility Principle）
+ *    - テストが容易（個別にテスト可能）
+ *    - コードの可読性向上（各ファイルが短く、理解しやすい）
+ *
+ * 2. コンポジションパターン（Composition over Inheritance）
+ *    理由: 複数の小さなフックを組み合わせて、複雑な機能を実現
+ *    → 継承ではなく、合成（composition）でロジックを構築
+ *    例:
+ *    - useCandidateLotFetcher: キャッシュから候補ロット取得
+ *    - useChangeAllocationHandler: 引当数量変更
+ *    - useAutoAllocateHandler: 自動引当ロジック
+ *    - useAllocationSaver: バックエンドへの保存
+ *    → これらを組み合わせて、完全な引当管理機能を提供
+ *
+ * 3. 依存性注入（Dependency Injection）
+ *    理由: 各フックに必要な依存を明示的に渡す
+ *    例: candidateFetcher を useChangeAllocationHandler に渡す
+ *    メリット:
+ *    - 依存関係が明確（どのフックが何に依存しているかが分かる）
+ *    - テスト時にモックを注入しやすい
+ *
+ * 4. 統合インターフェース
+ *    理由: コンポーネント側は、このフック1つを使うだけで全機能にアクセス可能
+ *    → 7つの小さなフックを個別にimportする必要がない
+ *    → API が統一され、使いやすい
  */
 
 import type { QueryClient } from "@tanstack/react-query";

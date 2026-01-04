@@ -6,6 +6,114 @@ Handles FEFO-based automatic allocation:
 
 P3: Uses LotReservation exclusively.
 v3.0: Delegates to AllocationCandidateService (SSOT).
+
+【設計意図】自動引当の設計判断:
+
+1. なぜ AllocationCandidateService に委譲するのか（L52-60）
+   理由: 引当候補取得ロジックのSSoT
+   → v3.0で AllocationCandidateService が引当候補取得の責務を持つ
+   実装:
+   - _get_fefo_candidates_for_line(): AllocationCandidateService.get_candidates() を呼び出す
+   メリット:
+   - FEFO/FIFO ロジックが1箇所に集中 → 変更影響を限定
+
+2. なぜ既存予約を差し引くのか（L83-96）
+   理由: 重複引当の防止
+   問題:
+   - 受注明細: 100個必要、既に50個引当済み
+   → 100個引当すると、合計150個引当（重複）
+   解決:
+   - already_reserved = sum(r.reserved_qty ...)
+   - required_qty = order_quantity - already_reserved
+   → 残り50個のみ引当
+   業務影響:
+   - 過剰引当を防止 → 在庫の有効活用
+
+3. なぜ FOR_UPDATE でロックするのか（L56, L101-102）
+   理由: 並行引当での競合防止
+   問題:
+   - ユーザーA: ロットX（在庫50個）を引当
+   - ユーザーB: 同時にロットX（在庫50個）を引当
+   → 両方が「在庫あり」と判定 → 合計100個引当（実在庫50個）
+   解決:
+   - lock=True → LockMode.FOR_UPDATE
+   → ロット行をロックして、同時引当を防止
+   メリット:
+   - 在庫の二重引当を防止
+
+4. なぜ create_manual_reservation を呼ぶのか（L117-123）
+   理由: 予約作成ロジックの共通化
+   実装:
+   - create_manual_reservation(): 手動・自動引当の共通処理
+   → LotReservation レコード作成 + バリデーション
+   メリット:
+   - 予約作成ロジックが重複しない
+   - バリデーションルールを一元管理
+
+5. なぜ commit_db=False を使うのか（L122, L181）
+   理由: 一括コミットによるトランザクション最適化
+   問題:
+   - 10個のロットを引当 → 10回のコミット → 遅い
+   解決:
+   - commit_db=False: 各引当でコミットしない
+   - L128: 最後に1回だけコミット
+   メリット:
+   - パフォーマンス向上（トランザクション回数削減）
+   - 全件成功 or 全件ロールバック（原子性）
+
+6. なぜ auto_reserve_bulk があるのか（L189-274）
+   理由: 複数受注明細の一括引当
+   用途:
+   - 管理者: 「FORECAST_LINKED の受注を全て引当」
+   - バッチ処理: 「夜間に全受注を一括引当」
+   実装:
+   - フィルタ: product_id, customer_id, delivery_place_id, order_type
+   - ORDER BY delivery_date ASC: 納期が早い順に引当
+   業務影響:
+   - 手動で1件ずつ引当する手間を削減
+
+7. なぜ skip_already_reserved があるのか（L196, L259-261）
+   理由: 全量引当済み明細のスキップ
+   問題:
+   - 100件の受注明細のうち、80件は既に全量引当済み
+   → 80件の処理は無駄
+   解決:
+   - skip_already_reserved=True: 全量引当済みはスキップ
+   → 残り20件のみ処理
+   メリット:
+   - 処理時間の短縮
+
+8. なぜ result サマリーを返すのか（L236-242, L272-274）
+   理由: バッチ処理結果の可視化
+   サマリー内容:
+   - processed_lines: 処理対象の明細数
+   - reserved_lines: 引当成功した明細数
+   - skipped_lines: スキップした明細数
+   - failed_lines: エラーが発生した明細一覧
+   用途:
+   - フロントエンド: 「100件処理、80件成功、10件スキップ、10件失敗」と表示
+
+9. なぜ try-except で個別エラーをキャッチするのか（L263-269）
+   理由: 一部失敗でも継続処理
+   問題:
+   - 100件の引当中、10件目でエラー → 全件ロールバック
+   → 9件の成功も無駄に
+   解決:
+   - try-except で個別エラーをキャッチ
+   → failed_lines に追加して、残り90件を処理継続
+   業務影響:
+   - 一部失敗しても、成功した引当は有効化
+
+10. なぜ _auto_reserve_line_no_commit があるのか（L135-186）
+    理由: バッチ処理用の内部関数
+    違い:
+    - auto_reserve_line(): 単体引当（commit あり）
+    - _auto_reserve_line_no_commit(): バッチ引当（commit なし）
+    実装:
+    - auto_reserve_bulk() から呼び出し
+    → 全明細の引当が完了してから、1回だけコミット
+    メリット:
+    - トランザクション回数の削減
 """
 
 from __future__ import annotations

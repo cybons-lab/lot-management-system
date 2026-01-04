@@ -1,5 +1,45 @@
 # backend/app/services/orders/validation.py
-"""Order validation service for inventory availability checks."""
+"""Order validation service for inventory availability checks.
+
+【設計意図】受注バリデーションサービスの設計判断:
+
+1. Frozen Dataclass パターン（L17-28）
+   理由: 値オブジェクト（Value Object）として設計
+   → frozen=True で不変性を保証
+   → slots=True でメモリ使用量を削減
+   用途: OrderLineDemandは、受注明細の「需要」を表す値オブジェクト
+   メリット:
+   - イミュータブル → 予期しない変更を防ぐ
+   - ハッシュ可能 → Dict のキーとして使用可能
+
+2. __post_init__ によるバリデーション（L24-27）
+   理由: dataclass 初期化後に実行されるバリデーション
+   → quantity < 1 の場合、ValueError を raise
+   → object.__setattr__ で frozen dataclass の値を変更（int型への変換）
+   トレードオフ: frozen=True でも __post_init__ 内では変更可能
+
+3. Facade パターン（validate classmethod, L46-85）
+   理由: 外部から使いやすいシンプルなAPI
+   → validate() は classmethod として公開
+   → 内部で OrderValidationService インスタンスを生成
+   メリット:
+   - 呼び出し側は db セッションを渡すだけ（インスタンス化不要）
+   - 内部実装（validate_lines）を隠蔽
+   例: OrderValidationService.validate(db, demands)
+
+4. InsufficientStockError のハンドリング（L72-85）
+   理由: ドメインエラーを ValidationResult に変換
+   → ドメイン層（domain/errors.py）からのエラーを、
+      プレゼンテーション層（API）向けの形式に変換
+   → error_data に詳細情報を格納（product_code, required, available）
+   業務上の意味: API レスポンスで「どの製品が、何個不足しているか」を伝える
+
+5. stock_repository の依存性注入（L42-44）
+   理由: テスト時にモックを注入可能
+   → デフォルトは StockRepository(db) を使用
+   → テスト時は、モックリポジトリを注入してDBアクセスを回避
+   メリット: 単体テストが高速化、外部依存を排除
+"""
 
 from __future__ import annotations
 

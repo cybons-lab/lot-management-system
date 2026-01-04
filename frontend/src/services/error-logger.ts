@@ -1,27 +1,48 @@
 /**
- * Error Logger Service
+ * エラーロガーサービス
  *
- * Provides centralized error logging for the frontend application.
- * Logs errors to console in development and optionally sends to backend.
+ * フロントエンドアプリケーションの集約的なエラーログ機能を提供します。
+ * 開発モードではコンソールに出力し、エラーレベルのログはバックエンドにも送信します。
  */
 
+/**
+ * エラーログエントリ
+ */
 export interface ErrorLogEntry {
+  /** タイムスタンプ（ISO形式） */
   timestamp: string;
+  /** ログレベル */
   level: "error" | "warning" | "info";
+  /** エラー発生元 */
   source: string;
+  /** エラーメッセージ */
   message: string;
+  /** スタックトレース */
   stack?: string;
+  /** 追加のコンテキスト情報 */
   context?: Record<string, unknown>;
+  /** ユーザーエージェント */
   userAgent?: string;
+  /** 発生URL */
   url?: string;
 }
 
+/**
+ * エラーロガークラス
+ *
+ * シングルトンパターンでエラーログを管理します。
+ */
 class ErrorLogger {
   private logs: ErrorLogEntry[] = [];
   private readonly maxLogs = 100;
 
   /**
-   * Log an error with specified level
+   * 指定レベルでログを記録
+   *
+   * @param level - ログレベル（error/warning/info）
+   * @param source - エラー発生元
+   * @param error - エラーオブジェクトまたはメッセージ
+   * @param context - 追加のコンテキスト情報
    */
   log(
     level: ErrorLogEntry["level"],
@@ -64,45 +85,65 @@ class ErrorLogger {
   }
 
   /**
-   * Log an error
+   * エラーを記録
+   *
+   * @param source - エラー発生元
+   * @param error - エラーオブジェクトまたはメッセージ
+   * @param context - 追加のコンテキスト情報
    */
   error(source: string, error: Error | string, context?: Record<string, unknown>): void {
     this.log("error", source, error, context);
   }
 
   /**
-   * Log a warning
+   * 警告を記録
+   *
+   * @param source - 警告発生元
+   * @param error - エラーオブジェクトまたはメッセージ
+   * @param context - 追加のコンテキスト情報
    */
   warning(source: string, error: Error | string, context?: Record<string, unknown>): void {
     this.log("warning", source, error, context);
   }
 
   /**
-   * Log an info message
+   * 情報を記録
+   *
+   * @param source - 情報発生元
+   * @param message - メッセージ
+   * @param context - 追加のコンテキスト情報
    */
   info(source: string, message: string, context?: Record<string, unknown>): void {
     this.log("info", source, message, context);
   }
 
   /**
-   * Get all logs
+   * 全ログを取得
+   *
+   * @returns ログエントリの配列（コピー）
    */
   getLogs(): ErrorLogEntry[] {
     return [...this.logs];
   }
 
   /**
-   * Clear all logs
+   * 全ログをクリア
    */
   clearLogs(): void {
     this.logs = [];
   }
 }
 
-// Singleton instance
+// シングルトンインスタンス
 export const errorLogger = new ErrorLogger();
 
-// Convenience functions
+/**
+ * エラーログを記録する便利関数
+ *
+ * @param source - エラー発生元
+ * @param error - エラーオブジェクトまたはメッセージ
+ * @param context - 追加のコンテキスト情報
+ */
 export const logError = (
   source: string,
   error: Error | string,
@@ -111,6 +152,13 @@ export const logError = (
   errorLogger.error(source, error, context);
 };
 
+/**
+ * 警告ログを記録する便利関数
+ *
+ * @param source - 警告発生元
+ * @param error - エラーオブジェクトまたはメッセージ
+ * @param context - 追加のコンテキスト情報
+ */
 export const logWarning = (
   source: string,
   error: Error | string,
@@ -119,6 +167,13 @@ export const logWarning = (
   errorLogger.warning(source, error, context);
 };
 
+/**
+ * 情報ログを記録する便利関数
+ *
+ * @param source - 情報発生元
+ * @param message - メッセージ
+ * @param context - 追加のコンテキスト情報
+ */
 export const logInfo = (source: string, message: string, context?: Record<string, unknown>) => {
   errorLogger.info(source, message, context);
 };

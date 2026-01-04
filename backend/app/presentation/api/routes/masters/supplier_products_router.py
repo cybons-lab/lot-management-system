@@ -31,9 +31,20 @@ def list_supplier_products(
     include_inactive: bool = Query(False),
     db: Session = Depends(get_db),
 ):
-    """Get supplier products (仕入先商品一覧).
+    """仕入先商品一覧を取得.
 
-    product_suppliers テーブルから製品-仕入先の関連を取得。
+    product_suppliersテーブルから製品-仕入先の関連情報を取得します。
+    デフォルトでは有効なレコードのみを返します。
+
+    Args:
+        skip: スキップ件数（ページネーション用）
+        limit: 取得件数上限（最大1000件）
+        supplier_id: 仕入先IDでフィルタ
+        include_inactive: 論理削除済みレコードを含めるか（デフォルト: False）
+        db: データベースセッション
+
+    Returns:
+        仕入先商品のリスト（製品情報と仕入先情報を含む）
     """
     query = (
         select(
@@ -80,7 +91,15 @@ def list_supplier_products(
 
 @router.get("/export/download")
 def export_supplier_products(format: str = "csv", db: Session = Depends(get_db)):
-    """Export supplier products."""
+    """仕入先商品をエクスポート.
+
+    Args:
+        format: エクスポート形式（"csv" または "xlsx"）
+        db: データベースセッション
+
+    Returns:
+        Excel形式またはCSV形式のファイルレスポンス
+    """
     query = (
         select(
             ProductSupplier.id,
@@ -120,7 +139,18 @@ def export_supplier_products(format: str = "csv", db: Session = Depends(get_db))
 
 @router.get("/{id}", response_model=SupplierProductResponse)
 def get_supplier_product(id: int, db: Session = Depends(get_db)):
-    """Get a supplier product by ID."""
+    """仕入先商品詳細を取得.
+
+    Args:
+        id: 仕入先商品ID
+        db: データベースセッション
+
+    Returns:
+        SupplierProductResponse: 仕入先商品詳細（製品情報と仕入先情報を含む）
+
+    Raises:
+        HTTPException: レコードが見つからない場合は404
+    """
     sp = db.query(ProductSupplier).filter(ProductSupplier.id == id).first()
     if not sp:
         raise HTTPException(status_code=404, detail="Supplier product not found")
@@ -146,7 +176,21 @@ def get_supplier_product(id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=SupplierProductResponse, status_code=status.HTTP_201_CREATED)
 def create_supplier_product(data: SupplierProductCreate, db: Session = Depends(get_db)):
-    """Create a new supplier product."""
+    """仕入先商品を新規作成.
+
+    製品と仕入先の関連を登録します。
+    is_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。
+
+    Args:
+        data: 仕入先商品作成データ
+        db: データベースセッション
+
+    Returns:
+        SupplierProductResponse: 作成された仕入先商品情報
+
+    Raises:
+        HTTPException: 製品-仕入先のペアが既に存在する場合は400
+    """
     # Check if exists (including inactive ones?)
     # Ideally should reactivate if exists and inactive, but for now duplicate error
     existing = (
@@ -194,7 +238,21 @@ def create_supplier_product(data: SupplierProductCreate, db: Session = Depends(g
 
 @router.put("/{id}", response_model=SupplierProductResponse)
 def update_supplier_product(id: int, data: SupplierProductUpdate, db: Session = Depends(get_db)):
-    """Update a supplier product."""
+    """仕入先商品を更新.
+
+    is_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。
+
+    Args:
+        id: 仕入先商品ID
+        data: 更新データ
+        db: データベースセッション
+
+    Returns:
+        SupplierProductResponse: 更新後の仕入先商品情報
+
+    Raises:
+        HTTPException: レコードが見つからない場合は404
+    """
     sp = db.query(ProductSupplier).filter(ProductSupplier.id == id).first()
     if not sp:
         raise HTTPException(status_code=404, detail="Supplier product not found")
@@ -237,7 +295,19 @@ def delete_supplier_product(
     end_date: date | None = Query(None),
     db: Session = Depends(get_db),
 ):
-    """Soft delete a supplier product (mark as inactive)."""
+    """仕入先商品を論理削除（無効化）.
+
+    Args:
+        id: 仕入先商品ID
+        end_date: 終了日（省略時は今日の日付）
+        db: データベースセッション
+
+    Returns:
+        None
+
+    Raises:
+        HTTPException: レコードが見つからない場合は404
+    """
     sp = db.query(ProductSupplier).filter(ProductSupplier.id == id).first()
     if not sp:
         raise HTTPException(status_code=404, detail="Supplier product not found")
@@ -249,7 +319,18 @@ def delete_supplier_product(
 
 @router.delete("/{id}/permanent", status_code=status.HTTP_204_NO_CONTENT)
 def permanent_delete_supplier_product(id: int, db: Session = Depends(get_db)):
-    """Permanently delete a supplier product."""
+    """仕入先商品を物理削除.
+
+    Args:
+        id: 仕入先商品ID
+        db: データベースセッション
+
+    Returns:
+        None
+
+    Raises:
+        HTTPException: レコードが見つからない場合は404
+    """
     sp = db.query(ProductSupplier).filter(ProductSupplier.id == id).first()
     if not sp:
         raise HTTPException(status_code=404, detail="Supplier product not found")
@@ -261,7 +342,18 @@ def permanent_delete_supplier_product(id: int, db: Session = Depends(get_db)):
 
 @router.post("/{id}/restore", response_model=SupplierProductResponse)
 def restore_supplier_product(id: int, db: Session = Depends(get_db)):
-    """Restore a soft-deleted supplier product."""
+    """論理削除された仕入先商品を復元.
+
+    Args:
+        id: 仕入先商品ID
+        db: データベースセッション
+
+    Returns:
+        SupplierProductResponse: 復元された仕入先商品情報
+
+    Raises:
+        HTTPException: レコードが見つからない場合は404
+    """
     sp = db.query(ProductSupplier).filter(ProductSupplier.id == id).first()
     if not sp:
         raise HTTPException(status_code=404, detail="Supplier product not found")

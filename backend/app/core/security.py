@@ -1,4 +1,30 @@
-"""Security utilities (JWT)."""
+"""Security utilities (JWT).
+
+【設計意図】JWT認証の設定値について:
+
+1. ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24（1日）
+   理由: 在庫管理システムの業務特性
+   - 営業担当者は終日システムを使用
+   - 頻繁なログイン要求はユーザビリティを損なう
+   → 1日有効なトークンで業務を継続できる
+
+   セキュリティとの兼ね合い:
+   - 短期: セキュアだが、ユーザーの手間が増える
+   - 長期: 便利だが、トークン盗難のリスク
+   → 社内システムかつVPN経由のため、1日は許容範囲
+
+   将来の改善案:
+   - リフレッシュトークン機構の導入
+   - アクセストークン15分 + リフレッシュトークン1週間
+
+2. デフォルト15分（create_access_token内）
+   用途: 特定の短期操作用（パスワードリセット等）
+   → 通常のログインでは明示的に1日を指定
+
+3. SECRET_KEY（開発用ハードコード）
+   注意: 本番環境では必ず環境変数から読み込むこと
+   → 現状は開発の利便性を優先
+"""
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -9,7 +35,7 @@ import jwt  # type: ignore[import-not-found]
 # Hardcoded secret for dev (In prod, load from env)
 SECRET_KEY = "dev-secret-key-change-me-in-production"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 1 day (社内システムのため許容)
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:

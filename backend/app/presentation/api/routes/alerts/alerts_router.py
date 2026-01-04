@@ -1,6 +1,6 @@
-"""Alert API endpoints.
+"""アラートAPIエンドポイント.
 
-Provides REST API for retrieving system alerts and alert summaries.
+システムアラートとアラートサマリーを取得するREST APIを提供します。
 """
 
 import logging
@@ -34,16 +34,17 @@ def list_alerts(
     only_open: bool = Query(True, description="Only return open/active alerts"),
     db: Session = Depends(get_db),
 ) -> list[AlertItem]:
-    """Get list of current alerts.
+    """現在のアラート一覧を取得.
 
-    Query parameters:
-    - severity: Filter by severity (comma-separated: critical,warning,info)
-    - category: Filter by category (comma-separated: order,inventory,lot,forecast)
-    - limit: Max alerts to return (default: 50, max: 500)
-    - only_open: Only show open alerts (default: true)
+    Args:
+        severity: 重要度でフィルタ（カンマ区切り: critical,warning,info）
+        category: カテゴリでフィルタ（カンマ区切り: order,inventory,lot,forecast）
+        limit: 取得件数上限（デフォルト: 50、最大: 500）
+        only_open: オープンなアラートのみ表示（デフォルト: true）
+        db: データベースセッション
 
     Returns:
-        List of alert items sorted by severity and time
+        重要度と時間でソートされたアラートアイテムのリスト
     """
     service = AlertService(db)
 
@@ -77,10 +78,13 @@ def list_alerts(
 
 @router.get("/summary", response_model=AlertSummaryResponse)
 def get_alert_summary(db: Session = Depends(get_db)) -> AlertSummaryResponse:
-    """Get summary of all current alerts.
+    """現在のアラートサマリーを取得.
+
+    Args:
+        db: データベースセッション
 
     Returns:
-        Alert counts grouped by severity and category
+        重要度とカテゴリ別にグループ化されたアラート件数
     """
     service = AlertService(db)
     summary = service.get_alert_summary()

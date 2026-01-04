@@ -1,6 +1,132 @@
 """Lot repository and service utilities with FEFO support.
 
 v2.2: lot_current_stock 依存を削除。Lot モデルを直接使用。
+
+【設計意図】ロットサービスの設計判断:
+
+1. なぜ AllocationCandidateService に処理を委譲するのか（L84-141）
+   理由: 引当候補取得のSSoT（Single Source of Truth）
+   背景:
+   - v3.0以前: LotService が FEFO候補を直接取得
+   - v3.0以降: AllocationCandidateService が引当候補取得の責務を持つ
+   → LotService は AllocationCandidateService を呼び出すだけ
+   実装:
+   - get_fefo_candidates(): AllocationCandidateService.get_candidates() に委譲
+   メリット:
+   - 引当候補ロジックが1箇所に集中 → 変更時の影響範囲を限定
+   - FEFO/FIFO の切り替えが容易
+
+2. なぜ primary_supplier_ids で優先ソートするのか（L220-236）
+   理由: 営業担当者の業務効率化
+   業務的背景:
+   - 営業担当者: 自分の担当サプライヤーのロットを優先的に確認
+   → 一覧表示時に、担当ロットを上位に表示
+   実装:
+   - priority_case = case((supplier_id.in_(...), 0), else_=1)
+   - ORDER BY priority_case ASC（0が優先）
+   用途:
+   - ロット一覧画面: 担当ロットが上位に表示 → 確認作業が効率化
+
+3. なぜ temporary_lot_key と lot_number を分けるのか（L392-417）
+   理由: 仮入庫対応
+   業務フロー:
+   - Step1: 入庫予定登録（ロット番号未確定）
+   → temporary_lot_key（UUID）を発行
+   - Step2: 実際の入庫時にロット番号を確定
+   → lot_number を更新
+   実装:
+   - temporary_lot_key: UUID（システム内部での一意識別子）
+   - lot_number: TMP-20251213-a1b2c3d4（ユーザー表示用の暫定番号）
+   業務影響:
+   - 入庫予定段階で引当可能（ロット番号未確定でもOK）
+
+4. なぜ origin_type 別に lot_number を自動採番するのか（L335-341, L366-390）
+   理由: 非受注ロットの識別
+   業務的背景:
+   - ORDER: 仕入先から受領したロット番号を使用
+   - SAMPLE: サンプル用ロット → SMP-20250304-0001
+   - SAFETY_STOCK: 安全在庫 → SAF-20250304-0001
+   - ADHOC: 臨時入庫 → ADH-20250304-0001
+   実装:
+   - _generate_adhoc_lot_number(): プレフィックス + 日付 + 連番
+   メリット:
+   - プレフィックスでロットの起源を一目で識別
+
+5. なぜ VLotDetails ビューを使うのか（L190-268, list_lots）
+   理由: JOIN済みデータの高速取得
+   問題:
+   - Lot + Product + Supplier + Warehouse の4テーブルJOIN → 遅い
+   解決:
+   - VLotDetails: 事前にJOINしたビュー
+   → 製品名、仕入先名、倉庫名を1回のクエリで取得
+   実装:
+   - query(VLotDetails).filter(...).all()
+   メリット:
+   - N+1問題を回避
+   - ロット一覧の表示速度向上
+
+6. なぜ Soft Delete 対応をするのか（L634-671）
+   理由: 削除済みマスタの参照
+   問題:
+   - 製品マスタ削除 → 過去のロットで製品名が表示できない
+   解決:
+   - is_soft_deleted: マスタが削除済みかを判定
+   - 削除済みの場合: "[削除済み製品]" と表示
+   実装:
+   - product_deleted = product.is_soft_deleted if ... else False
+   - product_name = ... if not product_deleted else "[削除済み製品]"
+   業務影響:
+   - 過去のロット情報を正しく表示（マスタ削除後も）
+
+7. なぜ lock_lot と unlock_lot があるのか（L471-542）
+   理由: 手動での在庫ロック
+   業務例:
+   - 品質検査中のロット: 検査完了まで引当不可にしたい
+   → lock_lot() で手動ロック
+   実装:
+   - locked_quantity: ロック数量
+   - lock_reason: ロック理由（「検査中」等）
+   用途:
+   - 利用可能数量 = current_quantity - reserved_qty - locked_qty
+   → ロックされた数量は引当対象外
+
+8. なぜ StockMovement を記録するのか（L544-604）
+   理由: 在庫変動の監査証跡
+   業務要件:
+   - 在庫不一致が発生した場合の原因追跡
+   → すべての在庫変動を記録（Immutable）
+   実装:
+   - create_stock_movement(): StockMovement レコード作成
+   - transaction_type: 入庫/出庫/調整等の種別
+   - quantity_change: 変動数量
+   - quantity_after: 変動後の数量
+   メリット:
+   - 「いつ、誰が、何個、どの理由で在庫を変動させたか」を完全に記録
+
+9. なぜ EventDispatcher.queue() を呼ぶのか（L593-602）
+   理由: ドメインイベントの発行
+   用途:
+   - StockChangedEvent: 在庫変動イベント
+   → 在庫アラートの通知、外部システムへの連携等
+   実装:
+   - EventDispatcher.queue(event): イベントをキューに追加
+   → リクエスト完了後に一括処理
+   メリット:
+   - 在庫変動処理と、通知・連携処理を疎結合に実装
+
+10. なぜ IntegrityError を特別に処理するのか（L347-358, L453-458）
+    理由: ユーザーフレンドリーなエラーメッセージ
+    問題:
+    - IntegrityError: "duplicate key value violates unique constraint..."
+    → 技術的すぎて、ユーザーには分かりにくい
+    解決:
+    - uq_lots_number_product_warehouse: ロット番号の重複エラーを検出
+    → "ロット番号「XXX」は既に存在します" と分かりやすく表示
+    実装:
+    - except IntegrityError: error_str から制約名を検出
+    → LotValidationError で分かりやすいメッセージを返す
+    業務影響:
+    - ユーザーが自分で問題を解決できる
 """
 
 from __future__ import annotations
@@ -49,13 +175,33 @@ from app.presentation.schemas.inventory.inventory_schema import (
 
 
 class LotService:
-    """Business logic for lot operations and FEFO candidate retrieval."""
+    """ロット操作とFEFO候補取得のビジネスロジック.
+
+    ロットの作成・更新・削除、在庫変動記録、引当候補の取得など、
+    ロット在庫管理の中核となるビジネスロジックを提供します。
+    """
 
     def __init__(self, db: Session):
+        """サービスの初期化.
+
+        Args:
+            db: データベースセッション
+        """
         self.db = db
         self.repository = LotRepository(db)
 
     def get_lot(self, lot_id: int) -> Lot:
+        """ロットを取得.
+
+        Args:
+            lot_id: ロットID
+
+        Returns:
+            Lot: ロットエンティティ
+
+        Raises:
+            LotNotFoundError: ロットが存在しない場合
+        """
         lot = self.repository.find_by_id(lot_id)
         if not lot:
             raise LotNotFoundError(lot_id)
@@ -69,18 +215,22 @@ class LotService:
         include_sample: bool = False,
         include_adhoc: bool = False,
     ) -> list[LotCandidate]:
-        """Get FEFO candidate lots.
+        """FEFO引当候補ロットを取得.
 
-        v2.2: Uses Lot.current_quantity - Lot.allocated_quantity for available quantity.
-        v2.3: Filters out sample/adhoc origin types by default.
-        v3.0: Delegates to AllocationCandidateService (SSOT).
+        有効期限の早い順（FEFO: First Expiry First Out）に並べた引当候補ロットを返します。
+        v2.2: Lot.current_quantity - Lot.allocated_quantityで利用可能数量を計算
+        v2.3: デフォルトでサンプル/アドホック起源ロットを除外
+        v3.0: AllocationCandidateService（SSOT）に処理を委譲
 
         Args:
-            product_code: Product code to filter by
-            warehouse_code: Optional warehouse code filter
-            exclude_expired: Whether to exclude expired lots
-            include_sample: Whether to include sample origin lots (default: False)
-            include_adhoc: Whether to include adhoc origin lots (default: False)
+            product_code: フィルタ対象の製品コード
+            warehouse_code: 倉庫コードフィルタ（省略可）
+            exclude_expired: 期限切れロットを除外するか（デフォルト: True）
+            include_sample: サンプル起源ロットを含めるか（デフォルト: False）
+            include_adhoc: アドホック起源ロットを含めるか（デフォルト: False）
+
+        Returns:
+            list[LotCandidate]: FEFO順に並んだ引当候補ロットのリスト
         """
         from app.application.services.allocations.candidate_service import (
             AllocationCandidateService,

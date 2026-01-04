@@ -30,10 +30,19 @@ def list_customers(
     include_inactive: bool = Query(False, description="Include soft-deleted (inactive) customers"),
     db: Session = Depends(get_db),
 ):
-    """Return customers.
+    """顧客一覧を取得.
 
-    By default, only active customers (valid_to >= today) are returned.
-    Set include_inactive=true to include soft-deleted customers.
+    デフォルトでは有効な顧客（valid_to >= 今日）のみを返します。
+    論理削除された顧客も含める場合はinclude_inactive=trueを指定してください。
+
+    Args:
+        skip: スキップ件数（ページネーション用）
+        limit: 取得件数（最大100件）
+        include_inactive: 論理削除済み顧客を含めるか（デフォルト: False）
+        db: データベースセッション
+
+    Returns:
+        list[CustomerResponse]: 顧客情報のリスト
     """
     service = CustomerService(db)
     return service.get_all(skip=skip, limit=limit, include_inactive=include_inactive)
@@ -41,13 +50,29 @@ def list_customers(
 
 @router.get("/template/download")
 def download_customers_template(format: str = "csv", include_sample: bool = True):
-    """Download customer import template."""
+    """顧客インポートテンプレートをダウンロード.
+
+    Args:
+        format: ファイル形式（'csv' または 'xlsx'、デフォルト: csv）
+        include_sample: サンプル行を含めるか（デフォルト: True）
+
+    Returns:
+        顧客インポート用テンプレートファイル
+    """
     return ExportService.export_template("customers", format=format, include_sample=include_sample)
 
 
 @router.get("/export/download")
 def export_customers(format: str = "csv", db: Session = Depends(get_db)):
-    """Export customers to CSV or Excel."""
+    """顧客データをCSVまたはExcelでエクスポート.
+
+    Args:
+        format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）
+        db: データベースセッション
+
+    Returns:
+        StreamingResponse: エクスポートファイル
+    """
     service = CustomerService(db)
     customers = service.get_all()
     data = [CustomerResponse.model_validate(c).model_dump() for c in customers]
@@ -59,14 +84,36 @@ def export_customers(format: str = "csv", db: Session = Depends(get_db)):
 
 @router.get("/{customer_code}", response_model=CustomerResponse)
 def get_customer(customer_code: str, db: Session = Depends(get_db)):
-    """Fetch a customer by code."""
+    """顧客コードで顧客を取得.
+
+    Args:
+        customer_code: 顧客コード
+        db: データベースセッション
+
+    Returns:
+        CustomerResponse: 顧客詳細情報
+
+    Raises:
+        HTTPException: 顧客が存在しない場合（404）
+    """
     service = CustomerService(db)
     return service.get_by_code(customer_code)
 
 
 @router.post("", response_model=CustomerResponse, status_code=201)
 def create_customer(customer: CustomerCreate, db: Session = Depends(get_db)):
-    """Create a new customer."""
+    """顧客を新規作成.
+
+    Args:
+        customer: 顧客作成リクエストデータ
+        db: データベースセッション
+
+    Returns:
+        CustomerResponse: 作成された顧客情報
+
+    Raises:
+        HTTPException: 顧客コードが既に存在する場合（409）
+    """
     service = CustomerService(db)
     existing = service.get_by_code(customer.customer_code, raise_404=False)
     if existing:

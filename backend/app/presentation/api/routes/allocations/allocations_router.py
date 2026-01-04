@@ -1,3 +1,129 @@
+r"""引当APIルーター.
+
+【設計意図】引当ルーターの設計判断:
+
+1. なぜ preview と commit を分離するのか（L68, L101）
+   理由: Two-Phase Commit パターン
+   業務的背景:
+   - 自動車部品商社: 引当実行前に結果を確認したい
+   → 「期限の近いロットから引当されるか」を事前確認
+   設計:
+   - Phase 1: preview_allocation() - 引当シミュレーション
+   → 実際のデータベース更新なし、計画のみ返す
+   - Phase 2: commit_allocation() - 引当確定
+   → LotReservation レコードを作成、在庫を予約
+   メリット:
+   - ユーザーが結果を確認してから実行
+   - 誤った引当の防止（「意図しないロットから引当された」を回避）
+
+2. _map_fefo_preview() ヘルパーの設計（L37-65）
+   理由: 内部モデルとAPIスキーマの変換を一元化
+   変換内容:
+   - FefoPreviewResult（サービス層） → FefoPreviewResponse（APIスキーマ）
+   - FefoLinePlan → FefoLineAllocation
+   - FefoLotPlan → FefoLotAllocation
+   メリット:
+   - 変換ロジックの重複を避ける
+   - preview と commit の両方で同じ変換を使用
+   設計原則:
+   - ルーター層: データ変換のみ
+   - サービス層: ビジネスロジック
+   → 責務の明確な分離
+
+3. なぜ product_id or 0 としているのか（L54）
+   理由: Pydantic スキーマの型安全性
+   問題:
+   - line_plan.product_id が None の可能性
+   - FefoLineAllocation.product_id: int（NonNullable）
+   → None を渡すと Pydantic バリデーションエラー
+   解決:
+   - product_id or 0: None の場合は 0 を返す
+   → 型エラー回避
+   業務的意義:
+   - product_id=0 は「製品未設定」を意味
+   → フロントエンドで警告表示
+
+4. manual_allocate() の drag-assign エンドポイント（L146）
+   理由: UIでのドラッグ&ドロップ操作
+   業務フロー:
+   - ユーザーが画面でロットを受注明細にドラッグ
+   → POST /drag-assign で手動引当を作成
+   設計:
+   - 自動引当（FEFO）とは別のエンドポイント
+   → 手動引当は即座に確定（preview不要）
+   業務シナリオ:
+   - 特定のロットを特定の受注に割り当てたい
+   → 自動引当では意図したロットが選ばれない場合
+
+5. confirm_allocation() の設計（L193）
+   理由: Soft → Hard の状態遷移
+   背景:
+   - Soft Allocation（仮引当）: 在庫を予約するが、まだSAP未連携
+   - Hard Allocation（本引当）: SAP連携済み、確定引当
+   処理:
+   - PATCH /{allocation_id}/confirm
+   → ReservationStatus.TEMPORARY → ReservationStatus.ACTIVE
+   業務的意義:
+   - 営業担当が引当内容を確認後、「確定」ボタンを押す
+   → SAP連携バッチが実行される前に、社内で引当を確定
+
+6. 例外ハンドリングの設計（L93-98, L136-143, L178-190）
+   理由: エラーの適切な分類とHTTPステータスコード変換
+   パターン:
+   - ValueError("not found"): 404 Not Found
+   - ValueError("insufficient"): 409 Conflict（在庫不足）
+   - AllocationCommitError: 400 Bad Request
+   - その他の例外: グローバルハンドラに委譲
+   メリット:
+   - クライアント側で適切なエラーハンドリング可能
+   → 404 はリトライ不要、409 は在庫不足メッセージ表示
+
+7. get_available_quantity() の呼び出し（L164）
+   理由: 手動引当後の最新在庫数を返す
+   設計:
+   - reservation を作成後、lot の available_qty を再計算
+   → current_quantity - reserved_quantity - locked_quantity
+   用途:
+   - フロントエンドで「残り在庫: XX個」と表示
+   → ユーザーが次の引当を判断する材料
+
+8. db.refresh(reservation) の重要性（L162）
+   理由: リレーションのロード
+   問題:
+   - create_manual_reservation() の戻り値
+   → reservation オブジェクトのリレーション（lot等）が未ロード
+   解決:
+   - db.refresh(reservation)
+   → リレーションを明示的にロード
+   → reservation.lot にアクセス可能
+   用途:
+   - lot.lot_number, lot.expiry_date 等をレスポンスに含める
+
+9. current_user: 認証必須（L72, L105, L150, L198）
+   理由: 引当操作は機密性が高い
+   背景:
+   - 引当 = 在庫の予約
+   → 誰が引当を実行したかの記録が必要（監査証跡）
+   設計:
+   - Depends(AuthService.get_current_user)
+   → 認証トークンが無効な場合、401 Unauthorized
+   業務的意義:
+   - 「誰がこの引当を作成したか」を記録
+   → トラブル時に責任を明確化
+
+10. status=\"preview\" の意味（L175）
+    理由: フロントエンドでの状態表示
+    用途:
+    - 手動引当作成後、まだ「仮」の状態
+    → フロントエンドで「仮引当」と表示
+    実際のステータス:
+    - LotReservation.status = ReservationStatus.TEMPORARY
+    → しかし、APIレスポンスでは \"preview\" という文字列
+    設計:
+    - APIスキーマとドメインモデルの分離
+    → APIはクライアントに優しい表現を使う
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -71,7 +197,22 @@ def preview_allocation(
     db: Session = Depends(get_db),
     current_user: User = Depends(AuthService.get_current_user),
 ) -> FefoPreviewResponse:
-    """FEFO allocation preview."""
+    """FEFO引当プレビュー.
+
+    指定された受注に対してFEFO（先入先出）アルゴリズムで
+    自動引当をシミュレーションし、結果をプレビュー表示します。
+
+    Args:
+        request: プレビューリクエスト（受注ID含む）
+        db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
+
+    Returns:
+        FefoPreviewResponse: 引当プレビュー結果（各明細の引当候補ロット情報）
+
+    Raises:
+        HTTPException: 受注が見つからない場合（404）またはバリデーションエラー（400）
+    """
     try:
         result = fefo.preview_fefo_allocation(db, request.order_id)
         return _map_fefo_preview(result)
@@ -89,7 +230,21 @@ def commit_allocation(
     db: Session = Depends(get_db),
     current_user: User = Depends(AuthService.get_current_user),
 ) -> AllocationCommitResponse:
-    """Commit FEFO allocation."""
+    """FEFO引当確定.
+
+    プレビューした引当結果を確定し、ロット予約を作成します。
+
+    Args:
+        request: 引当確定リクエスト（受注ID含む）
+        db: データベースセッション
+        current_user: 現在のログインユーザー（認証必須）
+
+    Returns:
+        AllocationCommitResponse: 引当確定結果（作成された予約ID等）
+
+    Raises:
+        HTTPException: 受注が見つからない、在庫不足、または確定に失敗した場合
+    """
     try:
         result = actions.commit_fefo_reservation(db, request.order_id)
 

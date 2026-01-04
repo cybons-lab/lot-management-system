@@ -9,6 +9,114 @@ Soft Delete Support:
     - Filters out soft-deleted records in get_all() by default
     - Uses soft_delete() instead of physical delete
     - Provides hard_delete() for physical deletion (admin only)
+
+【設計意図】BaseService の設計判断:
+
+1. なぜ Generic ベースサービスを作ったのか
+   理由: 26以上のサービスクラスで同じCRUDコードが重複していた
+   DRY (Don't Repeat Yourself) 原則の適用
+   重複していたコード:
+   - get_by_id: 全サービスで同じロジック
+   - create: Pydanticスキーマ→ORM変換のボイラープレート
+   - update: exclude_unsetの処理パターン
+   - delete: 404エラーハンドリング
+   → BaseServiceに集約し、継承するだけで全機能を利用可能
+
+2. TypeVar で ID型をパラメータ化する理由（L31）
+   理由: マスタデータの主キー型が統一されていない
+   実例:
+   - Product: id (int)
+   - Customer: customer_code (str)
+   - Supplier: supplier_code (str)
+   → IDType = TypeVar("IDType", int, str) で両方に対応
+   メリット:
+   - 型安全性を保ちつつ、柔軟なID型をサポート
+   - ProductService では get_by_id(id: int)
+   - CustomerService では get_by_id(id: str)
+
+3. _supports_soft_delete のチェック（L66）
+   理由: モデルごとにソフトデリートの有無が異なる
+   対象:
+   - SoftDeleteMixin 継承: Product, Customer, Supplier 等のマスタ
+   - 非継承: StockHistory, Allocation 等のトランザクションデータ
+   動作:
+   - get_all() で自動的にvalid_to > CURRENT_DATE でフィルタ（L88-89）
+   - delete() で自動的にsoft_delete()を呼び出し（L205-208）
+   → サービス側はモデルの実装詳細を意識しなくて良い
+
+4. get_by_id の raise_404 フラグ（L110）
+   理由: 呼び出し側のユースケースに応じた柔軟性
+   ユースケース:
+   - raise_404=True（デフォルト）: API エンドポイント → 404エラーを返す
+   - raise_404=False: 存在チェック → None を返して呼び出し側で判定
+   例:
+   ```python
+   # API エンドポイント
+   product = service.get_by_id(id)  # 見つからなければ404
+
+   # 内部ロジック
+   product = service.get_by_id(id, raise_404=False)
+   if product is None:
+       # カスタムエラーハンドリング
+   ```
+
+5. IntegrityError のカスタムエラーメッセージ（L149-155）
+   理由: データベースエラーをユーザーフレンドリーなメッセージに変換
+   業務シナリオ:
+   - 製品コード重複: "UNIQUE constraint failed: products.product_code"
+   → "製品コード 'P-001' は既に登録されています"
+   実装:
+   - parse_db_error() でDB固有のエラーメッセージを解析
+   - 業務的に意味のあるメッセージに変換
+   メリット: エンドユーザーが理解できるエラーメッセージ
+
+6. update() の exclude_unset=True（L172）
+   理由: PATCH セマンティクス（部分更新）のサポート
+   動作:
+   - exclude_unset=True: 明示的に指定されたフィールドのみ更新
+   - exclude_unset=False: 未指定フィールドはNone等のデフォルト値で上書き
+   例:
+   ```python
+   # PATCH /products/1 {"product_name": "新名称"}
+   # → product_code, internal_unit 等は変更されない
+   ```
+   → RESTful APIのベストプラクティスに準拠
+
+7. delete() のソフトデリート自動判定（L186-212）
+   理由: 呼び出し側がモデルの実装詳細を意識しなくて良い
+   動作:
+   - SoftDeleteMixin 継承 → soft_delete() を呼び出し
+   - 非継承 → db.delete() で物理削除
+   メリット:
+   - サービス継承クラスで delete() をオーバーライド不要
+   - モデルの変更（ソフトデリート追加）がサービス層に影響しない
+
+8. hard_delete() の用途（L242-271）
+   理由: 管理者による誤登録データの完全削除
+   制限事項:
+   - 参照整合性制約でエラーになる場合は、409エラーを返す
+   - エラーメッセージで「ソフトデリートを使うべき」と案内
+   用途:
+   - テストデータの削除
+   - 誤って登録した重複マスタの削除
+   → 通常業務では使用しない（ソフトデリートを推奨）
+
+9. _execute_in_transaction() ヘルパー（L299-320）
+   理由: カスタム業務ロジックでトランザクション管理を統一
+   使用例:
+   ```python
+   def custom_operation(self):
+       def _logic():
+           # 複数の処理
+           self.db.add(...)
+           self.db.flush()
+           # ...
+           return result
+       return self._execute_in_transaction(_logic)
+   ```
+   メリット:
+   - commit/rollback のボイラープレート削減
+   - 例外時の自動rollback保証
 """
 
 from datetime import date

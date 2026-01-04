@@ -24,14 +24,14 @@ router = APIRouter(prefix="/delivery-places", tags=["delivery-places"])
 
 @router.get("/template/download")
 def download_delivery_places_template(format: str = "xlsx", include_sample: bool = True):
-    """Download delivery place import template.
+    """納入先インポートテンプレートをダウンロード.
 
     Args:
-        format: 'csv' or 'xlsx' (default: xlsx)
-        include_sample: Whether to include a sample row (default: True)
+        format: ファイル形式（'csv' または 'xlsx'、デフォルト: xlsx）
+        include_sample: サンプル行を含めるか（デフォルト: True）
 
     Returns:
-        Template file for delivery place import
+        納入先インポート用のテンプレートファイル
     """
     return ExportService.export_template(
         "delivery_places", format=format, include_sample=include_sample
@@ -40,7 +40,15 @@ def download_delivery_places_template(format: str = "xlsx", include_sample: bool
 
 @router.get("/export/download")
 def export_delivery_places(format: str = "xlsx", db: Session = Depends(get_db)):
-    """Export delivery places to CSV or Excel."""
+    """納入先をエクスポート.
+
+    Args:
+        format: エクスポート形式（'csv' または 'xlsx'）
+        db: データベースセッション
+
+    Returns:
+        Excel形式またはCSV形式のファイルレスポンス
+    """
     query = db.query(DeliveryPlace).filter(DeliveryPlace.valid_to > func.current_date())
     places = query.order_by(DeliveryPlace.id).all()
     data = [DeliveryPlaceResponse.model_validate(p).model_dump() for p in places]
@@ -58,7 +66,21 @@ def list_delivery_places(
     include_inactive: bool = Query(False, description="Include soft-deleted places"),
     db: Session = Depends(get_db),
 ):
-    """Return delivery places, optionally filtered by customer_id."""
+    """納入先一覧を取得.
+
+    デフォルトでは有効な納入先のみを返します。
+    オプションで得意先IDによるフィルタリングが可能です。
+
+    Args:
+        skip: スキップ件数（ページネーション用）
+        limit: 取得件数上限
+        customer_id: 得意先IDでフィルタ
+        include_inactive: 論理削除済み納入先を含めるか（デフォルト: False）
+        db: データベースセッション
+
+    Returns:
+        納入先のリスト
+    """
     query = db.query(DeliveryPlace)
 
     # Filter out soft-deleted records by default
@@ -74,7 +96,18 @@ def list_delivery_places(
 
 @router.get("/{delivery_place_id}", response_model=DeliveryPlaceResponse)
 def get_delivery_place(delivery_place_id: int, db: Session = Depends(get_db)):
-    """Get a delivery place by ID."""
+    """納入先詳細を取得.
+
+    Args:
+        delivery_place_id: 納入先ID
+        db: データベースセッション
+
+    Returns:
+        DeliveryPlaceResponse: 納入先詳細
+
+    Raises:
+        HTTPException: 納入先が見つからない場合は404
+    """
     place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
     if not place:
         raise HTTPException(status_code=404, detail="Delivery place not found")
@@ -83,7 +116,21 @@ def get_delivery_place(delivery_place_id: int, db: Session = Depends(get_db)):
 
 @router.post("", response_model=DeliveryPlaceResponse, status_code=status.HTTP_201_CREATED)
 def create_delivery_place(data: DeliveryPlaceCreate, db: Session = Depends(get_db)):
-    """Create a new delivery place."""
+    """納入先を新規作成.
+
+    得意先の存在確認と納入先コードの重複チェックを行います。
+
+    Args:
+        data: 納入先作成データ
+        db: データベースセッション
+
+    Returns:
+        DeliveryPlaceResponse: 作成された納入先情報
+
+    Raises:
+        HTTPException: 得意先が見つからない場合は400
+        HTTPException: 納入先コードが既に存在する場合は400
+    """
     # Check customer exists
     customer = db.query(Customer).filter(Customer.id == data.customer_id).first()
     if not customer:
@@ -109,7 +156,22 @@ def create_delivery_place(data: DeliveryPlaceCreate, db: Session = Depends(get_d
 def update_delivery_place(
     delivery_place_id: int, data: DeliveryPlaceUpdate, db: Session = Depends(get_db)
 ):
-    """Update a delivery place."""
+    """納入先を更新.
+
+    得意先IDを変更する場合は、得意先の存在確認を行います。
+
+    Args:
+        delivery_place_id: 納入先ID
+        data: 更新データ
+        db: データベースセッション
+
+    Returns:
+        DeliveryPlaceResponse: 更新後の納入先情報
+
+    Raises:
+        HTTPException: 納入先が見つからない場合は404
+        HTTPException: 得意先が見つからない場合は400
+    """
     place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
     if not place:
         raise HTTPException(status_code=404, detail="Delivery place not found")
@@ -136,7 +198,19 @@ def delete_delivery_place(
     end_date: date | None = Query(None, description="Valid until date (defaults to yesterday)"),
     db: Session = Depends(get_db),
 ):
-    """Soft delete a delivery place by setting valid_to date."""
+    """納入先を論理削除（valid_toを設定して無効化）.
+
+    Args:
+        delivery_place_id: 納入先ID
+        end_date: 有効終了日（省略時は昨日）
+        db: データベースセッション
+
+    Returns:
+        None
+
+    Raises:
+        HTTPException: 納入先が見つからない場合は404
+    """
     place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
     if not place:
         raise HTTPException(status_code=404, detail="Delivery place not found")
@@ -152,9 +226,23 @@ def permanent_delete_delivery_place(
     delivery_place_id: int,
     db: Session = Depends(get_db),
 ):
-    """Permanently delete a delivery place (admin only).
+    """納入先を物理削除（管理者のみ）.
 
-    Only allowed if the place has no references in other tables.
+    他のテーブルから参照されていない場合のみ削除可能です。
+
+    Args:
+        delivery_place_id: 納入先ID
+        db: データベースセッション
+
+    Returns:
+        None
+
+    Raises:
+        HTTPException: 納入先が見つからない場合は404
+        HTTPException: 他のデータから参照されている場合は409
+
+    Note:
+        TODO: 管理者ロールチェックを追加
     """
     # TODO: Add admin role check
 
@@ -181,7 +269,18 @@ def restore_delivery_place(
     delivery_place_id: int,
     db: Session = Depends(get_db),
 ):
-    """Restore a soft-deleted delivery place."""
+    """論理削除された納入先を復元.
+
+    Args:
+        delivery_place_id: 納入先ID
+        db: データベースセッション
+
+    Returns:
+        DeliveryPlaceResponse: 復元された納入先情報
+
+    Raises:
+        HTTPException: 納入先が見つからない場合は404
+    """
     place = db.query(DeliveryPlace).filter(DeliveryPlace.id == delivery_place_id).first()
     if not place:
         raise HTTPException(status_code=404, detail="Delivery place not found")

@@ -8,6 +8,107 @@
 - ルーターの登録（register_all_routers経由）
 - ドメインイベントハンドラの登録
 - 本番環境でのフロントエンド静的ファイル配信
+
+【設計意図】FastAPIアプリケーション構成の設計判断:
+
+1. lifespan() でのライフサイクル管理（L41-50）
+   理由: アプリケーション起動・終了時の処理を一元化
+   動作:
+   - yield 前: 起動時処理（DB初期化、ログ設定等）
+   - yield: アプリケーション実行
+   - yield 後: 終了時処理（クリーンアップ等）
+   メリット:
+   - リソースリークを防ぐ
+   - 起動・終了ログで運用状況を追跡
+   業務的意義:
+   - 自動車部品商社の業務時間内のみ起動
+   → 起動・終了ログで稼働時間を記録
+
+2. 例外ハンドラの登録順序（L64-71）
+   理由: より具体的な例外を先に登録
+   登録順:
+   1. StarletteHTTPException: HTTP例外（404, 401等）
+   2. RequestValidationError: リクエストバリデーションエラー
+   3. DomainError: ビジネスロジックエラー
+   4. Exception: 汎用例外（キャッチオール）
+   設計原則:
+   - 具体的な例外 → 汎用的な例外
+   → 特定のエラーを優先的に処理
+   メリット:
+   - DomainError は Problem+JSON形式で返す
+   - HTTPExceptionは標準形式で返す
+   → エラーの種類に応じた適切なレスポンス
+
+3. ミドルウェアの登録順序（L73-91）
+   理由: add_middleware() は逆順で実行される
+   登録順: CORS → Metrics → RequestLogging → RequestID
+   実行順: RequestID → RequestLogging → Metrics → CORS
+
+   実行順の意味:
+   - RequestID: 最初にリクエストIDを生成
+   → 全てのログにリクエストIDを付与
+   - RequestLogging: リクエスト/レスポンスのログ記録
+   → リクエストIDを含むログを出力
+   - Metrics: パフォーマンスメトリクスを記録
+   → リクエスト処理時間、エラー率等
+   - CORS: 最後にCORSヘッダーを追加
+   → 他のミドルウェアがレスポンスを変更した後
+
+   業務的意義:
+   - 営業部門が顧客対応中にエラー発生
+   → リクエストIDでログを検索し、原因を特定
+
+4. ドメインイベントハンドラの自動登録（L24-25）
+   理由: インポート時に自動的にハンドラーを登録
+   動作:
+   - import app.domain.events.handlers
+   → handlers モジュール内の @subscribe デコレータが実行
+   → イベントディスパッチャーにハンドラーが登録される
+   メリット:
+   - 明示的な登録コード不要
+   - ハンドラー追加時に main.py を変更不要
+   → 疎結合、拡張性向上
+
+5. フロントエンド静的ファイル配信の設計（L98-144）
+   理由: 本番環境ではバックエンドとフロントエンドを統合配信
+   条件分岐:
+   - frontend/dist 存在: 静的ファイル配信モード
+   - frontend/dist 不在: 開発モード（Vite dev server使用）
+
+   静的ファイル配信モード（L105-133）:
+   - /assets: JS/CSS等のアセット
+   - /static: その他の静的ファイル
+   - /{full_path:path}: SPAフォールバック
+   → 未知のパスは index.html を返す
+
+   SPAフォールバックの重要性:
+   - React Router等のクライアントサイドルーティングに対応
+   - 例: /allocations へのアクセス
+   → バックエンドに /allocations エンドポイントがなくても、
+   index.html を返し、React Router が処理
+
+   APIパスの除外（L120-121）:
+   - /api/* はSPAフォールバックから除外
+   → API リクエストは404を返す（正常な動作）
+
+6. openapi_url, docs_url, redoc_url の設計（L55-57）
+   理由: APIドキュメントを /api 配下に配置
+   URL:
+   - /api/openapi.json: OpenAPI仕様書
+   - /api/docs: Swagger UI（開発者用）
+   - /api/redoc: ReDoc（ドキュメント重視）
+   業務的意義:
+   - フロントエンド開発者がAPIドキュメントを参照
+   - 新規エンドポイント追加時の仕様確認
+
+7. なぜ backward compatibility alias を定義するのか（L148）
+   理由: 既存のテストコードとの互換性維持
+   設計:
+   - app: FastAPI = application
+   → 既存コードが app をインポートしていても動作
+   将来的な削除計画:
+   - 全てのコードを application に統一
+   - この行を削除
 """
 
 import logging

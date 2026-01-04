@@ -1,3 +1,10 @@
+/**
+ * SAP受注登録ダイアログコンポーネント
+ *
+ * 引当確定済みの受注明細を選択してSAPシステムに一括登録するダイアログです。
+ * 複数明細の選択・全選択機能を提供します。
+ */
+
 import { Package, Send } from "lucide-react";
 import { useState } from "react";
 
@@ -14,9 +21,15 @@ import type { ConfirmedOrderLine } from "@/hooks/useConfirmedOrderLines";
 import { useSAPBatchRegistration } from "@/hooks/useSAPBatchRegistration";
 import { formatDate } from "@/shared/utils/date";
 
+/**
+ * 受注明細行アイテムのProps
+ */
 interface LineItemProps {
+  /** 受注明細情報 */
   line: ConfirmedOrderLine;
+  /** 選択状態 */
   isSelected: boolean;
+  /** 選択切り替えハンドラ */
   onToggle: () => void;
 }
 
@@ -50,12 +63,27 @@ function LineItem({ line, isSelected, onToggle }: LineItemProps) {
   );
 }
 
+/**
+ * SAP登録ダイアログのProps
+ */
 interface SAPRegistrationDialogProps {
+  /** ダイアログの開閉状態 */
   isOpen: boolean;
+  /** ダイアログを閉じる処理 */
   onClose: () => void;
+  /** 引当確定済み受注明細のリスト */
   confirmedLines: ConfirmedOrderLine[];
 }
 
+/**
+ * SAP受注登録ダイアログ
+ *
+ * 引当確定済み明細を選択してSAPに一括登録します。
+ * 登録成功後はダイアログを閉じ、選択状態をクリアします。
+ *
+ * @param props - コンポーネントプロパティ
+ * @returns SAP登録ダイアログコンポーネント
+ */
 export function SAPRegistrationDialog({
   isOpen,
   onClose,

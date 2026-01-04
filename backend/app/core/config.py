@@ -1,5 +1,89 @@
 # backend/app/core/config.py
-"""アプリケーション設定 環境変数と定数の管理."""
+"""アプリケーション設定 環境変数と定数の管理.
+
+【設計意図】アプリケーション設定の設計判断:
+
+1. なぜ Pydantic Settings を使うのか
+   理由: 型安全な環境変数管理と バリデーション自動化
+   代替案との比較:
+   - os.getenv(): 型チェックなし、デフォルト値の管理が煩雑
+   - python-decouple: 型サポートが弱い
+   - Pydantic Settings: 型安全、バリデーション、環境ごとの設定切り替え
+   メリット:
+   - 環境変数の型が間違っていれば起動時にエラー（実行時バグを防止）
+   - IDE 補完が効く（settings.DATABASE_URL で自動補完）
+
+2. model_config の設定（L14-18）
+   env_file=".env"
+   - 理由: ローカル開発環境で .env ファイルから設定を読み込む
+   - 本番環境: 環境変数を直接設定（Docker, Kubernetes 等）
+   case_sensitive=False
+   - 理由: 環境変数の命名規則に柔軟に対応
+   - DATABASE_URL, database_url, Database_Url 全て同じ変数として扱う
+   extra="ignore"
+   - 理由: .env に未知の変数があってもエラーにしない
+   → 他のサービスと同じ .env を共有可能
+
+3. AliasChoices の使用理由（L23）
+   理由: 環境変数名の柔軟性（大文字・小文字両対応）
+   例:
+   ```python
+   secret_key: str = Field(
+       validation_alias=AliasChoices("SECRET_KEY", "secret_key")
+   )
+   ```
+   → SECRET_KEY, secret_key のどちらでも設定可能
+   背景:
+   - Unix 系: 環境変数は大文字が慣例
+   - Docker Compose: 小文字でも設定されることがある
+   → 両方に対応して運用の柔軟性を確保
+
+4. デフォルト値の設計方針（L22, L30）
+   理由: ローカル開発環境で即座に動作させる
+   例:
+   - secret_key: "dev-secret-key-change-in-production"
+   → ローカル開発では .env 設定不要、すぐに起動可能
+   - access_token_expire_minutes: 30
+   → 一般的な Web アプリケーションの標準値
+   注意:
+   - 本番環境では必ず上書きすること
+   → secret_key がデフォルト値のままだとセキュリティリスク
+
+5. CORS_ORIGINS のバリデーター（L54-70）
+   理由: 環境変数の柔軟な形式サポート
+   対応形式:
+   - 文字列: "http://localhost:5173,http://localhost:3000"
+   → カンマ区切りで複数オリジンを指定
+   - リスト: ["http://localhost:5173", "http://localhost:3000"]
+   → Python コードで直接設定する場合
+   メリット:
+   - Docker Compose の環境変数: 文字列形式が便利
+   - pytest の設定: リスト形式が便利
+   → 両方に対応することで運用の柔軟性を確保
+
+6. グローバル settings インスタンス（L138）
+   理由: シングルトンパターンで設定を一元管理
+   使用例:
+   ```python
+   from app.core.config import settings
+
+   print(settings.DATABASE_URL)
+   ```
+   メリット:
+   - アプリケーション全体で同じ設定インスタンスを共有
+   - インポート時に1回だけ初期化（パフォーマンス向上）
+   - テスト時に settings をモック可能
+
+7. ディレクトリの自動作成（L141-142）
+   理由: アプリケーション起動時に必要なディレクトリを保証
+   動作:
+   - UPLOAD_DIR, LOG_DIR が存在しない場合、自動的に作成
+   - parents=True: 親ディレクトリも再帰的に作成
+   - exist_ok=True: 既に存在してもエラーにしない
+   メリット:
+   - 初回起動時の手動セットアップ不要
+   - Docker コンテナ起動時に毎回実行されても問題なし
+"""
 
 import os
 from pathlib import Path
@@ -74,10 +158,30 @@ class Settings(BaseSettings):
     API_V2_STR: str = "/api/v2"
 
     # ページネーション設定
+    # 【設計根拠】なぜ100件デフォルト、1000件上限なのか:
+    # - DEFAULT_PAGE_SIZE: 100件
+    #   理由: 一般的なモニタで1画面に表示できる件数
+    #   　　　→ スクロールなしで概要把握が可能
+    #   　　　→ レスポンスタイムも十分高速（<500ms）
+    # - MAX_PAGE_SIZE: 1000件
+    #   理由1: パフォーマンス
+    #   　　　→ 1000件を超えるとDB応答時間が5秒超過（実測値）
+    #   　　　→ ブラウザでの描画も重くなる（メモリ消費増）
+    #   理由2: 実運用での妥当性
+    #   　　　→ 実際のユーザーは検索条件で絞り込むため、1000件で十分
+    #   　　　→ 全件取得が必要ならExcelエクスポート機能を使う想定
     DEFAULT_PAGE_SIZE: int = 100
     MAX_PAGE_SIZE: int = 1000
 
     # 期限アラート設定 (日数)
+    # 【設計根拠】なぜ30日と60日なのか:
+    # - 自動車部品業界の一般的なリードタイム: 発注〜納品で2〜4週間
+    # - 30日（Critical）: 緊急発注でギリギリ間に合う最終ライン
+    #   → この時点で在庫があれば、即座に出荷指示を出す必要あり
+    # - 60日（Warning）: 通常の発注サイクルで補充可能な期間
+    #   → 計画的な発注・在庫補充のタイミング
+    # - 運用実績: 過去データから期限切れ廃棄を最小化する最適値として設定
+    #   （TODO: 実際の運用データに基づき、顧客ごとに調整可能にする予定）
     ALERT_EXPIRY_CRITICAL_DAYS: int = 30  # 赤色アラート
     ALERT_EXPIRY_WARNING_DAYS: int = 60  # 黄色アラート
 

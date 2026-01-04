@@ -1,6 +1,92 @@
 """RPA State Management Logic.
 
 Encapsulates status transitions and validation rules for RPA workflows.
+
+【設計意図】RPA状態管理の設計判断:
+
+1. なぜ状態管理ロジックを分離するのか
+   理由: RPAワークフローの複雑な状態遷移を一元管理
+   業務背景:
+   - OCR受注取込は複数のステップで構成される
+     Step1: OCR読取（外部）
+     Step2: SAP Flow実行
+     Step3: ロット引当
+     Step4: 突合・レビュー
+   → 各ステップ間の遷移条件を明確にする必要がある
+
+2. 静的メソッドの採用（@staticmethod）
+   理由: 状態を持たないバリデーション関数
+   メリット:
+   - インスタンス化不要で呼び出し可能
+   - テストが容易（副作用なし）
+   - 関数的プログラミングの原則に準拠
+
+3. can_edit_item() の設計（L17-36）
+   理由: アイテム編集可否の複雑なルールを集約
+   ビジネスルール:
+   - ロック済みアイテムは原則編集禁止
+   - ただし、Step4でのロット番号修正は例外的に許可
+   - Step3実行中以降は原則編集禁止
+   背景:
+   - Step3（ロット引当）実行後は、引当結果との整合性が必要
+   → 不用意な編集を防ぐためロック
+
+4. can_execute_step2() の設計（L38-47）
+   理由: Step2（SAP Flow実行）の前提条件を検証
+   許可される状態:
+   - DRAFT: 初回実行
+   - READY_FOR_STEP2: OCR読取完了後
+   業務要件:
+   - Step2はSAP連携を伴う重い処理
+   → 不正な状態での実行を防ぐ
+
+5. can_mark_external_done() の設計（L50-53）
+   理由: 外部手順完了の記録を厳密に管理
+   許可される状態:
+   - STEP3_DONE_WAITING_EXTERNAL のみ
+   業務シナリオ:
+   - Step3完了後、人手での確認作業が必要な場合がある
+   → 確認完了を明示的にマークする
+
+6. can_execute_step4_check() の設計（L56-63）
+   理由: 突合処理の実行条件を明確化
+   許可される状態:
+   - READY_FOR_STEP4_CHECK: 初回突合
+   - READY_FOR_STEP4_REVIEW: 再実行（修正後）
+   業務要件:
+   - 突合エラー後の修正・再実行を許容
+
+7. can_retry_step3() の設計（L66-69）
+   理由: Step3（ロット引当）の再試行を制御
+   許可される状態:
+   - READY_FOR_STEP4_REVIEW のみ
+   業務シナリオ:
+   - 引当失敗時に条件変更して再試行
+   → 特定の状態からのみ再試行を許可
+
+8. should_transition_to_ready_for_step2() の設計（L72-80）
+   理由: 自動状態遷移の判定ロジック
+   遷移条件:
+   - 発行対象がある（issue_count > 0）
+   - または、全アイテム完了している
+   業務的意義:
+   - Step1完了後に自動的に次ステップへ進む
+
+9. is_step3_complete() の設計（L83-87）
+   理由: Step3完了判定の一元化
+   判定条件:
+   - 未処理の発行アイテム数 = 0
+   業務的意義:
+   - 全ての引当処理が完了したら自動的に次ステップへ
+
+10. ValueError の使用
+    理由: 状態遷移違反を明示的にエラー化
+    利点:
+    - 呼び出し側で try/except ValueError でキャッチ
+    - エラーメッセージで「なぜ不可なのか」を明示
+    改善の余地:
+    - カスタム例外（InvalidRpaStateError）を定義すると、
+      よりドメイン固有のエラーハンドリングが可能
 """
 
 from app.infrastructure.persistence.models.rpa_models import (
