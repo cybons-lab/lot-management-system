@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from app.application.services.common.export_service import ExportService
 from app.application.services.masters.customer_items_service import CustomerItemsService
 from app.core.database import get_db
+from app.infrastructure.persistence.models.auth_models import User
+from app.presentation.api.routes.auth.auth_router import get_current_admin
 from app.presentation.schemas.masters.customer_items_schema import (
     CustomerItemBulkUpsertRequest,
     CustomerItemCreate,
@@ -157,7 +159,10 @@ def delete_customer_item(
     "/{customer_id}/{external_product_code}/permanent", status_code=status.HTTP_204_NO_CONTENT
 )
 def permanent_delete_customer_item(
-    customer_id: int, external_product_code: str, db: Session = Depends(get_db)
+    customer_id: int,
+    external_product_code: str,
+    current_user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
 ):
     """得意先品番マッピング完全削除.
 
