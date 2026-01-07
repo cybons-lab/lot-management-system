@@ -1,6 +1,14 @@
 /* eslint-disable max-lines-per-function */
 import { format } from "date-fns";
-import { ArrowUpFromLine, ChevronDown, ChevronRight, Edit, History, Lock, Unlock } from "lucide-react";
+import {
+  ArrowUpFromLine,
+  ChevronDown,
+  ChevronRight,
+  Edit,
+  History,
+  Lock,
+  Unlock,
+} from "lucide-react";
 import { Fragment } from "react";
 
 import { Button } from "@/components/ui";
@@ -216,7 +224,6 @@ interface InventoryRowProps {
   onWithdrawLot?: (lot: LotUI) => void;
   onHistoryLot?: (lot: LotUI) => void;
 }
-
 
 export function InventoryRow({
   item,

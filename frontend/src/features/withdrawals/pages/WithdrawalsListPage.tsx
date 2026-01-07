@@ -86,10 +86,10 @@ export function WithdrawalsListPage() {
           </div>
         </div>
         <div className="flex gap-2">
-            <Button onClick={handleCreate}>
-              <Plus className="mr-2 h-4 w-4" />
-              出庫登録
-            </Button>
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            出庫登録
+          </Button>
         </div>
       </div>
 

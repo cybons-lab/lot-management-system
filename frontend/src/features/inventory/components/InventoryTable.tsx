@@ -22,12 +22,7 @@ interface InventoryTableProps {
   onRefresh?: () => void;
 }
 
-export function InventoryTable({
-  data,
-  isLoading,
-  onRowClick,
-  onRefresh,
-}: InventoryTableProps) {
+export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: InventoryTableProps) {
   const {
     selectedLot,
     editDialog,

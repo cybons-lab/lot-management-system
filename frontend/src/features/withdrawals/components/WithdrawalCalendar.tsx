@@ -73,7 +73,7 @@ export function WithdrawalCalendar({ lotId }: WithdrawalCalendarProps) {
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       {/* Month Navigation */}
       <div className="flex items-center justify-center gap-4">
         <Button
@@ -83,7 +83,7 @@ export function WithdrawalCalendar({ lotId }: WithdrawalCalendarProps) {
         >
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <h2 className="text-xl font-semibold w-40 text-center">
+        <h2 className="w-40 text-center text-xl font-semibold">
           {format(currentMonth, "yyyy年 M月", { locale: ja })}
         </h2>
         <Button
@@ -96,7 +96,7 @@ export function WithdrawalCalendar({ lotId }: WithdrawalCalendarProps) {
       </div>
 
       {/* Calendar Grid */}
-      <div className="border rounded-lg bg-white shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
         {/* Weekday Header */}
         <div className="grid grid-cols-7 border-b bg-gray-50">
           {weekDays.map((day, i) => (
@@ -112,7 +112,7 @@ export function WithdrawalCalendar({ lotId }: WithdrawalCalendarProps) {
         </div>
 
         {/* Days */}
-        <div className="grid grid-cols-7 auto-rows-[100px]">
+        <div className="grid auto-rows-[100px] grid-cols-7">
           {days.map((day) => {
             const dateKey = format(day, "yyyy-MM-dd");
             const stat = dailyStats[dateKey];
@@ -122,11 +122,11 @@ export function WithdrawalCalendar({ lotId }: WithdrawalCalendarProps) {
             return (
               <div
                 key={dateKey}
-                className={`border-r border-b p-2 relative ${
+                className={`relative border-r border-b p-2 ${
                   !isCurrentMonth ? "bg-gray-50/50" : ""
                 } ${isToday ? "bg-blue-50" : ""}`}
               >
-                <div className="flex justify-between items-start">
+                <div className="flex items-start justify-between">
                   <span
                     className={`text-sm ${
                       !isCurrentMonth ? "text-gray-400" : "text-gray-700"
@@ -139,13 +139,13 @@ export function WithdrawalCalendar({ lotId }: WithdrawalCalendarProps) {
                 {stat && (
                   <div className="mt-2 space-y-1">
                     <div
-                      className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded truncate"
+                      className="truncate rounded bg-blue-100 px-2 py-1 text-xs text-blue-800"
                       title={`${stat.count}件の出庫`}
                     >
                       {stat.count} 件
                     </div>
                     <div
-                      className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded truncate font-medium"
+                      className="truncate rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-800"
                       title={`合計 ${fmt(stat.quantity)}`}
                     >
                       計 {fmt(stat.quantity)}

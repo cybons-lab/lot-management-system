@@ -22,13 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
 import type { LotUI } from "@/shared/libs/normalize";
@@ -100,13 +94,16 @@ export function QuickWithdrawalDialog({
   }, [open, today]);
 
   // フィールド更新
-  const updateField = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
-    setFormState((prev) => ({ ...prev, [key]: value }));
-    // エラーをクリア
-    if (key in errors) {
-      setErrors((prev) => ({ ...prev, [key]: undefined }));
-    }
-  }, [errors]);
+  const updateField = useCallback(
+    <K extends keyof FormState>(key: K, value: FormState[K]) => {
+      setFormState((prev) => ({ ...prev, [key]: value }));
+      // エラーをクリア
+      if (key in errors) {
+        setErrors((prev) => ({ ...prev, [key]: undefined }));
+      }
+    },
+    [errors],
+  );
 
   // バリデーション
   const validate = useCallback((): boolean => {
@@ -173,11 +170,15 @@ export function QuickWithdrawalDialog({
               </div>
               <div>
                 <span className="text-slate-500">現在在庫:</span>{" "}
-                <span className="font-medium">{fmt(Number(lot.current_quantity))} {lot.unit}</span>
+                <span className="font-medium">
+                  {fmt(Number(lot.current_quantity))} {lot.unit}
+                </span>
               </div>
               <div className="col-span-2">
                 <span className="text-slate-500">利用可能:</span>{" "}
-                <span className="font-semibold text-blue-600">{fmt(availableQuantity)} {lot.unit}</span>
+                <span className="font-semibold text-blue-600">
+                  {fmt(availableQuantity)} {lot.unit}
+                </span>
               </div>
             </div>
           </div>
@@ -238,9 +239,7 @@ export function QuickWithdrawalDialog({
               placeholder={`最大: ${fmt(availableQuantity)}`}
               disabled={isSubmitting}
             />
-            {errors.quantity && (
-              <p className="mt-1 text-sm text-red-600">{errors.quantity}</p>
-            )}
+            {errors.quantity && <p className="mt-1 text-sm text-red-600">{errors.quantity}</p>}
           </div>
 
           {/* 参照番号 */}
@@ -276,11 +275,7 @@ export function QuickWithdrawalDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             キャンセル
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || availableQuantity <= 0}>
