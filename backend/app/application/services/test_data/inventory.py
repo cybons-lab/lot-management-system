@@ -41,8 +41,21 @@ def generate_lots(
         forecast_total = forecast_totals.get(p.id, 0)
 
         if forecast_total <= 0:
-            # No forecast: create 1 small lot
-            lots_to_create = [(random.randint(50, 100),)]
+            # No forecast: create 1-2 lots with reasonable quantities
+            # すべての製品にロットを持たせるため、フォーキャストがなくても複数ロットを生成
+            roll = random.random()
+            if roll < 0.50:
+                lot_count = 1
+            else:
+                lot_count = 2
+            
+            base_qty = random.randint(100, 500)
+            if lot_count == 1:
+                lots_to_create = [(base_qty,)]
+            else:
+                first_qty = int(base_qty * random.uniform(0.4, 0.6))
+                second_qty = base_qty - first_qty
+                lots_to_create = [(first_qty,), (second_qty,)]
         else:
             # Determine lot count distribution
             # 60% -> 1 lot, 30% -> 2 lots, 10% -> 3 lots

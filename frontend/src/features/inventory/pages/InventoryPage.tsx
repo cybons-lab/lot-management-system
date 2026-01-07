@@ -260,7 +260,11 @@ export function InventoryPage() {
         {/* Tables */}
         <div className="rounded-md border bg-white shadow-sm">
           {overviewMode === "items" && (
-            <InventoryTable data={inventoryItems} isLoading={isItemsLoading} />
+            <InventoryTable
+              data={inventoryItems}
+              isLoading={isItemsLoading}
+              onRefresh={refetchItems}
+            />
           )}
           {overviewMode === "supplier" && (
             <InventoryBySupplierTable

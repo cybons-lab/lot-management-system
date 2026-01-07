@@ -4,6 +4,7 @@
  */
 
 import { format } from "date-fns";
+import { ArrowUpFromLine } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -15,6 +16,7 @@ import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/u
 import { ROUTES } from "@/constants/routes";
 import { ForecastsTab } from "@/features/inventory/components/ForecastsTab";
 import { InboundPlansTab } from "@/features/inventory/components/InboundPlansTab";
+import { QuickWithdrawalDialog } from "@/features/withdrawals/components";
 import { useLotsQuery } from "@/hooks/api";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
@@ -28,19 +30,34 @@ export function InventoryItemDetailPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("summary");
 
+  // 簡易出庫ダイアログ用の状態
+  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
+  const [selectedLotForWithdrawal, setSelectedLotForWithdrawal] = useState<LotUI | null>(null);
+
   const productIdNum = productId ? Number(productId) : 0;
   const warehouseIdNum = warehouseId ? Number(warehouseId) : 0;
 
   const { data: item, isLoading, isError } = useInventoryItem(productIdNum, warehouseIdNum);
 
   // 全ロット取得してフィルタリング
-  const { data: allLots = [], isLoading: lotsLoading } = useLotsQuery({});
+  const { data: allLots = [], isLoading: lotsLoading, refetch: refetchLots } = useLotsQuery({});
   const itemLots = allLots.filter(
     (lot) => lot.product_id === productIdNum && lot.warehouse_id === warehouseIdNum,
   );
 
   const handleBack = () => {
     navigate(ROUTES.INVENTORY.SUMMARY);
+  };
+
+  // 出庫ダイアログを開く
+  const handleOpenWithdrawal = (lot: LotUI) => {
+    setSelectedLotForWithdrawal(lot);
+    setWithdrawalDialogOpen(true);
+  };
+
+  // 出庫成功時のハンドラ
+  const handleWithdrawalSuccess = () => {
+    refetchLots();
   };
 
   // ロットテーブルのカラム定義
@@ -100,6 +117,29 @@ export function InventoryItemDetailPage() {
       },
       sortable: true,
       align: "left",
+    },
+    {
+      id: "actions",
+      header: "操作",
+      cell: (lot) => {
+        const availableQty =
+          Number(lot.current_quantity) -
+          Number(lot.allocated_quantity) -
+          Number(lot.locked_quantity || 0);
+        return (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => handleOpenWithdrawal(lot)}
+            disabled={availableQty <= 0}
+            className="h-7 px-2 text-xs"
+          >
+            <ArrowUpFromLine className="mr-1 h-3 w-3" />
+            出庫
+          </Button>
+        );
+      },
+      align: "center",
     },
   ];
 
@@ -236,6 +276,16 @@ export function InventoryItemDetailPage() {
           <ForecastsTab productId={productIdNum} />
         </TabsContent>
       </Tabs>
+
+      {/* 簡易出庫ダイアログ */}
+      {selectedLotForWithdrawal && (
+        <QuickWithdrawalDialog
+          lot={selectedLotForWithdrawal}
+          open={withdrawalDialogOpen}
+          onOpenChange={setWithdrawalDialogOpen}
+          onSuccess={handleWithdrawalSuccess}
+        />
+      )}
     </div>
   );
 }
