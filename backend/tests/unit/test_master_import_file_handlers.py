@@ -5,7 +5,9 @@ from openpyxl import Workbook
 from app.application.services.master_import.file_handlers import parse_excel
 
 
-def _build_excel(headers: list[str], rows: list[list[object]], sheet_title: str = "Template") -> bytes:
+def _build_excel(
+    headers: list[str], rows: list[list[object]], sheet_title: str = "Template"
+) -> bytes:
     workbook = Workbook()
     sheet = workbook.active
     sheet.title = sheet_title

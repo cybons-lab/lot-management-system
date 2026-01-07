@@ -24,8 +24,9 @@ export const tableActions = "flex items-center gap-2";
 export const searchInput = "w-64";
 
 export const form = {
-  grid: "space-y-4",
+  grid: "grid grid-cols-1 md:grid-cols-2 gap-4",
   field: "space-y-2",
+  fieldFullWidth: "space-y-2 md:col-span-2",
   label: "text-sm font-medium text-gray-700",
   input: "w-full",
   error: "text-sm text-red-500",

@@ -110,9 +110,9 @@ class TestAllocationCalculatorProperties:
         result = calculate_allocation(request, candidates)
 
         # Verify property
-        assert (
-            result.total_allocated <= total_available
-        ), f"Allocated {result.total_allocated} exceeds available {total_available}"
+        assert result.total_allocated <= total_available, (
+            f"Allocated {result.total_allocated} exceeds available {total_available}"
+        )
 
     @given(
         request=allocation_request_strategy(),
@@ -206,9 +206,9 @@ class TestAllocationCalculatorProperties:
         result = calculate_allocation(request, candidates)
 
         expected_shortage = request.required_quantity - result.total_allocated
-        assert (
-            result.shortage == expected_shortage
-        ), f"Shortage calculation incorrect: expected {expected_shortage}, got {result.shortage}"
+        assert result.shortage == expected_shortage, (
+            f"Shortage calculation incorrect: expected {expected_shortage}, got {result.shortage}"
+        )
 
     @given(
         request=allocation_request_strategy(),
@@ -224,9 +224,9 @@ class TestAllocationCalculatorProperties:
 
         # At minimum, trace logs should record decisions for all active, valid lots
         # or have a rejection reason for lots that couldn't be used
-        assert (
-            len(result.trace_logs) > 0 or len(candidates) == 0
-        ), "Trace logs should not be empty when candidates exist"
+        assert len(result.trace_logs) > 0 or len(candidates) == 0, (
+            "Trace logs should not be empty when candidates exist"
+        )
 
         # Verify all allocated lots are in trace logs
         allocated_lot_ids = {decision.lot_id for decision in result.allocated_lots}
@@ -234,6 +234,6 @@ class TestAllocationCalculatorProperties:
             decision.lot_id for decision in result.trace_logs if decision.lot_id is not None
         }
 
-        assert allocated_lot_ids.issubset(
-            trace_lot_ids
-        ), "All allocated lots should be present in trace logs"
+        assert allocated_lot_ids.issubset(trace_lot_ids), (
+            "All allocated lots should be present in trace logs"
+        )
