@@ -50,7 +50,9 @@ export function WithdrawalCalendar({ lotId }: WithdrawalCalendarProps) {
     const stats: Record<string, { count: number; quantity: number }> = {};
 
     data.withdrawals.forEach((w) => {
-      const dateKey = format(new Date(w.ship_date), "yyyy-MM-dd");
+      // date-fnsのnew Date()parserはタイムゾーンの影響を受ける可能性があるため、
+      // 文字列から直接日付部分を取得します
+      const dateKey = w.ship_date.substring(0, 10);
       if (!stats[dateKey]) {
         stats[dateKey] = { count: 0, quantity: 0 };
       }
