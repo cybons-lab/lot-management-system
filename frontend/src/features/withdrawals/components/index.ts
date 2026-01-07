@@ -5,4 +5,5 @@ export { LotSelector } from "./LotSelector";
 export { WithdrawalInfoSection } from "./WithdrawalInfoSection";
 export { QuickWithdrawalDialog } from "./QuickWithdrawalDialog";
 export { WithdrawalCalendar } from "./WithdrawalCalendar";
+export { WithdrawalHistoryList } from "./WithdrawalHistoryList";
 export { WithdrawalHistoryDialog } from "./WithdrawalHistoryDialog";

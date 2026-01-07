@@ -5,7 +5,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowUpFromLine } from "lucide-react";
+import { ArrowUpFromLine, History } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
@@ -17,7 +17,11 @@ import { Button, Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/u
 import { ROUTES } from "@/constants/routes";
 import { ForecastsTab } from "@/features/inventory/components/ForecastsTab";
 import { InboundPlansTab } from "@/features/inventory/components/InboundPlansTab";
-import { QuickWithdrawalDialog } from "@/features/withdrawals/components";
+import {
+  QuickWithdrawalDialog,
+  WithdrawalHistoryDialog,
+  WithdrawalHistoryList,
+} from "@/features/withdrawals/components";
 import { useLotsQuery } from "@/hooks/api";
 import { DataTable, type Column } from "@/shared/components/data/DataTable";
 import { LotStatusIcon } from "@/shared/components/data/LotStatusIcon";
@@ -36,6 +40,10 @@ export function InventoryItemDetailPage() {
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [selectedLotForWithdrawal, setSelectedLotForWithdrawal] = useState<LotUI | null>(null);
 
+  // 履歴ダイアログ用の状態
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [selectedLotForHistory, setSelectedLotForHistory] = useState<LotUI | null>(null);
+
   const productIdNum = productId ? Number(productId) : 0;
   const warehouseIdNum = warehouseId ? Number(warehouseId) : 0;
 
@@ -51,10 +59,15 @@ export function InventoryItemDetailPage() {
     navigate(ROUTES.INVENTORY.SUMMARY);
   };
 
-  // 出庫ダイアログを開く
   const handleOpenWithdrawal = (lot: LotUI) => {
     setSelectedLotForWithdrawal(lot);
     setWithdrawalDialogOpen(true);
+  };
+
+  // 履歴ダイアログを開く
+  const handleOpenHistory = (lot: LotUI) => {
+    setSelectedLotForHistory(lot);
+    setHistoryDialogOpen(true);
   };
 
   // 出庫成功時のハンドラ
@@ -133,16 +146,27 @@ export function InventoryItemDetailPage() {
           Number(lot.allocated_quantity) -
           Number(lot.locked_quantity || 0);
         return (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleOpenWithdrawal(lot)}
-            disabled={availableQty <= 0}
-            className="h-7 px-2 text-xs"
-          >
-            <ArrowUpFromLine className="mr-1 h-3 w-3" />
-            出庫
-          </Button>
+          <div className="flex items-center justify-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleOpenWithdrawal(lot)}
+              disabled={availableQty <= 0}
+              className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+              title="出庫"
+            >
+              <ArrowUpFromLine className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => handleOpenHistory(lot)}
+              className="h-8 w-8 p-0"
+              title="出庫履歴"
+            >
+              <History className="h-4 w-4" />
+            </Button>
+          </div>
         );
       },
       align: "center",
@@ -214,6 +238,7 @@ export function InventoryItemDetailPage() {
           <TabsTrigger value="summary">サマリ</TabsTrigger>
           <TabsTrigger value="lots">ロット一覧 ({itemLots.length})</TabsTrigger>
           <TabsTrigger value="inbound">入荷予定</TabsTrigger>
+          <TabsTrigger value="history">出庫履歴</TabsTrigger>
           <TabsTrigger value="forecast">需要予測</TabsTrigger>
         </TabsList>
 
@@ -277,7 +302,12 @@ export function InventoryItemDetailPage() {
           <InboundPlansTab productId={productIdNum} warehouseId={warehouseIdNum} />
         </TabsContent>
 
-        {/* Tab 4: 需要予測 */}
+        {/* Tab 4: 出庫履歴 */}
+        <TabsContent value="history" className="space-y-4">
+          <WithdrawalHistoryList productId={productIdNum} warehouseId={warehouseIdNum} />
+        </TabsContent>
+
+        {/* Tab 5: 需要予測 */}
         <TabsContent value="forecast" className="space-y-4">
           <ForecastsTab productId={productIdNum} />
         </TabsContent>
@@ -290,6 +320,16 @@ export function InventoryItemDetailPage() {
           open={withdrawalDialogOpen}
           onOpenChange={setWithdrawalDialogOpen}
           onSuccess={handleWithdrawalSuccess}
+        />
+      )}
+
+      {/* 履歴カレンダーダイアログ */}
+      {selectedLotForHistory && (
+        <WithdrawalHistoryDialog
+          lot={selectedLotForHistory}
+          open={historyDialogOpen}
+          onOpenChange={setHistoryDialogOpen}
+          onWithdrawalSuccess={handleWithdrawalSuccess}
         />
       )}
     </div>

@@ -105,7 +105,7 @@ function CalendarDay({
               e.stopPropagation();
               onDateClick(day);
             }}
-            className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 opacity-0 transition-all hover:bg-blue-100 hover:text-blue-600 group-hover:opacity-100"
+            className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-blue-100 hover:text-blue-600"
             title="この日に出庫を追加"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -235,7 +235,7 @@ function WeekdayHeader() {
       {WEEK_DAYS.map((day, i) => (
         <div
           key={day}
-          className={`py-3 text-center text-xs font-semibold uppercase tracking-wider ${
+          className={`py-3 text-center text-xs font-semibold tracking-wider uppercase ${
             i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-slate-500"
           }`}
         >
@@ -329,7 +329,10 @@ export function WithdrawalCalendar({
 }: WithdrawalCalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
-  const { dailyStats, monthlyTotal, days, isLoading } = useWithdrawalCalendarData(lotId, currentMonth);
+  const { dailyStats, monthlyTotal, days, isLoading } = useWithdrawalCalendarData(
+    lotId,
+    currentMonth,
+  );
 
   const handleDateClick = (date: Date) => onDateSelect?.(format(date, "yyyy-MM-dd"));
 
