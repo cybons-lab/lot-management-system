@@ -100,10 +100,12 @@ def parse_excel(content: bytes) -> dict:
                 str(h).lower().strip() if h is not None else ""
                 for h in next(template_sheet.iter_rows(values_only=True), [])
             ]
-            if "supplier_code" in headers:
-                result["supply_data"] = {"suppliers": _parse_suppliers_sheet(template_sheet)}
-            elif "customer_code" in headers:
+            # Check customer_code FIRST since customer templates may contain both
+            # customer_code and supplier_code columns (supplier_code is used for items)
+            if "customer_code" in headers:
                 result["customer_data"] = {"customers": _parse_customers_sheet(template_sheet)}
+            elif "supplier_code" in headers:
+                result["supply_data"] = {"suppliers": _parse_suppliers_sheet(template_sheet)}
 
     wb.close()
     return result
