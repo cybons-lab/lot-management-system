@@ -43,6 +43,7 @@ describe("QuickWithdrawalDialog", () => {
   let queryClient: QueryClient;
 
   const mockLot: LotUI = {
+    id: 1,
     lot_id: 1,
     lot_number: "LOT-2026-001",
     product_id: 100,
@@ -59,6 +60,13 @@ describe("QuickWithdrawalDialog", () => {
     expiry_date: "2027-01-01",
     supplier_id: 1,
     supplier_name: "Test Supplier",
+    received_date: "2026-01-01",
+    expected_lot_id: null,
+    created_at: "2026-01-01T00:00:00Z",
+    updated_at: "2026-01-01T00:00:00Z",
+    inspection_status: "not_required",
+    inspection_date: null,
+    inspection_cert_number: null,
   };
 
   const mockCustomers = [

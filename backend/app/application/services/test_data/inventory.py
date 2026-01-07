@@ -48,7 +48,7 @@ def generate_lots(
                 lot_count = 1
             else:
                 lot_count = 2
-            
+
             base_qty = random.randint(100, 500)
             if lot_count == 1:
                 lots_to_create = [(base_qty,)]
