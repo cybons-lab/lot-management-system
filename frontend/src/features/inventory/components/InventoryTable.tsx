@@ -1,3 +1,6 @@
+/* eslint-disable max-lines-per-function */
+import { useState } from "react";
+
 import type { InventoryItem } from "@/features/inventory/api";
 import {
   LoadingState,
@@ -8,15 +11,18 @@ import { LotEditForm, type LotUpdateData } from "@/features/inventory/components
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
 import { useInventoryTableLogic } from "@/features/inventory/hooks/useInventoryTableLogic";
 import * as styles from "@/features/inventory/pages/styles";
+import { QuickWithdrawalDialog, WithdrawalHistoryDialog } from "@/features/withdrawals/components";
 import { FormDialog } from "@/shared/components/form";
+import type { LotUI } from "@/shared/libs/normalize";
 
 interface InventoryTableProps {
   data: InventoryItem[];
   isLoading: boolean;
   onRowClick?: (item: InventoryItem) => void;
+  onRefresh?: () => void;
 }
 
-export function InventoryTable({ data, isLoading, onRowClick }: InventoryTableProps) {
+export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: InventoryTableProps) {
   const {
     selectedLot,
     editDialog,
@@ -32,7 +38,31 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
     handleViewDetail,
     handleCloseEdit,
     handleCloseLock,
+    refetchLots,
   } = useInventoryTableLogic();
+
+  // 簡易出庫ダイアログ用の状態
+  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
+  const [selectedWithdrawalLot, setSelectedWithdrawalLot] = useState<LotUI | null>(null);
+
+  const handleWithdrawLot = (lot: LotUI) => {
+    setSelectedWithdrawalLot(lot);
+    setWithdrawalDialogOpen(true);
+  };
+
+  // 履歴ダイアログ用の状態
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState<LotUI | null>(null);
+
+  const handleHistoryLot = (lot: LotUI) => {
+    setSelectedHistoryLot(lot);
+    setHistoryDialogOpen(true);
+  };
+
+  const handleWithdrawalSuccess = () => {
+    refetchLots();
+    onRefresh?.();
+  };
 
   if (isLoading) {
     return <LoadingState />;
@@ -65,7 +95,8 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
           <tbody className={styles.table.tbody}>
             {data.map((item) => {
               const expanded = isRowExpanded(item.product_id, item.warehouse_id);
-              const lots = expanded ? getLotsForItem(item.product_id, item.warehouse_id) : [];
+              // ロット数は常に取得して表示
+              const lots = getLotsForItem(item.product_id, item.warehouse_id);
 
               return (
                 <InventoryRow
@@ -79,6 +110,8 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
                   onEditLot={handleEditLot}
                   onLockLot={handleLockLot}
                   onUnlockLot={handleUnlockLot}
+                  onWithdrawLot={handleWithdrawLot}
+                  onHistoryLot={handleHistoryLot}
                 />
               );
             })}
@@ -95,6 +128,25 @@ export function InventoryTable({ data, isLoading, onRowClick }: InventoryTablePr
         onCloseEdit={handleCloseEdit}
         onCloseLock={handleCloseLock}
       />
+
+      {/* 簡易出庫ダイアログ */}
+      {selectedWithdrawalLot && (
+        <QuickWithdrawalDialog
+          lot={selectedWithdrawalLot}
+          open={withdrawalDialogOpen}
+          onOpenChange={setWithdrawalDialogOpen}
+          onSuccess={handleWithdrawalSuccess}
+        />
+      )}
+
+      {/* 履歴カレンダーダイアログ */}
+      {selectedHistoryLot && (
+        <WithdrawalHistoryDialog
+          lot={selectedHistoryLot}
+          open={historyDialogOpen}
+          onOpenChange={setHistoryDialogOpen}
+        />
+      )}
     </div>
   );
 }

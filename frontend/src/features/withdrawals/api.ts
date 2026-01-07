@@ -84,6 +84,8 @@ export interface WithdrawalListParams {
   lot_id?: number;
   customer_id?: number;
   withdrawal_type?: WithdrawalType;
+  start_date?: string;
+  end_date?: string;
 }
 
 // ============ API Functions ============
@@ -93,6 +95,7 @@ const BASE_PATH = "withdrawals";
 /**
  * 出庫履歴一覧を取得
  */
+// eslint-disable-next-line complexity
 export async function getWithdrawals(
   params?: WithdrawalListParams,
 ): Promise<WithdrawalListResponse> {
@@ -103,6 +106,8 @@ export async function getWithdrawals(
   if (params?.customer_id !== undefined)
     searchParams.set("customer_id", String(params.customer_id));
   if (params?.withdrawal_type) searchParams.set("withdrawal_type", params.withdrawal_type);
+  if (params?.start_date) searchParams.set("start_date", params.start_date);
+  if (params?.end_date) searchParams.set("end_date", params.end_date);
 
   const query = searchParams.toString();
   const url = query ? `${BASE_PATH}?${query}` : BASE_PATH;

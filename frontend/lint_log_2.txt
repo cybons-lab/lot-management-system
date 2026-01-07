@@ -1,0 +1,12 @@
+
+> lot-management-frontend@1.0.0 lint
+> eslint . --max-warnings=0
+
+
+D:\Work\Lot-management-system\frontend\src\features\inventory\components\InventoryTableComponents.tsx
+  220:1  warning  Unused eslint-disable directive (no problems were reported from 'max-lines-per-function')
+
+笨・1 problem (0 errors, 1 warning)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+
+ESLint found too many warnings (maximum: 0).

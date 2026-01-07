@@ -82,6 +82,7 @@ export function useLotActions() {
   return {
     selectedLot,
     allLots,
+    refetchLots,
     editDialog,
     lockDialog,
     updateLotMutation,

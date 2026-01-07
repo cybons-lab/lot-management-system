@@ -85,10 +85,12 @@ export function WithdrawalsListPage() {
             <p className="text-sm text-gray-500">受注外出庫の履歴一覧</p>
           </div>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          出庫登録
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleCreate}>
+            <Plus className="mr-2 h-4 w-4" />
+            出庫登録
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
