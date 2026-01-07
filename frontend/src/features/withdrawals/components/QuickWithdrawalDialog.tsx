@@ -37,6 +37,8 @@ export interface QuickWithdrawalDialogProps {
   onOpenChange: (open: boolean) => void;
   /** 出庫成功時のコールバック */
   onSuccess?: () => void;
+  /** 初期出荷日（カレンダーから選択された場合） */
+  initialShipDate?: string;
 }
 
 interface FormState {
@@ -57,6 +59,7 @@ export function QuickWithdrawalDialog({
   open,
   onOpenChange,
   onSuccess,
+  initialShipDate,
 }: QuickWithdrawalDialogProps) {
   const { user } = useAuth();
   const today = new Date().toISOString().split("T")[0];
@@ -84,14 +87,14 @@ export function QuickWithdrawalDialog({
     if (open) {
       setFormState({
         customer_id: 0,
-        ship_date: today,
+        ship_date: initialShipDate || today,
         quantity: 0,
         reference_number: "",
         reason: "",
       });
       setErrors({});
     }
-  }, [open, today]);
+  }, [open, today, initialShipDate]);
 
   // フィールド更新
   const updateField = useCallback(

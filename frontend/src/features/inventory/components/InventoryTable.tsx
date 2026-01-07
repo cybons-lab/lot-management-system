@@ -145,6 +145,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
           lot={selectedHistoryLot}
           open={historyDialogOpen}
           onOpenChange={setHistoryDialogOpen}
+          onWithdrawalSuccess={handleWithdrawalSuccess}
         />
       )}
     </div>

@@ -3,12 +3,13 @@
  * Inventory item detail page (product × warehouse) with tabbed interface
  */
 
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { ArrowUpFromLine } from "lucide-react";
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-import { useInventoryItem } from "../hooks";
+import { useInventoryItem, inventoryItemKeys } from "../hooks";
 
 import * as styles from "./styles";
 
@@ -28,6 +29,7 @@ import { getLotStatuses } from "@/shared/utils/status";
 export function InventoryItemDetailPage() {
   const { productId, warehouseId } = useParams<{ productId: string; warehouseId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("summary");
 
   // 簡易出庫ダイアログ用の状態
@@ -58,6 +60,10 @@ export function InventoryItemDetailPage() {
   // 出庫成功時のハンドラ
   const handleWithdrawalSuccess = () => {
     refetchLots();
+    // 在庫サマリも更新（総数量、利用可能数量が変わるため）
+    queryClient.invalidateQueries({
+      queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),
+    });
   };
 
   // ロットテーブルのカラム定義
