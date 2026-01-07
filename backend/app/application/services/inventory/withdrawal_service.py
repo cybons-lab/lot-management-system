@@ -103,6 +103,8 @@ class WithdrawalService:
         withdrawal_type: str | None = None,
         start_date: date | None = None,
         end_date: date | None = None,
+        product_id: int | None = None,
+        warehouse_id: int | None = None,
     ) -> WithdrawalListResponse:
         """出庫履歴一覧を取得.
 
@@ -114,6 +116,8 @@ class WithdrawalService:
             withdrawal_type: 出庫タイプでフィルタ
             start_date: 開始日（出荷日）
             end_date: 終了日（出荷日）
+            product_id: 製品IDでフィルタ
+            warehouse_id: 倉庫IDでフィルタ
 
         Returns:
             出庫履歴一覧
@@ -127,6 +131,14 @@ class WithdrawalService:
 
         if lot_id is not None:
             query = query.filter(Withdrawal.lot_id == lot_id)
+
+        # Lot結合が必要なフィルタ
+        if product_id is not None or warehouse_id is not None:
+            query = query.join(Withdrawal.lot)
+            if product_id is not None:
+                query = query.filter(Lot.product_id == product_id)
+            if warehouse_id is not None:
+                query = query.filter(Lot.warehouse_id == warehouse_id)
 
         if customer_id is not None:
             query = query.filter(Withdrawal.customer_id == customer_id)

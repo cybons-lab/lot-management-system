@@ -33,6 +33,8 @@ def list_withdrawals(
     withdrawal_type: str | None = Query(None, description="出庫タイプでフィルタ"),
     start_date: date | None = Query(None, description="開始日（出荷日）"),
     end_date: date | None = Query(None, description="終了日（出荷日）"),
+    product_id: int | None = Query(None, description="製品IDでフィルタ"),
+    warehouse_id: int | None = Query(None, description="倉庫IDでフィルタ"),
     db: Session = Depends(get_db),
 ):
     """出庫履歴一覧を取得.
@@ -45,6 +47,8 @@ def list_withdrawals(
         withdrawal_type: 出庫タイプでフィルタ
         start_date: 開始日
         end_date: 終了日
+        product_id: 製品ID
+        warehouse_id: 倉庫ID
         db: データベースセッション
 
     Returns:
@@ -59,6 +63,8 @@ def list_withdrawals(
         withdrawal_type=withdrawal_type,
         start_date=start_date,
         end_date=end_date,
+        product_id=product_id,
+        warehouse_id=warehouse_id,
     )
 
 

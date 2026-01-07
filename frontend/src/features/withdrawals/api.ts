@@ -86,6 +86,8 @@ export interface WithdrawalListParams {
   withdrawal_type?: WithdrawalType;
   start_date?: string;
   end_date?: string;
+  product_id?: number;
+  warehouse_id?: number;
 }
 
 // ============ API Functions ============
@@ -108,6 +110,9 @@ export async function getWithdrawals(
   if (params?.withdrawal_type) searchParams.set("withdrawal_type", params.withdrawal_type);
   if (params?.start_date) searchParams.set("start_date", params.start_date);
   if (params?.end_date) searchParams.set("end_date", params.end_date);
+  if (params?.product_id !== undefined) searchParams.set("product_id", String(params.product_id));
+  if (params?.warehouse_id !== undefined)
+    searchParams.set("warehouse_id", String(params.warehouse_id));
 
   const query = searchParams.toString();
   const url = query ? `${BASE_PATH}?${query}` : BASE_PATH;
