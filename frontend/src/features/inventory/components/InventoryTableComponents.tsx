@@ -1,5 +1,6 @@
+/* eslint-disable max-lines-per-function */
 import { format } from "date-fns";
-import { ArrowUpFromLine, ChevronDown, ChevronRight, Edit, Lock, Unlock } from "lucide-react";
+import { ArrowUpFromLine, ChevronDown, ChevronRight, Edit, History, Lock, Unlock } from "lucide-react";
 import { Fragment } from "react";
 
 import { Button } from "@/components/ui";
@@ -32,9 +33,17 @@ interface LotTableRowProps {
   onLock: (lot: LotUI) => void;
   onUnlock: (lot: LotUI) => void;
   onWithdraw?: (lot: LotUI) => void;
+  onHistory?: (lot: LotUI) => void;
 }
 
-export function LotTableRow({ lot, onEdit, onLock, onUnlock, onWithdraw }: LotTableRowProps) {
+export function LotTableRow({
+  lot,
+  onEdit,
+  onLock,
+  onUnlock,
+  onWithdraw,
+  onHistory,
+}: LotTableRowProps) {
   const statuses = getLotStatuses(lot);
   const isLocked = statuses.includes("locked");
   const availableQty =
@@ -79,6 +88,19 @@ export function LotTableRow({ lot, onEdit, onLock, onUnlock, onWithdraw }: LotTa
               className="text-blue-600 hover:text-blue-700"
             >
               <ArrowUpFromLine className="h-4 w-4" />
+            </Button>
+          )}
+          {onHistory && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onHistory(lot);
+              }}
+              title="出庫履歴"
+            >
+              <History className="h-4 w-4" />
             </Button>
           )}
           <Button
@@ -129,6 +151,7 @@ interface ExpandedLotDetailsProps {
   onLockLot: (lot: LotUI) => void;
   onUnlockLot: (lot: LotUI) => void;
   onWithdrawLot?: (lot: LotUI) => void;
+  onHistoryLot?: (lot: LotUI) => void;
 }
 
 export function ExpandedLotDetails({
@@ -137,6 +160,7 @@ export function ExpandedLotDetails({
   onLockLot,
   onUnlockLot,
   onWithdrawLot,
+  onHistoryLot,
 }: ExpandedLotDetailsProps) {
   return (
     <tr>
@@ -165,6 +189,7 @@ export function ExpandedLotDetails({
                     onLock={onLockLot}
                     onUnlock={onUnlockLot}
                     onWithdraw={onWithdrawLot}
+                    onHistory={onHistoryLot}
                   />
                 ))}
               </tbody>
@@ -189,9 +214,10 @@ interface InventoryRowProps {
   onLockLot: (lot: LotUI) => void;
   onUnlockLot: (lot: LotUI) => void;
   onWithdrawLot?: (lot: LotUI) => void;
+  onHistoryLot?: (lot: LotUI) => void;
 }
 
-// eslint-disable-next-line max-lines-per-function
+
 export function InventoryRow({
   item,
   isExpanded,
@@ -203,6 +229,7 @@ export function InventoryRow({
   onLockLot,
   onUnlockLot,
   onWithdrawLot,
+  onHistoryLot,
 }: InventoryRowProps) {
   return (
     <Fragment>
@@ -276,6 +303,7 @@ export function InventoryRow({
           onLockLot={onLockLot}
           onUnlockLot={onUnlockLot}
           onWithdrawLot={onWithdrawLot}
+          onHistoryLot={onHistoryLot}
         />
       )}
     </Fragment>

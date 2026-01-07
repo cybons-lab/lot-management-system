@@ -44,6 +44,7 @@
    → joinedload で関連データを一括取得（N+1回避）
 """
 
+from datetime import date
 from decimal import Decimal
 
 from sqlalchemy.orm import Session, joinedload
@@ -100,6 +101,8 @@ class WithdrawalService:
         lot_id: int | None = None,
         customer_id: int | None = None,
         withdrawal_type: str | None = None,
+        start_date: date | None = None,
+        end_date: date | None = None,
     ) -> WithdrawalListResponse:
         """出庫履歴一覧を取得.
 
@@ -109,6 +112,8 @@ class WithdrawalService:
             lot_id: ロットIDでフィルタ
             customer_id: 得意先IDでフィルタ
             withdrawal_type: 出庫タイプでフィルタ
+            start_date: 開始日（出荷日）
+            end_date: 終了日（出荷日）
 
         Returns:
             出庫履歴一覧
@@ -128,6 +133,12 @@ class WithdrawalService:
 
         if withdrawal_type is not None:
             query = query.filter(Withdrawal.withdrawal_type == withdrawal_type)
+
+        if start_date is not None:
+            query = query.filter(Withdrawal.ship_date >= start_date)
+
+        if end_date is not None:
+            query = query.filter(Withdrawal.ship_date <= end_date)
 
         # 全件数を取得
         total = query.count()

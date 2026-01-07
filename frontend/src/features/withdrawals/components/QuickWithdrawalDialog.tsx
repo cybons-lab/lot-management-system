@@ -6,6 +6,7 @@
  * - 得意先、出荷日、数量を入力して出庫
  */
 
+/* eslint-disable max-lines-per-function */
 import { Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";

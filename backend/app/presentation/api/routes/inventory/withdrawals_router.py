@@ -3,6 +3,8 @@
 出庫（受注外出庫）のAPIエンドポイント。
 """
 
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
@@ -29,6 +31,8 @@ def list_withdrawals(
     lot_id: int | None = Query(None, description="ロットIDでフィルタ"),
     customer_id: int | None = Query(None, description="得意先IDでフィルタ"),
     withdrawal_type: str | None = Query(None, description="出庫タイプでフィルタ"),
+    start_date: date | None = Query(None, description="開始日（出荷日）"),
+    end_date: date | None = Query(None, description="終了日（出荷日）"),
     db: Session = Depends(get_db),
 ):
     """出庫履歴一覧を取得.
@@ -39,6 +43,8 @@ def list_withdrawals(
         lot_id: ロットIDでフィルタ
         customer_id: 得意先IDでフィルタ
         withdrawal_type: 出庫タイプでフィルタ
+        start_date: 開始日
+        end_date: 終了日
         db: データベースセッション
 
     Returns:
@@ -51,6 +57,8 @@ def list_withdrawals(
         lot_id=lot_id,
         customer_id=customer_id,
         withdrawal_type=withdrawal_type,
+        start_date=start_date,
+        end_date=end_date,
     )
 
 

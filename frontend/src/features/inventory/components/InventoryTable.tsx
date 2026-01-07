@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 import { useState } from "react";
 
 import type { InventoryItem } from "@/features/inventory/api";
@@ -10,7 +11,7 @@ import { LotEditForm, type LotUpdateData } from "@/features/inventory/components
 import { LotLockDialog } from "@/features/inventory/components/LotLockDialog";
 import { useInventoryTableLogic } from "@/features/inventory/hooks/useInventoryTableLogic";
 import * as styles from "@/features/inventory/pages/styles";
-import { QuickWithdrawalDialog } from "@/features/withdrawals/components";
+import { QuickWithdrawalDialog, WithdrawalHistoryDialog } from "@/features/withdrawals/components";
 import { FormDialog } from "@/shared/components/form";
 import type { LotUI } from "@/shared/libs/normalize";
 
@@ -52,6 +53,15 @@ export function InventoryTable({
   const handleWithdrawLot = (lot: LotUI) => {
     setSelectedWithdrawalLot(lot);
     setWithdrawalDialogOpen(true);
+  };
+
+  // 履歴ダイアログ用の状態
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [selectedHistoryLot, setSelectedHistoryLot] = useState<LotUI | null>(null);
+
+  const handleHistoryLot = (lot: LotUI) => {
+    setSelectedHistoryLot(lot);
+    setHistoryDialogOpen(true);
   };
 
   const handleWithdrawalSuccess = () => {
@@ -106,6 +116,7 @@ export function InventoryTable({
                   onLockLot={handleLockLot}
                   onUnlockLot={handleUnlockLot}
                   onWithdrawLot={handleWithdrawLot}
+                  onHistoryLot={handleHistoryLot}
                 />
               );
             })}
@@ -130,6 +141,15 @@ export function InventoryTable({
           open={withdrawalDialogOpen}
           onOpenChange={setWithdrawalDialogOpen}
           onSuccess={handleWithdrawalSuccess}
+        />
+      )}
+
+      {/* 履歴カレンダーダイアログ */}
+      {selectedHistoryLot && (
+        <WithdrawalHistoryDialog
+          lot={selectedHistoryLot}
+          open={historyDialogOpen}
+          onOpenChange={setHistoryDialogOpen}
         />
       )}
     </div>
