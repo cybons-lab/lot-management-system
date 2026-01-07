@@ -50,35 +50,37 @@ export function MasterImportDialog({ open, onOpenChange, title, group }: MasterI
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* テンプレートダウンロード・アクションバー */}
-          <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-4">
-            <div>
-              <h4 className="font-medium text-slate-700">テンプレートを取得</h4>
-              <p className="text-xs text-slate-500">
-                最新のインポート用テンプレートをダウンロードします
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleDownloadTemplate(group)}
-              disabled={isDownloadingTemplate}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              テンプレートをダウンロード
-            </Button>
-          </div>
-
           {!result ? (
-            <UploadCard
-              file={file}
-              dryRun={dryRun}
-              isUploading={isUploading}
-              onFileChange={handleFileChange}
-              onDryRunChange={setDryRun}
-              onImport={handleImport}
-              onClear={handleClear}
-            />
+            <div className="grid gap-6 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+              {/* テンプレートダウンロード・アクションバー */}
+              <div className="flex h-fit items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-4">
+                <div>
+                  <h4 className="font-medium text-slate-700">テンプレートを取得</h4>
+                  <p className="text-xs text-slate-500">
+                    最新のインポート用テンプレートをダウンロードします
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownloadTemplate(group)}
+                  disabled={isDownloadingTemplate}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  テンプレートをダウンロード
+                </Button>
+              </div>
+
+              <UploadCard
+                file={file}
+                dryRun={dryRun}
+                isUploading={isUploading}
+                onFileChange={handleFileChange}
+                onDryRunChange={setDryRun}
+                onImport={handleImport}
+                onClear={handleClear}
+              />
+            </div>
           ) : (
             <div className="space-y-4">
               <ImportResultCard result={result} />
