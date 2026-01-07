@@ -41,6 +41,23 @@ TEMPLATE_DEFINITIONS = {
         "sample_row": ["SUP-001", "サンプル仕入先"],
         "description": "仕入先マスタ インポート用テンプレート",
     },
+    "delivery_places": {
+        "columns": [
+            "customer_code",
+            "customer_name",
+            "delivery_place_code",
+            "delivery_place_name",
+            "jiku_code",
+        ],
+        "sample_row": [
+            "CUST-001",
+            "サンプル顧客",
+            "DP-001",
+            "サンプル納入先",
+            "J-001",
+        ],
+        "description": "納入先マスタ インポート用テンプレート",
+    },
 }
 
 
@@ -118,7 +135,7 @@ class ExportService:
         """Export an import template with headers (and optional sample data).
 
         Args:
-            template_type: One of 'products', 'customers', 'warehouses', 'suppliers'
+            template_type: One of 'products', 'customers', 'warehouses', 'suppliers', 'delivery_places'
             format: 'csv' or 'xlsx'
             include_sample: Whether to include a sample row
 

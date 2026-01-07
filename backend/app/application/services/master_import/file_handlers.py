@@ -88,6 +88,25 @@ def parse_excel(content: bytes) -> dict:
     if "customers" in wb.sheetnames:
         result["customer_data"] = {"customers": _parse_customers_sheet(wb["customers"])}
 
+    if not result:
+        template_sheet = None
+        if "Template" in wb.sheetnames:
+            template_sheet = wb["Template"]
+        elif "Sheet1" in wb.sheetnames:
+            template_sheet = wb["Sheet1"]
+
+        if template_sheet:
+            headers = [
+                str(h).lower().strip() if h is not None else ""
+                for h in next(template_sheet.iter_rows(values_only=True), [])
+            ]
+            # Check customer_code FIRST since customer templates may contain both
+            # customer_code and supplier_code columns (supplier_code is used for items)
+            if "customer_code" in headers:
+                result["customer_data"] = {"customers": _parse_customers_sheet(template_sheet)}
+            elif "supplier_code" in headers:
+                result["supply_data"] = {"suppliers": _parse_suppliers_sheet(template_sheet)}
+
     wb.close()
     return result
 

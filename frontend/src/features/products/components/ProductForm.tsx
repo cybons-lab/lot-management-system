@@ -220,7 +220,7 @@ export function ProductForm({
         )}
       </div>
 
-      <div className="flex items-center gap-2 pt-2">
+      <div className="flex items-center gap-2 pt-2 md:col-span-2">
         <input
           id="is_active"
           type="checkbox"
@@ -233,7 +233,7 @@ export function ProductForm({
         <span className="text-sm text-gray-500">{watch("is_active") ? "有効" : "無効"}</span>
       </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+      <div className="flex justify-end gap-2 pt-4 md:col-span-2">
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           キャンセル
         </Button>
