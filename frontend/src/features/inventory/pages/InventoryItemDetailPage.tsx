@@ -77,6 +77,10 @@ export function InventoryItemDetailPage() {
     queryClient.invalidateQueries({
       queryKey: inventoryItemKeys.detail(productIdNum, warehouseIdNum),
     });
+    // 出庫履歴リストも更新
+    queryClient.invalidateQueries({
+      queryKey: ["withdrawals", "list", { productId: productIdNum, warehouseId: warehouseIdNum }],
+    });
   };
 
   // ロットテーブルのカラム定義
