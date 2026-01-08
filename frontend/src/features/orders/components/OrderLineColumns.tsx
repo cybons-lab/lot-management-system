@@ -68,14 +68,14 @@ export function createOrderLineColumns(
       id: "customer_name",
       header: "得意先",
       cell: (row: OrderLineRow) => (
-        <div className="max-w-[200px]">
+        <div>
           <div className="truncate font-semibold text-slate-900" title={row.customer_name ?? ""}>
             {row.customer_name}
           </div>
           <div className="text-[11px] text-slate-500">{row.customer_code}</div>
         </div>
       ),
-      width: "200px",
+      minWidth: 200,
     },
 
     // 製品
@@ -83,7 +83,7 @@ export function createOrderLineColumns(
       id: "product_code",
       header: "製品",
       cell: (row: OrderLineRow) => (
-        <div className="max-w-[300px]">
+        <div>
           <div className="text-sm font-medium text-slate-600">{row.product_code ?? "–"}</div>
           {row.product_name && (
             <div className="truncate text-sm font-semibold text-slate-900" title={row.product_name}>
@@ -92,7 +92,7 @@ export function createOrderLineColumns(
           )}
         </div>
       ),
-      width: "300px",
+      minWidth: 300,
     },
 
     // 注文数量（単位を小さく）

@@ -31,19 +31,21 @@ import { cn } from "@/shared/libs/utils";
 export interface Column<T = never> {
   /** カラムID */
   id: string;
-  /** カラムヘッダー表示名 */
+  /** ヘッダーラベル */
   header: string;
-  /** セルの値を取得する関数 */
-  accessor?: (row: T) => unknown;
-  /** セルのレンダリング関数(カスタム表示) */
+  /** セルのレンダー関数 */
   cell?: (row: T) => React.ReactNode;
+  /** データアクセサ */
+  accessor?: (row: T) => unknown;
+  /** カラム幅 */
+  width?: string | number;
+  /** 最小幅 */
+  minWidth?: string | number;
   /** ソート可能かどうか */
   sortable?: boolean;
-  /** カラム幅(CSS) - TanStack Tableでは数値推奨だが互換性のため文字列も許容(パースして使用) */
-  width?: string;
   /** テキスト配置 */
   align?: "left" | "center" | "right";
-  /** カラムのクラス名 */
+  /** 追加のCSSClass */
   className?: string;
 }
 
@@ -137,14 +139,15 @@ export function DataTable<T = never>({
     }
 
     // データ列
-    columns.forEach((col) => {
-      // 幅の解析 (例: "200px" -> 200)
-      const parseWidth = (w?: string) => {
-        if (!w) return undefined;
-        const match = w.match(/^(\d+)/);
-        return match ? parseInt(match[1], 10) : undefined;
-      };
+    // 幅の解析 (例: "200px" -> 200)
+    const parseWidth = (width: string | number | undefined): number | undefined => {
+      if (width === undefined) return undefined;
+      if (typeof width === "number") return width;
+      const match = String(width).match(/^(\d+)/);
+      return match ? Number.parseInt(match[1], 10) : 150; // デフォルト150px
+    };
 
+    columns.forEach((col) => {
       defs.push({
         id: col.id,
         header: col.header,
@@ -157,6 +160,7 @@ export function DataTable<T = never>({
           return info.getValue() as React.ReactNode;
         },
         size: parseWidth(col.width),
+        minSize: col.minWidth ? parseWidth(col.minWidth) : undefined,
         enableSorting: col.sortable,
         meta: {
           align: col.align,
