@@ -281,7 +281,7 @@ export function DataTable<T = never>({
       )}
     >
       <table className="w-full" style={{ tableLayout: "fixed" }}>
-        <thead className="border-b border-slate-100 bg-slate-50/50">
+        <thead className="border-b bg-slate-50">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -292,7 +292,7 @@ export function DataTable<T = never>({
                   <th
                     key={header.id}
                     className={cn(
-                      "relative px-6 py-3.5 text-left text-xs font-semibold text-slate-700",
+                      "relative px-4 py-3 text-left text-sm font-semibold text-slate-700",
                       meta?.align === "center" && "text-center",
                       meta?.align === "right" && "text-right",
                       header.column.getCanSort() &&
@@ -361,7 +361,7 @@ export function DataTable<T = never>({
                     <td
                       key={cell.id}
                       className={cn(
-                        "px-6 py-3.5 text-sm text-slate-900",
+                        "px-4 py-3 text-sm text-slate-900",
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
                         meta?.className,
