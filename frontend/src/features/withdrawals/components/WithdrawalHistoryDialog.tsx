@@ -6,7 +6,7 @@
  * - 日付を選択して新規出庫を登録可能
  */
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { QuickWithdrawalDialog } from "./QuickWithdrawalDialog";
 import { WithdrawalCalendar } from "./WithdrawalCalendar";
@@ -30,14 +30,6 @@ export function WithdrawalHistoryDialog({
   const queryClient = useQueryClient();
   const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      console.log("[DEBUG] WithdrawalHistoryDialog - lot object:", lot);
-      console.log("[DEBUG] warehouse_name:", lot.warehouse_name);
-      console.log("[DEBUG] warehouse_code:", lot.warehouse_code);
-    }
-  }, [open, lot]);
 
   const handleDateSelect = (date: string) => {
     setSelectedDate(date);
@@ -66,10 +58,6 @@ export function WithdrawalHistoryDialog({
             </DialogTitle>
             <p className="mt-1 text-sm text-slate-500">
               {lot.product_name || lot.product_code} ・ 日付をクリックして新規出庫を登録できます
-            </p>
-            <p className="mt-1 text-xs text-red-500">
-              [DEBUG] warehouse_name: {lot.warehouse_name || "null"} | warehouse_code:{" "}
-              {lot.warehouse_code || "null"}
             </p>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto bg-slate-50/30">

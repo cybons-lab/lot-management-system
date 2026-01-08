@@ -166,7 +166,7 @@ function DayTooltip({
               <span className="ml-2 whitespace-nowrap">{fmt(w.quantity)}</span>
             </div>
             <div className="mt-0.5 truncate text-[10px] text-slate-500">
-              {warehouseName || "【DEBUG:倉庫名なし】"} → {w.delivery_place_name || "納入先未定"}
+              {warehouseName || ""} → {w.delivery_place_name || "納入先未定"}
             </div>
           </div>
         ))}
