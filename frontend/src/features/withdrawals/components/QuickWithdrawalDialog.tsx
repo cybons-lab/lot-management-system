@@ -26,7 +26,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
-import { http } from "@/shared/libs/http-client";
+import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 
