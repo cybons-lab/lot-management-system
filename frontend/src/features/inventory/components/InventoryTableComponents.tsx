@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, complexity */
 import { format } from "date-fns";
 import {
   ArrowUpFromLine,
@@ -306,11 +306,44 @@ export function InventoryRow({
       {isExpanded && (
         <ExpandedLotDetails
           lots={lots}
-          onEditLot={onEditLot}
-          onLockLot={onLockLot}
-          onUnlockLot={onUnlockLot}
-          onWithdrawLot={onWithdrawLot}
-          onHistoryLot={onHistoryLot}
+          onEditLot={(lot) =>
+            onEditLot({
+              ...lot,
+              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+            })
+          }
+          onLockLot={(lot) =>
+            onLockLot({
+              ...lot,
+              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+            })
+          }
+          onUnlockLot={(lot) =>
+            onUnlockLot({
+              ...lot,
+              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+            })
+          }
+          onWithdrawLot={
+            onWithdrawLot
+              ? (lot) =>
+                  onWithdrawLot({
+                    ...lot,
+                    warehouse_name:
+                      lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+                  })
+              : undefined
+          }
+          onHistoryLot={
+            onHistoryLot
+              ? (lot) =>
+                  onHistoryLot({
+                    ...lot,
+                    warehouse_name:
+                      lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+                  })
+              : undefined
+          }
         />
       )}
     </Fragment>

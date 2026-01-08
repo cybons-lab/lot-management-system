@@ -60,13 +60,19 @@ export function InventoryItemDetailPage() {
   };
 
   const handleOpenWithdrawal = (lot: LotUI) => {
-    setSelectedLotForWithdrawal(lot);
+    setSelectedLotForWithdrawal({
+      ...lot,
+      warehouse_name: lot.warehouse_name || item?.warehouse_name || item?.warehouse_code,
+    });
     setWithdrawalDialogOpen(true);
   };
 
   // 履歴ダイアログを開く
   const handleOpenHistory = (lot: LotUI) => {
-    setSelectedLotForHistory(lot);
+    setSelectedLotForHistory({
+      ...lot,
+      warehouse_name: lot.warehouse_name || item?.warehouse_name || item?.warehouse_code,
+    });
     setHistoryDialogOpen(true);
   };
 
