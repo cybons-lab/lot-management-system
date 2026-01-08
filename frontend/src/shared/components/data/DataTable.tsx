@@ -321,7 +321,7 @@ export function DataTable<T = never>({
                         className={cn(
                           "absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none",
                           "transition-all duration-200 select-none",
-                          "bg-slate-300/50 hover:w-2 hover:bg-blue-500",
+                          "bg-transparent hover:w-2 hover:bg-blue-500",
                           header.column.getIsResizing() && "w-2 bg-blue-600 shadow-lg",
                         )}
                       />
