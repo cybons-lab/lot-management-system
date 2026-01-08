@@ -190,7 +190,7 @@ export function createOrderLineColumns(
     // 引当状況（アイコン化）
     {
       id: "status",
-      header: "",
+      header: "状況",
       cell: (row: OrderLineRow) => {
         const orderQty = Number(row.order_quantity ?? row.quantity ?? 0);
         const lots = coerceAllocatedLots(row.allocated_lots);
