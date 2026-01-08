@@ -57,11 +57,8 @@ export function OrdersListPage() {
         }
       />
 
-      {/* フィルターとテーブルを画面いっぱいに広げる */}
-      <div className="-mx-6 space-y-6">
-        <div className="mx-6">
-          <OrdersFilters filters={logic.filters} />
-        </div>
+      <div className="space-y-6">
+        <OrdersFilters filters={logic.filters} />
 
         <ErrorState error={logic.error} onRetry={logic.refetch} />
 
@@ -72,7 +69,7 @@ export function OrdersListPage() {
         />
 
         {!logic.error && logic.sortedLines.length > 0 && (
-          <div className="mx-6 rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
+          <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
             <TablePagination
               currentPage={logic.table.calculatePagination(logic.filteredLines.length).page ?? 1}
               pageSize={logic.table.calculatePagination(logic.filteredLines.length).pageSize ?? 25}
