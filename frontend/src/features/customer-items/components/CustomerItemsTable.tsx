@@ -1,13 +1,13 @@
 /* eslint-disable max-lines-per-function */
 /**
  * CustomerItemsTable - Table component for customer items.
- * OCR-SAP変換フィールド対応版
+ * OCR-SAP変換フィールド対応版 + チェックボックス選択対応
  */
 import { Building2, CheckCircle, Package, RotateCcw, Trash2, XCircle } from "lucide-react";
 
 import type { CustomerItem } from "../api";
 
-import { Button } from "@/components/ui";
+import { Button, Checkbox } from "@/components/ui";
 
 interface CustomerItemsTableProps {
   items: CustomerItem[];
@@ -16,12 +16,52 @@ interface CustomerItemsTableProps {
   onPermanentDelete: (item: CustomerItem) => void;
   onRestore: (item: CustomerItem) => void;
   onRowClick?: (item: CustomerItem) => void;
+  // 選択機能（オプション）
+  selectedIds?: Set<string | number>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
+  // 管理者なら全アイテム選択可能
+  isAdmin?: boolean;
 }
 
-function TableHeader() {
+const isInactive = (validTo?: string) => {
+  if (!validTo) return false;
+  const today = new Date().toISOString().split("T")[0];
+  return validTo <= today;
+};
+
+/** CustomerItem用の一意キー生成 */
+const getItemKey = (item: CustomerItem) => `${item.customer_id}-${item.external_product_code}`;
+
+interface TableHeaderProps {
+  showCheckbox: boolean;
+  allSelected: boolean;
+  someSelected: boolean;
+  onToggleSelectAll?: () => void;
+  selectableCount: number;
+}
+
+function TableHeader({
+  showCheckbox,
+  allSelected,
+  someSelected,
+  onToggleSelectAll,
+  selectableCount,
+}: TableHeaderProps) {
   return (
     <thead className="sticky top-0 z-10 bg-gray-50">
       <tr>
+        {showCheckbox && (
+          <th className="w-12 px-4 py-3 text-left">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() => onToggleSelectAll?.()}
+              aria-label="全て選択"
+              disabled={selectableCount === 0}
+              className={someSelected && !allSelected ? "opacity-50" : ""}
+            />
+          </th>
+        )}
         <th className="px-4 py-3 text-left text-xs font-medium tracking-wider whitespace-nowrap text-gray-700 uppercase">
           得意先
         </th>
@@ -63,19 +103,40 @@ interface TableRowProps {
   onPermanentDelete: (item: CustomerItem) => void;
   onRestore: (item: CustomerItem) => void;
   onRowClick?: (item: CustomerItem) => void;
+  showCheckbox: boolean;
+  isSelected: boolean;
+  onToggleSelect?: (id: string) => void;
+  isAdmin?: boolean;
 }
 
-const isInactive = (validTo?: string) => {
-  if (!validTo) return false;
-  const today = new Date().toISOString().split("T")[0];
-  return validTo <= today;
-};
-
-function TableRow({ item, onSoftDelete, onPermanentDelete, onRestore, onRowClick }: TableRowProps) {
+function TableRow({
+  item,
+  onSoftDelete,
+  onPermanentDelete,
+  onRestore,
+  onRowClick,
+  showCheckbox,
+  isSelected,
+  onToggleSelect,
+  isAdmin = false,
+}: TableRowProps) {
   const inactive = isInactive(item.valid_to);
+  const itemKey = getItemKey(item);
+  // 管理者は全アイテム選択可、非管理者はアクティブのみ（論理削除用）
+  const canSelect = isAdmin ? true : !inactive;
 
   return (
     <tr className="cursor-pointer hover:bg-gray-50" onClick={() => onRowClick?.(item)}>
+      {showCheckbox && (
+        <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={() => onToggleSelect?.(itemKey)}
+            aria-label={`${item.customer_name} - ${item.external_product_code}を選択`}
+            disabled={!canSelect}
+          />
+        </td>
+      )}
       <td className="px-4 py-4 text-sm text-gray-900">
         <div className="flex items-center gap-2">
           <Building2 className="h-4 w-4 shrink-0 text-orange-600" />
@@ -213,7 +274,19 @@ export function CustomerItemsTable({
   onPermanentDelete,
   onRestore,
   onRowClick,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
+  isAdmin = false,
 }: CustomerItemsTableProps) {
+  const showCheckbox = !!selectedIds && !!onToggleSelect;
+  // 管理者は全アイテム、非管理者はアクティブのみ選択対象（論理削除用）
+  const selectableItems = isAdmin ? items : items.filter((item) => !isInactive(item.valid_to));
+  const allSelectableSelected =
+    selectableItems.length > 0 &&
+    selectableItems.every((item) => selectedIds?.has(getItemKey(item)));
+  const someSelected = selectableItems.some((item) => selectedIds?.has(getItemKey(item)));
+
   return (
     <div className="rounded-lg border bg-white shadow-sm">
       <div className="border-b p-4">
@@ -230,16 +303,26 @@ export function CustomerItemsTable({
       ) : (
         <div className="max-h-[600px] overflow-auto">
           <table className="w-full min-w-[1200px] divide-y divide-gray-200">
-            <TableHeader />
+            <TableHeader
+              showCheckbox={showCheckbox}
+              allSelected={allSelectableSelected}
+              someSelected={someSelected}
+              onToggleSelectAll={onToggleSelectAll}
+              selectableCount={selectableItems.length}
+            />
             <tbody className="divide-y divide-gray-200 bg-white">
               {items.map((item) => (
                 <TableRow
-                  key={`${item.customer_id}-${item.external_product_code}`}
+                  key={getItemKey(item)}
                   item={item}
                   onSoftDelete={onSoftDelete}
                   onPermanentDelete={onPermanentDelete}
                   onRestore={onRestore}
                   onRowClick={onRowClick}
+                  showCheckbox={showCheckbox}
+                  isSelected={selectedIds?.has(getItemKey(item)) ?? false}
+                  onToggleSelect={onToggleSelect}
+                  isAdmin={isAdmin}
                 />
               ))}
             </tbody>

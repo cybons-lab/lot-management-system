@@ -28,6 +28,7 @@ import { fmt } from "@/shared/utils/number";
 
 interface WithdrawalCalendarProps {
   lotId: number;
+  warehouseName?: string;
   onDateSelect?: (date: string) => void;
   showWithdrawButton?: boolean;
 }
@@ -39,6 +40,7 @@ interface DailyStat {
     withdrawal_id: number;
     quantity: string;
     customer_name: string;
+    delivery_place_name?: string;
   }>;
 }
 
@@ -49,6 +51,7 @@ interface CalendarDayProps {
   isToday: boolean;
   isHovered: boolean;
   showWithdrawButton: boolean;
+  warehouseName?: string;
   onHover: (dateKey: string | null) => void;
   onDateClick: (date: Date) => void;
 }
@@ -76,6 +79,7 @@ function CalendarDay({
   isToday,
   isHovered,
   showWithdrawButton,
+  warehouseName,
   onHover,
   onDateClick,
 }: CalendarDayProps) {
@@ -113,7 +117,9 @@ function CalendarDay({
         )}
       </div>
       {stat && <DayStats stat={stat} />}
-      {stat && isHovered && stat.withdrawals.length > 0 && <DayTooltip day={day} stat={stat} />}
+      {stat && isHovered && stat.withdrawals.length > 0 && (
+        <DayTooltip day={day} stat={stat} warehouseName={warehouseName} />
+      )}
     </div>
   );
 }
@@ -138,17 +144,30 @@ function DayStats({ stat }: { stat: DailyStat }) {
   );
 }
 
-function DayTooltip({ day, stat }: { day: Date; stat: DailyStat }) {
+function DayTooltip({
+  day,
+  stat,
+  warehouseName,
+}: {
+  day: Date;
+  stat: DailyStat;
+  warehouseName?: string;
+}) {
   return (
-    <div className="absolute top-full left-1/2 z-50 mt-1 w-56 -translate-x-1/2 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+    <div className="absolute top-full left-1/2 z-50 mt-1 w-64 -translate-x-1/2 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
       <div className="mb-2 border-b border-slate-100 pb-2 text-xs font-semibold text-slate-700">
         {format(day, "M月d日", { locale: ja })}の出庫詳細
       </div>
-      <div className="max-h-32 space-y-1.5 overflow-y-auto">
+      <div className="max-h-48 space-y-2 overflow-y-auto">
         {stat.withdrawals.slice(0, 5).map((w) => (
-          <div key={w.withdrawal_id} className="flex items-center justify-between text-xs">
-            <span className="truncate text-slate-600">{w.customer_name || "—"}</span>
-            <span className="ml-2 font-medium text-slate-800">{fmt(w.quantity)}</span>
+          <div key={w.withdrawal_id} className="text-xs">
+            <div className="flex items-center justify-between font-medium text-slate-800">
+              <span className="truncate">{w.customer_name || "—"}</span>
+              <span className="ml-2 whitespace-nowrap">{fmt(w.quantity)}</span>
+            </div>
+            <div className="mt-0.5 truncate text-[10px] text-slate-500">
+              {warehouseName || ""} → {w.delivery_place_name || "納入先未定"}
+            </div>
           </div>
         ))}
         {stat.withdrawals.length > 5 && (
@@ -305,6 +324,7 @@ function useWithdrawalCalendarData(lotId: number, currentMonth: Date) {
         withdrawal_id: w.withdrawal_id,
         quantity: w.quantity,
         customer_name: w.customer_name,
+        delivery_place_name: w.delivery_place_name,
       });
     });
     return stats;
@@ -324,6 +344,7 @@ function useWithdrawalCalendarData(lotId: number, currentMonth: Date) {
 
 export function WithdrawalCalendar({
   lotId,
+  warehouseName,
   onDateSelect,
   showWithdrawButton = true,
 }: WithdrawalCalendarProps) {
@@ -361,6 +382,7 @@ export function WithdrawalCalendar({
                 isToday={isSameDay(day, new Date())}
                 isHovered={hoveredDate === dateKey}
                 showWithdrawButton={showWithdrawButton}
+                warehouseName={warehouseName}
                 onHover={setHoveredDate}
                 onDateClick={handleDateClick}
               />

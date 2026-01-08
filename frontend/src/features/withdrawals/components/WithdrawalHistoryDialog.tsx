@@ -65,6 +65,7 @@ export function WithdrawalHistoryDialog({
               lotId={lot.id}
               onDateSelect={handleDateSelect}
               showWithdrawButton={true}
+              warehouseName={lot.warehouse_name || undefined}
             />
           </div>
         </DialogContent>

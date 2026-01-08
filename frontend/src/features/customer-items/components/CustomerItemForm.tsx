@@ -96,9 +96,11 @@ export function CustomerItemForm({
         onProductSelect={handleProductSelect}
       />
 
-      <CustomerItemFormOcrSapSection control={control} isSubmitting={isSubmitting} />
-
-      <CustomerItemFormSapCacheSection control={control} isSubmitting={isSubmitting} />
+      {/* OCR→SAP変換設定とSAPキャッシュ設定を2段レイアウト */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <CustomerItemFormOcrSapSection control={control} isSubmitting={isSubmitting} />
+        <CustomerItemFormSapCacheSection control={control} isSubmitting={isSubmitting} />
+      </div>
 
       {/* Submit Buttons */}
       <div className="flex justify-end gap-3">

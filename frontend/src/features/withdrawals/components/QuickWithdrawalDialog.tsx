@@ -6,12 +6,13 @@
  * - 得意先、出荷日、数量を入力して出庫
  */
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, complexity */
 import { Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
 import { createWithdrawal, type WithdrawalCreateRequest } from "../api";
+import type { DeliveryPlace } from "../hooks/useWithdrawalFormState";
 
 import { Button, Input, Label } from "@/components/ui";
 import {
@@ -25,6 +26,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
+import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 
@@ -43,6 +45,7 @@ export interface QuickWithdrawalDialogProps {
 
 interface FormState {
   customer_id: number;
+  delivery_place_id: number;
   ship_date: string;
   quantity: number;
   reference_number: string;
@@ -51,6 +54,7 @@ interface FormState {
 
 interface FormErrors {
   customer_id?: string;
+  delivery_place_id?: string;
   quantity?: string;
 }
 
@@ -65,6 +69,10 @@ export function QuickWithdrawalDialog({
   const today = new Date().toISOString().split("T")[0];
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
 
+  // 納入先状態
+  const [deliveryPlaces, setDeliveryPlaces] = useState<DeliveryPlace[]>([]);
+  const [isLoadingDeliveryPlaces, setIsLoadingDeliveryPlaces] = useState(false);
+
   // 利用可能数量を計算
   const availableQuantity =
     Number(lot.current_quantity) -
@@ -74,6 +82,7 @@ export function QuickWithdrawalDialog({
   // フォーム状態
   const [formState, setFormState] = useState<FormState>({
     customer_id: 0,
+    delivery_place_id: 0,
     ship_date: today,
     quantity: 0,
     reference_number: "",
@@ -87,14 +96,61 @@ export function QuickWithdrawalDialog({
     if (open) {
       setFormState({
         customer_id: 0,
+        delivery_place_id: 0,
         ship_date: initialShipDate || today,
         quantity: 0,
         reference_number: "",
         reason: "",
       });
+      setDeliveryPlaces([]);
       setErrors({});
     }
   }, [open, today, initialShipDate]);
+
+  // 得意先が変わったら納入先を再取得（レースコンディション対策）
+  useEffect(() => {
+    const customerId = formState.customer_id;
+
+    if (!customerId) {
+      setDeliveryPlaces([]);
+      updateField("delivery_place_id", 0);
+      return;
+    }
+
+    const abortController = new AbortController();
+    setIsLoadingDeliveryPlaces(true);
+
+    http
+      .get<DeliveryPlace[]>(`masters/delivery-places?customer_id=${customerId}`, {
+        signal: abortController.signal,
+      })
+      .then((places) => {
+        // レスポンス時点でcustomer_idが変わっていないか確認
+        if (formState.customer_id === customerId) {
+          setDeliveryPlaces(places);
+          updateField("delivery_place_id", 0);
+        }
+      })
+      .catch((error) => {
+        // AbortErrorは無視
+        if ((error as Error).name !== "AbortError") {
+          console.error("納入先取得エラー:", error);
+          if (formState.customer_id === customerId) {
+            setDeliveryPlaces([]);
+          }
+        }
+      })
+      .finally(() => {
+        if (formState.customer_id === customerId) {
+          setIsLoadingDeliveryPlaces(false);
+        }
+      });
+
+    return () => {
+      abortController.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formState.customer_id]);
 
   // フィールド更新
   const updateField = useCallback(
@@ -109,11 +165,16 @@ export function QuickWithdrawalDialog({
   );
 
   // バリデーション
+  // バリデーション
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formState.customer_id || formState.customer_id <= 0) {
       newErrors.customer_id = "得意先を選択してください";
+    }
+
+    if (!formState.delivery_place_id || formState.delivery_place_id <= 0) {
+      newErrors.delivery_place_id = "納入場所を選択してください";
     }
 
     if (!formState.quantity || formState.quantity <= 0) {
@@ -137,6 +198,7 @@ export function QuickWithdrawalDialog({
         quantity: formState.quantity,
         withdrawal_type: "order_manual",
         customer_id: formState.customer_id,
+        delivery_place_id: formState.delivery_place_id || undefined,
         ship_date: formState.ship_date,
         reason: formState.reason || undefined,
         reference_number: formState.reference_number || undefined,
@@ -209,6 +271,43 @@ export function QuickWithdrawalDialog({
             </Select>
             {errors.customer_id && (
               <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>
+            )}
+          </div>
+
+          {/* 納入場所 */}
+          <div>
+            <Label htmlFor="delivery_place_id" className="mb-2 block text-sm font-medium">
+              納入場所 <span className="text-red-500">*</span>
+            </Label>
+            <Select
+              value={formState.delivery_place_id ? String(formState.delivery_place_id) : ""}
+              onValueChange={(v) => updateField("delivery_place_id", Number(v))}
+              disabled={isLoadingDeliveryPlaces || !formState.customer_id || isSubmitting}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    !formState.customer_id
+                      ? "先に得意先を選択"
+                      : isLoadingDeliveryPlaces
+                        ? "読み込み中..."
+                        : "納入場所を選択"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {deliveryPlaces.map((dp) => (
+                  <SelectItem key={dp.id} value={String(dp.id)}>
+                    {dp.delivery_place_code} - {dp.delivery_place_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!formState.delivery_place_id && formState.customer_id > 0 && (
+              <p className="mt-1 text-xs text-slate-500">出庫登録には納入場所の選択が必須です</p>
+            )}
+            {errors.delivery_place_id && (
+              <p className="mt-1 text-xs text-red-500">{errors.delivery_place_id}</p>
             )}
           </div>
 

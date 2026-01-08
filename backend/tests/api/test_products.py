@@ -116,6 +116,8 @@ def test_create_product_success(test_db: Session):
     product_data = {
         "product_code": "CREATE-001",
         "product_name": "New Product",
+        "customer_part_no": "CUST-001",
+        "maker_item_code": "MAKER-001",
         "internal_unit": "CAN",
         "external_unit": "KG",
         "qty_per_internal_unit": 20.0,
@@ -144,6 +146,8 @@ def test_create_product_duplicate_returns_409(test_db: Session):
     product_data = {
         "product_code": "DUP-001",
         "product_name": "Duplicate",
+        "customer_part_no": "CUST-DUP",
+        "maker_item_code": "MAKER-DUP",
         "internal_unit": "EA",
         "external_unit": "EA",
         "qty_per_internal_unit": 1.0,

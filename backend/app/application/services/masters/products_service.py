@@ -114,11 +114,38 @@ class ProductService(BaseService[Product, ProductCreate, ProductUpdate, int]):
         return cast(list[Product], self.db.query(Product).order_by(Product.maker_part_code).all())
 
     def create(self, payload: ProductCreate) -> Product:
-        """Create new product with field mapping."""
+        """Create new product with field mapping and auto-numbering."""
         data = payload.model_dump()
-        # Map schema fields to model fields
-        if "product_code" in data:
-            data["maker_part_code"] = data.pop("product_code")
+
+        # 1. 自動採番 (product_code / maker_part_code)
+        # ユーザー入力の product_code があればそれを使うが、なければ自動生成
+        input_code = data.get("product_code")
+        if input_code:
+            data["maker_part_code"] = input_code
+        else:
+            # P + YYYYMMDD + HHMMSS + Random3
+            import random
+            import string
+            from datetime import datetime
+
+            now = datetime.now()
+            date_str = now.strftime("%Y%m%d%H%M%S")
+            rand_str = "".join(random.choices(string.ascii_uppercase + string.digits, k=3))
+            auto_code = f"P{date_str}{rand_str}"
+            data["maker_part_code"] = auto_code
+
+        # 不要な product_code フィールドを削除
+        data.pop("product_code", None)
+
+        # 2. 必須フィールドの確認 (スキーマでもチェックしているが念のため)
+        if not data.get("customer_part_no"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="先方品番は必須です"
+            )
+        if not data.get("maker_item_code"):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="メーカー品番は必須です"
+            )
 
         # Remove fields not in model
         data.pop("is_active", None)

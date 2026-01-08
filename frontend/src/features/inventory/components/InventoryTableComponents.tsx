@@ -1,4 +1,4 @@
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, complexity */
 import { format } from "date-fns";
 import {
   ArrowUpFromLine,
@@ -223,6 +223,7 @@ interface InventoryRowProps {
   onUnlockLot: (lot: LotUI) => void;
   onWithdrawLot?: (lot: LotUI) => void;
   onHistoryLot?: (lot: LotUI) => void;
+  columnWidths?: Record<string, string | number>;
 }
 
 export function InventoryRow({
@@ -237,6 +238,7 @@ export function InventoryRow({
   onUnlockLot,
   onWithdrawLot,
   onHistoryLot,
+  columnWidths,
 }: InventoryRowProps) {
   return (
     <Fragment>
@@ -247,7 +249,7 @@ export function InventoryRow({
           onRowClick?.(item);
         }}
       >
-        <td className={styles.table.td}>
+        <td className={styles.table.td} style={{ width: columnWidths?.expander }}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -262,35 +264,47 @@ export function InventoryRow({
             )}
           </button>
         </td>
-        <td className={styles.table.td}>
+        <td className={styles.table.td} style={{ width: columnWidths?.product }}>
           <span
-            className="block max-w-[200px] truncate"
+            className="block truncate"
             title={item.product_name || item.product_code || `ID: ${item.product_id}`}
           >
             {item.product_name || item.product_code || `ID: ${item.product_id}`}
           </span>
         </td>
-        <td className={styles.table.td}>
+        <td className={styles.table.td} style={{ width: columnWidths?.warehouse }}>
           <span
-            className="block max-w-[150px] truncate"
+            className="block truncate"
             title={item.warehouse_name || item.warehouse_code || `ID: ${item.warehouse_id}`}
           >
             {item.warehouse_name || item.warehouse_code || `ID: ${item.warehouse_id}`}
           </span>
         </td>
-        <td className={styles.table.tdRight}>{lots.length}</td>
-        <td className={styles.table.tdRight}>{fmt(item.total_quantity)}</td>
-        <td className={`${styles.table.tdRight} text-orange-600`}>
+        <td className={styles.table.tdRight} style={{ width: columnWidths?.lots }}>
+          {lots.length}
+        </td>
+        <td className={styles.table.tdRight} style={{ width: columnWidths?.total }}>
+          {fmt(item.total_quantity)}
+        </td>
+        <td
+          className={`${styles.table.tdRight} text-orange-600`}
+          style={{ width: columnWidths?.soft }}
+        >
           {fmt(item.soft_allocated_quantity)}
         </td>
-        <td className={`${styles.table.tdRight} font-medium text-red-600`}>
+        <td
+          className={`${styles.table.tdRight} font-medium text-red-600`}
+          style={{ width: columnWidths?.hard }}
+        >
           {fmt(item.hard_allocated_quantity)}
         </td>
-        <td className={styles.table.tdRightGreen}>{fmt(item.available_quantity)}</td>
-        <td className={styles.table.tdGray}>
+        <td className={styles.table.tdRightGreen} style={{ width: columnWidths?.available }}>
+          {fmt(item.available_quantity)}
+        </td>
+        <td className={styles.table.tdGray} style={{ width: columnWidths?.updated }}>
           {new Date(item.last_updated).toLocaleString("ja-JP")}
         </td>
-        <td className={styles.table.tdRight}>
+        <td className={styles.table.tdRight} style={{ width: columnWidths?.actions }}>
           <Button
             variant="outline"
             size="sm"
@@ -306,11 +320,44 @@ export function InventoryRow({
       {isExpanded && (
         <ExpandedLotDetails
           lots={lots}
-          onEditLot={onEditLot}
-          onLockLot={onLockLot}
-          onUnlockLot={onUnlockLot}
-          onWithdrawLot={onWithdrawLot}
-          onHistoryLot={onHistoryLot}
+          onEditLot={(lot) =>
+            onEditLot({
+              ...lot,
+              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+            })
+          }
+          onLockLot={(lot) =>
+            onLockLot({
+              ...lot,
+              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+            })
+          }
+          onUnlockLot={(lot) =>
+            onUnlockLot({
+              ...lot,
+              warehouse_name: lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+            })
+          }
+          onWithdrawLot={
+            onWithdrawLot
+              ? (lot) =>
+                  onWithdrawLot({
+                    ...lot,
+                    warehouse_name:
+                      lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+                  })
+              : undefined
+          }
+          onHistoryLot={
+            onHistoryLot
+              ? (lot) =>
+                  onHistoryLot({
+                    ...lot,
+                    warehouse_name:
+                      lot.warehouse_name || item.warehouse_name || item.warehouse_code,
+                  })
+              : undefined
+          }
         />
       )}
     </Fragment>
