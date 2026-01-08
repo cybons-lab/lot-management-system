@@ -269,7 +269,7 @@ describe("QuickWithdrawalDialog", () => {
     });
 
     // Should show delivery place select enabled
-    const deliveryPlaceSelectTrigger = screen.getByText("納入場所を選択（任意）");
+    const deliveryPlaceSelectTrigger = screen.getByText("納入場所を選択");
     expect(deliveryPlaceSelectTrigger).toBeInTheDocument();
     expect(deliveryPlaceSelectTrigger).toBeEnabled();
 
@@ -289,9 +289,9 @@ describe("QuickWithdrawalDialog", () => {
 
     // 2. Select Delivery Place
     await waitFor(() => {
-      expect(screen.getByText("納入場所を選択（任意）")).toBeEnabled();
+      expect(screen.getByText("納入場所を選択")).toBeEnabled();
     });
-    await user.click(screen.getByText("納入場所を選択（任意）"));
+    await user.click(screen.getByText("納入場所を選択"));
     await user.click(screen.getByText(/納入場所A/));
 
     // 3. Enter Quantity
@@ -327,6 +327,19 @@ describe("QuickWithdrawalDialog", () => {
     // Should show validation errors
     await waitFor(() => {
       expect(screen.getByText("得意先を選択してください")).toBeInTheDocument();
+    });
+    // Customer not selected, so delivery place is disabled/empty.
+    // If we select customer but not delivery place, we should see error.
+
+    // Select customer to enable delivery place validation check (if dependent)
+    // Actually our validation checks delivery_place_id even if customer_id is missing?
+    // Code says: if (!customer_id) error; if (!delivery_place_id) error;
+    // So both errors should appear.
+    // But delivery place UI says "先に得意先を選択" if no customer.
+    // Ideally we should select customer then submit to verify delivery place error specifically.
+
+    await waitFor(() => {
+      expect(screen.getByText("納入場所を選択してください")).toBeInTheDocument();
     });
     await waitFor(() => {
       expect(screen.getByText("出庫数量を入力してください")).toBeInTheDocument();

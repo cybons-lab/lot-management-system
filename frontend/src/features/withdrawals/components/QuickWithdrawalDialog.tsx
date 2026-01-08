@@ -54,6 +54,7 @@ interface FormState {
 
 interface FormErrors {
   customer_id?: string;
+  delivery_place_id?: string;
   quantity?: string;
 }
 
@@ -150,11 +151,16 @@ export function QuickWithdrawalDialog({
   );
 
   // バリデーション
+  // バリデーション
   const validate = useCallback((): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formState.customer_id || formState.customer_id <= 0) {
       newErrors.customer_id = "得意先を選択してください";
+    }
+
+    if (!formState.delivery_place_id || formState.delivery_place_id <= 0) {
+      newErrors.delivery_place_id = "納入場所を選択してください";
     }
 
     if (!formState.quantity || formState.quantity <= 0) {
@@ -254,10 +260,10 @@ export function QuickWithdrawalDialog({
             )}
           </div>
 
-          {/* 納入場所 (任意) */}
+          {/* 納入場所 */}
           <div>
             <Label htmlFor="delivery_place_id" className="mb-2 block text-sm font-medium">
-              納入場所 <span className="text-slate-400">(任意)</span>
+              納入場所 <span className="text-red-500">*</span>
             </Label>
             <Select
               value={formState.delivery_place_id ? String(formState.delivery_place_id) : ""}
@@ -271,12 +277,11 @@ export function QuickWithdrawalDialog({
                       ? "先に得意先を選択"
                       : isLoadingDeliveryPlaces
                         ? "読み込み中..."
-                        : "納入場所を選択（任意）"
+                        : "納入場所を選択"
                   }
                 />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="0">指定なし</SelectItem>
                 {deliveryPlaces.map((dp) => (
                   <SelectItem key={dp.id} value={String(dp.id)}>
                     {dp.delivery_place_code} - {dp.delivery_place_name}
@@ -284,6 +289,12 @@ export function QuickWithdrawalDialog({
                 ))}
               </SelectContent>
             </Select>
+            {!formState.delivery_place_id && formState.customer_id > 0 && (
+              <p className="mt-1 text-xs text-slate-500">出庫登録には納入場所の選択が必須です</p>
+            )}
+            {errors.delivery_place_id && (
+              <p className="mt-1 text-xs text-red-500">{errors.delivery_place_id}</p>
+            )}
           </div>
 
           {/* 出荷日 */}
