@@ -67,9 +67,12 @@ export function useCustomerItemsPage() {
   const { mutate: createCustomerItem, isPending: isCreating } = useCreateCustomerItem();
 
   const { mutate: softDelete, isPending: isSoftDeleting } = useDeleteCustomerItem();
-  const { mutate: permanentDelete, isPending: isPermanentDeleting } =
+  const { mutateAsync: permanentDeleteAsync, isPending: isPermanentDeleting } =
     usePermanentDeleteCustomerItem();
   const { mutate: restore, isPending: isRestoring } = useRestoreCustomerItem();
+
+  // 一括削除の状態管理
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Filtering
   const filteredItems = useMemo(() => {
@@ -117,7 +120,7 @@ export function useCustomerItemsPage() {
   // Permanent Delete Handler
   const handlePermanentDelete = useCallback(
     (customerId: number, externalProductCode: string) => {
-      permanentDelete(
+      permanentDeleteAsync(
         { customerId, externalProductCode },
         {
           onSuccess: () => toast.success("完全に削除しました"),
@@ -125,7 +128,40 @@ export function useCustomerItemsPage() {
         },
       );
     },
-    [permanentDelete],
+    [permanentDeleteAsync],
+  );
+
+  // Bulk Permanent Delete Handler
+  const handleBulkPermanentDelete = useCallback(
+    async (items: { customer_id: number; external_product_code: string }[]) => {
+      if (items.length === 0) return;
+
+      setIsBulkDeleting(true);
+      try {
+        const results = await Promise.allSettled(
+          items.map((item) =>
+            permanentDeleteAsync({
+              customerId: item.customer_id,
+              externalProductCode: item.external_product_code,
+            }),
+          ),
+        );
+
+        const succeeded = results.filter((r) => r.status === "fulfilled").length;
+        const failed = results.filter((r) => r.status === "rejected").length;
+
+        if (failed === 0) {
+          toast.success(`${succeeded} 件を完全に削除しました`);
+        } else if (succeeded === 0) {
+          toast.error(`${failed} 件の削除に失敗しました`);
+        } else {
+          toast.warning(`${succeeded} 件を削除、${failed} 件が失敗しました`);
+        }
+      } finally {
+        setIsBulkDeleting(false);
+      }
+    },
+    [permanentDeleteAsync],
   );
 
   // Restore Handler
@@ -170,11 +206,13 @@ export function useCustomerItemsPage() {
     isSoftDeleting,
     isPermanentDeleting,
     isRestoring,
+    isBulkDeleting,
     stats,
     // Handlers
     handleCreate,
     handleSoftDelete,
     handlePermanentDelete,
+    handleBulkPermanentDelete,
     handleRestore,
   };
 }
