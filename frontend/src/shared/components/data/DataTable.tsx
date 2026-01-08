@@ -274,7 +274,7 @@ export function DataTable<T = never>({
       )}
     >
       <table className="w-full border-collapse" style={{ width: table.getTotalSize() }}>
-        <thead className="border-b-2 border-slate-300 bg-gradient-to-r from-slate-50 to-slate-100">
+        <thead className="border-b border-slate-200 bg-slate-50/50">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -285,12 +285,11 @@ export function DataTable<T = never>({
                   <th
                     key={header.id}
                     className={cn(
-                      "relative px-6 py-4 text-left text-sm font-bold text-slate-800",
-                      "tracking-wide uppercase",
+                      "relative px-6 py-3.5 text-left text-xs font-semibold text-slate-700",
                       meta?.align === "center" && "text-center",
                       meta?.align === "right" && "text-right",
                       header.column.getCanSort() &&
-                        "cursor-pointer transition-colors select-none hover:bg-slate-100/80",
+                        "cursor-pointer transition-colors select-none hover:bg-slate-100",
                       meta?.className,
                     )}
                     style={{ width: header.getSize() }}
