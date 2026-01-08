@@ -67,9 +67,16 @@ export function useDeliveryPlacesPageState() {
   // Mutations
   const { mutate: create, isPending: isCreating } = useCreateDeliveryPlace();
   const { mutate: update, isPending: isUpdating } = useUpdateDeliveryPlace();
-  const { mutate: softDelete, isPending: isSoftDeleting } = useSoftDeleteDeliveryPlace();
-  const { mutate: permanentDelete, isPending: isPermanentDeleting } =
-    usePermanentDeleteDeliveryPlace();
+  const {
+    mutate: softDelete,
+    mutateAsync: softDeleteAsync,
+    isPending: isSoftDeleting,
+  } = useSoftDeleteDeliveryPlace();
+  const {
+    mutate: permanentDelete,
+    mutateAsync: permanentDeleteAsync,
+    isPending: isPermanentDeleting,
+  } = usePermanentDeleteDeliveryPlace();
   const { mutate: restore, isPending: isRestoring } = useRestoreDeliveryPlace();
 
   // Filtered data
@@ -220,5 +227,9 @@ export function useDeliveryPlacesPageState() {
     isSoftDeleting,
     isPermanentDeleting,
     isRestoring,
+
+    // 一抬削除用のAsync関数
+    softDeleteAsync,
+    permanentDeleteAsync,
   };
 }
