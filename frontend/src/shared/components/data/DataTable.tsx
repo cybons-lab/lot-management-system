@@ -332,7 +332,7 @@ export function DataTable<T = never>({
             </tr>
           ))}
         </thead>
-        <tbody className="divide-y divide-slate-200">
+        <tbody className="divide-y divide-slate-100">
           {table.getRowModel().rows.map((row) => {
             const customClassName = getRowClassName?.(row.original);
 
