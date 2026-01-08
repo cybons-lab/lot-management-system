@@ -21,10 +21,12 @@ import {
   PermanentDeleteDialog,
   RestoreDialog,
   BulkPermanentDeleteDialog,
+  BulkSoftDeleteDialog,
 } from "@/components/common";
 import { Button, Checkbox } from "@/components/ui";
 import { Label } from "@/components/ui/form/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/layout/dialog";
+import { useAuth } from "@/features/auth/AuthContext";
 import { useListPageDialogs } from "@/hooks/ui";
 import { PageHeader } from "@/shared/components/layout/PageHeader";
 
@@ -61,17 +63,22 @@ export function CustomerItemsListPage() {
     handlePermanentDelete,
     handleRestore,
     handleBulkPermanentDelete,
+    handleBulkSoftDelete,
     isSoftDeleting,
     isPermanentDeleting,
     isRestoring,
     isBulkDeleting,
   } = useCustomerItemsPage();
 
+  // 管理者権限チェック
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("admin") ?? false;
+
   // 詳細ダイアログ用（独自管理）
   const [selectedItem, setSelectedItem] = useState<CustomerItem | null>(null);
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
-  // 選択機能（削除済みアイテム用）
+  // 選択機能（管理者は全アイテム、非管理者はアクティブのみ）
   const [selectedIds, setSelectedIds] = useState<Set<string | number>>(new Set());
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
 
@@ -130,20 +137,24 @@ export function CustomerItemsListPage() {
   }, []);
 
   const handleToggleSelectAll = useCallback(() => {
-    const inactiveItems = filteredItems.filter(
-      (item) => item.valid_to && item.valid_to <= new Date().toISOString().split("T")[0],
-    );
-    const allKeys = inactiveItems.map((item) => getItemKey(item));
-    const allSelected = allKeys.every((key) => selectedIds.has(key));
+    // 管理者は全アイテム、非管理者はアクティブなアイテムのみ選択可能
+    const selectableItems = isAdmin
+      ? filteredItems
+      : filteredItems.filter(
+          (item) => !item.valid_to || item.valid_to > new Date().toISOString().split("T")[0],
+        );
+    const allKeys = selectableItems.map((item) => getItemKey(item));
+    const allSelected = allKeys.length > 0 && allKeys.every((key) => selectedIds.has(key));
 
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(allKeys));
     }
-  }, [filteredItems, selectedIds]);
+  }, [filteredItems, selectedIds, isAdmin]);
 
-  const executeBulkDelete = async () => {
+  // 管理者: 一括物理削除
+  const executeBulkPermanentDelete = async () => {
     const keys = Array.from(selectedIds) as string[];
     const items = keys.map(parseItemKey);
     await handleBulkPermanentDelete(items);
@@ -151,7 +162,19 @@ export function CustomerItemsListPage() {
     setIsBulkDeleteDialogOpen(false);
   };
 
+  // 非管理者: 一括論理削除
+  const executeBulkSoftDelete = async (endDate: string | null) => {
+    const keys = Array.from(selectedIds) as string[];
+    const items = keys.map(parseItemKey);
+    await handleBulkSoftDelete(items, endDate ?? undefined);
+    setSelectedIds(new Set());
+    setIsBulkDeleteDialogOpen(false);
+  };
+
   const selectedCount = selectedIds.size;
+
+  // チェックボックス表示条件: 管理者は常に、非管理者も常に（論理削除用）
+  const showCheckboxes = true;
 
   return (
     <div className="space-y-6 px-6 py-6 md:px-8">
@@ -208,14 +231,23 @@ export function CustomerItemsListPage() {
       </div>
 
       {/* 一括操作バー */}
-      {showInactive && selectedCount > 0 && (
-        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 p-3">
-          <span className="text-sm font-medium text-red-800">
-            {selectedCount} 件選択中（削除済みのみ）
+      {showCheckboxes && selectedCount > 0 && (
+        <div
+          className={`flex items-center justify-between rounded-lg border p-3 ${
+            isAdmin ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"
+          }`}
+        >
+          <span className={`text-sm font-medium ${isAdmin ? "text-red-800" : "text-amber-800"}`}>
+            {selectedCount} 件選択中
           </span>
-          <Button variant="destructive" size="sm" onClick={() => setIsBulkDeleteDialogOpen(true)}>
+          <Button
+            variant={isAdmin ? "destructive" : "outline"}
+            size="sm"
+            onClick={() => setIsBulkDeleteDialogOpen(true)}
+            className={!isAdmin ? "border-amber-600 text-amber-700 hover:bg-amber-100" : ""}
+          >
             <Trash2 className="mr-2 h-4 w-4" />
-            一括削除
+            {isAdmin ? "一括削除" : "一括無効化"}
           </Button>
         </div>
       )}
@@ -227,9 +259,10 @@ export function CustomerItemsListPage() {
         onPermanentDelete={openPermanentDelete}
         onRestore={openRestore}
         onRowClick={handleRowClick}
-        selectedIds={showInactive ? selectedIds : undefined}
-        onToggleSelect={showInactive ? handleToggleSelect : undefined}
-        onToggleSelectAll={showInactive ? handleToggleSelectAll : undefined}
+        selectedIds={showCheckboxes ? selectedIds : undefined}
+        onToggleSelect={showCheckboxes ? handleToggleSelect : undefined}
+        onToggleSelectAll={showCheckboxes ? handleToggleSelectAll : undefined}
+        isAdmin={isAdmin}
       />
 
       {/* 新規登録ダイアログ */}
@@ -289,16 +322,28 @@ export function CustomerItemsListPage() {
         description={`${restoringItem?.customer_name} - ${restoringItem?.product_name} の設定を有効状態に戻します。`}
       />
 
-      {/* 一括削除ダイアログ */}
-      <BulkPermanentDeleteDialog
-        open={isBulkDeleteDialogOpen}
-        onOpenChange={setIsBulkDeleteDialogOpen}
-        selectedCount={selectedCount}
-        onConfirm={executeBulkDelete}
-        isPending={isBulkDeleting}
-        title="選択したマッピングを完全に削除しますか？"
-        description={`選択された ${selectedCount} 件の得意先品番マッピングを完全に削除します。`}
-      />
+      {/* 一括削除ダイアログ（管理者: 物理削除、非管理者: 論理削除） */}
+      {isAdmin ? (
+        <BulkPermanentDeleteDialog
+          open={isBulkDeleteDialogOpen}
+          onOpenChange={setIsBulkDeleteDialogOpen}
+          selectedCount={selectedCount}
+          onConfirm={executeBulkPermanentDelete}
+          isPending={isBulkDeleting}
+          title="選択したマッピングを完全に削除しますか？"
+          description={`選択された ${selectedCount} 件の得意先品番マッピングを完全に削除します。`}
+        />
+      ) : (
+        <BulkSoftDeleteDialog
+          open={isBulkDeleteDialogOpen}
+          onOpenChange={setIsBulkDeleteDialogOpen}
+          selectedCount={selectedCount}
+          onConfirm={executeBulkSoftDelete}
+          isPending={isBulkDeleting}
+          title="選択したマッピングを無効化しますか？"
+          description={`選択された ${selectedCount} 件の得意先品番マッピングを無効化します。`}
+        />
+      )}
     </div>
   );
 }

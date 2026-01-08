@@ -20,6 +20,8 @@ interface CustomerItemsTableProps {
   selectedIds?: Set<string | number>;
   onToggleSelect?: (id: string) => void;
   onToggleSelectAll?: () => void;
+  // 管理者なら全アイテム選択可能
+  isAdmin?: boolean;
 }
 
 const isInactive = (validTo?: string) => {
@@ -36,7 +38,7 @@ interface TableHeaderProps {
   allSelected: boolean;
   someSelected: boolean;
   onToggleSelectAll?: () => void;
-  inactiveItems: CustomerItem[];
+  selectableCount: number;
 }
 
 function TableHeader({
@@ -44,7 +46,7 @@ function TableHeader({
   allSelected,
   someSelected,
   onToggleSelectAll,
-  inactiveItems,
+  selectableCount,
 }: TableHeaderProps) {
   return (
     <thead className="sticky top-0 z-10 bg-gray-50">
@@ -55,7 +57,7 @@ function TableHeader({
               checked={allSelected}
               onCheckedChange={() => onToggleSelectAll?.()}
               aria-label="全て選択"
-              disabled={inactiveItems.length === 0}
+              disabled={selectableCount === 0}
               className={someSelected && !allSelected ? "opacity-50" : ""}
             />
           </th>
@@ -104,6 +106,7 @@ interface TableRowProps {
   showCheckbox: boolean;
   isSelected: boolean;
   onToggleSelect?: (id: string) => void;
+  isAdmin?: boolean;
 }
 
 function TableRow({
@@ -115,9 +118,12 @@ function TableRow({
   showCheckbox,
   isSelected,
   onToggleSelect,
+  isAdmin = false,
 }: TableRowProps) {
   const inactive = isInactive(item.valid_to);
   const itemKey = getItemKey(item);
+  // 管理者は全アイテム選択可、非管理者はアクティブのみ（論理削除用）
+  const canSelect = isAdmin ? true : !inactive;
 
   return (
     <tr className="cursor-pointer hover:bg-gray-50" onClick={() => onRowClick?.(item)}>
@@ -127,7 +133,7 @@ function TableRow({
             checked={isSelected}
             onCheckedChange={() => onToggleSelect?.(itemKey)}
             aria-label={`${item.customer_name} - ${item.external_product_code}を選択`}
-            disabled={!inactive}
+            disabled={!canSelect}
           />
         </td>
       )}
@@ -271,12 +277,15 @@ export function CustomerItemsTable({
   selectedIds,
   onToggleSelect,
   onToggleSelectAll,
+  isAdmin = false,
 }: CustomerItemsTableProps) {
   const showCheckbox = !!selectedIds && !!onToggleSelect;
-  const inactiveItems = items.filter((item) => isInactive(item.valid_to));
-  const allInactiveSelected =
-    inactiveItems.length > 0 && inactiveItems.every((item) => selectedIds?.has(getItemKey(item)));
-  const someSelected = inactiveItems.some((item) => selectedIds?.has(getItemKey(item)));
+  // 管理者は全アイテム、非管理者はアクティブのみ選択対象（論理削除用）
+  const selectableItems = isAdmin ? items : items.filter((item) => !isInactive(item.valid_to));
+  const allSelectableSelected =
+    selectableItems.length > 0 &&
+    selectableItems.every((item) => selectedIds?.has(getItemKey(item)));
+  const someSelected = selectableItems.some((item) => selectedIds?.has(getItemKey(item)));
 
   return (
     <div className="rounded-lg border bg-white shadow-sm">
@@ -296,10 +305,10 @@ export function CustomerItemsTable({
           <table className="w-full min-w-[1200px] divide-y divide-gray-200">
             <TableHeader
               showCheckbox={showCheckbox}
-              allSelected={allInactiveSelected}
+              allSelected={allSelectableSelected}
               someSelected={someSelected}
               onToggleSelectAll={onToggleSelectAll}
-              inactiveItems={inactiveItems}
+              selectableCount={selectableItems.length}
             />
             <tbody className="divide-y divide-gray-200 bg-white">
               {items.map((item) => (
@@ -313,6 +322,7 @@ export function CustomerItemsTable({
                   showCheckbox={showCheckbox}
                   isSelected={selectedIds?.has(getItemKey(item)) ?? false}
                   onToggleSelect={onToggleSelect}
+                  isAdmin={isAdmin}
                 />
               ))}
             </tbody>

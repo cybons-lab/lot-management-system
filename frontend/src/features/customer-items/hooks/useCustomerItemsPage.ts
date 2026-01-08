@@ -66,7 +66,11 @@ export function useCustomerItemsPage() {
   const { data: customerItems = [], isLoading } = useCustomerItems(queryParams);
   const { mutate: createCustomerItem, isPending: isCreating } = useCreateCustomerItem();
 
-  const { mutate: softDelete, isPending: isSoftDeleting } = useDeleteCustomerItem();
+  const {
+    mutate: softDelete,
+    mutateAsync: softDeleteAsync,
+    isPending: isSoftDeleting,
+  } = useDeleteCustomerItem();
   const { mutateAsync: permanentDeleteAsync, isPending: isPermanentDeleting } =
     usePermanentDeleteCustomerItem();
   const { mutate: restore, isPending: isRestoring } = useRestoreCustomerItem();
@@ -164,6 +168,40 @@ export function useCustomerItemsPage() {
     [permanentDeleteAsync],
   );
 
+  // Bulk Soft Delete Handler
+  const handleBulkSoftDelete = useCallback(
+    async (items: { customer_id: number; external_product_code: string }[], endDate?: string) => {
+      if (items.length === 0) return;
+
+      setIsBulkDeleting(true);
+      try {
+        const results = await Promise.allSettled(
+          items.map((item) =>
+            softDeleteAsync({
+              customerId: item.customer_id,
+              externalProductCode: item.external_product_code,
+              endDate,
+            }),
+          ),
+        );
+
+        const succeeded = results.filter((r) => r.status === "fulfilled").length;
+        const failed = results.filter((r) => r.status === "rejected").length;
+
+        if (failed === 0) {
+          toast.success(`${succeeded} 件を無効化しました`);
+        } else if (succeeded === 0) {
+          toast.error(`${failed} 件の無効化に失敗しました`);
+        } else {
+          toast.warning(`${succeeded} 件を無効化、${failed} 件が失敗しました`);
+        }
+      } finally {
+        setIsBulkDeleting(false);
+      }
+    },
+    [softDeleteAsync],
+  );
+
   // Restore Handler
   const handleRestore = useCallback(
     (customerId: number, externalProductCode: string) => {
@@ -213,6 +251,7 @@ export function useCustomerItemsPage() {
     handleSoftDelete,
     handlePermanentDelete,
     handleBulkPermanentDelete,
+    handleBulkSoftDelete,
     handleRestore,
   };
 }
