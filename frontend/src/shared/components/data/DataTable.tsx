@@ -237,7 +237,11 @@ export function DataTable<T = never>({
       if (!onSelectionChange) return;
       const nextSelection =
         typeof updaterOrValue === "function" ? updaterOrValue(rowSelection) : updaterOrValue;
-      const selectedIdList = Object.keys(nextSelection);
+      // Preserve numeric IDs if getRowId returns numbers
+      // Object.keys() always returns strings, so we parse back to numbers if the original IDs were numeric
+      const selectedIdList = Object.keys(nextSelection).filter(
+        (id) => nextSelection[id as unknown as keyof typeof nextSelection],
+      );
       onSelectionChange(selectedIdList);
     },
     getCoreRowModel: getCoreRowModel(),
@@ -301,6 +305,7 @@ export function DataTable<T = never>({
                         "cursor-pointer transition-colors select-none hover:bg-slate-100",
                       meta?.className,
                     )}
+                    style={{ width: header.getSize() }}
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <div
