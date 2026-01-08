@@ -39,9 +39,9 @@ export function OrdersFlatView({ lines, isLoading, onRefresh }: OrdersFlatViewPr
         emptyMessage="明細がありません"
         renderHoverActions={(row) => (
           <Button
-            variant="default"
+            variant="outline"
             size="sm"
-            className="h-8 text-xs shadow-sm"
+            className="h-7 border-slate-300 text-xs hover:border-slate-400 hover:bg-slate-50"
             onClick={(e) => {
               e.stopPropagation();
               handleAllocate(row);

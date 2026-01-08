@@ -277,7 +277,7 @@ export function DataTable<T = never>({
       )}
     >
       <table className="w-full border-collapse" style={{ width: table.getTotalSize() }}>
-        <thead className="border-b border-slate-200 bg-slate-50/50">
+        <thead className="border-b border-slate-100 bg-slate-50/50">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
