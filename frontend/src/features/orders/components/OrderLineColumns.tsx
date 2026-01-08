@@ -5,6 +5,7 @@
 
 import { CheckCircle, Circle, CircleDot, Clipboard, Link, Package, Zap } from "lucide-react";
 
+import { Button } from "@/components/ui";
 import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import type { Column } from "@/shared/components/data/DataTable";
 import { coerceAllocatedLots } from "@/shared/libs/allocations";
@@ -23,8 +24,9 @@ interface OrderLineColumnsOptions {
  */
 // eslint-disable-next-line max-lines-per-function -- カラム定義を1箇所にまとめて管理
 export function createOrderLineColumns(
-  _options: OrderLineColumnsOptions = {},
+  options: OrderLineColumnsOptions = {},
 ): Column<OrderLineRow>[] {
+  const { onAllocate } = options;
   return [
     // 種別（アイコン化）
     {
@@ -212,6 +214,27 @@ export function createOrderLineColumns(
         );
       },
       width: "50px",
+    },
+
+    // 操作
+    {
+      id: "actions",
+      header: "操作",
+      cell: (row: OrderLineRow) => (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 border-slate-300 text-xs hover:border-slate-400 hover:bg-slate-50"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAllocate?.(row);
+          }}
+        >
+          引当
+        </Button>
+      ),
+      align: "right",
+      width: "80px",
     },
   ];
 }
