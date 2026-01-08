@@ -57,17 +57,18 @@ vi.mock("@/shared/components/form", () => ({
 
 const mockData: InventoryItem[] = [
   {
+    inventory_item_id: 1,
     product_id: 1,
     warehouse_id: 1,
     product_code: "P001",
     product_name: "Test Product",
     warehouse_code: "W001",
     warehouse_name: "Test Warehouse",
-    total_quantity: 100,
-    allocated_quantity: 0,
-    soft_allocated_quantity: 0,
-    hard_allocated_quantity: 0,
-    available_quantity: 100,
+    total_quantity: "100",
+    allocated_quantity: "0",
+    soft_allocated_quantity: "0",
+    hard_allocated_quantity: "0",
+    available_quantity: "100",
     last_updated: "2023-01-01",
   },
 ];
