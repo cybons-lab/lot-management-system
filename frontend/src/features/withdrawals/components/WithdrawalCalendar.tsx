@@ -344,6 +344,7 @@ function useWithdrawalCalendarData(lotId: number, currentMonth: Date) {
 
 export function WithdrawalCalendar({
   lotId,
+  warehouseName,
   onDateSelect,
   showWithdrawButton = true,
 }: WithdrawalCalendarProps) {
@@ -381,6 +382,7 @@ export function WithdrawalCalendar({
                 isToday={isSameDay(day, new Date())}
                 isHovered={hoveredDate === dateKey}
                 showWithdrawButton={showWithdrawButton}
+                warehouseName={warehouseName}
                 onHover={setHoveredDate}
                 onDateClick={handleDateClick}
               />
