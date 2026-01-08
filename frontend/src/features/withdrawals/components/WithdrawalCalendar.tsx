@@ -166,7 +166,7 @@ function DayTooltip({
               <span className="ml-2 whitespace-nowrap">{fmt(w.quantity)}</span>
             </div>
             <div className="mt-0.5 truncate text-[10px] text-slate-500">
-              {warehouseName || "倉庫"} → {w.delivery_place_name || "納入先未定"}
+              {warehouseName || ""} → {w.delivery_place_name || "納入先未定"}
             </div>
           </div>
         ))}
@@ -344,6 +344,7 @@ function useWithdrawalCalendarData(lotId: number, currentMonth: Date) {
 
 export function WithdrawalCalendar({
   lotId,
+  warehouseName,
   onDateSelect,
   showWithdrawButton = true,
 }: WithdrawalCalendarProps) {
@@ -381,6 +382,7 @@ export function WithdrawalCalendar({
                 isToday={isSameDay(day, new Date())}
                 isHovered={hoveredDate === dateKey}
                 showWithdrawButton={showWithdrawButton}
+                warehouseName={warehouseName}
                 onHover={setHoveredDate}
                 onDateClick={handleDateClick}
               />

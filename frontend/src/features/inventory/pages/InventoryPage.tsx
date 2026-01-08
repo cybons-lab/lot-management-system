@@ -1,5 +1,5 @@
-import { ArrowUpFromLine, Box, History, Home, List, Package, Truck } from "lucide-react";
-import { useMemo } from "react";
+import { ArrowUpFromLine, Box, History, Home, List, Package, RefreshCw, Truck } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -38,6 +38,8 @@ export function InventoryPage() {
   const navigate = useNavigate();
   // Lot creation dialog
   const createDialog = useDialog();
+  // Refresh loading state
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Page state (Jotai atom - persisted in sessionStorage)
   const { overviewMode, filters, queryParams, setOverviewMode, updateFilter, setFilters } =
@@ -100,20 +102,28 @@ export function InventoryPage() {
     onError: (error) => toast.error(`作成に失敗しました: ${error.message} `),
   });
 
-  const handleRefresh = () => {
-    switch (overviewMode) {
-      case "items":
-        refetchItems();
-        break;
-      case "supplier":
-        supplierQuery.refetch();
-        break;
-      case "warehouse":
-        warehouseQuery.refetch();
-        break;
-      case "product":
-        productQuery.refetch();
-        break;
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      switch (overviewMode) {
+        case "items":
+          await refetchItems();
+          break;
+        case "supplier":
+          await supplierQuery.refetch();
+          break;
+        case "warehouse":
+          await warehouseQuery.refetch();
+          break;
+        case "product":
+          await productQuery.refetch();
+          break;
+      }
+      toast.success("データを更新しました");
+    } catch {
+      toast.error("データの更新に失敗しました");
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -217,7 +227,8 @@ export function InventoryPage() {
             </Button>
           </div>
 
-          <Button variant="outline" size="sm" onClick={handleRefresh}>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
             データを更新
           </Button>
         </div>
