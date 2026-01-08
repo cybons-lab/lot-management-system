@@ -267,9 +267,14 @@ export function DataTable<T = never>({
   }
 
   return (
-    <div className={cn("relative overflow-x-auto rounded-md border", className)}>
+    <div
+      className={cn(
+        "relative overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-md",
+        className,
+      )}
+    >
       <table className="w-full border-collapse" style={{ width: table.getTotalSize() }}>
-        <thead className="border-b border-slate-200 bg-slate-50/30">
+        <thead className="border-b-2 border-slate-300 bg-gradient-to-r from-slate-50 to-slate-100">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
@@ -280,9 +285,12 @@ export function DataTable<T = never>({
                   <th
                     key={header.id}
                     className={cn(
-                      "relative px-6 py-4 text-left text-sm font-semibold text-slate-700",
+                      "relative px-6 py-4 text-left text-sm font-bold text-slate-800",
+                      "tracking-wide uppercase",
                       meta?.align === "center" && "text-center",
                       meta?.align === "right" && "text-right",
+                      header.column.getCanSort() &&
+                        "cursor-pointer transition-colors select-none hover:bg-slate-100/80",
                       meta?.className,
                     )}
                     style={{ width: header.getSize() }}
@@ -290,7 +298,7 @@ export function DataTable<T = never>({
                   >
                     <div
                       className={cn(
-                        "flex items-center gap-1",
+                        "flex items-center gap-1 whitespace-nowrap",
                         meta?.align === "right" && "justify-end",
                         meta?.align === "center" && "justify-center",
                       )}
@@ -305,9 +313,12 @@ export function DataTable<T = never>({
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}
                         onClick={(e) => e.stopPropagation()}
-                        className={`absolute top-0 right-0 h-full w-1 cursor-col-resize touch-none bg-slate-200 opacity-50 transition-colors select-none hover:bg-blue-400 hover:opacity-100 ${
-                          header.column.getIsResizing() ? "bg-blue-600 opacity-100" : ""
-                        }`}
+                        className={cn(
+                          "absolute top-0 right-0 h-full w-1.5 cursor-col-resize touch-none",
+                          "transition-all duration-200 select-none",
+                          "bg-slate-300/50 hover:w-2 hover:bg-blue-500",
+                          header.column.getIsResizing() && "w-2 bg-blue-600 shadow-lg",
+                        )}
                       />
                     )}
                   </th>
@@ -323,9 +334,13 @@ export function DataTable<T = never>({
               <tr
                 key={row.id}
                 className={cn(
-                  "bg-white transition-colors",
-                  onRowClick && "cursor-pointer hover:bg-slate-50",
-                  row.getIsSelected() && "bg-blue-50",
+                  "transition-all duration-150",
+                  // ストライプ効果
+                  row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
+                  // ホバー効果
+                  onRowClick && "cursor-pointer hover:bg-blue-50/50 hover:shadow-sm",
+                  // 選択状態
+                  row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
                   customClassName,
                 )}
                 onClick={() => onRowClick?.(row.original)}
