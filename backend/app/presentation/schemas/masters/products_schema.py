@@ -23,8 +23,15 @@ class ProductBase(BaseModel):
 class ProductCreate(ProductBase):
     """Payload to create a product."""
 
-    customer_part_no: str | None = None
-    maker_item_code: str | None = None
+    # product_code は自動採番されるため任意
+    product_code: str | None = None
+
+    # 以下2つは必須
+    customer_part_no: str = Field(..., min_length=1, description="先方品番")
+    maker_item_code: str = Field(
+        ..., min_length=1, description="メーカー品番（旧メーカー品目コード）"
+    )
+
     is_active: bool = True
 
 

@@ -4734,7 +4734,7 @@
           "withdrawals"
         ],
         "summary": "List Withdrawals",
-        "description": "出庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    customer_id: 得意先IDでフィルタ\n    withdrawal_type: 出庫タイプでフィルタ\n    db: データベースセッション\n\nReturns:\n    出庫履歴一覧",
+        "description": "出庫履歴一覧を取得.\n\nArgs:\n    skip: スキップ件数\n    limit: 取得件数上限\n    lot_id: ロットIDでフィルタ\n    customer_id: 得意先IDでフィルタ\n    withdrawal_type: 出庫タイプでフィルタ\n    start_date: 開始日\n    end_date: 終了日\n    product_id: 製品ID\n    warehouse_id: 倉庫ID\n    db: データベースセッション\n\nReturns:\n    出庫履歴一覧",
         "operationId": "list_withdrawals_api_withdrawals_get",
         "parameters": [
           {
@@ -4817,6 +4817,80 @@
               "title": "Withdrawal Type"
             },
             "description": "出庫タイプでフィルタ"
+          },
+          {
+            "name": "start_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "開始日（出荷日）",
+              "title": "Start Date"
+            },
+            "description": "開始日（出荷日）"
+          },
+          {
+            "name": "end_date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "終了日（出荷日）",
+              "title": "End Date"
+            },
+            "description": "終了日（出荷日）"
+          },
+          {
+            "name": "product_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "製品IDでフィルタ",
+              "title": "Product Id"
+            },
+            "description": "製品IDでフィルタ"
+          },
+          {
+            "name": "warehouse_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "倉庫IDでフィルタ",
+              "title": "Warehouse Id"
+            },
+            "description": "倉庫IDでフィルタ"
           }
         ],
         "responses": {
@@ -5285,6 +5359,11 @@
         "summary": "Permanent Delete Customer",
         "description": "Permanently delete customer (admin only).",
         "operationId": "permanent_delete_customer_api_masters_customers__customer_code__permanent_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "customer_code",
@@ -5773,8 +5852,13 @@
           "delivery-places"
         ],
         "summary": "Permanent Delete Delivery Place",
-        "description": "納入先を物理削除（管理者のみ）.\n\n他のテーブルから参照されていない場合のみ削除可能です。\n\nArgs:\n    delivery_place_id: 納入先ID\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: 納入先が見つからない場合は404\n    HTTPException: 他のデータから参照されている場合は409\n\nNote:\n    TODO: 管理者ロールチェックを追加",
+        "description": "納入先を物理削除（管理者のみ）.\n\n他のテーブルから参照されていない場合のみ削除可能です。\n\nArgs:\n    delivery_place_id: 納入先ID\n    current_user: 認証済み管理者ユーザー\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: 納入先が見つからない場合は404\n    HTTPException: 他のデータから参照されている場合は409",
         "operationId": "permanent_delete_delivery_place_api_masters_delivery_places__delivery_place_id__permanent_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "delivery_place_id",
@@ -6262,6 +6346,11 @@
         "summary": "Permanent Delete Product",
         "description": "Permanently delete product (admin only).",
         "operationId": "permanent_delete_product_api_masters_products__product_code__permanent_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "product_code",
@@ -6734,6 +6823,11 @@
         "summary": "Permanent Delete Supplier",
         "description": "Permanently delete supplier (admin only).\n\nWARNING: This completely removes the supplier from the database.\nThis operation cannot be undone.\n\nUse this only for incorrectly created records.\nWill fail if the supplier is referenced by other records.",
         "operationId": "permanent_delete_supplier_api_masters_suppliers__supplier_code__permanent_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "supplier_code",
@@ -7161,8 +7255,13 @@
           "masters"
         ],
         "summary": "Permanent Delete Supplier Product",
-        "description": "仕入先商品を物理削除.\n\nArgs:\n    id: 仕入先商品ID\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
+        "description": "仕入先商品を物理削除.\n\nArgs:\n    id: 仕入先商品ID\n    current_user: 認証済み管理者ユーザー\n    db: データベースセッション\n\nReturns:\n    None\n\nRaises:\n    HTTPException: レコードが見つからない場合は404",
         "operationId": "permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "id",
@@ -7547,8 +7646,13 @@
           "masters"
         ],
         "summary": "Permanent Delete Uom Conversion",
-        "description": "Permanently delete a UOM conversion by ID.\n\nArgs:\n    conversion_id: ID of the conversion to delete\n    db: Database session",
+        "description": "Permanently delete a UOM conversion by ID.\n\nArgs:\n    conversion_id: ID of the conversion to delete\n    current_user: Authenticated admin user\n    db: Database session",
         "operationId": "permanent_delete_uom_conversion_api_masters_uom_conversions__conversion_id__permanent_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "conversion_id",
@@ -7979,6 +8083,11 @@
         "summary": "Permanent Delete Warehouse",
         "description": "Permanently delete warehouse (admin only).",
         "operationId": "permanent_delete_warehouse_api_masters_warehouses__warehouse_code__permanent_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "warehouse_code",
@@ -8416,8 +8525,13 @@
           "customer-items"
         ],
         "summary": "Permanent Delete Customer Item",
-        "description": "得意先品番マッピング完全削除.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
+        "description": "得意先品番マッピング完全削除.\n\nArgs:\n    customer_id: 得意先ID\n    external_product_code: 得意先品番\n    current_user: 認証済み管理者ユーザー\n    db: データベースセッション\n\nRaises:\n    HTTPException: マッピングが存在しない場合",
         "operationId": "permanent_delete_customer_item_api_masters_customer_items__customer_id___external_product_code__permanent_delete",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
         "parameters": [
           {
             "name": "customer_id",
@@ -13129,6 +13243,49 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Execute Step4 Check Api Rpa Material Delivery Note Runs  Run Id  Step4 Check Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/rpa/material-delivery-note/runs/{run_id}/step4-complete": {
+      "post": {
+        "tags": [
+          "rpa-material-delivery-note"
+        ],
+        "summary": "Complete Step4",
+        "description": "Step4完了としてステータスを更新する.",
+        "operationId": "complete_step4_api_rpa_material_delivery_note_runs__run_id__step4_complete_post",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Run Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RpaRunResponse"
                 }
               }
             }
@@ -22438,8 +22595,14 @@
       "ProductCreate": {
         "properties": {
           "product_code": {
-            "type": "string",
-            "minLength": 1,
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Product Code"
           },
           "product_name": {
@@ -22492,26 +22655,16 @@
             "default": 1.0
           },
           "customer_part_no": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Customer Part No"
+            "type": "string",
+            "minLength": 1,
+            "title": "Customer Part No",
+            "description": "先方品番"
           },
           "maker_item_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Maker Item Code"
+            "type": "string",
+            "minLength": 1,
+            "title": "Maker Item Code",
+            "description": "メーカー品番（旧メーカー品目コード）"
           },
           "is_active": {
             "type": "boolean",
@@ -22521,8 +22674,9 @@
         },
         "type": "object",
         "required": [
-          "product_code",
-          "product_name"
+          "product_name",
+          "customer_part_no",
+          "maker_item_code"
         ],
         "title": "ProductCreate",
         "description": "Payload to create a product."

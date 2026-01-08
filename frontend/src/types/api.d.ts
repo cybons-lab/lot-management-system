@@ -547,24 +547,26 @@ export interface paths {
      * List Lots
      * @description ロット一覧取得.
      *
+     *     v_lots_with_master ビューを使用してロット一覧を取得します。
+     *     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能で、
+     *     FEFO (First Expiry First Out) 順に並べて返します。
+     *
      *     Args:
-     *         skip: スキップ件数
-     *         limit: 取得件数
-     *         product_id: 製品ID
-     *         product_code: 製品コード
-     *         supplier_code: 仕入先コード
-     *         warehouse_code: 倉庫コード
-     *         expiry_from: 有効期限開始日
-     *         expiry_to: 有効期限終了日
-     *         with_stock: 在庫ありのみ取得するかどうか
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数（最大100件）
+     *         product_id: 製品ID（フィルタ）
+     *         product_code: 製品コード（フィルタ）
+     *         supplier_code: 仕入先コード（フィルタ）
+     *         warehouse_code: 倉庫コード（フィルタ）
+     *         expiry_from: 有効期限開始日（フィルタ）
+     *         expiry_to: 有効期限終了日（フィルタ）
+     *         with_stock: 在庫ありのみ取得するかどうか（デフォルト: True）
      *         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
-     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用）
+     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
      *         db: データベースセッション
      *
-     *     ロット一覧取得（v_lots_with_master ビュー使用）.
-     *
-     *     製品コード・仕入先コード・倉庫コード・有効期限範囲でフィルタリング可能.
-     *     FEFO (先入先出) 順に並べて返す.
+     *     Returns:
+     *         list[LotResponse]: ロット情報のリスト
      */
     get: operations["list_lots_api_lots_get"];
     put?: never;
@@ -572,8 +574,17 @@ export interface paths {
      * Create Lot
      * @description ロット新規登録.
      *
-     *     - ロットマスタ登録
-     *     - 現在在庫テーブル初期化
+     *     ロットマスタへの登録と現在在庫テーブルの初期化を行います。
+     *
+     *     Args:
+     *         lot: ロット作成リクエストデータ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         LotResponse: 作成されたロット情報
+     *
+     *     Raises:
+     *         HTTPException: ロット作成に失敗した場合
      */
     post: operations["create_lot_api_lots_post"];
     delete?: never;
@@ -591,12 +602,35 @@ export interface paths {
     };
     /**
      * Get Lot
-     * @description ロット詳細取得（v2.2: Lot モデルから直接取得）.
+     * @description ロット詳細取得.
+     *
+     *     指定されたIDのロット情報を取得します（v2.2: Lot モデルから直接取得）。
+     *
+     *     Args:
+     *         lot_id: ロットID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         LotResponse: ロット詳細情報
+     *
+     *     Raises:
+     *         HTTPException: ロットが存在しない場合（404）
      */
     get: operations["get_lot_api_lots__lot_id__get"];
     /**
      * Update Lot
      * @description ロット更新.
+     *
+     *     Args:
+     *         lot_id: ロットID
+     *         lot: ロット更新リクエストデータ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         LotResponse: 更新されたロット情報
+     *
+     *     Raises:
+     *         HTTPException: ロットが存在しない場合（404）または更新に失敗した場合
      */
     put: operations["update_lot_api_lots__lot_id__put"];
     post?: never;
@@ -628,6 +662,17 @@ export interface paths {
     /**
      * Lock Lot
      * @description ロットをロックする（数量指定可）.
+     *
+     *     Args:
+     *         lot_id: ロットID
+     *         lock_data: ロックデータ（数量、理由等）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         LotResponse: ロック後のロット情報
+     *
+     *     Raises:
+     *         HTTPException: ロットが存在しない場合（404）またはロックに失敗した場合
      */
     post: operations["lock_lot_api_lots__lot_id__lock_post"];
     delete?: never;
@@ -648,6 +693,17 @@ export interface paths {
     /**
      * Unlock Lot
      * @description ロットのロックを解除する（数量指定可）.
+     *
+     *     Args:
+     *         lot_id: ロットID
+     *         unlock_data: ロック解除データ（数量指定等、省略可）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         LotResponse: ロック解除後のロット情報
+     *
+     *     Raises:
+     *         HTTPException: ロットが存在しない場合（404）またはロック解除に失敗した場合
      */
     post: operations["unlock_lot_api_lots__lot_id__unlock_post"];
     delete?: never;
@@ -666,6 +722,16 @@ export interface paths {
     /**
      * List Lot Movements
      * @description ロットの在庫変動履歴取得.
+     *
+     *     Args:
+     *         lot_id: ロットID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         list[StockMovementResponse]: 在庫変動履歴のリスト
+     *
+     *     Raises:
+     *         HTTPException: ロットが存在しない場合（404）
      */
     get: operations["list_lot_movements_api_lots__lot_id__movements_get"];
     put?: never;
@@ -689,8 +755,17 @@ export interface paths {
      * Create Stock Movement
      * @description 在庫変動記録.
      *
-     *     - 在庫変動履歴追加
-     *     - 現在在庫更新
+     *     在庫変動履歴の追加と現在在庫の更新を行います。
+     *
+     *     Args:
+     *         movement: 在庫変動データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         StockMovementResponse: 記録された在庫変動情報
+     *
+     *     Raises:
+     *         HTTPException: 在庫変動記録に失敗した場合
      */
     post: operations["create_stock_movement_api_lots_movements_post"];
     delete?: never;
@@ -708,12 +783,19 @@ export interface paths {
     };
     /**
      * Get Confirmed Order Lines
-     * @description Get all order lines that are fully reserved and not yet registered in
-     *     SAP.
+     * @description 引当確定済み受注明細を取得（SAP登録用）.
      *
-     *     Returns lines where reserved_quantity >= converted_quantity and sap_order_no is NULL.
+     *     ロット引当が完了し、まだSAPに登録されていない受注明細を取得します。
+     *     reserved_quantity >= converted_quantity かつ sap_order_no が NULL の明細を返します。
      *
-     *     P3: Uses LotReservation instead of Allocation.
+     *     Args:
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         list[ConfirmedOrderLineResponse]: 引当確定済み受注明細のリスト
+     *
+     *     Note:
+     *         P3: Allocation廃止、LotReservationを使用
      */
     get: operations["get_confirmed_order_lines_api_orders_confirmed_order_lines_get"];
     put?: never;
@@ -756,12 +838,37 @@ export interface paths {
     /**
      * List Orders
      * @description 受注一覧取得（読み取り専用）.
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数（最大100件）
+     *         status: ステータスフィルタ
+     *         customer_code: 顧客コードフィルタ
+     *         date_from: 受注日開始日フィルタ
+     *         date_to: 受注日終了日フィルタ
+     *         order_type: 受注種別フィルタ
+     *         prioritize_primary: 主担当の仕入先を優先表示するかどうか（デフォルト: True）
+     *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（主担当仕入先取得に使用、オプショナル）
+     *
+     *     Returns:
+     *         list[OrderWithLinesResponse]: 受注情報のリスト（明細含む）
      */
     get: operations["list_orders_api_orders_get"];
     put?: never;
     /**
      * Create Order
      * @description 受注作成.
+     *
+     *     Args:
+     *         order: 受注作成リクエストデータ
+     *         uow: Unit of Work（トランザクション管理）
+     *
+     *     Returns:
+     *         OrderWithLinesResponse: 作成された受注情報（明細含む）
+     *
+     *     Raises:
+     *         HTTPException: 受注作成に失敗した場合
      */
     post: operations["create_order_api_orders_post"];
     delete?: never;
@@ -780,6 +887,16 @@ export interface paths {
     /**
      * Get Order
      * @description 受注詳細取得（読み取り専用、明細含む）.
+     *
+     *     Args:
+     *         order_id: 受注ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         OrderWithLinesResponse: 受注詳細情報（明細含む）
+     *
+     *     Raises:
+     *         HTTPException: 受注が存在しない場合（404）
      */
     get: operations["get_order_api_orders__order_id__get"];
     put?: never;
@@ -1052,16 +1169,17 @@ export interface paths {
     };
     /**
      * List Alerts
-     * @description Get list of current alerts.
+     * @description 現在のアラート一覧を取得.
      *
-     *     Query parameters:
-     *     - severity: Filter by severity (comma-separated: critical,warning,info)
-     *     - category: Filter by category (comma-separated: order,inventory,lot,forecast)
-     *     - limit: Max alerts to return (default: 50, max: 500)
-     *     - only_open: Only show open alerts (default: true)
+     *     Args:
+     *         severity: 重要度でフィルタ（カンマ区切り: critical,warning,info）
+     *         category: カテゴリでフィルタ（カンマ区切り: order,inventory,lot,forecast）
+     *         limit: 取得件数上限（デフォルト: 50、最大: 500）
+     *         only_open: オープンなアラートのみ表示（デフォルト: true）
+     *         db: データベースセッション
      *
      *     Returns:
-     *         List of alert items sorted by severity and time
+     *         重要度と時間でソートされたアラートアイテムのリスト
      */
     get: operations["list_alerts_api_alerts_get"];
     put?: never;
@@ -1081,10 +1199,13 @@ export interface paths {
     };
     /**
      * Get Alert Summary
-     * @description Get summary of all current alerts.
+     * @description 現在のアラートサマリーを取得.
+     *
+     *     Args:
+     *         db: データベースセッション
      *
      *     Returns:
-     *         Alert counts grouped by severity and category
+     *         重要度とカテゴリ別にグループ化されたアラート件数
      */
     get: operations["get_alert_summary_api_alerts_summary_get"];
     put?: never;
@@ -1106,7 +1227,21 @@ export interface paths {
     put?: never;
     /**
      * Preview Allocation
-     * @description FEFO allocation preview.
+     * @description FEFO引当プレビュー.
+     *
+     *     指定された受注に対してFEFO（先入先出）アルゴリズムで
+     *     自動引当をシミュレーションし、結果をプレビュー表示します。
+     *
+     *     Args:
+     *         request: プレビューリクエスト（受注ID含む）
+     *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（認証必須）
+     *
+     *     Returns:
+     *         FefoPreviewResponse: 引当プレビュー結果（各明細の引当候補ロット情報）
+     *
+     *     Raises:
+     *         HTTPException: 受注が見つからない場合（404）またはバリデーションエラー（400）
      */
     post: operations["preview_allocation_api_allocations_preview_post"];
     delete?: never;
@@ -1126,7 +1261,20 @@ export interface paths {
     put?: never;
     /**
      * Commit Allocation
-     * @description Commit FEFO allocation.
+     * @description FEFO引当確定.
+     *
+     *     プレビューした引当結果を確定し、ロット予約を作成します。
+     *
+     *     Args:
+     *         request: 引当確定リクエスト（受注ID含む）
+     *         db: データベースセッション
+     *         current_user: 現在のログインユーザー（認証必須）
+     *
+     *     Returns:
+     *         AllocationCommitResponse: 引当確定結果（作成された予約ID等）
+     *
+     *     Raises:
+     *         HTTPException: 受注が見つからない、在庫不足、または確定に失敗した場合
      */
     post: operations["commit_allocation_api_allocations_commit_post"];
     delete?: never;
@@ -1558,6 +1706,10 @@ export interface paths {
      *         lot_id: ロットIDでフィルタ
      *         customer_id: 得意先IDでフィルタ
      *         withdrawal_type: 出庫タイプでフィルタ
+     *         start_date: 開始日
+     *         end_date: 終了日
+     *         product_id: 製品ID
+     *         warehouse_id: 倉庫ID
      *         db: データベースセッション
      *
      *     Returns:
@@ -1629,16 +1781,35 @@ export interface paths {
     };
     /**
      * List Customers
-     * @description Return customers.
+     * @description 顧客一覧を取得.
      *
-     *     By default, only active customers (valid_to >= today) are returned.
-     *     Set include_inactive=true to include soft-deleted customers.
+     *     デフォルトでは有効な顧客（valid_to >= 今日）のみを返します。
+     *     論理削除された顧客も含める場合はinclude_inactive=trueを指定してください。
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数（最大100件）
+     *         include_inactive: 論理削除済み顧客を含めるか（デフォルト: False）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         list[CustomerResponse]: 顧客情報のリスト
      */
     get: operations["list_customers_api_masters_customers_get"];
     put?: never;
     /**
      * Create Customer
-     * @description Create a new customer.
+     * @description 顧客を新規作成.
+     *
+     *     Args:
+     *         customer: 顧客作成リクエストデータ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         CustomerResponse: 作成された顧客情報
+     *
+     *     Raises:
+     *         HTTPException: 顧客コードが既に存在する場合（409）
      */
     post: operations["create_customer_api_masters_customers_post"];
     delete?: never;
@@ -1656,7 +1827,14 @@ export interface paths {
     };
     /**
      * Download Customers Template
-     * @description Download customer import template.
+     * @description 顧客インポートテンプレートをダウンロード.
+     *
+     *     Args:
+     *         format: ファイル形式（'csv' または 'xlsx'、デフォルト: csv）
+     *         include_sample: サンプル行を含めるか（デフォルト: True）
+     *
+     *     Returns:
+     *         顧客インポート用テンプレートファイル
      */
     get: operations["download_customers_template_api_masters_customers_template_download_get"];
     put?: never;
@@ -1676,7 +1854,14 @@ export interface paths {
     };
     /**
      * Export Customers
-     * @description Export customers to CSV or Excel.
+     * @description 顧客データをCSVまたはExcelでエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         StreamingResponse: エクスポートファイル
      */
     get: operations["export_customers_api_masters_customers_export_download_get"];
     put?: never;
@@ -1696,7 +1881,17 @@ export interface paths {
     };
     /**
      * Get Customer
-     * @description Fetch a customer by code.
+     * @description 顧客コードで顧客を取得.
+     *
+     *     Args:
+     *         customer_code: 顧客コード
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         CustomerResponse: 顧客詳細情報
+     *
+     *     Raises:
+     *         HTTPException: 顧客が存在しない場合（404）
      */
     get: operations["get_customer_api_masters_customers__customer_code__get"];
     /**
@@ -1784,14 +1979,14 @@ export interface paths {
     };
     /**
      * Download Delivery Places Template
-     * @description Download delivery place import template.
+     * @description 納入先インポートテンプレートをダウンロード.
      *
      *     Args:
-     *         format: 'csv' or 'xlsx' (default: xlsx)
-     *         include_sample: Whether to include a sample row (default: True)
+     *         format: ファイル形式（'csv' または 'xlsx'、デフォルト: xlsx）
+     *         include_sample: サンプル行を含めるか（デフォルト: True）
      *
      *     Returns:
-     *         Template file for delivery place import
+     *         納入先インポート用のテンプレートファイル
      */
     get: operations["download_delivery_places_template_api_masters_delivery_places_template_download_get"];
     put?: never;
@@ -1811,7 +2006,14 @@ export interface paths {
     };
     /**
      * Export Delivery Places
-     * @description Export delivery places to CSV or Excel.
+     * @description 納入先をエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（'csv' または 'xlsx'）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         Excel形式またはCSV形式のファイルレスポンス
      */
     get: operations["export_delivery_places_api_masters_delivery_places_export_download_get"];
     put?: never;
@@ -1831,13 +2033,39 @@ export interface paths {
     };
     /**
      * List Delivery Places
-     * @description Return delivery places, optionally filtered by customer_id.
+     * @description 納入先一覧を取得.
+     *
+     *     デフォルトでは有効な納入先のみを返します。
+     *     オプションで得意先IDによるフィルタリングが可能です。
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数上限
+     *         customer_id: 得意先IDでフィルタ
+     *         include_inactive: 論理削除済み納入先を含めるか（デフォルト: False）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         納入先のリスト
      */
     get: operations["list_delivery_places_api_masters_delivery_places_get"];
     put?: never;
     /**
      * Create Delivery Place
-     * @description Create a new delivery place.
+     * @description 納入先を新規作成.
+     *
+     *     得意先の存在確認と納入先コードの重複チェックを行います。
+     *
+     *     Args:
+     *         data: 納入先作成データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         DeliveryPlaceResponse: 作成された納入先情報
+     *
+     *     Raises:
+     *         HTTPException: 得意先が見つからない場合は400
+     *         HTTPException: 納入先コードが既に存在する場合は400
      */
     post: operations["create_delivery_place_api_masters_delivery_places_post"];
     delete?: never;
@@ -1855,18 +2083,53 @@ export interface paths {
     };
     /**
      * Get Delivery Place
-     * @description Get a delivery place by ID.
+     * @description 納入先詳細を取得.
+     *
+     *     Args:
+     *         delivery_place_id: 納入先ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         DeliveryPlaceResponse: 納入先詳細
+     *
+     *     Raises:
+     *         HTTPException: 納入先が見つからない場合は404
      */
     get: operations["get_delivery_place_api_masters_delivery_places__delivery_place_id__get"];
     /**
      * Update Delivery Place
-     * @description Update a delivery place.
+     * @description 納入先を更新.
+     *
+     *     得意先IDを変更する場合は、得意先の存在確認を行います。
+     *
+     *     Args:
+     *         delivery_place_id: 納入先ID
+     *         data: 更新データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         DeliveryPlaceResponse: 更新後の納入先情報
+     *
+     *     Raises:
+     *         HTTPException: 納入先が見つからない場合は404
+     *         HTTPException: 得意先が見つからない場合は400
      */
     put: operations["update_delivery_place_api_masters_delivery_places__delivery_place_id__put"];
     post?: never;
     /**
      * Delete Delivery Place
-     * @description Soft delete a delivery place by setting valid_to date.
+     * @description 納入先を論理削除（valid_toを設定して無効化）.
+     *
+     *     Args:
+     *         delivery_place_id: 納入先ID
+     *         end_date: 有効終了日（省略時は昨日）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         None
+     *
+     *     Raises:
+     *         HTTPException: 納入先が見つからない場合は404
      */
     delete: operations["delete_delivery_place_api_masters_delivery_places__delivery_place_id__delete"];
     options?: never;
@@ -1886,9 +2149,21 @@ export interface paths {
     post?: never;
     /**
      * Permanent Delete Delivery Place
-     * @description Permanently delete a delivery place (admin only).
+     * @description 納入先を物理削除（管理者のみ）.
      *
-     *     Only allowed if the place has no references in other tables.
+     *     他のテーブルから参照されていない場合のみ削除可能です。
+     *
+     *     Args:
+     *         delivery_place_id: 納入先ID
+     *         current_user: 認証済み管理者ユーザー
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         None
+     *
+     *     Raises:
+     *         HTTPException: 納入先が見つからない場合は404
+     *         HTTPException: 他のデータから参照されている場合は409
      */
     delete: operations["permanent_delete_delivery_place_api_masters_delivery_places__delivery_place_id__permanent_delete"];
     options?: never;
@@ -1907,7 +2182,17 @@ export interface paths {
     put?: never;
     /**
      * Restore Delivery Place
-     * @description Restore a soft-deleted delivery place.
+     * @description 論理削除された納入先を復元.
+     *
+     *     Args:
+     *         delivery_place_id: 納入先ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         DeliveryPlaceResponse: 復元された納入先情報
+     *
+     *     Raises:
+     *         HTTPException: 納入先が見つからない場合は404
      */
     post: operations["restore_delivery_place_api_masters_delivery_places__delivery_place_id__restore_post"];
     delete?: never;
@@ -1925,7 +2210,20 @@ export interface paths {
     };
     /**
      * List Products
-     * @description Return a paginated list of products.
+     * @description 製品一覧を取得.
+     *
+     *     デフォルトでは有効な製品のみを返します。
+     *     論理削除された製品も含める場合はinclude_inactive=trueを指定してください。
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数（最大100件）
+     *         search: 検索キーワード（製品コード、製品名で部分一致）
+     *         include_inactive: 論理削除済み製品を含めるか（デフォルト: False）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         list[ProductOut]: 製品情報のリスト
      */
     get: operations["list_products_api_masters_products_get"];
     put?: never;
@@ -1976,7 +2274,14 @@ export interface paths {
     };
     /**
      * Export Products
-     * @description Export products to CSV or Excel.
+     * @description 製品データをCSVまたはExcelでエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         StreamingResponse: エクスポートファイル
      */
     get: operations["export_products_api_masters_products_export_download_get"];
     put?: never;
@@ -1996,7 +2301,17 @@ export interface paths {
     };
     /**
      * Get Product
-     * @description Fetch a product by its code (maker_part_code).
+     * @description 製品コードで製品を取得.
+     *
+     *     Args:
+     *         product_code: 製品コード（maker_part_code）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         ProductOut: 製品詳細情報
+     *
+     *     Raises:
+     *         HTTPException: 製品が存在しない場合（404）
      */
     get: operations["get_product_api_masters_products__product_code__get"];
     /**
@@ -2112,16 +2427,35 @@ export interface paths {
     };
     /**
      * List Suppliers
-     * @description List suppliers.
+     * @description サプライヤー一覧を取得.
      *
-     *     By default, only active suppliers (valid_to >= today) are returned.
-     *     Set include_inactive=true to include soft-deleted suppliers.
+     *     デフォルトでは有効なサプライヤー（valid_to >= 今日）のみを返します。
+     *     論理削除されたサプライヤーも含める場合はinclude_inactive=trueを指定してください。
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数（最大100件）
+     *         include_inactive: 論理削除済みサプライヤーを含めるか（デフォルト: False）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         list[SupplierResponse]: サプライヤー情報のリスト
      */
     get: operations["list_suppliers_api_masters_suppliers_get"];
     put?: never;
     /**
      * Create Supplier
-     * @description Create supplier.
+     * @description サプライヤーを新規作成.
+     *
+     *     Args:
+     *         supplier: サプライヤー作成リクエストデータ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SupplierResponse: 作成されたサプライヤー情報
+     *
+     *     Raises:
+     *         HTTPException: サプライヤーコードが既に存在する場合（409）
      */
     post: operations["create_supplier_api_masters_suppliers_post"];
     delete?: never;
@@ -2186,7 +2520,17 @@ export interface paths {
     };
     /**
      * Get Supplier
-     * @description Get supplier by code.
+     * @description サプライヤーコードでサプライヤーを取得.
+     *
+     *     Args:
+     *         supplier_code: サプライヤーコード
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SupplierResponse: サプライヤー詳細情報
+     *
+     *     Raises:
+     *         HTTPException: サプライヤーが存在しない場合（404）
      */
     get: operations["get_supplier_api_masters_suppliers__supplier_code__get"];
     /**
@@ -2290,15 +2634,39 @@ export interface paths {
     };
     /**
      * List Supplier Products
-     * @description Get supplier products (仕入先商品一覧).
+     * @description 仕入先商品一覧を取得.
      *
-     *     product_suppliers テーブルから製品-仕入先の関連を取得。
+     *     product_suppliersテーブルから製品-仕入先の関連情報を取得します。
+     *     デフォルトでは有効なレコードのみを返します。
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数上限（最大1000件）
+     *         supplier_id: 仕入先IDでフィルタ
+     *         include_inactive: 論理削除済みレコードを含めるか（デフォルト: False）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         仕入先商品のリスト（製品情報と仕入先情報を含む）
      */
     get: operations["list_supplier_products_api_masters_supplier_products_get"];
     put?: never;
     /**
      * Create Supplier Product
-     * @description Create a new supplier product.
+     * @description 仕入先商品を新規作成.
+     *
+     *     製品と仕入先の関連を登録します。
+     *     is_primaryがTrueの場合、同一製品の他のレコードのis_primaryをFalseに更新します。
+     *
+     *     Args:
+     *         data: 仕入先商品作成データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SupplierProductResponse: 作成された仕入先商品情報
+     *
+     *     Raises:
+     *         HTTPException: 製品-仕入先のペアが既に存在する場合は400
      */
     post: operations["create_supplier_product_api_masters_supplier_products_post"];
     delete?: never;
@@ -2316,7 +2684,14 @@ export interface paths {
     };
     /**
      * Export Supplier Products
-     * @description Export supplier products.
+     * @description 仕入先商品をエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（"csv" または "xlsx"）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         Excel形式またはCSV形式のファイルレスポンス
      */
     get: operations["export_supplier_products_api_masters_supplier_products_export_download_get"];
     put?: never;
@@ -2336,18 +2711,52 @@ export interface paths {
     };
     /**
      * Get Supplier Product
-     * @description Get a supplier product by ID.
+     * @description 仕入先商品詳細を取得.
+     *
+     *     Args:
+     *         id: 仕入先商品ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SupplierProductResponse: 仕入先商品詳細（製品情報と仕入先情報を含む）
+     *
+     *     Raises:
+     *         HTTPException: レコードが見つからない場合は404
      */
     get: operations["get_supplier_product_api_masters_supplier_products__id__get"];
     /**
      * Update Supplier Product
-     * @description Update a supplier product.
+     * @description 仕入先商品を更新.
+     *
+     *     is_primaryをTrueに設定する場合、同一製品の他のレコードのis_primaryをFalseに更新します。
+     *
+     *     Args:
+     *         id: 仕入先商品ID
+     *         data: 更新データ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SupplierProductResponse: 更新後の仕入先商品情報
+     *
+     *     Raises:
+     *         HTTPException: レコードが見つからない場合は404
      */
     put: operations["update_supplier_product_api_masters_supplier_products__id__put"];
     post?: never;
     /**
      * Delete Supplier Product
-     * @description Soft delete a supplier product (mark as inactive).
+     * @description 仕入先商品を論理削除（無効化）.
+     *
+     *     Args:
+     *         id: 仕入先商品ID
+     *         end_date: 終了日（省略時は今日の日付）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         None
+     *
+     *     Raises:
+     *         HTTPException: レコードが見つからない場合は404
      */
     delete: operations["delete_supplier_product_api_masters_supplier_products__id__delete"];
     options?: never;
@@ -2367,7 +2776,18 @@ export interface paths {
     post?: never;
     /**
      * Permanent Delete Supplier Product
-     * @description Permanently delete a supplier product.
+     * @description 仕入先商品を物理削除.
+     *
+     *     Args:
+     *         id: 仕入先商品ID
+     *         current_user: 認証済み管理者ユーザー
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         None
+     *
+     *     Raises:
+     *         HTTPException: レコードが見つからない場合は404
      */
     delete: operations["permanent_delete_supplier_product_api_masters_supplier_products__id__permanent_delete"];
     options?: never;
@@ -2386,7 +2806,17 @@ export interface paths {
     put?: never;
     /**
      * Restore Supplier Product
-     * @description Restore a soft-deleted supplier product.
+     * @description 論理削除された仕入先商品を復元.
+     *
+     *     Args:
+     *         id: 仕入先商品ID
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         SupplierProductResponse: 復元された仕入先商品情報
+     *
+     *     Raises:
+     *         HTTPException: レコードが見つからない場合は404
      */
     post: operations["restore_supplier_product_api_masters_supplier_products__id__restore_post"];
     delete?: never;
@@ -2525,6 +2955,7 @@ export interface paths {
      *
      *     Args:
      *         conversion_id: ID of the conversion to delete
+     *         current_user: Authenticated admin user
      *         db: Database session
      */
     delete: operations["permanent_delete_uom_conversion_api_masters_uom_conversions__conversion_id__permanent_delete"];
@@ -2569,13 +3000,35 @@ export interface paths {
     };
     /**
      * List Warehouses
-     * @description List warehouses.
+     * @description 倉庫一覧を取得.
+     *
+     *     デフォルトでは有効な倉庫のみを返します。
+     *     論理削除された倉庫も含める場合はinclude_inactive=trueを指定してください。
+     *
+     *     Args:
+     *         skip: スキップ件数（ページネーション用）
+     *         limit: 取得件数（最大100件）
+     *         include_inactive: 論理削除済み倉庫を含めるか（デフォルト: False）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         list[WarehouseResponse]: 倉庫情報のリスト
      */
     get: operations["list_warehouses_api_masters_warehouses_get"];
     put?: never;
     /**
      * Create Warehouse
-     * @description Create warehouse.
+     * @description 倉庫を新規作成.
+     *
+     *     Args:
+     *         warehouse: 倉庫作成リクエストデータ
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         WarehouseResponse: 作成された倉庫情報
+     *
+     *     Raises:
+     *         HTTPException: 倉庫コードが既に存在する場合（409）
      */
     post: operations["create_warehouse_api_masters_warehouses_post"];
     delete?: never;
@@ -2620,7 +3073,14 @@ export interface paths {
     };
     /**
      * Export Warehouses
-     * @description Export warehouses to CSV or Excel.
+     * @description 倉庫データをCSVまたはExcelでエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（'csv' または 'xlsx'、デフォルト: csv）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         StreamingResponse: エクスポートファイル
      */
     get: operations["export_warehouses_api_masters_warehouses_export_download_get"];
     put?: never;
@@ -2640,7 +3100,17 @@ export interface paths {
     };
     /**
      * Get Warehouse
-     * @description Get warehouse by code.
+     * @description 倉庫コードで倉庫を取得.
+     *
+     *     Args:
+     *         warehouse_code: 倉庫コード
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         WarehouseResponse: 倉庫詳細情報
+     *
+     *     Raises:
+     *         HTTPException: 倉庫が存在しない場合（404）
      */
     get: operations["get_warehouse_api_masters_warehouses__warehouse_code__get"];
     /**
@@ -2858,6 +3328,7 @@ export interface paths {
      *     Args:
      *         customer_id: 得意先ID
      *         external_product_code: 得意先品番
+     *         current_user: 認証済み管理者ユーザー
      *         db: データベースセッション
      *
      *     Raises:
@@ -2909,7 +3380,14 @@ export interface paths {
     };
     /**
      * Export Customer Items
-     * @description Export customer items to CSV or Excel.
+     * @description 得意先品番マッピングをエクスポート.
+     *
+     *     Args:
+     *         format: エクスポート形式（'csv' または 'xlsx'）
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         Excel形式またはCSV形式のファイルレスポンス
      */
     get: operations["export_customer_items_api_masters_customer_items_export_download_get"];
     put?: never;
@@ -2931,13 +3409,17 @@ export interface paths {
     put?: never;
     /**
      * Bulk Upsert Customer Items
-     * @description Bulk upsert customer items by composite key (customer_id,
-     *     external_product_code).
+     * @description 得意先品番マッピング一括登録/更新.
      *
-     *     - If a customer item with the same composite key exists, it will be updated
-     *     - If not, a new customer item will be created
+     *     複合キー（customer_id, external_product_code）で判定し、
+     *     既存レコードがあれば更新、なければ新規作成します。
      *
-     *     Returns summary with counts of created/updated/failed records.
+     *     Args:
+     *         request: 一括登録/更新リクエスト
+     *         db: データベースセッション
+     *
+     *     Returns:
+     *         BulkUpsertResponse: 作成/更新/失敗件数のサマリー
      */
     post: operations["bulk_upsert_customer_items_api_masters_customer_items_bulk_upsert_post"];
     delete?: never;
@@ -4612,10 +5094,20 @@ export interface paths {
     put?: never;
     /**
      * Register Sales Orders
-     * @description Register sales orders to SAP (Mock implementation).
+     * @description 受注をSAPに登録（モック実装）.
      *
-     *     This endpoint simulates the registration of sales orders to SAP ERP.
-     *     It returns dummy SAP order numbers for the provided order IDs.
+     *     SAPシステムへの受注登録をシミュレートします。
+     *     提供された受注IDに対してダミーのSAP受注番号を返します。
+     *
+     *     Args:
+     *         request: SAP受注登録リクエスト（受注IDリスト）
+     *
+     *     Returns:
+     *         SAPOrderRegistrationResponse: 登録結果（受注ID、SAP受注番号、ステータス）
+     *
+     *     Note:
+     *         現在はモック実装です。本番環境では実際のSAP APIに接続します。
+     *         1秒のネットワーク遅延をシミュレートしています。
      */
     post: operations["register_sales_orders_api_integration_sap_sales_orders_post"];
     delete?: never;
@@ -4895,6 +5387,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/rpa/material-delivery-note/runs/{run_id}/step4-complete": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete Step4
+     * @description Step4完了としてステータスを更新する.
+     */
+    post: operations["complete_step4_api_rpa_material_delivery_note_runs__run_id__step4_complete_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/rpa/material-delivery-note/runs/{run_id}/retry-failed": {
     parameters: {
       query?: never;
@@ -5081,7 +5593,7 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/": {
+  "/{full_path}": {
     parameters: {
       query?: never;
       header?: never;
@@ -5089,10 +5601,10 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Root
-     * @description ルートエンドポイント.
+     * Serve Spa
+     * @description SPA フォールバック: 未知のパスは index.html を返す.
      */
-    get: operations["root__get"];
+    get: operations["serve_spa__full_path__get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -9104,7 +9616,7 @@ export interface components {
      */
     ProductCreate: {
       /** Product Code */
-      product_code: string;
+      product_code?: string | null;
       /** Product Name */
       product_name: string;
       /**
@@ -9139,10 +9651,16 @@ export interface components {
        * @default 1
        */
       qty_per_internal_unit: number;
-      /** Customer Part No */
-      customer_part_no?: string | null;
-      /** Maker Item Code */
-      maker_item_code?: string | null;
+      /**
+       * Customer Part No
+       * @description 先方品番
+       */
+      customer_part_no: string;
+      /**
+       * Maker Item Code
+       * @description メーカー品番（旧メーカー品目コード）
+       */
+      maker_item_code: string;
       /**
        * Is Active
        * @default true
@@ -13564,6 +14082,14 @@ export interface operations {
         customer_id?: number | null;
         /** @description 出庫タイプでフィルタ */
         withdrawal_type?: string | null;
+        /** @description 開始日（出荷日） */
+        start_date?: string | null;
+        /** @description 終了日（出荷日） */
+        end_date?: string | null;
+        /** @description 製品IDでフィルタ */
+        product_id?: number | null;
+        /** @description 倉庫IDでフィルタ */
+        warehouse_id?: number | null;
       };
       header?: never;
       path?: never;
@@ -18944,6 +19470,37 @@ export interface operations {
       };
     };
   };
+  complete_step4_api_rpa_material_delivery_note_runs__run_id__step4_complete_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        run_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["RpaRunResponse"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   retry_failed_items_api_rpa_material_delivery_note_runs__run_id__retry_failed_post: {
     parameters: {
       query?: never;
@@ -19321,11 +19878,13 @@ export interface operations {
       };
     };
   };
-  root__get: {
+  serve_spa__full_path__get: {
     parameters: {
       query?: never;
       header?: never;
-      path?: never;
+      path: {
+        full_path: string;
+      };
       cookie?: never;
     };
     requestBody?: never;
@@ -19337,6 +19896,15 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };
