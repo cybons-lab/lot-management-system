@@ -125,6 +125,7 @@ export function DataTable<T = never>({
           />
         ),
         cell: ({ row }) => (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
           <div onClick={(e) => e.stopPropagation()}>
             <Checkbox
               checked={row.getIsSelected()}
@@ -175,6 +176,7 @@ export function DataTable<T = never>({
         id: "__actions",
         header: "アクション",
         cell: ({ row }) => (
+          // eslint-disable-next-line jsx-a11y/click-events-have-key-events
           <div onClick={(e) => e.stopPropagation()}>{rowActions(row.original)}</div>
         ),
         size: 96, // w-24 equivalent
@@ -314,6 +316,7 @@ export function DataTable<T = never>({
                       )}
                     </div>
                     {header.column.getCanResize() && (
+                      // eslint-disable-next-line jsx-a11y/click-events-have-key-events
                       <div
                         onMouseDown={header.getResizeHandler()}
                         onTouchStart={header.getResizeHandler()}

@@ -129,6 +129,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
 
   // リサイズハンドルのレンダリングヘルパー
   const ResizeHandle = ({ columnId }: { columnId: string }) => (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events
     <div
       onMouseDown={(e) => handleResizeStart(e, columnId)}
       onTouchStart={(e) => handleResizeStart(e, columnId)}
