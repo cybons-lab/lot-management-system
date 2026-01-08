@@ -25,7 +25,7 @@ export function OrdersListPage() {
   const logic = useOrdersListLogic();
 
   return (
-    <PageContainer className="max-w-full">
+    <PageContainer>
       <PageHeader
         title="受注管理"
         subtitle="受注明細一覧と引当状況を管理します"
@@ -61,7 +61,8 @@ export function OrdersListPage() {
 
       <ErrorState error={logic.error} onRetry={logic.refetch} />
 
-      <div className="space-y-4">
+      {/* テーブルを画面いっぱいに広げるため、負のマージンでPageContainerのpaddingを相殺 */}
+      <div className="-mx-6 space-y-4">
         <OrdersFlatView
           lines={logic.paginatedLines}
           isLoading={logic.isLoading}
@@ -69,7 +70,7 @@ export function OrdersListPage() {
         />
 
         {!logic.error && logic.sortedLines.length > 0 && (
-          <div className="rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
+          <div className="mx-6 rounded-lg border border-slate-200 bg-white px-6 py-4 shadow-sm">
             <TablePagination
               currentPage={logic.table.calculatePagination(logic.filteredLines.length).page ?? 1}
               pageSize={logic.table.calculatePagination(logic.filteredLines.length).pageSize ?? 25}
