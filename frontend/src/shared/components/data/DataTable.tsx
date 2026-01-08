@@ -299,7 +299,6 @@ export function DataTable<T = never>({
                         "cursor-pointer transition-colors select-none hover:bg-slate-100",
                       meta?.className,
                     )}
-                    style={{ width: header.getSize() }}
                     onClick={header.column.getToggleSortingHandler()}
                   >
                     <div
@@ -367,7 +366,6 @@ export function DataTable<T = never>({
                         meta?.align === "right" && "text-right",
                         meta?.className,
                       )}
-                      style={{ width: cell.column.getSize() }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
