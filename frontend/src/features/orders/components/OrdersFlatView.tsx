@@ -26,16 +26,17 @@ export function OrdersFlatView({ lines, isLoading, onRefresh }: OrdersFlatViewPr
     setSelectedLine(row);
   };
 
-  // カラム定義（引当ボタンのコールバックを渡す）
+  // カラム定義（引当コールバックを渡す）
   const columns = createOrderLineColumns({ onAllocate: handleAllocate });
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <>
       <DataTable
         data={lines}
         columns={columns}
         isLoading={isLoading}
         emptyMessage="明細がありません"
+        className="rounded-lg border border-slate-200 bg-white shadow-sm"
       />
 
       {/* 引当ダイアログ */}
@@ -47,6 +48,6 @@ export function OrdersFlatView({ lines, isLoading, onRefresh }: OrdersFlatViewPr
           onRefresh?.();
         }}
       />
-    </div>
+    </>
   );
 }

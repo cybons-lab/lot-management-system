@@ -57,11 +57,11 @@ export function OrdersListPage() {
         }
       />
 
-      <OrdersFilters filters={logic.filters} />
+      <div className="space-y-6">
+        <OrdersFilters filters={logic.filters} />
 
-      <ErrorState error={logic.error} onRetry={logic.refetch} />
+        <ErrorState error={logic.error} onRetry={logic.refetch} />
 
-      <div className="space-y-4">
         <OrdersFlatView
           lines={logic.paginatedLines}
           isLoading={logic.isLoading}

@@ -3,7 +3,7 @@
  * 受注明細行のカラム定義
  */
 
-import { AllocationStatusBadge } from "./display/AllocationStatusBadge";
+import { CheckCircle, Circle, CircleDot, Clipboard, Link, Package, Zap } from "lucide-react";
 
 import { Button } from "@/components/ui";
 import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
@@ -27,70 +27,96 @@ export function createOrderLineColumns(
   options: OrderLineColumnsOptions = {},
 ): Column<OrderLineRow>[] {
   const { onAllocate } = options;
-
   return [
+    // 種別（アイコン化）
     {
       id: "order_type",
-      header: "種別",
+      header: "",
       cell: (row: OrderLineRow) => {
-        const typeMap: Record<string, { label: string; color: string }> = {
-          FORECAST_LINKED: { label: "FC連携", color: "bg-purple-100 text-purple-800" },
-          KANBAN: { label: "かんばん", color: "bg-orange-100 text-orange-800" },
-          SPOT: { label: "スポット", color: "bg-pink-100 text-pink-800" },
-          ORDER: { label: "通常受注", color: "bg-slate-100 text-slate-800" },
+        const iconMap = {
+          FORECAST_LINKED: {
+            Icon: Link,
+            color: "text-purple-600",
+            bg: "bg-purple-50",
+            label: "FC連携",
+          },
+          KANBAN: {
+            Icon: Clipboard,
+            color: "text-orange-600",
+            bg: "bg-orange-50",
+            label: "かんばん",
+          },
+          SPOT: { Icon: Zap, color: "text-pink-600", bg: "bg-pink-50", label: "スポット" },
+          ORDER: { Icon: Package, color: "text-slate-600", bg: "bg-slate-50", label: "通常受注" },
         };
         const orderType = (row.order_type as string) || "ORDER";
-        const info = typeMap[orderType] || typeMap["ORDER"];
+        const config = iconMap[orderType as keyof typeof iconMap] || iconMap["ORDER"];
+        const IconComponent = config.Icon;
+
         return (
-          <span className={`inline-flex rounded px-2 py-0.5 text-xs font-semibold ${info.color}`}>
-            {info.label}
-          </span>
+          <div
+            className={`flex h-8 w-8 items-center justify-center rounded-full ${config.bg}`}
+            title={config.label}
+          >
+            <IconComponent className={`h-4 w-4 ${config.color}`} />
+          </div>
         );
       },
-      width: "80px",
+      width: "60px",
     },
+
+    // 得意先
     {
       id: "customer_name",
       header: "得意先",
       cell: (row: OrderLineRow) => (
-        <div className="max-w-[180px]">
-          <div className="truncate font-bold text-slate-900" title={row.customer_name ?? ""}>
+        <div>
+          <div className="truncate font-semibold text-slate-900" title={row.customer_name ?? ""}>
             {row.customer_name}
           </div>
-          <div className="text-xs text-slate-500">{row.customer_code}</div>
+          <div className="text-[11px] text-slate-500">{row.customer_code}</div>
         </div>
       ),
-      width: "180px",
+      minWidth: 200,
     },
+
+    // 製品
     {
       id: "product_code",
       header: "製品",
       cell: (row: OrderLineRow) => (
-        <div className="max-w-[250px]">
-          <div className="font-medium text-slate-900">{row.product_code ?? "–"}</div>
+        <div>
+          <div className="text-sm font-medium text-slate-600">{row.product_code ?? "–"}</div>
           {row.product_name && (
-            <div className="truncate font-bold text-slate-700" title={row.product_name}>
+            <div className="truncate text-sm font-semibold text-slate-900" title={row.product_name}>
               {row.product_name}
             </div>
           )}
         </div>
       ),
-      width: "250px",
+      minWidth: 300,
     },
+
+    // 注文数量（単位を小さく）
     {
       id: "order_quantity",
       header: "注文数量",
       cell: (row: OrderLineRow) => {
         const qty = Number(row.order_quantity ?? row.quantity ?? 0);
         return (
-          <div className="font-bold text-slate-900">
-            {qty.toLocaleString()} {row.unit ?? ""}
+          <div className="flex items-baseline justify-end gap-1">
+            <span className="text-base font-semibold text-slate-900 tabular-nums">
+              {qty.toLocaleString()}
+            </span>
+            <span className="text-xs text-slate-500">{row.unit}</span>
           </div>
         );
       },
       align: "right",
-      width: "120px",
+      width: "100px",
     },
+
+    // 引当数量（単位を小さく）
     {
       id: "allocated_quantity",
       header: "引当数量",
@@ -100,23 +126,25 @@ export function createOrderLineColumns(
           (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
           0,
         );
-        // Soft引当が含まれているか判定
         const hasSoft = lots.some((a) => a.allocation_type === "soft");
 
         return (
           <div className="flex flex-col items-end">
-            <span className="font-medium text-slate-900">
-              {allocatedQty.toLocaleString()} {row.unit ?? ""}
-            </span>
-            {hasSoft && (
-              <span className="text-[10px] font-medium text-amber-600">(内Softあり)</span>
-            )}
+            <div className="flex items-baseline gap-1">
+              <span className="text-base font-semibold text-slate-900 tabular-nums">
+                {allocatedQty.toLocaleString()}
+              </span>
+              <span className="text-xs text-slate-500">{row.unit}</span>
+            </div>
+            {hasSoft && <span className="text-[10px] font-medium text-amber-600">(Soft含)</span>}
           </div>
         );
       },
       align: "right",
-      width: "120px",
+      width: "100px",
     },
+
+    // 引当率（プログレスバー）
     {
       id: "allocation_rate",
       header: "引当率",
@@ -130,8 +158,8 @@ export function createOrderLineColumns(
         const rate = orderQty > 0 ? (allocatedQty / orderQty) * 100 : 0;
 
         return (
-          <div className="flex items-center gap-3">
-            <div className="h-2.5 w-24 overflow-hidden rounded-full bg-slate-200">
+          <div className="flex items-center gap-2.5">
+            <div className="h-2 w-20 overflow-hidden rounded-full bg-slate-200">
               <div
                 className={`h-full rounded-full transition-all ${
                   rate === 100 ? "bg-green-500" : rate > 0 ? "bg-blue-500" : "bg-slate-300"
@@ -139,95 +167,74 @@ export function createOrderLineColumns(
                 style={{ width: `${rate}%` }}
               />
             </div>
-            <span className="text-sm font-medium text-slate-700">{rate.toFixed(0)}%</span>
+            <span className="w-9 text-right text-xs font-medium text-slate-600 tabular-nums">
+              {rate.toFixed(0)}%
+            </span>
           </div>
         );
       },
-      width: "180px",
+      width: "160px",
     },
+
+    // 納期
     {
       id: "due_date",
       header: "納期",
       cell: (row: OrderLineRow) => {
-        // APIはdelivery_dateを返すが、due_dateはレガシーフィールドとして残っている
         const dueDate = row.delivery_date ?? row.due_date ?? null;
-        return <div className="font-bold text-slate-900">{formatDate(dueDate)}</div>;
+        return <div className="font-semibold text-slate-900">{formatDate(dueDate)}</div>;
       },
-      width: "120px",
+      width: "100px",
     },
+
+    // 引当状況（アイコン化）
     {
       id: "status",
-      header: "引当状況",
+      header: "状況",
       cell: (row: OrderLineRow) => {
-        // Calculate soft and hard allocated quantities
+        const orderQty = Number(row.order_quantity ?? row.quantity ?? 0);
         const lots = coerceAllocatedLots(row.allocated_lots);
-        const softAllocated = lots
-          .filter((a) => a.allocation_type === "soft")
-          .reduce(
-            (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
-            0,
-          );
-        const hardAllocated = lots
-          .filter((a) => a.allocation_type === "hard")
-          .reduce(
-            (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
-            0,
-          );
+        const allocatedQty = lots.reduce(
+          (acc, alloc) => acc + Number(alloc.allocated_quantity ?? alloc.allocated_qty ?? 0),
+          0,
+        );
+        const rate = orderQty > 0 ? (allocatedQty / orderQty) * 100 : 0;
 
+        const statusConfig = {
+          icon: rate === 0 ? Circle : rate === 100 ? CheckCircle : CircleDot,
+          color: rate === 0 ? "text-red-500" : rate === 100 ? "text-green-500" : "text-blue-500",
+          label: rate === 0 ? "未引当" : rate === 100 ? "引当済" : `部分引当 (${rate.toFixed(0)}%)`,
+        };
+
+        const IconComponent = statusConfig.icon;
         return (
-          <AllocationStatusBadge softAllocated={softAllocated} hardAllocated={hardAllocated} />
+          <div className="flex items-center justify-center" title={statusConfig.label}>
+            <IconComponent className={`h-5 w-5 ${statusConfig.color}`} />
+          </div>
         );
       },
-      width: "100px",
+      width: "50px",
     },
-    {
-      id: "shipping_document_text",
-      header: "出荷表テキスト",
-      cell: (row: OrderLineRow) => (
-        <div className="max-w-[120px]">
-          {row.shipping_document_text ? (
-            <span className="truncate text-sm text-slate-700" title={row.shipping_document_text}>
-              {row.shipping_document_text}
-            </span>
-          ) : (
-            <span className="text-slate-400">-</span>
-          )}
-        </div>
-      ),
-      width: "120px",
-    },
-    {
-      id: "forecast_reference",
-      header: "予測参照",
-      cell: (row: OrderLineRow) => (
-        <div className="max-w-[100px]">
-          {row.forecast_reference ? (
-            <span className="truncate text-sm text-slate-700" title={row.forecast_reference}>
-              {row.forecast_reference}
-            </span>
-          ) : (
-            <span className="text-slate-400">-</span>
-          )}
-        </div>
-      ),
-      width: "100px",
-    },
+
+    // 操作
     {
       id: "actions",
-      header: "",
+      header: "操作",
       cell: (row: OrderLineRow) => (
-        <div className="flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 text-xs"
-            onClick={() => onAllocate?.(row)}
-          >
-            引当
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 border-slate-300 text-xs hover:border-slate-400 hover:bg-slate-50"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAllocate?.(row);
+          }}
+        >
+          引当
+        </Button>
       ),
-      width: "100px",
+      align: "right",
+      width: "80px",
     },
   ];
 }
