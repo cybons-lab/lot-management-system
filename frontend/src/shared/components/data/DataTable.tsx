@@ -73,6 +73,8 @@ export interface DataTableProps<T = never> {
   onRowClick?: (row: T) => void;
   /** 行のアクションボタン */
   rowActions?: (row: T) => React.ReactNode;
+  /** ホバー時に表示するアクション */
+  renderHoverActions?: (row: T) => React.ReactNode;
   /** 空データ時のメッセージ */
   emptyMessage?: string;
   /** ローディング状態 */
@@ -98,6 +100,7 @@ export function DataTable<T = never>({
   getRowId = (row: T) => (row as Record<string, unknown>)["id"] as string | number,
   onRowClick,
   rowActions,
+  renderHoverActions,
   emptyMessage = "データがありません",
   isLoading = false,
   className,
@@ -329,15 +332,18 @@ export function DataTable<T = never>({
         <tbody className="divide-y divide-slate-200">
           {table.getRowModel().rows.map((row) => {
             const customClassName = getRowClassName?.(row.original);
+
             return (
               <tr
                 key={row.id}
                 className={cn(
-                  "transition-all duration-150",
+                  "relative transition-all duration-150",
+                  "group", // Added group class here
                   // ストライプ効果
                   row.index % 2 === 0 ? "bg-white" : "bg-slate-50/30",
                   // ホバー効果
-                  onRowClick && "cursor-pointer hover:bg-blue-50/50 hover:shadow-sm",
+                  (onRowClick || renderHoverActions) && "hover:bg-blue-50/30",
+                  onRowClick && "cursor-pointer",
                   // 選択状態
                   row.getIsSelected() && "bg-blue-100/60 hover:bg-blue-100/80",
                   customClassName,
@@ -352,7 +358,7 @@ export function DataTable<T = never>({
                     <td
                       key={cell.id}
                       className={cn(
-                        "px-6 py-4 text-sm text-slate-900",
+                        "px-6 py-3.5 text-sm text-slate-900",
                         meta?.align === "center" && "text-center",
                         meta?.align === "right" && "text-right",
                         meta?.className,
@@ -363,6 +369,15 @@ export function DataTable<T = never>({
                     </td>
                   );
                 })}
+
+                {/* ホバーアクション */}
+                {renderHoverActions && (
+                  <td className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:opacity-100">
+                    <div className="pointer-events-auto flex gap-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
+                      {renderHoverActions(row.original)}
+                    </div>
+                  </td>
+                )}
               </tr>
             );
           })}

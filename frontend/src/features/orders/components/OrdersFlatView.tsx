@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AllocationDialog } from "./AllocationDialog";
 import { createOrderLineColumns } from "./OrderLineColumns";
 
+import { Button } from "@/components/ui";
 import type { OrderLineRow } from "@/features/orders/hooks/useOrderLines";
 import { DataTable } from "@/shared/components/data/DataTable";
 
@@ -26,8 +27,8 @@ export function OrdersFlatView({ lines, isLoading, onRefresh }: OrdersFlatViewPr
     setSelectedLine(row);
   };
 
-  // カラム定義（引当ボタンのコールバックを渡す）
-  const columns = createOrderLineColumns({ onAllocate: handleAllocate });
+  // カラム定義
+  const columns = createOrderLineColumns();
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -36,6 +37,19 @@ export function OrdersFlatView({ lines, isLoading, onRefresh }: OrdersFlatViewPr
         columns={columns}
         isLoading={isLoading}
         emptyMessage="明細がありません"
+        renderHoverActions={(row) => (
+          <Button
+            variant="default"
+            size="sm"
+            className="h-8 text-xs shadow-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAllocate(row);
+            }}
+          >
+            引当
+          </Button>
+        )}
       />
 
       {/* 引当ダイアログ */}
