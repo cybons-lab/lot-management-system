@@ -57,12 +57,14 @@ export function OrdersListPage() {
         }
       />
 
-      <OrdersFilters filters={logic.filters} />
+      {/* フィルターとテーブルを画面いっぱいに広げる */}
+      <div className="-mx-6 space-y-6">
+        <div className="mx-6">
+          <OrdersFilters filters={logic.filters} />
+        </div>
 
-      <ErrorState error={logic.error} onRetry={logic.refetch} />
+        <ErrorState error={logic.error} onRetry={logic.refetch} />
 
-      {/* テーブルを画面いっぱいに広げるため、負のマージンでPageContainerのpaddingを相殺 */}
-      <div className="-mx-6 space-y-4">
         <OrdersFlatView
           lines={logic.paginatedLines}
           isLoading={logic.isLoading}
