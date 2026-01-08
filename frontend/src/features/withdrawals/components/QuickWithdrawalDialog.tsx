@@ -26,7 +26,6 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
-import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 
@@ -107,34 +106,48 @@ export function QuickWithdrawalDialog({
     }
   }, [open, today, initialShipDate]);
 
-  // 得意先変更時に納入先を取得
+  // 得意先が変わったら納入先を再取得（レースコンディション対策）
   useEffect(() => {
-    const fetchDeliveryPlaces = async () => {
-      if (!formState.customer_id) {
-        setDeliveryPlaces([]);
-        return;
-      }
+    const customerId = formState.customer_id;
 
-      setIsLoadingDeliveryPlaces(true);
-      try {
-        const places = await http.get<DeliveryPlace[]>(
-          `masters/delivery-places?customer_id=${formState.customer_id}`,
-        );
-        setDeliveryPlaces(places);
-        // 得意先が変わったら納入先をリセット
-        updateField("delivery_place_id", 0);
-      } catch (error) {
-        console.error("納入先取得エラー:", error);
-        setDeliveryPlaces([]);
-      } finally {
-        setIsLoadingDeliveryPlaces(false);
-      }
+    if (!customerId) {
+      setDeliveryPlaces([]);
+      updateField("delivery_place_id", 0);
+      return;
+    }
+
+    const abortController = new AbortController();
+    setIsLoadingDeliveryPlaces(true);
+
+    http
+      .get<DeliveryPlace[]>(`masters/delivery-places?customer_id=${customerId}`, {
+        signal: abortController.signal,
+      })
+      .then((places) => {
+        // レスポンス時点でcustomer_idが変わっていないか確認
+        if (formState.customer_id === customerId) {
+          setDeliveryPlaces(places);
+          updateField("delivery_place_id", 0);
+        }
+      })
+      .catch((error) => {
+        // AbortErrorは無視
+        if ((error as Error).name !== "AbortError") {
+          console.error("納入先取得エラー:", error);
+          if (formState.customer_id === customerId) {
+            setDeliveryPlaces([]);
+          }
+        }
+      })
+      .finally(() => {
+        if (formState.customer_id === customerId) {
+          setIsLoadingDeliveryPlaces(false);
+        }
+      });
+
+    return () => {
+      abortController.abort();
     };
-
-    fetchDeliveryPlaces();
-    // updateField内で依存関係を解決するため、ここではcustomer_idの変更のみを監視する設計とするが、
-    // updateFieldでdelivery_place_idをリセットすると無限ループリスクがあるため
-    // customer_id変更を検知して実行するこのuseEffectパターンを採用
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formState.customer_id]);
 
