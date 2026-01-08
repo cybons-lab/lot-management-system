@@ -1,5 +1,5 @@
 /* eslint-disable max-lines-per-function */
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 import type { InventoryItem } from "@/features/inventory/api";
 import {
@@ -64,6 +64,79 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
     onRefresh?.();
   };
 
+  // 列リサイズロジック
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
+    expander: 40,
+    product: 200,
+    warehouse: 150,
+    lots: 80,
+    total: 80,
+    soft: 80,
+    hard: 80,
+    available: 80,
+    updated: 150,
+    actions: 100,
+  });
+
+  const resizingColumn = useRef<string | null>(null);
+  const startX = useRef<number>(0);
+  const startWidth = useRef<number>(0);
+
+  const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, columnId: string) => {
+    e.preventDefault();
+    resizingColumn.current = columnId;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    startX.current = clientX;
+    startWidth.current = columnWidths[columnId];
+
+    document.addEventListener("mousemove", handleResizeMove);
+    document.addEventListener("mouseup", handleResizeEnd);
+    document.addEventListener("touchmove", handleResizeMove);
+    document.addEventListener("touchend", handleResizeEnd);
+  };
+
+  const handleResizeMove = useCallback((e: MouseEvent | TouchEvent) => {
+    if (!resizingColumn.current) return;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const diff = clientX - startX.current;
+
+    // 最小幅を30pxに設定
+    const newWidth = Math.max(30, startWidth.current + diff);
+
+    setColumnWidths((prev) => ({
+      ...prev,
+      [resizingColumn.current!]: newWidth,
+    }));
+  }, []);
+
+  const handleResizeEnd = useCallback(() => {
+    resizingColumn.current = null;
+    document.removeEventListener("mousemove", handleResizeMove);
+    document.removeEventListener("mouseup", handleResizeEnd);
+    document.removeEventListener("touchmove", handleResizeMove);
+    document.removeEventListener("touchend", handleResizeEnd);
+  }, [handleResizeMove]);
+
+  // コンポーネントのアンマウント時にイベントリスナーを解除
+  useEffect(() => {
+    return () => {
+      document.removeEventListener("mousemove", handleResizeMove);
+      document.removeEventListener("mouseup", handleResizeEnd);
+      document.removeEventListener("touchmove", handleResizeMove);
+      document.removeEventListener("touchend", handleResizeEnd);
+    };
+  }, [handleResizeMove, handleResizeEnd]);
+
+  // リサイズハンドルのレンダリングヘルパー
+  const ResizeHandle = ({ columnId }: { columnId: string }) => (
+    <div
+      onMouseDown={(e) => handleResizeStart(e, columnId)}
+      onTouchStart={(e) => handleResizeStart(e, columnId)}
+      className="absolute top-0 right-0 h-full w-1 cursor-col-resize touch-none bg-slate-200 opacity-0 transition-opacity select-none group-hover:opacity-50 hover:bg-blue-400 hover:opacity-100"
+      onClick={(e) => e.stopPropagation()}
+    />
+  );
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -80,16 +153,75 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
         <table className={styles.table.root}>
           <thead className={styles.table.thead}>
             <tr>
-              <th className={styles.table.th} style={{ width: "40px" }}></th>
-              <th className={styles.table.th}>製品</th>
-              <th className={styles.table.th}>倉庫</th>
-              <th className={styles.table.thRight}>ロット数</th>
-              <th className={styles.table.thRight}>総在庫数</th>
-              <th className={styles.table.thRight}>仮引当</th>
-              <th className={styles.table.thRight}>確定引当</th>
-              <th className={styles.table.thRight}>利用可能</th>
-              <th className={styles.table.th}>最終更新</th>
-              <th className={styles.table.thRight}>アクション</th>
+              <th
+                className={`${styles.table.th} group relative`}
+                style={{ width: columnWidths.expander }}
+              >
+                <ResizeHandle columnId="expander" />
+              </th>
+              <th
+                className={`${styles.table.th} group relative`}
+                style={{ width: columnWidths.product }}
+              >
+                製品
+                <ResizeHandle columnId="product" />
+              </th>
+              <th
+                className={`${styles.table.th} group relative`}
+                style={{ width: columnWidths.warehouse }}
+              >
+                倉庫
+                <ResizeHandle columnId="warehouse" />
+              </th>
+              <th
+                className={`${styles.table.thRight} group relative`}
+                style={{ width: columnWidths.lots }}
+              >
+                ロット数
+                <ResizeHandle columnId="lots" />
+              </th>
+              <th
+                className={`${styles.table.thRight} group relative`}
+                style={{ width: columnWidths.total }}
+              >
+                総在庫数
+                <ResizeHandle columnId="total" />
+              </th>
+              <th
+                className={`${styles.table.thRight} group relative`}
+                style={{ width: columnWidths.soft }}
+              >
+                仮引当
+                <ResizeHandle columnId="soft" />
+              </th>
+              <th
+                className={`${styles.table.thRight} group relative`}
+                style={{ width: columnWidths.hard }}
+              >
+                確定引当
+                <ResizeHandle columnId="hard" />
+              </th>
+              <th
+                className={`${styles.table.thRight} group relative`}
+                style={{ width: columnWidths.available }}
+              >
+                利用可能
+                <ResizeHandle columnId="available" />
+              </th>
+              <th
+                className={`${styles.table.th} group relative`}
+                style={{ width: columnWidths.updated }}
+              >
+                最終更新
+                <ResizeHandle columnId="updated" />
+              </th>
+              <th
+                className={`${styles.table.thRight} group relative`}
+                style={{ width: columnWidths.actions }}
+              >
+                アクション
+                <ResizeHandle columnId="actions" />
+              </th>
             </tr>
           </thead>
           <tbody className={styles.table.tbody}>
@@ -112,6 +244,7 @@ export function InventoryTable({ data, isLoading, onRowClick, onRefresh }: Inven
                   onUnlockLot={handleUnlockLot}
                   onWithdrawLot={handleWithdrawLot}
                   onHistoryLot={handleHistoryLot}
+                  columnWidths={columnWidths}
                 />
               );
             })}
