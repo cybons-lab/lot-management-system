@@ -59,13 +59,23 @@ function TableContent<TData>({ table }: { table: Table<TData> }) {
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-sm font-semibold text-slate-700"
+                  className="relative px-4 py-3 text-left text-sm font-semibold text-slate-700"
+                  style={{ width: header.getSize() }}
                   onClick={header.column.getToggleSortingHandler()}
                 >
                   <div className="flex items-center gap-1">
                     {flexRender(header.column.columnDef.header, header.getContext())}
                     {header.column.getCanSort() && (
                       <SortIcon isSorted={header.column.getIsSorted()} />
+                    )}
+                    {header.column.getCanResize() && (
+                      <div
+                        onMouseDown={header.getResizeHandler()}
+                        onTouchStart={header.getResizeHandler()}
+                        className={`absolute top-0 right-0 h-full w-1 cursor-col-resize touch-none bg-slate-200 opacity-50 transition-colors select-none hover:bg-blue-400 hover:opacity-100 ${
+                          header.column.getIsResizing() ? "bg-blue-600 opacity-100" : ""
+                        }`}
+                      />
                     )}
                   </div>
                 </th>
@@ -77,7 +87,11 @@ function TableContent<TData>({ table }: { table: Table<TData> }) {
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id} className="hover:bg-slate-50/60">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-4 py-3 text-sm text-slate-800">
+                <td
+                  key={cell.id}
+                  className="px-4 py-3 text-sm text-slate-800"
+                  style={{ width: cell.column.getSize() }}
+                >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
@@ -110,6 +124,7 @@ export function TanstackTable<TData>({
   const table = useReactTable({
     data,
     columns,
+    columnResizeMode: "onChange",
     state: {
       sorting,
       pagination: { pageIndex, pageSize },
