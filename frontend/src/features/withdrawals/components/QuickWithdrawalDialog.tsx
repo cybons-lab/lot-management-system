@@ -6,12 +6,13 @@
  * - 得意先、出荷日、数量を入力して出庫
  */
 
-/* eslint-disable max-lines-per-function */
+/* eslint-disable max-lines-per-function, complexity */
 import { Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
 import { createWithdrawal, type WithdrawalCreateRequest } from "../api";
+import type { DeliveryPlace } from "../hooks/useWithdrawalFormState";
 
 import { Button, Input, Label } from "@/components/ui";
 import {
@@ -25,6 +26,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui";
 import { useAuth } from "@/features/auth/AuthContext";
 import { useCustomersQuery } from "@/hooks/api/useMastersQuery";
+import { http } from "@/shared/api/http-client";
 import type { LotUI } from "@/shared/libs/normalize";
 import { fmt } from "@/shared/utils/number";
 
@@ -43,6 +45,7 @@ export interface QuickWithdrawalDialogProps {
 
 interface FormState {
   customer_id: number;
+  delivery_place_id: number;
   ship_date: string;
   quantity: number;
   reference_number: string;
@@ -65,6 +68,10 @@ export function QuickWithdrawalDialog({
   const today = new Date().toISOString().split("T")[0];
   const { data: customers = [], isLoading: isLoadingCustomers } = useCustomersQuery();
 
+  // 納入先状態
+  const [deliveryPlaces, setDeliveryPlaces] = useState<DeliveryPlace[]>([]);
+  const [isLoadingDeliveryPlaces, setIsLoadingDeliveryPlaces] = useState(false);
+
   // 利用可能数量を計算
   const availableQuantity =
     Number(lot.current_quantity) -
@@ -74,6 +81,7 @@ export function QuickWithdrawalDialog({
   // フォーム状態
   const [formState, setFormState] = useState<FormState>({
     customer_id: 0,
+    delivery_place_id: 0,
     ship_date: today,
     quantity: 0,
     reference_number: "",
@@ -87,14 +95,47 @@ export function QuickWithdrawalDialog({
     if (open) {
       setFormState({
         customer_id: 0,
+        delivery_place_id: 0,
         ship_date: initialShipDate || today,
         quantity: 0,
         reference_number: "",
         reason: "",
       });
+      setDeliveryPlaces([]);
       setErrors({});
     }
   }, [open, today, initialShipDate]);
+
+  // 得意先変更時に納入先を取得
+  useEffect(() => {
+    const fetchDeliveryPlaces = async () => {
+      if (!formState.customer_id) {
+        setDeliveryPlaces([]);
+        return;
+      }
+
+      setIsLoadingDeliveryPlaces(true);
+      try {
+        const places = await http.get<DeliveryPlace[]>(
+          `masters/delivery-places?customer_id=${formState.customer_id}`,
+        );
+        setDeliveryPlaces(places);
+        // 得意先が変わったら納入先をリセット
+        updateField("delivery_place_id", 0);
+      } catch (error) {
+        console.error("納入先取得エラー:", error);
+        setDeliveryPlaces([]);
+      } finally {
+        setIsLoadingDeliveryPlaces(false);
+      }
+    };
+
+    fetchDeliveryPlaces();
+    // updateField内で依存関係を解決するため、ここではcustomer_idの変更のみを監視する設計とするが、
+    // updateFieldでdelivery_place_idをリセットすると無限ループリスクがあるため
+    // customer_id変更を検知して実行するこのuseEffectパターンを採用
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formState.customer_id]);
 
   // フィールド更新
   const updateField = useCallback(
@@ -137,6 +178,7 @@ export function QuickWithdrawalDialog({
         quantity: formState.quantity,
         withdrawal_type: "order_manual",
         customer_id: formState.customer_id,
+        delivery_place_id: formState.delivery_place_id || undefined,
         ship_date: formState.ship_date,
         reason: formState.reason || undefined,
         reference_number: formState.reference_number || undefined,
@@ -210,6 +252,38 @@ export function QuickWithdrawalDialog({
             {errors.customer_id && (
               <p className="mt-1 text-sm text-red-600">{errors.customer_id}</p>
             )}
+          </div>
+
+          {/* 納入場所 (任意) */}
+          <div>
+            <Label htmlFor="delivery_place_id" className="mb-2 block text-sm font-medium">
+              納入場所 <span className="text-slate-400">(任意)</span>
+            </Label>
+            <Select
+              value={formState.delivery_place_id ? String(formState.delivery_place_id) : ""}
+              onValueChange={(v) => updateField("delivery_place_id", Number(v))}
+              disabled={isLoadingDeliveryPlaces || !formState.customer_id || isSubmitting}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    !formState.customer_id
+                      ? "先に得意先を選択"
+                      : isLoadingDeliveryPlaces
+                        ? "読み込み中..."
+                        : "納入場所を選択（任意）"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0">指定なし</SelectItem>
+                {deliveryPlaces.map((dp) => (
+                  <SelectItem key={dp.id} value={String(dp.id)}>
+                    {dp.delivery_place_code} - {dp.delivery_place_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* 出荷日 */}
