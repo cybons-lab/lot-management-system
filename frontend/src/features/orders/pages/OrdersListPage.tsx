@@ -25,7 +25,7 @@ export function OrdersListPage() {
   const logic = useOrdersListLogic();
 
   return (
-    <PageContainer>
+    <PageContainer className="max-w-full">
       <PageHeader
         title="受注管理"
         subtitle="受注明細一覧と引当状況を管理します"

@@ -31,12 +31,13 @@ export function OrdersFlatView({ lines, isLoading, onRefresh }: OrdersFlatViewPr
   const columns = createOrderLineColumns();
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+    <>
       <DataTable
         data={lines}
         columns={columns}
         isLoading={isLoading}
         emptyMessage="明細がありません"
+        className="rounded-lg border border-slate-200 bg-white shadow-sm"
         renderHoverActions={(row) => (
           <Button
             variant="outline"
@@ -61,6 +62,6 @@ export function OrdersFlatView({ lines, isLoading, onRefresh }: OrdersFlatViewPr
           onRefresh?.();
         }}
       />
-    </div>
+    </>
   );
 }
