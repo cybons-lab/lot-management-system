@@ -280,7 +280,7 @@ export function DataTable<T = never>({
         className,
       )}
     >
-      <table className="w-full border-collapse">
+      <table className="w-full" style={{ tableLayout: "fixed" }}>
         <thead className="border-b border-slate-100 bg-slate-50/50">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
