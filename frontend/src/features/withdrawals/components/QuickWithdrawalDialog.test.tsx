@@ -265,6 +265,9 @@ describe("QuickWithdrawalDialog", () => {
     await waitFor(() => {
       expect(http.get).toHaveBeenCalledWith(
         expect.stringContaining("masters/delivery-places?customer_id=1"),
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
       );
     });
 
