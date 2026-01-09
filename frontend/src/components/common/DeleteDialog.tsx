@@ -194,7 +194,7 @@ export function DeleteDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent data-testid="delete-dialog">
         <AlertDialogHeader>
           <AlertDialogTitle className={`flex items-center gap-2 ${alertStyles.titleColor}`}>
             <Icon className="h-5 w-5" />
@@ -240,6 +240,7 @@ export function DeleteDialog({
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
                 min={today}
                 className={`${alertStyles.borderColor} focus:border-amber-500`}
+                data-testid="delete-dialog-date-input"
               />
               <p className="text-xs text-slate-500">
                 {bulk
@@ -264,6 +265,7 @@ export function DeleteDialog({
                 }
                 placeholder={confirmationPhrase}
                 className="border-red-200 focus:border-red-500"
+                data-testid="delete-dialog-confirm-input"
               />
             </div>
           )}
@@ -285,6 +287,7 @@ export function DeleteDialog({
             onClick={handleConfirm}
             disabled={isConfirmDisabled}
             className={`${alertStyles.buttonBg} disabled:opacity-50`}
+            data-testid="delete-dialog-confirm-button"
           >
             {confirmButtonText}
           </AlertDialogAction>

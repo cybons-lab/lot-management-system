@@ -411,6 +411,7 @@ export function CustomersListPage() {
               size="sm"
               onClick={() => setIsBulkDeleteDialogOpen(true)}
               className={!isAdmin ? "border-amber-600 text-amber-700 hover:bg-amber-100" : ""}
+              data-testid={isAdmin ? "bulk-delete-button" : "bulk-inactivate-button"}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               {isAdmin ? "一括削除" : "一括無効化"}

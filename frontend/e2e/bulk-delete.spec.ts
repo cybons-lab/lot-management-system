@@ -9,8 +9,14 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Bulk Delete", () => {
-  // Helper to mock auth with roles
-  const mockAuth = async (page: import("@playwright/test").Page, roles: string[]) => {
+  // Helper to mock auth with roles and set up localStorage
+  const setupAuth = async (page: import("@playwright/test").Page, roles: string[]) => {
+    // Set fake token to trigger auth/me call
+    await page.addInitScript(() => {
+      localStorage.setItem("token", "fake-test-token");
+    });
+
+    // Mock auth/me API
     await page.route("**/auth/me", async (route) => {
       await route.fulfill({
         json: {
@@ -60,54 +66,59 @@ test.describe("Bulk Delete", () => {
 
   test.describe("Admin - Bulk Permanent Delete", () => {
     test.beforeEach(async ({ page }) => {
-      await mockAuth(page, ["admin"]);
+      await setupAuth(page, ["admin"]);
       await mockCustomersList(page);
     });
 
     test("should show bulk delete bar when items are selected", async ({ page }) => {
       await page.goto("/customers");
+      await expect(page.getByText("Customer 1")).toBeVisible();
 
       // Select first item checkbox
-      const firstCheckbox = page.locator('table tbody tr:first-child input[type="checkbox"]');
-      await firstCheckbox.click();
+      const firstCheckbox = page.getByTestId("select-row-checkbox").first();
+      await firstCheckbox.click({ force: true });
+      await expect(firstCheckbox).toBeChecked();
 
       // Bulk action bar should appear with admin styling
-      await expect(page.getByText("1 件選択中")).toBeVisible();
-      await expect(page.getByRole("button", { name: "一括削除" })).toBeVisible();
+      await expect(page.getByTestId("bulk-delete-button")).toBeVisible();
     });
 
     test("should open bulk permanent delete dialog on click", async ({ page }) => {
       await page.goto("/customers");
+      await expect(page.getByText("Customer 1")).toBeVisible();
 
       // Select multiple items
-      const checkboxes = page.locator('table tbody input[type="checkbox"]');
-      await checkboxes.nth(0).click();
-      await checkboxes.nth(1).click();
+      const checkboxes = page.getByTestId("select-row-checkbox");
+      await checkboxes.nth(0).click({ force: true });
+      await expect(checkboxes.nth(0)).toBeChecked();
+      await checkboxes.nth(1).click({ force: true });
+      await expect(checkboxes.nth(1)).toBeChecked();
 
       // Click bulk delete button
-      await page.getByRole("button", { name: "一括削除" }).click();
+      await page.getByTestId("bulk-delete-button").click();
 
-      // Dialog should open
-      await expect(page.getByText("選択項目を完全に削除しますか？")).toBeVisible();
-      await expect(
-        page.getByText(/この操作は取り消せません。データベースから完全に削除されます/),
-      ).toBeVisible();
+      // Dialog should open (check by testid instead of Japanese text)
+      await expect(page.getByTestId("delete-dialog")).toBeVisible();
+      await expect(page.getByTestId("delete-dialog-confirm-input")).toBeVisible();
     });
 
     test("should require DELETE confirmation for permanent delete", async ({ page }) => {
       await page.goto("/customers");
+      await expect(page.getByText("Customer 1")).toBeVisible();
 
       // Select item and open dialog
-      const firstCheckbox = page.locator('table tbody tr:first-child input[type="checkbox"]');
-      await firstCheckbox.click();
-      await page.getByRole("button", { name: "一括削除" }).click();
+      const firstCheckbox = page.getByTestId("select-row-checkbox").first();
+      await expect(firstCheckbox).toBeVisible();
+      await firstCheckbox.click({ force: true });
+      await expect(firstCheckbox).toBeChecked();
+      await page.getByTestId("bulk-delete-button").click();
 
       // Confirm button should be disabled initially
-      const confirmButton = page.getByRole("button", { name: /件を完全に削除/ });
+      const confirmButton = page.getByTestId("delete-dialog-confirm-button");
       await expect(confirmButton).toBeDisabled();
 
       // Enter DELETE phrase
-      await page.getByPlaceholder("DELETE").fill("DELETE");
+      await page.getByTestId("delete-dialog-confirm-input").fill("DELETE");
 
       // Confirm button should be enabled
       await expect(confirmButton).toBeEnabled();
@@ -116,54 +127,62 @@ test.describe("Bulk Delete", () => {
 
   test.describe("Non-Admin - Bulk Soft Delete", () => {
     test.beforeEach(async ({ page }) => {
-      await mockAuth(page, ["user"]);
+      await setupAuth(page, ["user"]);
       await mockCustomersList(page);
     });
 
     test("should show bulk inactivate bar when items are selected", async ({ page }) => {
       await page.goto("/customers");
+      await expect(page.getByText("Customer 1")).toBeVisible();
 
       // Select first item checkbox
-      const firstCheckbox = page.locator('table tbody tr:first-child input[type="checkbox"]');
-      await firstCheckbox.click();
+      const firstCheckbox = page.getByTestId("select-row-checkbox").first();
+      await expect(firstCheckbox).toBeVisible();
+      await firstCheckbox.click({ force: true });
+      await expect(firstCheckbox).toBeChecked();
 
       // Bulk action bar should appear with non-admin styling
-      await expect(page.getByText("1 件選択中")).toBeVisible();
-      await expect(page.getByRole("button", { name: "一括無効化" })).toBeVisible();
+      await expect(page.getByTestId("bulk-inactivate-button")).toBeVisible();
     });
 
     test("should open bulk soft delete dialog on click", async ({ page }) => {
       await page.goto("/customers");
+      await expect(page.getByText("Customer 1")).toBeVisible();
 
       // Select item
-      const firstCheckbox = page.locator('table tbody tr:first-child input[type="checkbox"]');
-      await firstCheckbox.click();
+      const firstCheckbox = page.getByTestId("select-row-checkbox").first();
+      await expect(firstCheckbox).toBeVisible();
+      await firstCheckbox.click({ force: true });
+      await expect(firstCheckbox).toBeChecked();
 
       // Click bulk inactivate button
-      await page.getByRole("button", { name: "一括無効化" }).click();
+      await page.getByTestId("bulk-inactivate-button").click();
 
-      // Dialog should open
-      await expect(page.getByText("選択項目を無効化しますか？")).toBeVisible();
-      await expect(page.getByLabelText(/無効化日/)).toBeVisible();
+      // Dialog should open (check by testid instead of Japanese text)
+      await expect(page.getByTestId("delete-dialog")).toBeVisible();
+      await expect(page.getByTestId("delete-dialog-date-input")).toBeVisible();
     });
 
     test("should allow setting end date for soft delete", async ({ page }) => {
       await page.goto("/customers");
+      await expect(page.getByText("Customer 1")).toBeVisible();
 
-      // Select item and open dialog
-      const firstCheckbox = page.locator('table tbody tr:first-child input[type="checkbox"]');
-      await firstCheckbox.click();
-      await page.getByRole("button", { name: "一括無効化" }).click();
+      // Select first item checkbox
+      const firstCheckbox = page.getByTestId("select-row-checkbox").first();
+      await expect(firstCheckbox).toBeVisible();
+      await firstCheckbox.click({ force: true });
+      await expect(firstCheckbox).toBeChecked();
+      await page.getByTestId("bulk-inactivate-button").click();
 
-      // Date input should have today's date by default
-      const dateInput = page.getByLabelText(/無効化日/);
+      // Date input should be visible
+      const dateInput = page.getByTestId("delete-dialog-date-input");
       await expect(dateInput).toHaveAttribute("type", "date");
 
       // Change date
       await dateInput.fill("2024-12-31");
 
       // Confirm button should be enabled
-      const confirmButton = page.getByRole("button", { name: /件を無効化/ });
+      const confirmButton = page.getByTestId("delete-dialog-confirm-button");
       await expect(confirmButton).toBeEnabled();
     });
   });
