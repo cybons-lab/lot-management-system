@@ -11,6 +11,18 @@ import { test, expect } from "@playwright/test";
 test.describe("Bulk Delete", () => {
   // Helper to mock auth with roles
   const mockAuth = async (page: import("@playwright/test").Page, roles: string[]) => {
+    // Debugging
+    // page.on("console", (msg) => console.log("PAGE LOG:", msg.text()));
+    // page.on("pageerror", (exception) => console.log(`PAGE EXCEPTION: "${exception}"`));
+    // page.on("requestfailed", (request) =>
+    //   console.log(`REQUEST FAILED: ${request.url()} ${request.failure()?.errorText}`),
+    // );
+    // page.on("request", (request) => console.log(`REQ: ${request.url()}`));
+
+    await page.addInitScript(() => {
+      window.localStorage.setItem("token", "test-token");
+    });
+
     await page.route("**/auth/me", async (route) => {
       await route.fulfill({
         json: {
@@ -26,35 +38,54 @@ test.describe("Bulk Delete", () => {
 
   // Helper to mock customers list
   const mockCustomersList = async (page: import("@playwright/test").Page) => {
-    await page.route("**/masters/customers*", async (route) => {
-      if (route.request().method() === "GET") {
-        await route.fulfill({
-          json: [
-            {
-              id: 1,
-              customer_code: "C001",
-              customer_name: "Customer 1",
-              updated_at: "2025-01-01T10:00:00Z",
-            },
-            {
-              id: 2,
-              customer_code: "C002",
-              customer_name: "Customer 2",
-              updated_at: "2025-01-01T10:00:00Z",
-            },
-            {
-              id: 3,
-              customer_code: "C003",
-              customer_name: "Customer 3",
-              updated_at: "2025-01-01T10:00:00Z",
-            },
-          ],
-        });
-      } else if (route.request().method() === "DELETE") {
-        await route.fulfill({ json: { success: true } });
-      } else {
-        await route.continue();
+    await page.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (url.includes("masters/customers")) {
+        if (route.request().method() === "GET") {
+          await route.fulfill({
+            json: [
+              {
+                id: 1,
+                customer_code: "C001",
+                customer_name: "Customer 1",
+                updated_at: "2025-01-01T10:00:00Z",
+              },
+              {
+                id: 2,
+                customer_code: "C002",
+                customer_name: "Customer 2",
+                updated_at: "2025-01-01T10:00:00Z",
+              },
+              {
+                id: 3,
+                customer_code: "C003",
+                customer_name: "Customer 3",
+                updated_at: "2025-01-01T10:00:00Z",
+              },
+            ],
+          });
+          return;
+        } else if (route.request().method() === "DELETE") {
+          await route.fulfill({ json: { success: true } });
+          return;
+        }
+      } else if (url.includes("auth/me")) {
+        // let the other handler handle it?
+        // Playwright executes handlers in order.
+        // If I have **/* here, it might swallow everything.
+        // I should put this handler LAST or verify order avoiding conflict.
+        // But mockCustomersList is called inside beforeEach.
+        // mockAuth called before mockCustomersList.
+        // So mockAuth handler (**/auth/me) runs first?
+        // No, standard Playwright: new routes override old ones (LIFO) or FIFO?
+        // Documentation: "Routes specified later override those specified earlier." (Reverse?)
+        // "When multiple routes match the request, the one defined LAST is used."
+        // So MOCK CUSTOMERS LIST defined AFTER mockAuth -> runs FIRST.
+        // So I must handle auth/me here or fallback.
+        await route.fallback();
+        return;
       }
+      await route.fallback();
     });
   };
 
@@ -144,7 +175,7 @@ test.describe("Bulk Delete", () => {
 
       // Dialog should open
       await expect(page.getByText("選択項目を無効化しますか？")).toBeVisible();
-      await expect(page.getByLabelText(/無効化日/)).toBeVisible();
+      await expect(page.getByLabel(/無効化日/)).toBeVisible();
     });
 
     test("should allow setting end date for soft delete", async ({ page }) => {
@@ -156,7 +187,7 @@ test.describe("Bulk Delete", () => {
       await page.getByRole("button", { name: "一括無効化" }).click();
 
       // Date input should have today's date by default
-      const dateInput = page.getByLabelText(/無効化日/);
+      const dateInput = page.getByLabel(/無効化日/);
       await expect(dateInput).toHaveAttribute("type", "date");
 
       // Change date

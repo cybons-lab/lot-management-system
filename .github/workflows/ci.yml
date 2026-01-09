@@ -102,9 +102,7 @@ jobs:
   e2e-tests:
     name: Frontend E2E Tests
     runs-on: ubuntu-latest
-    if: false  # Temporarily disabled - E2E tests timing out, needs investigation
     timeout-minutes: 20  # Set reasonable timeout
-    continue-on-error: true  # Allow E2E failures due to environment issues
     
     steps:
       - name: Checkout code
