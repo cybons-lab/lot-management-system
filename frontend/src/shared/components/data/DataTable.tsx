@@ -156,6 +156,7 @@ export function DataTable<T = never>({
             indeterminate={table.getIsSomeRowsSelected()}
             onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
             aria-label="すべて選択"
+            data-testid="select-all-checkbox"
           />
         ),
         cell: ({ row }) => (
@@ -165,6 +166,7 @@ export function DataTable<T = never>({
               checked={row.getIsSelected()}
               onCheckedChange={(value) => row.toggleSelected(!!value)}
               aria-label="行を選択"
+              data-testid="select-row-checkbox"
             />
           </div>
         ),
